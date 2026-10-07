@@ -3,7 +3,7 @@
   "theme": "black-orange",
   "legacy": false,
   "complete": true,
-  "directory": "E:\\KAMUCL\\out\\qa-skin-layers119-black-orange-2fbb669b-a540-4bfa-8ad8-58f37cce500a",
+  "directory": "E:\\FAIONYX\\out\\qa-skin-layers119-black-orange-2fbb669b-a540-4bfa-8ad8-58f37cce500a",
   "steps": [
     {
       "label": "blank outer, visible brush",
@@ -264027,7 +264027,7 @@
   ],
   "recording": {
     "version": "1.1.19",
-    "directory": "E:\\KAMUCL\\out\\skinlayers119-original-black-orange",
+    "directory": "E:\\FAIONYX\\out\\skinlayers119-original-black-orange",
     "capture": {
       "format": "jpeg",
       "quality": 70,

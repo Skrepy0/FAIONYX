@@ -2,7 +2,7 @@ import faceUrl from './assets/splash-face.png'
 import { makeBootGlass, advanceBootGlass, glassPosition, canAssembleBoot, GLASS_FLOAT_MIN_MS, CONVERGE_DURATION, ASSEMBLED_HOLD_MS, BOOT_FRAME_MS, type BootState, type GlassPoint } from '@shared/startup'
 import './splash.css'
 
-const bridge = window.kamuclSplash
+const bridge = window.faionyxSplash
 const canvas = document.querySelector<HTMLCanvasElement>('#glass')!
 const ctx = canvas.getContext('2d', { alpha: true })!
 const caption = document.querySelector<HTMLSpanElement>('#stage')!

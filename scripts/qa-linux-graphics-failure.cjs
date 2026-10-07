@@ -79,11 +79,11 @@ async function recordLinuxGraphicsFailure(primaryError, options, dependencies = 
     if (!identity || identity.pid !== options.expectedPid || identity.platform !== 'linux' || identity.arch !== options.expectedArch || path.resolve(identity.execPath) !== path.resolve(options.expectedExecutable)) throw Error('Observed main process PID, ABI, platform or executable does not match the original owned Linux GUI; GPU queries refused')
     receipt.ownedIdentityVerified = true
     const metadata = await observe('embeddedPackageIdentity', () => {
-      const file = path.join(path.dirname(options.expectedExecutable), 'resources', 'kamucl-linux.json')
+      const file = path.join(path.dirname(options.expectedExecutable), 'resources', 'faionyx-linux.json')
       const stat = fs.lstatSync(file)
       if (!stat.isFile() || stat.isSymbolicLink()) throw Error('Unsafe embedded metadata file')
       const bytes = fs.readFileSync(file), parsed = JSON.parse(bytes)
-      return { metadataFile: 'resources/kamucl-linux.json', sha256: crypto.createHash('sha256').update(bytes).digest('hex'), schemaVersion: parsed.schemaVersion, product: parsed.product, platform: parsed.platform, arch: parsed.arch, version: parsed.version, sourceCommit: parsed.sourceCommit, runtimeVersion: parsed.runtimeVersion, installationKind: parsed.installationKind, matchesActualRuntime: parsed.runtimeVersion === identity.versions?.electron && parsed.arch === identity.arch && parsed.platform === identity.platform }
+      return { metadataFile: 'resources/faionyx-linux.json', sha256: crypto.createHash('sha256').update(bytes).digest('hex'), schemaVersion: parsed.schemaVersion, product: parsed.product, platform: parsed.platform, arch: parsed.arch, version: parsed.version, sourceCommit: parsed.sourceCommit, runtimeVersion: parsed.runtimeVersion, installationKind: parsed.installationKind, matchesActualRuntime: parsed.runtimeVersion === identity.versions?.electron && parsed.arch === identity.arch && parsed.platform === identity.platform }
     })
     if (metadata && !metadata.matchesActualRuntime) receipt.diagnosticErrors.push({ observation: 'embeddedPackageIdentity', message: 'Embedded metadata does not match the actual owned runtime; original failure is unchanged' })
     await Promise.all([

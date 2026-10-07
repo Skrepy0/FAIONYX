@@ -30,7 +30,7 @@ function parseReleaseArgs(argv) {
 function productAssetNames(version, platform = 'all') {
   assert(typeof version === 'string' && /^\d+\.\d+\.\d+$/.test(version), 'Release version must be a numeric triplet')
   platformValue(platform)
-  const prefix = `KAMUCL-${version}`
+  const prefix = `FAIONYX-${version}`
   const windows = [`${prefix}.exe`, `${prefix}-windows-x64.zip`, `${prefix}-windows-x64-unpacked.zip`]
   const mac = ['arm64', 'x64'].flatMap(arch => ['dmg', 'zip'].map(ext => `${prefix}-mac-${arch}.${ext}`))
   const linux = ['x64', 'arm64'].flatMap(arch => ['AppImage', 'deb', 'tar.gz'].map(ext => `${prefix}-linux-${arch}.${ext}`))
@@ -40,7 +40,7 @@ function productAssetNames(version, platform = 'all') {
 function releaseAssetNames(version, platform = 'all') {
   const products = productAssetNames(version, platform)
   // Preserve the legacy all-platform order: Windows, source, Mac, handoff.
-  return [...products.slice(0, 3), `KAMUCL-${version}-source.zip`, ...products.slice(3), `KAMUCL-${version}-handoff.zip`]
+  return [...products.slice(0, 3), `FAIONYX-${version}-source.zip`, ...products.slice(3), `FAIONYX-${version}-handoff.zip`]
 }
 
 function assertUniqueAssetNames(names) {

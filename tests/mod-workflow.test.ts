@@ -123,7 +123,7 @@ test('modified Vue components compile with real scripts and templates', () => {
 })
 
 test('real dependency download waits for consent, verifies JAR and commits into isolated folder without duplicates', async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-dependencies-test-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-dependencies-test-'))
   let requests = 0
   const jar = (id: string, depends = {}) => {
     const zip = new AdmZip(); zip.addFile('fabric.mod.json', Buffer.from(JSON.stringify({ id, version: '1.2.3', depends: { minecraft: '>=1.20 <1.21', fabricloader: '>=0.15', ...depends } }))); return zip.toBuffer()
@@ -185,7 +185,7 @@ versionRange='[1.20.1,1.21)'`))
 })
 
 test('external runtime reuse follows exact coordinates, preserves existing bytes and does not copy unrelated versions', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-runtime-test-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-runtime-test-'))
   try {
     const source = path.join(root, 'external'), shared = path.join(root, 'shared')
     for (const ver of ['26.2.0.66', '26.2.0.99']) {
@@ -241,7 +241,7 @@ test('nested version any/all preserve boolean precedence and Quilt has its own b
 async function pinnedTransactionFixture(options: { transitive?: boolean; pinned?: boolean; existingVersion?: 1 | 2; hashes?: boolean; cycle?: boolean; wrongExact?: boolean }, work: (fixture: {
   target: InstalledVersion; rootFile: CommunityFile; repo: DependencyRepository; existing: string; one: Buffer; two: Buffer; requests: string[]
 }) => Promise<void>) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-pinned118-')), game = path.join(root, 'isolated'), directory = path.join(game, 'mods')
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-pinned118-')), game = path.join(root, 'isolated'), directory = path.join(game, 'mods')
   fs.mkdirSync(directory, { recursive: true })
   const jar = (id: string, version: string, depends: Record<string, string> = {}) => {
     const zip = new AdmZip(); zip.addFile('fabric.mod.json', Buffer.from(JSON.stringify({ id, version, depends: { minecraft: '1.20.1', fabricloader: '>=0.15', ...depends } }))); return zip.toBuffer()

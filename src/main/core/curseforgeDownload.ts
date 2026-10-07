@@ -127,7 +127,7 @@ export async function exactModrinthDownload(file: ResolvedCfFile, signal?: Abort
       const timeout = AbortSignal.timeout(6000)
       const res = await httpFetch(`${base}/version_file/${file.sha1}?algorithm=sha1`, {
         signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
-        headers: { 'User-Agent': 'KAMUCL (github.com/kamubaba-i/KAMUCL)' }
+        headers: { 'User-Agent': 'FAIONYX (github.com/Skrepy0/FAIONYX)' }
       })
       if (!res.ok) { await res.body?.cancel(); continue }
       const data = await res.json() as { files?: Array<{ size?: number; hashes?: { sha1?: string }; url?: string }> }

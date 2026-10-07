@@ -12,7 +12,7 @@ test('Java module checks reject trimmed desktop runtimes without requiring JDK c
   assert(missingGameModules('java.base@25', 25).includes('jdk.unsupported'))
 })
 test('selected Java health validates files, modules and graph; changes invalidate successful cache', async () => {
-  const home = await fs.mkdtemp(path.join(os.tmpdir(), 'kamucl-java-health-'))
+  const home = await fs.mkdtemp(path.join(os.tmpdir(), 'faionyx-java-health-'))
   const exe = path.join(home, 'bin/java')
   const jvm = path.join(home, process.platform === 'win32' ? 'bin/server/jvm.dll' : process.platform === 'darwin' ? 'lib/server/libjvm.dylib' : 'lib/server/libjvm.so')
   const modules = path.join(home, 'lib/modules')

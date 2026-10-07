@@ -13,7 +13,7 @@ import type { Account } from '../src/shared/types'
 
 const javaRoot = process.env.JAVA_HOME || (process.platform === 'win32' ? 'C:/Program Files/Java/jdk-25.0.2' : '')
 const tool = (name: string) => javaRoot ? path.join(javaRoot, 'bin', name + (process.platform === 'win32' ? '.exe' : '')) : name
-const agent = path.resolve('offline-skin-agent/dist/kamucl-offline-skin.jar')
+const agent = path.resolve('offline-skin-agent/dist/faionyx-offline-skin.jar')
 // A complete original PNG generated without user data; the producer's validation
 // is covered separately. These tests also execute the bundled Java bytecode.
 const pngReady = sharp({ create: { width:64, height:64, channels:4, background:{ r:37, g:177, b:145, alpha:1 } } }).png().toBuffer()
@@ -31,7 +31,7 @@ function request(url: string, method = 'GET', body?: string, headers: Record<str
 }
 async function fixture(t: any, username = 'OfflineSkinProbe', variant: 'classic'|'slim' = 'slim') {
   const png = await pngReady
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'KAMUCL 离线皮肤118 ')); build(root)
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX 离线皮肤118 ')); build(root)
   const skin = path.join(root, '皮肤 § 1.png'); fs.writeFileSync(skin, png)
   const account: Account = { id: 'test-only', type: 'offline', uuid: 'c430be75-2e7a-37ab-839f-44d28d4a52f0', username }
   const launch = await createOfflineSkinLaunch(account, { filePath: skin, sha256: crypto.createHash('sha256').update(png).digest('hex'), variant }, agent, 'unused-test-injector.jar', root)
@@ -92,7 +92,7 @@ test('Unicode names, offline-server UUID alias and disconnecting the launcher pr
 
 test('invalid or changed local snapshots never allocate a launch config or modify the original PNG', async () => {
   const png = await pngReady
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'KAMUCL offline reject ')), skin = path.join(root, 'skin.png'); fs.writeFileSync(skin, png)
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX offline reject ')), skin = path.join(root, 'skin.png'); fs.writeFileSync(skin, png)
   try {
     await assert.rejects(createOfflineSkinLaunch({ id:'test', type:'offline', uuid:'a'.repeat(32), username:'Test' }, { filePath:skin, sha256:'0'.repeat(64), variant:'classic' }, agent, 'unused.jar', root), /已变化或无效/)
     assert.deepEqual(fs.readdirSync(root), ['skin.png']); assert.deepEqual(fs.readFileSync(skin), png)
@@ -100,7 +100,7 @@ test('invalid or changed local snapshots never allocate a launch config or modif
 })
 
 test('an idle connection to the reservation cannot hold game launch or cleanup open', async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'KAMUCL offline reservation ')), skin = path.join(root,'skin.png'), png = await pngReady
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX offline reservation ')), skin = path.join(root,'skin.png'), png = await pngReady
   fs.writeFileSync(skin,png)
   const launch = await createOfflineSkinLaunch({id:'idle-probe',type:'offline',uuid:'a'.repeat(32),username:'Test'}, {filePath:skin,sha256:crypto.createHash('sha256').update(png).digest('hex'),variant:'classic'},agent,'unused.jar',root)
   const socket = net.connect(Number(new URL(launch.args[1].split('=')[1]).port),'127.0.0.1')

@@ -1,4 +1,4 @@
-# KAMUCL 1.1.15 Windows 独立评审
+# FAIONYX 1.1.15 Windows 独立评审
 
 评审时间：2026-10-06 18:22（Asia/Hong_Kong）。评审者：独立子 agent `/root/independent_final115`。本评审未修改产品或运行新的 GUI；独立阅读代码、测试和原始回执，并实际逐张查看最终截图。
 
@@ -19,9 +19,9 @@
 
 | 文件 | 字节 | SHA256 |
 | --- | ---: | --- |
-| KAMUCL-1.1.15.exe | 97289152 | `4822890c6cc94353a16687d812fdfb0be9379dad1c0258ef4b1a35c14d686df9` |
-| KAMUCL-1.1.15-windows-x64.zip | 97320724 | `9f7f6de1a92b4e8a2d9f09bb24140082040a80ae8e9d9def58765212b4df6d0f` |
-| KAMUCL-1.1.15-windows-x64-unpacked.zip | 142949477 | `bafb95956a15dd428fd93938f348de77e5ff6b331adb4acd95d5ee867c3c164f` |
+| FAIONYX-1.1.15.exe | 97289152 | `4822890c6cc94353a16687d812fdfb0be9379dad1c0258ef4b1a35c14d686df9` |
+| FAIONYX-1.1.15-windows-x64.zip | 97320724 | `9f7f6de1a92b4e8a2d9f09bb24140082040a80ae8e9d9def58765212b4df6d0f` |
+| FAIONYX-1.1.15-windows-x64-unpacked.zip | 142949477 | `bafb95956a15dd428fd93938f348de77e5ff6b331adb4acd95d5ee867c3c164f` |
 
 运行时为 Electron 44.3.0。497 项生产输入与17:34构建前快照逐项比较，全部大小及 SHA256 未变；打包图标另有未变的构建后核验记录，未冒称它们包含在原快照中。QA 和文档修改应在交付说明中与成品输入区分。
 

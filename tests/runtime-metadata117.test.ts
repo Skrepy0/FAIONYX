@@ -10,7 +10,7 @@ import { readClientVersionEvidence } from '../src/main/core/instanceVersionEvide
 import { supportsQuickPlayMultiplayer } from '../src/main/core/serverUtils'
 
 test('117 verified client version drives Java and direct join without changing profile metadata', t => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-runtime-metadata117-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-runtime-metadata117-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   const file = path.join(root, 'client.jar')
   const profile = Object.freeze({ id: 'custom-Fabric', inheritsFrom: 'opaque-parent', _mcVersion: '0.0.0', libraries: [{ name: 'net.fabricmc:fabric-loader:0.19.5' }] })

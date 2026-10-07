@@ -57,14 +57,14 @@ test('Linux updater performs real swap, receipt and failure restoration without 
     child.once('close', code => { clearTimeout(timer); resolve(code) })
   })
   for (const mode of ['receipt', 'timeout', 'tampered'] as const) {
-    const dir = path.join(root, mode), target = path.join(dir, 'KAMUCL'), staged = path.join(dir, 'stage'), state = path.join(dir, 'state'), log = path.join(dir, 'events')
+    const dir = path.join(root, mode), target = path.join(dir, 'FAIONYX'), staged = path.join(dir, 'stage'), state = path.join(dir, 'state'), log = path.join(dir, 'events')
     for (const appDir of [target, staged]) fs.mkdirSync(path.join(appDir, 'resources'), { recursive: true })
     fs.mkdirSync(state); fs.writeFileSync(path.join(target, 'resources/app.asar'), 'old'); fs.writeFileSync(path.join(staged, 'resources/app.asar'), 'new')
     const id = randomUUID(), applying = path.join(state, 'linux-update.json.applying'), pidFile = path.join(dir, 'new.pid')
     fs.writeFileSync(applying, JSON.stringify({ id }))
     const oldProgram = '#!/bin/sh\n' + 'if [ -f ' + q(pidFile) + ' ] && kill -0 "$(cat ' + q(pidFile) + ')" 2>/dev/null; then printf CONCURRENT >>' + q(log) + '; exit 9; fi\nprintf "OLD\\n" >>' + q(log) + '\n'
     const newProgram = '#!/bin/sh\nprintf "NEW\\n" >>' + q(log) + '\nprintf "%s" "$$" >' + q(pidFile) + '\n' + (mode === 'receipt' ? 'printf "%s" ' + q(id) + ' >' + q(applying + '.receipt') + '\n' : 'sleep 5\n')
-    fs.writeFileSync(path.join(target, 'kamucl'), oldProgram, { mode: 0o755 }); fs.writeFileSync(path.join(staged, 'kamucl'), newProgram, { mode: 0o755 })
+    fs.writeFileSync(path.join(target, 'faionyx'), oldProgram, { mode: 0o755 }); fs.writeFileSync(path.join(staged, 'faionyx'), newProgram, { mode: 0o755 })
     // Only the fixture clock is shortened. The production helper still waits
     // its original 120 seconds and retains exact PID/starttime identity checks.
     const transaction = { schema: 1, id, target, file: path.join(dir, 'file.tar.gz'), sha256: hash('new'), size: 3, from: '1.1.10', release: { version: '1.1.11' }, mode: 'upgrade' }
@@ -89,14 +89,14 @@ test('Linux updater performs real swap, receipt and failure restoration without 
   }
 })
 test('Linux TAR rejects escaping, ambiguous, linked and damaged header paths', () => {
-  assert.equal(linuxTarHeader(header('KAMUCL/resources/app.asar'))?.name, 'KAMUCL/resources/app.asar')
-  for (const name of ['KAMUCL/../outside', '/KAMUCL/file', 'Other/file', 'KAMUCL//file', 'KAMUCL/./file', 'KAMUCL\\file']) assert.throws(() => linuxTarHeader(header(name)))
-  assert.throws(() => linuxTarHeader(header('KAMUCL/link', 0, '2')), /链接/)
-  const bad = header('KAMUCL/file'); bad[10] ^= 1; assert.throws(() => linuxTarHeader(bad), /校验/)
+  assert.equal(linuxTarHeader(header('FAIONYX/resources/app.asar'))?.name, 'FAIONYX/resources/app.asar')
+  for (const name of ['FAIONYX/../outside', '/FAIONYX/file', 'Other/file', 'FAIONYX//file', 'FAIONYX/./file', 'FAIONYX\\file']) assert.throws(() => linuxTarHeader(header(name)))
+  assert.throws(() => linuxTarHeader(header('FAIONYX/link', 0, '2')), /链接/)
+  const bad = header('FAIONYX/file'); bad[10] ^= 1; assert.throws(() => linuxTarHeader(bad), /校验/)
 })
 test('Linux streamed archive validates complete payload and rejects duplicate or missing targets', async t => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'linux-tar-test-')); t.after(() => fs.rmSync(root, { recursive: true, force: true }))
-  const files = ['KAMUCL/kamucl', 'KAMUCL/resources/app.asar', 'KAMUCL/resources/kamucl-linux.json'], target = path.join(root, 'payload.tar.gz')
+  const files = ['FAIONYX/faionyx', 'FAIONYX/resources/app.asar', 'FAIONYX/resources/faionyx-linux.json'], target = path.join(root, 'payload.tar.gz')
   fs.writeFileSync(target, archive(files)); await validateLinuxArchive(target)
   fs.writeFileSync(target, archive([...files, files[0]])); await assert.rejects(validateLinuxArchive(target), /重复/)
   fs.writeFileSync(target, archive(files.slice(1))); await assert.rejects(validateLinuxArchive(target), /缺少/)
@@ -104,7 +104,7 @@ test('Linux streamed archive validates complete payload and rejects duplicate or
   await assert.rejects(validateLinuxArchive(path.join(root, 'absent.tar.gz')), /ENOENT/)
 })
 test('Linux manifest constrains product architecture and package kind', () => {
-  const metadata = { product: 'KAMUCL', platform: 'linux', arch: 'arm64', version: '1.1.11', installationKind: 'appimage' }
+  const metadata = { product: 'FAIONYX', platform: 'linux', arch: 'arm64', version: '1.1.11', installationKind: 'appimage' }
   assert.doesNotThrow(() => assertLinuxManifest(JSON.stringify(metadata), '1.1.11', 'appimage', 'arm64'))
   assert.throws(() => assertLinuxManifest(JSON.stringify(metadata), '1.1.11', 'deb', 'arm64'), /身份/)
   assert.throws(() => assertLinuxManifest(JSON.stringify(metadata), '1.1.11', 'appimage', 'x64'), /架构/)

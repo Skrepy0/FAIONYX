@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-// TicketClient.java / TicketDetailScreen.java, VoxLink c475faa9; KAMUCL controlled IPC adapter.
+// TicketClient.java / TicketDetailScreen.java, VoxLink c475faa9; FAIONYX controlled IPC adapter.
 import fs from 'node:fs'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
@@ -60,7 +60,7 @@ export class TicketService {
     // and the writable local index before sending any user content.
     const probe='ticket-storage-'+randomUUID();if(this.codec.open(this.codec.seal(probe))!==probe)throw new TicketError('SECRET_UNAVAILABLE','系统凭证保护无法验证，请稍后再提交')
     this.save();signal.throwIfAborted()
-    const data=await this.upload('/ticket/submit',{description:description.trim(),client:'app',clientInfo:JSON.stringify({client:'KAMUCL',version:APP_VERSION,os:process.platform,arch:process.arch})},files,signal,progress)
+    const data=await this.upload('/ticket/submit',{description:description.trim(),client:'app',clientInfo:JSON.stringify({client:'FAIONYX',version:APP_VERSION,os:process.platform,arch:process.arch})},files,signal,progress)
     if(!validId(data?.id)||typeof data.ticketSecret!=='string'||!data.ticketSecret)throw new TicketError('BAD_RESPONSE','服务器未返回工单归属凭证')
     const now=Date.now();this.rows.push({id:data.id,secret:this.codec.seal(data.ticketSecret),server:this.base(),timeMs:now,lastTimeMs:now,deleted:false,hasUnread:false,replyCount:0});this.save();return{id:data.id}
   }

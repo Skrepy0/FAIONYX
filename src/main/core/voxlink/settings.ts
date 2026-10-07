@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// KAMUCL local settings; atomic replacement preserves the last valid file on failure.
+// FAIONYX local settings; atomic replacement preserves the last valid file on failure.
 import fs from 'node:fs'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'

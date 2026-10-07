@@ -37,7 +37,7 @@ sealed class StartupFeedback : Form {
     System.Threading.Timer frameTimer; readonly object frameGate=new object();
     double nextFrame; int framePending; bool preciseTimer;
     readonly Bitmap face;
-    readonly string frameProbe=Environment.GetEnvironmentVariable("KAMUCL_FRAME_PROBE");
+    readonly string frameProbe=Environment.GetEnvironmentVariable("FAIONYX_FRAME_PROBE");
     readonly List<double> frameTimes=new List<double>();
     Bitmap surface;IntPtr surfaceDC,surfaceImage,previousImage;
     sealed class Shard {
@@ -172,7 +172,7 @@ sealed class StartupFeedback : Form {
         EnsureSurface();PaintScene(surface,now);
         if(!Present(reveal<0?1:1-Smooth((now-reveal)/320))){Close();return;}
         if(!String.IsNullOrEmpty(frameProbe))frameTimes.Add(clock.Elapsed.TotalMilliseconds);
-        if(!reported){reported=true;Mark(".visible",Process.GetCurrentProcess().Id.ToString());var probe=Environment.GetEnvironmentVariable("KAMUCL_BOOT_PROBE");if(!String.IsNullOrEmpty(probe))try{File.WriteAllText(probe,DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString());}catch{}}
+        if(!reported){reported=true;Mark(".visible",Process.GetCurrentProcess().Id.ToString());var probe=Environment.GetEnvironmentVariable("FAIONYX_BOOT_PROBE");if(!String.IsNullOrEmpty(probe))try{File.WriteAllText(probe,DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString());}catch{}}
         if(!assembled&&command=="ready"&&convergence>=0&&now-convergence>=(reduced?0:ConvergeMilliseconds+HoldMilliseconds)){assembled=true;Mark(".assembled",reduced?"reduced":"ready");}
     }
     void Mark(string suffix,string value){try{File.WriteAllText(signal+suffix,value);}catch{}}
@@ -206,7 +206,7 @@ sealed class StartupFeedback : Form {
             var panel=new RectangleF(logicalWidth/2f-110,logicalHeight/2f+135,220,86);
             using(var outline=Round(panel,14))using(var fill=new SolidBrush(Color.FromArgb(184,23,32,33)))using(var border=new Pen(Color.FromArgb(36,255,255,255),1)){g.FillPath(fill,outline);g.DrawPath(border,outline);}
             using(var titleFont=new Font("Segoe UI",20,FontStyle.Bold,GraphicsUnit.Pixel))using(var textFont=new Font("Microsoft YaHei UI",12,FontStyle.Regular,GraphicsUnit.Pixel))using(var ink=new SolidBrush(Color.FromArgb(245,248,246)))using(var format=new StringFormat{Alignment=StringAlignment.Center,LineAlignment=StringAlignment.Center}){
-                g.DrawString("KAMUCL",titleFont,ink,new RectangleF(panel.X,panel.Y+10,panel.Width,30),format);
+                g.DrawString("FAIONYX",titleFont,ink,new RectangleF(panel.X,panel.Y+10,panel.Width,30),format);
                 g.DrawString(caption,textFont,ink,new RectangleF(panel.X+10,panel.Y+44,panel.Width-20,25),format);
             }
         }

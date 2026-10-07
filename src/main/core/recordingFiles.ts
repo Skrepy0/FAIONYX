@@ -48,7 +48,7 @@ export async function copyRecording(source: string, destination: string, signal?
   if (!before.isFile() || before.isSymbolicLink()) throw new Error('录像不是普通文件')
   const root = await fs.promises.realpath(destination)
   if ((await fs.promises.lstat(destination)).isSymbolicLink()) throw new Error('目标目录不能是链接')
-  const stage = path.join(root, '.kamucl-recording-' + crypto.randomUUID() + '.part')
+  const stage = path.join(root, '.faionyx-recording-' + crypto.randomUUID() + '.part')
   const digest = crypto.createHash('sha256'); let done = 0
   const gate = new Transform({ transform(chunk, _encoding, cb) { waitIfTaskPaused(signal).then(() => { digest.update(chunk); done += chunk.length; progress?.(done); cb(null, chunk) }, cb) } })
   try {

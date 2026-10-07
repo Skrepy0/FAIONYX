@@ -2,7 +2,7 @@
 import { launch, killGame } from '../src/main/core/launch'
 import fs from 'node:fs'
 
-const ACCOUNTS = 'C:/Users/ROG/AppData/Roaming/kamucl/accounts.json'
+const ACCOUNTS = 'C:/Users/ROG/AppData/Roaming/faionyx/accounts.json'
 
 async function main() {
   // 临时切换选中账号为离线账号（测完恢复）

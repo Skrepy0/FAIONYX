@@ -70,16 +70,16 @@ try {
   launcherLogWarn('main', 'crashReporter 初始化失败，不阻断启动', error)
 }
 
-launcherLogInfo('main', '注册特权协议方案：kamucl-asset / kamucl-plugin')
+launcherLogInfo('main', '注册特权协议方案：faionyx-asset / faionyx-plugin')
 
 protocol.registerSchemesAsPrivileged([
   {
-    scheme: 'kamucl-asset',
+    scheme: 'faionyx-asset',
     // 仅供 <img>/CSS 读取，不开放 renderer fetch，缩小本地资源协议的攻击面。
     privileges: { standard: true, secure: true, stream: true }
   },
   {
-    scheme: 'kamucl-plugin',
+    scheme: 'faionyx-plugin',
     // 插件脚本协议：仅服务已启用插件的 main.js（见 core/plugins.ts registerPluginProtocol）。
     privileges: { standard: true, secure: true, stream: true }
   }
@@ -109,7 +109,7 @@ function createWindow(startup?: Awaited<ReturnType<typeof createStartupSplash>>)
     ...initialWindow,
     icon: join(__dirname, '../../build/icon.png'),
     show: false,
-    title: 'KAMUCL',
+    title: 'FAIONYX',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: true,
@@ -213,7 +213,7 @@ app.whenReady().then(async () => {
   } catch (error) {
     launcherLogWarn('appearance', '旧版外观资源迁移失败，不阻断启动', error)
   }
-  protocol.handle('kamucl-asset', (request) => {
+  protocol.handle('faionyx-asset', (request) => {
     if (request.method !== 'GET') return new Response('Method Not Allowed', { status: 405 })
     try {
       const candidate = new URL(request.url).searchParams.get('path') ?? ''

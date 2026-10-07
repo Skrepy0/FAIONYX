@@ -28,9 +28,9 @@ async function fixture(options: {
   generateKeyPair?: (callback: (error: Error | null, publicKey: Buffer, privateKey: Buffer) => void) => void
   onListen?: () => void; onWrite?: () => void
 } = {}) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'KAMUCL preparation118 ')), bytes = await png
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX preparation118 ')), bytes = await png
   const filePath = path.join(root, 'skin.png'); fs.writeFileSync(filePath, bytes)
-  fs.writeFileSync(path.join(root, 'kamucl-offline-skin.jar'), 'bundled-agent-fixture')
+  fs.writeFileSync(path.join(root, 'faionyx-offline-skin.jar'), 'bundled-agent-fixture')
   const snapshot = { filePath, sha256: crypto.createHash('sha256').update(bytes).digest('hex'), variant: 'slim' }
   const observed = { skinIds: [] as string[], injector: 0, keys: 0, servers: [] as net.Server[] }
   const require = createRequire(path.resolve('package.json')), module = { exports: {} as any }

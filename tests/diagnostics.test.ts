@@ -50,7 +50,7 @@ test('诊断文件名过滤 Windows 非法字符，路径隐藏当前用户主�
 })
 
 test('诊断归档生成真实 ZIP，记录缺失项并脱敏每份文本', async () => {
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-diagnostic-test-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-diagnostic-test-'))
   const source = path.join(root, 'latest.log')
   const missing = path.join(root, 'debug.log')
   const destination = path.join(root, 'diagnostic.zip')

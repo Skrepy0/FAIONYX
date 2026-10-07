@@ -128,7 +128,7 @@ test('网络中断后使用 Range 续传并保持单文件进度单调', async (
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
   const address = server.address()
   assert.ok(address && typeof address !== 'string')
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-resume-test-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-resume-test-'))
   const dest = path.join(root, 'client.jar')
   const values: number[] = []
   try {
@@ -176,7 +176,7 @@ test('多文件并行下载的真实字节进度单调，暂停时停止写盘�
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
   const address = server.address()
   assert.ok(address && typeof address !== 'string')
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-pause-test-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-pause-test-'))
   const task = registerTask('暂停恢复测试', 'download')
   const snapshots: DownloadBatchProgress[] = []
   const base = `http://127.0.0.1:${address.port}`

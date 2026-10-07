@@ -1,14 +1,14 @@
 /**
- * 插件加载器：以 <script src="kamucl-plugin://<id>/main.js"> 方式加载启用的 JS 插件。
- * 走自定义协议而非 eval/inline，页面 CSP 仅需精确放行 kamucl-plugin: 脚本源。
- * 插件通过全局单例 window.kamuclPlugin 使用 API：toast / 视图事件 / 样式注入 /
+ * 插件加载器：以 <script src="faionyx-plugin://<id>/main.js"> 方式加载启用的 JS 插件。
+ * 走自定义协议而非 eval/inline，页面 CSP 仅需精确放行 faionyx-plugin: 脚本源。
+ * 插件通过全局单例 window.faionyxPlugin 使用 API：toast / 视图事件 / 样式注入 /
  * store 引用，并可直接操作 DOM 更改 UI。仅安装可信来源的插件。
  */
 import { watch } from 'vue'
 import { listPlugins } from './api'
 import { store, toast } from './store'
 
-export interface KamuclPluginApi {
+export interface FaionyxPluginApi {
   /** 全局 toast 通知 */
   toast: typeof toast
   /** 注入自定义 CSS（更改界面样式） */
@@ -25,7 +25,7 @@ export interface KamuclPluginApi {
 
 declare global {
   interface Window {
-    kamuclPlugin?: KamuclPluginApi
+    faionyxPlugin?: FaionyxPluginApi
   }
 }
 
@@ -37,11 +37,11 @@ function installGlobalApi(): void {
   if (apiInstalled) return
   apiInstalled = true
   const viewCallbacks = new Set<(view: string) => void>()
-  window.kamuclPlugin = {
+  window.faionyxPlugin = {
     toast,
     addStyles(css) {
       const el = document.createElement('style')
-      el.dataset.kamuclPlugin = 'true'
+      el.dataset.faionyxPlugin = 'true'
       el.textContent = String(css)
       document.head.appendChild(el)
     },
@@ -78,14 +78,14 @@ export async function loadEnabledPlugins(): Promise<void> {
   for (const plugin of enabled) {
     await new Promise<void>((resolve) => {
       const el = document.createElement('script')
-      el.src = `kamucl-plugin://${encodeURIComponent(plugin.id)}/main.js`
-      el.dataset.kamuclPlugin = plugin.id
+      el.src = `faionyx-plugin://${encodeURIComponent(plugin.id)}/main.js`
+      el.dataset.faionyxPlugin = plugin.id
       el.onload = () => {
-        console.info(`[KAMUCL] 插件已加载：${plugin.id}`)
+        console.info(`[FAIONYX] 插件已加载：${plugin.id}`)
         resolve()
       }
       el.onerror = () => {
-        console.warn(`[KAMUCL] 插件加载失败：${plugin.id}`)
+        console.warn(`[FAIONYX] 插件加载失败：${plugin.id}`);
         resolve()
       }
       document.head.appendChild(el)

@@ -3,17 +3,17 @@
   "date": "2026-10-03 14:43",
   "artifacts": [
     {
-      "name": "KAMUCL-1.1.10.exe",
+      "name": "FAIONYX-1.1.10.exe",
       "bytes": 97277567,
       "sha256": "92e93260179b75f36d3e145ad70f7c4e818042d6de60fadf3949a372249b50da"
     },
     {
-      "name": "KAMUCL-1.1.10-windows-x64.zip",
+      "name": "FAIONYX-1.1.10-windows-x64.zip",
       "bytes": 97309139,
       "sha256": "76cfb0eebf917a639b6551b0d360c47ddc71850239799a303430dce1fca95442"
     },
     {
-      "name": "KAMUCL-1.1.10-windows-x64-unpacked.zip",
+      "name": "FAIONYX-1.1.10-windows-x64-unpacked.zip",
       "bytes": 143049447,
       "sha256": "d1b42165dedeed4d32f53559da120af90fd083001959deb63f23013bb2a5edd7"
     }
@@ -67,40 +67,40 @@
     },
     "portable": {
       "pass": true,
-      "root": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-Jzu2Kr",
+      "root": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-Jzu2Kr",
       "results": [
         {
           "phase": "cold",
           "firstPaintMs": 491,
           "electronEntryMs": 5623,
-          "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-Jzu2Kr\\KAMUCL-runtime\\1.1.10-6a4e15aaeb951757\\cache.ready",
+          "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-Jzu2Kr\\FAIONYX-runtime\\1.1.10-6a4e15aaeb951757\\cache.ready",
           "cacheMtime": 1791009777485.5994
         },
         {
           "phase": "warm",
           "firstPaintMs": 333,
           "electronEntryMs": 217,
-          "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-Jzu2Kr\\KAMUCL-runtime\\1.1.10-6a4e15aaeb951757\\cache.ready",
+          "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-Jzu2Kr\\FAIONYX-runtime\\1.1.10-6a4e15aaeb951757\\cache.ready",
           "cacheMtime": 1791009777485.5994
         }
       ]
     },
     "zipped": {
       "pass": true,
-      "root": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-DeTM5i",
+      "root": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-DeTM5i",
       "results": [
         {
           "phase": "cold",
           "firstPaintMs": 505,
           "electronEntryMs": 5772,
-          "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-DeTM5i\\KAMUCL-runtime\\1.1.10-6a4e15aaeb951757\\cache.ready",
+          "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-DeTM5i\\FAIONYX-runtime\\1.1.10-6a4e15aaeb951757\\cache.ready",
           "cacheMtime": 1791009786271.928
         },
         {
           "phase": "warm",
           "firstPaintMs": 411,
           "electronEntryMs": 292,
-          "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-DeTM5i\\KAMUCL-runtime\\1.1.10-6a4e15aaeb951757\\cache.ready",
+          "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-DeTM5i\\FAIONYX-runtime\\1.1.10-6a4e15aaeb951757\\cache.ready",
           "cacheMtime": 1791009786271.928
         }
       ]

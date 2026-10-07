@@ -297,7 +297,7 @@ async function pickFile(f: File | undefined | null) {
     toast('请选择 PNG 格式的皮肤文件', 'error')
     return
   }
-  const p = window.kamucl.getFilePath(f)
+  const p = window.faionyx.getFilePath(f)
   if (!p) {
     toast('无法获取文件路径', 'error')
     return
@@ -571,10 +571,10 @@ watch(
           <p data-ui="SkinsView:aa2915a1b866" v-if="canApplySkin" class="muted skin-hint">支持 64×64 的 PNG 皮肤文件</p>
           <div data-ui="SkinsView:252d1a5f5b2f" v-else class="external-skin-note">
             <span data-ui="SkinsView:d35771891dd7" class="tag tag-cyan">{{ store.selectedAccount?.providerName }}</span>
-            <p data-ui="SkinsView:d7b70906b3c5" class="muted skin-hint">外置账号的皮肤与披风由所属皮肤站管理；KAMUCL 会读取并在启动时加载当前材质。</p>
+            <p data-ui="SkinsView:d7b70906b3c5" class="muted skin-hint">外置账号的皮肤与披风由所属皮肤站管理；FAIONYX 会读取并在启动时加载当前材质。</p>
           </div>
           <p v-if="isOffline" class="muted skin-hint offline-skin-hint">离线账号皮肤仅在本机游戏显示，修改从下次启动生效；其他玩家看到的皮肤由服务器决定。首次启动会从作者官方来源下载并校验 authlib-injector 皮肤加载组件，之后可在断网时使用缓存。</p>
-          <p v-if="isOffline && !currentSkin" class="muted skin-hint">尚未应用本地皮肤。此处显示 KAMUCL 默认预览，游戏使用自身默认皮肤。</p>
+          <p v-if="isOffline && !currentSkin" class="muted skin-hint">尚未应用本地皮肤。此处显示 FAIONYX 默认预览，游戏使用自身默认皮肤。</p>
 
           <input data-ui="SkinsView:e63f2137c12b"
             ref="fileInput"

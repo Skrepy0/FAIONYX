@@ -86,7 +86,7 @@ test('real metadata: custom names, flattened profiles, inherited loaders and mis
 })
 
 test('parse real JAR metadata for all supported loaders; arrays preserve OR semantics', async () => {
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-mod-parser-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-mod-parser-'))
   try {
     const cases = [
       ['fabric.mod.json', JSON.stringify({ id: 'x', depends: { minecraft: ['1.20.1', '26.2'], fabricloader: ['>=0.15 <0.16', '>=0.19'] } }), 'fabric'],
@@ -107,7 +107,7 @@ test('parse real JAR metadata for all supported loaders; arrays preserve OR sema
 })
 
 test('all registered roots, duplicate IDs, isolation destination, backend revalidation and no overwrite', async () => {
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-mod-targets-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-mod-targets-'))
   try {
     const folders = ['A', 'B'].map(n => path.join(root, n))
     folders.forEach(f => fs.mkdirSync(f))

@@ -31,14 +31,14 @@ export function setUpdateEmitter(fn: Emitter): void { emit = fn }
 
 /**
  * 当前运行的便携 exe（外层启动器）路径。
- * 便携包运行时进程在 KAMUCL-runtime 内，外层 exe 由 electron-builder 注入 PORTABLE_EXECUTABLE_FILE；
- * 测试可用 KAMUCL_UPDATE_TARGET_EXE 指向沙盒副本走全链路。
+ * 便携包运行时进程在 FAIONYX-runtime 内，外层 exe 由 electron-builder 注入 PORTABLE_EXECUTABLE_FILE；
+ * 测试可用 FAIONYX_UPDATE_TARGET_EXE 指向沙盒副本走全链路。
  */
 export function currentPortableExe(): string | null {
   if (process.platform === 'darwin') return macAppTarget()
   if (process.platform === 'linux') return linuxAppTarget()
   if (process.platform !== 'win32') return null
-  return (isolatedUpdateTest() && process.env.KAMUCL_UPDATE_TARGET_EXE) || process.env.PORTABLE_EXECUTABLE_FILE || null
+  return (isolatedUpdateTest() && process.env.FAIONYX_UPDATE_TARGET_EXE) || process.env.PORTABLE_EXECUTABLE_FILE || null
 }
 
 /** 是否支持自更新（仅便携包运行或测试注入目标时） */
@@ -51,14 +51,14 @@ export function updateSupported(): boolean {
 function updateDirOf(exe: string): string {
   if (process.platform === 'darwin') return macUpdateDir()
   if (process.platform === 'linux') return linuxUpdateDir()
-  return path.join(path.dirname(exe), 'KAMUCL-update')
+  return path.join(path.dirname(exe), 'FAIONYX-update')
 }
 function backupDirOf(exe: string): string {
-  return path.join(path.dirname(exe), 'KAMUCL-backup')
+  return path.join(path.dirname(exe), 'FAIONYX-backup')
 }
 
 function userDataDir(): string {
-  return isolatedUpdateTest() ? process.env.KAMUCL_USERDATA_DIR! : app.getPath('userData')
+  return isolatedUpdateTest() ? process.env.FAIONYX_USERDATA_DIR! : app.getPath('userData')
 }
 function stateFile(): string {
   return path.join(userDataDir(), 'update-state.json')
@@ -269,7 +269,7 @@ let activeDownload: { version: string; handle: UpdateDownloadHandle } | null = n
  * 完成后强制 SHA256 校验。低速 30s 通过 emit 发一次内测群提示。
  */
 export function startUpdateDownload(release: ReleaseInfo, settings: Pick<Settings, 'updateSource' | 'updateMirrorUrl'>, mode: 'upgrade' | 'rollback'): UpdateDownloadHandle {
-  if (process.platform === 'darwin' && !macUpdateSupported()) throw new Error('请将 KAMUCL.app 拖入可写的应用程序目录后再更新')
+  if (process.platform === 'darwin' && !macUpdateSupported()) throw new Error('请将 FAIONYX.app 拖入可写的应用程序目录后再更新')
   if (!trustedUpdateRelease(release)) throw new Error('更新来源无效，请重新检查官方版本')
   if (activeDownload) {
     if (activeDownload.version === release.version) return activeDownload.handle
@@ -281,7 +281,7 @@ export function startUpdateDownload(release: ReleaseInfo, settings: Pick<Setting
   // Keep the previous ready update until its replacement has been fully verified.
   const updateDir = path.join(updateDirOf(exe), release.version)
   fs.mkdirSync(updateDir, { recursive: true })
-  const dest = path.join(updateDir, release.assetName || `KAMUCL-${release.version}.exe`)
+  const dest = path.join(updateDir, release.assetName || `FAIONYX-${release.version}.exe`)
 
   const task = registerTask(`${mode === 'rollback' ? '回退' : '下载'}启动器 v${release.version}`, 'download')
   const [url, ...alternates] = updateDownloadCandidates(release.assetUrl, settings)
@@ -353,7 +353,7 @@ export function resetSpeedSamplerForTest(): void {}
 async function spawnUpdater(spec: UpdaterScriptSpec): Promise<number> {
   const { spawnDetachedProcess, windowsQuote } = await import('./gracefulClose')
   spec.launchArguments = process.argv.slice(1).map(windowsQuote).join(' ')
-  const scriptFile = path.join(os.tmpdir(), `kamucl-updater-${spec.transaction.id}.ps1`)
+  const scriptFile = path.join(os.tmpdir(), `faionyx-updater-${spec.transaction.id}.ps1`)
   fs.writeFileSync(scriptFile, '\uFEFF' + buildUpdaterScript(spec), 'utf8')
   const pid = await spawnDetachedProcess('powershell.exe', ['-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', scriptFile], { cwd: os.tmpdir() })
   if (!pid) throw new Error('无法启动更新助手，当前启动器已保留')
@@ -374,20 +374,20 @@ export async function restoreBackupAndRestart(): Promise<void> {
   if (!state || !exe) throw new Error('没有可用的备份')
   if (process.platform === 'darwin') return stageMacBackup(state.backupPath, state.backupVersion)
   if (process.platform === 'linux') return stageLinuxBackup(state.backupPath, state.backupVersion)
-  const dest = path.join(updateDirOf(exe), randomUUID(), `KAMUCL-${state.backupVersion}.exe`)
+  const dest = path.join(updateDirOf(exe), randomUUID(), `FAIONYX-${state.backupVersion}.exe`)
   fs.mkdirSync(path.dirname(dest), { recursive: true }); fs.copyFileSync(state.backupPath, dest)
   await writePendingUpdate({ version: state.backupVersion, publishedAt: '', body: '', assetUrl: '', assetSize: fs.statSync(dest).size, assetName: path.basename(dest) }, dest, await sha256File(dest), 'rollback')
 }
 
 /** 校验本地安装包：版本号（文件名解析）与 SHA256（联网比对 Release，离线则 unknown 由用户自担确认） */
-const EXE_VERSION_RE = /^KAMUCL-(\d+\.\d+\.\d+(?:\.\d+)?)/i
+const EXE_VERSION_RE = /^FAIONYX-(\d+\.\d+\.\d+(?:\.\d+)?)/i
 export async function checkLocalUpdateFile(filePath: string): Promise<LocalUpdateCheck> {
   const fileName = path.basename(filePath)
   const st = fs.statSync(filePath)
   const m = EXE_VERSION_RE.exec(fileName)
   const version = m?.[1] ?? ''
-  if (process.platform === 'darwin' && (!version || fileName !== updateAssetName(version))) throw new Error('请选择当前 Mac 架构的 KAMUCL-版本-mac-' + process.arch + '.zip')
-  if (process.platform === 'linux' && (!version || fileName !== updateAssetName(version))) throw new Error('请选择当前 Linux 架构及安装方式的 KAMUCL 更新包')
+  if (process.platform === 'darwin' && (!version || fileName !== updateAssetName(version))) throw new Error('请选择当前 Mac 架构的 FAIONYX-版本-mac-' + process.arch + '.zip')
+  if (process.platform === 'linux' && (!version || fileName !== updateAssetName(version))) throw new Error('请选择当前 Linux 架构及安装方式的 FAIONYX 更新包')
   const current = currentVersion()
   const versionOk = !!version && compareSemver(version, current) >= 0
   let sha: LocalUpdateCheck['sha256'] = 'unknown'

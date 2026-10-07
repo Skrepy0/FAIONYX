@@ -54,12 +54,12 @@ test('persistent pending state times out with every original sample; observer er
 
 async function rendererRead({origin=200,readyState='complete',storeCount=1}={}){
   const store='{initialized:true,currentView:"home",accounts:[{username:"private-placeholder"}],installed:[],tasks:[],settings:{theme:"black-orange"}}'
-  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-theme-reader113-')),file=path.join(directory,'entry.mjs'),moduleURL=pathToFileURL(file).href
+  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-theme-reader113-')),file=path.join(directory,'entry.mjs'),moduleURL=pathToFileURL(file).href
   fs.writeFileSync(file,`export const minifiedAlias=${store};${storeCount===2?`export const second=${store};`:''}`,{flag:'wx'})
   let requests=0
   const run=new Function('performance','document','window',`return (${readActualRendererTheme.toString()})(100)`)
   try{
-    const result=await run({timeOrigin:origin},{URL:expected.url,readyState,documentElement:{dataset:{theme:'black-orange'}},querySelectorAll:()=>[{src:moduleURL}]},{kamucl:{invoke:async channel=>{assert.equal(channel,'settings:get');requests++;return{theme:'black-orange'}}}})
+    const result=await run({timeOrigin:origin},{URL:expected.url,readyState,documentElement:{dataset:{theme:'black-orange'}},querySelectorAll:()=>[{src:moduleURL}]},{faionyx:{invoke:async channel=>{assert.equal(channel,'settings:get');requests++;return{theme:'black-orange'}}}})
     return{result,requests,moduleURL}
   }finally{fs.unlinkSync(file);fs.rmdirSync(directory)}
 }

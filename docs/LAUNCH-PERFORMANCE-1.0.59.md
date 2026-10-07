@@ -34,9 +34,9 @@ EXE 减少 465,155 字节，约 0.44MiB / 0.69%。ZIP 使用相同压缩格式�
 
 Windows EXE SHA256：`a1bd582c147cec06cd8b6d79a3119a97d33e4ff0232e62801d0be4540b7e44dd`。
 
-Mac 原生构建与 APP/DMG 启动验证：[34588000755](https://github.com/kamubaba-i/KAMUCL/actions/runs/34588000755)，ARM64 与 Intel 均通过。继续沿用 ad-hoc 签名，未做 Apple 开发者签名及公证。
+Mac 原生构建与 APP/DMG 启动验证：[34588000755](https://github.com/Skrepy0/FAIONYX/actions/runs/34588000755)，ARM64 与 Intel 均通过。继续沿用 ad-hoc 签名，未做 Apple 开发者签名及公证。
 
 本地证据：`out/launch-preparation-benchmark-1059.json`、`out/release-1.0.59-proof.json`、`out/release-1.0.59-payload.json`、`out/network-ui-qAOC5x`。
 
 
-发布验证（2026-09-11 18:21）：[v1.0.59](https://github.com/kamubaba-i/KAMUCL/releases/tag/v1.0.59)，Release ID `386947754`。标签绑定构建源码 `6d880d14459a13fd388c100184e04dab75a625dc`，Windows EXE/ZIP、Mac 两架构 APP ZIP/DMG 与统一 SHA256SUMS.txt 共七个远端附件的大小和 SHA256 digest 全部匹配。成品归档 `release/final-1.0.59`。
+发布验证（2026-09-11 18:21）：[v1.0.59](https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.59)，Release ID `386947754`。标签绑定构建源码 `6d880d14459a13fd388c100184e04dab75a625dc`，Windows EXE/ZIP、Mac 两架构 APP ZIP/DMG 与统一 SHA256SUMS.txt 共七个远端附件的大小和 SHA256 digest 全部匹配。成品归档 `release/final-1.0.59`。

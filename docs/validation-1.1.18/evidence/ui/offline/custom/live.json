@@ -2,7 +2,7 @@
   "complete": true,
   "version": "1.1.18",
   "theme": "custom",
-  "directory": "E:\\KAMUCL\\out\\qa-offline118-custom-3a1b48dc-c3f7-4718-8355-c2029744f652",
+  "directory": "E:\\FAIONYX\\out\\qa-offline118-custom-3a1b48dc-c3f7-4718-8355-c2029744f652",
   "observations": [
     {
       "label": "real native focus",
@@ -7397,7 +7397,7 @@
     "ppid": 42260,
     "windowId": 1,
     "webContentsId": 1,
-    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 rEnLkm\\profile"
+    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 rEnLkm\\profile"
   },
   "initialViewport": {
     "native": {
@@ -7463,7 +7463,7 @@
   },
   "setup": {
     "complete": true,
-    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 rEnLkm\\profile"
+    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 rEnLkm\\profile"
   },
   "previousAccount": null,
   "accounts": [
@@ -7479,7 +7479,7 @@
     }
   ],
   "source": {
-    "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 rEnLkm\\offline118-custom.png",
+    "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 rEnLkm\\offline118-custom.png",
     "sha256": "f8580d5b181734d194389a95b3e15d9b4f3d44a1c20ed8fb88d878fd9b010303"
   },
   "nativeFocusObservations": [
@@ -10478,7 +10478,7 @@
   },
   "recording": {
     "version": "1.1.18",
-    "directory": "E:\\KAMUCL\\out\\offline118-editor-001cac3f-8c87-40a7-b2e2-b709eedff0cb-custom",
+    "directory": "E:\\FAIONYX\\out\\offline118-editor-001cac3f-8c87-40a7-b2e2-b709eedff0cb-custom",
     "capture": {
       "format": "jpeg",
       "quality": 70,

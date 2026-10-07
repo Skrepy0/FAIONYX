@@ -32,7 +32,7 @@ test('Linux pinned runtime inventory requires the actual codec, sandbox, Vulkan 
     assert.throws(() => assertLinuxElectronFiles(truncated, arch, '44.3.0'), /Truncated runtime ELF/)
     const invalid = fixture(arch); invalid['libffmpeg.so'].data.fill(0)
     assert.throws(() => assertLinuxElectronFiles(invalid, arch, '44.3.0'), /Invalid runtime ELF/)
-    const narrow = fixture(arch); narrow['kamucl'].data[4] = 1
+    const narrow = fixture(arch); narrow['faionyx'].data[4] = 1
     assert.throws(() => assertLinuxElectronFiles(narrow, arch, '44.3.0'), /64-bit/)
     const endian = fixture(arch); endian['libvulkan.so.1'].data[5] = 2
     assert.throws(() => assertLinuxElectronFiles(endian, arch, '44.3.0'), /little-endian/)

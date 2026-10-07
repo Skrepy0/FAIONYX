@@ -66,7 +66,7 @@ test('跨平台备用下载只接受 SHA1、大小都一致的官方文件，不
 })
 
 for (const outcome of ['included', 'mismatch', 'missing', 'supplied'] as const) test(`真实整合包导入：${outcome}，受限模组必须有精确副本`, {timeout:15000}, async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-bundled-1080-')), game = path.join(root, 'game'), id = '包内文件验证'
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-bundled-1080-')), game = path.join(root, 'game'), id = '包内文件验证'
   fs.mkdirSync(game)
   const bundled = Buffer.from('restricted-mod'), network = Buffer.from('downloaded-mod'), client = Buffer.from('client fixture')
   const requests: string[] = []
@@ -126,7 +126,7 @@ for (const outcome of ['included', 'mismatch', 'missing', 'supplied'] as const) 
       assert.deepEqual(accepted, { accepted: 1, remaining: 0, rejected: [] })
       assert.deepEqual(fs.readFileSync(good), bundled)
 
-      assert(!fs.existsSync(path.join(otherFolder, '.kamucl', 'modpack-cache')))
+      assert(!fs.existsSync(path.join(otherFolder, '.faionyx', 'modpack-cache')))
       runtime.getSettings().folders[0].path = game
     }
     const instance = path.join(game, 'versions', id)
@@ -144,7 +144,7 @@ for (const outcome of ['included', 'mismatch', 'missing', 'supplied'] as const) 
       assert(requests.includes('/network'))
       assert.equal(requests.some(r => r.includes('restricted.jar')), outcome === 'supplied', 'only missing files need a CDN probe')
       assert.equal(events.at(-1).stage, 'done')
-      const managed = JSON.parse(fs.readFileSync(path.join(instance, '.kamucl-modpack.json'), 'utf8')).managedFiles
+      const managed = JSON.parse(fs.readFileSync(path.join(instance, '.faionyx-modpack.json'), 'utf8')).managedFiles
       assert(managed.includes('mods/' + localName)); assert(managed.includes('mods/network.jar'))
       if (outcome === 'supplied') {
         const downloads = requests.filter(r => r === '/network').length

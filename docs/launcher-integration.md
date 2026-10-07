@@ -1,6 +1,6 @@
 # VoxLink 启动器集成规范（Launcher Integration）
 
-> 本文档面向第三方启动器（如 KAMUCL，Electron/JS 技术栈）对接 VoxLink 联机服务。
+> 本文档面向第三方启动器（如 FAIONYX，Electron/JS 技术栈）对接 VoxLink 联机服务。
 > 目标读者是 AI 助手：按 §0 任务清单执行；所有对接细节以本文档为权威，参考实现一律读
 > §8 列出的 GitHub 源码文件（只读参考，**不得修改 VoxLink 仓库**）。
 > 参考实现基线：**VoxLink 1.1.9**（`fabric/1.20_1.20.1`）。
@@ -179,7 +179,7 @@
    - `required`：以 client_side 非 `optional`/`unsupported` 的模组为根，沿 `dependencies` 中
      `dependency_type=="required"` 闭包（BFS，visited 按 project_id 去重），剔除 server-only；
    - `all`：全部 MR 可识别模组（server-only 除外），不区分 client_side；
-5. User-Agent 带产品标识（如 `KAMUCL-App/<版本>`）；HTTP 429 按 `Retry-After` 退避；
+5. User-Agent 带产品标识（如 `FAIONYX-App/<版本>`）；HTTP 429 按 `Retry-After` 退避；
    4xx 永久失败不重试；5xx/网络错误重试 3 次（1s/3s 退避）。
 
 ### 3.5 房客侧 diff（严格参考 [`ModSyncGuestService.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/modsync/ModSyncGuestService.java)）

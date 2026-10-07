@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-// KAMUCL HTTP adapter. Endpoint/envelope contract: VoxLink SignalingClient.java 6b11d93.
+// FAIONYX HTTP adapter. Endpoint/envelope contract: VoxLink SignalingClient.java 6b11d93.
 import { version } from '../../../../package.json'
 export const APP_VERSION = version
 export const DEFAULT_SERVER_URL = 'https://p2p.wuhui.icu'
 export const HTTP_TIMEOUT_MS = 10_000
 export const MAX_RESPONSE_LEN = 4 << 20
-export const CLIENT_TAG = 'kamucl'
+export const CLIENT_TAG = 'faionyx'
 export type QueryValue = string | number | boolean | undefined | null
 export interface Envelope { success: boolean; data?: unknown; error?: string; message?: string }
 export interface ApiClientOptions { userAgent?: string; timeoutMs?: number }
@@ -20,7 +20,7 @@ export class ApiClient {
   readonly userAgent: string
   readonly timeoutMs: number
   private deadlines = new Map<string, number>()
-  constructor(options: ApiClientOptions = {}) { this.userAgent = options.userAgent ?? `KAMUCL-App/${APP_VERSION}`; this.timeoutMs = options.timeoutMs ?? HTTP_TIMEOUT_MS }
+  constructor(options: ApiClientOptions = {}) { this.userAgent = options.userAgent ?? `FAIONYX-App/${APP_VERSION}`; this.timeoutMs = options.timeoutMs ?? HTTP_TIMEOUT_MS }
   async do(base: string, method: 'GET' | 'POST', route: string, query: Record<string, QueryValue | QueryValue[]>, body: unknown, signal?: AbortSignal): Promise<unknown> {
     if (!validateServerURL(base)) throw new APIError('NETWORK', '服务器地址无效')
     const key = route === '/room/update' ? `${base}|${String((body as { code?: string })?.code ?? '')}` : ''

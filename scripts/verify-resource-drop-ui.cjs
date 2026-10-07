@@ -23,7 +23,7 @@ app.whenReady().then(async()=>{
  b.onResolve({filter:/^@shared\//},a=>({path:path.resolve('src/shared',a.path.slice(8)+'.ts')}))
  b.onLoad({filter:/\.vue$/},a=>({contents:/KeysView|FileManager/.test(a.path)?compileScript(parse(fs.readFileSync(a.path,'utf8')).descriptor,{id:path.basename(a.path),inlineTemplate:true}).content:'export default {render:()=>null}',loader:'ts',resolveDir:path.dirname(a.path)}))
  }}]});fs.writeFileSync(path.join(root,'ui.js'),bundle.outputFiles[0].text)
- fs.writeFileSync(path.join(root,'index.html'),`<div id="app"></div><script>window.qa={imports:[],defaults:[],lists:[],toasts:[],global:0,errors:[]};window.kamucl={getFilePath:f=>f.name};window.addEventListener('error',e=>qa.errors.push(e.message))</script><script src="ui.js"></script>`)
+ fs.writeFileSync(path.join(root,'index.html'),`<div id="app"></div><script>window.qa={imports:[],defaults:[],lists:[],toasts:[],global:0,errors:[]};window.faionyx={getFilePath:f=>f.name};window.addEventListener('error',e=>qa.errors.push(e.message))</script><script src="ui.js"></script>`)
  const win=new BrowserWindow({show:false,webPreferences:{contextIsolation:true}}),run=s=>win.webContents.executeJavaScript(s),wait=()=>new Promise(r=>setTimeout(r,100))
  await win.loadFile(path.join(root,'index.html'));await wait()
  async function drop(name){await run(`(()=>{const dt=new DataTransfer();dt.items.add(new File(['test'],${JSON.stringify(name)}));for(const type of ['dragenter','dragover','drop'])document.querySelector('#app .page')?.dispatchEvent(new DragEvent(type,{dataTransfer:dt,bubbles:true,cancelable:true}))})()`);await wait()}

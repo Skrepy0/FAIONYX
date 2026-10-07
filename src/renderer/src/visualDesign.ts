@@ -19,14 +19,14 @@ let refresh=()=>{},saveTimer:ReturnType<typeof setTimeout>|undefined,saveQueue:P
 export const designDirty=computed(()=>!!designDraft.value&&JSON.stringify(designDraft.value)!==baseline)
 export async function beginDesign(){
  const base=appearance(store.settings!);baseline=JSON.stringify(base);designDraft.value=base;designHistory.value=[];designFuture.value=[];designSelection.value='';designRecovered.value=false;designSaveState.value=''
- try{const saved=await window.kamucl.invoke('appearance:draftRead') as Appearance|null;if(saved&&store.editMode){designDraft.value=saved;designRecovered.value=JSON.stringify(saved)!==baseline}}catch{designSaveState.value='草稿读取失败'}
+ try{const saved=await window.faionyx.invoke('appearance:draftRead') as Appearance|null;if(saved&&store.editMode){designDraft.value=saved;designRecovered.value=JSON.stringify(saved)!==baseline}}catch{designSaveState.value='草稿读取失败'}
  refresh()
 }
 export function checkpoint(){designHistory.value.push(copy());if(designHistory.value.length>50)designHistory.value.shift();designFuture.value=[]}
 export async function flushDesign(){
  clearTimeout(saveTimer);saveTimer=undefined;if(!designDraft.value)return
  const snapshot=copy();designSaveState.value='正在保存草稿…'
- const work=saveQueue.catch(()=>{}).then(()=>window.kamucl.invoke('appearance:draftSave',snapshot));saveQueue=work
+ const work=saveQueue.catch(()=>{}).then(()=>window.faionyx.invoke('appearance:draftSave',snapshot));saveQueue=work
  try{await work;designSaveState.value='草稿已保存'}catch(e){designSaveState.value='草稿保存失败，请重试';throw e}
 }
 function scheduleSave(){clearTimeout(saveTimer);designSaveState.value='有未应用的修改';saveTimer=setTimeout(()=>void flushDesign().catch(()=>{}),400)}
@@ -34,9 +34,9 @@ function persist(design:VisualDesign){if(!designDraft.value)return;designDraft.v
 export function previewAppearance(value:Partial<Settings>){checkpoint();designDraft.value=appearance({...appearancePreview.value!,...value});scheduleSave();refresh()}
 export async function finishDesign(action:'apply'|'keep'|'discard'){
  clearTimeout(saveTimer);await saveQueue.catch(()=>{})
- if(action==='apply'){await flushDesign();store.settings=await window.kamucl.invoke('appearance:draftApply',copy()) as Settings}
+ if(action==='apply'){await flushDesign();store.settings=await window.faionyx.invoke('appearance:draftApply',copy()) as Settings}
  else if(action==='keep')await flushDesign()
- else await window.kamucl.invoke('appearance:draftDiscard')
+ else await window.faionyx.invoke('appearance:draftDiscard')
  designDraft.value=null;designRecovered.value=false;refresh()
 }
 export function changeComponent(patch:Partial<ComponentDesign>,record=true){const t=designSelected.value;if(!t||!designDraft.value)return;if(record)checkpoint();const d=JSON.parse(JSON.stringify(currentDesign.value)) as VisualDesign;const page=d.pages[t.scope]??={width:window.innerWidth,height:window.innerHeight,components:{}};page.components[t.key]={...page.components[t.key],...patch};persist(d)}

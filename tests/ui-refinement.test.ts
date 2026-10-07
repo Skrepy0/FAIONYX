@@ -3,8 +3,8 @@ import assert from 'node:assert/strict'
 import { resourceDisplayName, pageSelection, terracottaRole } from '../src/shared/uiPresentation'
 import { resolveComponentDesign } from '../src/shared/visualDesign'
 test('managed resource display names keep unrecognized filenames intact',()=>{
- const name='My-Pack-版本.zip';assert.equal(resourceDisplayName('KAMUCL-default-'+'a'.repeat(64)+'-'+name),name)
- for(const bad of ['KAMUCL-default-abc-'+name,'KAMUCL-default-'+'z'.repeat(64)+'-'+name,name])assert.equal(resourceDisplayName(bad),bad)
+ const name='My-Pack-版本.zip';assert.equal(resourceDisplayName('FAIONYX-default-'+'a'.repeat(64)+'-'+name),name)
+ for(const bad of ['FAIONYX-default-abc-'+name,'FAIONYX-default-'+'z'.repeat(64)+'-'+name,name])assert.equal(resourceDisplayName(bad),bad)
 })
 test('current-page selection excludes other pages and reports partial selection',()=>{
  assert.deepEqual(pageSelection([],new Set(['other'])),{all:false,partial:false})

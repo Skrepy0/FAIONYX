@@ -60,7 +60,7 @@ async function connectTransport(h){
 }
 
 async function runTrace(h,action,options={}){
-  const enabled=options.enabled===true||process.env.KAMUCL_NATIVE_COMPOSITOR_TRACE==='1'
+  const enabled=options.enabled===true||process.env.FAIONYX_NATIVE_COMPOSITOR_TRACE==='1'
   if(!enabled)return{enabled:false,actionExecuted:false,reason:'opt-in diagnostic only; no automatic registration'}
   if(options.separateRun!==true)throw Error('Tracing requires an explicitly separate diagnostic run')
   if(await h.main('process.platform')!=='darwin')throw Error('Native compositor trace requires Darwin')
@@ -79,7 +79,7 @@ async function runTrace(h,action,options={}){
     transport=options.transport||await connectTransport(h)
     unsubscribe=transport.subscribe((method,params)=>{if(method==='Tracing.tracingComplete')resolveComplete(params);else if(method==='__closed')rejectComplete(Error('Trace connection closed before completion'))})
     await transport.call('Tracing.start',{categories:categories.join(','),options:'record-until-full',transferMode:'ReturnAsStream',streamFormat:'json',streamCompression:'none'});started=true;proof.startAcknowledged=true
-    const name='KAMUCL-native-compositor-diagnostic-'+crypto.randomUUID()
+    const name='FAIONYX-native-compositor-diagnostic-'+crypto.randomUUID()
     marker=await h.evaluate(`(()=>{performance.mark(${JSON.stringify(name)});const m=performance.getEntriesByName(${JSON.stringify(name)}).at(-1);return{name:m.name,startTime:m.startTime,timeOrigin:performance.timeOrigin}})()`);proof.marker=marker
     await observe('before-action');proof.actionExecuted=true
     try{await action({observe})}catch(error){actionError=error;proof.errors.push({phase:'action',message:error.name||'Error'} /* arbitrary exception strings may contain input */)}

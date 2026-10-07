@@ -49,9 +49,9 @@ module.exports = async function (h, binding) {
   }
   const openCase = async options => {
     const row = await h.main(`__qaModProgress117.useCase(${JSON.stringify(options)})`); proof.cases.push(row); save()
-    row.registration = await h.evaluate(`window.kamucl.invoke('folders:add',${JSON.stringify(row.folder)})`)
+    row.registration = await h.evaluate(`window.faionyx.invoke('folders:add',${JSON.stringify(row.folder)})`)
     assert.equal(row.registration.folder.path, row.folder)
-    row.targets = await h.evaluate("window.kamucl.invoke('mods:targets')")
+    row.targets = await h.evaluate("window.faionyx.invoke('mods:targets')")
     assert(row.targets.versions.some(v => v.id === row.instance && v.folder === row.folder && v.mcVersion === '1.20.1' && v.loader === 'fabric'))
     // Public controls retain the original metadata fetch/download selection path.
     await text('[data-ui="CommunityView:bc0450fd9c8f"]', row.rootId); await key('Enter', 'Enter', 13)

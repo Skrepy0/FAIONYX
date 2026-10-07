@@ -12,7 +12,7 @@ import { CarouselPlayback } from '../src/shared/carouselPlayback'
 import { fileJobKey, withFileJob } from '../src/main/core/fileJobs'
 
 test('streamed ZIP preserves Chinese, spaces, §, entry bytes, SHA and output CRC', async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-stream113-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-stream113-'))
   const file = path.join(root, '中文 § 包.zip'), output = path.join(root, 'out.jar')
   const bytes = crypto.randomBytes(3 * 1024 * 1024), zip = new AdmZip()
   zip.addFile('overrides/mods/中文 § 测试.jar', bytes); zip.addFile('empty', Buffer.alloc(0)); zip.writeZip(file)
@@ -36,7 +36,7 @@ test('streamed ZIP preserves Chinese, spaces, §, entry bytes, SHA and output CR
 })
 
 test('streamed ZIP rejects corrupt CRC, bounded entries, cancellation and use after close', async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-stream113-failure-')), file = path.join(root, 'pack.zip')
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-stream113-failure-')), file = path.join(root, 'pack.zip')
   const zip = new AdmZip(); zip.addFile('data', Buffer.from('original payload')); zip.writeZip(file)
   let archive: StreamPackZip | undefined
   try {
@@ -67,7 +67,7 @@ test('streamed ZIP rejects corrupt CRC, bounded entries, cancellation and use af
 })
 
 test('streamed metadata and payload remain bound to the same open source when its pathname is replaced', async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-stream113-replaced-')), file = path.join(root, 'pack.zip')
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-stream113-replaced-')), file = path.join(root, 'pack.zip')
   const original = crypto.randomBytes(2 * 1024 * 1024), replacement = crypto.randomBytes(original.length)
   const zip = new AdmZip(); zip.addFile('data', original); zip.writeZip(file)
   const archive = await StreamPackZip.open(file, 10)
@@ -81,7 +81,7 @@ test('streamed metadata and payload remain bound to the same open source when it
 })
 
 test('archive metadata preserves native JSON and UTF8 semantics without a new document limit', async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-stream113-json-')), file = path.join(root, 'pack.zip')
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-stream113-json-')), file = path.join(root, 'pack.zip')
   const value = { name: '中文 § 🐷', description: crypto.randomBytes(1024 * 1024).toString('hex'), files: [] }
   const zip = new AdmZip(); zip.addFile('modrinth.index.json', Buffer.from(JSON.stringify(value))); zip.writeZip(file)
   const archive = await StreamPackZip.open(file, 10)
@@ -92,7 +92,7 @@ test('archive metadata preserves native JSON and UTF8 semantics without a new do
 })
 
 test('disposal drains accepted readers and outstanding positioned IO before closing their source FD', async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-stream113-drain-')), file = path.join(root, 'pack.zip')
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-stream113-drain-')), file = path.join(root, 'pack.zip')
   const original = crypto.randomBytes(4 * 1024 * 1024), zip = new AdmZip()
   zip.addFile('data', original); zip.writeZip(file)
   const archive = await StreamPackZip.open(file, 10), started = Promise.withResolvers<void>()
@@ -132,8 +132,8 @@ test('file streaming hash supports cancellation and missing files', async () => 
 })
 
 test('platform file locks canonicalize aliases without rewriting filenames or releasing an active writer on cancellation', { timeout: 15000 }, async () => {
-  const firstPath = path.join(os.tmpdir(), 'kamucl-lock113', 'Caf\u00e9'), otherPath = process.platform === 'darwin'
-    ? path.join(os.tmpdir(), 'kamucl-lock113', 'cafe\u0301') : process.platform === 'win32'
+  const firstPath = path.join(os.tmpdir(), 'faionyx-lock113', 'Caf\u00e9'), otherPath = process.platform === 'darwin'
+    ? path.join(os.tmpdir(), 'faionyx-lock113', 'cafe\u0301') : process.platform === 'win32'
       ? firstPath.toLowerCase() : firstPath
   assert.equal(fileJobKey(firstPath), fileJobKey(otherPath))
   const started = Promise.withResolvers<void>(), release = Promise.withResolvers<void>(), actions: string[] = []
@@ -155,7 +155,7 @@ test('PowerShell fallback opens only supplied launcher PID and reports native fa
   const script = trimSelfPowerShellScript(4711)
   assert(script.includes('OpenProcess(1280,$false,4711)'))
   assert(!script.includes('GetCurrentProcess'))
-  assert(script.includes('finally{[Win32.KamuclTrim]::CloseHandle'))
+  assert(script.includes('finally{[Win32.FaionyxTrim]::CloseHandle'))
   assert(script.includes('exit 1'))
   for (const pid of [0, -1, NaN, 1.5]) assert.throws(() => trimSelfPowerShellScript(pid))
 })

@@ -5,9 +5,9 @@ const fs = require('node:fs'), path = require('node:path'), crypto = require('no
 const native = require('./qa-native-window115.cjs')
 module.exports = async function(h) {
   assert.equal(process.platform, 'win32')
-  const directory = path.resolve('out', 'qa-offline118-' + (process.env.KAMUCL_TEST_THEME || 'black-orange') + '-' + crypto.randomUUID())
+  const directory = path.resolve('out', 'qa-offline118-' + (process.env.FAIONYX_TEST_THEME || 'black-orange') + '-' + crypto.randomUUID())
   fs.mkdirSync(directory, { recursive: true })
-  const proof = { complete: false, version: h.version, theme: process.env.KAMUCL_TEST_THEME, directory, observations: [], screenshots: [], classification: 'Actual owned Windows UI coordinate and keyboard input; genuine production PNG decoding and account-scoped disk storage. Deferred reply is an isolated scheduling fixture. No game launch or game-screen acceptance.' }
+  const proof = { complete: false, version: h.version, theme: process.env.FAIONYX_TEST_THEME, directory, observations: [], screenshots: [], classification: 'Actual owned Windows UI coordinate and keyboard input; genuine production PNG decoding and account-scoped disk storage. Deferred reply is an isolated scheduling fixture. No game launch or game-screen acceptance.' }
   const save = () => fs.writeFileSync(path.join(directory, 'live.json'), JSON.stringify(proof, null, 2))
   const identity = await h.main(`(()=>{const f=process.mainModule.require('node:fs'),w=testElectron.BrowserWindow.getAllWindows().filter(w=>w.webContents.getURL().includes('/renderer/index.html'));if(w.length!==1)throw Error('Ambiguous QA renderer');return{pid:process.pid,ppid:process.ppid,windowId:w[0].id,webContentsId:w[0].webContents.id,profile:f.realpathSync.native(testElectron.app.getPath('userData'))}})()`)
   assert(identity.pid === h.ownedTrack.pid || identity.ppid === h.ownedTrack.pid)
@@ -81,7 +81,7 @@ module.exports = async function(h) {
     await foreground(); return { label, ...value }
   }
   const key = async (key, code, vk) => { await foreground(); for (const type of ['keyDown', 'keyUp']) await h.call('Input.dispatchKeyEvent', { type, key, code, windowsVirtualKeyCode: vk }); await h.wait(120); await foreground() }
-  const invoke = (channel, ...args) => h.evaluate(`window.kamucl.invoke(${JSON.stringify(channel)},...${JSON.stringify(args)})`)
+  const invoke = (channel, ...args) => h.evaluate(`window.faionyx.invoke(${JSON.stringify(channel)},...${JSON.stringify(args)})`)
   const profile = accountId => invoke('skin:profile', true, accountId)
   const select = async account => {
     await nav('accounts')

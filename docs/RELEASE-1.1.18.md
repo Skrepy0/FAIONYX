@@ -1,4 +1,4 @@
-# KAMUCL 1.1.18 — Windows x64
+# FAIONYX 1.1.18 — Windows x64
 
 2026-10-07 14:54（香港时间）
 
@@ -11,6 +11,6 @@
 
 1343项回归中1342通过、0失败、1Linux专属跳过；类型/许可/构建/完整包/四主题真实UI通过。最终EXE在原生26.3/Fabric演示世界正确显示离线皮肤，GPU PNG哈希一致，正常保存退出，关闭材质包后再启动保持关闭。
 
-四JVM/认证库探针不冒称四版本完整游戏。社区事务用合成文件配合生产管线；用户原实例、旧Forge完整游戏、全部组合、两真实服务完整MOD游戏安装、多人显示、完整动效和人工听感未覆盖。Windows未签名。查看[验证范围](https://github.com/kamubaba-i/KAMUCL/blob/v1.1.18/docs/validation-1.1.18/README.md)与[独立评审](https://github.com/kamubaba-i/KAMUCL/blob/v1.1.18/docs/validation-1.1.18/INDEPENDENT_REVIEW.md)。
+四JVM/认证库探针不冒称四版本完整游戏。社区事务用合成文件配合生产管线；用户原实例、旧Forge完整游戏、全部组合、两真实服务完整MOD游戏安装、多人显示、完整动效和人工听感未覆盖。Windows未签名。查看[验证范围](https://github.com/Skrepy0/FAIONYX/blob/v1.1.18/docs/validation-1.1.18/README.md)与[独立评审](https://github.com/Skrepy0/FAIONYX/blob/v1.1.18/docs/validation-1.1.18/INDEPENDENT_REVIEW.md)。
 
 非实现者独立评分均≥8.5，最低外观8.6。蓝白主题窄窗待应用模型标签对比偏弱已记录，不影响主要操作，不宣称零缺陷。

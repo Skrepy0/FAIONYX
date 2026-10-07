@@ -11,7 +11,7 @@ const requireFixture = createRequire(path.resolve('package.json'))
 const { ROUTES, THEMES, LAYOUTS, ROUTE_COMPONENTS, assertNavigationCoverage, assertQueueLedger, publicAccount, stableHash, createQueueClickObserver, createInstallHandlerObserver, restoreInstallHandlerObserver, preserveInstallObservation, collectAndRestoreInstallObserver, preservePrimaryFailure, assertMatchingDownloadResponse, assertDownloadTargetSelection } = requireFixture('./scripts/verify-mac-parity-ui.cjs')
 const { parityRoot, assertRestartIdentity, assertNaturalOwnedClose, safeEvidence } = requireFixture('./scripts/verify-mac-parity.cjs')
 function temporary(t: TestContext) {
-  const base = fs.realpathSync.native(os.tmpdir()), root = fs.realpathSync.native(fs.mkdtempSync(path.join(base, 'KAMUCL synthetic Mac parity contract ')))
+  const base = fs.realpathSync.native(os.tmpdir()), root = fs.realpathSync.native(fs.mkdtempSync(path.join(base, 'FAIONYX synthetic Mac parity contract ')))
   assert(root.startsWith(base + path.sep))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   return root
@@ -109,7 +109,7 @@ test('Mac click observer cannot use another Event to finish a captured input and
   assert.equal(ledger.clicks.length, 1, 'unrelated clicks are not queue inputs')
 })
 test('Mac restart requires a different actual PID with the same profile, signed source, runtime, version and executable', () => {
-  const first = { version: 'synthetic', sourceCommit: 'b'.repeat(40), runtimeVersion: 'synthetic-runtime', arch: 'arm64', executable: '/private/app/KAMUCL', profile: '/private/qa/profile', pid: 500 }
+  const first = { version: 'synthetic', sourceCommit: 'b'.repeat(40), runtimeVersion: 'synthetic-runtime', arch: 'arm64', executable: '/private/app/FAIONYX', profile: '/private/qa/profile', pid: 500 }
   const restart = { ...first, pid: 501, actualUserData: first.profile, publicAccountsPersisted: true, mascotCountsPersisted: true, settingsPersisted: true, favoritePersisted: true }
   assertRestartIdentity(first, restart)
   for (const field of ['sourceCommit', 'runtimeVersion', 'executable', 'profile', 'arch', 'version']) assert.throws(() => assertRestartIdentity(first, { ...restart, [field]: 'foreign' }))
@@ -126,16 +126,16 @@ test('Mac restart cannot call a forced or foreign process termination a normal o
   assert.throws(() => assertNaturalOwnedClose({ ...actual, child: { ...actual.child, events: [...actual.child.events, { event: 'SIGTERM-request' }] } }, 601))
 })
 test('Persistent Mac QA root requires a native disposable session, exact ownership and fresh first / existing restart phase', t => {
-  const root = temporary(t), token = 'c'.repeat(32), env = { GITHUB_ACTIONS: 'true', KAMUCL_PARITY_PHASE: 'first', KAMUCL_PARITY_ROOT: root, KAMUCL_PARITY_TOKEN: token }
+  const root = temporary(t), token = 'c'.repeat(32), env = { GITHUB_ACTIONS: 'true', FAIONYX_PARITY_PHASE: 'first', FAIONYX_PARITY_ROOT: root, FAIONYX_PARITY_TOKEN: token }
   fs.writeFileSync(path.join(root, 'mac-parity-owner.json'), JSON.stringify({ schemaVersion: 1, root, token }))
   assert.equal(parityRoot(env, 'darwin'), root)
   assert.throws(() => parityRoot(env, 'win32'))
   assert.throws(() => parityRoot({ ...env, GITHUB_ACTIONS: 'false' }, 'darwin'))
-  assert.throws(() => parityRoot({ ...env, KAMUCL_PARITY_TOKEN: 'd'.repeat(32) }, 'darwin'))
-  assert.throws(() => parityRoot({ ...env, KAMUCL_PARITY_PHASE: 'restart' }, 'darwin'))
+  assert.throws(() => parityRoot({ ...env, FAIONYX_PARITY_TOKEN: 'd'.repeat(32) }, 'darwin'))
+  assert.throws(() => parityRoot({ ...env, FAIONYX_PARITY_PHASE: 'restart' }, 'darwin'))
   fs.mkdirSync(path.join(root, 'profile')); fs.writeFileSync(path.join(root, 'profile/settings.json'), '{}')
   assert.throws(() => parityRoot(env, 'darwin'))
-  assert.equal(parityRoot({ ...env, KAMUCL_PARITY_PHASE: 'restart' }, 'darwin'), root)
+  assert.equal(parityRoot({ ...env, FAIONYX_PARITY_PHASE: 'restart' }, 'darwin'), root)
 })
 test('Mac evidence collector copies only exact regular files without path traversal or overwriting original bytes', t => {
   const root = temporary(t), destination = path.join(root, 'proof'); fs.mkdirSync(destination)

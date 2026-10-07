@@ -164,14 +164,14 @@ export function getSettings(): Settings {
         fs.mkdirSync(path.dirname(settingsFile()), { recursive: true })
         fs.writeFileSync(settingsFile(), JSON.stringify(c, null, 2), 'utf-8')
       } catch (error) {
-        console.error('[KAMUCL] 旧外观设置迁移写入失败:', error)
+        console.error('[FAIONYX] 旧外观设置迁移写入失败:', error)
       }
     }
   } catch {
     cached = def
   }
   try { ensureDefaultGameFolder(app.getPath('appData'), cached.folders) }
-  catch (error) { console.error('[KAMUCL] 默认游戏目录创建失败:', error) }
+  catch (error) { console.error('[FAIONYX] 默认游戏目录创建失败:', error) }
   return cached
 }
 
@@ -259,7 +259,7 @@ export function saveSettings(patch: Partial<Settings>): Settings {
   return merged
 }
 
-/** 将旧版保存的外部图片复制到 KAMUCL 目录；原文件永不删除。 */
+/** 将旧版保存的外部图片复制到 FAIONYX 目录；原文件永不删除。 */
 export async function migrateLegacyAppearanceAssets(): Promise<void> {
   const current = getSettings()
   const imported: Array<{ path: string; purpose: 'background' | 'launch-thumbnail' }> = []

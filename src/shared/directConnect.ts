@@ -2,7 +2,7 @@ import type { InstalledVersion } from './types'
 
 export interface DirectEndpoint { host: string; port: number; kind: 'ipv6' | 'ipv4' | 'lan' }
 export interface DirectInvitation {
-  format: 'KAMUCL-DIRECT'; version: 1; name: string; minecraftVersion: string
+  format: 'FAIONYX-DIRECT'; version: 1; name: string; minecraftVersion: string
   loader?: string; loaderVersion?: string; endpoints: DirectEndpoint[]; expiresAt: string
 }
 export interface DirectNetworkInfo {

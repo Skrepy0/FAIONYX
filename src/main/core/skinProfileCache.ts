@@ -52,7 +52,7 @@ export class SkinProfileCache {
   async get(key: string, load: () => Promise<ProfileSkins>, refresh = false): Promise<ProfileSkins> {
     const cached = this.read(key)
     // Failed cape downloads must not become a permanent successful cache hit.
-    if (cached && !refresh && !incompleteProfile(cached)) { console.info('[KAMUCL] Skin profile: cache hit, no network'); return structuredClone(cached) }
+    if (cached && !refresh && !incompleteProfile(cached)) { console.info('[FAIONYX] Skin profile: cache hit, no network'); return structuredClone(cached) }
     if (this.pending.has(key)) return this.pending.get(key)!
     const work = (async () => {
       const started = Date.now()
@@ -71,7 +71,7 @@ export class SkinProfileCache {
         }
         return publicProfile ?? cached ?? fresh
       } catch (error) { if (cached) return cached; throw error }
-      finally { this.pending.delete(key); console.info(`[KAMUCL] Skin profile: ${refresh ? 'refresh' : 'cache miss'}, ${Date.now() - started} ms`) }
+      finally { this.pending.delete(key); console.info(`[FAIONYX] Skin profile: ${refresh ? 'refresh' : 'cache miss'}, ${Date.now() - started} ms`) }
     })()
     this.pending.set(key, work)
     return work

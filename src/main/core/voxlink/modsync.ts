@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 // Adapted from AUGUHDAR/VoxLink modsync, revision 721c7fae (LGPL-3.0).
-// KAMUCL: instance-scoped I/O, actual installed-file hashes and non-overwriting commits.
+// FAIONYX: instance-scoped I/O, actual installed-file hashes and non-overwriting commits.
 import fs from 'node:fs'
 import path from 'node:path'
 import { createHash } from 'node:crypto'
@@ -42,7 +42,7 @@ export async function modrinthRequest(route: string, signal: AbortSignal, body?:
     try {
       const response = await fetch(`https://api.modrinth.com/v2${route}`, {
         method: body === undefined ? 'GET' : 'POST', signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]),
-        headers: { 'User-Agent': `KAMUCL-App/${APP_VERSION}`, 'Content-Type': 'application/json' },
+        headers: { 'User-Agent': `FAIONYX-App/${APP_VERSION}`, 'Content-Type': 'application/json' },
         ...(body === undefined ? {} : { body: JSON.stringify(body) })
       })
       if (response.ok) return await response.json()

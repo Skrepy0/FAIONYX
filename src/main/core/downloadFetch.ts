@@ -9,7 +9,7 @@ export function needsCurseForgeKey(url: string): boolean {
 
 /** Recompute credentials at every redirect; an application key never reaches a mirror. */
 export async function downloadFetch(url: string, init: Parameters<typeof httpFetch>[1],
-  getKey = async () => process.versions.electron ? (await import('./community')).cfChannel().key : (process.env.KAMUCL_CF_API_KEY || CF_BUILTIN_KEY),
+  getKey = async () => process.versions.electron ? (await import('./community')).cfChannel().key : (process.env.FAIONYX_CF_API_KEY || CF_BUILTIN_KEY),
   fetcher = httpFetch): Promise<Response> {
   for (let hop = 0; hop < 10; hop++) {
     // Use the player's configured proxy/PAC immediately; keep direct transfer

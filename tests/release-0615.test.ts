@@ -90,7 +90,7 @@ test('只在启动淡入完成后释放分层状态，隐藏期间完成也保�
     () => {}, finished => calls.push(!!finished))
   events.emit('show'); await new Promise(r => setTimeout(r, 160))
   assert.deepEqual(calls, [false], '淡入途中不能清除原生透明度')
-  visible = false; events.emit('kamucl:startup-opacity-complete')
+  visible = false; events.emit('faionyx:startup-opacity-complete')
   await new Promise(r => setTimeout(r, 160)); assert.deepEqual(calls, [false])
   visible = true; events.emit('restore'); events.emit('focus')
   await new Promise(r => setTimeout(r, 160)); assert.deepEqual(calls, [false, true])
@@ -107,7 +107,7 @@ test('便携包模板引用含空格/中文的TEMP路径，失败明确提示而
   assert.ok(fixed.includes(`ExecWait '"$INSTDIR\\\${APP_EXECUTABLE_FILENAME}" $R0' $0`))
   assert.ok(fixed.includes('IfErrors'))
   // 解压目标：exe 所在文件夹的固定子目录，不再落系统 TEMP 随机目录
-  assert.ok(fixed.includes('StrCpy $INSTDIR "$EXEDIR\\KAMUCL-runtime"'))
+  assert.ok(fixed.includes('StrCpy $INSTDIR "$EXEDIR\\FAIONYX-runtime"'))
   assert.ok(!fixed.includes('StrCpy $INSTDIR "$PLUGINSDIR\\app"'))
   assert.equal(repairPortableScript(fixed), fixed)
   assert.throws(() => repairPortableScript('unexpected template'), /template changed/)

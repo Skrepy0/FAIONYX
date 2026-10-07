@@ -1,18 +1,18 @@
 {
   "complete": false,
   "application": {
-    "file": "E:\\KAMUCL\\release\\KAMUCL-1.1.17.exe",
+    "file": "E:\\FAIONYX\\release\\FAIONYX-1.1.17.exe",
     "sha256": "4517bdbb98b180c797f4e800a0d5c6d24b055db125876a3d27bf1b175332de2e"
   },
-  "directory": "E:\\KAMUCL\\out\\acceptance-1.1.17\\ui-23d03096-a4f7-4e9b-a7b4-9cc3ef9c1c56",
+  "directory": "E:\\FAIONYX\\out\\acceptance-1.1.17\\ui-23d03096-a4f7-4e9b-a7b4-9cc3ef9c1c56",
   "runs": [
     {
       "theme": "black-orange",
       "application": {
-        "file": "E:\\KAMUCL\\release\\KAMUCL-1.1.17.exe",
+        "file": "E:\\FAIONYX\\release\\FAIONYX-1.1.17.exe",
         "sha256": "4517bdbb98b180c797f4e800a0d5c6d24b055db125876a3d27bf1b175332de2e"
       },
-      "logFile": "E:\\KAMUCL\\out\\acceptance-1.1.17\\ui-23d03096-a4f7-4e9b-a7b4-9cc3ef9c1c56\\black-orange.log",
+      "logFile": "E:\\FAIONYX\\out\\acceptance-1.1.17\\ui-23d03096-a4f7-4e9b-a7b4-9cc3ef9c1c56\\black-orange.log",
       "fullEditorRegression": true,
       "qualification": "Core, MOD progress and full editor suite",
       "startedAt": "2026-10-06T17:43:42.509Z",
@@ -15977,9 +15977,9 @@
         "available": true,
         "classification": "Original Windows Win32_Process PID/parent/creation-time snapshot. Each generation is a separate identity, descendants require an actual live owned parent; PID reuse alone never grants ownership. Previously seen exact identities remain tracked after parents exit. No name/command-line matching or signals."
       },
-      "proofDirectory": "E:\\KAMUCL\\out\\qa-ux117-black-orange-ca00b9ae-3d51-4741-91df-b22415a9fbc0",
+      "proofDirectory": "E:\\FAIONYX\\out\\qa-ux117-black-orange-ca00b9ae-3d51-4741-91df-b22415a9fbc0",
       "log": {
-        "file": "E:\\KAMUCL\\out\\acceptance-1.1.17\\ui-23d03096-a4f7-4e9b-a7b4-9cc3ef9c1c56\\black-orange.log",
+        "file": "E:\\FAIONYX\\out\\acceptance-1.1.17\\ui-23d03096-a4f7-4e9b-a7b4-9cc3ef9c1c56\\black-orange.log",
         "sha256": "3829b73759b8ec13d06e8f1dd284176fe0afc3353220feefff172b29a4152539"
       }
     }
@@ -15988,7 +15988,7 @@
   "error": {
     "name": "AssertionError",
     "message": "Expected values to be strictly equal:\n\n1 !== 0\n",
-    "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n1 !== 0\n\n    at E:\\KAMUCL\\scripts\\run-ux117.cjs:16:230\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+    "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n1 !== 0\n\n    at E:\\FAIONYX\\scripts\\run-ux117.cjs:16:230\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
   },
   "finishedAt": "2026-10-06T17:45:12.337Z"
 }

@@ -117,7 +117,7 @@
     "java:list",
     "java:pickAdd",
     "java:refresh",
-    "kamucl:mem-trim",
+    "faionyx:mem-trim",
     "keys:getDefault",
     "keys:reset",
     "keys:setDefault",
@@ -881,7 +881,7 @@
     "java:refresh": [
       "invoke"
     ],
-    "kamucl:mem-trim": [
+    "faionyx:mem-trim": [
       "event"
     ],
     "keys:getDefault": [

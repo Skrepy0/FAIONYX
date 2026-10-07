@@ -2,40 +2,40 @@
   "complete": true,
   "version": "1.1.19",
   "theme": "blue-white",
-  "directory": "E:\\KAMUCL\\out\\qa-mrpack119-blue-white-43d503c4-815f-4717-860c-53c8df06012e",
+  "directory": "E:\\FAIONYX\\out\\qa-mrpack119-blue-white-43d503c4-815f-4717-860c-53c8df06012e",
   "checks": [
     {
       "label": "whole MRPACK from home",
       "ready": true,
-      "text": "导入整合包\nModrinth (.mrpack)\nMC 1.20.1\nforge 47.4.23\n版本 fixture-119\n\n0 个清单文件 · 大小未知 · overrides · client-overrides\n\n目标游戏文件夹\n\n独立验证目录（默认） · C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 WZkNbU\\games\n整合包收藏 · C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 WZkNbU\\second-games\n\n实例命名\n\n使用压缩包文件名\n中文 § BOM 包\n使用整合包名称\nMRPACK 中文 § GUI\n取消\n确认导入",
+      "text": "导入整合包\nModrinth (.mrpack)\nMC 1.20.1\nforge 47.4.23\n版本 fixture-119\n\n0 个清单文件 · 大小未知 · overrides · client-overrides\n\n目标游戏文件夹\n\n独立验证目录（默认） · C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 WZkNbU\\games\n整合包收藏 · C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 WZkNbU\\second-games\n\n实例命名\n\n使用压缩包文件名\n中文 § BOM 包\n使用整合包名称\nMRPACK 中文 § GUI\n取消\n确认导入",
       "world": false,
       "mod": false
     },
     {
       "label": "whole MRPACK from mods",
       "ready": true,
-      "text": "导入整合包\nModrinth (.mrpack)\nMC 1.20.1\nforge 47.4.23\n版本 fixture-119\n\n0 个清单文件 · 大小未知 · overrides · client-overrides\n\n目标游戏文件夹\n\n独立验证目录（默认） · C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 WZkNbU\\games\n整合包收藏 · C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 WZkNbU\\second-games\n\n实例命名\n\n使用压缩包文件名\n中文 § BOM 包\n使用整合包名称\nMRPACK 中文 § GUI\n取消\n确认导入",
+      "text": "导入整合包\nModrinth (.mrpack)\nMC 1.20.1\nforge 47.4.23\n版本 fixture-119\n\n0 个清单文件 · 大小未知 · overrides · client-overrides\n\n目标游戏文件夹\n\n独立验证目录（默认） · C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 WZkNbU\\games\n整合包收藏 · C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 WZkNbU\\second-games\n\n实例命名\n\n使用压缩包文件名\n中文 § BOM 包\n使用整合包名称\nMRPACK 中文 § GUI\n取消\n确认导入",
       "world": false,
       "mod": false
     },
     {
       "label": "whole MRPACK from packs",
       "ready": true,
-      "text": "导入整合包\nModrinth (.mrpack)\nMC 1.20.1\nforge 47.4.23\n版本 fixture-119\n\n0 个清单文件 · 大小未知 · overrides · client-overrides\n\n目标游戏文件夹\n\n独立验证目录（默认） · C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 WZkNbU\\games\n整合包收藏 · C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 WZkNbU\\second-games\n\n实例命名\n\n使用压缩包文件名\n中文 § BOM 包\n使用整合包名称\nMRPACK 中文 § GUI\n取消\n确认导入",
+      "text": "导入整合包\nModrinth (.mrpack)\nMC 1.20.1\nforge 47.4.23\n版本 fixture-119\n\n0 个清单文件 · 大小未知 · overrides · client-overrides\n\n目标游戏文件夹\n\n独立验证目录（默认） · C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 WZkNbU\\games\n整合包收藏 · C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 WZkNbU\\second-games\n\n实例命名\n\n使用压缩包文件名\n中文 § BOM 包\n使用整合包名称\nMRPACK 中文 § GUI\n取消\n确认导入",
       "world": false,
       "mod": false
     },
     {
       "label": "whole MRPACK from shaders",
       "ready": true,
-      "text": "导入整合包\nModrinth (.mrpack)\nMC 1.20.1\nforge 47.4.23\n版本 fixture-119\n\n0 个清单文件 · 大小未知 · overrides · client-overrides\n\n目标游戏文件夹\n\n独立验证目录（默认） · C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 WZkNbU\\games\n整合包收藏 · C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 WZkNbU\\second-games\n\n实例命名\n\n使用压缩包文件名\n中文 § BOM 包\n使用整合包名称\nMRPACK 中文 § GUI\n取消\n确认导入",
+      "text": "导入整合包\nModrinth (.mrpack)\nMC 1.20.1\nforge 47.4.23\n版本 fixture-119\n\n0 个清单文件 · 大小未知 · overrides · client-overrides\n\n目标游戏文件夹\n\n独立验证目录（默认） · C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 WZkNbU\\games\n整合包收藏 · C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 WZkNbU\\second-games\n\n实例命名\n\n使用压缩包文件名\n中文 § BOM 包\n使用整合包名称\nMRPACK 中文 § GUI\n取消\n确认导入",
       "world": false,
       "mod": false
     },
     {
       "label": "whole MRPACK from keys",
       "ready": true,
-      "text": "导入整合包\nModrinth (.mrpack)\nMC 1.20.1\nforge 47.4.23\n版本 fixture-119\n\n0 个清单文件 · 大小未知 · overrides · client-overrides\n\n目标游戏文件夹\n\n独立验证目录（默认） · C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 WZkNbU\\games\n整合包收藏 · C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 WZkNbU\\second-games\n\n实例命名\n\n使用压缩包文件名\n中文 § BOM 包\n使用整合包名称\nMRPACK 中文 § GUI\n取消\n确认导入",
+      "text": "导入整合包\nModrinth (.mrpack)\nMC 1.20.1\nforge 47.4.23\n版本 fixture-119\n\n0 个清单文件 · 大小未知 · overrides · client-overrides\n\n目标游戏文件夹\n\n独立验证目录（默认） · C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 WZkNbU\\games\n整合包收藏 · C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 WZkNbU\\second-games\n\n实例命名\n\n使用压缩包文件名\n中文 § BOM 包\n使用整合包名称\nMRPACK 中文 § GUI\n取消\n确认导入",
       "world": false,
       "mod": false
     },
@@ -48,7 +48,7 @@
     {
       "label": "toolbar file picker",
       "ready": true,
-      "text": "导入整合包\nModrinth (.mrpack)\nMC 1.20.1\nforge 47.4.23\n版本 fixture-119\n\n0 个清单文件 · 大小未知 · overrides · client-overrides\n\n目标游戏文件夹\n\n独立验证目录（默认） · C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 WZkNbU\\games\n整合包收藏 · C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 WZkNbU\\second-games\n\n实例命名\n\n使用压缩包文件名\n中文 § BOM 包\n使用整合包名称\nMRPACK 中文 § GUI\n取消\n确认导入",
+      "text": "导入整合包\nModrinth (.mrpack)\nMC 1.20.1\nforge 47.4.23\n版本 fixture-119\n\n0 个清单文件 · 大小未知 · overrides · client-overrides\n\n目标游戏文件夹\n\n独立验证目录（默认） · C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 WZkNbU\\games\n整合包收藏 · C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 WZkNbU\\second-games\n\n实例命名\n\n使用压缩包文件名\n中文 § BOM 包\n使用整合包名称\nMRPACK 中文 § GUI\n取消\n确认导入",
       "world": false,
       "mod": false
     }

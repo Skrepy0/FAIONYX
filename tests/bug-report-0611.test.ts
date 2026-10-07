@@ -22,7 +22,7 @@ test('BUG06 old NeoForge production client requires all four generated artifacts
   assert.equal(relative.length, 4)
   assert(relative.some(p => p.endsWith('neoforge-21.1.248-client.jar')))
   assert(relative.some(p => p.endsWith('client-1.21.1-20240808.144430-srg.jar')))
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-neo-libs-test-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-neo-libs-test-'))
   try {
     const external = path.join(root, 'external'), shared = path.join(root, 'shared')
     for (const rel of relative) { const file = path.join(external, 'libraries', rel); fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, 'fixture runtime') }
@@ -91,7 +91,7 @@ test('BUG08 each slide has its own duration; leaving/reentering pauses time with
 })
 
 test('BUG01 Java probe cache survives process restart and invalidates changed runtime/release metadata', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-javacache-test-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-javacache-test-'))
   try {
     const exe = path.join(root, 'bin/java.exe'), file = () => path.join(root, 'probe-cache.json')
     fs.mkdirSync(path.dirname(exe)); fs.writeFileSync(exe, 'jvm fixture')

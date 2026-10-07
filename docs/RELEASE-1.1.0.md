@@ -1,4 +1,4 @@
-# KAMUCL 1.1.0
+# FAIONYX 1.1.0
 
 2026-09-21 23:33
 
@@ -10,6 +10,6 @@
 - 整合包覆盖配置按受限批次异步写入，显示真实的已写入文件数；保留安全路径、符号链接检查、暂停、取消与失败回滚。
 - 安装器生成运行文件的未知进度显示“处理中”，不再一直显示 0%。下载、安装处理和配置写入仍按实际阶段反馈。
 
-完整验证数据见 [下载验证记录](https://github.com/kamubaba-i/KAMUCL/blob/v1.1.0/docs/DOWNLOAD-1.1.0-VERIFICATION.md)。实际速度受线路、源站、限流、磁盘及安装器计算影响，不承诺所有网络固定倍速。
+完整验证数据见 [下载验证记录](https://github.com/Skrepy0/FAIONYX/blob/v1.1.0/docs/DOWNLOAD-1.1.0-VERIFICATION.md)。实际速度受线路、源站、限流、磁盘及安装器计算影响，不承诺所有网络固定倍速。
 
 Windows 便携 EXE 可直接运行；ZIP 请先解压。展开式 ZIP 为备用包。附源码与 SHA256SUMS.txt，不提供 macOS 包。

@@ -31,11 +31,11 @@ export function platformInfo(platform: string, arch: string, installation: Insta
 export function updateArtifactName(version: string, platform: string, arch: string, installation: InstallationKind): string {
   if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error('无效的更新版本')
   if (arch !== 'x64' && arch !== 'arm64') throw new Error('当前处理器架构没有经过验证的更新包')
-  if (platform === 'win32') return `KAMUCL-${version}.exe`
-  if (platform === 'darwin') return `KAMUCL-${version}-mac-${arch}.zip`
+  if (platform === 'win32') return `FAIONYX-${version}.exe`
+  if (platform === 'darwin') return `FAIONYX-${version}-mac-${arch}.zip`
   if (platform === 'linux') {
     const extension = installation === 'appimage' ? 'AppImage' : installation === 'deb' ? 'deb' : 'tar.gz'
-    return `KAMUCL-${version}-linux-${arch}.${extension}`
+    return `FAIONYX-${version}-linux-${arch}.${extension}`
   }
   throw new Error('当前平台的更新安装能力尚未验证')
 }

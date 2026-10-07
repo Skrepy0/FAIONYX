@@ -1,4 +1,4 @@
-# KAMUCL 1.1.13 — Windows 收藏模组安装修复
+# FAIONYX 1.1.13 — Windows 收藏模组安装修复
 
 2026-10-06 11:54（Asia/Hong_Kong）。本次仅发布 Windows x64，Mac ARM64 制作已暂停。
 

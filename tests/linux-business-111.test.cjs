@@ -29,10 +29,10 @@ test('Linux native QA observes a real private child normal exit and only signals
   await stopOwnedChild(natural); assert(!natural.ledger.events.some(event => event.event === 'owned-SIGTERM'), 'A naturally exited child is never signalled')
 })
 test('Linux update observer selects only the single same-user private executable main, allowing its linked renderer children', () => {
-  const expected = { exe: '/private/owned-123/KAMUCL/kamucl', uid: 1001 }
+  const expected = { exe: '/private/owned-123/FAIONYX/faionyx', uid: 1001 }
   const main = { pid: 701, ppid: 600, uid: 1001, exe: expected.exe, startTime: '30000' }
   const renderer = { pid: 702, ppid: 701, uid: 1001, exe: expected.exe, startTime: '30001' }
-  const other = { pid: 703, ppid: 600, uid: 1001, exe: '/private/not-owned/KAMUCL/kamucl', startTime: '30002' }
+  const other = { pid: 703, ppid: 600, uid: 1001, exe: '/private/not-owned/FAIONYX/faionyx', startTime: '30002' }
   const otherUser = { pid: 704, ppid: 600, uid: 1002, exe: expected.exe, startTime: '30003' }
   assert.equal(selectOwnedExecutable([main, renderer, other, otherUser], expected), main)
   assert.equal(selectOwnedExecutable([other, otherUser, { ...main, startTime: '' }], expected), null)

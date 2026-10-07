@@ -23,13 +23,13 @@ const ARCHIVE_PATTERN = /^launcher-(\d{8}-\d{6})(?:-(\d+))?\.log$/
 
 // ---------------- 可纯测核心 ----------------
 
-/** 级别过滤：达到最低级别才写。环境变量 KAMUCL_LOG_LEVEL 可调，默认 debug 全量。 */
+/** 级别过滤：达到最低级别才写。环境变量 FAIONYX_LOG_LEVEL 可调，默认 debug 全量。 */
 export function levelAtLeast(level: LauncherLogLevel, minimum: LauncherLogLevel): boolean {
   return LEVEL_ORDER[level] >= LEVEL_ORDER[minimum]
 }
 
 export function minimumLevelFromEnv(env: Record<string, string | undefined> = process.env): LauncherLogLevel {
-  const raw = (env.KAMUCL_LOG_LEVEL ?? '').trim().toLowerCase()
+  const raw = (env.FAIONYX_LOG_LEVEL ?? '').trim().toLowerCase()
   return raw === 'info' || raw === 'warn' || raw === 'error' ? raw : 'debug'
 }
 
@@ -131,7 +131,7 @@ export function initializeLauncherLog(): string {
       currentLogPath,
       [
         divider,
-        `[${now.toISOString()}] KAMUCL ${app.getVersion()} session started (${process.platform} ${process.arch})`,
+        `[${now.toISOString()}] FAIONYX ${app.getVersion()} session started (${process.platform} ${process.arch})`,
         `Electron ${process.versions.electron ?? '?'} / Node ${process.versions.node ?? '?'} / 日志级别下限 ${minimumLevel}`,
         divider
       ].join('\n') + '\n',

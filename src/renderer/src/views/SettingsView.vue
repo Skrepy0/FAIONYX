@@ -39,9 +39,9 @@ import { useMotion } from '../motion'
 const { systemReduced } = useMotion()
 import { usePlatformUpdate } from '../composables/usePlatformUpdate'
 const { systemInstaller, installAction, updateReadyMessage } = usePlatformUpdate()
-const systemMotionHelp = window.kamucl.platform === 'darwin'
+const systemMotionHelp = window.faionyx.platform === 'darwin'
   ? '若需要动画，请在系统设置 → 辅助功能 → 显示中关闭“减少动态效果”。'
-  : window.kamucl.platform === 'win32'
+  : window.faionyx.platform === 'win32'
     ? '若需要动画，请在 Windows 设置 → 辅助功能 → 视觉效果开启动画效果。'
     : '若需要动画，请检查本机桌面的辅助功能或动画设置。'
 import HomeLayoutEditor from '../components/HomeLayoutEditor.vue'
@@ -55,7 +55,7 @@ const page = ref<HTMLElement | null>(null)
 const vFocus = { mounted: (el: HTMLElement) => el.focus() }
 const settingsQuery = ref('')
 const searchMatches = computed(() => searchSettings(settingsQuery.value))
-const savedCategory = sessionStorage.getItem('kamucl.settings.category')
+const savedCategory = sessionStorage.getItem('faionyx.settings.category')
 const category = ref<SettingsCategory>(settingsCategories.find(c => c.id === savedCategory)?.id ?? 'appearance')
 const scope = computed(() => scopeOfCategory(category.value))
 const visibleCategories = computed(() => settingsCategories.filter(c => c.scope === scope.value))
@@ -68,7 +68,7 @@ function scroller() { return page.value?.querySelector<HTMLElement>('.settings-b
 async function selectCategory(id: SettingsCategory) {
   const ticket = ++navigation
   const scroll = scroller(); positions.set(category.value, scroll?.scrollTop ?? 0)
-  category.value = id; lastCategories[scopeOfCategory(id)] = id; settingsQuery.value = ''; sessionStorage.setItem('kamucl.settings.category', id)
+  category.value = id; lastCategories[scopeOfCategory(id)] = id; settingsQuery.value = ''; sessionStorage.setItem('faionyx.settings.category', id)
   await nextTick()
   if (ticket === navigation && scroll) scroll.scrollTop = Math.min(positions.get(id) ?? 0, Math.max(0, scroll.scrollHeight-scroll.clientHeight))
 }
@@ -116,7 +116,7 @@ async function changeWindowFit(event: Event) {
 
 const defaultDownloadFolder = computed(() => store.settings?.folders.find(folder => folder.isDefault)?.path || store.settings?.activeFolder || store.settings?.gameDir || '')
 const windowSizeBusy = ref(false)
-const canRememberWindow = window.kamucl.platform === 'win32'
+const canRememberWindow = window.faionyx.platform === 'win32'
 async function toggleWindowSize(event: Event) {
   const input = event.target as HTMLInputElement
   if (!store.settings || windowSizeBusy.value) return
@@ -224,7 +224,7 @@ function confirmRollback() {
   store.updatePrompt = { release, rollback: true }
 }
 function releaseSummary(body: string): string {
-  const first = (body || '').split(/\r?\n/).map((s) => s.replace(/^(?:#+|[-*])\s*/, '').trim()).filter(s => s && !/^KAMUCL\s+v?[\d.]+$/i.test(s))[0] ?? ''
+  const first = (body || '').split(/\r?\n/).map((s) => s.replace(/^(?:#+|[-*])\s*/, '').trim()).filter(s => s && !/^FAIONYX\s+v?[\d.]+$/i.test(s))[0] ?? ''
   return first.length > 60 ? first.slice(0, 60) + '…' : first
 }
 function releaseDate(value: string): string {
@@ -1102,7 +1102,7 @@ async function onRemovePlugin(p: PluginInfo) {
         <div class="card group group-inline">
           <div>
             <h3 class="group-title">启动后关闭启动器</h3>
-            <p class="muted group-hint">游戏成功启动后自动退出 KAMUCL</p>
+            <p class="muted group-hint">游戏成功启动后自动退出 FAIONYX</p>
           </div>
           <label class="switch">
             <input data-ui="SettingsView:f2f1ffcd2e84"
@@ -1195,7 +1195,7 @@ async function onRemovePlugin(p: PluginInfo) {
           </div>
           </details>
           <p class="muted group-hint">
-            更新包发布在 GitHub Releases；下载较慢时可到 KAMUCL 内测群（{{ store.settings.qqGroupNumber?.trim() || QQ_GROUP_NUMBER }}）获取，群内文件与 GitHub 版本一致。
+            更新包发布在 GitHub Releases；下载较慢时可到 FAIONYX 内测群（{{ store.settings.qqGroupNumber?.trim() || QQ_GROUP_NUMBER }}）获取，群内文件与 GitHub 版本一致。
           </p>
         </div>
       </details>

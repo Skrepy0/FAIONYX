@@ -103,7 +103,7 @@ function writePNGProjection(directory, capture, pngs) {
 
 async function captureWalking(h, initialBounds, action) {
   const { main, evaluate, wait, version } = h
-  const theme = process.env.KAMUCL_TEST_THEME, directory = path.resolve('out', 'skin-walk-native-111-' + theme), receiptFile = directory + '.json'
+  const theme = process.env.FAIONYX_TEST_THEME, directory = path.resolve('out', 'skin-walk-native-111-' + theme), receiptFile = directory + '.json'
   assert(!fs.existsSync(directory) && !fs.existsSync(receiptFile), 'native walking evidence is immutable; use a fresh run')
   fs.mkdirSync(directory, { recursive: true })
   const proof = { version, theme, directory, complete: false, primaryCadenceSource: 'Original ScreenCaptureKit CMSampleBuffer PTS',
@@ -126,7 +126,7 @@ async function captureWalking(h, initialBounds, action) {
   try {
     persist()
     proof.sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
-    proof.runtime = await main("({pid:process.pid,platform:process.platform,arch:process.arch,runtimeVersion:process.versions.electron,embeddedIdentity:JSON.parse(process.mainModule.require('fs').readFileSync(process.mainModule.require('path').join(process.resourcesPath,'kamucl-mac.json'),'utf8'))})")
+    proof.runtime = await main("({pid:process.pid,platform:process.platform,arch:process.arch,runtimeVersion:process.versions.electron,embeddedIdentity:JSON.parse(process.mainModule.require('fs').readFileSync(process.mainModule.require('path').join(process.resourcesPath,'faionyx-mac.json'),'utf8'))})")
     assert.equal(proof.runtime.pid, h.ownedTrack?.pid, 'native peer must be the actually spawned owned launcher')
     assert.equal(proof.runtime.platform, 'darwin'); assert.equal(proof.runtime.arch, process.arch)
     assert.equal(proof.runtime.embeddedIdentity.sourceCommit, proof.sourceCommit); assert.equal(proof.runtime.embeddedIdentity.version, version)

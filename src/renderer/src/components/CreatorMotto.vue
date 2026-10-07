@@ -37,7 +37,7 @@ function move(event: PointerEvent) {
     })
   })
 }
-function maximize() { if (!props.disabled) window.kamucl.send('window:maximize') }
+function maximize() { if (!props.disabled) window.faionyx.send('window:maximize') }
 watch(() => props.disabled, reset)
 onMounted(() => {
   slots = [...host.value!.querySelectorAll<HTMLElement>('.motto-slot')]

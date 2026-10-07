@@ -13,26 +13,26 @@ const ownLast=computed(()=>detail.value?[...detail.value.messages].reverse().fin
 const waitSeconds=computed(()=>Math.max(0,Math.ceil((retryAt.value-now.value)/1000)))
 let operation='',epoch=0,off:()=>void=()=>{},timer:ReturnType<typeof setInterval>
 const time=(ms:number)=>new Date(ms).toLocaleString()
-function release(){if(files.value.length)void window.kamucl.invoke('voxlink:tickets:release',files.value.map(f=>f.id));files.value=[]}
+function release(){if(files.value.length)void window.faionyx.invoke('voxlink:tickets:release',files.value.map(f=>f.id));files.value=[]}
 function close(){if(busy.value)return;release();emit('close')}
 function back(){if(busy.value)return;release();detail.value=null;creating.value=false;error.value='';text.value='';messagePage.value=0}
 function newTicket(){back();creating.value=true}
 async function perform<T>(channel:string,payload:Record<string,unknown>):Promise<T|undefined>{
   if(busy.value)return
   busy.value=true;error.value='';progress.value='';operation=crypto.randomUUID();const current=++epoch
-  try{const result=await window.kamucl.invoke(channel,{...payload,operation}) as TicketResult<T>;if(current!==epoch)return;if(result.ok)return result.value;error.value=result.message;if(result.retryAt)retryAt.value=result.retryAt}
+  try{const result=await window.faionyx.invoke(channel,{...payload,operation}) as TicketResult<T>;if(current!==epoch)return;if(result.ok)return result.value;error.value=result.message;if(result.retryAt)retryAt.value=result.retryAt}
   catch(e){if(current===epoch)error.value=(e as Error).message}
   finally{if(current===epoch){busy.value=false;operation=''}}
 }
 async function open(id:string){const value=await perform<VoxTicketDetail>('voxlink:tickets:detail',{id});if(value){release();detail.value=value;creating.value=false;messagePage.value=messagePages.value-1;await loadTickets()}}
-async function choose(){if(busy.value)return;try{const picked=await window.kamucl.invoke('voxlink:tickets:pick') as TicketFileGrant[];if(files.value.length+picked.length>10||files.value.concat(picked).reduce((n,f)=>n+f.size,0)>500*1048576){void window.kamucl.invoke('voxlink:tickets:release',picked.map(f=>f.id));error.value='每条消息最多 10 个附件，附件总量不得超过 500 MB';return}files.value.push(...picked)}catch(e){error.value=(e as Error).message}}
-function removeFile(file:TicketFileGrant){void window.kamucl.invoke('voxlink:tickets:release',[file.id]);files.value=files.value.filter(f=>f.id!==file.id)}
+async function choose(){if(busy.value)return;try{const picked=await window.faionyx.invoke('voxlink:tickets:pick') as TicketFileGrant[];if(files.value.length+picked.length>10||files.value.concat(picked).reduce((n,f)=>n+f.size,0)>500*1048576){void window.faionyx.invoke('voxlink:tickets:release',picked.map(f=>f.id));error.value='每条消息最多 10 个附件，附件总量不得超过 500 MB';return}files.value.push(...picked)}catch(e){error.value=(e as Error).message}}
+function removeFile(file:TicketFileGrant){void window.faionyx.invoke('voxlink:tickets:release',[file.id]);files.value=files.value.filter(f=>f.id!==file.id)}
 async function submit(){if(waitSeconds.value)return;const value=await perform<{id:string}>('voxlink:tickets:submit',{description:description.value,attachments:files.value.map(f=>f.id)});if(value){files.value=[];description.value='';await loadTickets();await open(value.id)}}
 async function reply(){if(!detail.value||waitSeconds.value)return;const id=detail.value.id,value=await perform<{id:string}>('voxlink:tickets:reply',{id,text:text.value,attachments:files.value.map(f=>f.id)});if(value){files.value=[];text.value='';await open(id)}}
 async function retract(){if(!detail.value||!ownLast.value?.id)return;const id=detail.value.id,result=await perform('voxlink:tickets:retract',{id,msg:ownLast.value.id});if(result)await open(id)}
 async function remove(){confirmDelete.value=false;if(!detail.value)return;const result=await perform('voxlink:tickets:delete',{id:detail.value.id});if(result){back();await loadTickets();page.value=Math.min(page.value,pages.value-1)}}
-function cancel(){if(operation)void window.kamucl.invoke('voxlink:tickets:cancel',operation)}
-onMounted(()=>{void loadTickets();timer=setInterval(()=>now.value=Date.now(),1000);off=window.kamucl.on('voxlink:tickets:progress',value=>{const p=value as {operation:string;bytes:number;total:number};if(p.operation===operation)progress.value=`${(p.bytes/1048576).toFixed(1)} / ${(p.total/1048576).toFixed(1)} MB`})})
+function cancel(){if(operation)void window.faionyx.invoke('voxlink:tickets:cancel',operation)}
+onMounted(()=>{void loadTickets();timer=setInterval(()=>now.value=Date.now(),1000);off=window.faionyx.on('voxlink:tickets:progress',value=>{const p=value as {operation:string;bytes:number;total:number};if(p.operation===operation)progress.value=`${(p.bytes/1048576).toFixed(1)} / ${(p.total/1048576).toFixed(1)} MB`})})
 onUnmounted(()=>{cancel();++epoch;clearInterval(timer);off();release()})
 </script>
 <template>

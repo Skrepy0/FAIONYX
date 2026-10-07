@@ -13,7 +13,7 @@ import { downloadModpackFiles } from '../src/main/core/modpackDownloads'
 const sha = (data: Buffer) => crypto.createHash('sha1').update(data).digest('hex')
 async function fixture(handler: http.RequestListener) {
   const server=http.createServer(handler);await new Promise<void>(r=>server.listen(0,'127.0.0.1',r))
-  const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-transfer-1075-'))
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-transfer-1075-'))
   return {root,base:`http://127.0.0.1:${(server.address() as {port:number}).port}`,close:async()=>{server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));fs.rmSync(root,{recursive:true,force:true})}}
 }
 function sendRange(req: http.IncomingMessage,res: http.ServerResponse,bytes: Buffer) {

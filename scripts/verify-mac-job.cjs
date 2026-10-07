@@ -20,19 +20,19 @@ let mount,attached=false,nativeDisplay
  assert.equal(manifest.runtimeVersion,pkg.devDependencies.electron);assert.equal(Number(manifest.minimum.split('.')[0]),13)
  assert.equal(manifest.packageIntegrity,true);assert.equal(manifest.assets.length,2)
  for(const asset of manifest.assets){
-  assert.equal(path.basename(asset.name),asset.name);assert([`KAMUCL-${pkg.version}-mac-${arch}.zip`,`KAMUCL-${pkg.version}-mac-${arch}.dmg`].includes(asset.name))
+  assert.equal(path.basename(asset.name),asset.name);assert([`FAIONYX-${pkg.version}-mac-${arch}.zip`,`FAIONYX-${pkg.version}-mac-${arch}.dmg`].includes(asset.name))
   const file=path.resolve('release',asset.name);assert.equal(fs.statSync(file).size,asset.bytes);assert.equal(await sha(file),asset.sha256)
  }
  receipt.package=manifest;receipt.steps.push('original ZIP/DMG size, SHA256, commit and locked runtime verified');save()
- const clean=fs.mkdtempSync(path.join(os.tmpdir(),'KAMUCL 原生验证 '))
+ const clean=fs.mkdtempSync(path.join(os.tmpdir(),'FAIONYX 原生验证 '))
  let appPath
  if(stage==='dmg'){
-  mount=fs.mkdtempSync(path.join(os.tmpdir(),'KAMUCL DMG mount '))
-  run('hdiutil',['verify',`release/KAMUCL-${pkg.version}-mac-${arch}.dmg`])
-  run('hdiutil',['attach',`release/KAMUCL-${pkg.version}-mac-${arch}.dmg`,'-readonly','-nobrowse','-mountpoint',mount]);attached=true
-  appPath=path.join(mount,'KAMUCL.app')
+  mount=fs.mkdtempSync(path.join(os.tmpdir(),'FAIONYX DMG mount '))
+  run('hdiutil',['verify',`release/FAIONYX-${pkg.version}-mac-${arch}.dmg`])
+  run('hdiutil',['attach',`release/FAIONYX-${pkg.version}-mac-${arch}.dmg`,'-readonly','-nobrowse','-mountpoint',mount]);attached=true
+  appPath=path.join(mount,'FAIONYX.app')
  }else{
-  run('ditto',['-x','-k',`release/KAMUCL-${pkg.version}-mac-${arch}.zip`,clean]);appPath=path.join(clean,'KAMUCL.app')
+  run('ditto',['-x','-k',`release/FAIONYX-${pkg.version}-mac-${arch}.zip`,clean]);appPath=path.join(clean,'FAIONYX.app')
  }
  const packageIdentity=readMacPackageIdentity(appPath,{version:pkg.version,arch,sourceCommit:receipt.commit,runtimeVersion:pkg.devDependencies.electron,minimumSystemVersion:manifest.minimum})
  assert.deepEqual(packageIdentity.identity,manifest.buildIdentity);assert.equal(packageIdentity.identitySHA256,manifest.buildIdentitySHA256)
@@ -60,11 +60,11 @@ let mount,attached=false,nativeDisplay
  for(const [name,cmd,args] of [['system.txt','/usr/bin/sw_vers',[]],['graphics.txt','/usr/sbin/system_profiler',['SPDisplaysDataType']]]){
   try{fs.writeFileSync(path.join(proof,name),execFileSync(cmd,args,{timeout:20000,maxBuffer:4*1024*1024}))}catch(diagnosticError){receipt[name+'Error']=String(diagnosticError)}
  }
- // Only this disposable runner's current KAMUCL reports, never a player's files.
+ // Only this disposable runner's current FAIONYX reports, never a player's files.
  const crashRoot=path.join(os.homedir(),'Library/Logs/DiagnosticReports')
  if(fs.existsSync(crashRoot))for(const name of fs.readdirSync(crashRoot)){
   const file=path.join(crashRoot,name)
-  if(/^KAMUCL.*\.(?:ips|crash)$/.test(name)&&fs.statSync(file).mtimeMs>=Date.parse(receipt.startedAt))fs.copyFileSync(file,path.join(proof,name))
+  if(/^FAIONYX.*\.(?:ips|crash)$/.test(name)&&fs.statSync(file).mtimeMs>=Date.parse(receipt.startedAt))fs.copyFileSync(file,path.join(proof,name))
  }
 }).finally(async()=>{
  if(nativeDisplay)try{await nativeDisplay.restore();receipt.nativeDisplayRestored=true}catch(error){receipt.complete=false;(receipt.cleanupErrors??=[]).push({stage:'native display restore',name:error.name,message:error.message});console.error(error);process.exitCode=1}

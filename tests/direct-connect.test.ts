@@ -6,7 +6,7 @@ import { createLocalForwarder, detectLanPort, encodeInvitation, ipv4Scope, isGlo
 import { createMapping, localRouterUrl, parseGatewayServices, soapEnvelope } from '../src/main/core/directUpnp'
 import type { DirectInvitation } from '../src/shared/directConnect'
 
-const invite = (): DirectInvitation => ({format:'KAMUCL-DIRECT',version:1,name:'好友世界',minecraftVersion:'1.21.1',endpoints:[{host:'2001:4860::1',port:25565,kind:'ipv6'},{host:'192.168.1.2',port:35000,kind:'lan'}],expiresAt:new Date(Date.now()+3600000).toISOString()})
+const invite = (): DirectInvitation => ({format:'FAIONYX-DIRECT',version:1,name:'好友世界',minecraftVersion:'1.21.1',endpoints:[{host:'2001:4860::1',port:25565,kind:'ipv6'},{host:'192.168.1.2',port:35000,kind:'lan'}],expiresAt:new Date(Date.now()+3600000).toISOString()})
 test('直连邀请可往返，拒绝过期、伪造格式、回环地址、域名和非法端口', () => {
   const value = invite()
   assert.deepEqual(parseInvitation(encodeInvitation(value)).endpoints, value.endpoints)
@@ -76,15 +76,15 @@ test('UPnP 映射使用 300 秒租约；只移除自己创建的规则并保留�
     const action = options?.action?.split('#')[1] ?? ''
     actions.push(action)
     if (action === 'GetSpecificPortMappingEntry' && !mapping) return {status:500,localAddress:gateway.localAddress,body:'<errorCode>714</errorCode>'}
-    if (action === 'GetSpecificPortMappingEntry') return {status:200,localAddress:gateway.localAddress,body:`<NewInternalClient>192.168.1.2</NewInternalClient><NewInternalPort>34567</NewInternalPort><NewPortMappingDescription>${foreign ? 'other-app' : 'KAMUCL-test'}</NewPortMappingDescription>`}
+    if (action === 'GetSpecificPortMappingEntry') return {status:200,localAddress:gateway.localAddress,body:`<NewInternalClient>192.168.1.2</NewInternalClient><NewInternalPort>34567</NewInternalPort><NewPortMappingDescription>${foreign ? 'other-app' : 'FAIONYX-test'}</NewPortMappingDescription>`}
     if (action === 'AddPortMapping') { mapping=true; assert.match(options!.body!,/<NewLeaseDuration>300<\/NewLeaseDuration>/) }
     if (action === 'DeletePortMapping') mapping=false
     return {status:200,localAddress:gateway.localAddress,body:'<ok />'}
   }
-  const handle = await createMapping(gateway,34567,'KAMUCL-test',undefined,transport)
-  await assert.rejects(createMapping(gateway,34567,'KAMUCL-test',undefined,transport),/已存在/)
+  const handle = await createMapping(gateway,34567,'FAIONYX-test',undefined,transport)
+  await assert.rejects(createMapping(gateway,34567,'FAIONYX-test',undefined,transport),/已存在/)
   await handle.renew(); await handle.remove(); assert.equal(mapping,false)
-  const second = await createMapping(gateway,34567,'KAMUCL-test',undefined,transport)
+  const second = await createMapping(gateway,34567,'FAIONYX-test',undefined,transport)
   foreign=true; await second.remove(); assert.equal(mapping,true)
   const deletes = actions.filter(action=>action==='DeletePortMapping').length
   assert.equal(deletes,1)

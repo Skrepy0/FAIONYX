@@ -1,4 +1,4 @@
-# KAMUCL local offline skin provider
+# FAIONYX local offline skin provider
 
 Original Java source licensed GPL-3.0-or-later. The Java agent serves one captured offline player's PNG and signed texture property from inside that game's JVM, using a random loopback-only route. It contains no Minecraft or authlib-injector source.
 

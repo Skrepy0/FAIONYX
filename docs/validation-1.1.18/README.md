@@ -1,4 +1,4 @@
-# KAMUCL 1.1.18 验证范围
+# FAIONYX 1.1.18 验证范围
 
 香港日志 2026-10-07 14:54。最终 EXE a0427950efe94c5ffc5f05cca9dcc33b79bab96293cfde7e0c89a2f7198be887，97323101 字节，Electron 44.3.0。原生验收 Windows 11 26200 x64、125% 显示缩放。用户数据保留；本批不含 Mac、不恢复优化。
 
@@ -27,7 +27,7 @@ Windows：npx --no-install electron-builder --win portable --x64 --config.electr
 
 构建需JDK17+，实际JDK25.0.2。原创提供器以 --release 8 编译。真实探针入口 scripts/verify-java-runtime118.ts、scripts/verify-offline-skin-runtime118.ts，需要相应 Java/网络；回执记录的机器路径不是通用预置。
 
-成品UI：设置 KAMUCL_EXTENSION_GUI=1、KAMUCL_EXTENSION_ONLY=1、KAMUCL_SKIP_EXTENSION_BASE=1；KAMUCL_UI_MODULE 分别 offline118、packs118、ux116、game118，执行 node scripts/verify-ui-refinement.cjs black-orange。前两项分别顺序跑 black-orange/blue-white/transparent/custom。不要设置 KAMUCL_GUI_DEV。仅专属测试账号、目录和进程，不向其他程序输入，不并发启动可能影响前台的工具；焦点变化硬失败。测试游戏驱动 tests/fixtures/OfflineGameProbe.java 不进入成品，不含私人世界。
+成品UI：设置 FAIONYX_EXTENSION_GUI=1、FAIONYX_EXTENSION_ONLY=1、FAIONYX_SKIP_EXTENSION_BASE=1；FAIONYX_UI_MODULE 分别 offline118、packs118、ux116、game118，执行 node scripts/verify-ui-refinement.cjs black-orange。前两项分别顺序跑 black-orange/blue-white/transparent/custom。不要设置 FAIONYX_GUI_DEV。仅专属测试账号、目录和进程，不向其他程序输入，不并发启动可能影响前台的工具；焦点变化硬失败。测试游戏驱动 tests/fixtures/OfflineGameProbe.java 不进入成品，不含私人世界。
 
 ## 证据与尺寸
 

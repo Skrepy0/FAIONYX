@@ -6,7 +6,7 @@ import path from 'node:path'
 import { configureRuntimeGraphics } from '../src/main/runtimeGraphics'
 
 test('compact runtime keeps existing switches and does not disable WebGL/GPU; full Windows and Mac are unchanged', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-graphics-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-graphics-'))
   try {
     const flags = new Map<string, string>([['disable-features', 'ExistingFeature']])
     const commandLine = { getSwitchValue: (n: string) => flags.get(n) || '', appendSwitch: (n: string, v = '') => { flags.set(n, v) } }

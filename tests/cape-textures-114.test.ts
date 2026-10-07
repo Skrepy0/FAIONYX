@@ -68,7 +68,7 @@ test('PNG download preserves exact bytes and dimensions, retries failure, and re
 })
 
 test('partial cached capes retry after restart and deduplicate; complete cache avoids network and keeps no secrets', async () => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-cape-cache-'))
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-cape-cache-'))
   try {
     const incomplete = { username:'fixture', skins:[{ variant:'classic', url:'https://skin.example/skin.png', dataUrl:dataUrl(64,64) }],
       capes:[{ id:'a', alias:'Aurora', active:true, url:'https://skin.example/a.png', textureError:'HTTP 503，请刷新重试' },

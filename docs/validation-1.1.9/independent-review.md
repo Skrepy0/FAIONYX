@@ -1,4 +1,4 @@
-KAMUCL 1.1.9 Windows 独立交付评审
+FAIONYX 1.1.9 Windows 独立交付评审
 
 本轮仅 Windows。用户直接调整范围：“暂时不输出intel arm64的mac版本”；“暂时不做intel arm64的mac版本”。complete=true / passed=true 仅限 deliveryPlatforms=[windows]，不表示全部平台通过。
 

@@ -10,16 +10,16 @@ import { trackLaunchState, instanceLaunchBusy, type LaunchTracking } from '../sr
 
 let code: Promise<string>
 async function runtime(t: any, env: Record<string, string> = {}, platform = process.platform, arch = process.arch) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-defaults-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-defaults-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   code ??= build({ stdin: { contents: `export * from './src/main/core/defaultResourcePacks';export {getPendingUpdate} from './src/main/core/applyUpdate';export {checkLatest,currentVersion} from './src/main/core/selfUpdate';export {trustedUpdateRelease} from './src/main/core/updateTrust';export {setDefaultKey,syncKeysToGameDir} from './src/main/core/keybindings';`, resolveDir: process.cwd() }, platform: 'node', format: 'cjs', bundle: true, write: false, packages: 'external' }).then(r => r.outputFiles[0].text)
   const require = createRequire(path.resolve('package.json')), mod = { exports: {} as any }, requested: string[] = []
   const fixtureEnv = { ...process.env, ...env }
-  delete fixtureEnv.PORTABLE_EXECUTABLE_FILE; delete fixtureEnv.KAMUCL_UPDATE_TARGET_EXE; delete fixtureEnv.APPIMAGE
+  delete fixtureEnv.PORTABLE_EXECUTABLE_FILE; delete fixtureEnv.FAIONYX_UPDATE_TARGET_EXE; delete fixtureEnv.APPIMAGE
   const fakeProcess = { ...process, platform, arch, env: fixtureEnv }
   new Function('require','module','exports','process',await code)(
     (name: string) => name === 'electron' ? { app: { isPackaged: true, getPath: () => root, getVersion: () => '1.0.41', getName: () => 'test' } }
-      : name === 'undici' ? { ...require(name), fetch: async (url: string) => { requested.push(String(url)); return Response.json({ tag_name: 'v1.0.30', assets: [{ name: 'KAMUCL-1.0.30.exe', size: 123, browser_download_url: 'https://github.com/kamubaba-i/KAMUCL/releases/download/v1.0.30/KAMUCL-1.0.30.exe' }] }) } }
+      : name === 'undici' ? { ...require(name), fetch: async (url: string) => { requested.push(String(url)); return Response.json({ tag_name: 'v1.0.30', assets: [{ name: 'FAIONYX-1.0.30.exe', size: 123, browser_download_url: 'https://github.com/Skrepy0/FAIONYX/releases/download/v1.0.30/FAIONYX-1.0.30.exe' }] }) } }
       : require(name), mod, mod.exports, fakeProcess)
   return { root, api: mod.exports, requested, fixtureEnv }
 }
@@ -119,7 +119,7 @@ test('explicitly reapplying compatible defaults clears old false incompatibility
   const client = path.join(root, 'client.jar'), game = path.join(root, 'game'), resource = path.join(root, 'Fullbright.zip')
   const jar = new AdmZip(); jar.addFile('version.json', Buffer.from(JSON.stringify({ pack_version: { resource_major: 88, resource_minor: 0 } }))); jar.writeZip(client)
   const zip = new AdmZip(); zip.addFile('pack.mcmeta', Buffer.from(JSON.stringify({ pack: { pack_format: 15, min_format: [15, 0], max_format: [1000, 0], supported_formats: [15, 1000] } }))); zip.writeZip(resource)
-  const [p] = api.importDefaultResourcePacks([resource]), id = `file/KAMUCL-default-${p.id}-${p.name}`
+  const [p] = api.importDefaultResourcePacks([resource]), id = `file/FAIONYX-default-${p.id}-${p.name}`
   fs.mkdirSync(game)
   fs.writeFileSync(path.join(game, 'options.txt'), `resourcePacks:["vanilla","file/Personal.zip","${id}"]\nincompatibleResourcePacks:["file/Personal.zip","${id}"]\nlang:zh_cn\n`)
   api.applyDefaultResourcePacks(game, '26.2', client)
@@ -147,25 +147,25 @@ test('unassigned key persists and syncs as unknown while other settings survive'
 })
 
 test('Windows packaged updates ignore test overrides and reject local v99 pending/cache pollution', async t => {
-  const isolatedKeys = ['PORTABLE_EXECUTABLE_FILE', 'KAMUCL_UPDATE_TARGET_EXE', 'APPIMAGE'] as const
+  const isolatedKeys = ['PORTABLE_EXECUTABLE_FILE', 'FAIONYX_UPDATE_TARGET_EXE', 'APPIMAGE'] as const
   const hostEnvironment = isolatedKeys.map(key => process.env[key])
-  const unrelated = path.join(os.tmpdir(), 'kamucl-unrelated-host')
+  const unrelated = path.join(os.tmpdir(), 'faionyx-unrelated-host')
   const { root, api, requested, fixtureEnv } = await runtime(t, {
-    KAMUCL_USERDATA_DIR: 'unused-test-dir', KAMUCL_UPDATE_API_BASE: 'http://127.0.0.1:8310', KAMUCL_VERSION_OVERRIDE: '99.0.0',
-    PORTABLE_EXECUTABLE_FILE: path.join(unrelated, 'KAMUCL.exe'),
-    KAMUCL_UPDATE_TARGET_EXE: path.join(unrelated, 'another.exe'), APPIMAGE: path.join(unrelated, 'KAMUCL.AppImage')
+    FAIONYX_USERDATA_DIR: 'unused-test-dir', FAIONYX_UPDATE_API_BASE: 'http://127.0.0.1:8310', FAIONYX_VERSION_OVERRIDE: '99.0.0',
+    PORTABLE_EXECUTABLE_FILE: path.join(unrelated, 'FAIONYX.exe'),
+    FAIONYX_UPDATE_TARGET_EXE: path.join(unrelated, 'another.exe'), APPIMAGE: path.join(unrelated, 'FAIONYX.AppImage')
   }, 'win32', 'x64')
   for (const key of isolatedKeys) assert.equal(fixtureEnv[key], undefined, `${key} must not route the fixture to a host installation`)
   assert.deepEqual(isolatedKeys.map(key => process.env[key]), hostEnvironment, 'the real host environment remains unchanged')
   assert.equal(api.currentVersion(), '1.0.41')
-  const file = path.join(root, 'KAMUCL-99.0.0.exe'); fs.writeFileSync(file, 'fixture')
-  const release = { version: '99.0.0', assetName: path.basename(file), assetUrl: 'http://127.0.0.1:8310/download/KAMUCL-99.0.0.exe', assetSize: 7 }
+  const file = path.join(root, 'FAIONYX-99.0.0.exe'); fs.writeFileSync(file, 'fixture')
+  const release = { version: '99.0.0', assetName: path.basename(file), assetUrl: 'http://127.0.0.1:8310/download/FAIONYX-99.0.0.exe', assetSize: 7 }
   fs.writeFileSync(path.join(root, 'pending-update.json'), JSON.stringify({ release, file }))
   assert.equal(api.getPendingUpdate(), null); assert(fs.existsSync(file)); assert(fs.readdirSync(root).some(f => f.startsWith('pending-update.json.rejected-')))
   fs.writeFileSync(path.join(root, 'update-check-cache.json'), JSON.stringify({ checkedAt: Date.now(), latest: release }))
   const checked = await api.checkLatest(false)
   assert.equal(checked.hasUpdate, false); assert.equal(checked.release.version, '1.0.30'); assert(requested.every(u => u.startsWith('https://api.github.com/')))
-  const official = { ...release, version: '1.0.42', assetName: 'KAMUCL-1.0.42.exe', assetUrl: 'https://github.com/kamubaba-i/KAMUCL/releases/download/v1.0.42/KAMUCL-1.0.42.exe' }
+  const official = { ...release, version: '1.0.42', assetName: 'FAIONYX-1.0.42.exe', assetUrl: 'https://github.com/Skrepy0/FAIONYX/releases/download/v1.0.42/FAIONYX-1.0.42.exe' }
   const officialFile = path.join(root, official.assetName); fs.writeFileSync(officialFile, 'fixture')
   fs.writeFileSync(path.join(root, 'pending-update.json'), JSON.stringify({ release: official, file: officialFile }))
   assert.equal(api.getPendingUpdate().release.version, '1.0.42')

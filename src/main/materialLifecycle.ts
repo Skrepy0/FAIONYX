@@ -25,7 +25,7 @@ export function trackMaterialLifecycle(
   for (const event of ['maximize', 'unmaximize', 'restore', 'show', 'leave-full-screen']) window.on(event, refresh)
   // Electron's setOpacity(1) leaves WS_EX_LAYERED behind. Release it only
   // after our own native fade has finished, never in the middle of the fade.
-  window.on('kamucl:startup-opacity-complete', () => { startupRevealed = true; refresh() })
+  window.on('faionyx:startup-opacity-complete', () => { startupRevealed = true; refresh() })
 
   // Alt+Tab/Win+D can need a frame repair, but focus belongs to the same queue
   // as maximize/show/restore. Never schedule a second independent compositor pass.

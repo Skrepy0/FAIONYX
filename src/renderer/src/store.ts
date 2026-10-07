@@ -37,8 +37,8 @@ export interface ToastItem {
   type: ToastType
 }
 
-const LAST_PLAYED_KEY = 'kamucl.lastPlayed'
-const BANNER_ALIGN_KEY = 'kamucl.bannerAlign'
+const LAST_PLAYED_KEY = 'faionyx.lastPlayed'
+const BANNER_ALIGN_KEY = 'faionyx.bannerAlign'
 
 export type BannerAlign = 'start' | 'center'
 
@@ -136,11 +136,11 @@ watch([activeInstalled, () => store.settings?.activeFolder], () => {
   if (!store.settings) return
   const list = activeInstalled.value
   if (!list.some(v => v.id === store.resourceVersionId)) {
-    const saved = localStorage.getItem('kamucl.lastVersion') || ''
+    const saved = localStorage.getItem('faionyx.lastVersion') || ''
     store.resourceVersionId = list.find(v => v.id === saved)?.id || list[0]?.id || ''
   }
 }, { flush: 'sync' })
-watch(() => store.resourceVersionId, id => { if (id) localStorage.setItem('kamucl.lastVersion', id) }, { flush: 'sync' })
+watch(() => store.resourceVersionId, id => { if (id) localStorage.setItem('faionyx.lastVersion', id) }, { flush: 'sync' })
 
 export const applyLaunchState = (state: LaunchState) => trackLaunchState(store, state)
 
@@ -439,7 +439,7 @@ export function versionIconUrl(v: InstalledVersion): string {
     const def =
       store.settings?.folders.find((f) => f.isDefault)?.path ?? store.settings?.gameDir ?? ''
     if (!def) return ''
-    const p = `${def}/.kamucl/icons/${icon.slice(5)}`.replace(/\\/g, '/')
+    const p = `${def}/.faionyx/icons/${icon.slice(5)}`.replace(/\\/g, '/')
     return 'file:///' + p.replace(/^\/+/, '')
   }
   return ''

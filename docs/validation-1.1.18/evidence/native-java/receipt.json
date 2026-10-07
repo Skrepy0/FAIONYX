@@ -11,7 +11,7 @@
   },
   "runtimes": [
     {
-      "path": "E:\\KAMUCL\\out\\java118-runtime\\unpacked\\zulu8.96.0.205-ca-jre8.0.504-win_x64\\bin\\java.exe",
+      "path": "E:\\FAIONYX\\out\\java118-runtime\\unpacked\\zulu8.96.0.205-ca-jre8.0.504-win_x64\\bin\\java.exe",
       "major": 8,
       "version": "1.8.0_504",
       "is64Bit": true,
@@ -48,7 +48,7 @@
       "game": "1.12.2",
       "selected": 8,
       "requestedDownload": 8,
-      "path": "E:\\KAMUCL\\out\\java118-runtime\\unpacked\\zulu8.96.0.205-ca-jre8.0.504-win_x64\\bin\\java.exe"
+      "path": "E:\\FAIONYX\\out\\java118-runtime\\unpacked\\zulu8.96.0.205-ca-jre8.0.504-win_x64\\bin\\java.exe"
     },
     {
       "game": "1.20.1",

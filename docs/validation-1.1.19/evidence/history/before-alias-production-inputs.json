@@ -15,12 +15,12 @@
       "sha256": "9f4b059d111b5676b26e9d37cd2cb7492b2029e597f9905fab702ed2a529a92c"
     },
     {
-      "file": "bridge/dist/kamucl-bridge-1.0.0.jar",
+      "file": "bridge/dist/faionyx-bridge-1.0.0.jar",
       "bytes": 21041,
       "sha256": "280eb076498ca44c902ca039f7183d246a319d04292546f0d3ef27e9c79c7bc5"
     },
     {
-      "file": "bridge/dist/kamucl-bridge-1.0.1.jar",
+      "file": "bridge/dist/faionyx-bridge-1.0.1.jar",
       "bytes": 21827,
       "sha256": "20e482f85923483641fa84e7e6c737b57411c9b4979efb8f0033b17ad24fc69d"
     },
@@ -145,7 +145,7 @@
       "sha256": "7f0e9d11b7dd8bec629262ca0d998c3fb5e5f58a1bd68072df96cda52ef0ef7d"
     },
     {
-      "file": "offline-skin-agent/src/cn/kamucl/skin/OfflineSkinAgent.java",
+      "file": "offline-skin-agent/src/cn/faionyx/skin/OfflineSkinAgent.java",
       "bytes": 14191,
       "sha256": "16fa651efebeb48a724b990a9de0ae4d3a52261370b6fd3f379917c365e304b5"
     },

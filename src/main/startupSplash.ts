@@ -7,7 +7,7 @@ import { awaitNativeStartup, createNativeStartup, showStartupWindow } from './na
 
 /** Startup-only window coordination. This does not own or terminate Minecraft processes. */
 export async function createStartupSplash() {
-  const signal = process.env.KAMUCL_BOOT_SIGNAL
+  const signal = process.env.FAIONYX_BOOT_SIGNAL
   if (signal) {
     const pid = await awaitNativeStartup(signal)
     if (pid) return createNativeStartup(signal, pid)
@@ -23,7 +23,7 @@ function createElectronStartupSplash() {
   let splash: BrowserWindow | null = new BrowserWindow({
     ...bounds, show: false, frame: false, transparent: true, backgroundColor: '#00000000',
     hasShadow: false, thickFrame: false, resizable: false, movable: false, focusable: false,
-    skipTaskbar: true, alwaysOnTop: true, title: 'KAMUCL · 正在启动',
+    skipTaskbar: true, alwaysOnTop: true, title: 'FAIONYX · 正在启动',
     webPreferences: { preload: join(__dirname, '../preload/splash.js'), sandbox: true, contextIsolation: true, nodeIntegration: false, backgroundThrottling: false }
   })
   splash.setIgnoreMouseEvents(true)
@@ -104,13 +104,13 @@ function createElectronStartupSplash() {
       window.webContents.once('render-process-gone', (_event, details) => {
         if (revealed) return
         dispose()
-        void dialog.showMessageBox({ type: 'error', title: 'KAMUCL 初始化失败', message: `主界面进程退出：${details.reason}。请重新启动并查看启动器日志。` })
+        void dialog.showMessageBox({ type: 'error', title: 'FAIONYX 初始化失败', message: `主界面进程退出：${details.reason}。请重新启动并查看启动器日志。` })
         window.close()
       })
       window.webContents.once('did-fail-load', (_event, code, description, _url, isMainFrame) => {
         if (!isMainFrame || code === -3 || revealed) return
         dispose()
-        void dialog.showMessageBox({ type: 'error', title: 'KAMUCL 初始化失败', message: `无法加载主界面（${code}）：${description}` })
+        void dialog.showMessageBox({ type: 'error', title: 'FAIONYX 初始化失败', message: `无法加载主界面（${code}）：${description}` })
         window.close()
       })
     }

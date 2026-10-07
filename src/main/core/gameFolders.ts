@@ -152,7 +152,7 @@ export function setDefaultGameFolder(input: string): GameFolder[] {
 
 function assertWritableDownloadFolder(folder: string): void {
   if (!fs.existsSync(folder) || !fs.statSync(folder).isDirectory()) throw new Error('下载文件夹已不存在，请重新选择')
-  const probe = path.join(folder, `.kamucl-write-test-${crypto.randomUUID()}`)
+  const probe = path.join(folder, `.faionyx-write-test-${crypto.randomUUID()}`)
   try {
     fs.writeFileSync(probe, '', { flag: 'wx' })
     fs.unlinkSync(probe)
@@ -203,8 +203,8 @@ export function scanGameFolder(input: string): FolderScanResult {
       durationMs: Date.now() - started
     }
   }
-  const structure = fs.existsSync(path.join(folder.path, '.kamucl'))
-    ? 'kamucl'
+  const structure = fs.existsSync(path.join(folder.path, '.faionyx'))
+    ? 'faionyx'
     : fs.existsSync(path.join(folder.path, 'versions'))
       ? 'minecraft'
       : 'empty'

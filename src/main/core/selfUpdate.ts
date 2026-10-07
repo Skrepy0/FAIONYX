@@ -23,13 +23,13 @@ const updateLog = logScope('self-update')
 const CACHE_TTL_MS = 6 * 3600_000
 const API_TIMEOUT_MS = 10_000
 
-/** GitHub API 基地址（env 覆盖供 mock 测试：KAMUCL_UPDATE_API_BASE=http://127.0.0.1:8310） */
+/** GitHub API 基地址（env 覆盖供 mock 测试：FAIONYX_UPDATE_API_BASE=http://127.0.0.1:8310） */
 function apiBase(): string {
-  return (isolatedUpdateTest() ? process.env.KAMUCL_UPDATE_API_BASE! : 'https://api.github.com').replace(/\/+$/, '')
+  return (isolatedUpdateTest() ? process.env.FAIONYX_UPDATE_API_BASE! : 'https://api.github.com').replace(/\/+$/, '')
 }
 /** 文件下载基地址（镜像/mock 用；默认空 = 用 API 返回的 browser_download_url 原样） */
 function downloadBaseOverride(): string {
-  return (isolatedUpdateTest() ? process.env.KAMUCL_UPDATE_DOWNLOAD_BASE || '' : '').replace(/\/+$/, '')
+  return (isolatedUpdateTest() ? process.env.FAIONYX_UPDATE_DOWNLOAD_BASE || '' : '').replace(/\/+$/, '')
 }
 
 interface CheckCache {
@@ -41,11 +41,11 @@ interface CheckCache {
 
 /** 当前版本（env 覆盖供测试） */
 export function currentVersion(): string {
-  return (isolatedUpdateTest() && process.env.KAMUCL_VERSION_OVERRIDE) || app.getVersion()
+  return (isolatedUpdateTest() && process.env.FAIONYX_VERSION_OVERRIDE) || app.getVersion()
 }
 /** userData 目录（env 覆盖供测试） */
 function userDataDir(): string {
-  return isolatedUpdateTest() ? process.env.KAMUCL_USERDATA_DIR! : app.getPath('userData')
+  return isolatedUpdateTest() ? process.env.FAIONYX_USERDATA_DIR! : app.getPath('userData')
 }
 
 function cacheFile(): string {
@@ -111,7 +111,7 @@ async function ghFetch(url: string, etag?: string): Promise<Response> {
         signal: ctrl.signal,
         headers: {
           Accept: 'application/vnd.github+json',
-          'User-Agent': 'KAMUCL-Launcher',
+          'User-Agent': 'FAIONYX-Launcher',
           ...(etag ? { 'If-None-Match': etag } : {})
         }
       })

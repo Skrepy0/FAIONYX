@@ -5,20 +5,40 @@ const assert = require('node:assert/strict'), crypto = require('node:crypto'), {
 const version = require('../package.json').version, pack = process.argv[2], label = process.argv[3] || version
 assert(pack && fs.existsSync(pack), 'Usage: node scripts/benchmark-modpack-gui.cjs <CurseForge pack.zip> [label]')
 const mc = JSON.parse(new (require('adm-zip'))(pack).readAsText('manifest.json')).minecraft.version
-const reusedRoot = process.env.KAMUCL_BENCH_REUSE_ROOT
-if (reusedRoot) assert(path.dirname(path.resolve(reusedRoot)) === path.resolve(os.tmpdir()) && path.basename(reusedRoot).startsWith('KAMUCL pack GUI '), 'Reuse only an isolated benchmark root')
-const root = reusedRoot || fs.mkdtempSync(path.join(os.tmpdir(), 'KAMUCL pack GUI ')), profile = path.join(root, 'profile'), game = path.join(root, 'game')
+const reusedRoot = process.env.FAIONYX_BENCH_REUSE_ROOT;
+if (reusedRoot) assert(
+  path.dirname(path.resolve(reusedRoot)) === path.resolve(os.tmpdir()) &&
+    path.basename(reusedRoot).startsWith("FAIONYX pack GUI "),
+  "Reuse only an isolated benchmark root",
+);
+const root =
+    reusedRoot || fs.mkdtempSync(path.join(os.tmpdir(), "FAIONYX pack GUI ")),
+  profile = path.join(root, "profile"),
+  game = path.join(root, "game");
 fs.mkdirSync(profile, {recursive:true}); fs.mkdirSync(game, {recursive:true})
 fs.writeFileSync(path.join(profile, 'settings.json'), JSON.stringify({ gameDir: game, activeFolder: game, folders: [{ path: game, name: '下载验证目录', isDefault: true }], autoUpdate: false, mirror: 'bmclapi', downloadThreads: 16, downloadSpeedKBps: 0, theme: 'black-orange' }))
-const exe = path.join(root, `KAMUCL-${version}.exe`)
-if(!process.env.KAMUCL_GUI_DEV) fs.copyFileSync(`release/KAMUCL-${version}.exe`, exe)
+const exe = path.join(root, `FAIONYX-${version}.exe`);
+if (!process.env.FAIONYX_GUI_DEV)
+  fs.copyFileSync(`release/FAIONYX-${version}.exe`, exe);
 const wait = ms => new Promise(r => setTimeout(r, ms))
 ;(async () => {
   const socket = net.createServer(); await new Promise(r => socket.listen(0, '127.0.0.1', r))
   const port = socket.address().port; await new Promise(r => socket.close(r))
   const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE
   const log = fs.openSync(path.join(root, 'process.log'), 'w')
-  const child = spawn(process.env.KAMUCL_GUI_DEV ? path.resolve('node_modules/electron/dist/electron.exe') : exe, [...(process.env.KAMUCL_GUI_DEV ? ['.'] : []), `--user-data-dir=${profile}`, `--remote-debugging-port=${port}`, '--disable-renderer-backgrounding', '--disable-background-timer-throttling'], { env, stdio: ['ignore', log, log] })
+  const child = spawn(
+    process.env.FAIONYX_GUI_DEV
+      ? path.resolve("node_modules/electron/dist/electron.exe")
+      : exe,
+    [
+      ...(process.env.FAIONYX_GUI_DEV ? ["."] : []),
+      `--user-data-dir=${profile}`,
+      `--remote-debugging-port=${port}`,
+      "--disable-renderer-backgrounding",
+      "--disable-background-timer-throttling",
+    ],
+    { env, stdio: ["ignore", log, log] },
+  );
   let ws, evaluate, taskId
   try {
     let page
@@ -44,9 +64,9 @@ const wait = ms => new Promise(r => setTimeout(r, ms))
     await evaluate("document.querySelector('[data-tab=download]').click()")
     // Finish the page's initial directory scan before starting an installation.
     await wait(2000)
-    await evaluate("globalThis.downloadProof={events:[],done:null};window.kamucl.on('event:progress',e=>{downloadProof.events.push({...e,at:Date.now()})});window.kamucl.on('event:installDone',e=>{downloadProof.done=e})")
+    await evaluate("globalThis.downloadProof={events:[],done:null};window.faionyx.on('event:progress',e=>{downloadProof.events.push({...e,at:Date.now()})});window.faionyx.on('event:installDone',e=>{downloadProof.done=e})")
     const started = Date.now()
-    await evaluate(`window.kamucl.invoke('modpack:install',${JSON.stringify(pack)},{targetFolder:${JSON.stringify(game)}})`)
+    await evaluate(`window.faionyx.invoke('modpack:install',${JSON.stringify(pack)},{targetFolder:${JSON.stringify(game)}})`)
     await wait(1500)
     await evaluate("document.querySelector('.dl-toggle').click()")
     await wait(200); assert(await evaluate("!!document.querySelector('.dl-panel')"), 'download panel did not open')
@@ -56,7 +76,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms))
       result = await evaluate('({done:downloadProof.done,last:downloadProof.events.at(-1)})')
       taskId = result.last?.taskId || taskId
       if (result.done) break
-      if (process.env.KAMUCL_TEST_PAUSE && !paused && taskId && i >= 8) {
+      if (process.env.FAIONYX_TEST_PAUSE && !paused && taskId && i >= 8) {
         await evaluate("[...document.querySelectorAll('.dl-actions button')].find(b=>b.textContent==='暂停').click()")
         await wait(800); await capture('download-paused')
         assert(await evaluate("document.querySelector('.dl-panel').innerText.includes('已暂停')"))
@@ -70,7 +90,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms))
     }
     fs.writeFileSync(`out/modpack-events-${label}.json`,JSON.stringify({root,started,finished:Date.now(),...result,events:await evaluate('downloadProof.events')},null,2))
     assert(result?.done?.ok, JSON.stringify(result))
-    const installed = await evaluate("window.kamucl.invoke('versions:installed',true)")
+    const installed = await evaluate("window.faionyx.invoke('versions:installed',true)")
     assert(installed.some(v => v.id === result.done.versionId && !v.incomplete && !v.failed))
     const installSeconds = (Date.now()-started)/1000
     const id = result.done.versionId
@@ -81,13 +101,13 @@ const wait = ms => new Promise(r => setTimeout(r, ms))
     const assets = JSON.parse(fs.readFileSync(path.join(game, 'assets', 'indexes', json.assetIndex.id + '.json'))).objects
     for (const asset of Object.values(assets)) verify(path.join(game, 'assets', 'objects', asset.hash.slice(0, 2), asset.hash), { size: asset.size, sha1: asset.hash })
     await capture('download-complete')
-    const report = { version, mc, pack, label, startedAt: started, installSeconds, packSHA256: crypto.createHash('sha256').update(fs.readFileSync(pack)).digest('hex'), root, game, complete: true, instanceId: id, emptyDirectory: !reusedRoot, elapsedSeconds: (Date.now() - started) / 1000, pausedAndResumed: paused, verifiedAssets: Object.keys(assets).length, exeSHA256: process.env.KAMUCL_GUI_DEV ? null : crypto.createHash('sha256').update(fs.readFileSync(exe)).digest('hex'), events: await evaluate('downloadProof.events') }
+    const report = { version, mc, pack, label, startedAt: started, installSeconds, packSHA256: crypto.createHash('sha256').update(fs.readFileSync(pack)).digest('hex'), root, game, complete: true, instanceId: id, emptyDirectory: !reusedRoot, elapsedSeconds: (Date.now() - started) / 1000, pausedAndResumed: paused, verifiedAssets: Object.keys(assets).length, exeSHA256: process.env.FAIONYX_GUI_DEV ? null : crypto.createHash('sha256').update(fs.readFileSync(exe)).digest('hex'), events: await evaluate('downloadProof.events') }
     fs.writeFileSync(`out/modpack-gui-${label}.json`, JSON.stringify(report, null, 2))
     console.log(JSON.stringify({ root, installSeconds, elapsedSeconds: report.elapsedSeconds, verifiedAssets: report.verifiedAssets, pausedAndResumed: paused }))
   } finally {
     if (evaluate) {
-      if (taskId) await evaluate(`window.kamucl.invoke('tasks:cancel',${JSON.stringify(taskId)})`).catch(() => {})
-      await evaluate("window.kamucl.send('window:close')").catch(() => {})
+      if (taskId) await evaluate(`window.faionyx.invoke('tasks:cancel',${JSON.stringify(taskId)})`).catch(() => {})
+      await evaluate("window.faionyx.send('window:close')").catch(() => {})
     }
     ws?.close(); fs.closeSync(log)
     for (let i = 0; i < 50 && child.exitCode === null; i++) await wait(100)

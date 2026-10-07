@@ -1,4 +1,4 @@
-package cn.kamucl.bridge;
+package cn.faionyx.bridge;
 
 /**
  * 演示行为：心跳线程按参数节奏在游戏日志打印演示状态。
@@ -15,9 +15,9 @@ final class DemoBehavior {
 
     static synchronized void setHeartbeat(boolean on) {
         heartbeat = on;
-        System.out.println("[KAMUCL Demo] 心跳日志已" + (on ? "开启" : "关闭"));
+        System.out.println("[FAIONYX Demo] 心跳日志已" + (on ? "开启" : "关闭"));
         if (on && (thread == null || !thread.isAlive())) {
-            thread = new Thread(DemoBehavior::loop, "kamucl-demo-heartbeat");
+            thread = new Thread(DemoBehavior::loop, "faionyx-demo-heartbeat");
             thread.setDaemon(true);
             thread.start();
         }
@@ -25,22 +25,22 @@ final class DemoBehavior {
 
     static synchronized void setInterval(double seconds) {
         interval = seconds;
-        System.out.println("[KAMUCL Demo] 心跳间隔调整为 " + seconds + " 秒（即时生效）");
+        System.out.println("[FAIONYX Demo] 心跳间隔调整为 " + seconds + " 秒（即时生效）");
     }
 
     static synchronized void setMode(String next) {
         mode = next;
-        System.out.println("[KAMUCL Demo] 演示模式切换为 " + next + "（即时生效）");
+        System.out.println("[FAIONYX Demo] 演示模式切换为 " + next + "（即时生效）");
     }
 
     static synchronized void setMotto(String next) {
         motto = next;
-        System.out.println("[KAMUCL Demo] 演示座右铭更新为「" + next + "」（即时生效）");
+        System.out.println("[FAIONYX Demo] 演示座右铭更新为「" + next + "」（即时生效）");
     }
 
     private static void loop() {
         while (heartbeat) {
-            System.out.println("[KAMUCL Demo] 心跳 · 模式=" + mode + " · 座右铭=" + motto + " · 间隔=" + interval + "s");
+            System.out.println("[FAIONYX Demo] 心跳 · 模式=" + mode + " · 座右铭=" + motto + " · 间隔=" + interval + "s");
             try {
                 Thread.sleep((long) (interval * 1000));
             } catch (InterruptedException e) {

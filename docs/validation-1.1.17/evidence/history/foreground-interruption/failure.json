@@ -1,7 +1,7 @@
 {
   "complete": false,
   "version": "1.1.17",
-  "directory": "E:\\KAMUCL\\out\\qa-ux117-black-orange-ca00b9ae-3d51-4741-91df-b22415a9fbc0",
+  "directory": "E:\\FAIONYX\\out\\qa-ux117-black-orange-ca00b9ae-3d51-4741-91df-b22415a9fbc0",
   "theme": "black-orange",
   "observations": [
     {
@@ -140,20 +140,20 @@
               "theme": "black-orange"
             },
             "settings": {
-              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "folders": [
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
                   "name": "独立验证目录",
                   "isDefault": true
                 },
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\second-games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\second-games",
                   "name": "整合包收藏",
                   "isDefault": false
                 }
               ],
-              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "javaPath": "",
               "javaAuto": true,
               "javaCustom": [],
@@ -286,20 +286,20 @@
             "failed": true,
             "checked": true,
             "settings": {
-              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "folders": [
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
                   "name": "独立验证目录",
                   "isDefault": true
                 },
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\second-games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\second-games",
                   "name": "整合包收藏",
                   "isDefault": false
                 }
               ],
-              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "javaPath": "",
               "javaAuto": true,
               "javaCustom": [],
@@ -457,20 +457,20 @@
               "theme": "black-orange"
             },
             "settings": {
-              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "folders": [
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
                   "name": "独立验证目录",
                   "isDefault": true
                 },
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\second-games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\second-games",
                   "name": "整合包收藏",
                   "isDefault": false
                 }
               ],
-              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "javaPath": "",
               "javaAuto": true,
               "javaCustom": [],
@@ -733,7 +733,7 @@
             "headings": 8,
             "strong": 0,
             "unsafe": false,
-            "text": "Third-party notices / 第三方声明The root MIT license covers original KAMUCL contributions only. Third-partycopyright, license and trademark rights remain with their respective holders.VoxLink protocol integration — LGPL-3.0-onlyUpstream: https://github.co"
+            "text": "Third-party notices / 第三方声明The root MIT license covers original FAIONYX contributions only. Third-partycopyright, license and trademark rights remain with their respective holders.VoxLink protocol integration — LGPL-3.0-onlyUpstream: https://github.co"
           }
         }
       ],
@@ -1464,20 +1464,20 @@
               "theme": "black-orange"
             },
             "settings": {
-              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "folders": [
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
                   "name": "独立验证目录",
                   "isDefault": true
                 },
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\second-games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\second-games",
                   "name": "整合包收藏",
                   "isDefault": false
                 }
               ],
-              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "javaPath": "",
               "javaAuto": true,
               "javaCustom": [],
@@ -1682,20 +1682,20 @@
               "theme": "black-orange"
             },
             "settings": {
-              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "folders": [
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
                   "name": "独立验证目录",
                   "isDefault": true
                 },
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\second-games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\second-games",
                   "name": "整合包收藏",
                   "isDefault": false
                 }
               ],
-              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "javaPath": "",
               "javaAuto": true,
               "javaCustom": [],
@@ -1847,20 +1847,20 @@
               "theme": "black-orange"
             },
             "settings": {
-              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "folders": [
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
                   "name": "独立验证目录",
                   "isDefault": true
                 },
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\second-games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\second-games",
                   "name": "整合包收藏",
                   "isDefault": false
                 }
               ],
-              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "javaPath": "",
               "javaAuto": true,
               "javaCustom": [],
@@ -2087,8 +2087,8 @@
         {
           "at": 1791308656708,
           "value": {
-            "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL…games\\versions\\26.3 Fabric 生存世界\\mods",
-            "title": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games\\versions\\26.3 Fabric 生存世界\\mods（点击复制完整路径）"
+            "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX…games\\versions\\26.3 Fabric 生存世界\\mods",
+            "title": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games\\versions\\26.3 Fabric 生存世界\\mods（点击复制完整路径）"
           }
         }
       ],
@@ -2130,8 +2130,8 @@
         {
           "at": 1791308657715,
           "value": {
-            "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL…sions\\26.3 Fabric 生存世界\\resourcepacks",
-            "title": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games\\versions\\26.3 Fabric 生存世界\\resourcepacks（点击复制完整路径）"
+            "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX…sions\\26.3 Fabric 生存世界\\resourcepacks",
+            "title": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games\\versions\\26.3 Fabric 生存世界\\resourcepacks（点击复制完整路径）"
           }
         }
       ],
@@ -2173,8 +2173,8 @@
         {
           "at": 1791308658711,
           "value": {
-            "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL…ersions\\26.3 Fabric 生存世界\\shaderpacks",
-            "title": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games\\versions\\26.3 Fabric 生存世界\\shaderpacks（点击复制完整路径）"
+            "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX…ersions\\26.3 Fabric 生存世界\\shaderpacks",
+            "title": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games\\versions\\26.3 Fabric 生存世界\\shaderpacks（点击复制完整路径）"
           }
         }
       ],
@@ -2338,20 +2338,20 @@
               "theme": "black-orange"
             },
             "settings": {
-              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "folders": [
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
                   "name": "独立验证目录",
                   "isDefault": true
                 },
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\second-games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\second-games",
                   "name": "整合包收藏",
                   "isDefault": false
                 }
               ],
-              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "javaPath": "",
               "javaAuto": true,
               "javaCustom": [],
@@ -2545,20 +2545,20 @@
               "theme": "black-orange"
             },
             "settings": {
-              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "folders": [
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
                   "name": "独立验证目录",
                   "isDefault": true
                 },
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\second-games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\second-games",
                   "name": "整合包收藏",
                   "isDefault": false
                 }
               ],
-              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "javaPath": "",
               "javaAuto": true,
               "javaCustom": [],
@@ -2710,20 +2710,20 @@
               "theme": "black-orange"
             },
             "settings": {
-              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "folders": [
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
                   "name": "独立验证目录",
                   "isDefault": true
                 },
                 {
-                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\second-games",
+                  "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\second-games",
                   "name": "整合包收藏",
                   "isDefault": false
                 }
               ],
-              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+              "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
               "javaPath": "",
               "javaAuto": true,
               "javaCustom": [],
@@ -3975,7 +3975,7 @@
     "ppid": 8240,
     "windowId": 1,
     "webContentsId": 1,
-    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\profile",
+    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\profile",
     "electron": "44.3.0",
     "arch": "x64"
   },
@@ -4017,20 +4017,20 @@
       "theme": "black-orange"
     },
     "settings": {
-      "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+      "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
       "folders": [
         {
-          "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+          "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
           "name": "独立验证目录",
           "isDefault": true
         },
         {
-          "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\second-games",
+          "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\second-games",
           "name": "整合包收藏",
           "isDefault": false
         }
       ],
-      "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+      "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
       "javaPath": "",
       "javaAuto": true,
       "javaCustom": [],
@@ -4184,20 +4184,20 @@
     "failed": true,
     "checked": true,
     "settings": {
-      "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+      "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
       "folders": [
         {
-          "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+          "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
           "name": "独立验证目录",
           "isDefault": true
         },
         {
-          "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\second-games",
+          "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\second-games",
           "name": "整合包收藏",
           "isDefault": false
         }
       ],
-      "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+      "activeFolder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
       "javaPath": "",
       "javaAuto": true,
       "javaCustom": [],
@@ -4322,9 +4322,9 @@
     "mcVersion": "1.21.5",
     "loader": "fabric",
     "loaderVersion": "0.16.12",
-    "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+    "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
     "isolated": false,
-    "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
+    "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
     "isolationReason": "shared"
   },
   "metadataUi": "1.21.5-Fabric 版本识别验证1.21.5Fabric 0.16.12独立验证目录共享目录管理▶ 启动⋯最近游玩：—",
@@ -4332,7 +4332,7 @@
     "headings": 8,
     "strong": 0,
     "unsafe": false,
-    "text": "Third-party notices / 第三方声明The root MIT license covers original KAMUCL contributions only. Third-partycopyright, license and trademark rights remain with their respective holders.VoxLink protocol integration — LGPL-3.0-onlyUpstream: https://github.co"
+    "text": "Third-party notices / 第三方声明The root MIT license covers original FAIONYX contributions only. Third-partycopyright, license and trademark rights remain with their respective holders.VoxLink protocol integration — LGPL-3.0-onlyUpstream: https://github.co"
   },
   "historySetup": {
     "owned": true
@@ -4393,7 +4393,7 @@
   },
   "poseRecording": {
     "version": "1.1.17",
-    "directory": "E:\\KAMUCL\\out\\ux117-poses-eb3f3508-48fa-421c-beed-6bd2383d327f-black-orange",
+    "directory": "E:\\FAIONYX\\out\\ux117-poses-eb3f3508-48fa-421c-beed-6bd2383d327f-black-orange",
     "capture": {
       "format": "jpeg",
       "quality": 70,
@@ -8900,18 +8900,18 @@
   "resources": [
     {
       "id": "mods",
-      "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL…games\\versions\\26.3 Fabric 生存世界\\mods",
-      "title": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games\\versions\\26.3 Fabric 生存世界\\mods（点击复制完整路径）"
+      "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX…games\\versions\\26.3 Fabric 生存世界\\mods",
+      "title": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games\\versions\\26.3 Fabric 生存世界\\mods（点击复制完整路径）"
     },
     {
       "id": "packs",
-      "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL…sions\\26.3 Fabric 生存世界\\resourcepacks",
-      "title": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games\\versions\\26.3 Fabric 生存世界\\resourcepacks（点击复制完整路径）"
+      "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX…sions\\26.3 Fabric 生存世界\\resourcepacks",
+      "title": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games\\versions\\26.3 Fabric 生存世界\\resourcepacks（点击复制完整路径）"
     },
     {
       "id": "shaders",
-      "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL…ersions\\26.3 Fabric 生存世界\\shaderpacks",
-      "title": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games\\versions\\26.3 Fabric 生存世界\\shaderpacks（点击复制完整路径）"
+      "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX…ersions\\26.3 Fabric 生存世界\\shaderpacks",
+      "title": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games\\versions\\26.3 Fabric 生存世界\\shaderpacks（点击复制完整路径）"
     }
   ],
   "select": {
@@ -8938,8 +8938,8 @@
     ],
     "target": {
       "id": "联机验证实例",
-      "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games",
-      "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 ijHMvO\\games\\versions\\联机验证实例",
+      "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games",
+      "gameDir": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 ijHMvO\\games\\versions\\联机验证实例",
       "mcVersion": "1.20.1",
       "loader": "fabric",
       "loaderVersion": "0.19.5"
@@ -8953,7 +8953,7 @@
   "error": {
     "name": "AssertionError",
     "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 179507178\n- 18351084\n",
-    "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 179507178\n- 18351084\n\n    at foreground (E:\\KAMUCL\\scripts\\qa-ux117.cjs:20:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async screenshot (E:\\KAMUCL\\scripts\\qa-ux117.cjs:44:20)\n    at async module.exports (E:\\KAMUCL\\scripts\\verify-skin-editor-ui.cjs:231:436)\n    at async module.exports (E:\\KAMUCL\\scripts\\qa-ux117.cjs:150:64)\n    at async E:\\KAMUCL\\scripts\\verify-ui-refinement.cjs:233:9"
+    "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 179507178\n- 18351084\n\n    at foreground (E:\\FAIONYX\\scripts\\qa-ux117.cjs:20:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async screenshot (E:\\FAIONYX\\scripts\\qa-ux117.cjs:44:20)\n    at async module.exports (E:\\FAIONYX\\scripts\\verify-skin-editor-ui.cjs:231:436)\n    at async module.exports (E:\\FAIONYX\\scripts\\qa-ux117.cjs:150:64)\n    at async E:\\FAIONYX\\scripts\\verify-ui-refinement.cjs:233:9"
   },
   "__qaWindow117Restored": {
     "complete": true,

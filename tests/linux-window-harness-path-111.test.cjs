@@ -7,15 +7,15 @@ const { packagedWindowDirectories } = require('../scripts/verify-linux-business.
 // facade. No native helper or real desktop window is started by this contract.
 const product = buildSync({ entryPoints: ['src/main/core/gracefulClose.ts'], bundle: true, platform: 'node', format: 'cjs', packages: 'external', write: false }).outputFiles[0].text
 function fixture(t) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'KAMUCL window-path contract-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX window-path contract-'))
   const originalRoot = fs.realpathSync(root)
   t.after(() => {
     assert.equal(fs.realpathSync(root), originalRoot)
     assert(fs.lstatSync(root).isDirectory() && !fs.lstatSync(root).isSymbolicLink())
-    assert(path.basename(root).startsWith('KAMUCL window-path contract-'))
+    assert(path.basename(root).startsWith('FAIONYX window-path contract-'))
     fs.rmSync(root, { recursive: true })
   })
-  const application = path.join(root, "KAMUCL 中文 § O'Neil")
+  const application = path.join(root, "FAIONYX 中文 § O'Neil")
   const directories = packagedWindowDirectories(application)
   const helper = path.join(application, 'resources', 'app.asar.unpacked', 'out', 'main', 'LinuxGameWindow')
   fs.mkdirSync(path.dirname(helper), { recursive: true }); fs.writeFileSync(helper, 'contract fixture; never execute')

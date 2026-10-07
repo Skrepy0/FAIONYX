@@ -251,7 +251,7 @@ async function submit() {
 
           <div v-if="candidate.modEvidence.length" class="world-warning">
             <strong>检测到模组痕迹</strong>
-            <span>{{ candidate.modEvidence.join('；') }}。普通存档不包含可靠的完整 MOD 清单，KAMUCL 不会猜测或自动下载未知依赖。</span>
+            <span>{{ candidate.modEvidence.join('；') }}。普通存档不包含可靠的完整 MOD 清单，FAIONYX 不会猜测或自动下载未知依赖。</span>
           </div>
 
           <label class="field">

@@ -2,7 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict')
 const {createNativeSession,withRestoration}=require('../scripts/verify-kamu-native-compositor-119.cjs')
 const {installRendererObserver}=require('../scripts/verify-kamu-native-compositor-119.cjs'),vm=require('node:vm')
 function fixture(){
- const calls=[],w={id:7,webContents:{id:11,getURL:()=> 'file:///Applications/KAMUCL.app/Contents/Resources/app.asar/out/renderer/index.html',isDestroyed:()=>false},isDestroyed:()=>false,isFocused:()=>true,isVisible:()=>true,isMinimized:()=>false,getBounds:()=>({x:0,y:0,width:1280,height:900}),getBackgroundColor:()=> '#00000000',getOpacity:()=>1,setVibrancy:value=>calls.push(value)}
+ const calls=[],w={id:7,webContents:{id:11,getURL:()=> 'file:///Applications/FAIONYX.app/Contents/Resources/app.asar/out/renderer/index.html',isDestroyed:()=>false},isDestroyed:()=>false,isFocused:()=>true,isVisible:()=>true,isMinimized:()=>false,getBounds:()=>({x:0,y:0,width:1280,height:900}),getBackgroundColor:()=> '#00000000',getOpacity:()=>1,setVibrancy:value=>calls.push(value)}
  const electron={BrowserWindow:{getAllWindows:()=>[w]},screen:{getDisplayMatching:()=>({id:1,size:{width:1920,height:1080},scaleFactor:1,displayFrequency:60})}}
  return{calls,w,electron}
 }

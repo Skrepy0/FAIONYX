@@ -62,17 +62,17 @@ test('plugin main module enforces id whitelist, enabled-only reads and size cap'
 test('renderer plugin loader executes only enabled plugins via the CSP-scoped plugin protocol', () => {
   const loader = read('src/renderer/src/plugins.ts')
   assert.match(loader, /p\.enabled && p\.hasCode/)
-  assert.match(loader, /kamucl-plugin:\/\/\$\{encodeURIComponent\(plugin\.id\)\}\/main\.js/)
+  assert.match(loader, /faionyx-plugin:\/\/\$\{encodeURIComponent\(plugin\.id\)\}\/main\.js/)
   for (const api of ['toast', 'addStyles', 'onViewChange', 'getView', 'store']) assert(loader.includes(api), api)
   const app = read('src/renderer/src/App.vue')
   assert.match(app, /loadEnabledPlugins\(\)/)
   // CSP：仅放行插件协议的 script-src，不放行 unsafe-eval / unsafe-inline
   const html = read('src/renderer/index.html')
-  assert.match(html, /script-src 'self' kamucl-plugin:/)
+  assert.match(html, /script-src 'self' faionyx-plugin:/)
   assert(!html.includes('unsafe-eval'), 'CSP must not allow unsafe-eval')
   // 主进程：协议注册 + 仅已启用插件可读
   const main = read('src/main/index.ts')
-  assert.match(main, /scheme: 'kamucl-plugin'/)
+  assert.match(main, /scheme: 'faionyx-plugin'/)
   assert.match(main, /registerPluginProtocol\(\)/)
   const plugins = read('src/main/core/plugins.ts')
   assert.match(plugins, /if \(!readEnabled\(\)\.includes\(id\)\) return new Response\('plugin disabled', \{ status: 403 \}\)/)

@@ -54,7 +54,7 @@
   ],
   "recording": {
     "version": "1.1.10",
-    "directory": "E:\\KAMUCL\\out\\skin-walk-110-blue-white",
+    "directory": "E:\\FAIONYX\\out\\skin-walk-110-blue-white",
     "capture": {
       "format": "jpeg",
       "quality": 70,
@@ -1851,18 +1851,18 @@
     "sidebar": "color-mix(in srgb, #f5f7fb 38%, transparent)"
   },
   "background": {
-    "style": "inset: -18px; background-color: rgb(27, 36, 55); background-image: url(\"kamucl-asset://local/image?path=C%3A%5CUsers%5CROG%5CAppData%5CLocal%5CTemp%5CKAMUCL+EXE+GUI+%E4%B8%AD%E6%96%87+8N4VHU%5Cprofile%5Cappearance%5Cbackgrounds%5Cqa-wallpaper.png\"); background-size: cover; background-position: center center; background-repeat: no-repeat; opacity: 0.7; filter: blur(12px);"
+    "style": "inset: -18px; background-color: rgb(27, 36, 55); background-image: url(\"faionyx-asset://local/image?path=C%3A%5CUsers%5CROG%5CAppData%5CLocal%5CTemp%5CFAIONYX+EXE+GUI+%E4%B8%AD%E6%96%87+8N4VHU%5Cprofile%5Cappearance%5Cbackgrounds%5Cqa-wallpaper.png\"); background-size: cover; background-position: center center; background-repeat: no-repeat; opacity: 0.7; filter: blur(12px);"
   },
   "carouselObserved": [
-    "file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/KAMUCL-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/farmer-3krkG6Tm.webp",
-    "file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/KAMUCL-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/cannon-CrDDsD5Q.webp",
-    "file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/KAMUCL-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/cactus-ZHT28Bbx.webp",
-    "file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/KAMUCL-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/sunset--N5hnz1m.webp",
-    "file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/KAMUCL-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/piston-CXXgq7BE.webp",
-    "file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/KAMUCL-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/farmer-3krkG6Tm.webp",
-    "file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/KAMUCL-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/piston-CXXgq7BE.webp",
-    "file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/KAMUCL-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/cannon-CrDDsD5Q.webp",
-    "file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/KAMUCL-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/sunset--N5hnz1m.webp"
+    "file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/FAIONYX-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/farmer-3krkG6Tm.webp",
+    "file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/FAIONYX-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/cannon-CrDDsD5Q.webp",
+    "file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/FAIONYX-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/cactus-ZHT28Bbx.webp",
+    "file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/FAIONYX-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/sunset--N5hnz1m.webp",
+    "file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/FAIONYX-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/piston-CXXgq7BE.webp",
+    "file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/FAIONYX-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/farmer-3krkG6Tm.webp",
+    "file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/FAIONYX-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/piston-CXXgq7BE.webp",
+    "file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/FAIONYX-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/cannon-CrDDsD5Q.webp",
+    "file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%208N4VHU/FAIONYX-runtime/1.1.10-6a4e15aaeb951757/resources/app.asar/out/renderer/assets/sunset--N5hnz1m.webp"
   ],
   "layout": [
     {

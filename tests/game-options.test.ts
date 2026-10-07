@@ -8,7 +8,7 @@ import { build } from 'esbuild'
 import { encodeGameOption, uniqueGameOptions } from '../src/shared/gameOptions'
 
 test('默认游戏选项按实例写入，版本转换后的游戏读值与界面一致', async t => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-game-options-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-game-options-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   const built = await build({ entryPoints: ['src/main/core/defaultGameOptions.ts'], platform: 'node', format: 'cjs', bundle: true, write: false, packages: 'external' })
   const require = createRequire(path.resolve('package.json')), mod = { exports: {} as any }

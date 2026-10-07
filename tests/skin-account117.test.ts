@@ -44,7 +44,7 @@ async function fixture(overrides: Record<string, unknown>, accountType = 'micros
     : name === 'store' ? { store, toast: (message: string, kind: string) => notices.push({ message, kind }) }
     : name === 'api' ? api : name === 'skin-render' ? { renderCape: async () => '', renderSkinFront: async (url: string) => 'thumbnail:' + url }
     : name === 'fallbackSkin' ? { createFallbackSkin: () => ({ toDataURL: () => 'data:default-local' }) }
-    : require(name), mod, mod.exports, { kamucl: { getFilePath: (file: any) => file.path } }, FileReaderFixture)
+    : require(name), mod, mod.exports, { faionyx: { getFilePath: (file: any) => file.path } }, FileReaderFixture)
   const scope = vue.effectScope(), state = scope.run(() => mod.exports.default.setup({}, { expose() {} }))
   const switchAccount = async (id: string) => { store.selectedAccount = { id, type: accountType, username: 'Player ' + id }; await flush() }
   return { state, store, notices, reads, switchAccount, close: () => { for (const fn of unmounted) fn(); scope.stop() } }

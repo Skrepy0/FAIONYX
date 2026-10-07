@@ -8,7 +8,7 @@ fs.mkdirSync(path.resolve('out'),{recursive:true})
 // Current feature contract, independent of release version: single LOGO mascot and current editor/import/selection behavior.
 const mascotProofRevision='119',mascotRecordingKind='logo'
 const stage=process.argv[4]||(appPath.split(path.sep).includes('dmg-mount')?'dmg':'app');assert(['app','dmg'].includes(stage),'proof stage must be app or dmg')
-const exe=path.join(appPath,'Contents/MacOS/KAMUCL'),proof=path.resolve(`release/mac-proof-${arch}-${stage}`)
+const exe=path.join(appPath,'Contents/MacOS/FAIONYX'),proof=path.resolve(`release/mac-proof-${arch}-${stage}`)
 fs.mkdirSync(proof,{recursive:true})
 const packageIdentity=require('./mac-package-identity.cjs').readMacPackageIdentity(appPath,{version,arch,sourceCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),runtimeVersion:require('../package.json').devDependencies.electron,minimumSystemVersion:'13.0.0'})
 fs.writeFileSync(path.join(proof,'package-identity.json'),JSON.stringify(packageIdentity,null,2))
@@ -65,7 +65,7 @@ async function main(){
  assert(content.includes('首页')&&content.includes(version),'main UI missing')
  const userAgent=(await call('Runtime.evaluate',{expression:'navigator.userAgent',returnByValue:true})).result.value
  assert(userAgent.includes('Electron/'+require('../package.json').devDependencies.electron),'native APP must use the current shared locked Electron runtime')
- const checks=await call('Runtime.evaluate',{expression:`(async()=>{const folders=await window.kamucl.invoke('folders:list');const scan=await window.kamucl.invoke('folders:scan',folders.active);return {platform:document.documentElement.dataset.platform,customButtons:document.querySelectorAll('.win-btn').length,logoTop:document.querySelector('.logo-area').getBoundingClientRect().top,folderStatus:scan.status,folderPath:folders.active}})()`,awaitPromise:true,returnByValue:true});
+ const checks=await call('Runtime.evaluate',{expression:`(async()=>{const folders=await window.faionyx.invoke('folders:list');const scan=await window.faionyx.invoke('folders:scan',folders.active);return {platform:document.documentElement.dataset.platform,customButtons:document.querySelectorAll('.win-btn').length,logoTop:document.querySelector('.logo-area').getBoundingClientRect().top,folderStatus:scan.status,folderPath:folders.active}})()`,awaitPromise:true,returnByValue:true});
  const macUI=checks.result.value;assert.equal(macUI.platform,'darwin');assert.equal(macUI.customButtons,0);assert(macUI.logoTop>=38,'native traffic light area overlaps branding');assert.equal(macUI.folderStatus,'ready','default folder missing on first launch');
  await wait(3000)
  const screenshot=await call('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(proof,'main.png'),Buffer.from(screenshot.data,'base64'))
@@ -122,7 +122,7 @@ async function main(){
  fs.writeFileSync(path.join(proof,'default-skin-capture.json'),JSON.stringify({...skinCapture,facePixels,shirtPixels},null,2))
  assert(facePixels>20&&shirtPixels>20,'default skin texture not rendered')
  // Shared current dark themes use the same translucent shell; exercise native desktop material.
- await call('Runtime.evaluate',{expression:`window.kamucl.invoke('settings:set',{theme:'black-orange'})`,awaitPromise:true})
+ await call('Runtime.evaluate',{expression:`window.faionyx.invoke('settings:set',{theme:'black-orange'})`,awaitPromise:true})
  // Settings IPC persists state; the normal settings view updates its Vue store.
  // Reload to exercise the same saved-theme startup path without poking Vue internals.
  await call('Page.reload');await wait(3000)
@@ -155,7 +155,7 @@ async function main(){
    nativeMaterial.samples=samples;nativeMaterial.difference=Math.max(...samples[0].map((v,i)=>Math.abs(v-samples[1][i])))
    assert(nativeMaterial.difference>2,'native macOS window still opaque over changing desktop background')
  }
- await call('Runtime.evaluate',{expression:`window.kamucl.invoke('settings:set',{theme:'transparent'})`,awaitPromise:true})
+ await call('Runtime.evaluate',{expression:`window.faionyx.invoke('settings:set',{theme:'transparent'})`,awaitPromise:true})
  fs.writeFileSync(path.join(proof,'verification.json'),JSON.stringify({version,arch,stage,packageIdentity,binary,userAgent,mainUI:true,macUI,skin:{facePixels,shirtPixels,capture:skinCapture},nativeMaterial,url:page.url},null,2));ws.close()
  console.log('PASS native macOS '+arch+' packaged app '+version)
 }
@@ -185,18 +185,18 @@ ownedQA.preservingCleanup(async()=>{
   // or a later independent normal GUI run fails/times out. Previously collected
   // traces remain evidence; repeating optional trace/ABA experiments by default
   // must not consume the workflow budget needed by required native checks.
-  if(process.env.KAMUCL_NATIVE_TRACE119==='1'){
+  if(process.env.FAIONYX_NATIVE_TRACE119==='1'){
    const began=Date.now(),preflight={version,arch,stage,classification:'instrumented diagnostic only; not normal motion acceptance',startedAt:new Date(began).toISOString(),timeoutMs:180000,complete:false}
    console.log('DIAGNOSTIC native-trace preflight start '+preflight.startedAt)
-   try{execFileSync(process.execPath,['scripts/verify-ui-refinement.cjs'],{env:{...env,KAMUCL_GUI_APP:exe,KAMUCL_EXTENSION_GUI:'1',KAMUCL_EXTENSION_ONLY:'1',KAMUCL_SKIP_EXTENSION_BASE:'1',KAMUCL_UI_MODULE:'native-trace',KAMUCL_TEST_THEME:'black-orange'},stdio:'inherit',timeout:180000});preflight.complete=true}
+   try{execFileSync(process.execPath,['scripts/verify-ui-refinement.cjs'],{env:{...env,FAIONYX_GUI_APP:exe,FAIONYX_EXTENSION_GUI:'1',FAIONYX_EXTENSION_ONLY:'1',FAIONYX_SKIP_EXTENSION_BASE:'1',FAIONYX_UI_MODULE:'native-trace',FAIONYX_TEST_THEME:'black-orange'},stdio:'inherit',timeout:180000});preflight.complete=true}
    catch(error){preflight.error={name:error.name,code:error.code??null,status:error.status??null,signal:error.signal??null};console.warn('DIAGNOSTIC native-trace preflight failed; normal acceptance remains independently required',preflight.error)}
    finally{preflight.endedAt=new Date().toISOString();preflight.elapsedMs=Date.now()-began;fs.writeFileSync(path.join('out','kamu-native-compositor-trace-preflight.json'),JSON.stringify(preflight,null,2));console.log('DIAGNOSTIC native-trace preflight end '+preflight.endedAt+' elapsedMs='+preflight.elapsedMs)}
   }
   // Separate disposable process starts native mascot audio cold, without the full
   // header's MediaRecorder/tap hooks. Preserve its diagnostic evidence separately.
-  execFileSync(process.execPath,['scripts/verify-ui-refinement.cjs'],{env:{...env,KAMUCL_GUI_APP:exe,KAMUCL_EXTENSION_GUI:'1',KAMUCL_EXTENSION_ONLY:'1',KAMUCL_SKIP_EXTENSION_BASE:'1',KAMUCL_UI_MODULE:'motion119',KAMUCL_TEST_THEME:'black-orange'},stdio:'inherit',timeout:180000})
+  execFileSync(process.execPath,['scripts/verify-ui-refinement.cjs'],{env:{...env,FAIONYX_GUI_APP:exe,FAIONYX_EXTENSION_GUI:'1',FAIONYX_EXTENSION_ONLY:'1',FAIONYX_SKIP_EXTENSION_BASE:'1',FAIONYX_UI_MODULE:'motion119',FAIONYX_TEST_THEME:'black-orange'},stdio:'inherit',timeout:180000})
   execFileSync(process.execPath,['scripts/verify-ui-refinement.cjs'],{
-   env:{...env,KAMUCL_GUI_APP:exe,KAMUCL_EXTENSION_GUI:'1',KAMUCL_EXTENSION_ONLY:'1',KAMUCL_TEST_THEME:'black-orange',KAMUCL_NATIVE_RECORDER_STAGE119:stage,KAMUCL_NATIVE_VIDEO_STAGE119:stage},
+   env:{...env,FAIONYX_GUI_APP:exe,FAIONYX_EXTENSION_GUI:'1',FAIONYX_EXTENSION_ONLY:'1',FAIONYX_TEST_THEME:'black-orange',FAIONYX_NATIVE_RECORDER_STAGE119:stage,FAIONYX_NATIVE_VIDEO_STAGE119:stage},
    stdio:'inherit',timeout:480000
   })
   // An optional recorder may fail, but its current failure receipt must still be
@@ -215,7 +215,7 @@ ownedQA.preservingCleanup(async()=>{
   for(const theme of themes){
    const startedAt=Date.now(),row={theme,startedAt:new Date(startedAt).toISOString(),complete:false};themeRuns.push(row)
    try{
-    execFileSync(process.execPath,['scripts/verify-ui-refinement.cjs'],{env:{...env,KAMUCL_GUI_APP:exe,KAMUCL_EXTENSION_GUI:'1',KAMUCL_EXTENSION_ONLY:'1',KAMUCL_SKIP_EXTENSION_BASE:'1',KAMUCL_UI_MODULE:'ux110',KAMUCL_TEST_THEME:theme},stdio:'inherit',timeout:240000})
+    execFileSync(process.execPath,['scripts/verify-ui-refinement.cjs'],{env:{...env,FAIONYX_GUI_APP:exe,FAIONYX_EXTENSION_GUI:'1',FAIONYX_EXTENSION_ONLY:'1',FAIONYX_SKIP_EXTENSION_BASE:'1',FAIONYX_UI_MODULE:'ux110',FAIONYX_TEST_THEME:theme},stdio:'inherit',timeout:240000})
     const file=path.join('out','appearance-motion-'+theme+'-110.json');assert(fs.existsSync(file)&&fs.statSync(file).mtimeMs>=startedAt,'current native theme proof missing')
     const result=JSON.parse(fs.readFileSync(file));assert.equal(result.version,version);assert.equal(result.complete,true);assert.equal(result.theme,theme)
     row.complete=true;row.result=result
@@ -272,10 +272,10 @@ ownedQA.preservingCleanup(async()=>{
   // One separate, disposable Intel APP diagnostic after archiving the normal
   // result, including its original failure. Diagnostics cannot replace it.
   // Keep workflow permissions/budget and all formal capture assertions intact.
-  if(process.env.KAMUCL_MAC_DIAGNOSTICS==='1'&&arch==='x64'&&stage==='app'&&process.env.CI==='true'){
+  if(process.env.FAIONYX_MAC_DIAGNOSTICS==='1'&&arch==='x64'&&stage==='app'&&process.env.CI==='true'){
    const began=Date.now();observerABA119={classification:'Independent instrumentation-only observer A/B/A; not formal acceptance',startedAt:new Date(began).toISOString(),timeoutMs:180000,complete:false,normalAcceptanceChanged:false}
    console.log('DIAGNOSTIC observer ABA start '+observerABA119.startedAt)
-   try{execFileSync(process.execPath,['scripts/verify-ui-refinement.cjs'],{env:{...env,KAMUCL_GUI_APP:exe,KAMUCL_EXTENSION_GUI:'1',KAMUCL_EXTENSION_ONLY:'1',KAMUCL_SKIP_EXTENSION_BASE:'1',KAMUCL_UI_MODULE:'native-compositor',KAMUCL_OBSERVER_ABA119:'1',KAMUCL_TEST_THEME:'black-orange'},stdio:'inherit',timeout:observerABA119.timeoutMs});observerABA119.processExitCode=0}
+   try{execFileSync(process.execPath,['scripts/verify-ui-refinement.cjs'],{env:{...env,FAIONYX_GUI_APP:exe,FAIONYX_EXTENSION_GUI:'1',FAIONYX_EXTENSION_ONLY:'1',FAIONYX_SKIP_EXTENSION_BASE:'1',FAIONYX_UI_MODULE:'native-compositor',FAIONYX_OBSERVER_ABA119:'1',FAIONYX_TEST_THEME:'black-orange'},stdio:'inherit',timeout:observerABA119.timeoutMs});observerABA119.processExitCode=0}
    catch(error){observerABA119.error={name:error.name,code:error.code??null,status:error.status??null,signal:error.signal??null};console.warn('DIAGNOSTIC observer ABA failed; original formal results remain unchanged',observerABA119.error)}
    finally{
     observerABA119.finishedAt=new Date().toISOString();observerABA119.elapsedMs=Date.now()-began;observerABA119.directories=[]
@@ -291,7 +291,7 @@ ownedQA.preservingCleanup(async()=>{
   }
   // Only after DMG formal proofs are archived, in a separate owned process.
   // The helper bounds 85s execution + 5s cleanup and excludes private CPU data.
-  if(process.env.KAMUCL_MAC_DIAGNOSTICS==='1')require('./native-trace-control-preflight-119.cjs').run({version,arch,stage,ci:process.env.CI,env,exe,extensionProof})
+  if(process.env.FAIONYX_MAC_DIAGNOSTICS==='1')require('./native-trace-control-preflight-119.cjs').run({version,arch,stage,ci:process.env.CI,env,exe,extensionProof})
 
  }
  assert.equal(performanceBenchmark?.passed,true,'original native CDP recording is below its unchanged display capture target; evidence retained')

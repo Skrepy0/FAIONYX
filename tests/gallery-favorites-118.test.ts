@@ -78,7 +78,7 @@ async function runtime(invoke:(channel:string,...args:any[])=>Promise<any>){
     plugin.onResolve({filter:/^\.\/(api|store)$/},args=>args.importer.endsWith('modFavorites.ts')?{path:args.path,namespace:'service'}:undefined)
     plugin.onLoad({filter:/.*/,namespace:'service'},args=>({contents:args.path==='./api'?'export function errText(e){return e.message}':'export function toast(message){window.errors.push(message)}',loader:'js'}))
   }}]}).then(result=>result.outputFiles[0].text)
-  const module={exports:{} as any},window={kamucl:{invoke},errors:[] as string[]}
+  const module={exports:{} as any},window={faionyx:{invoke},errors:[] as string[]}
   new Function('require','module','exports','window',await runtimeBundle)(require,module,module.exports,window)
   return {...module.exports,errors:window.errors}
 }
@@ -174,7 +174,7 @@ test('manual project validation accepts only verified Minecraft mods and resolve
   const before=urls.length;await assert.rejects(module.exports.communityModProject('curseforge','../123'),/有效的来源/);assert.equal(urls.length,before)
 })
 test('main IPC linking and cancellation persist merged SHA1s, keep old records on validation failure and reject stale bulk changes',async()=>{
-  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-favorites-118-'))
+  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-favorites-118-'))
   try{
     fs.writeFileSync(path.join(directory,'mod-favorites.json'),JSON.stringify(records))
     const result=await build({entryPoints:['src/main/core/modFavorites.ts'],bundle:true,write:false,platform:'node',format:'cjs',packages:'external',plugins:[{name:'isolated-main',setup(plugin){

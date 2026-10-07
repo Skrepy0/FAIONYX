@@ -1,20 +1,20 @@
 {
   "schemaVersion": 1,
-  "id": "kamucl-bridge",
+  "id": "faionyx-bridge",
   "version": "1.0.1",
-  "name": "KAMUCL Bridge",
-  "description": "KAMUCL 启动器的本机桥接与参数注册接口；附带演示 MOD（kamucl-demo）。",
-  "authors": ["KAMUCL"],
+  "name": "FAIONYX Bridge",
+  "description": "FAIONYX 启动器的本机桥接与参数注册接口；附带演示 MOD（faionyx-demo）。",
+  "authors": ["FAIONYX"],
   "license": "MIT",
   "environment": "*",
   "entrypoints": {
-    "main": ["cn.kamucl.bridge.KamuclBridgeMod"]
+    "main": ["cn.faionyx.bridge.FaionyxBridgeMod"]
   },
   "depends": {
     "fabricloader": ">=0.15.0",
     "minecraft": ">=1.20"
   },
   "custom": {
-    "kamucl": { "protocol": 1, "demo": true }
+    "faionyx": { "protocol": 1, "demo": true }
   }
 }

@@ -10,15 +10,15 @@ import { parse, compileScript, compileTemplate } from '@vue/compiler-sfc'
 import { decideUpdateAction } from '../src/main/core/selfUpdate'
 
 const read = (file: string) => fs.readFileSync(file, 'utf8')
-const rel = (version: string) => ({ version, publishedAt: '', body: '', assetUrl: 'u', assetSize: 1, assetName: `KAMUCL-${version}.exe` })
+const rel = (version: string) => ({ version, publishedAt: '', body: '', assetUrl: 'u', assetSize: 1, assetName: `FAIONYX-${version}.exe` })
 
 let pendingFixtureCode: Promise<string>
 async function pendingFixture(root: string, platform: string, arch = 'x64', packaged = false, execPath = process.execPath) {
   pendingFixtureCode ??= build({ entryPoints: ['src/main/core/applyUpdate.ts'], bundle: true, write: false,
     platform: 'node', format: 'cjs', packages: 'external' }).then(r => r.outputFiles[0].text)
   const require = createRequire(path.resolve('package.json')), mod = { exports: {} as any }
-  const env = { ...process.env, KAMUCL_USERDATA_DIR: root, KAMUCL_UPDATE_API_BASE: 'http://127.0.0.1:8310' }
-  delete env.PORTABLE_EXECUTABLE_FILE; delete env.KAMUCL_UPDATE_TARGET_EXE; delete env.APPIMAGE
+  const env = { ...process.env, FAIONYX_USERDATA_DIR: root, FAIONYX_UPDATE_API_BASE: 'http://127.0.0.1:8310' }
+  delete env.PORTABLE_EXECUTABLE_FILE; delete env.FAIONYX_UPDATE_TARGET_EXE; delete env.APPIMAGE
   const controlledProcess = Object.create(process)
   Object.defineProperties(controlledProcess, { platform: { value: platform }, arch: { value: arch }, env: { value: env }, execPath: { value: execPath } })
   new Function('require', 'module', 'exports', 'process', await pendingFixtureCode)(
@@ -49,11 +49,11 @@ test('auto update decision: silent download by default, prompt when disabled, no
 })
 
 test('Windows legacy pending update roundtrip: readable only while file exists, clear removes', { timeout: 10000 }, async () => {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-pend-'))
+  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-pend-'))
   try {
     const { getPendingUpdate, clearPendingUpdate } = await pendingFixture(userData, 'win32')
     assert.equal(getPendingUpdate(), null, 'no pending initially')
-    const fakeExe = path.join(userData, 'KAMUCL-9.9.9.exe')
+    const fakeExe = path.join(userData, 'FAIONYX-9.9.9.exe')
     const marker = path.join(userData, 'pending-update.json')
     fs.writeFileSync(fakeExe, 'fake')
     fs.writeFileSync(marker, JSON.stringify({ release: rel('9.9.9'), file: fakeExe }))
@@ -78,20 +78,20 @@ test('Windows legacy pending update roundtrip: readable only while file exists, 
 test('Mac and Linux pending marker routing preserves Windows legacy records (filesystem fixtures)', { timeout: 10000 }, async t => {
   for (const [platform, arch] of [['darwin', 'arm64'], ['darwin', 'x64'], ['linux', 'arm64'], ['linux', 'x64']] as const) {
     await t.test(`${platform}/${arch}`, { timeout: 5000 }, async t => {
-      const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-native-pend-'))
+      const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-native-pend-'))
       t.after(() => fs.rmSync(root, { recursive: true, force: true }))
-      const target = path.join(root, platform === 'darwin' ? 'KAMUCL.app' : 'KAMUCL-portable')
-      const exe = platform === 'darwin' ? path.join(target, 'Contents/MacOS/KAMUCL') : path.join(target, 'kamucl')
+      const target = path.join(root, platform === 'darwin' ? 'FAIONYX.app' : 'FAIONYX-portable')
+      const exe = platform === 'darwin' ? path.join(target, 'Contents/MacOS/FAIONYX') : path.join(target, 'faionyx')
       fs.mkdirSync(path.dirname(exe), { recursive: true }); fs.writeFileSync(exe, 'fixture')
       if (platform === 'darwin') fs.writeFileSync(path.join(target, 'Contents/Info.plist'), 'fixture')
       const api = await pendingFixture(root, platform, arch, true, exe)
-      const legacyFile = path.join(root, 'KAMUCL-9.9.9.exe'), legacyMarker = path.join(root, 'pending-update.json')
+      const legacyFile = path.join(root, 'FAIONYX-9.9.9.exe'), legacyMarker = path.join(root, 'pending-update.json')
       fs.writeFileSync(legacyFile, 'fixture')
       const legacyRecord = JSON.stringify({ release: rel('9.9.9'), file: legacyFile })
       fs.writeFileSync(legacyMarker, legacyRecord)
       assert.equal(api.getPendingUpdate(), null, 'native routing must not accept a Windows EXE record')
       const nativeName = platform === 'darwin' ? 'mac' : 'linux'
-      const file = path.join(root, `${nativeName}-updates`, `KAMUCL-9.9.9-${nativeName}-${arch}.${platform === 'darwin' ? 'zip' : 'tar.gz'}`)
+      const file = path.join(root, `${nativeName}-updates`, `FAIONYX-9.9.9-${nativeName}-${arch}.${platform === 'darwin' ? 'zip' : 'tar.gz'}`)
       fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, 'fixture')
       const marker = path.join(root, `${nativeName}-update.json`)
       const transaction = { schema: 1, id: randomUUID(), target, file,

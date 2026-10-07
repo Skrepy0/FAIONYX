@@ -17,7 +17,7 @@ test('模组镜像只转换文档明确支持的 CDN 文件路径，官方模式
 })
 
 test('分段取消保留已接收字节，重新下载从每段断点恢复并通过完整哈希',{timeout:10000},async()=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-resume-')),data=crypto.randomBytes(8*1024*1024),hash=crypto.createHash('sha1').update(data).digest('hex'),starts:number[]=[]
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-resume-')),data=crypto.randomBytes(8*1024*1024),hash=crypto.createHash('sha1').update(data).digest('hex'),starts:number[]=[]
  const server=http.createServer((req,res)=>{const m=req.headers.range!.match(/bytes=(\d+)-(\d+)/)!;let at=Number(m[1]),end=Number(m[2]);starts.push(at);res.writeHead(206,{'content-range':`bytes ${at}-${end}/${data.length}`,'content-length':end-at+1});const timer=setInterval(()=>{if(at>end){res.end();return}const next=Math.min(end+1,at+32768);res.write(data.subarray(at,next));at=next},5);res.on('close',()=>clearInterval(timer))})
  await new Promise<void>(r=>server.listen(0,'127.0.0.1',r));const url=`http://127.0.0.1:${(server.address() as any).port}/large`,dest=path.join(root,'large.jar')
  try{
@@ -29,7 +29,7 @@ test('分段取消保留已接收字节，重新下载从每段断点恢复并�
 })
 
 test('整合包失败后重试复用已校验缓存；实例修改不污染缓存；损坏缓存重新下载',{timeout:15000},async()=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-pack-cache-')),a=Buffer.from('first mod'),b=Buffer.from('second mod');let fail=true,aRequests=0
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-pack-cache-')),a=Buffer.from('first mod'),b=Buffer.from('second mod');let fail=true,aRequests=0
  const verified=Promise.withResolvers<void>()
  const server=http.createServer((req,res)=>{if(req.url==='/a'){aRequests++;res.end(a)}else if(fail)void verified.promise.then(()=>{res.statusCode=404;res.end(b)});else res.end(b)})
  await new Promise<void>(r=>server.listen(0,'127.0.0.1',r));const url=`http://127.0.0.1:${(server.address() as any).port}`,cache=path.join(root,'cache'),instance=path.join(root,'instance')
@@ -45,7 +45,7 @@ test('整合包失败后重试复用已校验缓存；实例修改不污染缓�
 })
 
 test('cancelled incomplete transfer is not a reusable verified cache and retry downloads it again', {timeout:15000}, async()=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-pack-incomplete-')),a=Buffer.from('unfinished first mod'),b=Buffer.from('second mod'),received=Promise.withResolvers<void>();let fail=true,aRequests=0
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-pack-incomplete-')),a=Buffer.from('unfinished first mod'),b=Buffer.from('second mod'),received=Promise.withResolvers<void>();let fail=true,aRequests=0
  const server=http.createServer((req,res)=>{if(req.url==='/a'){aRequests++;res.writeHead(200,{'content-length':a.length});if(fail){res.write(a.subarray(0,4));received.resolve()}else res.end(a)}else if(fail)void received.promise.then(()=>{res.statusCode=404;res.end('failure before first transfer completes')});else res.end(b)})
  await new Promise<void>(r=>server.listen(0,'127.0.0.1',r));const url=`http://127.0.0.1:${(server.address() as any).port}`,cache=path.join(root,'cache'),instance=path.join(root,'instance')
  const tasks=[a,b].map((data,i)=>({url:url+'/'+(i?'b':'a'),dest:path.join(instance,i+'.jar'),size:data.length,sha1:crypto.createHash('sha1').update(data).digest('hex')}))
@@ -59,7 +59,7 @@ test('cancelled incomplete transfer is not a reusable verified cache and retry d
 })
 
 test('corrupt assembled ranges are discarded before whole-file fallback', {timeout:15000},async()=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-range-hash-')),data=Buffer.alloc(8*1024*1024,42),hash=crypto.createHash('sha1').update(data).digest('hex'),dest=path.join(root,'verified.jar');let full=0
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-range-hash-')),data=Buffer.alloc(8*1024*1024,42),hash=crypto.createHash('sha1').update(data).digest('hex'),dest=path.join(root,'verified.jar');let full=0
  const server=http.createServer((req,res)=>{const range=req.headers.range?.match(/^bytes=(\d+)-(\d+)$/);if(range){const start=Number(range[1]),end=Number(range[2]);res.writeHead(206,{'content-range':`bytes ${start}-${end}/${data.length}`,'content-length':end-start+1});res.end(Buffer.alloc(end-start+1,17))}else{assert.equal(req.headers.range,undefined,'fallback must start from byte zero');full++;res.writeHead(200,{'content-length':data.length});res.end(data)}})
  await new Promise<void>(r=>server.listen(0,'127.0.0.1',r))
  try{downloadLimiter.configure({downloadThreads:8,downloadSpeedKBps:0});await downloadFile(`http://127.0.0.1:${(server.address() as any).port}/file`,dest,undefined,hash,'official',undefined,[],{size:data.length});assert.equal(full,1);assert(fs.readFileSync(dest).equals(data))}finally{server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));fs.rmSync(root,{recursive:true,force:true})}

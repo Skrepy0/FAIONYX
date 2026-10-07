@@ -1,4 +1,4 @@
-# KAMUCL v1.0.80 — CurseForge 整合包文件补全
+# FAIONYX v1.0.80 — CurseForge 整合包文件补全
 
 《元素觉醒 1.4.6》的清单包含 252 个 CurseForge 文件，使用 Minecraft 1.20.1 / Forge 47.4.22。首个错误 `1661637/8695500` 对应 `whisperingstatusbar-1.3.jar`：API 没有自动下载地址，但压缩包 `overrides/mods` 内已经包含大小和 SHA1 完全一致的文件。原导入器在检查包内副本之前就拒绝了空下载地址。
 

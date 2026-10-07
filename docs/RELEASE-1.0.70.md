@@ -3,7 +3,7 @@
 根因证据：本机 Minecraft 26.2 / Fabric 0.19.5 / Java 25 的退出报告中，
 `Description: Client shutdown from post-main` 对应的线程转储显示
 `DestroyJavaVM` 与非守护 `HTTP-Dispatcher` 仍存活；模组列表含
-KAMUCL Bridge 1.0.0。桥接服务从 Fabric 初始化线程直接调用
+FAIONYX Bridge 1.0.0。桥接服务从 Fabric 初始化线程直接调用
 `HttpServer.start()`，因此它的调度线程阻止 JVM 自然退出。
 
 修复：桥接 1.0.1 从守护线程启动 HTTP 服务，请求使用独立的单线程守护

@@ -14,7 +14,7 @@ import type { ProgressEvent, CommunityFile } from '../src/shared/types'
 const sha1 = (bytes: Buffer) => crypto.createHash('sha1').update(bytes).digest('hex')
 
 test('社区 mrpack 从压缩包下载到模组及覆盖文件落盘，总进度不提前锁在 100%', async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-pack-progress-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-pack-progress-'))
   const game = path.join(root, 'game')
   const id = 'Progress Pack'
   const data = Buffer.alloc(128 * 1024, 'm')
@@ -55,7 +55,7 @@ test('社区 mrpack 从压缩包下载到模组及覆盖文件落盘，总进度
   }
   try {
     Object.assign(runtime.getSettings(), { gameDir: game, activeFolder: game, folders: [{ path: game, name: 'test', isDefault: true }], defaultIsolation: true, mirror: 'official' })
-    const baseDir = path.join(game, '.kamucl/base/26.2')
+    const baseDir = path.join(game, '.faionyx/base/26.2')
     fs.mkdirSync(baseDir, { recursive: true })
     fs.writeFileSync(path.join(baseDir, '26.2.json'), JSON.stringify({ id: '26.2', libraries: [] }))
     fs.writeFileSync(path.join(baseDir, '26.2.jar'), 'test runtime')

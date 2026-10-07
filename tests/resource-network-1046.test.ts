@@ -23,7 +23,7 @@ async function isolated(entry:string, root:string, plugins:any[]=[]) {
   return mod.exports
 }
 test('资源扫描：空版本友好错误、同名版本按文件夹隔离、3000 项非递归读取且后台解析不阻塞',async t=>{
-  const createdRoot=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-resource-1046-')),root=fs.realpathSync.native(createdRoot);t.after(()=>fs.rmSync(root,{recursive:true,force:true}))
+  const createdRoot=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-resource-1046-')),root=fs.realpathSync.native(createdRoot);t.after(()=>fs.rmSync(root,{recursive:true,force:true}))
   const aliasStat=fs.statSync(createdRoot),canonicalStat=fs.statSync(root)
   assert.equal(aliasStat.dev,canonicalStat.dev);assert.equal(aliasStat.ino,canonicalStat.ino,'临时别名与规范路径必须指向同一目录')
   t.diagnostic(JSON.stringify({temporaryRoot:createdRoot,canonicalRoot:root,device:canonicalStat.dev,inode:canonicalStat.ino}))
@@ -90,7 +90,7 @@ test('TURN：退出期间晚到的分配结果必须释放且不能复活房间'
 })
 
 test('FRP：创建使用 Bearer 与实际本地端口；运行只允许当前账号可用 TCP 隧道',async t=>{
-  const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-frp-1046-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}))
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-frp-1046-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}))
   const requests:any[]=[];let banned=false
   ;(globalThis as any).__frpTestFetch=async(url:string,options:any)=>{requests.push({url,...options});const p=new URL(url).pathname
     const body=p.endsWith('/nodes')?{'7':{name:'节点',flag:4,vip:0}}:p.endsWith('/node/stats')?{nodes:[{id:7,online:0,load:1}]}:options.method==='POST'?{id:123,name:'MC',remote:'40001'}:[{id:123,name:'MC',type:'tcp',node:7,local_ip:'127.0.0.1',local_port:25566,status:banned?2:0}]

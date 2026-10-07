@@ -193,7 +193,7 @@ function assertCapeRestoration(value,originalNative,originalRenderer,originalWin
 }
 
 async function makeCapeFixtures(directory){
- const sharp=require('sharp'),sources=[],publicRoot=process.env.KAMUCL_CAPE_PUBLIC_FIXTURE_ROOT?fs.realpathSync.native(process.env.KAMUCL_CAPE_PUBLIC_FIXTURE_ROOT):null
+ const sharp=require('sharp'),sources=[],publicRoot=process.env.FAIONYX_CAPE_PUBLIC_FIXTURE_ROOT?fs.realpathSync.native(process.env.FAIONYX_CAPE_PUBLIC_FIXTURE_ROOT):null
  if(publicRoot)assert(fs.statSync(publicRoot).isDirectory())
  const approved={mojang_cape:'5786fe99be377dfb6858859f926c4dbc995751e91cee373468c5fbf4865e7151',legacy_cape:'51557146be1091c8eb20fffc963760168b225f2642fa861f5220df5595ef8e51',hd_cape:'6b224a49046b5a17e9f14e857eee2d33a1e33de02d2c3eb565fbb217b88fa928'}
  for(const name of ['mojang_cape','legacy_cape','hd_cape']){
@@ -216,9 +216,9 @@ async function makeCapeFixtures(directory){
 }
 
 async function runCapes(harness){
- const{call,evaluate,main,wait,profile,root,ownedTrack,version}=harness,theme=process.env.KAMUCL_TEST_THEME||'black-orange'
+ const{call,evaluate,main,wait,profile,root,ownedTrack,version}=harness,theme=process.env.FAIONYX_TEST_THEME||'black-orange'
  const directory=path.resolve('out','qa-capes115-'+theme+'-'+crypto.randomUUID());fs.mkdirSync(directory,{recursive:true})
- const proof={schema:'kamucl-capes115-real-ui',version,theme,root,profile,classification:'Actual packaged renderer, original trusted inputs and WebGL uploads; synthetic IPC accounts/public texture fixtures. No user account, Microsoft request, product-cache or game-world acceptance inferred',
+ const proof={schema:'faionyx-capes115-real-ui',version,theme,root,profile,classification:'Actual packaged renderer, original trusted inputs and WebGL uploads; synthetic IPC accounts/public texture fixtures. No user account, Microsoft request, product-cache or game-world acceptance inferred',
   complete:false,operations:[],inputs:[],stages:[],captures:[],cleanup:[],startedAt:new Date().toISOString()},save=()=>fs.writeFileSync(path.join(directory,'proof.json'),JSON.stringify(proof,null,2))
  const nativeWindow=require('./qa-native-window115.cjs'),koffiPath=process.platform==='win32'?require.resolve('koffi'):null
  proof.qaSources=['qa-capes115.cjs','qa-capes115-tests.cjs','qa-coordinate-geometry114.cjs','qa-privacy-categories115.cjs','qa-owned-process-119.cjs','verify-ui-refinement.cjs','qa-native-window115.cjs'].map(name=>{const file=path.join(__dirname,name),bytes=fs.readFileSync(file);return{file,bytes:bytes.length,sha256:hash(bytes)}})
@@ -271,8 +271,8 @@ async function runCapes(harness){
   finally{if(token!==undefined)try{operation.targets=await evaluate(geometry.trustedTargetStopExpression(token),remaining(deadline));assertCapeDrag(operation.targets,{selector,...binding},operation.actual.coordinate.bounds);assert(performance.now()<deadline)}catch(caught){operation.complete=false;operation.targetError={name:caught.name,message:caught.message};if(!error)throw caught}finally{save()}save()}
  }
  try{
-  assert(process.env.KAMUCL_GUI_APP&&!process.env.KAMUCL_GUI_DEV&&process.env.KAMUCL_GUI_SOFTWARE!=='1','Cape native acceptance requires the explicit actual packaged application without a QA software override')
-  const application=path.resolve(process.env.KAMUCL_GUI_APP),applicationBytes=fs.readFileSync(application);proof.application={path:application,bytes:applicationBytes.length,sha256:hash(applicationBytes)};save()
+  assert(process.env.FAIONYX_GUI_APP&&!process.env.FAIONYX_GUI_DEV&&process.env.FAIONYX_GUI_SOFTWARE!=='1','Cape native acceptance requires the explicit actual packaged application without a QA software override')
+  const application=path.resolve(process.env.FAIONYX_GUI_APP),applicationBytes=fs.readFileSync(application);proof.application={path:application,bytes:applicationBytes.length,sha256:hash(applicationBytes)};save()
   proof.fixtures=await makeCapeFixtures(directory);proof.accounts=[{id:'qa-capes115-A',type:'microsoft',username:'合成披风 QA A',uuid:'00000000000000000000000000000115'},
    {id:'qa-capes115-B',type:'microsoft',username:'合成披风 QA B',uuid:'00000000000000000000000000000116'}]
   const url=await evaluate('location.href'),expectedProfile=fs.realpathSync.native(profile)

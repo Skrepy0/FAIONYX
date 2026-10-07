@@ -1,6 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),assert=require('node:assert/strict')
 module.exports=async function(h,binding){
- const file=path.resolve(process.env.KAMUCL_INSTALLER_EVENTS116||''),allowed=path.resolve('out')+path.sep
+ const file=path.resolve(process.env.FAIONYX_INSTALLER_EVENTS116||''),allowed=path.resolve('out')+path.sep
  assert(file.startsWith(allowed)&&/^installer-pipeline116-events-[a-f0-9-]+\.json$/.test(path.basename(file)))
  const bytes=fs.readFileSync(file),capture=JSON.parse(bytes)
  assert(capture.committedConfig&&capture.spawned===1&&capture.closed===1)

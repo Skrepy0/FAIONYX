@@ -15,7 +15,7 @@ import { probeModpack } from '../src/main/core/modpacks'
 const wait=(ms:number)=>new Promise(r=>setTimeout(r,ms))
 
 test('两版本并行安装共享库；取消一个不影响另一个，切换默认文件夹不改变在途目标',{timeout:15000},async t=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-multi-install-'))
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-multi-install-'))
  const lib=Buffer.from('shared library'),client=crypto.randomBytes(512*1024),sha=(b:Buffer)=>crypto.createHash('sha1').update(b).digest('hex');let libraryRequests=0
  let releaseClients!:()=>void
  const clientCompletion=new Promise<void>(resolve=>releaseClients=resolve),clientRequests=new Set<string>(),pending:Promise<unknown>[]=[]
@@ -61,7 +61,7 @@ test('两版本并行安装共享库；取消一个不影响另一个，切换�
 })
 
 test('外层启动器分发ZIP识别唯一mrpack，保留包名和配置，不执行外层EXE',async()=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-wrapper-'))
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-wrapper-'))
  try{
   const inner=new AdmZip();inner.addFile('modrinth.index.json',Buffer.from(JSON.stringify({formatVersion:1,game:'minecraft',name:'内部包名',dependencies:{minecraft:'1.21.11','fabric-loader':'0.19.2'},files:[]})));inner.addFile('overrides/options.txt',Buffer.from('lang:zh_cn'))
   const outer=new AdmZip();outer.addFile('modpack.mrpack',inner.toBuffer());outer.addFile('Plain Craft Launcher.exe',Buffer.from('not an executable'))
@@ -82,7 +82,7 @@ test('同目标写入互斥、不同目标并行；取消排队者不提前释�
 })
 
 test('大文件并发分段、完整哈希、Range回退及取消不影响共享文件等待者',{timeout:15000},async()=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-range-'));const data=crypto.randomBytes(8*1024*1024),hash=crypto.createHash('sha1').update(data).digest('hex')
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-range-'));const data=crypto.randomBytes(8*1024*1024),hash=crypto.createHash('sha1').update(data).digest('hex')
  let active=0,maxActive=0,ranges=0
  const server=http.createServer((req,res)=>{
   const range=req.headers.range?.match(/^bytes=(\d+)-(\d+)$/);let start=0,end=data.length-1

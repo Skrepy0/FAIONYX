@@ -7,7 +7,7 @@ import { createRequire } from 'node:module'
 import { build } from 'esbuild'
 
 test('117 resolution writes atomically preserve original instance bytes on partial write and rename failure', async t => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-resolution117-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-resolution117-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   const result = await build({ stdin: { contents: "export {setVersionResolution} from './src/main/core/versions';export {getSettings} from './src/main/core/settings';export {closeHttpClient} from './src/main/core/httpClient';", resolveDir: process.cwd(), loader: 'ts' }, bundle: true, write: false, format: 'cjs', platform: 'node', packages: 'external', logLevel: 'silent' })
   const req = createRequire(import.meta.url), module = { exports: {} as any }

@@ -1,4 +1,4 @@
-# KAMUCL 1.1.11 独立平台一致性评审
+# FAIONYX 1.1.11 独立平台一致性评审
 
 评审人：独立子 agent `independent_platform_parity`。基线为 Windows 1.1.10，提交 `85bfe93c016a004b7ddbd397c6b8769bedd25c50`。本文件为实施中的证据清单和静态评审，不表示新平台已经通过验收。
 
@@ -45,7 +45,7 @@
 
 ## 已复核的 Windows 局部回归
 
-实际 EXE 为 `release/KAMUCL-1.1.11.exe`，大小 **97290244**，SHA256 **dd584c92935c71ebdcd5ca379d0f1f851c9a07b604a9dcdfd6f2a1986e8142c7**。四主题 `out/appearance-motion-<theme>-110.json` 均为 1.1.11，`complete=true`。每个结果、原始帧清单、日志及已查看截图的摘要已记录于 `parity-matrix.json` 的 Windows 局部证据；该记录没有原始源码提交绑定，因此不提升为最终身份验收。
+实际 EXE 为 `release/FAIONYX-1.1.11.exe`，大小 **97290244**，SHA256 **dd584c92935c71ebdcd5ca379d0f1f851c9a07b604a9dcdfd6f2a1986e8142c7**。四主题 `out/appearance-motion-<theme>-110.json` 均为 1.1.11，`complete=true`。每个结果、原始帧清单、日志及已查看截图的摘要已记录于 `parity-matrix.json` 的 Windows 局部证据；该记录没有原始源码提交绑定，因此不提升为最终身份验收。
 
 已逐一查看四主题首页与收藏页截图：所采样布局中未见文字截断、缺字或原生蓝色复选框；首页壁纸实际渲染，黑紫自定义主题表面为 30%／侧栏 26% 混色；旧、新收藏均显示解码后的图片。收藏图片和项目元数据来自注入夹具，不能据此宣称真实 Modrinth／CurseForge 图标接口通过。主页模型也是纯色测试皮肤，不能据此评估卡慕纹理还原度。
 

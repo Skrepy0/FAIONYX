@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { BootState } from '../shared/startup'
-contextBridge.exposeInMainWorld('kamuclSplash', {
+contextBridge.exposeInMainWorld('faionyxSplash', {
   ready: () => ipcRenderer.send('boot:splash-ready'),
   assembled: () => ipcRenderer.send('boot:assembled'),
   finished: () => ipcRenderer.send('boot:finished'),

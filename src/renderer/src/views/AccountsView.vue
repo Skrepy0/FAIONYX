@@ -427,7 +427,7 @@ async function onRemove(acc: Account) {
       </div>
 
       <div v-if="accountMode === 'microsoft'" class="account-mode-panel">
-        <p class="muted mode-description">通过微软设备代码完成正版授权，KAMUCL 不会接触你的微软密码。</p>
+        <p class="muted mode-description">通过微软设备代码完成正版授权，FAIONYX 不会接触你的微软密码。</p>
         <p class="muted">SSL 证书验证已启用：校验证书链、域名及有效期，证书异常时终止登录。</p>
         <button class="btn btn-gold ms-btn" :disabled="ms.starting" @click="beginMsLogin">
           <span v-if="ms.starting" class="spin"></span>
@@ -612,7 +612,7 @@ async function onRemove(acc: Account) {
       <div v-if="providerModal.open" class="modal-mask" @pointerdown.self="providerModal.open = false">
         <div class="modal provider-modal">
           <h3 class="modal-title">添加外置登录提供商</h3>
-          <p class="muted ms-tip">支持 API Root、authlib-injector 拖拽 URI，以及 KAMUCL 提供商 JSON/TXT 文件。</p>
+          <p class="muted ms-tip">支持 API Root、authlib-injector 拖拽 URI，以及 FAIONYX 提供商 JSON/TXT 文件。</p>
           <label class="provider-input-label">
             <span>API Root 或配置内容</span>
             <textarea

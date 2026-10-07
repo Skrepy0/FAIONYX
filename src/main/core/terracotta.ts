@@ -1,7 +1,7 @@
 import { pipeline } from 'node:stream/promises'
 import { promisify } from 'node:util'
 /**
- * terracotta.ts — 陶瓦联机（Terracotta）官方工具集成（KAMUCL）
+ * terracotta.ts — 陶瓦联机（Terracotta）官方工具集成（FAIONYX）
  *
  * 移植自 VoxLink MOD 的集成方式（fabric/26.2/.../terracotta/*）：
  *  - 官方渠道下载 terracotta-<ver>-windows-<arch>-pkg.tar.gz（多镜像回退）→ SHA-256 校验 → 解出 exe
@@ -221,8 +221,8 @@ async function startProcess(): Promise<number> {
   }
   // v0.4.2 uses temp_dir()/terracotta for its Unix lock, logs and service.
   // A unique TMPDIR prevents --hmcl from attaching to or replacing another
-  // launcher's service, including another KAMUCL process using this profile.
-  const dir = fs.mkdtempSync(path.join(linux || mac ? tcDir() : os.tmpdir(), linux ? 'linux-session-' : mac ? 'mac-session-' : 'kamucl-tc-'))
+  // launcher's service, including another FAIONYX process using this profile.
+  const dir = fs.mkdtempSync(path.join(linux || mac ? tcDir() : os.tmpdir(), linux ? 'linux-session-' : mac ? 'mac-session-' : 'faionyx-tc-'))
   portFile = path.join(dir, 'http')
   fs.rmSync(portFile, { force: true })
   disposedByUser = false
@@ -453,7 +453,7 @@ async function tcStart(payload: { mode: 'host' | 'join'; code?: string; port?: n
     setState({ phase: 'starting' })
     await startProcess()
     if (generation !== operation) return { ...state }
-    const me = payload.playerName || 'KAMUCL'
+    const me = payload.playerName || 'FAIONYX'
     if (payload.mode === 'host') {
       setState({ phase: 'hosting', room: undefined, url: undefined, error: undefined })
       await tcGet(`/state/scanning?player=${encodeURIComponent(me)}`)

@@ -7,20 +7,20 @@ const MARKER='mac-parity-owner.json'
 function parityRoot(env,platform=process.platform){
  assert.equal(platform,'darwin','persistent GUI profile is Mac-only')
  assert.equal(env.GITHUB_ACTIONS,'true','only a disposable native runner is authorized')
- assert(['first','restart'].includes(env.KAMUCL_PARITY_PHASE),'unknown persistent profile phase')
- assert.match(env.KAMUCL_PARITY_TOKEN||'',/^[a-f0-9]{32}$/)
- const root=fs.realpathSync.native(env.KAMUCL_PARITY_ROOT),base=fs.realpathSync.native(os.tmpdir())
+ assert(['first','restart'].includes(env.FAIONYX_PARITY_PHASE),'unknown persistent profile phase')
+ assert.match(env.FAIONYX_PARITY_TOKEN||'',/^[a-f0-9]{32}$/)
+ const root=fs.realpathSync.native(env.FAIONYX_PARITY_ROOT),base=fs.realpathSync.native(os.tmpdir())
  assert(root.startsWith(base+path.sep),'QA root must be a private native temporary directory')
  const marker=path.join(root,MARKER),stat=fs.lstatSync(marker)
  assert(stat.isFile()&&!stat.isSymbolicLink(),'QA ownership marker must be a real file')
  const owner=JSON.parse(fs.readFileSync(marker,'utf8'))
- assert.equal(owner.token,env.KAMUCL_PARITY_TOKEN);assert.equal(owner.root,root)
+ assert.equal(owner.token,env.FAIONYX_PARITY_TOKEN);assert.equal(owner.root,root)
  assert.equal(owner.schemaVersion,1)
  for(const name of ['profile','games','second-games'])if(fs.existsSync(path.join(root,name))){
   const row=fs.lstatSync(path.join(root,name));assert(row.isDirectory()&&!row.isSymbolicLink(),'no linked QA profile or game directory')
   assert.equal(fs.realpathSync.native(path.join(root,name)),path.join(root,name))
  }
- if(env.KAMUCL_PARITY_PHASE==='first')assert(!fs.existsSync(path.join(root,'profile')),'first phase must use a fresh profile')
+ if(env.FAIONYX_PARITY_PHASE==='first')assert(!fs.existsSync(path.join(root,'profile')),'first phase must use a fresh profile')
  else assert(fs.existsSync(path.join(root,'profile','settings.json')),'restart must retain first phase settings')
  return root
 }
@@ -53,7 +53,7 @@ async function run(){
  const sourceCommit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()
  const identity=require('./mac-package-identity.cjs').readMacPackageIdentity(appPath,{version:pkg.version,arch,sourceCommit,runtimeVersion:pkg.devDependencies.electron,minimumSystemVersion:'13.0.0'})
  const proof=path.resolve(`release/mac-parity-proof-${arch}-${stage}`);fs.mkdirSync(proof,{recursive:true})
- const root=fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(),'KAMUCL Mac parity 中文 '))),token=crypto.randomBytes(16).toString('hex')
+ const root=fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(),'FAIONYX Mac parity 中文 '))),token=crypto.randomBytes(16).toString('hex')
  fs.writeFileSync(path.join(root,MARKER),JSON.stringify({schemaVersion:1,root,token}),{flag:'wx'})
  const result={schemaVersion:1,version:pkg.version,sourceCommit,arch,stage,packageIdentity:identity,startedAt:new Date().toISOString(),complete:false,nativeDesktop:false,fullParityAcceptance:false,classification:'Additional actual signed Mac GUI with synthetic disposable instance metadata; actual offline-account/settings/counters and real public Modrinth install. No Microsoft/Ygg authentication, multiplayer or physical listening claim.',phases:[],files:[]}
  const save=()=>fs.writeFileSync(path.join(proof,'summary.json'),JSON.stringify(result,null,2))
@@ -65,7 +65,7 @@ async function run(){
   for(const phase of ['first','restart']){
    const log=path.join(proof,phase+'-process.log'),fd=fs.openSync(log,'wx')
    try{
-    execFileSync(process.execPath,['scripts/verify-ui-refinement.cjs','black-orange'],{timeout:phase==='first'?15*60*1000:3*60*1000,stdio:['ignore',fd,fd],env:{...process.env,KAMUCL_GUI_APP:path.join(appPath,'Contents/MacOS/KAMUCL'),KAMUCL_EXTENSION_GUI:'1',KAMUCL_EXTENSION_ONLY:'1',KAMUCL_SKIP_EXTENSION_BASE:'1',KAMUCL_UI_MODULE:'mac-parity',KAMUCL_PARITY_PHASE:phase,KAMUCL_PARITY_ROOT:root,KAMUCL_PARITY_TOKEN:token,KAMUCL_OBSERVER_TRACE_CONTROL119:'1'}})
+    execFileSync(process.execPath,['scripts/verify-ui-refinement.cjs','black-orange'],{timeout:phase==='first'?15*60*1000:3*60*1000,stdio:['ignore',fd,fd],env:{...process.env,FAIONYX_GUI_APP:path.join(appPath,'Contents/MacOS/FAIONYX'),FAIONYX_EXTENSION_GUI:'1',FAIONYX_EXTENSION_ONLY:'1',FAIONYX_SKIP_EXTENSION_BASE:'1',FAIONYX_UI_MODULE:'mac-parity',FAIONYX_PARITY_PHASE:phase,FAIONYX_PARITY_ROOT:root,FAIONYX_PARITY_TOKEN:token,FAIONYX_OBSERVER_TRACE_CONTROL119:'1'}})
    }finally{fs.closeSync(fd)}
    const input=path.resolve(`out/mac-parity-${phase}.json`);assert(fs.existsSync(input),'phase must write its own actual receipt')
    const receipt=JSON.parse(fs.readFileSync(input,'utf8'));assert.equal(receipt.phase,phase);assert.equal(receipt.identity.sourceCommit,sourceCommit);assert.equal(receipt.complete,true)

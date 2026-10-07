@@ -37,7 +37,7 @@ test('本地文件复用：大小+sha1 命中时零网络请求直接复制', as
     requests++
     res.end('should not be reached')
   })
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-reuse-hit-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-reuse-hit-'))
   try {
     const base = await listen(server)
     const payload = Buffer.from('shared vanilla client jar payload for reuse test')
@@ -69,7 +69,7 @@ test('本地文件复用：大小相同但内容不符或扩展名不同时回�
     res.writeHead(200, { 'content-length': String(payload.length) })
     res.end(payload)
   })
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-reuse-miss-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-reuse-miss-'))
   try {
     const base = await listen(server)
     // 大小相同但内容损坏：预筛通过、sha1 不通过 → 走网络
@@ -149,7 +149,7 @@ test('慢速连接在滑动窗口内字节过少时主动掐断并重试耗尽',
     }, 80)
     res.on('close', () => clearInterval(timer))
   })
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-slow-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-slow-'))
   try {
     const base = await listen(server)
     await assert.rejects(
@@ -184,7 +184,7 @@ test('限速开启时跳过慢速检测，isThrottling 只读反映限速状态'
     res.writeHead(200, { 'content-length': String(payload.length) })
     res.end(payload)
   })
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-throttle-skip-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-throttle-skip-'))
   downloadLimiter.configure({ downloadThreads: 8, downloadSpeedKBps: 65536 })
   try {
     const base = await listen(server)
@@ -212,7 +212,7 @@ test('会话级源健康度：冷却中的 host 沉底，成功后恢复原序',
     res.writeHead(200, { 'content-length': String(payload.length) })
     res.end(payload)
   })
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-health-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-health-'))
   try {
     const badBase = await listen(badServer)
     const goodBase = await listen(goodServer)
@@ -250,7 +250,7 @@ test('磁盘空间预检：≥50MB 且空间不足时零请求直接失败，充
     res.writeHead(200, { 'content-length': String(small.length) })
     res.end(small)
   })
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-disk-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-disk-'))
   try {
     const base = await listen(server)
     // 注入仅剩 4MB 可用的 statfs：60MB 文件应直接失败且不发请求

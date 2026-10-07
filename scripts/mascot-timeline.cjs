@@ -22,7 +22,7 @@ function summarize(events,marker){
 }
 
 module.exports=async function startMascotTimeline(h,environment){
- const enabled=process.env.KAMUCL_MASCOT_TRACE==='1'&&environment.gpu.platform==='darwin'&&/swiftshader|llvmpipe|lavapipe|softpipe|software/i.test(environment.rendererGpu.unmaskedRenderer||environment.rendererGpu.renderer)
+ const enabled=process.env.FAIONYX_MASCOT_TRACE==='1'&&environment.gpu.platform==='darwin'&&/swiftshader|llvmpipe|lavapipe|softpipe|software/i.test(environment.rendererGpu.unmaskedRenderer||environment.rendererGpu.renderer)
  if(!enabled)return{enabled:false,end:async()=>{},stop:async()=>({enabled:false,reason:'diagnostic tracing is explicit opt-in; normal acceptance retains its original first interaction without tracing overhead'})}
  const summaryFile=path.resolve('out/mascot-header-timeline.json'),rawFile=path.resolve('out/mascot-header-timeline-raw.json')
  const proof={version:h.version,enabled,source:'real Chrome Tracing ReturnAsStream captured concurrently with the original first-leader Page.startScreencast; no changed FPS threshold, window size, extra warmup or recreated timestamps',instrumentation:'Tracing has its own overhead. This is a diagnostic run, not an uninstrumented FPS comparison. Trace startup/end add protocol work around the during phase; before/during/after cannot be claimed to have exactly equal instrumentation.',categories,environment,startedAt:new Date().toISOString(),complete:false,errors:[],rawFile}
@@ -41,7 +41,7 @@ module.exports=async function startMascotTimeline(h,environment){
   socket.addEventListener('message',event=>{const message=JSON.parse(event.data);if(message.id){const request=pending.get(message.id);if(request){clearTimeout(request.timer);pending.delete(message.id);message.error?request.reject(Error(JSON.stringify(message.error))):request.resolve(message.result)}}else if(message.method==='Tracing.tracingComplete')completionResolve(message.params)})
   socket.addEventListener('close',()=>completionReject(Error('timeline socket closed before stream completion')),{once:true})
   await command('Tracing.start',{categories:categories.join(','),options:'record-until-full',transferMode:'ReturnAsStream',streamFormat:'json',streamCompression:'none'});tracing=true
-  const name='KAMUCL-mascot-first-leader-'+crypto.randomUUID()
+  const name='FAIONYX-mascot-first-leader-'+crypto.randomUUID()
   marker=await h.evaluate(`(()=>{performance.mark(${JSON.stringify(name)});const mark=performance.getEntriesByName(${JSON.stringify(name)}).at(-1);return{name:mark.name,startTime:mark.startTime,timeOrigin:performance.timeOrigin}})()`)
   proof.marker=marker;save()
  }catch(error){proof.errors.push({at:'start',error:String(error)});if(tracing)try{await command('Tracing.end')}catch{}dispose();save();return{enabled:true,end:async()=>{},stop:async()=>proof}}

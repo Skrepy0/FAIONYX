@@ -11,9 +11,9 @@ export function useMotion() {
   const update = () => { system.value = query.matches; pageHidden.value = document.hidden }
   onMounted(() => {
     query.addEventListener('change', update); document.addEventListener('visibilitychange', update)
-    unsubscribe = window.kamucl.on('window:visibility', visible => { visibilityRevision++; nativeHidden.value = visible === false })
+    unsubscribe = window.faionyx.on('window:visibility', visible => { visibilityRevision++; nativeHidden.value = visible === false })
     const revision = visibilityRevision
-    void window.kamucl.invoke('window:visibility').then(visible => {
+    void window.faionyx.invoke('window:visibility').then(visible => {
       if (alive && revision === visibilityRevision) nativeHidden.value = visible === false
     }).catch(() => {})
   })

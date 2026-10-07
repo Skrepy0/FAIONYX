@@ -30,10 +30,10 @@ function archive(value: unknown, bom = false) {
   return zip
 }
 async function fixture(run: (root: string) => Promise<void>) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-mrpack119-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-mrpack119-'))
   try { await run(root) }
   finally {
-    assert(path.resolve(root).startsWith(path.resolve(os.tmpdir()) + path.sep + 'kamucl-mrpack119-'))
+    assert(path.resolve(root).startsWith(path.resolve(os.tmpdir()) + path.sep + 'faionyx-mrpack119-'))
     fs.rmSync(root, { recursive: true, force: true })
   }
 }
@@ -54,7 +54,7 @@ function dropHarness(view: string) {
   const paths = new WeakMap<object, string>()
   const state = { resourceCalls: 0, stopped: false, modalCalls: 0, worldOpened: false, modOpened: false }
   let complete: (result: { kind: string; file?: string; info?: unknown; message?: string }) => void = () => { throw new Error('unexpected drop completion') }
-  const window = { kamucl: { getFilePath: (file: object) => paths.get(file)! } }
+  const window = { faionyx: { getFilePath: (file: object) => paths.get(file)! } }
   const store = { currentView: view, editMode: false, resourceDropHandler: () => { state.resourceCalls++; complete({ kind: 'resource' }) } }
   const worldModal = new Proxy({ open: false }, { set(target, key, value) { Reflect.set(target, key, value); if (key === 'open' && value) { state.worldOpened = true; complete({ kind: 'world' }) } return true } })
   const modDrop = new Proxy({ open: false, files: [] }, { set(target, key, value) { Reflect.set(target, key, value); if (key === 'open' && value) { state.modOpened = true; complete({ kind: 'mod' }) } return true } })

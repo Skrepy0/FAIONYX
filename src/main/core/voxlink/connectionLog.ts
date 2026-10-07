@@ -38,9 +38,9 @@ export class ConnectionLog {
     this.pending = (async () => {
       try {
         const response = await fetch(url, { method: 'POST', signal: AbortSignal.timeout(timeout), headers: {
-          'Content-Type': 'application/octet-stream', 'Accept': 'application/json', 'User-Agent': `KAMUCL-App/${APP_VERSION}`,
+          'Content-Type': 'application/octet-stream', 'Accept': 'application/json', 'User-Agent': `FAIONYX-App/${APP_VERSION}`,
           'X-VoxLink-Version': APP_VERSION, 'X-Log-Sha256': createHash('sha256').update(payload).digest('hex'),
-          'X-Log-Role': role, 'X-Log-Code': code, 'X-Log-Name': 'KAMUCL', 'X-Log-Version': APP_VERSION, 'X-Log-Duration-Ms': String(elapsed)
+          'X-Log-Role': role, 'X-Log-Code': code, 'X-Log-Name': 'FAIONYX', 'X-Log-Version': APP_VERSION, 'X-Log-Duration-Ms': String(elapsed)
         }, body: payload })
         const data = await response.json() as { success?: boolean }
         if (epoch === this.generation && response.ok && data.success) this.uploaded = true

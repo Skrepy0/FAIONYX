@@ -8,7 +8,7 @@ import type { CommunityQuery, CommunityKind } from '../src/shared/types'
 
 const query: CommunityQuery = { keyword: '', source: 'all', kind: 'resourcepack', mcVersion: '26.2', loader: 'fabric', offset: 0, limit: 20 }
 async function fixture(t: any, totals = { modrinth: 45, curseforge: 7 }, failCf = false) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-browse-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-browse-'))
   const urls: URL[] = []
   const runtime = await versionInstallHarness(root, async input => {
     const url = new URL(String(input)); urls.push(url)

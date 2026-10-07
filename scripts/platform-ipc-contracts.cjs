@@ -22,7 +22,7 @@ const groups={
  gameOptions:{get:'读取真实默认游戏选项',set:'保存真实选项并验证启动应用与未选项保持'},
  import:{probe:'对真实输入按整合包优先分类并返回准确格式'},
  java:{addCustom:'添加实际可执行Java并验证架构版本',cancelScan:'取消实际扫描并终止该任务',hide:'隐藏指定Java记录并重读',list:'读取实际Java环境和健康',pickAdd:'原生选择并验证实际Java',refresh:'实际重扫Java环境并观察进度结果'},
- kamucl:{'mem-trim':'观察实际内存整理请求与当前平台受控结果'},
+ faionyx:{'mem-trim':'观察实际内存整理请求与当前平台受控结果'},
  keys:{getDefault:'读取真实默认按键文件',reset:'恢复默认按键并重读',setDefault:'记录实际按键并验证启动应用'},
  launch:{exportLogs:'导出实际启动日志且密钥和凭据脱敏'},
  loaders:{fabricApi:'请求指定游戏版本兼容FabricAPI',list:'请求指定游戏版本兼容加载器列表'},

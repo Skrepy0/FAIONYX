@@ -2,11 +2,11 @@ const test = require('node:test'), assert = require('node:assert/strict'), fs = 
 const source = fs.readFileSync(path.resolve('scripts/verify-linux-desktop.cjs'), 'utf8')
 
 async function preflightFailure({ removeOut, finalizerFailure } = {}) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-linux-evidence-fixture-')), commit = 'a'.repeat(40), arch = 'x64', version = require('../package.json').version
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-linux-evidence-fixture-')), commit = 'a'.repeat(40), arch = 'x64', version = require('../package.json').version
   let spawned = 0, outReadyAtFailure = false
   const processFixture = { argv: ['node', 'script', arch, '--fixture-smoke'], platform: 'linux', arch, execPath: process.execPath, env: { DISPLAY: ':fixture' }, getuid: () => 1000 }
   try {
-    const release = path.join(root, 'release'), bytes = Buffer.from('synthetic preflight archive; never executed'), name = `KAMUCL-${version}-linux-${arch}.tar.gz`
+    const release = path.join(root, 'release'), bytes = Buffer.from('synthetic preflight archive; never executed'), name = `FAIONYX-${version}-linux-${arch}.tar.gz`
     fs.mkdirSync(path.join(release, 'linux-proof-x64-packages'), { recursive: true }); fs.writeFileSync(path.join(release, name), bytes)
     fs.writeFileSync(path.join(release, 'linux-proof-x64-packages/summary.json'), JSON.stringify({ version, arch, sourceCommit: commit, packages: [{ name, bytes: bytes.length, sha256: crypto.createHash('sha256').update(bytes).digest('hex') }] }))
     const requireFixture = id => {
@@ -23,8 +23,8 @@ async function preflightFailure({ removeOut, finalizerFailure } = {}) {
         if (command === 'glxinfo') return 'OpenGL renderer string: llvmpipe fixture\n'
         if (command === '/bin/ps') return 'Xvfb\nopenbox\n'
         if (command === '/usr/bin/tar') {
-          const app = path.join(args[3], 'KAMUCL'); fs.mkdirSync(path.join(app, 'resources'), { recursive: true })
-          fs.writeFileSync(path.join(app, 'resources/kamucl-linux.json'), JSON.stringify({ schemaVersion: 1, version, arch, installationKind: 'portable-directory', sourceCommit: commit, runtimeVersion: '44.3.0' })); return ''
+          const app = path.join(args[3], 'FAIONYX'); fs.mkdirSync(path.join(app, 'resources'), { recursive: true })
+          fs.writeFileSync(path.join(app, 'resources/faionyx-linux.json'), JSON.stringify({ schemaVersion: 1, version, arch, installationKind: 'portable-directory', sourceCommit: commit, runtimeVersion: '44.3.0' })); return ''
         }
         assert.equal(command, 'xdpyinfo'); outReadyAtFailure = fs.existsSync(path.join(root, 'out'))
         if (removeOut) fs.rmSync(path.join(root, 'out'), { recursive: true, force: true })

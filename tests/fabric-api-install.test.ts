@@ -16,7 +16,7 @@ const sha1 = (data: Buffer) => crypto.createHash('sha1').update(data).digest('he
 
 for (const isolated of [true, false]) {
   test(`Fabric API uses the final ${isolated ? 'isolated' : 'shared'} mods directory before reporting success`, async t => {
-    const createdRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-fabric-install-'))
+    const createdRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-fabric-install-'))
     const root = fs.realpathSync.native(createdRoot)
     const aliasStat = fs.statSync(createdRoot), canonicalStat = fs.statSync(root)
     assert.equal(aliasStat.dev, canonicalStat.dev)
@@ -53,7 +53,7 @@ for (const isolated of [true, false]) {
         return Response.json([{ version_number: 'test+26.2', files: [{ primary: true, filename: 'fabric-api.jar', url: `${base}/fabric-api.jar`, hashes: { sha1: sha1(payload) } }] }])
       })
       Object.assign(runtime.getSettings(), { gameDir: game, activeFolder: game, folders: [{ path: game, isDefault: true }], defaultIsolation: isolated, mirror: 'official' })
-      const baseDir = path.join(game, '.kamucl/base/26.2')
+      const baseDir = path.join(game, '.faionyx/base/26.2')
       fs.mkdirSync(baseDir, { recursive: true })
       fs.writeFileSync(path.join(baseDir, '26.2.json'), JSON.stringify({ id: '26.2', libraries: [], downloads: { client: { url: `${base}/client.jar`, sha1: sha1(client), size: client.length } } }))
       const installedId = await runtime.installVersion('26.2', { loader: 'fabric', loaderVersion: '0.19.5', fabricApi: 'test+26.2', instanceName: id }, e => events.push(e))

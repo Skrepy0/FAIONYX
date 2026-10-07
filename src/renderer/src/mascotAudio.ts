@@ -46,7 +46,7 @@ export class MascotAudio {
   // Exercise the same real sample and first-contact resampling path, but through
   // an independent, permanently zero output. It is never a contact or a voice.
   source.buffer=this.buffer;source.playbackRate.value=.95;zeroGain.gain.value=0
-  Object.defineProperty(source,'kamuclInitialization',{value:Object.freeze({role:'silent-slap-buffer',zeroGain})})
+  Object.defineProperty(source,'faionyxInitialization',{value:Object.freeze({role:'silent-slap-buffer',zeroGain})})
   source.connect(zeroGain);zeroGain.connect(context.destination)
   const operation=new Promise<void>(resolve=>{
    let done=false,timer:ReturnType<typeof setTimeout>|undefined

@@ -9,7 +9,7 @@ import { downloadAll, retryAfterTime } from '../src/main/core/download'
 import { DEFAULT_DOWNLOAD_LIMITS, downloadLimiter, DownloadLimiter, validateDownloadLimits } from '../src/main/core/downloadLimits'
 
 test('default pool downloads distinct files concurrently and respects the shared configured ceiling', async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'kamucl-many-files-'))
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'faionyx-many-files-'))
   let active = 0, peak = 0
   const paths = new Set<string>()
   const server = http.createServer((req, res) => {
@@ -34,7 +34,7 @@ test('server Retry-After accepts seconds and HTTP dates without retrying early',
 })
 
 test('两个独立下载池共享 HTTP 并发上限和总速率，完成内容一致', async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'kamucl-limits-'))
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'faionyx-limits-'))
   let active = 0, peak = 0
   const payload = Buffer.alloc(64 * 1024, 83)
   const server = http.createServer((_req, res) => {

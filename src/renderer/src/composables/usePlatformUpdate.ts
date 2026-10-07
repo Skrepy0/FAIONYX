@@ -6,7 +6,7 @@ let requested = false
 export function usePlatformUpdate() {
   if (!requested) {
     requested = true
-    if (window.kamucl.platform === 'linux') void getSystemInfo().then(info => { systemInstaller.value = info.installation === 'deb' }).catch(() => {})
+    if (window.faionyx.platform === 'linux') void getSystemInfo().then(info => { systemInstaller.value = info.installation === 'deb' }).catch(() => {})
   }
   const installAction = computed(() => systemInstaller.value ? '下次启动打开安装器' : '下次启动应用')
   const installExplanation = computed(() => systemInstaller.value

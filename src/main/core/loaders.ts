@@ -152,7 +152,7 @@ function runInstaller(javaPath: string, jar: string, emit: ProgressEmit, signal?
   // External Java installers rewrite launcher_profiles.json in their target folder.
   // Only this final installer phase is serialized; version/file downloads remain concurrent.
   emit({ stage: 'loader-process', progress: 0, indeterminate: true, text: '等待同一游戏目录的安装器任务完成…' })
-  return withFileJob(path.join(target, '.kamucl-installer'), signal, () => {
+  return withFileJob(path.join(target, '.faionyx-installer'), signal, () => {
     emit({ stage: 'loader-process', progress: 0, indeterminate: true, text: '正在启动加载器安装器…' })
     return runInstallerUnlocked(javaPath, jar, emit, signal, target)
   })
@@ -208,7 +208,7 @@ function runInstallerUnlocked(javaPath: string, jar: string, emit: ProgressEmit,
         if (tail.trim()) allLines.push(tail)
         // 全量输出落盘，便于排查
         try {
-          const logDir = path.join(target, 'kamucl-logs')
+          const logDir = path.join(target, 'faionyx-logs')
           fs.mkdirSync(logDir, { recursive: true })
           fs.writeFileSync(
             path.join(logDir, 'installer.log'),
@@ -227,7 +227,7 @@ function runInstallerUnlocked(javaPath: string, jar: string, emit: ProgressEmit,
         else {
           const last = allLines.slice(-30).join('\n')
           loaderLog.error(`安装器失败（退出码 ${code ?? '未知'}），末尾输出：${last.slice(-400)}`)
-          reject(new Error(`安装器退出码 ${code}（完整日志见 kamucl-logs/installer.log）\n${last}`))
+          reject(new Error(`安装器退出码 ${code}（完整日志见 faionyx-logs/installer.log）\n${last}`))
         }
       })
     })
@@ -248,7 +248,7 @@ export async function repairNeoRuntime(json: VersionJson, clientJar: string, bas
   const neo = fmlArgument(json, '--fml.neoForgeVersion'), mc = fmlArgument(json, '--fml.mcVersion')
   if (!neo || !mc) throw new Error('NeoForge 本体库缺失，且启动元数据不完整；请修复该实例的加载器配置')
   loaderLog.info(`检测到 NeoForge ${neo} 本体库缺失，启动修复流程（不修改实例内容）`)
-  const staging = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-runtime-repair-'))
+  const staging = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-runtime-repair-'))
   // Keep failed repair logs for diagnosis; successful workspaces contain no player data.
   const jar = path.join(staging, 'installer.jar')
   emit({ stage: 'repair', progress: 0, text: `修复 NeoForge ${neo} 本体库（不修改实例内容）…` })
@@ -301,7 +301,7 @@ function tagLoaderJson(id: string, loader: LoaderName, loaderVersion: string): v
 
 /**
  * 安装加载器，返回新版本的 id。
- * 原版作为内部依赖：fabric/quilt 直接装进 .kamucl/base（不进版本列表）；
+ * 原版作为内部依赖：fabric/quilt 直接装进 .faionyx/base（不进版本列表）；
  * forge/neoforge 安装器强制要求 versions/ 下存在原版，先落地、装完（无论成败）再迁移进 base。
  */
 export async function installLoader(
@@ -407,7 +407,7 @@ async function installLoaderInternal(
       ? `https://maven.minecraftforge.net/net/minecraftforge/forge/${mcVersion}-${loaderVersion}/${fileBase}`
       : `https://maven.neoforged.net/releases/net/neoforged/neoforge/${loaderVersion}/${fileBase}`
 
-  const jarPath = path.join(os.tmpdir(), `kamucl-${loader}-installer-${Date.now()}.jar`)
+  const jarPath = path.join(os.tmpdir(), `faionyx-${loader}-installer-${Date.now()}.jar`)
   try {
     // A user-owned matching loader instance must not be renamed into a new pack.
     const reusable = instanceName?.trim() ? findInstalledDir(loader, mcVersion, loaderVersion) : null
@@ -544,7 +544,7 @@ const MODRINTH_BASES = [
   'https://api.modrinth.com/v2',
   'https://mod.mcimirror.top/modrinth/v2'
 ]
-const MODRINTH_UA = { 'User-Agent': 'KAMUCL/0.4.1 (kamucl launcher)' }
+const MODRINTH_UA = { 'User-Agent': 'FAIONYX/0.4.1 (faionyx launcher)' }
 
 interface ModrinthFile {
   url?: string

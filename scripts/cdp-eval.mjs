@@ -1,5 +1,5 @@
 /**
- * Evaluate an expression in the running KAMUCL renderer through Electron CDP.
+ * Evaluate an expression in the running FAIONYX renderer through Electron CDP.
  *
  * Usage:
  *   node scripts/cdp-eval.mjs "document.body.innerText"
@@ -16,8 +16,8 @@ const targetsResponse = await fetch('http://127.0.0.1:9222/json/list')
 if (!targetsResponse.ok) throw new Error(`CDP target list failed: HTTP ${targetsResponse.status}`)
 
 const targets = await targetsResponse.json()
-const page = targets.find((target) => target.type === 'page' && target.title === 'KAMUCL')
-if (!page?.webSocketDebuggerUrl) throw new Error('KAMUCL renderer CDP target not found')
+const page = targets.find((target) => target.type === 'page' && target.title === 'FAIONYX')
+if (!page?.webSocketDebuggerUrl) throw new Error('FAIONYX renderer CDP target not found')
 
 const socket = new WebSocket(page.webSocketDebuggerUrl)
 const timeout = setTimeout(() => {

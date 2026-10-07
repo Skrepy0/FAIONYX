@@ -2,7 +2,7 @@
 // New Node transport for the documented wire layout of VoxLink 1.1.5,
 // ReliableUdpTransport.java at 6b11d93 (AUGUHDAR/VoxLink contributors).
 // Four-chunk XOR parity, RTT estimator and retry backoff adapted from c475faa9;
-// bounded Node receive/cache lifecycle and explicit-ACK flood guards: KAMUCL.
+// bounded Node receive/cache lifecycle and explicit-ACK flood guards: FAIONYX.
 // No app-desktop Go implementation retained. See THIRD_PARTY_NOTICES.md.
 import dgram from 'node:dgram'
 import { EventEmitter } from 'node:events'

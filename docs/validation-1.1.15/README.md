@@ -1,4 +1,4 @@
-# KAMUCL 1.1.15 — Windows 验证与交付
+# FAIONYX 1.1.15 — Windows 验证与交付
 
 本批修复服务器地址显示隐私、游戏版本分类与独立收藏分类、披风加载与纹理布局、Windows 启动窗口样式刷新及导航残影。资源优化仍停止；保留用户图片、账号、设置、收藏、历史计数、实例和未提交文件，不操作 wuhui，不纳入 pelican-bicycle.html。
 
@@ -8,9 +8,9 @@ Windows x64，Electron 44.3.0；实际桌面环境为 Windows 11 10.0.26200。�
 
 | 成品 | 字节 | SHA256 |
 | --- | ---: | --- |
-| KAMUCL-1.1.15.exe | 97289152 | `4822890c6cc94353a16687d812fdfb0be9379dad1c0258ef4b1a35c14d686df9` |
-| KAMUCL-1.1.15-windows-x64.zip | 97320724 | `9f7f6de1a92b4e8a2d9f09bb24140082040a80ae8e9d9def58765212b4df6d0f` |
-| KAMUCL-1.1.15-windows-x64-unpacked.zip | 142949477 | `bafb95956a15dd428fd93938f348de77e5ff6b331adb4acd95d5ee867c3c164f` |
+| FAIONYX-1.1.15.exe | 97289152 | `4822890c6cc94353a16687d812fdfb0be9379dad1c0258ef4b1a35c14d686df9` |
+| FAIONYX-1.1.15-windows-x64.zip | 97320724 | `9f7f6de1a92b4e8a2d9f09bb24140082040a80ae8e9d9def58765212b4df6d0f` |
+| FAIONYX-1.1.15-windows-x64-unpacked.zip | 142949477 | `bafb95956a15dd428fd93938f348de77e5ff6b331adb4acd95d5ee867c3c164f` |
 
 17:34（Asia/Hong_Kong）在构建前冻结 497 个工作输入，构建后逐项核对未变化；两份原有构建图标的核对在构建后另记，均与既有 master 的 Git blob 完全一致，不回填为构建前记录。最终提交追加的 QA、文档和证据不进入产品运行时。原始证据目录用 Git -text 属性保留采集字节（包括CRLF日志及QA快照），归档核对以 bindings 中 publicFile 为准。源码 ZIP 保存原始 Git blob 字节；工作区 CRLF 与 Git LF、原生编译时间／MVID差异单列，不承诺重建 EXE 字节一致。
 

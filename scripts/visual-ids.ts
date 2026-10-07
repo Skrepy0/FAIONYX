@@ -4,7 +4,7 @@ import { basename } from 'node:path'
 import { createHash } from 'node:crypto'
 /** Structural IDs survive text/style edits; every native component can be independently selected. */
 export function visualIds() {
- return {name:'kamucl-visual-ids',enforce:'pre' as const,transform(code:string,id:string){
+ return {name:'faionyx-visual-ids',enforce:'pre' as const,transform(code:string,id:string){
   if(!id.endsWith('.vue') || /(?:EditPanel|VisualEditor)\.vue$/.test(id))return
   const block=parseSfc(code).descriptor.template;if(!block)return
   const edits:{at:number;text:string}[]=[]

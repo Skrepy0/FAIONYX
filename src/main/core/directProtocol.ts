@@ -31,16 +31,16 @@ export function detectLanPort(log: string): number | undefined {
   return port > 0 && port <= 65535 ? port : undefined
 }
 export function encodeInvitation(invitation: DirectInvitation): string {
-  return 'KAMUCL-DIRECT-1:' + Buffer.from(JSON.stringify(invitation)).toString('base64url')
+  return 'FAIONYX-DIRECT-1:' + Buffer.from(JSON.stringify(invitation)).toString('base64url')
 }
 export function parseInvitation(input: string, now = Date.now()): DirectInvitation {
   if (typeof input !== 'string' || input.length > 16384) throw new Error('邀请内容过大或格式无效')
   let value: DirectInvitation
   try {
     const raw = input.trim()
-    value = JSON.parse(raw.startsWith('KAMUCL-DIRECT-1:') ? Buffer.from(raw.slice(16), 'base64url').toString('utf8') : raw)
-  } catch { throw new Error('无法识别邀请，请粘贴完整的 KAMUCL-DIRECT-1 邀请信息') }
-  if (!value || value.format !== 'KAMUCL-DIRECT' || value.version !== 1 ||
+    value = JSON.parse(raw.startsWith('FAIONYX-DIRECT-1:') ? Buffer.from(raw.slice(16), 'base64url').toString('utf8') : raw)
+  } catch { throw new Error('无法识别邀请，请粘贴完整的 FAIONYX-DIRECT-1 邀请信息') }
+  if (!value || value.format !== 'FAIONYX-DIRECT' || value.version !== 1 ||
       typeof value.name !== 'string' || !value.name.trim() || value.name.length > 128 ||
       typeof value.minecraftVersion !== 'string' || value.minecraftVersion.length > 128 ||
       !Array.isArray(value.endpoints) || !value.endpoints.length || value.endpoints.length > 12)
@@ -59,7 +59,7 @@ export function parseInvitation(input: string, now = Date.now()): DirectInvitati
     const clean = { host, port: validatePort(endpoint.port), kind } as DirectEndpoint
     if (!endpoints.some(item => endpointAddress(item) === endpointAddress(clean))) endpoints.push(clean)
   }
-  return { format: 'KAMUCL-DIRECT', version: 1, name: value.name, minecraftVersion: value.minecraftVersion,
+  return { format: 'FAIONYX-DIRECT', version: 1, name: value.name, minecraftVersion: value.minecraftVersion,
     loader: value.loader, loaderVersion: value.loaderVersion, endpoints, expiresAt: value.expiresAt }
 }
 

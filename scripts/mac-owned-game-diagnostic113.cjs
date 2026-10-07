@@ -101,7 +101,7 @@ function rawRunner({directory,execute=execFile}){
 async function createMacOwnedGameDiagnostics({root,profile,games,instanceId,output,phase,launcherPID,inspect,onChange=()=>{},execute}){
  assert.equal(process.platform,'darwin','native Mac QA diagnostic only');assert.equal(process.arch,'arm64','native ARM64 diagnostic only')
  assert(/^[a-z0-9-]+$/.test(phase));assert.equal(path.basename(instanceId),instanceId)
- const generatedRoot=real(root);assert(path.basename(generatedRoot).startsWith('KAMUCL favorites113 中文 '),'only verifier-generated disposable QA root allowed')
+ const generatedRoot=real(root);assert(path.basename(generatedRoot).startsWith('FAIONYX favorites113 中文 '),'only verifier-generated disposable QA root allowed')
  assert.equal(real(profile),path.join(generatedRoot,'profile'));assert.equal(real(games),path.join(generatedRoot,'games §'))
  const effectiveGameDir=real(path.join(games,'versions',instanceId));assert(inside(generatedRoot,effectiveGameDir))
  const directory=path.join(output,phase+'-owned-game-diagnostic');assert(!fs.existsSync(directory),'preserve prior diagnostic attempt');fs.mkdirSync(directory)

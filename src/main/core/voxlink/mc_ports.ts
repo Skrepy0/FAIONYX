@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// KAMUCL process/port discovery. Process arguments are inspected locally and never logged.
+// FAIONYX process/port discovery. Process arguments are inspected locally and never logged.
 import { execFile } from 'node:child_process'
 import net from 'node:net'
 export interface McPortEntry { port: number; pid: number }

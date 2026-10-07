@@ -10,7 +10,7 @@ import { cleanDesign } from '../src/shared/visualDesign'
 import { versionCategory, filterVersions } from '../src/shared/versionPicker'
 const hash=(s:string)=>crypto.createHash('sha1').update(s).digest('hex')
 async function harness(entry='src/main/core/modManagement.ts'){
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-1054-')),dir=path.join(root,'versions','source','mods');fs.mkdirSync(dir,{recursive:true})
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-1054-')),dir=path.join(root,'versions','source','mods');fs.mkdirSync(dir,{recursive:true})
  const h:any={root,dir,downloads:[],fail:false,running:false,settings:{theme:'transparent',visualDesign:{version:1,pages:{}},memoryMB:4096},scanned:()=>fs.readdirSync(dir).filter(n=>/\.jar(?:\.disabled)?$/.test(n)).map(n=>({fileName:n,name:'Name '+n,version:'1.0',sha1:hash(fs.readFileSync(path.join(dir,n),'utf8')),fingerprint:1})),files:[]}
  h.files=[{source:'modrinth',projectId:'a',fileId:'new',fileName:'new.jar',url:'https://cdn.modrinth.com/new.jar',sha1:hash('new'),gameVersions:['1.21.1'],loaders:['fabric'],version:'2',date:'2026-09-11',dependencies:[],size:3}]
  h.download=async(url:string,dest:string,_p:any,sha:string)=>{h.downloads.push(url);if(h.fail)throw Error('download failed');if(h.onDownload)await h.onDownload();assert.equal(sha,hash('new'));fs.writeFileSync(dest,'new')}

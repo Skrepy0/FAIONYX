@@ -10,7 +10,7 @@ import {
 } from '../src/main/core/isolationFiles'
 
 async function fixture(): Promise<{ root: string; source: string; destination: string }> {
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-isolation-test-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-isolation-test-'))
   const source = path.join(root, 'minecraft')
   const destination = path.join(source, 'versions', 'test-instance')
   await fs.promises.mkdir(path.join(source, 'saves', 'World'), { recursive: true })

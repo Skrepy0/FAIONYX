@@ -6,7 +6,7 @@ import os from 'node:os'
 import { dragResourceFiles } from '../src/main/core/resourceDragPaths'
 
 test('native drag resolves literal resource entries, deduplicates, and rejects traversal, missing files and links', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'kamucl-drag-'))
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'faionyx-drag-'))
   try {
     const dir = path.join(root, 'mods'); await fs.mkdir(dir)
     for (const name of ['中文.jar', 'disabled.jar.disabled', '材质.zip']) await fs.writeFile(path.join(dir, name), 'fixture')

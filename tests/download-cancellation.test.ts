@@ -48,7 +48,7 @@ test('取消会中断流、等待 worker 退出、清理 .part，并阻止新子
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
   const address = server.address()
   assert.ok(address && typeof address !== 'string')
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-cancel-test-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-cancel-test-'))
   const first = path.join(root, 'first.bin')
   const second = path.join(root, 'second.bin')
   const task = registerTask('取消链路测试', 'download')

@@ -49,7 +49,7 @@ test('actual pinned Electron custom-main loads the QA entry and leaves its priva
   assert.equal(actual.executableSHA256, crypto.createHash('sha256').update(fs.readFileSync(executable)).digest('hex'))
   const privateRoot = path.dirname(actual.userData)
   assert.equal(actual.appData, path.join(privateRoot, 'config')); assert.equal(actual.userData, path.join(privateRoot, 'profile'))
-  assert(path.resolve(privateRoot).startsWith(path.resolve(os.tmpdir()) + path.sep)); assert(path.basename(privateRoot).startsWith('KAMUCL QA entry '))
+  assert(path.resolve(privateRoot).startsWith(path.resolve(os.tmpdir()) + path.sep)); assert(path.basename(privateRoot).startsWith('FAIONYX QA entry '))
   // execFileSync has observed the owned native process's normal exit already.
   fs.rmSync(privateRoot, { recursive: true, force: true })
 })

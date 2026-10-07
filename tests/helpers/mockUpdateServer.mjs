@@ -8,8 +8,8 @@ import crypto from 'node:crypto'
 export async function startMockServer(port = 0) {
   const assets = new Map()
   for (const ver of ['99.0.0', '1.0.0', '0.9.9']) {
-    const name = `KAMUCL-${ver}.exe`
-    const seed = crypto.createHash('sha256').update('kamucl-mock-' + ver).digest()
+    const name = `FAIONYX-${ver}.exe`
+    const seed = crypto.createHash('sha256').update('faionyx-mock-' + ver).digest()
     const file = Buffer.alloc(128 * 1024)
     for (let i = 0; i < file.length; i += seed.length) seed.copy(file, i)
     assets.set(name, file)
@@ -22,13 +22,13 @@ export async function startMockServer(port = 0) {
     const url = req.url || ''
     const mk = (ver, i) => ({
       tag_name: `v${ver}`,
-      name: `KAMUCL v${ver}`,
+      name: `FAIONYX v${ver}`,
       body: `## 测试 v${ver}\n\n- mock 第 ${i + 1} 条`,
       published_at: new Date(Date.now() - i * 86400000).toISOString(),
       draft: false,
       prerelease: false,
       assets: [
-        { name: `KAMUCL-${ver}.exe`, browser_download_url: `http://127.0.0.1:${server.address().port}/download/KAMUCL-${ver}.exe`, size: assets.get(`KAMUCL-${ver}.exe`).length },
+        { name: `FAIONYX-${ver}.exe`, browser_download_url: `http://127.0.0.1:${server.address().port}/download/FAIONYX-${ver}.exe`, size: assets.get(`FAIONYX-${ver}.exe`).length },
         { name: 'SHA256SUMS.txt', browser_download_url: `http://127.0.0.1:${server.address().port}/SHA256SUMS.txt`, size: sumsText.length }
       ]
     })

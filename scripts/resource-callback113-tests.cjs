@@ -57,7 +57,7 @@ test('Collector-source or frozen-evidence SHA changes cannot reuse a qualified c
  for(const mutate of[v=>v.analysis.source.sha256='c'.repeat(64),v=>v.raw.file.sha256='c'.repeat(64),v=>v.raw.file.bytes=2,v=>delete v.collector]){const changed=structuredClone(frozen);mutate(changed);assert.throws(()=>provenance.assertFrozenBindings(frozen,changed),/bytes changed/)}
 })
 test('Original run summaries, native logs, entry frames and screenshots are byte-bound, while foreign evidence paths fail closed',()=>{
- const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),provenance=require('./resource-provenance113.cjs'),root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-callback-provenance-'))
+ const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),provenance=require('./resource-provenance113.cjs'),root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-callback-provenance-'))
  try{
   const group={i:0,kind:'baseline'};for(const label of['cold','warm']){const directory=path.join(root,label);fs.mkdirSync(directory);group[label]=directory;fs.writeFileSync(path.join(directory,'summary.json'),JSON.stringify({platform:'win32',screenshots:[{file:'original.png'}]}));for(const name of['native.jsonl','process.log','boot.json','boot-frames.txt','original.png'])fs.writeFileSync(path.join(directory,name),'original-'+name)}
   const file=path.join(root,'run.json');fs.writeFileSync(file,JSON.stringify({groups:[group]}));const frozen=provenance.rawEvidenceBindings(file);assert.equal(frozen.sessions.length,2);assert.equal(Object.keys(frozen.sessions[0].files).length,6)
@@ -66,7 +66,7 @@ test('Original run summaries, native logs, entry frames and screenshots are byte
  }finally{assert(path.resolve(root).startsWith(path.resolve(os.tmpdir())+path.sep));fs.rmSync(root,{recursive:true})}
 })
 test('Original source bytes survive snapshot and cross-host verification without EOL normalization, fallback paths or overwrites',()=>{
- const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),p=require('./resource-provenance113.cjs'),root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-original-source-bytes-'))
+ const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),p=require('./resource-provenance113.cjs'),root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-original-source-bytes-'))
  try{
   const expected=p.sourceBindings(['resource-callback113.cjs']),directory=path.join(root,'tool-sources');p.recordSourceSnapshot(directory,expected);assert.equal(p.verifySourceSnapshot(directory,expected),true);assert.throws(()=>p.recordSourceSnapshot(directory,expected),/EEXIST/)
   const file=path.join(directory,'resource-callback113.cjs');fs.appendFileSync(file,'\r\n');assert.throws(()=>p.verifySourceSnapshot(directory,expected),/bytes changed/)

@@ -11,7 +11,7 @@ let coreCode: Promise<string>
 let applyCode: Promise<string>
 type Faults = { rename?: (source: string, dest: string) => void; write?: (file: string, data: unknown) => void }
 async function runtime(t: any) {
-  const root = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-resourcepacks-118-')))
+  const root = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-resourcepacks-118-')))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   coreCode ??= build({ entryPoints: ['src/main/core/defaultResourcePacks.ts'], platform: 'node', format: 'cjs', bundle: true, write: false, packages: 'external' }).then(result => result.outputFiles[0].text)
   const require = createRequire(path.resolve('package.json')), mod = { exports: {} as any }, faults: Faults = {}
@@ -34,9 +34,9 @@ function client(root: string, pack_version: any) {
   zip.addFile('version.json', Buffer.from(JSON.stringify({ id: '26.2', pack_version }))); zip.writeZip(file)
   return file
 }
-const filename = (p: any) => `KAMUCL-default-${p.id}-${p.name}`
+const filename = (p: any) => `FAIONYX-default-${p.id}-${p.name}`
 const name = (p: any, legacy = false) => (legacy ? '' : 'file/') + filename(p)
-const stateFile = (game: string) => path.join(game, '.kamucl-default-resourcepacks.json')
+const stateFile = (game: string) => path.join(game, '.faionyx-default-resourcepacks.json')
 const optionsFile = (game: string) => path.join(game, 'options.txt')
 const options = (game: string) => fs.readFileSync(optionsFile(game), 'utf8')
 const selected = (game: string, key = 'resourcePacks') => JSON.parse(options(game).replace(/^\uFEFF/, '').split(/\r?\n/).find(line => line.startsWith(key + ':'))!.slice(key.length + 1))
@@ -212,7 +212,7 @@ test('modified pack sources or instance copies are never overwritten and preflig
 })
 
 test('atomic transaction restores options and state after publishing either file fails; copied ZIPs remain recoverable', async t => {
-  for (const failFile of ['options.txt', '.kamucl-default-resourcepacks.json']) {
+  for (const failFile of ['options.txt', '.faionyx-default-resourcepacks.json']) {
     const { root, api, faults } = await runtime(t); importPair(root, api)
     const game = path.join(root, 'rollback'), before = writeChoice(game, ['vanilla', 'file/Personal.zip'])
     fs.writeFileSync(stateFile(game), '[]')
@@ -231,12 +231,12 @@ test('atomic transaction restores options and state after publishing either file
 test('staging failure publishes neither configuration and a concurrent options edit is detected without overwriting it', async t => {
   const { root, api, faults } = await runtime(t); importPair(root, api)
   const game = path.join(root, 'stage'), before = writeChoice(game, ['vanilla'])
-  faults.write = (file) => { if (file.startsWith(stateFile(game) + '.kamucl-write-')) throw new Error('fixture state stage failure') }
+  faults.write = (file) => { if (file.startsWith(stateFile(game) + '.faionyx-write-')) throw new Error('fixture state stage failure') }
   assert.throws(() => api.applyDefaultResourcePacks(game, '26.2'), /fixture state stage failure/)
   assert.equal(options(game), before); assert(!fs.existsSync(stateFile(game)))
   const concurrent = 'resourcePacks:["vanilla","file/NewChoice.zip"]\ncustom:new\n'
   let edited = false
-  faults.write = file => { if (!edited && file.startsWith(stateFile(game) + '.kamucl-write-')) { edited = true; fs.writeFileSync(optionsFile(game), concurrent) } }
+  faults.write = file => { if (!edited && file.startsWith(stateFile(game) + '.faionyx-write-')) { edited = true; fs.writeFileSync(optionsFile(game), concurrent) } }
   assert.throws(() => api.applyDefaultResourcePacks(game, '26.2'), /操作期间发生变化/)
   assert(edited); assert.equal(options(game), concurrent); assert(!fs.existsSync(stateFile(game)))
 })
@@ -249,7 +249,7 @@ test('a failed rollback never clobbers a concurrently edited options file and re
   faults.rename = (_source, dest) => { if (!edited && dest === stateFile(game)) { edited = true; fs.writeFileSync(optionsFile(game), concurrent); throw new Error('fixture state publish failure') } }
   assert.throws(() => api.applyDefaultResourcePacks(game, '26.2'), /无法回滚/)
   assert.equal(options(game), concurrent)
-  const recovery = fs.readdirSync(game).filter(file => file.startsWith('options.txt.kamucl-write-') && file.endsWith('.tmp'))
+  const recovery = fs.readdirSync(game).filter(file => file.startsWith('options.txt.faionyx-write-') && file.endsWith('.tmp'))
   assert.equal(recovery.length, 1); assert.equal(fs.readFileSync(path.join(game, recovery[0]), 'utf8'), before)
 })
 

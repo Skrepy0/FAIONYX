@@ -1,7 +1,7 @@
 // Synthetic archives through real production classifier and general import UI. No installation/network fixture.
 const fs=require('node:fs'),path=require('node:path'),zlib=require('node:zlib'),assert=require('node:assert/strict'),Zip=require('adm-zip')
 module.exports=async({call,evaluate,main,nav,wait,root,screenshot,version})=>{
- const theme=process.env.KAMUCL_TEST_THEME||'black-orange',proof={version,theme,complete:false,checks:[]},save=()=>fs.writeFileSync(`out/import-routing-119-ui-${theme}.json`,JSON.stringify(proof,null,2))
+ const theme=process.env.FAIONYX_TEST_THEME||'black-orange',proof={version,theme,complete:false,checks:[]},save=()=>fs.writeFileSync(`out/import-routing-119-ui-${theme}.json`,JSON.stringify(proof,null,2))
  const nbtFile=path.join(root,'import-nbt.cjs');require('esbuild').buildSync({entryPoints:['src/main/core/nbt.ts'],outfile:nbtFile,bundle:true,platform:'node',format:'cjs'});
  const level=zlib.gzipSync(require(nbtFile).writeNbt({Data:{LevelName:'Import routing fixture',DataVersion:3465,Version:{Name:'1.20.1',Id:3465}}}));
  const make=(name,index)=>{const z=new Zip();z.addFile('overrides/saves/world/level.dat',level);if(index!==undefined)z.addFile('modrinth.index.json',Buffer.from(index));const p=path.join(root,name);z.writeZip(p);return p}

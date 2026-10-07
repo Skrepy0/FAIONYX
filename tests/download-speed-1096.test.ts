@@ -18,7 +18,7 @@ async function server(handler: http.RequestListener) {
     instance.closeAllConnections(); await new Promise<void>(r => instance.close(() => r()))
   } }
 }
-const temporary = () => fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-speed-1096-'))
+const temporary = () => fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-speed-1096-'))
 
 test('批量下载由实际文件学会选快源；不为每个小文件重复测速、不超出连接上限', async () => {
   const body = Buffer.alloc(8192, 42), root = temporary()

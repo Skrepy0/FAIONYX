@@ -38,7 +38,7 @@ test('VoxLink create flow preserves rejected names, focuses the field, and submi
   new Function('require', 'module', 'exports', 'window', bundle.outputFiles[0].text)(
     (name: string) => name === 'vue' ? { ...vue, onMounted: () => {}, onUnmounted: () => {} }
       : name === 'store' ? { toast: () => {} } : name === 'api' ? {} : require(name),
-    module, module.exports, { kamucl: { invoke: async (channel: string, payload: any) => {
+    module, module.exports, { faionyx: { invoke: async (channel: string, payload: any) => {
       calls.push({ channel, payload })
       if (channel === 'voxlink:start' && blocked) throw new Error('APIError: CONTENT_BLOCKED: 内容不合规')
       return channel === 'voxlink:start' ? { ok: true } : { state: 'hosting', room: { name: '好友生存' } }

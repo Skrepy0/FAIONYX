@@ -52,7 +52,7 @@ export class LocalModpackFiles {
     }
     // Verified cache may already exist after a previous cancelled installation.
     for (const root of this.roots) {
-      const cached = modpackCachedFile(file, path.join(root, '.kamucl', 'modpack-cache'))
+      const cached = modpackCachedFile(file, path.join(root, '.faionyx', 'modpack-cache'))
       if (await exact(cached)) return cached
     }
     this.index ??= this.scan(signal)

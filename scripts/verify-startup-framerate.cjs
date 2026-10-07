@@ -2,7 +2,7 @@
 const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict'), { spawn } = require('node:child_process')
 const root = fs.mkdtempSync(path.resolve('out/startup-fps-'))
 const signal = path.join(root, 'control'), probe = path.join(root, 'frames.txt')
-const child = spawn(path.resolve('out/main/StartupFeedback.exe'), [signal, String(process.pid)], { windowsHide: true, env: { ...process.env, KAMUCL_FRAME_PROBE: probe }, stdio: 'ignore' })
+const child = spawn(path.resolve('out/main/StartupFeedback.exe'), [signal, String(process.pid)], { windowsHide: true, env: { ...process.env, FAIONYX_FRAME_PROBE: probe }, stdio: 'ignore' })
 const wait = ms => new Promise(r => setTimeout(r, ms))
 ;(async () => {
   const deadline = Date.now() + 5000

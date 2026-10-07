@@ -9,7 +9,7 @@ import { resolveRecordingDependencies, compatibleRecordingMod } from '../src/sha
 import type { CommunityFile } from '../src/shared/types'
 
 test('recording archives distinguish complete Replay and Flashback from unrelated ZIP and incomplete recordings', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'kamucl-recording-test-'))
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'faionyx-recording-test-'))
   try {
     const make = (name: string, entries: Record<string, string>) => { const zip = new Zip(); for (const [n, value] of Object.entries(entries)) zip.addFile(n, Buffer.from(value)); const f = path.join(root, name); zip.writeZip(f); return f }
     await validateRecording(make('one.mcpr', { 'metaData.json': '{}', 'recording.tmcpr': 'packets' }), 'replaymod')
@@ -20,7 +20,7 @@ test('recording archives distinguish complete Replay and Flashback from unrelate
   } finally { await fs.rm(root, { recursive: true, force: true }) }
 })
 test('recording copies preserve originals and same-name destinations, cancel cleanly, reject links and changing sources', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'kamucl-recording-test-'))
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'faionyx-recording-test-'))
   try {
     const input = path.join(root, '中文.mcpr'), dest = path.join(root, 'library'); await fs.mkdir(dest); await fs.writeFile(input, 'recording'); await fs.writeFile(path.join(dest, '中文.mcpr'), 'original destination')
     const copied = await copyRecording(input, dest); assert.equal(path.basename(copied), '中文 (1).mcpr'); assert.equal(await fs.readFile(copied, 'utf8'), 'recording'); assert.equal(await fs.readFile(input, 'utf8'), 'recording'); assert.equal(await fs.readFile(path.join(dest, '中文.mcpr'), 'utf8'), 'original destination')

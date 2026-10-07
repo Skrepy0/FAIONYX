@@ -10,7 +10,7 @@ declare module '*.vue' {
 }
 
 /** preload 暴露给渲染进程的桥接 API */
-interface KamuclBridge {
+interface FaionyxBridge {
   invoke: (channel: string, ...args: unknown[]) => Promise<unknown>
   on: (channel: string, cb: (...args: unknown[]) => void) => () => void
   send: (channel: string, ...args: unknown[]) => void
@@ -19,14 +19,16 @@ interface KamuclBridge {
 }
 
 interface Window {
-  kamucl: KamuclBridge
-  kamuclSplash: {
-    ready(): void
-    assembled(): void
-    finished(): void
-    failed(message: string): void
-    onPointer(callback: (point: { x: number; y: number }) => void): () => void
-    onState(callback: (state: import('../../shared/startup').BootState) => void): () => void
-    onReveal(callback: () => void): () => void
-  }
+  faionyx: FaionyxBridge;
+  faionyxSplash: {
+    ready(): void;
+    assembled(): void;
+    finished(): void;
+    failed(message: string): void;
+    onPointer(callback: (point: { x: number; y: number }) => void): () => void;
+    onState(
+      callback: (state: import("../../shared/startup").BootState) => void,
+    ): () => void;
+    onReveal(callback: () => void): () => void;
+  };
 }

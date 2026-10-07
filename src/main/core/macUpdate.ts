@@ -48,7 +48,7 @@ export function blockedMacVersion(): string | undefined {
   return (readMacUpdate(claim()) ?? readMacUpdate(claim() + '.failed'))?.release.version
 }
 export async function stageMacUpdate(release: ReleaseInfo, file: string, sha256: string, mode: UpdateTransaction['mode']): Promise<void> {
-  if (!macUpdateSupported()) throw new Error('请将 KAMUCL.app 拖入可写的应用程序目录后再更新')
+  if (!macUpdateSupported()) throw new Error('请将 FAIONYX.app 拖入可写的应用程序目录后再更新')
   if (path.basename(file) !== updateAssetName(release.version) || !inside(macUpdateDir(), file)) throw new Error('请选择与当前 Mac 架构一致的官方 ZIP 包')
   const t: UpdateTransaction = { schema: 1, id: randomUUID(), target: macAppTarget()!, file, sha256, size: fs.statSync(file).size, from: currentVersion(), release, mode }
   await validateUpdatePayload(t)
@@ -63,23 +63,23 @@ export function validateMacArchive(file: string): void {
   for (const e of entries) {
     const name = e.entryName
     if (name.includes('\\') || name.startsWith('/') || name.split('/').includes('..') ||
-      !(name.startsWith('KAMUCL.app/') || name === 'KAMUCL.app' || name.startsWith('__MACOSX/'))) throw new Error('Mac 更新包包含越界路径')
+      !(name.startsWith('FAIONYX.app/') || name === 'FAIONYX.app' || name.startsWith('__MACOSX/'))) throw new Error('Mac 更新包包含越界路径')
     total += e.header.size
     if (total > 3 * 1024 ** 3) throw new Error('Mac 更新包解压大小异常')
-    if (name === 'KAMUCL.app/Contents/Resources/app.asar') hasApp = true
+    if (name === 'FAIONYX.app/Contents/Resources/app.asar') hasApp = true
     if (((e.attr >>> 16) & 0xf000) === 0xa000) {
       const link = e.getData().toString('utf8')
       const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(name), link))
-      if (path.posix.isAbsolute(link) || !resolved.startsWith('KAMUCL.app/')) throw new Error('Mac 更新包符号链接越界')
+      if (path.posix.isAbsolute(link) || !resolved.startsWith('FAIONYX.app/')) throw new Error('Mac 更新包符号链接越界')
     }
   }
-  if (!hasApp) throw new Error('更新包缺少 KAMUCL.app')
+  if (!hasApp) throw new Error('更新包缺少 FAIONYX.app')
 }
 async function verifyBundle(bundle: string, version: string): Promise<void> {
   const plist = path.join(bundle, 'Contents/Info.plist')
   const value = async (key: string) => (await run('/usr/libexec/PlistBuddy', ['-c', `Print :${key}`, plist])).stdout.trim()
-  if (await value('CFBundleIdentifier') !== 'com.kamucl.launcher' || await value('CFBundleShortVersionString') !== version || await value('CFBundleExecutable') !== 'KAMUCL') throw new Error('Mac 更新包身份或版本不匹配')
-  await run('/usr/bin/lipo', [path.join(bundle, 'Contents/MacOS/KAMUCL'), '-verify_arch', process.arch === 'arm64' ? 'arm64' : 'x86_64'])
+  if (await value('CFBundleIdentifier') !== 'com.faionyx.launcher' || await value('CFBundleShortVersionString') !== version || await value('CFBundleExecutable') !== 'FAIONYX') throw new Error('Mac 更新包身份或版本不匹配')
+  await run('/usr/bin/lipo', [path.join(bundle, 'Contents/MacOS/FAIONYX'), '-verify_arch', process.arch === 'arm64' ? 'arm64' : 'x86_64'])
   await run('/usr/bin/codesign', ['--verify', '--deep', '--strict', bundle])
 }
 const asar = (bundle: string) => path.join(bundle, 'Contents/Resources/app.asar')
@@ -91,7 +91,7 @@ async function asarHash(bundle: string): Promise<string> {
 }
 const q = (value: string) => "'" + value.replace(/'/g, "'\\''") + "'"
 export function macUpdaterScript(t: UpdateTransaction, stage: string, oldHash: string, newHash: string, pid: number, stateDir: string): string {
-  const backup = path.join(path.dirname(t.target), `.KAMUCL-backup-${t.id}.app`)
+  const backup = path.join(path.dirname(t.target), `.FAIONYX-backup-${t.id}.app`)
   const applying = path.join(stateDir, 'mac-update.json.applying')
   const state = JSON.stringify({ from: t.from, to: t.release.version, time: new Date().toISOString(), backupPath: backup, backupVersion: t.from, result: 'applied' })
   return `#!/bin/sh
@@ -145,9 +145,9 @@ export async function applyMacUpdateOnStartup(): Promise<boolean> {
   try {
     if (t.mode === 'upgrade' && compareSemver(t.release.version, currentVersion()) <= 0) { clearMacUpdate(); return false }
     await validateUpdatePayload(t); validateMacArchive(t.file)
-    const stagingDir = fs.mkdtempSync(path.join(path.dirname(t.target), '.KAMUCL-update-'))
+    const stagingDir = fs.mkdtempSync(path.join(path.dirname(t.target), '.FAIONYX-update-'))
     await run('/usr/bin/ditto', ['-x', '-k', t.file, stagingDir])
-    const stagedApp = path.join(stagingDir, 'KAMUCL.app')
+    const stagedApp = path.join(stagingDir, 'FAIONYX.app')
     await verifyBundle(stagedApp, t.release.version)
     const oldHash = await asarHash(t.target), installedHash = await asarHash(stagedApp)
     const script = path.join(macUpdateDir(), `apply-${t.id}.sh`)
@@ -178,7 +178,7 @@ export async function stageMacBackup(backup: string, version: string): Promise<v
   await verifyBundle(backup, version)
   const dir = path.join(macUpdateDir(), randomUUID()); fs.mkdirSync(dir, { recursive: true })
   // Backup's unique basename must become the canonical app name inside the ZIP.
-  const copy = path.join(dir, 'KAMUCL.app')
+  const copy = path.join(dir, 'FAIONYX.app')
   await run('/usr/bin/ditto', [backup, copy])
   const assetName = updateAssetName(version), file = path.join(dir, assetName)
   await run('/usr/bin/ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', copy, file])

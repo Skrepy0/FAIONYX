@@ -58,8 +58,8 @@
 
 ## 成品
 
-- `release/KAMUCL-0.6.17.exe`
-- `release/KAMUCL-0.6.17-windows-x64.zip`
-- `release/KAMUCL-0.6.17-SHA256.txt`
+- `release/FAIONYX-0.6.17.exe`
+- `release/FAIONYX-0.6.17-windows-x64.zip`
+- `release/FAIONYX-0.6.17-SHA256.txt`
 
 EXE/ZIP 构建成功；检查成品内的版本、页面组件和编辑 IPC 通过；便携 EXE 在含中文与空格的 TEMP 路径启动内层 Electron 通过。沿用现有未签名构建配置，旧版本成品保留。

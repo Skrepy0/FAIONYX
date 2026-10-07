@@ -1,8 +1,8 @@
 {
-  "exe": "E:\\KAMUCL\\release\\KAMUCL-1.1.15.exe",
+  "exe": "E:\\FAIONYX\\release\\FAIONYX-1.1.15.exe",
   "exeSha": "4822890c6cc94353a16687d812fdfb0be9379dad1c0258ef4b1a35c14d686df9",
   "theme": "transparent",
-  "root": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb",
+  "root": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb",
   "classification": "Actual portable EXE and native desktop compositor crop; first capture before any window mutation; quarter phase uses explicit owned bounds, not a claim of physical Snap",
   "phases": [
     {
@@ -211,8 +211,8 @@
           "ownedPid": 54668
         }
       },
-      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\cold-initial-unmoved-native-application.png",
-      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\cold-initial-unmoved-renderer.png",
+      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\cold-initial-unmoved-native-application.png",
+      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\cold-initial-unmoved-renderer.png",
       "phase": "initial-unmoved",
       "launch": "cold"
     },
@@ -422,8 +422,8 @@
           "ownedPid": 54668
         }
       },
-      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\cold-quarter-request-native-application.png",
-      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\cold-quarter-request-renderer.png",
+      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\cold-quarter-request-native-application.png",
+      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\cold-quarter-request-renderer.png",
       "phase": "quarter-request",
       "launch": "cold"
     },
@@ -633,8 +633,8 @@
           "ownedPid": 54668
         }
       },
-      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\cold-same-bounds-restored-native-application.png",
-      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\cold-same-bounds-restored-renderer.png",
+      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\cold-same-bounds-restored-native-application.png",
+      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\cold-same-bounds-restored-renderer.png",
       "phase": "same-bounds-restored",
       "launch": "cold"
     },
@@ -844,8 +844,8 @@
           "ownedPid": 54668
         }
       },
-      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\cold-maximized-native-application.png",
-      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\cold-maximized-renderer.png",
+      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\cold-maximized-native-application.png",
+      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\cold-maximized-renderer.png",
       "phase": "maximized",
       "launch": "cold"
     },
@@ -1055,8 +1055,8 @@
           "ownedPid": 54668
         }
       },
-      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\cold-unmaximized-native-application.png",
-      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\cold-unmaximized-renderer.png",
+      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\cold-unmaximized-native-application.png",
+      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\cold-unmaximized-renderer.png",
       "phase": "unmaximized",
       "launch": "cold"
     },
@@ -1266,8 +1266,8 @@
           "ownedPid": 47724
         }
       },
-      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\warm-initial-unmoved-native-application.png",
-      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\warm-initial-unmoved-renderer.png",
+      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\warm-initial-unmoved-native-application.png",
+      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\warm-initial-unmoved-renderer.png",
       "phase": "initial-unmoved",
       "launch": "warm"
     },
@@ -1477,8 +1477,8 @@
           "ownedPid": 47724
         }
       },
-      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\warm-quarter-request-native-application.png",
-      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\warm-quarter-request-renderer.png",
+      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\warm-quarter-request-native-application.png",
+      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\warm-quarter-request-renderer.png",
       "phase": "quarter-request",
       "launch": "warm"
     },
@@ -1688,8 +1688,8 @@
           "ownedPid": 47724
         }
       },
-      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\warm-same-bounds-restored-native-application.png",
-      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\warm-same-bounds-restored-renderer.png",
+      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\warm-same-bounds-restored-native-application.png",
+      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\warm-same-bounds-restored-renderer.png",
       "phase": "same-bounds-restored",
       "launch": "warm"
     },
@@ -1899,8 +1899,8 @@
           "ownedPid": 47724
         }
       },
-      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\warm-maximized-native-application.png",
-      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\warm-maximized-renderer.png",
+      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\warm-maximized-native-application.png",
+      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\warm-maximized-renderer.png",
       "phase": "maximized",
       "launch": "warm"
     },
@@ -2110,8 +2110,8 @@
           "ownedPid": 47724
         }
       },
-      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\warm-unmaximized-native-application.png",
-      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL 初次背景 PcTxXb\\warm-unmaximized-renderer.png",
+      "nativeFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\warm-unmaximized-native-application.png",
+      "rendererFile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX 初次背景 PcTxXb\\warm-unmaximized-renderer.png",
       "phase": "unmaximized",
       "launch": "warm"
     }

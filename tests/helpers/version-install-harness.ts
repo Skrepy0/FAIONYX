@@ -25,7 +25,7 @@ export async function versionInstallHarness(root: string, metadataFetch: typeof 
   fs.mkdirSync(path.join(root, 'userData'), { recursive: true })
   const electron = { app: {
     getPath: (name: string) => path.join(root, name),
-    getVersion: () => 'test', getName: () => 'KAMUCL-test', isPackaged: false
+    getVersion: () => 'test', getName: () => 'FAIONYX-test', isPackaged: false
   } }
   new Function('require', 'module', 'exports', 'fetch', await bundle)(
     (name: string) => name === 'electron' ? electron : name === 'undici'

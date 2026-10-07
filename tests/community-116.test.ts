@@ -36,7 +36,7 @@ test('Chinese exact names, common aliases and typed suffixes do not choose an un
 
 const query: CommunityQuery = { keyword: '物品管理器', source: 'modrinth', kind: 'mod', mcVersion: '1.20.1', loader: 'fabric', sort: 'relevance', offset: 0, limit: 2 }
 async function searchFixture(t: any, fetcher: typeof fetch) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-community116-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-community116-'))
   const runtime = await versionInstallHarness(root, fetcher)
   t.after(async () => { await runtime.closeHttpClient(); fs.rmSync(root, { recursive: true, force: true }) })
   return runtime
@@ -78,7 +78,7 @@ test('broad Chinese alias unions disclose the retrieval cap instead of claiming 
 })
 
 test('dependency opt-out is checked by the real transaction; no missing dependency or root is silently installed', async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-dependency116-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-dependency116-'))
   const jar = (id: string, depends = {}) => { const z = new AdmZip(); z.addFile('fabric.mod.json', Buffer.from(JSON.stringify({ id, version: '1.0.0', depends: { minecraft: '1.20.1', fabricloader: '>=0.15', ...depends } }))); return z.toBuffer() }
   const bytes = jar('library'), source = path.join(root, 'root.jar'); fs.writeFileSync(source, jar('root', { library: '*' }))
   let downloads = 0

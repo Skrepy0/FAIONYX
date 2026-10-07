@@ -9,12 +9,12 @@ const { linuxArtifactNames, assertUnpublishedLinuxArtifact, publishLinuxArtifact
 
 test('Linux builder architecture names map explicitly to the trusted release identity on both ABIs', () => {
   const mappings = [
-    ['x64', 'AppImage', 'KAMUCL-1.1.11-linux-x86_64.AppImage', 'KAMUCL-1.1.11-linux-x64.AppImage'],
-    ['x64', 'deb', 'KAMUCL-1.1.11-linux-amd64.deb', 'KAMUCL-1.1.11-linux-x64.deb'],
-    ['x64', 'tar.gz', 'KAMUCL-1.1.11-linux-x64.tar.gz', 'KAMUCL-1.1.11-linux-x64.tar.gz'],
-    ['arm64', 'AppImage', 'KAMUCL-1.1.11-linux-arm64.AppImage', 'KAMUCL-1.1.11-linux-arm64.AppImage'],
-    ['arm64', 'deb', 'KAMUCL-1.1.11-linux-arm64.deb', 'KAMUCL-1.1.11-linux-arm64.deb'],
-    ['arm64', 'tar.gz', 'KAMUCL-1.1.11-linux-arm64.tar.gz', 'KAMUCL-1.1.11-linux-arm64.tar.gz']
+    ['x64', 'AppImage', 'FAIONYX-1.1.11-linux-x86_64.AppImage', 'FAIONYX-1.1.11-linux-x64.AppImage'],
+    ['x64', 'deb', 'FAIONYX-1.1.11-linux-amd64.deb', 'FAIONYX-1.1.11-linux-x64.deb'],
+    ['x64', 'tar.gz', 'FAIONYX-1.1.11-linux-x64.tar.gz', 'FAIONYX-1.1.11-linux-x64.tar.gz'],
+    ['arm64', 'AppImage', 'FAIONYX-1.1.11-linux-arm64.AppImage', 'FAIONYX-1.1.11-linux-arm64.AppImage'],
+    ['arm64', 'deb', 'FAIONYX-1.1.11-linux-arm64.deb', 'FAIONYX-1.1.11-linux-arm64.deb'],
+    ['arm64', 'tar.gz', 'FAIONYX-1.1.11-linux-arm64.tar.gz', 'FAIONYX-1.1.11-linux-arm64.tar.gz']
   ]
   for (const [arch, target, builderName, releaseName] of mappings) {
     const names = linuxArtifactNames('1.1.11', arch, target)
@@ -24,12 +24,12 @@ test('Linux builder architecture names map explicitly to the trusted release ide
 })
 
 test('Linux artifact publication requires the current exact builder output and preserves old candidates', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-linux-names-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-linux-names-'))
   try {
     const builder = path.join(root, 'current-builder'), release = path.join(root, 'release')
     fs.mkdirSync(builder); fs.mkdirSync(release)
     const names = linuxArtifactNames('1.1.11', 'x64', 'AppImage'), payload = Buffer.from('synthetic package fixture; not a native package')
-    fs.writeFileSync(path.join(builder, 'KAMUCL-1.1.10-linux-x86_64.AppImage'), Buffer.from('old builder output'))
+    fs.writeFileSync(path.join(builder, 'FAIONYX-1.1.10-linux-x86_64.AppImage'), Buffer.from('old builder output'))
     assert.throws(() => publishLinuxArtifact(builder, release, names), /ENOENT/)
     assert.deepEqual(fs.readdirSync(release), [])
     fs.writeFileSync(path.join(builder, names.builderName), payload, { mode: 0o755 })

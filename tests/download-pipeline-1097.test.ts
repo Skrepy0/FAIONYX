@@ -8,7 +8,7 @@ import crypto from 'node:crypto'
 import { versionInstallHarness } from './helpers/version-install-harness'
 
 for (const mode of ['success', 'processor-error', 'cancel'] as const) test(`加载器只等本体与依赖，资源保持并行；${mode} 必须排空后结束`, { timeout: 10000 }, async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-ready-')), game = path.join(root, 'game')
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-ready-')), game = path.join(root, 'game')
   const bodies = { client: Buffer.from('client'), lib: Buffer.from('library'), asset: Buffer.from('asset') }
   const hash = (bytes: Buffer) => crypto.createHash('sha1').update(bytes).digest('hex')
   const index = Buffer.from(JSON.stringify({ objects: { a: { hash: hash(bodies.asset), size: bodies.asset.length } } }))

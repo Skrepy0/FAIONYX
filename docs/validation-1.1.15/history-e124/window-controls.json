@@ -1,5 +1,5 @@
 {
-  "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL window 中文 ZXrtyT",
+  "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX window 中文 ZXrtyT",
   "checks": [
     {
       "display": 2422596671,
@@ -142,7 +142,7 @@
   ],
   "helpers": [
     {
-      "file": "E:\\KAMUCL\\out\\main\\WindowMaterial.exe",
+      "file": "E:\\FAIONYX\\out\\main\\WindowMaterial.exe",
       "args": [
         "42424"
       ],
@@ -236,7 +236,7 @@
         "count": 7
       },
       {
-        "event": "kamucl:startup-opacity-complete",
+        "event": "faionyx:startup-opacity-complete",
         "count": 2
       },
       {

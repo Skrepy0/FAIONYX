@@ -10,7 +10,7 @@ import { createRequire } from 'node:module'
 
 const hash=(bytes:Buffer|string)=>crypto.createHash('sha1').update(bytes).digest('hex')
 async function harness(){
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'KAMUCL 模组更新 1079 ')),dir=path.join(root,'games','mods')
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'FAIONYX 模组更新 1079 ')),dir=path.join(root,'games','mods')
  fs.mkdirSync(dir,{recursive:true})
  const h:any={root,dir,requests:[] as string[],errors:[] as string[],settings:{mirror:'bmclapi',downloadThreads:4},broken:false,running:false}
  const latest={id:'new-version',project_id:'project',version_number:'2',files:[{filename:'new.jar',url:'https://cdn.modrinth.com/data/project/versions/new/new.jar',primary:true,size:3,hashes:{sha1:hash('new')}}]}

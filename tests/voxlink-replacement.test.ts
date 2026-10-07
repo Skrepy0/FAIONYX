@@ -11,7 +11,7 @@ const require=createRequire(path.resolve('package.json'))
 async function runtime(root:string,stun:string){const built=await build({entryPoints:['src/main/core/voxlink/engine.ts'],bundle:true,write:false,platform:'node',format:'cjs',packages:'external',plugins:[{name:'local-stun',setup(builder){builder.onLoad({filter:/[\\/]voxlink[\\/]stun\.ts$/},args=>({contents:fs.readFileSync(args.path,'utf8').replace(/export const STUN_SERVERS = \[[^\]]+\]/,`export const STUN_SERVERS = [${JSON.stringify(stun)}]`),loader:'ts'}))}}]});const module={exports:{} as any};new Function('require','module','exports',built.outputFiles[0].text)((id:string)=>id==='electron'?{app:{getPath:()=>root}}:require(id),module,module.exports);return module.exports}
 const waitFor=async(check:()=>boolean)=>{const end=Date.now()+12000;while(!check()){if(Date.now()>end)throw new Error('connection timeout');await new Promise(r=>setTimeout(r,30))}}
 test('replacement room engine: create/join, authenticated UDP plus TCP echo, leave cleanup', {timeout:25000},async t=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-new-vox-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}))
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-new-vox-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}))
  const stun=dgram.createSocket('udp4');await new Promise<void>(r=>stun.bind(0,'127.0.0.1',r));t.after(()=>stun.close())
  stun.on('message',(p,from)=>{const reply=Buffer.alloc(32);p.copy(reply);reply.writeUInt16BE(0x101);reply.writeUInt16BE(12,2);reply.writeUInt16BE(1,20);reply.writeUInt16BE(8,22);reply[25]=1;reply.writeUInt16BE(from.port,26);reply.set([127,0,0,1],28);stun.send(reply,from.port,from.address)})
  const echo=net.createServer(socket=>socket.pipe(socket));await new Promise<void>(r=>echo.listen(0,'127.0.0.1',r));t.after(()=>echo.close())
@@ -32,7 +32,7 @@ test('replacement room engine: create/join, authenticated UDP plus TCP echo, lea
  await guest.leaveRoom();assert.equal(guest.state,'idle');assert.equal(guest.engine.joinedAt,0);assert.equal(guest.engine.session,null);assert(left>=1)
 })
 test('replacement room engine: late create completion is released and cannot revive cancelled session',async t=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-cancel-vox-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}))
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-cancel-vox-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}))
  const echo=net.createServer(socket=>socket.end());await new Promise<void>(r=>echo.listen(0,'127.0.0.1',r));t.after(()=>echo.close())
  let finish!:(value:any)=>void,requested=false,left=0
  const api={async post(_base:string,route:string){if(route==='/room/create'){requested=true;return await new Promise(r=>finish=r)}if(route==='/room/leave'){left++;return{}}throw new Error(route)}}

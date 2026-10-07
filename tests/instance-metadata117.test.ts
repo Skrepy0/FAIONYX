@@ -14,12 +14,12 @@ import type { VersionJson } from '../src/main/core/versions'
 
 const fabric = [{ name: 'net.fabricmc:fabric-loader:0.19.5' }, { name: 'net.fabricmc:intermediary:0.0.0' }]
 function temporary(t: { after: (fn: () => void) => void }) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-metadata117-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-metadata117-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   return root
 }
 function writeVersion(root: string, name: string, json: VersionJson, base = false) {
-  const dir = path.join(root, base ? '.kamucl/base' : 'versions', name)
+  const dir = path.join(root, base ? '.faionyx/base' : 'versions', name)
   fs.mkdirSync(dir, { recursive: true })
   fs.writeFileSync(path.join(dir, `${name}.json`), JSON.stringify(json))
   return dir
@@ -92,7 +92,7 @@ test('117 selective client manifest reads are bounded, cache invalidation follow
 })
 
 test('117 cached vanilla recovery requires one exact client SHA1, never asset-index/display-name guessing', t => {
-  const root = temporary(t), hash = 'a'.repeat(40), base = path.join(root, '.kamucl/base')
+  const root = temporary(t), hash = 'a'.repeat(40), base = path.join(root, '.faionyx/base')
   const json = { id: 'renamed', libraries: fabric, assetIndex: { id: '26', url: '' }, downloads: { client: { sha1: hash, url: 'https://fixture.invalid/client' } } }
   writeVersion(root, '26.3', { id: '26.3', downloads: json.downloads }, true)
   assert.equal(cachedClientVersionEvidence([json], [base]), '26.3')

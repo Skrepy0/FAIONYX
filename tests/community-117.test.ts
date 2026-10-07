@@ -115,7 +115,7 @@ test('the Electron MC百科 path actually uses session net.fetch, preserving dea
 
 const query: CommunityQuery = { keyword: '深海研究', source: 'modrinth', kind: 'mod', mcVersion: '1.20.1', loader: 'fabric', offset: 0, limit: 1 }
 test('real community orchestration retains original Chinese hits and all filters, confirms the explicit linked provider slug, and paginates the union', async t => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-mcmod117-')), requests: URL[] = []
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-mcmod117-')), requests: URL[] = []
   const runtime = await versionInstallHarness(root, async input => {
     const url = new URL(String(input)); requests.push(url)
     if (url.hostname === 'search.mcmod.cn') return html(searchPage([['22', '深海研究 (Ocean Research)']]))
@@ -143,7 +143,7 @@ test('real community orchestration retains original Chinese hits and all filters
   }
 })
 test('MC百科 failure is not cached as no compatible project, retry preserves original query and empty all-source failure is visible', async t => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-mcmod-retry117-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-mcmod-retry117-'))
   let encyclopediaCalls = 0, failing = true
   const runtime = await versionInstallHarness(root, async input => {
     const url = new URL(String(input))
@@ -162,7 +162,7 @@ test('MC百科 failure is not cached as no compatible project, retry preserves o
 })
 
 async function downloadFixture(t: any, unknown = false) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-mod-progress117-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-mod-progress117-'))
   const jar = new AdmZip()
   jar.addFile('fabric.mod.json', Buffer.from(JSON.stringify({ id: 'community_progress', version: '1.0.0', depends: { minecraft: '1.20.1', fabricloader: '>=0.15' } })))
   jar.addFile('large-test.bin', crypto.randomBytes(3 * 1024 * 1024))
@@ -281,7 +281,7 @@ test('compiled MOD dialog real Vue mount and unmount dispose the actual API prog
   const listeners = new Set<Function>(), cancelled: string[] = [], discarded: string[] = []
   let resolvePlan: (plan: any) => void = () => {}, operation = '', offCount = 0
   const fixture: any = { store: { fsRefreshTick: 0 } }
-  const window = { kamucl: {
+  const window = { faionyx: {
     on(channel: string, callback: Function) { assert.equal(channel, 'event:progress'); listeners.add(callback); return () => { assert(listeners.delete(callback)); offCount++ } },
     invoke(channel: string, ...args: any[]) {
       if (channel === 'mods:prepare') { operation = args[2]; return new Promise(resolve => { resolvePlan = resolve }) }

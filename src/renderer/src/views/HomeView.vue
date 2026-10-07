@@ -50,7 +50,7 @@ import { trackBootTask } from '../bootTasks'
 import { managedImageUrl } from '../managedAssets'
 import { builtInLaunchImages } from '../launchImages'
 
-const LAST_VERSION_KEY = 'kamucl.lastVersion'
+const LAST_VERSION_KEY = 'faionyx.lastVersion'
 
 // ---------------- 当前实例与展示图 ----------------
 const selectedId = computed({get: () => store.resourceVersionId, set: id => { store.resourceVersionId = id }})
@@ -130,7 +130,7 @@ function startBannerTimer() {
   stopBannerTimer()
   outgoingBanner.value = null
   if (!banners.value.length) { playback = null; playbackKey = ''; bannerIndex.value = 0; upcomingBanner.value = 0; readyBanners.clear(); return }
-  playbackKey = 'kamucl.carousel.' + bannerScope.value + (appearancePreview.value?.launchThumbnail.randomPlayback ? '.random' : '')
+  playbackKey = 'faionyx.carousel.' + bannerScope.value + (appearancePreview.value?.launchThumbnail.randomPlayback ? '.random' : '')
   let saved
   try { saved = JSON.parse(localStorage.getItem(playbackKey) ?? 'null') } catch { /* invalid bookmark */ }
   const settings = appearancePreview.value?.launchThumbnail

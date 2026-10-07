@@ -14,13 +14,13 @@ let compiled: Promise<string> | undefined
 async function runtime(root: string) {
   compiled ??= build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `export {updateVersionCategories,registerVersionCategoriesIpc} from './src/main/core/versionCategories';export {getSettings,saveSettings} from './src/main/core/settings';` }, bundle: true, write: false, platform: 'node', format: 'cjs', packages: 'external', logLevel: 'silent' }).then(result => result.outputFiles[0].text)
   const module = { exports: {} as any }, handlers = new Map<string, Function>()
-  const electron = { app: { getPath: (name: string) => path.join(root, name), getVersion: () => 'fixture', getName: () => 'KAMUCL fixture', isPackaged: false }, ipcMain: { handle: (name: string, handler: Function) => { assert(!handlers.has(name)); handlers.set(name, handler) } } }
+  const electron = { app: { getPath: (name: string) => path.join(root, name), getVersion: () => 'fixture', getName: () => 'FAIONYX fixture', isPackaged: false }, ipcMain: { handle: (name: string, handler: Function) => { assert(!handlers.has(name)); handlers.set(name, handler) } } }
   new Function('require', 'module', 'exports', await compiled)((name: string) => name === 'electron' ? electron : req(name), module, module.exports)
   module.exports.registerVersionCategoriesIpc()
   return { api: module.exports, handlers }
 }
 async function fixture(t: TestContext) {
-  const base = fs.realpathSync.native(os.tmpdir()), root = fs.mkdtempSync(path.join(base, 'KAMUCL categories115 '))
+  const base = fs.realpathSync.native(os.tmpdir()), root = fs.mkdtempSync(path.join(base, 'FAIONYX categories115 '))
   t.after(() => { assert(root.startsWith(base + path.sep)); fs.rmSync(root, { recursive: true, force: true }) })
   const first = path.join(root, '游戏目录 § A'), second = path.join(root, '游戏目录 B'), id = '相同实例名称'
   for (const folder of [first, second]) {
@@ -133,7 +133,7 @@ test('actual GameView category action keeps confirmed state on rejection, retrie
   const first = '/owned/a', second = '/owned/b', id = 'same', category = { id: 'one', name: '生存' }, favoriteKey = (folder: string) => JSON.stringify([folder, id]), store = reactive({ settings: { activeFolder: first, gameDir: first, folders: [{ path: first, name: 'A', isDefault: true }, { path: second, name: 'B', isDefault: false }], favoriteVersions: [id], favoriteInstanceOverrides: { [favoriteKey(first)]: false }, versionCategories: [category], versionCategoryAssignments: { [versionCategoryKey(first, id, process.platform)]: category.id } }, installed: [], lastPlayed: {}, installing: new Set(), failedInstalls: new Set() })
   let reject = true, complete: ((value: any) => void) | undefined
   const fixture = { store, selectedInstance: ref(null), api: { errText: (error: Error) => error.message, updateVersionCategories: async () => { if (reject) throw Error('actual IPC write failed'); return await new Promise(resolve => { complete = resolve }) } }, storeApi: { isFavorite: (vid: string, folder: string) => store.settings.favoriteInstanceOverrides[JSON.stringify([folder, vid]) as keyof typeof store.settings.favoriteInstanceOverrides] ?? store.settings.favoriteVersions.includes(vid), sortWithFavorite: (rows: any[]) => rows, displayVersionName: (row: any) => row.id } }
-  const module = { exports: {} as any }; new Function('require', 'module', 'exports', 'globalThis', 'window', compiled.outputFiles[0].text)(req, module, module.exports, { fixture }, { kamucl: { platform: process.platform } })
+  const module = { exports: {} as any }; new Function('require', 'module', 'exports', 'globalThis', 'window', compiled.outputFiles[0].text)(req, module, module.exports, { fixture }, { faionyx: { platform: process.platform } })
   const scope = effectScope(), state = scope.run(() => module.exports.default.setup({}, { expose: () => {} })); t.after(() => scope.stop())
   state.allInstalled.value = [{ id, folder: first, mcVersion: '1.20.1' }, { id, folder: second, mcVersion: '1.20.1' }]
   state.installedCategory.value = VERSION_CATEGORY_FAVORITES

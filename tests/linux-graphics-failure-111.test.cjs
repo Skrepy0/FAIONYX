@@ -3,9 +3,9 @@ const { spawn } = require('node:child_process'), { once } = require('node:events
 const { recordLinuxGraphicsFailure, preserveLinuxFailure } = require('../scripts/qa-linux-graphics-failure.cjs')
 
 function fixture() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-graphics-negative-')), executable = path.join(root, 'kamucl'), pid = 11751
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-graphics-negative-')), executable = path.join(root, 'faionyx'), pid = 11751
   fs.mkdirSync(path.join(root, 'resources'))
-  fs.writeFileSync(path.join(root, 'resources/kamucl-linux.json'), JSON.stringify({ schemaVersion: 1, product: 'KAMUCL', platform: 'linux', arch: 'x64', version: '1.1.11', sourceCommit: 'a'.repeat(40), runtimeVersion: '44.3.0', installationKind: 'portable-directory' }))
+  fs.writeFileSync(path.join(root, 'resources/faionyx-linux.json'), JSON.stringify({ schemaVersion: 1, product: 'FAIONYX', platform: 'linux', arch: 'x64', version: '1.1.11', sourceCommit: 'a'.repeat(40), runtimeVersion: '44.3.0', installationKind: 'portable-directory' }))
   const requests = [], options = { outputFile: path.join(root, 'negative-observation.json'), mainInspectorUrl: 'http://127.0.0.1:19211/json', browserDebugPort: 19212, rendererDebuggerURL: 'ws://127.0.0.1:19212/renderer', ownedChild: { pid, exitCode: null, signalCode: null }, expectedPid: pid, expectedArch: 'x64', expectedExecutable: executable, timeoutMs: 100, originalConsoleErrors: [{ method: 'Runtime.consoleAPICalled', timestamp: 1791072643555.17, args: [{ value: 'original context creation error' }] }] }
   const dependencies = {
     json: async url => url.endsWith('/json/version') ? { webSocketDebuggerUrl: 'ws://127.0.0.1:19212/browser' } : [{ webSocketDebuggerUrl: 'ws://127.0.0.1:19211/main' }],
@@ -80,7 +80,7 @@ test('Linux diagnosis rejects exited children and foreign endpoints before any i
 })
 
 test('Linux diagnostic transport reads the actual owned Node inspector PID and refuses a mismatched ABI before GPU inspection', { timeout: 10000 }, async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-owned-inspector-negative-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-owned-inspector-negative-'))
   const child = spawn(process.execPath, ['--inspect=127.0.0.1:0', '-e', 'setTimeout(()=>{},30000)'], { stdio: ['ignore', 'ignore', 'pipe'] })
   const closed = once(child, 'close'); let endpointTimer
   try {

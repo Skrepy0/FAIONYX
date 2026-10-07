@@ -16,7 +16,7 @@ export interface UpdateTransaction {
   helperPid?: number
 }
 
-export const updateMarker = (exe: string): string => path.join(path.dirname(exe), '.kamuclupdate')
+export const updateMarker = (exe: string): string => path.join(path.dirname(exe), '.faionyxupdate')
 export function atomicUpdateJson(file: string, data: unknown): void {
   fs.mkdirSync(path.dirname(file), { recursive: true })
   const tmp = file + '.' + randomUUID() + '.tmp'
@@ -28,7 +28,7 @@ export function atomicUpdateJson(file: string, data: unknown): void {
 export function readUpdateTransaction(file: string, target: string): UpdateTransaction | null {
   try {
     const t = JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, '')) as UpdateTransaction
-    const rel = path.relative(path.join(path.dirname(target), 'KAMUCL-update'), t.file)
+    const rel = path.relative(path.join(path.dirname(target), 'FAIONYX-update'), t.file)
     const key = (p: string) => process.platform === 'win32' ? path.resolve(p).toLowerCase() : path.resolve(p)
     if (t.schema !== 1 || !/^[a-f\d-]{36}$/i.test(t.id) || key(t.target) !== key(target)
       || !rel || rel.startsWith('..') || path.isAbsolute(rel) || !/^[a-f\d]{64}$/i.test(t.sha256)

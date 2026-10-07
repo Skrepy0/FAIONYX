@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto'
 import { spawnGameProcess, type GameProcessHandle } from '../src/main/core/gracefulClose'
 
 test('idle game plus concurrent mod-discovery output cannot exhaust Windows I/O workers', { skip: process.platform !== 'win32', timeout: 20000 }, async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'KAMUCL 日志并发 '))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX 日志并发 '))
   const owned: GameProcessHandle[] = []
   const closes: Promise<unknown>[] = []
   let watchdog: ReturnType<typeof setTimeout> | undefined

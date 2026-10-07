@@ -1,6 +1,6 @@
 # macOS 1.1.11 验收边界与待补证据
 
-2026-10-04 09:02（Asia/Hong_Kong）当前快照：第六 [37163779043](https://github.com/kamubaba-i/KAMUCL/actions/runs/37163779043) 绑定 `69c1e89ba23a007535c77bae65052f19b6d87f58`，两架构各 864 项为 860 通过、0 失败、4 项既有平台 skip。15 作业为 12 成功／3 UI 失败：2 打包、2 官方 Demo 游戏、6 限定集成、ARM DMG 四主题限定 GUI 和独立 Intel GPU 诊断成功。原生四个包实际读取 Contents/Resources/kamucl-mac.json 内嵌 source69／runtime44.3／ABI／最低 macOS13；strict ad-hoc 签名不是 Developer ID／公证。旧摘要的 kamucl-build.json 计划名作为 historicalSnapshotErrors 保留。
+2026-10-04 09:02（Asia/Hong_Kong）当前快照：第六 [37163779043](https://github.com/Skrepy0/FAIONYX/actions/runs/37163779043) 绑定 `69c1e89ba23a007535c77bae65052f19b6d87f58`，两架构各 864 项为 860 通过、0 失败、4 项既有平台 skip。15 作业为 12 成功／3 UI 失败：2 打包、2 官方 Demo 游戏、6 限定集成、ARM DMG 四主题限定 GUI 和独立 Intel GPU 诊断成功。原生四个包实际读取 Contents/Resources/faionyx-mac.json 内嵌 source69／runtime44.3／ABI／最低 macOS13；strict ad-hoc 签名不是 Developer ID／公证。旧摘要的 faionyx-build.json 计划名作为 historicalSnapshotErrors 保留。
 
 ARM DMG 四主题实际 GUI、可见皮肤步行、焦点和受管壁纸通过。ARM APP 90 个原 CDP 帧中，frame-0055.jpg 的 timestamp=1791072915.597551，frame-0056.jpg=1791072915.595933，倒退 1.618 ms；原算术 FPS=60.53927763443197，但 formalTimingUsable=false，原失败不改写，不用 DMG 补 APP。精确 [Chromium152 PageHandler源码](https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/content/browser/devtools/protocol/page_handler.cc) 的 wall-clock 元数据与异步编码顺序可解释为何需要更可靠原生观测，但尚不能证明本样本的因果；第七强制 SCK 用途明确的原始 BGRA／PTS／status 采集尚未原生验证，不排序旧帧、不放宽时间或 FPS。
 
@@ -12,7 +12,7 @@ Intel APP／DMG 默认运行时真实 WebGL 失败。单独诊断作业成功只
 
 第六旧源码／交接漏收 build/icon.png 和 build/icon-512.png，原审计 out/handoff111-history-source-closure-defect.json 保留；下一源码／交接必须重新核对完整构建输入闭包，尚无未来批次成功声明。
 
-2026-10-04 08:02（Asia/Hong_Kong）第五轮历史快照：第五轮 [37160588297](https://github.com/kamubaba-i/KAMUCL/actions/runs/37160588297) 绑定 `5167500b6c27b9bbdd1e80f22d91d3f5904007eb`。两架构各 857 项为 853 通过、0 失败、4 项既有平台 skip；14 个作业中 2 个打包、2 个实际游戏、6 个限定集成成功，4 个 APP／DMG UI 失败。运行主机 macOS 15.7.9，包仍是 ad-hoc 签名；不是 macOS 13 实机或 Developer ID／公证验证。
+2026-10-04 08:02（Asia/Hong_Kong）第五轮历史快照：第五轮 [37160588297](https://github.com/Skrepy0/FAIONYX/actions/runs/37160588297) 绑定 `5167500b6c27b9bbdd1e80f22d91d3f5904007eb`。两架构各 857 项为 853 通过、0 失败、4 项既有平台 skip；14 个作业中 2 个打包、2 个实际游戏、6 个限定集成成功，4 个 APP／DMG UI 失败。运行主机 macOS 15.7.9，包仍是 ad-hoc 签名；不是 macOS 13 实机或 Developer ID／公证验证。
 
 ARM 的 APP／DMG 已实际显示窗口、WebGL 和编辑器，LOGO 原始 CDP 为 59.975／60.167 FPS，原生传送为 59.613／58.882 FPS，均达到该项 30 FPS 门槛；后续透明主题在受管壁纸实际存在断言失败，原记录 background={}，缺少原设置／读取／规范路径身份观察，原因尚未证实。原皮肤步行录像只有 1 帧、FPS 0，模型不在画面内；它仍不合格，姿态状态不能代替可见运动。Intel APP／DMG 在 30 次就绪观察中均无画布，正式原进程 gl=disabled／angle=none、WebGL1／2 创建失败；实际 EGL 初始化失败仍未解决。主机 Apple Paravirtualized 64MB／Metal2／30Hz 不证明初始 ANGLE 后端或因果根因；新增独立 GPU 诊断尚未执行，不绕过正式 GPU／帧率门槛。
 

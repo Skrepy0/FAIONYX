@@ -28,7 +28,7 @@ async function main() {
     const javaRoot = process.env.JAVA_HOME || 'C:/Program Files/Java/jdk-25.0.2'
     execFileSync(path.join(javaRoot,'bin/javac.exe'),['--release','8','-d',root,'tests/fixtures/OfflineAuthlibProbe.java'],{stdio:'pipe',windowsHide:true})
     const bytes = await sharp({create:{width:64,height:64,channels:4,background:'#ce8550'}}).png().toBuffer(), skin = path.join(root,'synthetic-skin.png'),sha256=crypto.createHash('sha256').update(bytes).digest('hex'); fs.writeFileSync(skin,bytes)
-    for (const [id,java] of [['1.12.2',process.env.KAMUCL_JAVA8_ROOT || 'C:/Program Files/Java/jdk-17'],['1.20.1','C:/Program Files/Java/jdk-17'],['1.21.11','C:/Program Files/Java/jdk-21.0.12'],['26.3','C:/Program Files/Java/jdk-25.0.2']]) {
+    for (const [id,java] of [['1.12.2',process.env.FAIONYX_JAVA8_ROOT || 'C:/Program Files/Java/jdk-17'],['1.20.1','C:/Program Files/Java/jdk-17'],['1.21.11','C:/Program Files/Java/jdk-21.0.12'],['26.3','C:/Program Files/Java/jdk-25.0.2']]) {
       const row:any = {id, java, complete:false}; proof.cases.push(row); save()
       const entry=manifest.versions.find((v:any)=>v.id===id); assert(entry)
       const versionBytes=await read(entry.url,entry.sha1), version=JSON.parse(versionBytes.toString()); row.manifest={url:entry.url,sha1:entry.sha1,java:version.javaVersion}
@@ -36,7 +36,7 @@ async function main() {
       const cp=[root]; row.libraries=[]
       for (const lib of libs) { const file=path.join(root,'libraries',lib.path); if(!fs.existsSync(file)) {fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,await read(lib.url,lib.sha1))} assert.equal(crypto.createHash('sha1').update(fs.readFileSync(file)).digest('hex'),lib.sha1);cp.push(file);row.libraries.push({path:lib.path,sha1:lib.sha1}) }
       const account={id:'synthetic-offline',type:'offline' as const,username:'OfflineSkinProbe',uuid:'c430be75-2e7a-37ab-839f-44d28d4a52f0'}
-      const launch=await createOfflineSkinLaunch(account,{filePath:skin,sha256,variant:'slim'},path.resolve('offline-skin-agent/dist/kamucl-offline-skin.jar'),injector,root)
+      const launch=await createOfflineSkinLaunch(account,{filePath:skin,sha256,variant:'slim'},path.resolve('offline-skin-agent/dist/faionyx-offline-skin.jar'),injector,root)
       try {
         await launch.releasePort()
         row.output=execFileSync(path.join(java,'bin/java.exe'),[...launch.args,'-cp',cp.join(path.delimiter),'OfflineAuthlibProbe',account.uuid,account.username,sha256,'slim'],{cwd:root,encoding:'utf8',windowsHide:true,timeout:45000,stdio:'pipe'})

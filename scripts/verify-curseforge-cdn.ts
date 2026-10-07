@@ -22,7 +22,7 @@ undici.fetch = async (url: string, init: any = {}) => {
   if (new URL(url).hostname.endsWith('.forgecdn.net')) cdnRequests.push({ url, method: init.method || 'GET', status: response.status })
   return response
 }
-const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-cdn-live-'))
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-cdn-live-'))
 const game = path.join(root, 'game'), client = Buffer.from('isolated validation runtime')
 const hash = (bytes: Buffer) => crypto.createHash('sha1').update(bytes).digest('hex')
 const files = [

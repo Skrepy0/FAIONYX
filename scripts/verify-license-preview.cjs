@@ -19,7 +19,7 @@ const versions = ['26.2-Fabric 0.19.5', '1.21.11-NeoForge Adventures', '1.21.10-
 let settings = { gameDir: folder, activeFolder: folder, folders: [{ path: folder, name: '我的游戏', isDefault: true }], javaPath: '', javaAuto: true, javaCustom: [], javaHidden: [], memoryMB: 4096, memoryAuto: true, jvmArgs: '', resolution: { width: 854, height: 480, mode: 'windowed' }, mirror: 'bmclapi', theme: 'blue-white', custom: types.DEFAULT_CUSTOM_THEME, disabledFeatures: [], favoriteVersions: [], homeLayout: types.DEFAULT_HOME_LAYOUT, background: types.DEFAULT_BACKGROUND, launchThumbnail: types.DEFAULT_LAUNCH_THUMBNAIL, configVersion: 1 }
 const account = { id: 'fixture', type: 'microsoft', username: 'KaMuaMua', uuid: '00000000000000000000000000000000' }
 const calls = [], errors = []
-const updateRelease = { version:'1.0.46', tag:'v1.0.46', publishedAt:'2026-09-10T14:04:00Z', assetSize:67616046, body:'KAMUCL v1.0.46\n\n- 修复：皮肤重命名后恢复默认名称的问题\n- 优化：默认配置的分组、数值输入和同步状态', assetUrl:'https://example.invalid/test.exe' }
+const updateRelease = { version:'1.0.46', tag:'v1.0.46', publishedAt:'2026-09-10T14:04:00Z', assetSize:67616046, body:'FAIONYX v1.0.46\n\n- 修复：皮肤重命名后恢复默认名称的问题\n- 优化：默认配置的分组、数值输入和同步状态', assetUrl:'https://example.invalid/test.exe' }
 let vox={joinedAt:Date.now()-25000,state:'in_room',pending:false,room:{name:'测试房间',currentPlayers:2,maxPlayers:8},session:{state:'in_room',code:'ABCDEF',isHost:false},settings:{allowRelay:true},connection:{phase:'p2p',status:'failed',detail:'打洞重试中'},stages:{punch:{key:'punch',status:'retry',detail:'打洞重试中',ts:Date.now()-25000}}};let tcReady=false;const requests=[];
 ipcMain.handle('design:invoke', (_event, channel, ...args) => {
   calls.push(channel);requests.push({channel,args})
@@ -35,8 +35,8 @@ ipcMain.handle('design:invoke', (_event, channel, ...args) => {
     case 'frp:create-tunnel': return {id:123};
     case 'update:check': return {ok:true,hasUpdate:true,release:updateRelease}
     case 'update:start': return {taskId:'fixture-update'}
-    case 'update:pickLocalFile': return {fileName:'KAMUCL-1.0.46.exe',fileSize:67616046,version:'1.0.46',versionOk:true,sha256:'match'}
-    case 'update:listReleases': return Array.from({length:18},(_,i)=>({...updateRelease,version:'1.0.'+(43-i),body:'KAMUCL v1.0.'+(43-i)+'\n\n- 改善下载体验，修复界面显示问题'}))
+    case 'update:pickLocalFile': return {fileName:'FAIONYX-1.0.46.exe',fileSize:67616046,version:'1.0.46',versionOk:true,sha256:'match'}
+    case 'update:listReleases': return Array.from({length:18},(_,i)=>({...updateRelease,version:'1.0.'+(43-i),body:'FAIONYX v1.0.'+(43-i)+'\n\n- 改善下载体验，修复界面显示问题'}))
     case 'gameOptions:get': return gameOptions.getDefaultGameOptions()
     case 'gameOptions:set': return gameOptions.setDefaultGameOptions(args[0])
     case 'exitHistory:list': return journal.list()
@@ -61,7 +61,7 @@ ipcMain.handle('design:invoke', (_event, channel, ...args) => {
     default: return []
   }
 })
-fs.writeFileSync(path.join(root, 'preload.cjs'), `const {contextBridge,ipcRenderer}=require('electron');contextBridge.exposeInMainWorld('kamucl',{invoke:(c,...a)=>ipcRenderer.invoke('design:invoke',c,...a),on:(c,fn)=>{const h=(_,p)=>fn(p);ipcRenderer.on(c,h);return ()=>ipcRenderer.removeListener(c,h)},send:()=>{},getFilePath:()=>'',platform:'win32'});`)
+fs.writeFileSync(path.join(root, 'preload.cjs'), `const {contextBridge,ipcRenderer}=require('electron');contextBridge.exposeInMainWorld('faionyx',{invoke:(c,...a)=>ipcRenderer.invoke('design:invoke',c,...a),on:(c,fn)=>{const h=(_,p)=>fn(p);ipcRenderer.on(c,h);return ()=>ipcRenderer.removeListener(c,h)},send:()=>{},getFilePath:()=>'',platform:'win32'});`)
 app.whenReady().then(async()=>{
  session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_d,cb)=>cb({cancel:true}))
  const win=new BrowserWindow({show:false,width:1440,height:1000,webPreferences:{preload:path.join(root,'preload.cjs'),backgroundThrottling:false,offscreen:true}})

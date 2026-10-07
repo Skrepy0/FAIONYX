@@ -2,7 +2,7 @@
   "complete": false,
   "version": "1.1.18",
   "theme": "custom",
-  "directory": "E:\\KAMUCL\\out\\qa-offline118-custom-48e308e4-b39d-4858-a2e7-82834e3bd381",
+  "directory": "E:\\FAIONYX\\out\\qa-offline118-custom-48e308e4-b39d-4858-a2e7-82834e3bd381",
   "observations": [
     {
       "label": "real native focus",
@@ -1491,7 +1491,7 @@
     "ppid": 18252,
     "windowId": 1,
     "webContentsId": 1,
-    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 U3WXW3\\profile"
+    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 U3WXW3\\profile"
   },
   "initialViewport": {
     "native": {
@@ -1557,7 +1557,7 @@
   },
   "setup": {
     "complete": true,
-    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 U3WXW3\\profile"
+    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 U3WXW3\\profile"
   },
   "previousAccount": null,
   "accounts": [
@@ -1573,7 +1573,7 @@
     }
   ],
   "source": {
-    "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 U3WXW3\\offline118-custom.png",
+    "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 U3WXW3\\offline118-custom.png",
     "sha256": "f8580d5b181734d194389a95b3e15d9b4f3d44a1c20ed8fb88d878fd9b010303"
   },
   "nativeFocusObservations": [
@@ -2974,7 +2974,7 @@
   },
   "recording": {
     "version": "1.1.18",
-    "directory": "E:\\KAMUCL\\out\\offline118-editor-f13135ae-1851-43ee-8f50-398cce97bcdf-custom",
+    "directory": "E:\\FAIONYX\\out\\offline118-editor-f13135ae-1851-43ee-8f50-398cce97bcdf-custom",
     "capture": {
       "format": "jpeg",
       "quality": 70,
@@ -6378,7 +6378,7 @@
   "error": {
     "name": "AssertionError",
     "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 12193072\n- 36702884\n",
-    "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 12193072\n- 36702884\n\n    at foreground (E:\\KAMUCL\\scripts\\qa-offline118.cjs:19:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async reachable (E:\\KAMUCL\\scripts\\qa-offline118.cjs:77:5)\n    at async module.exports (E:\\KAMUCL\\scripts\\qa-offline118.cjs:196:397)\n    at async E:\\KAMUCL\\scripts\\verify-ui-refinement.cjs:233:9"
+    "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 12193072\n- 36702884\n\n    at foreground (E:\\FAIONYX\\scripts\\qa-offline118.cjs:19:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async reachable (E:\\FAIONYX\\scripts\\qa-offline118.cjs:77:5)\n    at async module.exports (E:\\FAIONYX\\scripts\\qa-offline118.cjs:196:397)\n    at async E:\\FAIONYX\\scripts\\verify-ui-refinement.cjs:233:9"
   },
   "captureError": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 12193072\n- 36702884\n",
   "restored": {

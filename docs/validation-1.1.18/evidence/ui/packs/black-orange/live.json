@@ -2,7 +2,7 @@
   "complete": true,
   "version": "1.1.18",
   "theme": "black-orange",
-  "directory": "E:\\KAMUCL\\out\\qa-packs118-black-orange-9ac25265-039a-4182-8923-1894ca85bf8f",
+  "directory": "E:\\FAIONYX\\out\\qa-packs118-black-orange-9ac25265-039a-4182-8923-1894ca85bf8f",
   "observations": [
     {
       "label": "actual focus",
@@ -166,11 +166,11 @@
             "failed": false,
             "ui": {
               "disabled": true,
-              "text": "KAMUCL\nv1.1.18\n首页\n游戏版本\n资源管理\n模组\n资源包\n光影包\n录像\n投影\nMOD 面板\n服务器\n联机\n默认配置\n皮肤\n社区资源\n设置\n全部系统运行正常\n尝试打造一个方便UP主高频使用的启动器\n尝\n试\n打\n造\n一\n个\n方\n便\nU\nP\n主\n高\n频\n使\n用\n的\n启\n动\n器\n下载\n导入\n默认配置\n\n让每个世界，都保留你熟悉的操作习惯。\n\n游戏选项\n画面、控制与辅助功能\n按键配置\n0 项自定义绑定\n默认材质包\n2 个材质包\n默认材质包\n\n拖入多个 ZIP 材质包，列表靠后的包优先级更高\n\n添加材质包…\n新实例默认启用\n§6中文 A 默认包.zip\n已启用\n↑\n↓\n移除\nB with spaces.zip\n已启用\n↑\n↓\n移除\n\n全局列表作为初始默认。启用后，在尚未配置资源包的游戏目录首次应用；已有实例以游戏内选择为准，后续启动保留启停和排序。新增默认包只补充可选文件。\n\n重新应用到实例\n\n按当前默认列表重设此实例的默认材质包选择，保留其他资源包。原文件和已复制文件保留。\n\n材质包验证 § 中文 实例\n26.2 · 独立游戏目录\n正在应用…"
+              "text": "FAIONYX\nv1.1.18\n首页\n游戏版本\n资源管理\n模组\n资源包\n光影包\n录像\n投影\nMOD 面板\n服务器\n联机\n默认配置\n皮肤\n社区资源\n设置\n全部系统运行正常\n尝试打造一个方便UP主高频使用的启动器\n尝\n试\n打\n造\n一\n个\n方\n便\nU\nP\n主\n高\n频\n使\n用\n的\n启\n动\n器\n下载\n导入\n默认配置\n\n让每个世界，都保留你熟悉的操作习惯。\n\n游戏选项\n画面、控制与辅助功能\n按键配置\n0 项自定义绑定\n默认材质包\n2 个材质包\n默认材质包\n\n拖入多个 ZIP 材质包，列表靠后的包优先级更高\n\n添加材质包…\n新实例默认启用\n§6中文 A 默认包.zip\n已启用\n↑\n↓\n移除\nB with spaces.zip\n已启用\n↑\n↓\n移除\n\n全局列表作为初始默认。启用后，在尚未配置资源包的游戏目录首次应用；已有实例以游戏内选择为准，后续启动保留启停和排序。新增默认包只补充可选文件。\n\n重新应用到实例\n\n按当前默认列表重设此实例的默认材质包选择，保留其他资源包。原文件和已复制文件保留。\n\n材质包验证 § 中文 实例\n26.2 · 独立游戏目录\n正在应用…"
             },
             "disk": {
-              "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
-              "state": "[\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
+              "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
+              "state": "[\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
               "copied": []
             }
           }
@@ -181,11 +181,11 @@
             "failed": false,
             "ui": {
               "disabled": true,
-              "text": "KAMUCL\nv1.1.18\n首页\n游戏版本\n资源管理\n模组\n资源包\n光影包\n录像\n投影\nMOD 面板\n服务器\n联机\n默认配置\n皮肤\n社区资源\n设置\n全部系统运行正常\n尝试打造一个方便UP主高频使用的启动器\n尝\n试\n打\n造\n一\n个\n方\n便\nU\nP\n主\n高\n频\n使\n用\n的\n启\n动\n器\n下载\n导入\n默认配置\n\n让每个世界，都保留你熟悉的操作习惯。\n\n游戏选项\n画面、控制与辅助功能\n按键配置\n0 项自定义绑定\n默认材质包\n2 个材质包\n默认材质包\n\n拖入多个 ZIP 材质包，列表靠后的包优先级更高\n\n添加材质包…\n新实例默认启用\n§6中文 A 默认包.zip\n已启用\n↑\n↓\n移除\nB with spaces.zip\n已启用\n↑\n↓\n移除\n\n全局列表作为初始默认。启用后，在尚未配置资源包的游戏目录首次应用；已有实例以游戏内选择为准，后续启动保留启停和排序。新增默认包只补充可选文件。\n\n重新应用到实例\n\n按当前默认列表重设此实例的默认材质包选择，保留其他资源包。原文件和已复制文件保留。\n\n材质包验证 § 中文 实例\n26.2 · 独立游戏目录\n正在应用…"
+              "text": "FAIONYX\nv1.1.18\n首页\n游戏版本\n资源管理\n模组\n资源包\n光影包\n录像\n投影\nMOD 面板\n服务器\n联机\n默认配置\n皮肤\n社区资源\n设置\n全部系统运行正常\n尝试打造一个方便UP主高频使用的启动器\n尝\n试\n打\n造\n一\n个\n方\n便\nU\nP\n主\n高\n频\n使\n用\n的\n启\n动\n器\n下载\n导入\n默认配置\n\n让每个世界，都保留你熟悉的操作习惯。\n\n游戏选项\n画面、控制与辅助功能\n按键配置\n0 项自定义绑定\n默认材质包\n2 个材质包\n默认材质包\n\n拖入多个 ZIP 材质包，列表靠后的包优先级更高\n\n添加材质包…\n新实例默认启用\n§6中文 A 默认包.zip\n已启用\n↑\n↓\n移除\nB with spaces.zip\n已启用\n↑\n↓\n移除\n\n全局列表作为初始默认。启用后，在尚未配置资源包的游戏目录首次应用；已有实例以游戏内选择为准，后续启动保留启停和排序。新增默认包只补充可选文件。\n\n重新应用到实例\n\n按当前默认列表重设此实例的默认材质包选择，保留其他资源包。原文件和已复制文件保留。\n\n材质包验证 § 中文 实例\n26.2 · 独立游戏目录\n正在应用…"
             },
             "disk": {
-              "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
-              "state": "[\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
+              "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
+              "state": "[\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
               "copied": []
             }
           }
@@ -196,11 +196,11 @@
             "failed": false,
             "ui": {
               "disabled": true,
-              "text": "KAMUCL\nv1.1.18\n首页\n游戏版本\n资源管理\n模组\n资源包\n光影包\n录像\n投影\nMOD 面板\n服务器\n联机\n默认配置\n皮肤\n社区资源\n设置\n全部系统运行正常\n尝试打造一个方便UP主高频使用的启动器\n尝\n试\n打\n造\n一\n个\n方\n便\nU\nP\n主\n高\n频\n使\n用\n的\n启\n动\n器\n下载\n导入\n默认配置\n\n让每个世界，都保留你熟悉的操作习惯。\n\n游戏选项\n画面、控制与辅助功能\n按键配置\n0 项自定义绑定\n默认材质包\n2 个材质包\n默认材质包\n\n拖入多个 ZIP 材质包，列表靠后的包优先级更高\n\n添加材质包…\n新实例默认启用\n§6中文 A 默认包.zip\n已启用\n↑\n↓\n移除\nB with spaces.zip\n已启用\n↑\n↓\n移除\n\n全局列表作为初始默认。启用后，在尚未配置资源包的游戏目录首次应用；已有实例以游戏内选择为准，后续启动保留启停和排序。新增默认包只补充可选文件。\n\n重新应用到实例\n\n按当前默认列表重设此实例的默认材质包选择，保留其他资源包。原文件和已复制文件保留。\n\n材质包验证 § 中文 实例\n26.2 · 独立游戏目录\n正在应用…"
+              "text": "FAIONYX\nv1.1.18\n首页\n游戏版本\n资源管理\n模组\n资源包\n光影包\n录像\n投影\nMOD 面板\n服务器\n联机\n默认配置\n皮肤\n社区资源\n设置\n全部系统运行正常\n尝试打造一个方便UP主高频使用的启动器\n尝\n试\n打\n造\n一\n个\n方\n便\nU\nP\n主\n高\n频\n使\n用\n的\n启\n动\n器\n下载\n导入\n默认配置\n\n让每个世界，都保留你熟悉的操作习惯。\n\n游戏选项\n画面、控制与辅助功能\n按键配置\n0 项自定义绑定\n默认材质包\n2 个材质包\n默认材质包\n\n拖入多个 ZIP 材质包，列表靠后的包优先级更高\n\n添加材质包…\n新实例默认启用\n§6中文 A 默认包.zip\n已启用\n↑\n↓\n移除\nB with spaces.zip\n已启用\n↑\n↓\n移除\n\n全局列表作为初始默认。启用后，在尚未配置资源包的游戏目录首次应用；已有实例以游戏内选择为准，后续启动保留启停和排序。新增默认包只补充可选文件。\n\n重新应用到实例\n\n按当前默认列表重设此实例的默认材质包选择，保留其他资源包。原文件和已复制文件保留。\n\n材质包验证 § 中文 实例\n26.2 · 独立游戏目录\n正在应用…"
             },
             "disk": {
-              "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
-              "state": "[\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
+              "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
+              "state": "[\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
               "copied": []
             }
           }
@@ -211,11 +211,11 @@
             "failed": false,
             "ui": {
               "disabled": true,
-              "text": "KAMUCL\nv1.1.18\n首页\n游戏版本\n资源管理\n模组\n资源包\n光影包\n录像\n投影\nMOD 面板\n服务器\n联机\n默认配置\n皮肤\n社区资源\n设置\n全部系统运行正常\n尝试打造一个方便UP主高频使用的启动器\n尝\n试\n打\n造\n一\n个\n方\n便\nU\nP\n主\n高\n频\n使\n用\n的\n启\n动\n器\n下载\n导入\n默认配置\n\n让每个世界，都保留你熟悉的操作习惯。\n\n游戏选项\n画面、控制与辅助功能\n按键配置\n0 项自定义绑定\n默认材质包\n2 个材质包\n默认材质包\n\n拖入多个 ZIP 材质包，列表靠后的包优先级更高\n\n添加材质包…\n新实例默认启用\n§6中文 A 默认包.zip\n已启用\n↑\n↓\n移除\nB with spaces.zip\n已启用\n↑\n↓\n移除\n\n全局列表作为初始默认。启用后，在尚未配置资源包的游戏目录首次应用；已有实例以游戏内选择为准，后续启动保留启停和排序。新增默认包只补充可选文件。\n\n重新应用到实例\n\n按当前默认列表重设此实例的默认材质包选择，保留其他资源包。原文件和已复制文件保留。\n\n材质包验证 § 中文 实例\n26.2 · 独立游戏目录\n正在应用…"
+              "text": "FAIONYX\nv1.1.18\n首页\n游戏版本\n资源管理\n模组\n资源包\n光影包\n录像\n投影\nMOD 面板\n服务器\n联机\n默认配置\n皮肤\n社区资源\n设置\n全部系统运行正常\n尝试打造一个方便UP主高频使用的启动器\n尝\n试\n打\n造\n一\n个\n方\n便\nU\nP\n主\n高\n频\n使\n用\n的\n启\n动\n器\n下载\n导入\n默认配置\n\n让每个世界，都保留你熟悉的操作习惯。\n\n游戏选项\n画面、控制与辅助功能\n按键配置\n0 项自定义绑定\n默认材质包\n2 个材质包\n默认材质包\n\n拖入多个 ZIP 材质包，列表靠后的包优先级更高\n\n添加材质包…\n新实例默认启用\n§6中文 A 默认包.zip\n已启用\n↑\n↓\n移除\nB with spaces.zip\n已启用\n↑\n↓\n移除\n\n全局列表作为初始默认。启用后，在尚未配置资源包的游戏目录首次应用；已有实例以游戏内选择为准，后续启动保留启停和排序。新增默认包只补充可选文件。\n\n重新应用到实例\n\n按当前默认列表重设此实例的默认材质包选择，保留其他资源包。原文件和已复制文件保留。\n\n材质包验证 § 中文 实例\n26.2 · 独立游戏目录\n正在应用…"
             },
             "disk": {
-              "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
-              "state": "[\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
+              "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
+              "state": "[\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
               "copied": []
             }
           }
@@ -226,14 +226,14 @@
             "failed": false,
             "ui": {
               "disabled": false,
-              "text": "KAMUCL\nv1.1.18\n首页\n游戏版本\n资源管理\n模组\n资源包\n光影包\n录像\n投影\nMOD 面板\n服务器\n联机\n默认配置\n皮肤\n社区资源\n设置\n全部系统运行正常\n尝试打造一个方便UP主高频使用的启动器\n尝\n试\n打\n造\n一\n个\n方\n便\nU\nP\n主\n高\n频\n使\n用\n的\n启\n动\n器\n下载\n导入\n默认配置\n\n让每个世界，都保留你熟悉的操作习惯。\n\n游戏选项\n画面、控制与辅助功能\n按键配置\n0 项自定义绑定\n默认材质包\n2 个材质包\n默认材质包\n\n拖入多个 ZIP 材质包，列表靠后的包优先级更高\n\n添加材质包…\n新实例默认启用\n§6中文 A 默认包.zip\n已启用\n↑\n↓\n移除\nB with spaces.zip\n已启用\n↑\n↓\n移除\n\n全局列表作为初始默认。启用后，在尚未配置资源包的游戏目录首次应用；已有实例以游戏内选择为准，后续启动保留启停和排序。新增默认包只补充可选文件。\n\n重新应用到实例\n\n按当前默认列表重设此实例的默认材质包选择，保留其他资源包。原文件和已复制文件保留。\n\n材质包验证 § 中文 实例\n26.2 · 独立游戏目录\n重新应用默认材质包\n重新应用失败：合成：默认材质包实例记录写入失败\n×"
+              "text": "FAIONYX\nv1.1.18\n首页\n游戏版本\n资源管理\n模组\n资源包\n光影包\n录像\n投影\nMOD 面板\n服务器\n联机\n默认配置\n皮肤\n社区资源\n设置\n全部系统运行正常\n尝试打造一个方便UP主高频使用的启动器\n尝\n试\n打\n造\n一\n个\n方\n便\nU\nP\n主\n高\n频\n使\n用\n的\n启\n动\n器\n下载\n导入\n默认配置\n\n让每个世界，都保留你熟悉的操作习惯。\n\n游戏选项\n画面、控制与辅助功能\n按键配置\n0 项自定义绑定\n默认材质包\n2 个材质包\n默认材质包\n\n拖入多个 ZIP 材质包，列表靠后的包优先级更高\n\n添加材质包…\n新实例默认启用\n§6中文 A 默认包.zip\n已启用\n↑\n↓\n移除\nB with spaces.zip\n已启用\n↑\n↓\n移除\n\n全局列表作为初始默认。启用后，在尚未配置资源包的游戏目录首次应用；已有实例以游戏内选择为准，后续启动保留启停和排序。新增默认包只补充可选文件。\n\n重新应用到实例\n\n按当前默认列表重设此实例的默认材质包选择，保留其他资源包。原文件和已复制文件保留。\n\n材质包验证 § 中文 实例\n26.2 · 独立游戏目录\n重新应用默认材质包\n重新应用失败：合成：默认材质包实例记录写入失败\n×"
             },
             "disk": {
-              "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
-              "state": "[\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
+              "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
+              "state": "[\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
               "copied": [
-                "KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
-                "KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
+                "FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
+                "FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
               ]
             }
           }
@@ -244,14 +244,14 @@
             "failed": true,
             "ui": {
               "disabled": false,
-              "text": "KAMUCL\nv1.1.18\n首页\n游戏版本\n资源管理\n模组\n资源包\n光影包\n录像\n投影\nMOD 面板\n服务器\n联机\n默认配置\n皮肤\n社区资源\n设置\n全部系统运行正常\n尝试打造一个方便UP主高频使用的启动器\n尝\n试\n打\n造\n一\n个\n方\n便\nU\nP\n主\n高\n频\n使\n用\n的\n启\n动\n器\n下载\n导入\n默认配置\n\n让每个世界，都保留你熟悉的操作习惯。\n\n游戏选项\n画面、控制与辅助功能\n按键配置\n0 项自定义绑定\n默认材质包\n2 个材质包\n默认材质包\n\n拖入多个 ZIP 材质包，列表靠后的包优先级更高\n\n添加材质包…\n新实例默认启用\n§6中文 A 默认包.zip\n已启用\n↑\n↓\n移除\nB with spaces.zip\n已启用\n↑\n↓\n移除\n\n全局列表作为初始默认。启用后，在尚未配置资源包的游戏目录首次应用；已有实例以游戏内选择为准，后续启动保留启停和排序。新增默认包只补充可选文件。\n\n重新应用到实例\n\n按当前默认列表重设此实例的默认材质包选择，保留其他资源包。原文件和已复制文件保留。\n\n材质包验证 § 中文 实例\n26.2 · 独立游戏目录\n重新应用默认材质包\n重新应用失败：合成：默认材质包实例记录写入失败\n×"
+              "text": "FAIONYX\nv1.1.18\n首页\n游戏版本\n资源管理\n模组\n资源包\n光影包\n录像\n投影\nMOD 面板\n服务器\n联机\n默认配置\n皮肤\n社区资源\n设置\n全部系统运行正常\n尝试打造一个方便UP主高频使用的启动器\n尝\n试\n打\n造\n一\n个\n方\n便\nU\nP\n主\n高\n频\n使\n用\n的\n启\n动\n器\n下载\n导入\n默认配置\n\n让每个世界，都保留你熟悉的操作习惯。\n\n游戏选项\n画面、控制与辅助功能\n按键配置\n0 项自定义绑定\n默认材质包\n2 个材质包\n默认材质包\n\n拖入多个 ZIP 材质包，列表靠后的包优先级更高\n\n添加材质包…\n新实例默认启用\n§6中文 A 默认包.zip\n已启用\n↑\n↓\n移除\nB with spaces.zip\n已启用\n↑\n↓\n移除\n\n全局列表作为初始默认。启用后，在尚未配置资源包的游戏目录首次应用；已有实例以游戏内选择为准，后续启动保留启停和排序。新增默认包只补充可选文件。\n\n重新应用到实例\n\n按当前默认列表重设此实例的默认材质包选择，保留其他资源包。原文件和已复制文件保留。\n\n材质包验证 § 中文 实例\n26.2 · 独立游戏目录\n重新应用默认材质包\n重新应用失败：合成：默认材质包实例记录写入失败\n×"
             },
             "disk": {
-              "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
-              "state": "[\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
+              "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
+              "state": "[\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
               "copied": [
-                "KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
-                "KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
+                "FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
+                "FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
               ]
             }
           }
@@ -285,11 +285,11 @@
         {
           "at": 1791357027042,
           "value": {
-            "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\"]\r\ncustom:keep\r\n",
-            "state": "{\n  \"version\": 2,\n  \"managed\": [\n    \"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\",\n    \"file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"\n  ]\n}\n",
+            "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\"]\r\ncustom:keep\r\n",
+            "state": "{\n  \"version\": 2,\n  \"managed\": [\n    \"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\",\n    \"file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"\n  ]\n}\n",
             "copied": [
-              "KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
-              "KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
+              "FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
+              "FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
             ]
           }
         }
@@ -538,43 +538,43 @@
         {
           "at": 1791357028813,
           "value": {
-            "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"Personal Legacy.zip\",\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"Personal Legacy.zip\",\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
-            "state": "[\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
+            "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"Personal Legacy.zip\",\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"Personal Legacy.zip\",\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
+            "state": "[\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
             "copied": []
           }
         },
         {
           "at": 1791357028905,
           "value": {
-            "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"Personal Legacy.zip\",\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"Personal Legacy.zip\",\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
-            "state": "[\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
+            "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"Personal Legacy.zip\",\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"Personal Legacy.zip\",\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
+            "state": "[\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
             "copied": []
           }
         },
         {
           "at": 1791357028997,
           "value": {
-            "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"Personal Legacy.zip\",\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"Personal Legacy.zip\",\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
-            "state": "[\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
+            "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"Personal Legacy.zip\",\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"Personal Legacy.zip\",\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
+            "state": "[\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
             "copied": []
           }
         },
         {
           "at": 1791357029092,
           "value": {
-            "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"Personal Legacy.zip\",\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"Personal Legacy.zip\",\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
-            "state": "[\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
+            "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"Personal Legacy.zip\",\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"Personal Legacy.zip\",\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
+            "state": "[\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
             "copied": []
           }
         },
         {
           "at": 1791357029186,
           "value": {
-            "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"Personal Legacy.zip\",\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\nincompatibleResourcePacks:[\"Personal Legacy.zip\",\"KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\ncustom:keep\r\n",
-            "state": "{\n  \"version\": 2,\n  \"managed\": [\n    \"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\",\n    \"file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"\n  ]\n}\n",
+            "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"Personal Legacy.zip\",\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\nincompatibleResourcePacks:[\"Personal Legacy.zip\",\"FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\ncustom:keep\r\n",
+            "state": "{\n  \"version\": 2,\n  \"managed\": [\n    \"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\",\n    \"file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"\n  ]\n}\n",
             "copied": [
-              "KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
-              "KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
+              "FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
+              "FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
             ]
           }
         }
@@ -712,7 +712,7 @@
           "value": [
             "vanilla",
             "file/个人 中文 § 包.zip",
-            "file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
+            "file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
           ]
         }
       ],
@@ -1648,7 +1648,7 @@
     "ppid": 56400,
     "windowId": 1,
     "webContentsId": 1,
-    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 hhPGir\\profile"
+    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 hhPGir\\profile"
   },
   "nativeFocus": {
     "hwnd": 9899764,
@@ -1674,10 +1674,10 @@
     ]
   },
   "fixtures": {
-    "root": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 hhPGir\\packs118-fixtures-c0f9f5c5-da36-47f7-ae0e-a12e9b08aa7b",
+    "root": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 hhPGir\\packs118-fixtures-c0f9f5c5-da36-47f7-ae0e-a12e9b08aa7b",
     "games": [
-      "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 hhPGir\\games\\versions\\材质包验证 § 中文 实例",
-      "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 hhPGir\\games\\versions\\1.12.2 材质包备选实例"
+      "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 hhPGir\\games\\versions\\材质包验证 § 中文 实例",
+      "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 hhPGir\\games\\versions\\1.12.2 材质包备选实例"
     ],
     "ids": [
       "材质包验证 § 中文 实例",
@@ -1685,17 +1685,17 @@
     ],
     "sources": [
       {
-        "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 hhPGir\\packs118-fixtures-c0f9f5c5-da36-47f7-ae0e-a12e9b08aa7b\\§6中文 A 默认包.zip",
+        "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 hhPGir\\packs118-fixtures-c0f9f5c5-da36-47f7-ae0e-a12e9b08aa7b\\§6中文 A 默认包.zip",
         "sha256": "9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1"
       },
       {
-        "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 hhPGir\\packs118-fixtures-c0f9f5c5-da36-47f7-ae0e-a12e9b08aa7b\\B with spaces.zip",
+        "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 hhPGir\\packs118-fixtures-c0f9f5c5-da36-47f7-ae0e-a12e9b08aa7b\\B with spaces.zip",
         "sha256": "9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53"
       }
     ],
     "names": [
-      "KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
-      "KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
+      "FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
+      "FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
     ],
     "personal": [
       "file/个人 中文 § 包.zip",
@@ -1704,13 +1704,13 @@
   },
   "before": [
     {
-      "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
-      "state": "[\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
+      "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
+      "state": "[\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
       "copied": []
     },
     {
-      "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"Personal Legacy.zip\",\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"Personal Legacy.zip\",\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
-      "state": "[\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
+      "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"Personal Legacy.zip\",\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"Personal Legacy.zip\",\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
+      "state": "[\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
       "copied": []
     }
   ],
@@ -1725,20 +1725,20 @@
   },
   "failureSetup": {
     "owned": true,
-    "target": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 hhPGir\\games\\versions\\材质包验证 § 中文 实例\\.kamucl-default-resourcepacks.json"
+    "target": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 hhPGir\\games\\versions\\材质包验证 § 中文 实例\\.faionyx-default-resourcepacks.json"
   },
   "failureRecovery": {
     "failed": true,
     "ui": {
       "disabled": false,
-      "text": "KAMUCL\nv1.1.18\n首页\n游戏版本\n资源管理\n模组\n资源包\n光影包\n录像\n投影\nMOD 面板\n服务器\n联机\n默认配置\n皮肤\n社区资源\n设置\n全部系统运行正常\n尝试打造一个方便UP主高频使用的启动器\n尝\n试\n打\n造\n一\n个\n方\n便\nU\nP\n主\n高\n频\n使\n用\n的\n启\n动\n器\n下载\n导入\n默认配置\n\n让每个世界，都保留你熟悉的操作习惯。\n\n游戏选项\n画面、控制与辅助功能\n按键配置\n0 项自定义绑定\n默认材质包\n2 个材质包\n默认材质包\n\n拖入多个 ZIP 材质包，列表靠后的包优先级更高\n\n添加材质包…\n新实例默认启用\n§6中文 A 默认包.zip\n已启用\n↑\n↓\n移除\nB with spaces.zip\n已启用\n↑\n↓\n移除\n\n全局列表作为初始默认。启用后，在尚未配置资源包的游戏目录首次应用；已有实例以游戏内选择为准，后续启动保留启停和排序。新增默认包只补充可选文件。\n\n重新应用到实例\n\n按当前默认列表重设此实例的默认材质包选择，保留其他资源包。原文件和已复制文件保留。\n\n材质包验证 § 中文 实例\n26.2 · 独立游戏目录\n重新应用默认材质包\n重新应用失败：合成：默认材质包实例记录写入失败\n×"
+      "text": "FAIONYX\nv1.1.18\n首页\n游戏版本\n资源管理\n模组\n资源包\n光影包\n录像\n投影\nMOD 面板\n服务器\n联机\n默认配置\n皮肤\n社区资源\n设置\n全部系统运行正常\n尝试打造一个方便UP主高频使用的启动器\n尝\n试\n打\n造\n一\n个\n方\n便\nU\nP\n主\n高\n频\n使\n用\n的\n启\n动\n器\n下载\n导入\n默认配置\n\n让每个世界，都保留你熟悉的操作习惯。\n\n游戏选项\n画面、控制与辅助功能\n按键配置\n0 项自定义绑定\n默认材质包\n2 个材质包\n默认材质包\n\n拖入多个 ZIP 材质包，列表靠后的包优先级更高\n\n添加材质包…\n新实例默认启用\n§6中文 A 默认包.zip\n已启用\n↑\n↓\n移除\nB with spaces.zip\n已启用\n↑\n↓\n移除\n\n全局列表作为初始默认。启用后，在尚未配置资源包的游戏目录首次应用；已有实例以游戏内选择为准，后续启动保留启停和排序。新增默认包只补充可选文件。\n\n重新应用到实例\n\n按当前默认列表重设此实例的默认材质包选择，保留其他资源包。原文件和已复制文件保留。\n\n材质包验证 § 中文 实例\n26.2 · 独立游戏目录\n重新应用默认材质包\n重新应用失败：合成：默认材质包实例记录写入失败\n×"
     },
     "disk": {
-      "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
-      "state": "[\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
+      "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\"]\r\ncustom:keep\r\n",
+      "state": "[\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]",
       "copied": [
-        "KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
-        "KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
+        "FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
+        "FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
       ]
     }
   },
@@ -1746,18 +1746,18 @@
     "complete": true,
     "records": [
       {
-        "source": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 hhPGir\\games\\versions\\材质包验证 § 中文 实例\\.kamucl-default-resourcepacks.json.kamucl-write-b781db01-2d75-462a-a74d-bfdfdff2b968.tmp",
-        "dest": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 hhPGir\\games\\versions\\材质包验证 § 中文 实例\\.kamucl-default-resourcepacks.json",
+        "source": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 hhPGir\\games\\versions\\材质包验证 § 中文 实例\\.faionyx-default-resourcepacks.json.faionyx-write-b781db01-2d75-462a-a74d-bfdfdff2b968.tmp",
+        "dest": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 hhPGir\\games\\versions\\材质包验证 § 中文 实例\\.faionyx-default-resourcepacks.json",
         "synthetic": true
       }
     ]
   },
   "retry": {
-    "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\"]\r\ncustom:keep\r\n",
-    "state": "{\n  \"version\": 2,\n  \"managed\": [\n    \"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\",\n    \"file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"\n  ]\n}\n",
+    "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\"]\r\ncustom:keep\r\n",
+    "state": "{\n  \"version\": 2,\n  \"managed\": [\n    \"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\",\n    \"file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"\n  ]\n}\n",
     "copied": [
-      "KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
-      "KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
+      "FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
+      "FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
     ]
   },
   "layouts": [
@@ -1883,11 +1883,11 @@
     }
   ],
   "legacy": {
-    "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"Personal Legacy.zip\",\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\nincompatibleResourcePacks:[\"Personal Legacy.zip\",\"KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\ncustom:keep\r\n",
-    "state": "{\n  \"version\": 2,\n  \"managed\": [\n    \"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\",\n    \"file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"\n  ]\n}\n",
+    "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"Personal Legacy.zip\",\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\nincompatibleResourcePacks:[\"Personal Legacy.zip\",\"FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\ncustom:keep\r\n",
+    "state": "{\n  \"version\": 2,\n  \"managed\": [\n    \"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\",\n    \"file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"\n  ]\n}\n",
     "copied": [
-      "KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
-      "KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
+      "FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
+      "FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
     ]
   },
   "globalControls": [
@@ -1907,7 +1907,7 @@
   "disabledReapply": [
     "vanilla",
     "file/个人 中文 § 包.zip",
-    "file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
+    "file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
   ],
   "persistedDefaults": [
     {
@@ -1925,19 +1925,19 @@
   ],
   "final": [
     {
-      "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\"]\r\ncustom:keep\r\n",
-      "state": "{\n  \"version\": 2,\n  \"managed\": [\n    \"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\",\n    \"file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"\n  ]\n}\n",
+      "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"file/个人 中文 § 包.zip\",\"file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\nincompatibleResourcePacks:[\"file/个人 中文 § 包.zip\"]\r\ncustom:keep\r\n",
+      "state": "{\n  \"version\": 2,\n  \"managed\": [\n    \"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\",\n    \"file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"\n  ]\n}\n",
       "copied": [
-        "KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
-        "KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
+        "FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
+        "FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
       ]
     },
     {
-      "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"Personal Legacy.zip\",\"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\nincompatibleResourcePacks:[\"Personal Legacy.zip\",\"KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\ncustom:keep\r\n",
-      "state": "{\n  \"version\": 2,\n  \"managed\": [\n    \"KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"file/KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\",\n    \"file/KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"\n  ]\n}\n",
+      "options": "﻿lang:zh_cn\r\n\r\nresourcePacks:[\"vanilla\",\"Personal Legacy.zip\",\"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\"FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\nincompatibleResourcePacks:[\"Personal Legacy.zip\",\"FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"]\r\ncustom:keep\r\n",
+      "state": "{\n  \"version\": 2,\n  \"managed\": [\n    \"FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"file/FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip\",\n    \"FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\",\n    \"file/FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip\"\n  ]\n}\n",
       "copied": [
-        "KAMUCL-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
-        "KAMUCL-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
+        "FAIONYX-default-9525ea4a82d9574015e0954e5577cec41dc8d67c8ad80cd8cbc65735cd6f84d1-§6中文 A 默认包.zip",
+        "FAIONYX-default-9ff3540f3ae0604598eb93687302854bf54a0cd758867f6d81971fbb030e6a53-B with spaces.zip"
       ]
     }
   ],

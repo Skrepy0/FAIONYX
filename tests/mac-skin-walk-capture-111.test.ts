@@ -11,7 +11,7 @@ const { skinCaptureRequest, cdpTiming, assertCaptureIdentity, nativePixelChanges
 const { captureRequest, verifyPixels } = requireFixture('./scripts/verify-kamu-native-video-119.cjs')
 const sha = (bytes: Buffer | string) => crypto.createHash('sha256').update(bytes).digest('hex')
 function directory(t: TestContext) {
-  const tempRoot = fs.realpathSync(os.tmpdir()), result = fs.mkdtempSync(path.join(tempRoot, 'KAMUCL synthetic SCK walk '))
+  const tempRoot = fs.realpathSync(os.tmpdir()), result = fs.mkdtempSync(path.join(tempRoot, 'FAIONYX synthetic SCK walk '))
   assert(path.resolve(result).startsWith(tempRoot + path.sep))
   t.after(() => fs.rmSync(result, { recursive: true, force: true }))
   return result

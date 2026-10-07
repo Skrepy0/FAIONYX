@@ -12,8 +12,8 @@ async function dataCheck(a,b){
 }
 (async()=>{
  try{
-  host=await api.post(base,'/room/create',{name:'KAMUCL 协议验收',visible:false,category:'',hostPort:25565,maxPlayers:20,natType:'unknown',loader:'fabric',gameVersion:'1.20.1',clientType:'app',clientTag:'kamucl',clientProtocolVersion:7,clientCapabilities:caps,idempotencyKey:crypto.randomUUID()});assert(host.code&&host.hostToken);proof.roomCreated=true;
-  guest=await api.post(base,'/room/join',{code:host.code,loader:'fabric',gameVersion:'1.20.1',clientType:'app',clientTag:'kamucl',clientProtocolVersion:7,clientCapabilities:caps,idempotencyKey:crypto.randomUUID()});assert(guest.clientToken&&guest.clientId);proof.roomJoined=true;
+  host=await api.post(base,'/room/create',{name:'FAIONYX 协议验收',visible:false,category:'',hostPort:25565,maxPlayers:20,natType:'unknown',loader:'fabric',gameVersion:'1.20.1',clientType:'app',clientTag:'faionyx',clientProtocolVersion:7,clientCapabilities:caps,idempotencyKey:crypto.randomUUID()});assert(host.code&&host.hostToken);proof.roomCreated=true;
+  guest=await api.post(base,'/room/join',{code:host.code,loader:'fabric',gameVersion:'1.20.1',clientType:'app',clientTag:'faionyx',clientProtocolVersion:7,clientCapabilities:caps,idempotencyKey:crypto.randomUUID()});assert(guest.clientToken&&guest.clientId);proof.roomJoined=true;
   const {nodes}=await api.get(base,'/relay/list',{}),node=nodes.find(n=>n.stdTurnPort>0);assert(node);const signal=AbortSignal.timeout(30000);
   const hc=await fetchTurnCredential(api,base,{code:host.code,clientId:'',token:host.hostToken},String(node.id),signal),gc=await fetchTurnCredential(api,base,{code:host.code,clientId:guest.clientId,token:guest.clientToken},String(node.id),signal);
   const h=await StdTurnSession.allocate(hc,signal);owned.push(h);const g=await StdTurnSession.allocate(gc,signal);owned.push(g);await h.bind(g.relay,signal);await g.bind(h.relay,signal);h.startKeepalive();g.startKeepalive();proof.standard=await dataCheck(h,g);h.close();g.close();

@@ -1,5 +1,5 @@
 
-> kamucl@1.1.15 license:check
+> faionyx@1.1.15 license:check
 > node scripts/check-licenses.cjs
 
 License check passed

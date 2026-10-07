@@ -84,7 +84,7 @@ const clean = (plan: PrivatePlan) => { fs.rmSync(plan.directory, { recursive: tr
 export async function prepareModInstall(target: InstalledVersion, input: { paths?: string[]; file?: CommunityFile }, emit: (e: ProgressEvent) => void, signal?: AbortSignal, repository = dependencyRepository): Promise<ModInstallPlan> {
   for (const p of plans.values()) if (p.expires < Date.now()) clean(p)
   if (plans.size >= 8) throw new Error('待确认安装过多，请取消已有安装计划')
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-mod-plan-'))
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-mod-plan-'))
   const id = crypto.randomUUID()
   const plan: PrivatePlan = { directory, roots: [], rootFiles: new Map(), downloads: [], pinnedFiles: new Map(), expires: Date.now() + 20 * 60_000, view: { id, target, files: [], missing: [], warnings: [] } }
   try {

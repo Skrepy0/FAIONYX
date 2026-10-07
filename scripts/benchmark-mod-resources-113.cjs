@@ -13,7 +13,7 @@ const root = path.resolve(__dirname, '..')
 const evidence = path.join(root, 'out', 'resource113')
 const baselineRef = process.argv[2] || execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim()
 if (!/^[a-f\d]{40}$/i.test(baselineRef)) throw Error('Pass the exact 1.1.12 source commit SHA')
-const work = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-mod-resource113-'))
+const work = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-mod-resource113-'))
 const previousSource = name => execFileSync('git', ['show', baselineRef + ':src/main/core/' + name], { cwd: root, encoding: 'utf8' })
 const currentSource = name => fs.readFileSync(path.join(root, 'src', 'main', 'core', name), 'utf8')
 function evaluate(source) {
@@ -139,5 +139,5 @@ async function main() {
 }
 main().finally(() => {
   const resolved = path.resolve(work), tempRoot = path.resolve(os.tmpdir()) + path.sep
-  if (resolved.startsWith(tempRoot) && path.basename(resolved).startsWith('kamucl-mod-resource113-')) fs.rmSync(resolved, { recursive: true, force: true })
+  if (resolved.startsWith(tempRoot) && path.basename(resolved).startsWith('faionyx-mod-resource113-')) fs.rmSync(resolved, { recursive: true, force: true })
 }).catch(error => { console.error(error); process.exitCode = 1 })

@@ -13,4 +13,4 @@ const api = {
   platform: process.platform
 }
 
-contextBridge.exposeInMainWorld('kamucl', api)
+contextBridge.exposeInMainWorld('faionyx', api)

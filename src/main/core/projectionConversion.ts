@@ -27,7 +27,7 @@ export function analyzeProjection(p:Projection,format:ProjectionFormat,targetVer
   if(format!=='litematic'){try{const flat=flatten(p);if(format==='nbt'&&flat.blocks.length>180000)result.unsupported='原版结构标签过多；请拆分为不超过 18 万方块的区域'}catch(e){result.unsupported=e instanceof Error?e.message:String(e)}}
   if(p.regions.length>1&&format!=='litematic')differences.push({key:'regions',kind:'data',description:'目标格式只有一个区域，将合并区域，区域名称和有符号选择方向不再保留',count:p.regions.length,discardOnly:true})
   else if(format!=='litematic'&&p.regions.some(r=>r.signedSize?.some(v=>v<0)))differences.push({key:'direction',kind:'data',description:'目标格式保留绝对偏移，但不保留负向选择方向与区域名称',count:1,discardOnly:true})
-  if(format==='nbt'&&p.regions.some(r=>r.offset.some(v=>v!==0)))differences.push({key:'nativeOffset',kind:'data',description:'原版结构不支持放置偏移；会保留 KAMUCLOffset 标签供启动器读取，原版游戏将忽略该标签',count:1,discardOnly:true})
+  if(format==='nbt'&&p.regions.some(r=>r.offset.some(v=>v!==0)))differences.push({key:'nativeOffset',kind:'data',description:'原版结构不支持放置偏移；会保留 FAIONYXOffset 标签供启动器读取，原版游戏将忽略该标签',count:1,discardOnly:true})
   if(format==='schematic'&&p.dataVersion!==1343)differences.push({key:'legacyVersion',kind:'data',description:'旧 schematic 不支持现代游戏版本标签，将保存为 1.12 格式',count:1,discardOnly:true})
   const legacy=new Set<string>(Object.values((minecraftData as any).legacy.pc.blocks))
   for(const [ri,r] of p.regions.entries()){

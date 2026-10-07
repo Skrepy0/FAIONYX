@@ -103,11 +103,11 @@ test('Win32 restoration uses only the exact owned HWND and original AsReported r
  assert.throws(()=>run({...original,pid:74}));assert.equal(calls.length,1)
 })
 test('explicit preserved public fixture mode refuses changed original bytes and never silently falls back to network',async()=>{
- const temp=fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(),'KAMUCL-cape-fixture-contract-'))),output=path.join(temp,'output'),previous=process.env.KAMUCL_CAPE_PUBLIC_FIXTURE_ROOT,originalFetch=global.fetch;let requests=0
+ const temp=fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(),'FAIONYX-cape-fixture-contract-'))),output=path.join(temp,'output'),previous=process.env.FAIONYX_CAPE_PUBLIC_FIXTURE_ROOT,originalFetch=global.fetch;let requests=0
  fs.mkdirSync(output);fs.writeFileSync(path.join(temp,'mojang_cape.png'),Buffer.from('changed public original'))
- process.env.KAMUCL_CAPE_PUBLIC_FIXTURE_ROOT=temp;global.fetch=()=>{requests++;throw Error('Unexpected network fallback')}
+ process.env.FAIONYX_CAPE_PUBLIC_FIXTURE_ROOT=temp;global.fetch=()=>{requests++;throw Error('Unexpected network fallback')}
  try{await assert.rejects(makeCapeFixtures(output),/Preserved public original bytes changed/);assert.equal(requests,0);assert.equal(fs.readdirSync(output).length,0)}
- finally{global.fetch=originalFetch;if(previous===undefined)delete process.env.KAMUCL_CAPE_PUBLIC_FIXTURE_ROOT;else process.env.KAMUCL_CAPE_PUBLIC_FIXTURE_ROOT=previous;const checked=fs.realpathSync.native(temp);assert.equal(checked,temp);assert(path.basename(checked).startsWith('KAMUCL-cape-fixture-contract-'));assert.equal(path.dirname(checked),fs.realpathSync.native(os.tmpdir()));fs.rmSync(checked,{recursive:true,force:true})}
+ finally{global.fetch=originalFetch;if(previous===undefined)delete process.env.FAIONYX_CAPE_PUBLIC_FIXTURE_ROOT;else process.env.FAIONYX_CAPE_PUBLIC_FIXTURE_ROOT=previous;const checked=fs.realpathSync.native(temp);assert.equal(checked,temp);assert(path.basename(checked).startsWith('FAIONYX-cape-fixture-contract-'));assert.equal(path.dirname(checked),fs.realpathSync.native(os.tmpdir()));fs.rmSync(checked,{recursive:true,force:true})}
 })
 test('real viewer drag requires the original trusted pointer sequence under the exact document and actual canvas bounds',()=>{
  const expected={selector:'.owned-viewer',timeOrigin:123,url:'file:///owned'},bounds={x:10,y:20,width:300,height:200},observation={...expected,overflow:false,records:['pointerdown','pointerup'].map((type,index)=>({type,isTrusted:true,matchesSelector:true,timeOrigin:123,url:'file:///owned',at:10+index,x:30+index*200,y:100,renderer:{hasFocus:true,hidden:false}}))}

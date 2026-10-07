@@ -2,12 +2,12 @@
 // whose hash it records, so signing introduces no circular payload hash.
 const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict')
 const crypto = require('node:crypto'), { execFileSync } = require('node:child_process')
-const IDENTITY_FILE = 'kamucl-mac.json'
+const IDENTITY_FILE = 'faionyx-mac.json'
 const signing = 'ad-hoc; not Developer ID or notarized'
 const sha256 = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
 function assertMacIdentity(identity, expected) {
   assert.equal(identity.schemaVersion, 1, 'Mac package identity schema missing')
-  assert.equal(identity.product, 'KAMUCL'); assert.equal(identity.platform, 'darwin')
+  assert.equal(identity.product, 'FAIONYX'); assert.equal(identity.platform, 'darwin')
   assert(['arm64', 'x64'].includes(identity.arch), 'Unsupported Mac package architecture')
   assert.match(identity.sourceCommit, /^[a-f0-9]{40}$/, 'Mac source must be an actual Git commit')
   assert.match(identity.appAsarSHA256, /^[a-f0-9]{64}$/, 'Mac ASAR identity hash missing')
@@ -20,7 +20,7 @@ function assertMacIdentity(identity, expected) {
   return identity
 }
 function createMacIdentity(values) {
-  const identity = { schemaVersion: 1, product: 'KAMUCL', platform: 'darwin', ...values, signing }
+  const identity = { schemaVersion: 1, product: 'FAIONYX', platform: 'darwin', ...values, signing }
   return assertMacIdentity(identity, values)
 }
 function readMacPackageIdentity(appPath, expected, { execute = execFileSync } = {}) {
@@ -30,7 +30,7 @@ function readMacPackageIdentity(appPath, expected, { execute = execFileSync } = 
   const identity = assertMacIdentity(JSON.parse(fs.readFileSync(file, 'utf8')), expected)
   execute('codesign', ['--verify', '--deep', '--strict', appPath], { timeout: 30000 })
   const nativeArch = identity.arch === 'x64' ? 'x86_64' : 'arm64'
-  for (const executable of [path.join(appPath, 'Contents', 'MacOS', 'KAMUCL'), path.join(resources, 'app.asar.unpacked', 'out', 'main', 'MacGameWindow')]) {
+  for (const executable of [path.join(appPath, 'Contents', 'MacOS', 'FAIONYX'), path.join(resources, 'app.asar.unpacked', 'out', 'main', 'MacGameWindow')]) {
     const observed = execute('lipo', ['-archs', executable], { encoding: 'utf8', timeout: 10000 }).trim().split(/\s+/)
     assert.deepEqual(observed, [nativeArch], 'Mac executable ABI differs from embedded architecture')
   }

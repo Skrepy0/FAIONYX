@@ -4,12 +4,12 @@ const {app, BrowserWindow, screen, desktopCapturer} = require('electron')
 const fs = require('node:fs'), path = require('node:path'), os = require('node:os'), assert = require('node:assert/strict')
 const koffi = require('koffi')
 assert.equal(process.platform, 'win32')
-const root = fs.mkdtempSync(path.join(os.tmpdir(), 'KAMUCL window 中文 '))
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX window 中文 '))
 app.setPath('userData', root)
 const folder = path.join(root, 'games'); fs.mkdirSync(folder)
 fs.writeFileSync(path.join(root, 'settings.json'), JSON.stringify({gameDir:folder,activeFolder:folder,folders:[{path:folder,name:'Window test'}],autoUpdate:false,theme:'blue-white'}))
 const reopenBounds={x:20,y:20,width:1100,height:700}
-if(process.env.KAMUCL_WINDOW_REOPEN)fs.writeFileSync(path.join(root,'window-state.json'),JSON.stringify({...reopenBounds,maximized:true}))
+if(process.env.FAIONYX_WINDOW_REOPEN)fs.writeFileSync(path.join(root,'window-state.json'),JSON.stringify({...reopenBounds,maximized:true}))
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 const user = koffi.load('user32.dll'), dwm = koffi.load('dwmapi.dll')
 const send = user.func('intptr_t __stdcall SendMessageW(uintptr_t, uint32_t, uintptr_t, intptr_t)')
@@ -27,11 +27,11 @@ report.helpers=[]
 processes.spawn=function(file,args,options){const child=originalSpawn.call(this,file,args,options);if(path.basename(String(file))==='WindowMaterial.exe'){const entry={file,args,pid:child.pid,output:[],errors:[]};report.helpers.push(entry);child.stdout?.on('data',data=>entry.output.push(String(data)));child.stderr?.on('data',data=>entry.errors.push(String(data)));child.on('error',error=>entry.errors.push(error.message));child.on('exit',(code,signal)=>{entry.exit={code,signal}})}return child}
 let started=false
 app.on('browser-window-created', (_event, win) => {
-  if (win.getTitle() !== 'KAMUCL') return
+  if (win.getTitle() !== 'FAIONYX') return
   // setIgnoreMouseEvents(true) itself adds WS_EX_LAYERED and would mask the
   // very startup-opacity regression this production test must detect.
   let startupOpacityComplete=false
-  win.on('kamucl:startup-opacity-complete',()=>{startupOpacityComplete=true;report.startupOpacity={at:Date.now(),opacity:win.getOpacity(),visible:win.isVisible()}})
+  win.on('faionyx:startup-opacity-complete',()=>{startupOpacityComplete=true;report.startupOpacity={at:Date.now(),opacity:win.getOpacity(),visible:win.isVisible()}})
   for(const name of ['maximize','unmaximize','minimize','restore'])win.on(name,()=>events.push(name))
   win.webContents.on('did-finish-load',async()=>{
     if(started)return;started=true
@@ -42,7 +42,7 @@ app.on('browser-window-created', (_event, win) => {
       assert(startupOpacityComplete,'actual startup fade did not complete')
       assert.equal(win.getOpacity(),1,'startup completion emitted before full opacity')
       await wait(1000)
-      if(process.env.KAMUCL_WINDOW_REOPEN){assert(win.isMaximized(),'reopen lost maximization');assert.deepEqual(win.getNormalBounds(),reopenBounds);win.unmaximize();await wait(300);assert.deepEqual(win.getBounds(),reopenBounds);report.reopen=true}
+      if(process.env.FAIONYX_WINDOW_REOPEN){assert(win.isMaximized(),'reopen lost maximization');assert.deepEqual(win.getNormalBounds(),reopenBounds);win.unmaximize();await wait(300);assert.deepEqual(win.getBounds(),reopenBounds);report.reopen=true}
       // Observe the original product style, without a QA topmost mutation.
       const raw=win.getNativeWindowHandle(),hwnd=Number(raw.length===8?raw.readBigUInt64LE():raw.readUInt32LE())
       report.initialNative={opacity:win.getOpacity(),hwnd,pid:process.pid,style:getStyle(hwnd,-20),startupOpacityComplete,listeners:win.eventNames().map(event=>({event:String(event),count:win.listenerCount(event)}))}
@@ -109,4 +109,4 @@ app.on('browser-window-created', (_event, win) => {
   })
 })
 setTimeout(()=>{console.error('Window verification timed out');app.exit(1)},60000).unref()
-require(process.env.KAMUCL_TEST_ENTRY || path.resolve('out/main/index.js'))
+require(process.env.FAIONYX_TEST_ENTRY || path.resolve('out/main/index.js'))

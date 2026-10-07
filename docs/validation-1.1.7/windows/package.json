@@ -2,45 +2,45 @@
   "version": "1.1.7",
   "portable": {
     "pass": true,
-    "root": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-Uut08H",
+    "root": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-Uut08H",
     "results": [
       {
         "phase": "cold",
         "firstPaintMs": 422,
         "electronEntryMs": 5547,
-        "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-Uut08H\\KAMUCL-runtime\\1.1.7-a5c67623918b38a3\\cache.ready",
+        "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-Uut08H\\FAIONYX-runtime\\1.1.7-a5c67623918b38a3\\cache.ready",
         "cacheMtime": 1790886422033.4456
       },
       {
         "phase": "warm",
         "firstPaintMs": 434,
         "electronEntryMs": 240,
-        "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-Uut08H\\KAMUCL-runtime\\1.1.7-a5c67623918b38a3\\cache.ready",
+        "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-Uut08H\\FAIONYX-runtime\\1.1.7-a5c67623918b38a3\\cache.ready",
         "cacheMtime": 1790886422033.4456
       }
     ]
   },
   "zipped": {
     "pass": true,
-    "root": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-TQjJAr",
+    "root": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-TQjJAr",
     "results": [
       {
         "phase": "cold",
         "firstPaintMs": 584,
         "electronEntryMs": 6249,
-        "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-TQjJAr\\KAMUCL-runtime\\1.1.7-a5c67623918b38a3\\cache.ready",
+        "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-TQjJAr\\FAIONYX-runtime\\1.1.7-a5c67623918b38a3\\cache.ready",
         "cacheMtime": 1790886431369.5918
       },
       {
         "phase": "warm",
         "firstPaintMs": 298,
         "electronEntryMs": 174,
-        "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-TQjJAr\\KAMUCL-runtime\\1.1.7-a5c67623918b38a3\\cache.ready",
+        "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-TQjJAr\\FAIONYX-runtime\\1.1.7-a5c67623918b38a3\\cache.ready",
         "cacheMtime": 1790886431369.5918
       }
     ]
   },
-  "zipRoot": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL ZIP 中文 p1TiGL",
+  "zipRoot": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX ZIP 中文 p1TiGL",
   "files": [
     {
       "path": "chrome_100_percent.pak",
@@ -68,7 +68,7 @@
       "sha256": "9f48c7f9c7c94d516a14870707e910ab94d75ae640ff6842c4af53276cd26ebe"
     },
     {
-      "path": "KAMUCL.exe",
+      "path": "FAIONYX.exe",
       "size": 246070784,
       "sha256": "566dcc35e59608479a988e376760b27ff3ee122cb927cb435a61979a318de505"
     },
@@ -123,7 +123,7 @@
       "sha256": "c109e54bb5c841c0bab51f22d1c80cd9159246cc30ad0be9955fb769891a78e9"
     },
     {
-      "path": "resources/app.asar.unpacked/out/main/kamucl-bridge.jar",
+      "path": "resources/app.asar.unpacked/out/main/faionyx-bridge.jar",
       "size": 21890,
       "sha256": "bb6e5433f89278d619636568b6a872ac4f6270cf298851d1e90f53ddad03a6a8"
     },

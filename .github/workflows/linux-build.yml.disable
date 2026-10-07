@@ -92,7 +92,7 @@ jobs:
             sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           fi
       - name: Exact clean portable package GUI smoke, explicitly not native desktop acceptance
-        run: xvfb-run -a -s '-screen 0 1600x1100x24' dbus-run-session -- sh -c 'openbox >/tmp/kamucl-openbox.log 2>&1 & node scripts/verify-linux-desktop.cjs ${{ matrix.arch }} --fixture-smoke'
+        run: xvfb-run -a -s '-screen 0 1600x1100x24' dbus-run-session -- sh -c 'openbox >/tmp/faionyx-openbox.log 2>&1 & node scripts/verify-linux-desktop.cjs ${{ matrix.arch }} --fixture-smoke'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -150,7 +150,7 @@ jobs:
         run: xvfb-run -a dbus-run-session -- node_modules/.bin/electron scripts/verify-linux-tools.cjs ${{ matrix.arch }}
       - name: Native credentials, business filesystem, update payloads and actual X11 backend fixtures
         if: always()
-        run: xvfb-run -a dbus-run-session -- sh -c 'openbox >/tmp/kamucl-business-openbox.log 2>&1 & node_modules/.bin/electron scripts/verify-linux-business.cjs ${{ matrix.arch }}'
+        run: xvfb-run -a dbus-run-session -- sh -c 'openbox >/tmp/faionyx-business-openbox.log 2>&1 & node_modules/.bin/electron scripts/verify-linux-business.cjs ${{ matrix.arch }}'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -185,7 +185,7 @@ jobs:
           - arch: arm64
             label: ARM64
             os: '26.04'
-    runs-on: [self-hosted, Linux, '${{ matrix.label }}', kamucl-desktop, 'ubuntu-${{ matrix.os }}']
+    runs-on: [self-hosted, Linux, '${{ matrix.label }}', faionyx-desktop, 'ubuntu-${{ matrix.os }}']
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4

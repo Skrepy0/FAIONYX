@@ -1,5 +1,5 @@
 /**
- * 诊断脚本：复刻 KAMUCL 启动逻辑，捕获 MC 真实崩溃输出
+ * 诊断脚本：复刻 FAIONYX 启动逻辑，捕获 MC 真实崩溃输出
  * 用法: node scripts/debug-launch.mjs <versionId>
  */
 import fs from 'node:fs'
@@ -12,7 +12,7 @@ import AdmZip from 'adm-zip'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const versionId = process.argv[2] || 'fabric-loader-0.19.5-26.2'
-const gameDir = path.join(process.env.APPDATA, '.kamucl')
+const gameDir = path.join(process.env.APPDATA, '.faionyx')
 const vdir = (id) => path.join(gameDir, 'versions', id)
 const vjson = (id) => JSON.parse(fs.readFileSync(path.join(vdir(id), `${id}.json`), 'utf-8'))
 
@@ -112,9 +112,9 @@ const vars = {
   clientid: '',
   auth_xuid: '',
   user_type: 'mojang',
-  version_type: 'KAMUCL-debug',
+  version_type: 'FAIONYX-debug',
   natives_directory: nativesDir,
-  launcher_name: 'KAMUCL',
+  launcher_name: 'FAIONYX',
   launcher_version: 'debug',
   classpath,
   library_directory: libRoot,

@@ -152,13 +152,13 @@ export function readPluginCode(id: string): string {
 }
 
 /**
- * 插件脚本协议：kamucl-plugin://<id>/main.js。
- * 只服务已启用插件目录内的 main.js；CSP 通过 script-src kamucl-plugin: 精确放行，
+ * 插件脚本协议：faionyx-plugin://<id>/main.js。
+ * 只服务已启用插件目录内的 main.js；CSP 通过 script-src faionyx-plugin: 精确放行，
  * 页面其余部分的 unsafe-eval / inline script 仍然禁止。
  * 必须在 app ready 后调用。
  */
 export function registerPluginProtocol(): void {
-  protocol.handle('kamucl-plugin', (request) => {
+  protocol.handle('faionyx-plugin', (request) => {
     try {
       const url = new URL(request.url)
       const id = decodeURIComponent(url.hostname)

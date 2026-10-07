@@ -47,9 +47,9 @@ function introSettled(state) {
 async function diagnostic(h, options = {}) {
   const { call, evaluate, main, nav, wait, recordScreencast, version } = h
   assert.equal(await main('process.platform'), 'darwin', 'recorder counterfactual requires Darwin')
-  const traceEnabled = options.enabled === true || process.env.KAMUCL_NATIVE_RECORDER_TRACE119 === '1'
-  const theme = process.env.KAMUCL_TEST_THEME || 'black-orange'
-  const stage = evidenceStage(process.env.KAMUCL_NATIVE_RECORDER_STAGE119)
+  const traceEnabled = options.enabled === true || process.env.FAIONYX_NATIVE_RECORDER_TRACE119 === '1'
+  const theme = process.env.FAIONYX_TEST_THEME || 'black-orange'
+  const stage = evidenceStage(process.env.FAIONYX_NATIVE_RECORDER_STAGE119)
   const mode = traceEnabled ? 'traced-' : ''
   const stem = `kamu-native-recorder-119-${stage}-${mode}${theme}`
   const file = path.resolve('out', `kamu-native-recorder-diagnostic-119-${stage}-${mode}${theme}.json`)
@@ -57,7 +57,7 @@ async function diagnostic(h, options = {}) {
   const proof = { version, stage, file, complete: false, classification: 'QA-only recorder on/off/on diagnostic, not performance or visual acceptance', traceEnabled, hardwareListening: 'not performed', normalAcceptanceChanged: false, startedAt: new Date().toISOString(), cases: [] }
   const persist = () => fs.writeFileSync(file, JSON.stringify(proof, null, 2))
   const native = () => main(`(${nativeSnapshot.toString()})(testElectron)`)
-  const saved = () => evaluate("window.kamucl.invoke('mascots:state')")
+  const saved = () => evaluate("window.faionyx.invoke('mascots:state')")
   const snapshot = () => evaluate(`(()=>{const e=document.querySelector('.mascot-stage'),b=document.querySelector('[data-hit=kamu]'),strip=e?.querySelector('.figure-strip'),r=strip?.getBoundingClientRect();return{now:performance.now(),timeOrigin:performance.timeOrigin,open:!!e,readyAt:Number(e?.dataset.readyAt),activation:Number(e?.dataset.activation),introAnimations:strip?.getAnimations().filter(a=>a.playState!=='finished'&&a.playState!=='idle').length,footprint:r?{width:r.width,height:r.height}:null,phase:e?.dataset.phase,queue:Number(e?.dataset.queue),contacts:Number(e?.dataset.contacts),sounds:Number(e?.dataset.soundsPlayed),disabled:b?.disabled,hidden:document.hidden,focus:document.hasFocus(),visibility:document.visibilityState,backend:e?.dataset.renderBackend,bufferPreparation:e?.dataset.audioPreparation}})()`)
   const until = async (label, predicate) => {
     const start = Date.now(); let s

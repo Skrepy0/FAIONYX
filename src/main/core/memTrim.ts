@@ -20,7 +20,7 @@ export const IDLE_TRIM_INTERVAL_MS = 15 * 60_000
 /** trim 后等待内核回收/统计稳定再读一次指标的间隔 */
 export const TRIM_SETTLE_MS = 800
 /** 主进程 → 渲染层瘦身广播通道（shared/types.ts 归他人维护，此处用局部常量） */
-export const MEM_TRIM_CHANNEL = 'kamucl:mem-trim'
+export const MEM_TRIM_CHANNEL = 'faionyx:mem-trim'
 
 // ---------------- 纯函数（可测） ----------------
 
@@ -114,9 +114,9 @@ export function trimSelfPowerShellScript(selfPid: number): string {
   return "$s='[DllImport(\"psapi.dll\")] public static extern bool EmptyWorkingSet(IntPtr h);" +
     '[DllImport("kernel32.dll")] public static extern IntPtr OpenProcess(uint access, bool inherit, uint pid);' +
     '[DllImport("kernel32.dll")] public static extern bool CloseHandle(IntPtr h);\';' +
-    "Add-Type -MemberDefinition $s -Name KamuclTrim -Namespace Win32 | Out-Null;" +
-    `$h=[Win32.KamuclTrim]::OpenProcess(1280,$false,${selfPid});` +
-    'if($h -eq [IntPtr]::Zero){exit 1};try{if(-not [Win32.KamuclTrim]::EmptyWorkingSet($h)){exit 1}}finally{[Win32.KamuclTrim]::CloseHandle($h)|Out-Null}'
+    "Add-Type -MemberDefinition $s -Name FaionyxTrim -Namespace Win32 | Out-Null;" +
+    `$h=[Win32.FaionyxTrim]::OpenProcess(1280,$false,${selfPid});` +
+    'if($h -eq [IntPtr]::Zero){exit 1};try{if(-not [Win32.FaionyxTrim]::EmptyWorkingSet($h)){exit 1}}finally{[Win32.FaionyxTrim]::CloseHandle($h)|Out-Null}'
 }
 
 async function trimSelfViaPowerShell(selfPid: number): Promise<boolean> {

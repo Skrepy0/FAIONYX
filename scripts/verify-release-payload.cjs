@@ -4,7 +4,7 @@ const version = require('../package.json').version
 const proof = JSON.parse(fs.readFileSync(`out/release-${version}-proof.json`, 'utf8'))
 const packed = path.dirname(proof.portable.results[0].cache)
 const root = path.resolve('release/win-unpacked')
-const zip = new Zip(`release/KAMUCL-${version}-windows-x64.zip`)
+const zip = new Zip(`release/FAIONYX-${version}-windows-x64.zip`)
 const entries = new Map(zip.getEntries().filter(e => !e.isDirectory).map(e => [e.entryName.replaceAll('\\', '/'), e]))
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex')
 const files = []
@@ -28,7 +28,7 @@ function visit(dir) {
 visit(root)
 assert.equal(files.filter(f => f.path !== 'resources/elevate.exe').length, entries.size)
 // All prior runtime capabilities and license notices must still be present.
-const previous = new Zip('release/final-1.0.58/KAMUCL-1.0.58-windows-x64.zip')
+const previous = new Zip('release/final-1.0.58/FAIONYX-1.0.58-windows-x64.zip')
 const before = previous.getEntries().filter(e => !e.isDirectory)
 assert.deepEqual([...entries.keys()].sort(), before.map(e => e.entryName.replaceAll('\\', '/')).sort())
 for (const entry of before) {

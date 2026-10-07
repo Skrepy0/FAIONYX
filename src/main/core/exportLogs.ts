@@ -31,7 +31,7 @@ const execFileAsync = promisify(execFile)
 export interface DiagnosticManifest {
   schemaVersion: 1
   exportedAt: string
-  launcher: { name: 'KAMUCL'; version: string }
+  launcher: { name: 'FAIONYX'; version: string }
   instance: {
     id: string
     name: string
@@ -113,9 +113,9 @@ async function javaSummary(
 function summaryText(manifest: DiagnosticManifest): string {
   const m = manifest
   return [
-    '================ KAMUCL 启动失败诊断摘要 ================',
+    '================ FAIONYX 启动失败诊断摘要 ================',
     `导出时间: ${m.exportedAt}`,
-    `KAMUCL: ${m.launcher.version}`,
+    `FAIONYX: ${m.launcher.version}`,
     `操作系统: ${m.operatingSystem.platform} ${m.operatingSystem.release} (${m.operatingSystem.architecture})`,
     '',
     `实例: ${m.instance.name} [${m.instance.id}]`,
@@ -170,7 +170,7 @@ export async function exportLaunchLogs(
       : directoryState.path
   const isolated = directoryState.isolated
   const now = new Date()
-  const defName = `KAMUCL-Diagnostic-${safeDiagnosticFilePart(item?.mcVersion || vid)}-${fmtStamp(now)}.zip`
+  const defName = `FAIONYX-Diagnostic-${safeDiagnosticFilePart(item?.mcVersion || vid)}-${fmtStamp(now)}.zip`
   const opts = {
     title: '导出错误日志',
     defaultPath: defName,
@@ -190,7 +190,7 @@ export async function exportLaunchLogs(
   const manifest: DiagnosticManifest = {
     schemaVersion: 1,
     exportedAt: now.toISOString(),
-    launcher: { name: 'KAMUCL', version: app.getVersion() },
+    launcher: { name: 'FAIONYX', version: app.getVersion() },
     instance: {
       id: vid,
       name: item?.modpackName || vid,
@@ -222,7 +222,7 @@ export async function exportLaunchLogs(
   }
 
   const crash = await newestCrashReport(effectiveGameDir)
-  const launchLogDir = currentLaunch?.logDir || path.join(folder, 'kamucl-logs')
+  const launchLogDir = currentLaunch?.logDir || path.join(folder, 'faionyx-logs')
   const sources: DiagnosticSource[] = [
     {
       archivePath: crash ? `crash-reports/${path.basename(crash)}` : 'crash-reports/latest.txt',

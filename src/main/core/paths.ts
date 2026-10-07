@@ -123,13 +123,13 @@ export function runtimesDir(): string {
   return path.join(defaultFolderPath(), 'runtimes')
 }
 
-// ---------------- 依赖原版区（.kamucl/base，不进入版本列表） ----------------
+// ---------------- 依赖原版区（.faionyx/base，不进入版本列表） ----------------
 // 加载器实例依赖的原版 json/jar 统一放这里（默认文件夹下共享），
 // 不再在 versions/ 生成独立原版条目
 
-/** 依赖原版目录：<默认文件夹>/.kamucl/base/<id> */
+/** 依赖原版目录：<默认文件夹>/.faionyx/base/<id> */
 export function baseVersionDir(id: string): string {
-  return path.join(defaultFolderPath(), '.kamucl', 'base', id)
+  return path.join(defaultFolderPath(), '.faionyx', 'base', id)
 }
 
 export function baseVersionJsonPath(id: string): string {
@@ -140,7 +140,7 @@ export function baseVersionJarPath(id: string): string {
   return path.join(baseVersionDir(id), `${id}.jar`)
 }
 
-/** 自定义实例图标目录：<默认文件夹>/.kamucl/icons（文件名随机，版本 json 以 file:<名> 引用） */
+/** 自定义实例图标目录：<默认文件夹>/.faionyx/icons（文件名随机，版本 json 以 file:<名> 引用） */
 export function instanceIconsDir(): string {
-  return path.join(defaultFolderPath(), '.kamucl', 'icons')
+  return path.join(defaultFolderPath(), '.faionyx', 'icons')
 }

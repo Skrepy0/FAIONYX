@@ -12,7 +12,7 @@
 ✔ 并行进度按各阶段权重累积，不因一个阶段完成提前达到 100% 或重复统计速度 (0.4751ms)
 ✔ 预取无哈希文件只写独立暂存目录，明确提交后才写实例，清理不碰实例 (41.0125ms)
 ✔ 真实四阶段并行整合包：success；成功后提交，失败取消后无迟到写入 (305.8039ms)
-[modpack] 整合包 pack.mrpack 安装失败 << Error: 整合包文件下载失败：下载失败：HTTP 404: https://pack-test.invalid/mod | 文件：030c7ffc1df610bcf047bb98492f17c47d207cb70d4fa93fda401d61be2f9419.jar | 地址：https://pack-test.invalid/mod |     at eval (eval at versionInstallHarness (E:\KAMUCL\tests\helpers\version-install-harness.ts:8:672), <anonymous>:10162:19) |     at async eval (eval at versionInstallHarness (E:\KAMUCL\tests\helpers\version-install-harness.ts:8:672), <anonymous>:3768:16) |     at async Promise.allSettled (index 1) |     at async runParallelTasks (eval at versionInstallHarness (E:\KAMUCL\tests\helpers\version-install-harness.ts:8:672), <anonymous>:3765:21) |     at async installModpackInFolder (eval at versionInstallHarness (E:\KAMUCL\tests\helpers\version-install-harness.ts:8:672), <anonymous>:10036:29) |     at async Object.installModpack (eval at versionInstallHarness (E:\KAMUCL\tests\helpers\version-install-harness.ts:8:672), <anonymous>:9964:16) |     at async waitForActual (node:assert:646:5) |     at async strict.rejects (node:assert:769:25) |     at async TestContext.<anonymous> (E:\KAMUCL\tests\parallel-install-1077.test.ts:117:7) |     at async Test.run (node:internal/test_runner/test:1313:7)
+[modpack] 整合包 pack.mrpack 安装失败 << Error: 整合包文件下载失败：下载失败：HTTP 404: https://pack-test.invalid/mod | 文件：030c7ffc1df610bcf047bb98492f17c47d207cb70d4fa93fda401d61be2f9419.jar | 地址：https://pack-test.invalid/mod |     at eval (eval at versionInstallHarness (E:\FAIONYX\tests\helpers\version-install-harness.ts:8:672), <anonymous>:10162:19) |     at async eval (eval at versionInstallHarness (E:\FAIONYX\tests\helpers\version-install-harness.ts:8:672), <anonymous>:3768:16) |     at async Promise.allSettled (index 1) |     at async runParallelTasks (eval at versionInstallHarness (E:\FAIONYX\tests\helpers\version-install-harness.ts:8:672), <anonymous>:3765:21) |     at async installModpackInFolder (eval at versionInstallHarness (E:\FAIONYX\tests\helpers\version-install-harness.ts:8:672), <anonymous>:10036:29) |     at async Object.installModpack (eval at versionInstallHarness (E:\FAIONYX\tests\helpers\version-install-harness.ts:8:672), <anonymous>:9964:16) |     at async waitForActual (node:assert:646:5) |     at async strict.rejects (node:assert:769:25) |     at async TestContext.<anonymous> (E:\FAIONYX\tests\parallel-install-1077.test.ts:117:7) |     at async Test.run (node:internal/test_runner/test:1313:7)
 ✔ 真实四阶段并行整合包：failure；成功后提交，失败取消后无迟到写入 (207.6205ms)
 ✔ 真实四阶段并行整合包：cancel；成功后提交，失败取消后无迟到写入 (192.3224ms)
 ℹ tests 16
@@ -34,7 +34,7 @@ test at tests\installer-observability116.test.ts:27:1
   + 'waiting'
   - 'running'
   
-      at TestContext.<anonymous> (E:\KAMUCL\tests\installer-observability116.test.ts:36:10)
+      at TestContext.<anonymous> (E:\FAIONYX\tests\installer-observability116.test.ts:36:10)
       at Test.runInAsyncScope (node:async_hooks:227:14)
       at Test.run (node:internal/test_runner/test:1306:25)
       at Test.processPendingSubtests (node:internal/test_runner/test:897:18)

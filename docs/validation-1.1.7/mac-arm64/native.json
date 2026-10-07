@@ -1,14 +1,14 @@
 {
   "version": "1.1.7",
   "arch": "arm64",
-  "binary": "/Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/MacOS/KAMUCL: Mach-O 64-bit executable arm64\n",
+  "binary": "/Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/MacOS/FAIONYX: Mach-O 64-bit executable arm64\n",
   "mainUI": true,
   "macUI": {
     "platform": "darwin",
     "customButtons": 0,
     "logoTop": 39,
     "folderStatus": "ready",
-    "folderPath": "/Users/runner/Library/Application Support/.kamucl"
+    "folderPath": "/Users/runner/Library/Application Support/.faionyx"
   },
   "skin": {
     "facePixels": 2883,
@@ -72,5 +72,5 @@
     ],
     "difference": 25
   },
-  "url": "file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/index.html"
+  "url": "file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/index.html"
 }

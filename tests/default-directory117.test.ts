@@ -15,7 +15,7 @@ async function runtime(root: string) {
   return module.exports
 }
 function temporary(t: import('node:test').TestContext, raw?: unknown) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-default117-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-default117-'))
   t.after(() => fs.rmSync(root, { force: true, recursive: true }))
   if (raw) { fs.mkdirSync(path.join(root, 'userData'), { recursive: true }); fs.writeFileSync(path.join(root, 'userData/settings.json'), JSON.stringify(raw)) }
   return root
@@ -27,11 +27,11 @@ test('new profiles use .minecraft and retain any pre-existing Minecraft contents
   const api = await runtime(root), settings = api.getSettings()
   assert.equal(settings.gameDir, target); assert.equal(settings.folders[0].path, target)
   assert.equal(settings.rememberGameWindowSize, false)
-  assert.equal(fs.readFileSync(path.join(target, 'keep.txt'), 'utf8'), 'existing game'); assert.equal(fs.existsSync(path.join(root, 'appData/.kamucl')), false)
+  assert.equal(fs.readFileSync(path.join(target, 'keep.txt'), 'utf8'), 'existing game'); assert.equal(fs.existsSync(path.join(root, 'appData/.faionyx')), false)
 })
 
 test('legacy profile without folders preserves its configured game directory and data', async t => {
-  const root = temporary(t), legacy = path.join(root, 'appData/.kamucl')
+  const root = temporary(t), legacy = path.join(root, 'appData/.faionyx')
   fs.mkdirSync(legacy, { recursive: true }); fs.writeFileSync(path.join(legacy, 'keep.txt'), 'legacy saved game')
   fs.mkdirSync(path.join(root, 'userData')); fs.writeFileSync(path.join(root, 'userData/settings.json'), JSON.stringify({ gameDir: legacy }))
   const api = await runtime(root), settings = api.getSettings()

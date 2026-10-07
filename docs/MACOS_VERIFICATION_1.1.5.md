@@ -1,12 +1,12 @@
-# KAMUCL 1.1.5 macOS 交付验收
+# FAIONYX 1.1.5 macOS 交付验收
 
 版本保持 **1.1.5**。本次增加 Apple Silicon / Intel 的原生 macOS 安装包，沿用当前 Vue 界面、主题、皮肤预览和玻璃启动动画。
 
 ## 可追溯性
 
 - Mac 安装包构建提交：`40e0c04c3e464fb16a1f449ac87a011e07542cdf`。
-- 原生双架构构建：[macOS packages #36486157926](https://github.com/kamubaba-i/KAMUCL/actions/runs/36486157926)。
-- `v1.1.5` 原有标签与 Windows 附件保留。GitHub 自动生成的该标签源码不包含本次 Mac 适配，请使用随附的 `KAMUCL-1.1.5-mac-source.zip`。
+- 原生双架构构建：[macOS packages #36486157926](https://github.com/Skrepy0/FAIONYX/actions/runs/36486157926)。
+- `v1.1.5` 原有标签与 Windows 附件保留。GitHub 自动生成的该标签源码不包含本次 Mac 适配，请使用随附的 `FAIONYX-1.1.5-mac-source.zip`。
 - 两个架构都使用 macOS 15 原生构建、Electron 33.4.11、对应架构 Java；最低声明系统为 macOS 11，未将其他系统版本描述为已实测。
 
 ## 验证范围
@@ -31,7 +31,7 @@ GitHub Intel Mac 的 Apple 虚拟显卡只有 64 MB 显存。原生调试栈显�
 
 ## 安装与验证边界
 
-- DMG 中将 `KAMUCL.app` 拖到“应用程序”；ZIP 解压后同样放到该目录。不要直接在只读 DMG 内执行更新。
+- DMG 中将 `FAIONYX.app` 拖到“应用程序”；ZIP 解压后同样放到该目录。不要直接在只读 DMG 内执行更新。
 - 已做 ad-hoc 签名，**没有 Apple Developer ID 签名及公证**。首次打开如被系统拦截，在确认来源与 SHA256 后，到“系统设置 → 隐私与安全性”确认打开。
 - 账户、游戏、设置在用户数据目录，不随应用包替换；更新失败保留旧应用备份，不强制终止游戏。
 - 未使用个人微软账户、付费 FRP 密钥，也未把工具 API 启动验证描述为两名玩家跨公网实联已测。对应功能保留，共用既有实现。
@@ -47,10 +47,10 @@ GitHub Intel Mac 的 Apple 虚拟显卡只有 64 MB 显存。原生调试栈显�
 
 | 文件 | SHA256 |
 | --- | --- |
-| KAMUCL-1.1.5-mac-arm64.dmg | `664716c3b84592134da0f40adfefca5b51596d540ad90e22b137286d63691754` |
-| KAMUCL-1.1.5-mac-arm64.zip | `aa5537adb407fde2bf3447ed758b5fea3ee35ea9e2007ca435733231ae641c71` |
-| KAMUCL-1.1.5-mac-x64.dmg | `9ebc3f54677428f46a279b6964048e2387019f99896d94c0a420e41dd53130f5` |
-| KAMUCL-1.1.5-mac-x64.zip | `5101e29b7fa83a68b006c7b796c056b9d0960ce8c86e99987f7aa1602a5e3c12` |
-| KAMUCL-1.1.5-mac-source.zip | `e93bc8717061b982eb04fedc4af2eb2a664049a9e2b31441482230599d5aa13a` |
+| FAIONYX-1.1.5-mac-arm64.dmg | `664716c3b84592134da0f40adfefca5b51596d540ad90e22b137286d63691754` |
+| FAIONYX-1.1.5-mac-arm64.zip | `aa5537adb407fde2bf3447ed758b5fea3ee35ea9e2007ca435733231ae641c71` |
+| FAIONYX-1.1.5-mac-x64.dmg | `9ebc3f54677428f46a279b6964048e2387019f99896d94c0a420e41dd53130f5` |
+| FAIONYX-1.1.5-mac-x64.zip | `5101e29b7fa83a68b006c7b796c056b9d0960ce8c86e99987f7aa1602a5e3c12` |
+| FAIONYX-1.1.5-mac-source.zip | `e93bc8717061b982eb04fedc4af2eb2a664049a9e2b31441482230599d5aa13a` |
 
 验证证据归档包含双架构截图、原生日志、验证 JSON、本地测试日志以及 GitHub 构建与附件来源记录。发布页的 SHA256SUMS.txt 同时覆盖原有 Windows 文件和本批 Mac 文件。

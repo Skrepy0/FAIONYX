@@ -62,7 +62,7 @@ async function mascotLifecycleFixture(options:{model?:boolean;softwareFails?:boo
   if(name.endsWith('.png'))return'disposable-lifecycle-skin.png'
   return nodeRequire(name)
  }
- const windowFixture={kamucl:{invoke:()=>state.promise,on:()=>()=>counts.unsubscribed++,send:()=>{}}}
+ const windowFixture={faionyx:{invoke:()=>state.promise,on:()=>()=>counts.unsubscribed++,send:()=>{}}}
  new Function('require','module','exports','window','Image','requestAnimationFrame','cancelAnimationFrame','performance','setTimeout','clearTimeout',await mascotSetupBundle)(requireFixture,mod,mod.exports,windowFixture,ImageFixture,(callback:any)=>{counts.frames++;frames.set(++nextFrame,callback);return nextFrame},(id:number)=>frames.delete(id),{now:()=>now},(callback:any,delay:number)=>{(delay===40?frameTimers:timers).set(++nextTimer,{callback,at:now+delay});return nextTimer},(id:number)=>{timers.delete(id);frameTimers.delete(id)})
  const scope=vue.effectScope(),setup=scope.run(()=>mod.exports.default.setup({focusOnReady:true},{expose:()=>{},emit:(...event:any[])=>events.push(event)}))
  const palmEffects=animationElement(()=>now),printEffects=animationElement(()=>now),palmStyles=palmEffects.styles,printStyles=printEffects.styles
@@ -480,10 +480,10 @@ class FakeMascotGain {
 }
 class FakeMascotBufferSource {
  buffer?:ReturnType<FakeMascotAudioContext['createBuffer']>;playbackRate={value:1};onended:null|(()=>void)=null;destinations:unknown[]=[];starts:number[]=[];stops=0;disconnects=0;ended=false
- declare kamuclInitialization?:{role:string;zeroGain:FakeMascotGain}
+ declare faionyxInitialization?:{role:string;zeroGain:FakeMascotGain}
  constructor(private context:FakeMascotAudioContext){}
  connect(target:unknown){this.destinations.push(target)}disconnect(){this.disconnects++}
- start(when=0){if(this.kamuclInitialization&&this.context.preparationStartFails)throw Error('preparation source unavailable');this.starts.push(when);if(this.kamuclInitialization){this.context.bufferPrimerStarts++;if(this.context.autoEndPreparation)queueMicrotask(()=>this.finish())}else{this.context.sourceStarts++;this.context.startTimes.push(when)}}
+ start(when=0){if(this.faionyxInitialization&&this.context.preparationStartFails)throw Error('preparation source unavailable');this.starts.push(when);if(this.faionyxInitialization){this.context.bufferPrimerStarts++;if(this.context.autoEndPreparation)queueMicrotask(()=>this.finish())}else{this.context.sourceStarts++;this.context.startTimes.push(when)}}
  stop(){this.stops++;this.finish(false)}
  finish(natural=true){if(this.ended)return;this.ended=true;if(natural)this.context.currentTime=Math.max(this.context.currentTime,this.starts[0]+this.buffer!.duration/this.playbackRate.value);this.onended?.()}
 }
@@ -524,15 +524,15 @@ test('LOGO audio output initializes once with exact digital silence outside slap
 test('silent buffer preparation exercises the real sample and first resampling path, completing only on actual end',async()=>{
  await fakeMascotAudio(async contexts=>{
   const preferences={muted:false,volume:.45},stats:number[][]=[],events:any[]=[],audio=new MascotAudio(()=>preferences,(played,voices)=>stats.push([played,voices]),()=>true,event=>events.push(event))
-  let completed=false;const unlocking=audio.unlock().then(()=>{completed=true});await settleAudio();const context=contexts[0],source=context.buffers[0],output=source.kamuclInitialization!.zeroGain
-  assert.equal(completed,false);assert.equal(source.kamuclInitialization!.role,'silent-slap-buffer');assert.equal(Object.getOwnPropertyDescriptor(source,'kamuclInitialization')!.writable,false);assert(Object.isFrozen(source.kamuclInitialization))
+  let completed=false;const unlocking=audio.unlock().then(()=>{completed=true});await settleAudio();const context=contexts[0],source=context.buffers[0],output=source.faionyxInitialization!.zeroGain
+  assert.equal(completed,false);assert.equal(source.faionyxInitialization!.role,'silent-slap-buffer');assert.equal(Object.getOwnPropertyDescriptor(source,'faionyxInitialization')!.writable,false);assert(Object.isFrozen(source.faionyxInitialization))
   assert.equal(output.gain.value,0);assert.notEqual(output,context.gainNode);assert.deepEqual(source.destinations,[output]);assert.deepEqual(output.destinations,[context.destination]);assert.equal(source.playbackRate.value,.95)
   assert(source.buffer!.samples.some(value=>Math.abs(value)>.25),'this prepares the actual nonzero slap buffer, not another zero constant');assert(source.buffer!.samples.every(value=>value*output.gain.value===0),'dedicated output is exactly silent for every sample')
   assert.equal(context.bufferPrimerStarts,1);assert.equal(context.sourceStarts,0);assert.deepEqual(stats,[]);assert.deepEqual(events.map(e=>e.phase),['pending']);assert.equal(audio.play(),0);assert.equal(context.sourceStarts,0,'cannot accept a voice before actual audio preparation completes')
   const concurrent=audio.unlock();await settleAudio();assert.equal(context.buffers.length,1,'all unlock callers share the one actual pending source')
   source.finish();await Promise.all([unlocking,concurrent]);assert.equal(completed,true);assert.deepEqual(events.map(e=>e.phase),['pending','ended']);assert.equal(events[1].audioTime,.075/.95);assert.equal(source.disconnects,1);assert.equal(output.disconnects,1)
   await audio.unlock();assert.equal(context.buffers.length,1,'the bounded completed source is never looped or recreated after idle')
-  audio.play();const palm=context.buffers[1];assert.equal(palm.buffer,source.buffer);assert.equal(palm.playbackRate.value,source.playbackRate.value);assert.equal(palm.kamuclInitialization,undefined);assert.deepEqual(palm.destinations,[context.gainNode]);assert.deepEqual(stats,[[1,1]]);assert.deepEqual(preferences,{muted:false,volume:.45})
+  audio.play();const palm=context.buffers[1];assert.equal(palm.buffer,source.buffer);assert.equal(palm.playbackRate.value,source.playbackRate.value);assert.equal(palm.faionyxInitialization,undefined);assert.deepEqual(palm.destinations,[context.gainNode]);assert.deepEqual(stats,[[1,1]]);assert.deepEqual(preferences,{muted:false,volume:.45})
   await audio.dispose();assert.equal(source.disconnects,1);assert.equal(output.disconnects,1)
  },false,true)
 })
@@ -540,7 +540,7 @@ test('silent buffer preparation exercises the real sample and first resampling p
 test('pause and disposal cancel real buffer preparation, release independent nodes and unblock every unlock',async()=>{
  for(const ending of ['pause','dispose'])await fakeMascotAudio(async contexts=>{
   let visible=true;const stats:number[][]=[],events:any[]=[],audio=new MascotAudio(()=>({muted:true,volume:.45}),(played,voices)=>stats.push([played,voices]),()=>visible,event=>events.push(event))
-  const unlocking=audio.unlock();await settleAudio();const context=contexts[0],source=context.buffers[0],output=source.kamuclInitialization!.zeroGain
+  const unlocking=audio.unlock();await settleAudio();const context=contexts[0],source=context.buffers[0],output=source.faionyxInitialization!.zeroGain
   visible=false;if(ending==='pause')audio.pause();else await audio.dispose();await unlocking;await settleAudio()
   assert.deepEqual(events.map(e=>e.phase),['pending','cancelled']);assert.equal(source.stops,1);assert.equal(source.onended,null);assert.equal(source.disconnects,1);assert.equal(output.disconnects,1);assert.deepEqual(stats,[]);assert.equal(context.sourceStarts,0);assert.equal(context.state,ending==='pause'?'suspended':'closed')
   visible=true;await audio.unlock();assert.equal(context.buffers.length,1,'cancellation is explicit and cannot be disguised as another hidden preparation');source.finish();assert.deepEqual(events.map(e=>e.phase),['pending','cancelled']);await audio.dispose()
@@ -551,7 +551,7 @@ test('buffer preparation device deadline is a failure boundary, never an assumed
  t.mock.timers.enable({apis:['setTimeout']})
  await fakeMascotAudio(async contexts=>{
   const events:any[]=[],stats:number[][]=[],audio=new MascotAudio(()=>({muted:false,volume:.45}),(played,voices)=>stats.push([played,voices]),()=>true,event=>events.push(event))
-  let completed=false;const unlocking=audio.unlock().then(()=>{completed=true});await settleAudio();const source=contexts[0].buffers[0],output=source.kamuclInitialization!.zeroGain
+  let completed=false;const unlocking=audio.unlock().then(()=>{completed=true});await settleAudio();const source=contexts[0].buffers[0],output=source.faionyxInitialization!.zeroGain
   t.mock.timers.tick(1499);await settleAudio();assert.equal(completed,false);assert.deepEqual(events.map(e=>e.phase),['pending'])
   t.mock.timers.tick(1);await unlocking;assert.equal(completed,true);assert.deepEqual(events.map(e=>e.phase),['pending','timeout']);assert.equal(events[1].audioTime,0,'no natural audio frames finished');assert.equal(source.stops,1);assert.equal(source.disconnects,1);assert.equal(output.disconnects,1);assert.deepEqual(stats,[]);await audio.dispose()
  },false,true)
@@ -561,7 +561,7 @@ test('a refused preparation start releases its graph, reports failure and can re
  await fakeMascotAudio(async contexts=>{
   const events:any[]=[],stats:number[][]=[],audio=new MascotAudio(()=>({muted:false,volume:.45}),(played,voices)=>stats.push([played,voices]),()=>true,event=>events.push(event))
   const unlocking=audio.unlock();const context=contexts[0];context.preparationStartFails=true;await unlocking
-  const failed=context.buffers[0];assert.deepEqual(events.map(e=>e.phase),['pending','failed']);assert.equal(failed.disconnects,1);assert.equal(failed.kamuclInitialization!.zeroGain.disconnects,1);assert.equal(context.bufferPrimerStarts,0);assert.equal(context.sourceStarts,0);assert.deepEqual(stats,[])
+  const failed=context.buffers[0];assert.deepEqual(events.map(e=>e.phase),['pending','failed']);assert.equal(failed.disconnects,1);assert.equal(failed.faionyxInitialization!.zeroGain.disconnects,1);assert.equal(context.bufferPrimerStarts,0);assert.equal(context.sourceStarts,0);assert.deepEqual(stats,[])
   context.preparationStartFails=false;await audio.unlock();assert.deepEqual(events.map(e=>e.phase),['pending','failed','pending','ended']);assert.equal(context.bufferPrimerStarts,1);assert.equal(context.primers.length,1);assert.deepEqual(stats,[]);await audio.dispose()
  })
 })
@@ -632,7 +632,7 @@ test('seven Minecraft textures are independent 64×64 RGBA skin atlases with opa
  assert.equal(hashes.size,7)
 })
 test('real file-backed IPC batches are idempotent, ordered, durable, and reject changed receipts',async()=>{
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'kamucl-mascot-117-')),handlers=new Map<string,Function>(),event={sender:{isDestroyed:()=>false}}
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'faionyx-mascot-117-')),handlers=new Map<string,Function>(),event={sender:{isDestroyed:()=>false}}
  const mock={app:{getPath:()=>root},BrowserWindow:{fromWebContents:()=>({})},ipcMain:{handle:(channel:string,handler:Function)=>handlers.set(channel,handler)}}
  try{
   await fs.writeFile(path.join(root,'mascot-counts.json'),JSON.stringify({counts:{q3:4},order:['q3','qiqi','biyuehu','hongshu','kamu','milo','muchuanbei']}))

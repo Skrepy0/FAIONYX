@@ -3,7 +3,7 @@
   "theme": "black-orange",
   "legacy": false,
   "complete": false,
-  "directory": "E:\\KAMUCL\\out\\qa-skin-layers119-black-orange-9522dffe-03a6-4788-9958-24719797b75f",
+  "directory": "E:\\FAIONYX\\out\\qa-skin-layers119-black-orange-9522dffe-03a6-4788-9958-24719797b75f",
   "steps": [],
   "screenshots": [
     {
@@ -74,6 +74,6 @@
   },
   "error": {
     "message": "Expected values to be strictly equal:\n\n962 !== 960\n",
-    "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n962 !== 960\n\n    at module.exports (E:\\KAMUCL\\scripts\\qa-skin-layers119.cjs:45:644)\n    at async E:\\KAMUCL\\scripts\\verify-ui-refinement.cjs:235:9"
+    "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n962 !== 960\n\n    at module.exports (E:\\FAIONYX\\scripts\\qa-skin-layers119.cjs:45:644)\n    at async E:\\FAIONYX\\scripts\\verify-ui-refinement.cjs:235:9"
   }
 }

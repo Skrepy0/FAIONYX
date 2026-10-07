@@ -2,7 +2,7 @@
   "complete": false,
   "version": "1.1.18",
   "theme": "black-orange",
-  "directory": "E:\\KAMUCL\\out\\qa-offline118-black-orange-6c95e39a-d284-4a7f-b810-5744ecbdb3d8",
+  "directory": "E:\\FAIONYX\\out\\qa-offline118-black-orange-6c95e39a-d284-4a7f-b810-5744ecbdb3d8",
   "observations": [
     {
       "label": "real native focus",
@@ -4444,7 +4444,7 @@
     "ppid": 56016,
     "windowId": 1,
     "webContentsId": 1,
-    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 2SkR4u\\profile"
+    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 2SkR4u\\profile"
   },
   "initialViewport": {
     "native": {
@@ -4470,7 +4470,7 @@
   },
   "setup": {
     "complete": true,
-    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 2SkR4u\\profile"
+    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 2SkR4u\\profile"
   },
   "previousAccount": null,
   "accounts": [
@@ -4486,7 +4486,7 @@
     }
   ],
   "source": {
-    "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 2SkR4u\\offline118-custom.png",
+    "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 2SkR4u\\offline118-custom.png",
     "sha256": "f8580d5b181734d194389a95b3e15d9b4f3d44a1c20ed8fb88d878fd9b010303"
   },
   "applied": {
@@ -4525,7 +4525,7 @@
   },
   "recording": {
     "version": "1.1.18",
-    "directory": "E:\\KAMUCL\\out\\offline118-editor-c213d760-9717-4de4-8683-5a7ea2a31588-black-orange",
+    "directory": "E:\\FAIONYX\\out\\offline118-editor-c213d760-9717-4de4-8683-5a7ea2a31588-black-orange",
     "capture": {
       "format": "jpeg",
       "quality": 70,
@@ -7743,7 +7743,7 @@
   "error": {
     "name": "Error",
     "message": "UI state not ready: actual viewport 960x620 zoom 1",
-    "stack": "Error: UI state not ready: actual viewport 960x620 zoom 1\n    at until (E:\\KAMUCL\\scripts\\qa-offline118.cjs:28:11)\n    at async module.exports (E:\\KAMUCL\\scripts\\qa-offline118.cjs:180:39)\n    at async E:\\KAMUCL\\scripts\\verify-ui-refinement.cjs:233:9"
+    "stack": "Error: UI state not ready: actual viewport 960x620 zoom 1\n    at until (E:\\FAIONYX\\scripts\\qa-offline118.cjs:28:11)\n    at async module.exports (E:\\FAIONYX\\scripts\\qa-offline118.cjs:180:39)\n    at async E:\\FAIONYX\\scripts\\verify-ui-refinement.cjs:233:9"
   },
   "restored": {
     "complete": true

@@ -7,7 +7,7 @@ import { SkinProfileCache } from '../src/main/core/skinProfileCache'
 import type { ProfileSkins } from '../src/shared/types'
 
 test('skin disk cache survives restart, isolates accounts, and never stores credentials', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-skin-cache-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-skin-cache-'))
   try {
     let downloads = 0
     const png = 'data:image/png;base64,' + fs.readFileSync('src/renderer/src/assets/splash-face.png').toString('base64')

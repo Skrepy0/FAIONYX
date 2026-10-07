@@ -59,7 +59,7 @@ function transform(relative, text) {
       this.nativeContext.ExecuteCommand(CommandType.kAppQuit, { is_sync: false });
     } catch (error) {
       this.pendingTermination = true;
-      console.error('KAMUCL close request failed: ' + JSON.stringify(error));
+      console.error('FAIONYX close request failed: ' + JSON.stringify(error));
     }
   }
 
@@ -119,7 +119,7 @@ function transform(relative, text) {
     catch (error) {
       // A freshly selected and granted directory can repair damaged metadata.
       // Preserve the exact old preference value instead of silently discarding it.
-      store.putSync('kamuclInvalidDirectoryUris-' + Date.now(), JSON.stringify({ originalValue: original }));
+      store.putSync('faionyxInvalidDirectoryUris-' + Date.now(), JSON.stringify({ originalValue: original }));
     }
     const combined = previous.slice();
     for (const uri of uris) if (!combined.includes(uri)) combined.push(uri);
@@ -179,7 +179,7 @@ function transform(relative, text) {
       if (selected.length === 0) return '';
       const paths = this.dirFilter(selected);
       // 37.2.0 does not pass a persist flag from showOpenDialog. All selected
-      // KAMUCL folders are reused after restart; persist the actual picker URIs.
+      // FAIONYX folders are reused after restart; persist the actual picker URIs.
       await this.permissionManagerAdapter.persistGrantedDirectories(selected);
       return JSON.stringify(paths);
     }).catch((error: Error) => {
@@ -195,7 +195,7 @@ function transform(relative, text) {
   } else if (relative === 'jsbindings/PermissionManagerAdapterBind.ets') {
     text = replaceOnce(text, '  implPermissionManagerAdapter().fileAccessPersist(uris);', `  // This legacy native binding has a void return; never leak a rejected Promise.
   implPermissionManagerAdapter().fileAccessPersist(uris).catch((error: Error) => {
-    console.error('KAMUCL directory permission request failed: ' + JSON.stringify(error));
+    console.error('FAIONYX directory permission request failed: ' + JSON.stringify(error));
   });`)
   } else if (relative === 'adapter/DialogAdapter.ets') {
     text = replaceOnce(text, "import { BaseAdapter } from '../common/BaseAdapter';", `import { BaseAdapter } from '../common/BaseAdapter';

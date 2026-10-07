@@ -1,4 +1,4 @@
-/** KAMUCL HTTP transfer service, implemented from the application contracts.
+/** FAIONYX HTTP transfer service, implemented from the application contracts.
  * SPDX-License-Identifier: MIT
  * HTTP semantics: RFC 9110 (status codes, Range and Content-Range).
  * No PCL source is used by this replacement. Historical provenance remains in Git.

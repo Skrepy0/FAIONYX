@@ -1,18 +1,18 @@
 {
   "complete": true,
   "application": {
-    "file": "E:\\KAMUCL\\release\\KAMUCL-1.1.16.exe",
+    "file": "E:\\FAIONYX\\release\\FAIONYX-1.1.16.exe",
     "sha256": "1cd995f199944a4205f4e198eaa832f5ceb1a9ebbb832643af884ea43365fbec"
   },
-  "directory": "E:\\KAMUCL\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25",
+  "directory": "E:\\FAIONYX\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25",
   "runs": [
     {
       "theme": "black-orange",
       "application": {
-        "file": "E:\\KAMUCL\\release\\KAMUCL-1.1.16.exe",
+        "file": "E:\\FAIONYX\\release\\FAIONYX-1.1.16.exe",
         "sha256": "1cd995f199944a4205f4e198eaa832f5ceb1a9ebbb832643af884ea43365fbec"
       },
-      "logFile": "E:\\KAMUCL\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\black-orange.log",
+      "logFile": "E:\\FAIONYX\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\black-orange.log",
       "startedAt": "2026-10-06T13:33:20.607Z",
       "pid": 38788,
       "windowsSamples": [
@@ -5337,13 +5337,13 @@
         "available": true,
         "classification": "Original Windows Win32_Process PID/parent/creation-time snapshot. Each generation is a separate identity, descendants require an actual live owned parent; PID reuse alone never grants ownership. Previously seen exact identities remain tracked after parents exit. No name/command-line matching or signals."
       },
-      "proofDirectory": "E:\\KAMUCL\\out\\qa-ux116-black-orange-d9f7b821-d688-450e-be4e-d05bacfd5418",
+      "proofDirectory": "E:\\FAIONYX\\out\\qa-ux116-black-orange-d9f7b821-d688-450e-be4e-d05bacfd5418",
       "log": {
-        "file": "E:\\KAMUCL\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\black-orange.log",
+        "file": "E:\\FAIONYX\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\black-orange.log",
         "sha256": "935a3ba699a300bc2d839bb452986ab26c061c052c81dd2284b46b33ea717328"
       },
       "summary": {
-        "file": "E:\\KAMUCL\\out\\qa-ux116-black-orange-d9f7b821-d688-450e-be4e-d05bacfd5418\\summary.json",
+        "file": "E:\\FAIONYX\\out\\qa-ux116-black-orange-d9f7b821-d688-450e-be4e-d05bacfd5418\\summary.json",
         "sha256": "3373991eec154a15f691d3fb84471b0f37aa4aca69c0198cdd8cedba3cd378bc"
       },
       "complete": true
@@ -5351,10 +5351,10 @@
     {
       "theme": "blue-white",
       "application": {
-        "file": "E:\\KAMUCL\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\紧凑 ZIP 中文 路径\\KAMUCL-1.1.16.exe",
+        "file": "E:\\FAIONYX\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\紧凑 ZIP 中文 路径\\FAIONYX-1.1.16.exe",
         "sha256": "1cd995f199944a4205f4e198eaa832f5ceb1a9ebbb832643af884ea43365fbec"
       },
-      "logFile": "E:\\KAMUCL\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\blue-white.log",
+      "logFile": "E:\\FAIONYX\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\blue-white.log",
       "startedAt": "2026-10-06T13:33:58.043Z",
       "pid": 52796,
       "windowsSamples": [
@@ -12033,13 +12033,13 @@
         "available": true,
         "classification": "Original Windows Win32_Process PID/parent/creation-time snapshot. Each generation is a separate identity, descendants require an actual live owned parent; PID reuse alone never grants ownership. Previously seen exact identities remain tracked after parents exit. No name/command-line matching or signals."
       },
-      "proofDirectory": "E:\\KAMUCL\\out\\qa-ux116-blue-white-61e531e7-a704-4276-8d00-a4eae9e2b8b4",
+      "proofDirectory": "E:\\FAIONYX\\out\\qa-ux116-blue-white-61e531e7-a704-4276-8d00-a4eae9e2b8b4",
       "log": {
-        "file": "E:\\KAMUCL\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\blue-white.log",
+        "file": "E:\\FAIONYX\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\blue-white.log",
         "sha256": "607d7fd417ec5c9d6f7082c039424f87ab7b613586b748ab541d879f190bb4e0"
       },
       "summary": {
-        "file": "E:\\KAMUCL\\out\\qa-ux116-blue-white-61e531e7-a704-4276-8d00-a4eae9e2b8b4\\summary.json",
+        "file": "E:\\FAIONYX\\out\\qa-ux116-blue-white-61e531e7-a704-4276-8d00-a4eae9e2b8b4\\summary.json",
         "sha256": "f432909218e5b7e1b251bf09beef7c602d0abacfd94ee7f1e3e5928094077ab5"
       },
       "complete": true
@@ -12047,10 +12047,10 @@
     {
       "theme": "transparent",
       "application": {
-        "file": "E:\\KAMUCL\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\展开 ZIP 中文 路径\\KAMUCL.exe",
+        "file": "E:\\FAIONYX\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\展开 ZIP 中文 路径\\FAIONYX.exe",
         "sha256": "b5afd27a8a38b08f452b255a084391fcb8c6434336e9e63bcef85830c476cf7f"
       },
-      "logFile": "E:\\KAMUCL\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\transparent.log",
+      "logFile": "E:\\FAIONYX\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\transparent.log",
       "startedAt": "2026-10-06T13:34:43.055Z",
       "pid": 48472,
       "windowsSamples": [
@@ -16370,13 +16370,13 @@
         "available": true,
         "classification": "Original Windows Win32_Process PID/parent/creation-time snapshot. Each generation is a separate identity, descendants require an actual live owned parent; PID reuse alone never grants ownership. Previously seen exact identities remain tracked after parents exit. No name/command-line matching or signals."
       },
-      "proofDirectory": "E:\\KAMUCL\\out\\qa-ux116-transparent-dc1849f1-4672-437c-ab7a-711b1b78a57d",
+      "proofDirectory": "E:\\FAIONYX\\out\\qa-ux116-transparent-dc1849f1-4672-437c-ab7a-711b1b78a57d",
       "log": {
-        "file": "E:\\KAMUCL\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\transparent.log",
+        "file": "E:\\FAIONYX\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\transparent.log",
         "sha256": "10562a0bb1994f2f2a0bb934fb3bdb05654231f1db618fa9a7261196a36ecdbc"
       },
       "summary": {
-        "file": "E:\\KAMUCL\\out\\qa-ux116-transparent-dc1849f1-4672-437c-ab7a-711b1b78a57d\\summary.json",
+        "file": "E:\\FAIONYX\\out\\qa-ux116-transparent-dc1849f1-4672-437c-ab7a-711b1b78a57d\\summary.json",
         "sha256": "396ea323f1d38946a7c7fbf4b202ac5a044976160d4c6ac91ebc99d96e2c37c6"
       },
       "complete": true
@@ -16384,10 +16384,10 @@
     {
       "theme": "custom",
       "application": {
-        "file": "E:\\KAMUCL\\release\\KAMUCL-1.1.16.exe",
+        "file": "E:\\FAIONYX\\release\\FAIONYX-1.1.16.exe",
         "sha256": "1cd995f199944a4205f4e198eaa832f5ceb1a9ebbb832643af884ea43365fbec"
       },
-      "logFile": "E:\\KAMUCL\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\custom.log",
+      "logFile": "E:\\FAIONYX\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\custom.log",
       "startedAt": "2026-10-06T13:35:19.127Z",
       "pid": 29432,
       "windowsSamples": [
@@ -22340,13 +22340,13 @@
         "available": true,
         "classification": "Original Windows Win32_Process PID/parent/creation-time snapshot. Each generation is a separate identity, descendants require an actual live owned parent; PID reuse alone never grants ownership. Previously seen exact identities remain tracked after parents exit. No name/command-line matching or signals."
       },
-      "proofDirectory": "E:\\KAMUCL\\out\\qa-ux116-custom-494961e8-0b52-4000-927d-10025893ba70",
+      "proofDirectory": "E:\\FAIONYX\\out\\qa-ux116-custom-494961e8-0b52-4000-927d-10025893ba70",
       "log": {
-        "file": "E:\\KAMUCL\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\custom.log",
+        "file": "E:\\FAIONYX\\out\\acceptance-1.1.16\\ui-fd071427-d7d2-4bb3-ad8e-9079706edd25\\custom.log",
         "sha256": "c68a5387107ebec2aace7262edafc2f485237d0c07d1641fe2f629d415b6334b"
       },
       "summary": {
-        "file": "E:\\KAMUCL\\out\\qa-ux116-custom-494961e8-0b52-4000-927d-10025893ba70\\summary.json",
+        "file": "E:\\FAIONYX\\out\\qa-ux116-custom-494961e8-0b52-4000-927d-10025893ba70\\summary.json",
         "sha256": "22641a73f9686f10590f865f630110cd78b5774fae2dd89ad284d47e50794eb5"
       },
       "complete": true

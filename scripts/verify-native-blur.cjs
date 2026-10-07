@@ -1,14 +1,14 @@
 // Local diagnostic: solid contrast proves transmission; fine stripes prove blur.
 const {app,BrowserWindow,screen,desktopCapturer}=require('electron');
 const fs=require('fs'),path=require('path'),os=require('os'),koffi=require('koffi');
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'KAMUCL-blur-pattern-'));
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'FAIONYX-blur-pattern-'));
 app.setPath('userData',root);const games=path.join(root,'games');fs.mkdirSync(games);
 fs.writeFileSync(path.join(root,'settings.json'),JSON.stringify({gameDir:games,activeFolder:games,folders:[{path:games}],autoUpdate:false,theme:'blue-white'}));
 const u=koffi.load('user32.dll'),pos=u.func('bool __stdcall SetWindowPos(uintptr_t,uintptr_t,int,int,int,int,uint32_t)');
 const handle=w=>Number(w.getNativeWindowHandle().readBigUInt64LE());
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 app.on('browser-window-created',(_e,w)=>{
- if(w.getTitle()!=='KAMUCL')return;
+ if(w.getTitle()!=='FAIONYX')return;
  w.webContents.once('did-finish-load',async()=>{try{
   await wait(5000);const display=screen.getAllDisplays().find(d=>d.id!==screen.getPrimaryDisplay().id)||screen.getPrimaryDisplay(),area=display.workArea;
   w.setBounds({x:area.x+20,y:area.y+20,width:1200,height:800});w.show();w.maximize();w.setAlwaysOnTop(true);w.focus();await wait(1000);

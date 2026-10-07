@@ -98,7 +98,7 @@ async function verifyPixels(directory, capture) {
 async function diagnostic(h) {
   const { main, evaluate, call, nav, wait, version } = h
   assert.equal(await main('process.platform'), 'darwin', 'ScreenCaptureKit requires actual Darwin')
-  const stage = evidenceStage(process.env.KAMUCL_NATIVE_VIDEO_STAGE119), theme = process.env.KAMUCL_TEST_THEME || 'black-orange'
+  const stage = evidenceStage(process.env.FAIONYX_NATIVE_VIDEO_STAGE119), theme = process.env.FAIONYX_TEST_THEME || 'black-orange'
   const stem = `kamu-native-video-119-${stage}-${theme}`, directory = path.resolve('out', stem), file = path.resolve('out', `kamu-native-video-diagnostic-119-${stage}-${theme}.json`)
   assert(!fs.existsSync(directory) && !fs.existsSync(file), 'native-video evidence is immutable; use a fresh stage')
   fs.mkdirSync(directory, { recursive: true })
@@ -106,7 +106,7 @@ async function diagnostic(h) {
   const persist = () => fs.writeFileSync(file, JSON.stringify(proof, null, 2))
   const native = () => main(`(${nativeVideoSnapshot.toString()})(testElectron,process.pid)`)
   const state = () => evaluate(`(()=>{const e=document.querySelector('.mascot-stage'),strip=e?.querySelector('.figure-strip'),r=strip?.getBoundingClientRect(),b=document.querySelector('[data-hit=kamu]');return{now:performance.now(),timeOrigin:performance.timeOrigin,open:!!e,readyAt:Number(e?.dataset.readyAt),activation:Number(e?.dataset.activation),introAnimations:strip?.getAnimations().filter(a=>a.playState!=='finished'&&a.playState!=='idle').length,footprint:r?{x:r.x,y:r.y,width:r.width,height:r.height}:null,phase:e?.dataset.phase,queue:Number(e?.dataset.queue),contacts:Number(e?.dataset.contacts||0),sounds:Number(e?.dataset.soundsPlayed||0),disabled:b?.disabled,hidden:document.hidden,focus:document.hasFocus(),bufferPreparation:e?.dataset.audioPreparation,viewport:{width:innerWidth,height:innerHeight,scale:visualViewport?.scale??1},backend:e?.dataset.renderBackend}})()`)
-  const saved = () => evaluate("window.kamucl.invoke('mascots:state')")
+  const saved = () => evaluate("window.faionyx.invoke('mascots:state')")
   const until = async (label, predicate, ms = 6000) => {
     const begin = Date.now(); let last
     do { last = await state(); if (await predicate(last)) return last; await wait(30) } while (Date.now() - begin < ms)

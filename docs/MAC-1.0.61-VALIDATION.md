@@ -11,10 +11,10 @@
 - 388 项自动化测试通过；新增默认目录创建、幂等、文件保留及外置目录保护验证。
 - 类型检查、许可检查、生产构建通过。
 - 生产渲染器 Mac 布局夹具检查通过，Windows 自绘按钮数量为 0，品牌区避开原生按钮。
-- [原生 Mac CI](https://github.com/kamubaba-i/KAMUCL/actions/runs/34599855180) ARM64 / x64 均通过 APP 与 DMG 启动检查；主界面正常，默认目录状态 ready。
+- [原生 Mac CI](https://github.com/Skrepy0/FAIONYX/actions/runs/34599855180) ARM64 / x64 均通过 APP 与 DMG 启动检查；主界面正常，默认目录状态 ready。
 - Windows 便携 EXE 冷/热入口与 ZIP 解压入口检查通过，EXE / ZIP 中 ASAR 一致。
 - Windows 构建首次遇到 GitHub 依赖连接超时，重试使用本机同版本 Electron 33.4.11 未压缩分发文件完成构建。
 
 原生材质模糊由 macOS 提供，视觉强度受系统设置影响，不保证与 Windows DWM 像素相同。Mac 沿用临时签名，未进行 Apple 公证。
 
-成品、对应源码与完整 SHA256：[v1.0.61](https://github.com/kamubaba-i/KAMUCL/releases/tag/v1.0.61)。本记录是源码标签之后的验证说明，不改变发行标签。
+成品、对应源码与完整 SHA256：[v1.0.61](https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.61)。本记录是源码标签之后的验证说明，不改变发行标签。

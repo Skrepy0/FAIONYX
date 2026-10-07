@@ -19,7 +19,7 @@ let bundle: Promise<string> | undefined
 async function fixture(t: any) {
   // macOS aliases /var to /private/var; production destinations use canonical
   // paths, so all fixture expectations must share the actual physical root.
-  const root = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-community112-')))
+  const root = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-community112-')))
   const temp = path.join(root, 'temp'), first = path.join(root, '游戏盘一'), second = path.join(root, '游戏盘二')
   for (const folder of [temp, first, second, path.join(root, 'userData')]) fs.mkdirSync(folder)
   bundle ??= build({ stdin: { contents: `export { communityDownload } from './src/main/core/community';
@@ -79,7 +79,7 @@ test('local filename policy preserves legal Unicode labels, extensions and URL-e
 })
 
 test('real filesystem commits colon, reserved and long Unicode labels by .part rename', t => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-filename112-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-filename112-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   const names = ['Yet Another Bingo: Ultimate-2.14.0.mrpack', '中文 § 全角：.zip', 'CON.jar', 'LPT².jar', '中文'.repeat(150) + '.mrpack']
   for (const name of names) {

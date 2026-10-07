@@ -43,16 +43,16 @@ function flushPalette(): Promise<void> {
       try { await saveSettings({ skinEditorPalette: next }) }
       catch (error) { toast('调色板偏好未能保存：' + errText(error), 'error') }
     }
-  })().finally(() => { paletteWrite = undefined; window.kamucl.send('window:skinEditorPrefsPending', { ownerId, pending: !!pendingPalette }) })
+  })().finally(() => { paletteWrite = undefined; window.faionyx.send('window:skinEditorPrefsPending', { ownerId, pending: !!pendingPalette }) })
   return paletteWrite
 }
 watch(palettePreferences, value => {
   pendingPalette = normalizeSkinPalettePreferences(value)
-  window.kamucl.send('window:skinEditorPrefsPending', { ownerId, pending: true })
+  window.faionyx.send('window:skinEditorPrefsPending', { ownerId, pending: true })
   if (store.settings) store.settings.skinEditorPalette = pendingPalette
   clearTimeout(paletteTimer); paletteTimer = setTimeout(() => void flushPalette(), 350)
 }, { deep: true, flush: 'sync' })
-watch(busy, pending => window.kamucl.send('window:skinEditorBusy', { ownerId, pending }), { flush: 'sync' })
+watch(busy, pending => window.faionyx.send('window:skinEditorBusy', { ownerId, pending }), { flush: 'sync' })
 const parts = [{key:'head',name:'头部'},{key:'body',name:'身体'},{key:'leftArm',name:'左臂'},{key:'rightArm',name:'右臂'},{key:'leftLeg',name:'左腿'},{key:'rightLeg',name:'右腿'}]
 const views = [{name:'正面',yaw:0,pitch:0},{name:'背面',yaw:Math.PI,pitch:0},{name:'左侧',yaw:Math.PI/2,pitch:0},{name:'右侧',yaw:-Math.PI/2,pitch:0},{name:'俯视',yaw:0,pitch:Math.PI*5/12},{name:'仰视',yaw:0,pitch:-Math.PI*5/12}]
 const selectedView = ref('')
@@ -112,7 +112,7 @@ function newSkin(){if(canEdit()){endGesture();operationError.value='';snapshot=p
 async function save(){
   if(busy.value||finishingClose.value||disposed)return false
   beginOperation('正在保存皮肤…')
-  try{const saved=await window.kamucl.invoke('skin:editorSave',canvas.value.toDataURL('image/png'));if(saved){dirty.value=false;toast('皮肤 PNG 已保存','success')}return !!saved}catch(error){failOperation(error);return false}finally{finishOperation()}
+  try{const saved=await window.faionyx.invoke('skin:editorSave',canvas.value.toDataURL('image/png'));if(saved){dirty.value=false;toast('皮肤 PNG 已保存','success')}return !!saved}catch(error){failOperation(error);return false}finally{finishOperation()}
 }
 function openUpload(){if(canEdit()&&canApplySkin.value&&store.selectedAccount){endGesture();operationError.value='';uploadTarget.value={id:store.selectedAccount.id,username:store.selectedAccount.username,type:store.selectedAccount.type,variant:variant.value};uploadConfirm.value=true}}
 async function upload(){
@@ -121,7 +121,7 @@ async function upload(){
   if(!target||target.id!==store.selectedAccount?.id){uploadConfirm.value=false;failOperation(Error('账号已变更，请重新确认应用账号'));return}
   const local=target.type==='offline'
   beginOperation(local?'正在应用本地皮肤…':'正在上传皮肤…')
-  try{await refreshSkinAfter(window.kamucl.invoke('skin:editorUpload',canvas.value.toDataURL('image/png'),target.variant,target.id));uploadConfirm.value=false;if(local)dirty.value=false;emit('uploaded');toast(local?`已应用到「${target.username}」离线账号，下次启动游戏生效`:'皮肤已上传，预览与历史已更新','success')}catch(error){failOperation(error)}finally{finishOperation()}
+  try{await refreshSkinAfter(window.faionyx.invoke('skin:editorUpload',canvas.value.toDataURL('image/png'),target.variant,target.id));uploadConfirm.value=false;if(local)dirty.value=false;emit('uploaded');toast(local?`已应用到「${target.username}」离线账号，下次启动游戏生效`:'皮肤已上传，预览与历史已更新','success')}catch(error){failOperation(error)}finally{finishOperation()}
 }
 watch(()=>store.selectedAccount?.id,()=>{if(!busy.value){uploadConfirm.value=false;uploadTarget.value=undefined}})
 function requestClose(intent:CloseIntent={kind:'editor'}){if(disposed)return;closeIntent.value=mergeSkinCloseIntent(closeIntent.value,intent);if(finishingClose.value)return;endGesture();uploadConfirm.value=false;processClose()}
@@ -132,8 +132,8 @@ async function finishClose(){
   if(finishingClose.value||busy.value||disposed)return
   endGesture();finishingClose.value=true;askClose.value=false;uploadConfirm.value=false;clearTimeout(paletteTimer);await flushPalette()
   const intent=closeIntent.value;closeIntent.value=undefined
-  dirty.value=false;window.kamucl.send('window:skinEditorDirty',false);emit('close')
-  if(intent?.kind==='quit')window.kamucl.send('window:skinEditorQuit');else if(intent?.kind==='window')window.kamucl.send('window:close');else if(intent?.kind==='navigate')store.currentView=intent.destination
+  dirty.value=false;window.faionyx.send('window:skinEditorDirty',false);emit('close')
+  if(intent?.kind==='quit')window.faionyx.send('window:skinEditorQuit');else if(intent?.kind==='window')window.faionyx.send('window:close');else if(intent?.kind==='navigate')store.currentView=intent.destination
 }
 async function saveClose(){if(await save() && closeIntent.value)await finishClose()}
 function selectView(view:typeof views[number]){if(!blocked.value){endGesture();selectedView.value=view.name;viewer.value?.view(view.yaw,view.pitch)}}
@@ -153,9 +153,9 @@ watch([tool,color,alpha],()=>viewer.value?.finishGesture(),{flush:'sync'})
 watch([tool,color,alpha,layer],()=>{sampleHint.value=''}, {flush:'sync'})
 let restoringView=false
 watch(()=>store.currentView,(next,old)=>{if(restoringView||next===old||!(dirty.value||busy.value||finishingClose.value))return;restoringView=true;store.currentView=old;restoringView=false;requestClose({kind:'navigate',destination:next})},{flush:'sync'})
-watch(dirty,value=>window.kamucl.send('window:skinEditorDirty',value),{flush:'sync'})
-const offClose=window.kamucl.on('window:skinEditorClose',(data:any)=>requestClose({kind:data?.quit===true?'quit':'window'}))
-onBeforeUnmount(()=>{endGesture();disposed=true;contentResize?.disconnect();clearTimeout(paletteTimer);void flushPalette();offClose();window.kamucl.send('window:skinEditorDirty',false);window.kamucl.send('window:skinEditorBusy',{ownerId,pending:false})})
+watch(dirty,value=>window.faionyx.send('window:skinEditorDirty',value),{flush:'sync'})
+const offClose=window.faionyx.on('window:skinEditorClose',(data:any)=>requestClose({kind:data?.quit===true?'quit':'window'}))
+onBeforeUnmount(()=>{endGesture();disposed=true;contentResize?.disconnect();clearTimeout(paletteTimer);void flushPalette();offClose();window.faionyx.send('window:skinEditorDirty',false);window.faionyx.send('window:skinEditorBusy',{ownerId,pending:false})})
 </script>
 
 <template>

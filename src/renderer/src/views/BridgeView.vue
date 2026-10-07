@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * MOD 实时配置面板：通过 KAMUCL Bridge 桥接 MOD 展示与修改参数。
+ * MOD 实时配置面板：通过 FAIONYX Bridge 桥接 MOD 展示与修改参数。
  * MOD 声明参数元数据（名称/说明/分组/类型/默认值/范围/生效方式），
  * 这里自动生成开关、滑块、输入框或下拉选项；以 MOD 返回的实际结果为准。
  */

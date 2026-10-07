@@ -1,5 +1,5 @@
 /**
- * frpNodes.ts — 樱花穿透（natfrp / SakuraFrp）节点列表与用户隧道查询（KAMUCL）
+ * frpNodes.ts — 樱花穿透（natfrp / SakuraFrp）节点列表与用户隧道查询（FAIONYX）
  *
  * 【数据来源】（官方公开 API，OpenAPI 定义：https://github.com/natfrp/api，Swagger UI：https://api.natfrp.com/docs/）
  *   - GET https://api.natfrp.com/v4/nodes        列出所有节点（需访问密钥）

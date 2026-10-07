@@ -13,7 +13,7 @@ const index = () => ({ game: 'minecraft', formatVersion: 1, name: 'export', vers
   { path: 'resourcepacks/LowOnFire v26.2§8.zip', hashes: { sha1: 'a'.repeat(40) }, downloads: ['https://example.invalid/file.zip'], fileSize: 1 }
 ] })
 async function fixture(entries: Record<string, Buffer | string>, run: (file: string) => Promise<void>, extension = '.zip') {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-classify-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-classify-'))
   try {
     const zip = new AdmZip(), file = path.join(root, '导出' + extension)
     for (const [name, data] of Object.entries(entries)) zip.addFile(name, Buffer.isBuffer(data) ? data : Buffer.from(data))
@@ -63,7 +63,7 @@ test('nested mrpack precedes outer bundled worlds; ambiguous inner packs are rej
 })
 
 test('ordinary folder/JAR flows and unsupported archives remain explicit', async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-import-folder-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-import-folder-'))
   try {
     assert.equal((await probeImport(root)).kind, 'mod')
     fs.writeFileSync(path.join(root, 'level.dat'), world()); assert.equal((await probeImport(root)).kind, 'world')

@@ -67,7 +67,7 @@ function installSkinFixtureDiagnostic(){
   return state()
 }
 module.exports=async({call,evaluate,main,nav,wait,root,screenshot,version})=>{
-  const theme=process.env.KAMUCL_TEST_THEME||'black-orange', proof={version,theme,complete:false,layouts:[],occlusions:[],nativeBusy:false,queuedCancellation:false,uploadBusy:false},output=path.join(root,'skin-editor-118.png')
+  const theme=process.env.FAIONYX_TEST_THEME||'black-orange', proof={version,theme,complete:false,layouts:[],occlusions:[],nativeBusy:false,queuedCancellation:false,uploadBusy:false},output=path.join(root,'skin-editor-118.png')
   const persist=()=>fs.writeFileSync('out/skin-editor-ui-'+theme+'.json',JSON.stringify({...proof,recordedAt:new Date().toISOString()},null,2))
   const until=async(label,expression,onWaiting,maxAttempts=80)=>{let state;for(let i=0;i<maxAttempts;i++){state=await evaluate(expression);if(state&&((typeof state==='object'&&'ready'in state)?state.ready:true))return state;if(onWaiting)await onWaiting(state);await wait(80)}proof.failure={label,state};persist();console.error('Skin readiness diagnostics',JSON.stringify(proof.failure));await screenshot('skin-failure-'+label.replace(/[^a-z0-9]/gi,'-').slice(0,75));throw Error(label+' was not ready: '+JSON.stringify(state))}
   const key=async(value,modifiers=0)=>{for(const type of ['keyDown','keyUp'])await call('Input.dispatchKeyEvent',{type,key:value,code:value==='Escape'?'Escape':value==='Tab'?'Tab':value,modifiers,windowsVirtualKeyCode:value==='Escape'?27:value==='Tab'?9:undefined});await wait(80)}
@@ -226,7 +226,7 @@ module.exports=async({call,evaluate,main,nav,wait,root,screenshot,version})=>{
   await main(`globalThis.skin118OriginalDialog=testElectron.dialog.showSaveDialog;globalThis.skin118SaveMode='normal';testElectron.dialog.showSaveDialog=async()=>{if(skin118SaveMode==='delay')return await new Promise(r=>globalThis.skin118ResumeSave=r);if(skin118SaveMode==='error')throw Error('验证保存拒绝');return skin118SaveMode==='cancel'?{canceled:true}:{canceled:false,filePath:${JSON.stringify(output)}}}`)
   try{
     await nav('skins')
-    const layouts=process.env.KAMUCL_SKIN_LAYOUT_PROBE==='narrow'?[[960,620,1],[960,620,1.5]]:process.env.KAMUCL_SKIN_COMPACT_PROBE?[[960,620,1.5]]:[[960,620,1],[1280,900,1.25],[1440,960,1.5],[1440,684,1.5],[960,620,1.5]]
+    const layouts=process.env.FAIONYX_SKIN_LAYOUT_PROBE==='narrow'?[[960,620,1],[960,620,1.5]]:process.env.FAIONYX_SKIN_COMPACT_PROBE?[[960,620,1.5]]:[[960,620,1],[1280,900,1.25],[1440,960,1.5],[1440,684,1.5],[960,620,1.5]]
     for(const [width,height,zoom] of layouts){
       await main(`testElectron.BrowserWindow.getAllWindows()[0].setSize(${width},${height});testElectron.BrowserWindow.getAllWindows()[0].webContents.setZoomFactor(${zoom})`);await wait(250);await screenshot('skin-page-'+width+'-'+zoom+(height===684?'-compact':''));await open();await pose('正面');await evaluate(`document.querySelector('.editor-content').scrollTop=0;document.querySelector('.editor-model').scrollTop=0`);await wait(80);await screenshot('skin-editor-'+width+'-'+zoom+(height===684?'-compact':''))
       const previewHeight=await evaluate(`document.querySelector('.skin-editor canvas').getBoundingClientRect().height`);assert(previewHeight>=120,'skin canvas must remain large enough to draw: '+previewHeight);

@@ -47,7 +47,7 @@ async function copyGroup() {
   } catch { /* 剪贴板不可用时静默 */ }
 }
 
-const bodyHtml = computed(() => renderMarkdownLite((props.release.body || '').replace(/^\s*(?:#{1,4}\s*)?KAMUCL\s+v?[\d.]+\s*(?:\r?\n|$)/i, '').trim() || '暂无更新说明'))
+const bodyHtml = computed(() => renderMarkdownLite((props.release.body || '').replace(/^\s*(?:#{1,4}\s*)?FAIONYX\s+v?[\d.]+\s*(?:\r?\n|$)/i, '').trim() || '暂无更新说明'))
 const dateText = computed(() => {
   const d = new Date(props.release.publishedAt)
   if (Number.isNaN(d.getTime())) return ''
@@ -65,7 +65,7 @@ const sizeText = computed(() => {
   <UpdateDialogShell :label="rollback ? '版本回退确认' : '启动器更新'" @dismiss="state === 'found' ? emit('later') : state === 'done' ? emit('close') : undefined">
     <template #header>
       <div class="upd-head">
-        <div><p class="upd-eyebrow">KAMUCL · {{ rollback ? '版本回退' : '软件更新' }}</p><h3 class="upd-title">{{ state === 'found' ? (rollback ? '回退到' : '发现新版本') : state === 'downloading' ? '正在下载' : '准备安装' }} v{{ release.version }}</h3></div>
+        <div><p class="upd-eyebrow">FAIONYX · {{ rollback ? '版本回退' : '软件更新' }}</p><h3 class="upd-title">{{ state === 'found' ? (rollback ? '回退到' : '发现新版本') : state === 'downloading' ? '正在下载' : '准备安装' }} v{{ release.version }}</h3></div>
         <button v-if="state !== 'downloading'" class="icon-btn" :aria-label="state === 'found' ? '稍后提醒' : '关闭'" @click="state === 'found' ? emit('later') : emit('close')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
       </div>
       <div class="upd-meta"><span>当前 v{{ currentVersion }}</span><span v-if="dateText">{{ dateText }}</span><span v-if="sizeText">{{ sizeText }}</span></div>

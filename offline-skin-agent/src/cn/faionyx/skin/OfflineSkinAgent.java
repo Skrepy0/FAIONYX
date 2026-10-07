@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-package cn.kamucl.skin;
+package cn.faionyx.skin;
 
 import java.io.*;
 import java.lang.instrument.Instrumentation;
@@ -26,11 +26,11 @@ public final class OfflineSkinAgent {
         provider.start();
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             public void run() { provider.close(); }
-        }, "KAMUCL-offline-skin-stop"));
+        }, "FAIONYX-offline-skin-stop"));
         // Only delete this accepted launch's generated configuration after all
         // keys and immutable PNG bytes have been consumed by its game JVM.
         Files.deleteIfExists(config);
-        System.out.println("[KAMUCL] Offline skin provider ready (local game only)");
+        System.out.println("[FAIONYX] Offline skin provider ready (local game only)");
     }
 
     static final class Provider {
@@ -62,7 +62,7 @@ public final class OfflineSkinAgent {
             PrivateKey key = factory.generatePrivate(new PKCS8EncodedKeySpec(Base64.getDecoder().decode(required(p, "privateKey"))));
             PublicKey pub = factory.generatePublic(new X509EncodedKeySpec(Base64.getDecoder().decode(required(p, "publicKey"))));
             String publicPem = "-----BEGIN PUBLIC KEY-----\n" + Base64.getEncoder().encodeToString(pub.getEncoded()) + "\n-----END PUBLIC KEY-----";
-            metadata = "{\"meta\":{\"serverName\":\"KAMUCL Offline Appearance\",\"feature.no_mojang_namespace\":true,\"feature.username_check\":true},\"skinDomains\":[\"127.0.0.1\"],\"signaturePublickey\":" + quote(publicPem) + "}";
+            metadata = "{\"meta\":{\"serverName\":\"FAIONYX Offline Appearance\",\"feature.no_mojang_namespace\":true,\"feature.username_check\":true},\"skinDomains\":[\"127.0.0.1\"],\"signaturePublickey\":" + quote(publicPem) + "}";
             identity = "{\"id\":" + quote(uuid) + ",\"name\":" + quote(username) + "}";
             String serverUuid = required(p, "serverUuid");
             if (!serverUuid.matches("[a-f0-9]{32}")) throw new IOException("Invalid local player alias");
@@ -80,7 +80,7 @@ public final class OfflineSkinAgent {
             server = new ServerSocket();
             server.bind(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port), 8);
             workers = new ThreadPoolExecutor(2, 2, 30, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(8), new ThreadFactory() {
-                public Thread newThread(Runnable r) { Thread t = new Thread(r, "KAMUCL-offline-skin-request"); t.setDaemon(true); return t; }
+                public Thread newThread(Runnable r) { Thread t = new Thread(r, "FAIONYX-offline-skin-request"); t.setDaemon(true); return t; }
             });
         }
 
@@ -95,7 +95,7 @@ public final class OfflineSkinAgent {
                         } catch (IOException error) { if (!server.isClosed()) close(); }
                     }
                 }
-            }, "KAMUCL-offline-skin-listen");
+            }, "FAIONYX-offline-skin-listen");
             accept.setDaemon(true); accept.start();
         }
 

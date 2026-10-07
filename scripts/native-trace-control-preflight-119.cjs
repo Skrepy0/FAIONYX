@@ -22,7 +22,7 @@ function run(options,dependencies={}){
   const original=JSON.parse(fs.readFileSync(path.join(appRoot,prior.directories[0].name,'observer-aba.json')))
   assert(original.complete===true&&original.cases.length===6&&original.cases.every(c=>c.complete),'all original six cases must remain complete')
   proof.priorABA={source:prior.directories[0].name,startedAt:original.startedAt,finishedAt:original.finishedAt,sourceSHA256:original.sourceSHA256??null}
-  invoke(process.execPath,['scripts/verify-ui-refinement.cjs'],{env:{...env,KAMUCL_GUI_APP:exe,KAMUCL_EXTENSION_GUI:'1',KAMUCL_EXTENSION_ONLY:'1',KAMUCL_SKIP_EXTENSION_BASE:'1',KAMUCL_UI_MODULE:'native-compositor',KAMUCL_OBSERVER_TRACE_CONTROL119:'1',KAMUCL_TEST_THEME:'black-orange'},stdio:'inherit',timeout:proof.executionBudgetMs,killSignal:'SIGTERM'})
+  invoke(process.execPath,['scripts/verify-ui-refinement.cjs'],{env:{...env,FAIONYX_GUI_APP:exe,FAIONYX_EXTENSION_GUI:'1',FAIONYX_EXTENSION_ONLY:'1',FAIONYX_SKIP_EXTENSION_BASE:'1',FAIONYX_UI_MODULE:'native-compositor',FAIONYX_OBSERVER_TRACE_CONTROL119:'1',FAIONYX_TEST_THEME:'black-orange'},stdio:'inherit',timeout:proof.executionBudgetMs,killSignal:'SIGTERM'})
   proof.processExitCode=0
  }catch(error){proof.error={name:error.name,code:error.code??null,status:error.status??null,signal:error.signal??null};console.warn('DIAGNOSTIC trace controls failed; original formal result unchanged',proof.error)}
  finally{

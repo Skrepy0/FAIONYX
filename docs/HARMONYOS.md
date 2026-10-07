@@ -1,6 +1,6 @@
 # 原生 HarmonyOS PC 接入与验收门槛
 
-目标是鸿蒙电脑（`2in1`）上的原生 KAMUCL，使用当前同一份业务代码、Vue 页面、Three 模型和动效资源。手机、平板、Android 兼容容器、Linux 虚拟机、远程游戏不属于本交付。
+目标是鸿蒙电脑（`2in1`）上的原生 FAIONYX，使用当前同一份业务代码、Vue 页面、Three 模型和动效资源。手机、平板、Android 兼容容器、Linux 虚拟机、远程游戏不属于本交付。
 
 ## 当前状态
 
@@ -47,7 +47,7 @@ node scripts/build-harmonyos.cjs --check
 工程处理包括：
 
 - 清除维护方个人签名资料和路径，生成未签名 build-profile。
-- 设置 `com.kamucl.launcher`、当前版本、KAMUCL 图标和标签，仅面向 `2in1`。
+- 设置 `com.faionyx.launcher`、当前版本、FAIONYX 图标和标签，仅面向 `2in1`。
 - 保留 ArkTS 原生窗口与重复启动的实际路由，移除模板的多应用实例声明。不会调用维护方明确不支持的 Electron 单实例锁接口。
 - 将相同生产 main、preload、renderer 原样复制，包含现有许可证文件；不复制 Windows/macOS/Linux 辅助执行文件或 Windows 专用 koffi 本机库。
 - 固定维护方 ArkTS adapter 的 inversify 6.0.1、reflect-metadata 0.1.13，实际 ohpm 安装后仍须保存并核查其完整依赖锁文件。
@@ -67,7 +67,7 @@ node scripts/build-harmonyos.cjs --check
 工具目录应包含 `bin/hvigorw.bat`（其他系统为 `hvigorw`）、ohpm 和 SDK。对已授权的安装路径设置：
 
 ```powershell
-$env:KAMUCL_HARMONY_COMMAND_LINE_TOOLS = 'D:\Tools\command-line-tools'
+$env:FAIONYX_HARMONY_COMMAND_LINE_TOOLS = 'D:\Tools\command-line-tools'
 node scripts/build-harmonyos.cjs
 ```
 

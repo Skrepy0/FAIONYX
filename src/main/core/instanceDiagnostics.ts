@@ -57,7 +57,7 @@ export async function diagnoseInstance(target:InstanceTarget,signal?:AbortSignal
   const context=selectDiagnosticSession(target.id,c.dir,[...(latest?[latest]:[]),...hist.map(e=>e.context!)])
   let session:string|undefined
   if(context?.logDir&&context.startedAt){session=String(context.startedAt);const logDir=String(context.logDir);let text='';for(const name of ['stdout.log','stderr.log'])try{const f=await safePath(logDir,name);text+='\n'+await tail(f)}catch{};findings.push(...analyzeDiagnosticText(text))}
-  else findings.push({rule:'no-session',title:'暂无该实例的启动日志',confidence:'unknown',evidence:'只展示本次环境检查结果，未读取其他实例或旧目录的日志。',advice:'下次通过 KAMUCL 启动失败后可查看对应会话原因。'})
+  else findings.push({rule:'no-session',title:'暂无该实例的启动日志',confidence:'unknown',evidence:'只展示本次环境检查结果，未读取其他实例或旧目录的日志。',advice:'下次通过 FAIONYX 启动失败后可查看对应会话原因。'})
   if(findings.some(f=>f.action==='mods'))try{const mods=await scanModDirectory(path.join(c.dir,'mods'),false);for(const f of findings.filter(f=>f.action==='mods'))f.mods=mods.filter(m=>f.evidence.includes(m.fileName)||(m.id&&new RegExp('(?:^|[^a-zA-Z0-9_])'+m.id.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?:$|[^a-zA-Z0-9_])').test(f.evidence))).map(m=>({fileName:m.fileName,name:m.name||m.fileName,icon:m.iconDataUrl}))}catch{}
   for(const[id,p]of plans)if(Date.now()-p.time>30*60*1000)plans.delete(id)
   const id=crypto.randomUUID();plans.set(id,{target:c.target,files:bad.filter(f=>f.url),metadata:JSON.stringify(merged),time:Date.now()})

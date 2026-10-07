@@ -36,7 +36,7 @@ test('feat-mod-disable: fs:toggleDisable renames .jar <-> .jar.disabled with run
 
 test('feat-mod-disable: rename semantics roundtrip on real fs (模组禁用)', () => {
   // 与 ipc.ts 处理函数同语义的改名行为：.jar → .jar.disabled → 还原
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-mod-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-mod-'))
   try {
     const jar = path.join(dir, 'test-mod.jar')
     fs.writeFileSync(jar, 'fake')

@@ -9,7 +9,7 @@ import { systemDownload, usesSystemProxy } from '../../src/main/core/systemDownl
 import { downloadFetch } from '../../src/main/core/downloadFetch'
 import { downloadFile } from '../../src/main/core/download'
 
-const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-native-http-'))
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-native-http-'))
 app.setPath('userData', path.join(root, 'profile'))
 void app.whenReady().then(async () => {
   const bytes = crypto.randomBytes(3 * 1024 * 1024), sha1 = crypto.createHash('sha1').update(bytes).digest('hex')

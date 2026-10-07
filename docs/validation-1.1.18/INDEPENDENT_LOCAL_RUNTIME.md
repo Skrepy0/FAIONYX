@@ -1,4 +1,4 @@
-# KAMUCL 1.1.18 离线皮肤启动链独立验收
+# FAIONYX 1.1.18 离线皮肤启动链独立验收
 
 审查日期：2026-10-07（Asia/Hong_Kong）。审查者：`/root/packs118`，未实现本报告评价的离线皮肤存储、启动衔接、JVM provider 或皮肤界面。本次仅审查产品代码、原始测试输出与最终运行证据，并新增本报告；未修改产品。
 
@@ -18,7 +18,7 @@
 
 ## 被审查的生产行为
 
-审查代码包含 `src/main/core/offlineSkinStore.ts`、`skins.ts`、`offlineSkinLaunch.ts`、`launch.ts`、`launchPreparation.ts`、`offline-skin-agent/src/cn/kamucl/skin/OfflineSkinAgent.java`，以及 `src/renderer/src/views/SkinsView.vue` 与 `components/SkinEditor.vue`。
+审查代码包含 `src/main/core/offlineSkinStore.ts`、`skins.ts`、`offlineSkinLaunch.ts`、`launch.ts`、`launchPreparation.ts`、`offline-skin-agent/src/cn/faionyx/skin/OfflineSkinAgent.java`，以及 `src/renderer/src/views/SkinsView.vue` 与 `components/SkinEditor.vue`。
 
 - PNG 经过真实解码、尺寸及内容校验后进入账号范围的存储。应用失败不会生成成功的内存选择；历史、当前选择和启动快照互相区分。异步文件读取与解码保留发起账号，账号 B 不会接收账号 A 的晚到应用结果。
 - 启动准备复制账号信息并固定 PNG 字节及模型，使用哈希检测已经变化的本地文件。取消慢读取、共享 injector 下载或 RSA 生成时，当前启动及时结束等待；晚到结果不会继续创建本次启动的 session、端口或游戏进程。
@@ -31,7 +31,7 @@
 
 ## 最终证据与完整性核对
 
-最终 Windows EXE：`release/KAMUCL-1.1.18.exe`。
+最终 Windows EXE：`release/FAIONYX-1.1.18.exe`。
 
 ```text
 SHA256 a0427950efe94c5ffc5f05cca9dcc33b79bab96293cfde7e0c89a2f7198be887

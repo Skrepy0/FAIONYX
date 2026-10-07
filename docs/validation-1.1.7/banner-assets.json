@@ -12,7 +12,7 @@
       "key": "builtin:piston",
       "title": "Minecraft活塞压扁大冒险",
       "original": {
-        "path": "C:\\Users\\ROG\\OneDrive\\桌面\\KAMUCL-首页图片\\Minecraft活塞压扁大冒险.png",
+        "path": "C:\\Users\\ROG\\OneDrive\\桌面\\FAIONYX-首页图片\\Minecraft活塞压扁大冒险.png",
         "format": "png",
         "sizeBytes": 1796017,
         "width": 1672,
@@ -24,7 +24,7 @@
         "decodedRGBAChannels": 4
       },
       "repository": {
-        "path": "E:\\KAMUCL\\src\\renderer\\src\\assets\\launch\\piston.webp",
+        "path": "E:\\FAIONYX\\src\\renderer\\src\\assets\\launch\\piston.webp",
         "format": "webp",
         "sizeBytes": 1406146,
         "width": 1672,
@@ -36,7 +36,7 @@
         "decodedRGBAChannels": 4
       },
       "production": {
-        "path": "E:\\KAMUCL\\out\\renderer\\assets\\piston-CXXgq7BE.webp",
+        "path": "E:\\FAIONYX\\out\\renderer\\assets\\piston-CXXgq7BE.webp",
         "format": "webp",
         "sizeBytes": 1406146,
         "width": 1672,
@@ -60,7 +60,7 @@
       "key": "builtin:brewer",
       "title": "暮色村庄酿药师",
       "original": {
-        "path": "C:\\Users\\ROG\\OneDrive\\桌面\\KAMUCL-首页图片\\暮色村庄酿药师.png",
+        "path": "C:\\Users\\ROG\\OneDrive\\桌面\\FAIONYX-首页图片\\暮色村庄酿药师.png",
         "format": "png",
         "sizeBytes": 1841134,
         "width": 1870,
@@ -72,7 +72,7 @@
         "decodedRGBAChannels": 4
       },
       "repository": {
-        "path": "E:\\KAMUCL\\src\\renderer\\src\\assets\\launch\\brewer.webp",
+        "path": "E:\\FAIONYX\\src\\renderer\\src\\assets\\launch\\brewer.webp",
         "format": "webp",
         "sizeBytes": 1405068,
         "width": 1870,
@@ -84,7 +84,7 @@
         "decodedRGBAChannels": 4
       },
       "production": {
-        "path": "E:\\KAMUCL\\out\\renderer\\assets\\brewer-_t6hu0qJ.webp",
+        "path": "E:\\FAIONYX\\out\\renderer\\assets\\brewer-_t6hu0qJ.webp",
         "format": "webp",
         "sizeBytes": 1405068,
         "width": 1870,
@@ -108,7 +108,7 @@
       "key": "builtin:cannon",
       "title": "熔岩悬崖上的失控大炮",
       "original": {
-        "path": "C:\\Users\\ROG\\OneDrive\\桌面\\KAMUCL-首页图片\\熔岩悬崖上的失控大炮.png",
+        "path": "C:\\Users\\ROG\\OneDrive\\桌面\\FAIONYX-首页图片\\熔岩悬崖上的失控大炮.png",
         "format": "png",
         "sizeBytes": 1987245,
         "width": 1870,
@@ -120,7 +120,7 @@
         "decodedRGBAChannels": 4
       },
       "repository": {
-        "path": "E:\\KAMUCL\\src\\renderer\\src\\assets\\launch\\cannon.webp",
+        "path": "E:\\FAIONYX\\src\\renderer\\src\\assets\\launch\\cannon.webp",
         "format": "webp",
         "sizeBytes": 1543372,
         "width": 1870,
@@ -132,7 +132,7 @@
         "decodedRGBAChannels": 4
       },
       "production": {
-        "path": "E:\\KAMUCL\\out\\renderer\\assets\\cannon-CrDDsD5Q.webp",
+        "path": "E:\\FAIONYX\\out\\renderer\\assets\\cannon-CrDDsD5Q.webp",
         "format": "webp",
         "sizeBytes": 1543372,
         "width": 1870,
@@ -156,7 +156,7 @@
       "key": "builtin:cactus",
       "title": "沙漠仙人掌飞跃大作战",
       "original": {
-        "path": "C:\\Users\\ROG\\OneDrive\\桌面\\KAMUCL-首页图片\\沙漠仙人掌飞跃大作战.png",
+        "path": "C:\\Users\\ROG\\OneDrive\\桌面\\FAIONYX-首页图片\\沙漠仙人掌飞跃大作战.png",
         "format": "png",
         "sizeBytes": 1790898,
         "width": 1870,
@@ -168,7 +168,7 @@
         "decodedRGBAChannels": 4
       },
       "repository": {
-        "path": "E:\\KAMUCL\\src\\renderer\\src\\assets\\launch\\cactus.webp",
+        "path": "E:\\FAIONYX\\src\\renderer\\src\\assets\\launch\\cactus.webp",
         "format": "webp",
         "sizeBytes": 1391550,
         "width": 1870,
@@ -180,7 +180,7 @@
         "decodedRGBAChannels": 4
       },
       "production": {
-        "path": "E:\\KAMUCL\\out\\renderer\\assets\\cactus-ZHT28Bbx.webp",
+        "path": "E:\\FAIONYX\\out\\renderer\\assets\\cactus-ZHT28Bbx.webp",
         "format": "webp",
         "sizeBytes": 1391550,
         "width": 1870,
@@ -204,7 +204,7 @@
       "key": "builtin:farmer",
       "title": "像素农夫与肥料伙伴",
       "original": {
-        "path": "C:\\Users\\ROG\\OneDrive\\桌面\\KAMUCL-首页图片\\像素农夫与肥料伙伴.png",
+        "path": "C:\\Users\\ROG\\OneDrive\\桌面\\FAIONYX-首页图片\\像素农夫与肥料伙伴.png",
         "format": "png",
         "sizeBytes": 2011221,
         "width": 1870,
@@ -216,7 +216,7 @@
         "decodedRGBAChannels": 4
       },
       "repository": {
-        "path": "E:\\KAMUCL\\src\\renderer\\src\\assets\\launch\\farmer.webp",
+        "path": "E:\\FAIONYX\\src\\renderer\\src\\assets\\launch\\farmer.webp",
         "format": "webp",
         "sizeBytes": 1588558,
         "width": 1870,
@@ -228,7 +228,7 @@
         "decodedRGBAChannels": 4
       },
       "production": {
-        "path": "E:\\KAMUCL\\out\\renderer\\assets\\farmer-3krkG6Tm.webp",
+        "path": "E:\\FAIONYX\\out\\renderer\\assets\\farmer-3krkG6Tm.webp",
         "format": "webp",
         "sizeBytes": 1588558,
         "width": 1870,
@@ -252,7 +252,7 @@
       "key": "builtin:camp",
       "title": "月夜篝火下的方块森林营地",
       "original": {
-        "path": "C:\\Users\\ROG\\OneDrive\\桌面\\KAMUCL-首页图片\\月夜篝火下的方块森林营地.png",
+        "path": "C:\\Users\\ROG\\OneDrive\\桌面\\FAIONYX-首页图片\\月夜篝火下的方块森林营地.png",
         "format": "png",
         "sizeBytes": 1809371,
         "width": 1870,
@@ -264,7 +264,7 @@
         "decodedRGBAChannels": 4
       },
       "repository": {
-        "path": "E:\\KAMUCL\\src\\renderer\\src\\assets\\launch\\camp.webp",
+        "path": "E:\\FAIONYX\\src\\renderer\\src\\assets\\launch\\camp.webp",
         "format": "webp",
         "sizeBytes": 1413784,
         "width": 1870,
@@ -276,7 +276,7 @@
         "decodedRGBAChannels": 4
       },
       "production": {
-        "path": "E:\\KAMUCL\\out\\renderer\\assets\\camp-KA8qI3ns.webp",
+        "path": "E:\\FAIONYX\\out\\renderer\\assets\\camp-KA8qI3ns.webp",
         "format": "webp",
         "sizeBytes": 1413784,
         "width": 1870,
@@ -300,7 +300,7 @@
       "key": "builtin:sunset",
       "title": "方块世界的日落奇遇",
       "original": {
-        "path": "C:\\Users\\ROG\\OneDrive\\桌面\\KAMUCL-首页图片\\方块世界的日落奇遇.png",
+        "path": "C:\\Users\\ROG\\OneDrive\\桌面\\FAIONYX-首页图片\\方块世界的日落奇遇.png",
         "format": "png",
         "sizeBytes": 2165048,
         "width": 1870,
@@ -312,7 +312,7 @@
         "decodedRGBAChannels": 4
       },
       "repository": {
-        "path": "E:\\KAMUCL\\src\\renderer\\src\\assets\\launch\\sunset.webp",
+        "path": "E:\\FAIONYX\\src\\renderer\\src\\assets\\launch\\sunset.webp",
         "format": "webp",
         "sizeBytes": 1582702,
         "width": 1870,
@@ -324,7 +324,7 @@
         "decodedRGBAChannels": 4
       },
       "production": {
-        "path": "E:\\KAMUCL\\out\\renderer\\assets\\sunset--N5hnz1m.webp",
+        "path": "E:\\FAIONYX\\out\\renderer\\assets\\sunset--N5hnz1m.webp",
         "format": "webp",
         "sizeBytes": 1582702,
         "width": 1870,

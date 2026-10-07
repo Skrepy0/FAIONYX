@@ -47,7 +47,7 @@ test('CDN probe sends HEAD without Range, does not follow redirects, and preserv
 })
 
 for (const outcome of ['success', 'unavailable', 'corrupt'] as const) test(`real modpack pipeline with missing API URLs and CDN fallback: ${outcome}`, async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-cdn-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-cdn-'))
   const game = path.join(root, 'game'), client = Buffer.from('fixture-client')
   fs.mkdirSync(game)
   const files = [

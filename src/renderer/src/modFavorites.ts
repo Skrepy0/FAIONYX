@@ -22,7 +22,7 @@ export async function loadFavorites(propagateError = false): Promise<void> {
   const read = (async () => {
     await writeQueue
     const writes = writeGeneration
-    const list = await window.kamucl.invoke('mods:favorites') as ModFavorite[]
+    const list = await window.faionyx.invoke('mods:favorites') as ModFavorite[]
     if (generation === readGeneration && writes === writeGeneration) favorites.value = list
     return { list, writes }
   })()
@@ -58,12 +58,12 @@ async function mutateFavorite(key: string | string[], request: () => Promise<Mod
 
 export function toggleProject(source: string, projectId: string, name: string, iconUrl?: string): Promise<boolean> {
   const key = source + ':' + projectId
-  return mutateFavorite(key, () => window.kamucl.invoke('mods:favorite', { source, projectId, name, iconUrl }, !favorites.value.some(f => f.key === key)) as Promise<ModFavorite[]>)
+  return mutateFavorite(key, () => window.faionyx.invoke('mods:favorite', { source, projectId, name, iconUrl }, !favorites.value.some(f => f.key === key)) as Promise<ModFavorite[]>)
 }
 
 export function setLocalFavorite(key: string, version: string, folder: string, name: string, enabled: boolean, link?: {source: string; projectId: string}): Promise<boolean> {
   const safeLink = link ? { source: link.source, projectId: link.projectId } : undefined
-  return mutateFavorite(key, () => window.kamucl.invoke('mods:favoriteLocal', version, folder, name, enabled, safeLink) as Promise<ModFavorite[]>)
+  return mutateFavorite(key, () => window.faionyx.invoke('mods:favoriteLocal', version, folder, name, enabled, safeLink) as Promise<ModFavorite[]>)
 }
 
 export function removeFavorites(keys: string[]): Promise<boolean> {
@@ -71,9 +71,9 @@ export function removeFavorites(keys: string[]): Promise<boolean> {
   // Snapshot plain primitive keys before enqueueing; later selection edits must
   // not alter either the busy guards or the request eventually sent to main.
   const safeKeys = [...new Set(keys)]
-  return mutateFavorite(safeKeys, () => window.kamucl.invoke('mods:favoriteRemove', safeKeys) as Promise<ModFavorite[]>)
+  return mutateFavorite(safeKeys, () => window.faionyx.invoke('mods:favoriteRemove', safeKeys) as Promise<ModFavorite[]>)
 }
 
 export function linkFavorite(key: string, source: string, projectId: string): Promise<boolean> {
-  return mutateFavorite([key, source + ':' + projectId], () => window.kamucl.invoke('mods:favoriteLink', key, source, projectId) as Promise<ModFavorite[]>)
+  return mutateFavorite([key, source + ':' + projectId], () => window.faionyx.invoke('mods:favoriteLink', key, source, projectId) as Promise<ModFavorite[]>)
 }

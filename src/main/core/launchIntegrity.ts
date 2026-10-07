@@ -41,7 +41,7 @@ export async function ensureLaunchArtifact(file: LaunchArtifact, mirror: MirrorP
   const stat=()=>fs.promises.lstat(file.dest).catch(e=>{if(e.code==='ENOENT')return null;throw e})
   const before=await stat()
   if(before&&(!before.isFile()||before.isSymbolicLink()))throw new Error('修复目标不是普通文件')
-  const stage=await fs.promises.mkdtemp(path.join(path.dirname(file.dest),'.kamucl-repair-'))
+  const stage=await fs.promises.mkdtemp(path.join(path.dirname(file.dest),'.faionyx-repair-'))
   const temporary=path.join(stage,path.basename(file.dest)),old=path.join(stage,'original')
   let preserve=false
   try{

@@ -98,7 +98,7 @@ async function readHtml(url: string, fetcher: typeof fetch, signal: AbortSignal)
   try { return await readHtmlWithSlot(url, fetcher, signal) } finally { release() }
 }
 async function readHtmlWithSlot(url: string, fetcher: typeof fetch, signal: AbortSignal): Promise<string> {
-  const response = await fetcher(url, { signal, redirect: 'error', headers: { 'User-Agent': 'KAMUCL (+https://github.com/kamubaba-i/KAMUCL)', Accept: 'text/html' } })
+  const response = await fetcher(url, { signal, redirect: 'error', headers: { 'User-Agent': 'FAIONYX (+https://github.com/Skrepy0/FAIONYX)', Accept: 'text/html' } })
   if (!response.ok) throw new Error(`MC百科 HTTP ${response.status}`)
   if (!(response.headers.get('content-type') ?? '').includes('text/html')) throw new Error('MC百科未返回可识别的搜索页面')
   if (Number(response.headers.get('content-length')) > MAX_BYTES) { await response.body?.cancel(); throw new Error('MC百科页面超出读取限制') }

@@ -14,7 +14,7 @@
   "productTestsModifiedByReviewer": false,
   "reviewerBuiltOrLaunchedGUI": false,
   "artifact": {
-    "file": "release/KAMUCL-1.1.19.exe",
+    "file": "release/FAIONYX-1.1.19.exe",
     "sha256": "7b11d4979f1d3afc72397b501770130e3c5e23e2e246deaa70a06276f6a61a65",
     "bytes": 97323050,
     "asarSHA256": "42697b9e8e9e1ef75ae7f9e6fa75eb41658002f235ed9f1bd2ec324c9454e2a1",
@@ -218,12 +218,12 @@
         "childStartedAt": "2026-10-07T08:16:33.018Z",
         "closed": true,
         "exitCode": 0,
-        "retainedEXE": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 Vvq1m1\\KAMUCL-1.1.19.exe",
+        "retainedEXE": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 Vvq1m1\\FAIONYX-1.1.19.exe",
         "retainedEXESHA256": "7b11d4979f1d3afc72397b501770130e3c5e23e2e246deaa70a06276f6a61a65",
         "exeCreatedBeforeSpawnMs": 133.60986328125,
         "retainedRuntime": [
           {
-            "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 Vvq1m1\\KAMUCL-runtime\\1.1.19-3b2241a4e94b87ac\\resources\\app.asar",
+            "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 Vvq1m1\\FAIONYX-runtime\\1.1.19-3b2241a4e94b87ac\\resources\\app.asar",
             "sha256": "42697b9e8e9e1ef75ae7f9e6fa75eb41658002f235ed9f1bd2ec324c9454e2a1"
           }
         ],
@@ -342,12 +342,12 @@
         "childStartedAt": "2026-10-07T08:17:24.743Z",
         "closed": true,
         "exitCode": 0,
-        "retainedEXE": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 WZkNbU\\KAMUCL-1.1.19.exe",
+        "retainedEXE": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 WZkNbU\\FAIONYX-1.1.19.exe",
         "retainedEXESHA256": "7b11d4979f1d3afc72397b501770130e3c5e23e2e246deaa70a06276f6a61a65",
         "exeCreatedBeforeSpawnMs": 123.6591796875,
         "retainedRuntime": [
           {
-            "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 WZkNbU\\KAMUCL-runtime\\1.1.19-3b2241a4e94b87ac\\resources\\app.asar",
+            "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 WZkNbU\\FAIONYX-runtime\\1.1.19-3b2241a4e94b87ac\\resources\\app.asar",
             "sha256": "42697b9e8e9e1ef75ae7f9e6fa75eb41658002f235ed9f1bd2ec324c9454e2a1"
           }
         ],
@@ -466,12 +466,12 @@
         "childStartedAt": "2026-10-07T08:18:16.040Z",
         "closed": true,
         "exitCode": 0,
-        "retainedEXE": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 8plEig\\KAMUCL-1.1.19.exe",
+        "retainedEXE": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 8plEig\\FAIONYX-1.1.19.exe",
         "retainedEXESHA256": "7b11d4979f1d3afc72397b501770130e3c5e23e2e246deaa70a06276f6a61a65",
         "exeCreatedBeforeSpawnMs": 119.301025390625,
         "retainedRuntime": [
           {
-            "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 8plEig\\KAMUCL-runtime\\1.1.19-3b2241a4e94b87ac\\resources\\app.asar",
+            "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 8plEig\\FAIONYX-runtime\\1.1.19-3b2241a4e94b87ac\\resources\\app.asar",
             "sha256": "42697b9e8e9e1ef75ae7f9e6fa75eb41658002f235ed9f1bd2ec324c9454e2a1"
           }
         ],
@@ -590,12 +590,12 @@
         "childStartedAt": "2026-10-07T08:19:06.607Z",
         "closed": true,
         "exitCode": 0,
-        "retainedEXE": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 tja77A\\KAMUCL-1.1.19.exe",
+        "retainedEXE": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 tja77A\\FAIONYX-1.1.19.exe",
         "retainedEXESHA256": "7b11d4979f1d3afc72397b501770130e3c5e23e2e246deaa70a06276f6a61a65",
         "exeCreatedBeforeSpawnMs": 125.544189453125,
         "retainedRuntime": [
           {
-            "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 tja77A\\KAMUCL-runtime\\1.1.19-3b2241a4e94b87ac\\resources\\app.asar",
+            "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 tja77A\\FAIONYX-runtime\\1.1.19-3b2241a4e94b87ac\\resources\\app.asar",
             "sha256": "42697b9e8e9e1ef75ae7f9e6fa75eb41658002f235ed9f1bd2ec324c9454e2a1"
           }
         ],
@@ -714,12 +714,12 @@
         "childStartedAt": "2026-10-07T08:20:04.968Z",
         "closed": true,
         "exitCode": 0,
-        "retainedEXE": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 uyEiM4\\KAMUCL-1.1.19.exe",
+        "retainedEXE": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 uyEiM4\\FAIONYX-1.1.19.exe",
         "retainedEXESHA256": "7b11d4979f1d3afc72397b501770130e3c5e23e2e246deaa70a06276f6a61a65",
         "exeCreatedBeforeSpawnMs": 125.7744140625,
         "retainedRuntime": [
           {
-            "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 uyEiM4\\KAMUCL-runtime\\1.1.19-3b2241a4e94b87ac\\resources\\app.asar",
+            "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 uyEiM4\\FAIONYX-runtime\\1.1.19-3b2241a4e94b87ac\\resources\\app.asar",
             "sha256": "42697b9e8e9e1ef75ae7f9e6fa75eb41658002f235ed9f1bd2ec324c9454e2a1"
           }
         ],

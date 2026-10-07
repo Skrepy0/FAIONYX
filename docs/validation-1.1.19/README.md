@@ -1,4 +1,4 @@
-# KAMUCL 1.1.19 Windows 验收
+# FAIONYX 1.1.19 Windows 验收
 
 香港更新日志 2026-10-07 16:08。仅 Windows x64，Electron 44.3.0。最终 EXE SHA256：`7b11d4979f1d3afc72397b501770130e3c5e23e2e246deaa70a06276f6a61a65`。优化和其他平台不在本批。
 
@@ -45,17 +45,17 @@ npm run build
 npx --no-install electron-builder --win portable --x64 --config.electronDist=node_modules/electron/dist --publish never
 node scripts/pack-windows-zip.cjs
 node scripts/verify-windows-package.cjs
-$env:KAMUCL_EXTENSION_GUI='1'
-$env:KAMUCL_EXTENSION_ONLY='1'
-$env:KAMUCL_SKIP_EXTENSION_BASE='1'
-$env:KAMUCL_119_WINDOW='[960,620,1]'
-$env:KAMUCL_UI_MODULE='skinlayers119'
+$env:FAIONYX_EXTENSION_GUI='1'
+$env:FAIONYX_EXTENSION_ONLY='1'
+$env:FAIONYX_SKIP_EXTENSION_BASE='1'
+$env:FAIONYX_119_WINDOW='[960,620,1]'
+$env:FAIONYX_UI_MODULE='skinlayers119'
 node scripts/verify-ui-refinement.cjs black-orange
-$env:KAMUCL_UI_MODULE='mrpack119'
+$env:FAIONYX_UI_MODULE='mrpack119'
 node scripts/verify-ui-refinement.cjs black-orange
 ```
 
-其他主题参数为 `blue-white`、`transparent`、`custom`。125% 参数为 `$env:KAMUCL_119_WINDOW='[1280,900,1.25]'`。完整旧编辑器模块为 `skin118`。只向自己创建的测试窗口操作；不要与其他需要焦点的操作并行。合成数据与原生文件选择框返回路径夹具均在脚本中明确。
+其他主题参数为 `blue-white`、`transparent`、`custom`。125% 参数为 `$env:FAIONYX_119_WINDOW='[1280,900,1.25]'`。完整旧编辑器模块为 `skin118`。只向自己创建的测试窗口操作；不要与其他需要焦点的操作并行。合成数据与原生文件选择框返回路径夹具均在脚本中明确。
 
 ## 原始失败、绑定与限制
 

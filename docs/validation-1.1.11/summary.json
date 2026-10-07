@@ -178,8 +178,8 @@
       "macLinuxNativeRebuildRequired": true,
       "nativeRebuildPerformed": true,
       "identity": {
-        "linux": "resources/kamucl-linux.json schemaVersion1/sourceCommit/runtimeVersion from Git HEAD and actual packaged ELF",
-        "mac": "Contents/Resources/kamucl-mac.json schemaVersion1/sourceCommit/runtimeVersion and actual matching Mach-O/framework/minimum/signature observation"
+        "linux": "resources/faionyx-linux.json schemaVersion1/sourceCommit/runtimeVersion from Git HEAD and actual packaged ELF",
+        "mac": "Contents/Resources/faionyx-mac.json schemaVersion1/sourceCommit/runtimeVersion and actual matching Mach-O/framework/minimum/signature observation"
       },
       "linuxQa": "x11-utils dependency, self-contained out, preserve primary error and record finalizationError separately",
       "macQa": "visible skin frames/focus/time/wallpaper observations, real normal-exit world hashes, separate strict Intel GPU diagnostic",
@@ -341,25 +341,25 @@
   ],
   "artifacts": [
     {
-      "name": "KAMUCL-1.1.11.exe",
+      "name": "FAIONYX-1.1.11.exe",
       "size": 97290244,
       "sha256": "dd584c92935c71ebdcd5ca379d0f1f851c9a07b604a9dcdfd6f2a1986e8142c7",
       "status": "local-windows-candidate; no public release"
     },
     {
-      "name": "KAMUCL-1.1.11-windows-x64.zip",
+      "name": "FAIONYX-1.1.11-windows-x64.zip",
       "size": 97321815,
       "sha256": "78d31f0045102c983fa67d586511993312f2901c686b3f75be1d0f95c163bd2f",
       "status": "local-windows-candidate; no public release"
     },
     {
-      "name": "KAMUCL-1.1.11-windows-x64-unpacked.zip",
+      "name": "FAIONYX-1.1.11-windows-x64-unpacked.zip",
       "size": 143058234,
       "sha256": "676162091dc723ee97ee6309232eca01de24d0fe602ddaa3d2e71d702b2dd881",
       "status": "local-windows-candidate; no public release"
     },
     {
-      "name": "KAMUCL-1.1.11-mac-arm64.zip",
+      "name": "FAIONYX-1.1.11-mac-arm64.zip",
       "size": 127153609,
       "sha256": "0983e1daf269726b5d87924f63e74bac3dda2ae5aa00df2aace7bb4be23e5657",
       "sourceCommit": "69c1e89ba23a007535c77bae65052f19b6d87f58",
@@ -371,14 +371,14 @@
       "nativeDesktop": false,
       "embeddedSourceCommitPresent": true,
       "embeddedRuntimeVersionPresent": true,
-      "metadataFile": "Contents/Resources/kamucl-mac.json",
+      "metadataFile": "Contents/Resources/faionyx-mac.json",
       "runtimeVersion": "44.3.0",
       "minimumSystemVersion": "13.0.0",
       "originalProof": "mac-ui-arm64-app/mac-job-arm64-app-ui/job.json",
       "status": "Sixth candidate; limited native results only; no full parity or release"
     },
     {
-      "name": "KAMUCL-1.1.11-mac-arm64.dmg",
+      "name": "FAIONYX-1.1.11-mac-arm64.dmg",
       "size": 136968299,
       "sha256": "78f25026a9cf6a5bdfa8e36ac012efc68024346ec649da011aac5c5b2a1b4a41",
       "sourceCommit": "69c1e89ba23a007535c77bae65052f19b6d87f58",
@@ -390,14 +390,14 @@
       "nativeDesktop": false,
       "embeddedSourceCommitPresent": true,
       "embeddedRuntimeVersionPresent": true,
-      "metadataFile": "Contents/Resources/kamucl-mac.json",
+      "metadataFile": "Contents/Resources/faionyx-mac.json",
       "runtimeVersion": "44.3.0",
       "minimumSystemVersion": "13.0.0",
       "originalProof": "mac-ui-arm64-dmg/mac-job-arm64-dmg-ui/job.json",
       "status": "Sixth candidate; limited native results only; no full parity or release"
     },
     {
-      "name": "KAMUCL-1.1.11-mac-x64.zip",
+      "name": "FAIONYX-1.1.11-mac-x64.zip",
       "size": 133313941,
       "sha256": "0ebc9125b8d8e527e2bf8626942885ee3fbd068616c2332db0de50e1ab0c6668",
       "sourceCommit": "69c1e89ba23a007535c77bae65052f19b6d87f58",
@@ -409,14 +409,14 @@
       "nativeDesktop": false,
       "embeddedSourceCommitPresent": true,
       "embeddedRuntimeVersionPresent": true,
-      "metadataFile": "Contents/Resources/kamucl-mac.json",
+      "metadataFile": "Contents/Resources/faionyx-mac.json",
       "runtimeVersion": "44.3.0",
       "minimumSystemVersion": "13.0.0",
       "originalProof": "mac-ui-x64-app/mac-job-x64-app-ui/job.json",
       "status": "Sixth candidate; limited native results only; no full parity or release"
     },
     {
-      "name": "KAMUCL-1.1.11-mac-x64.dmg",
+      "name": "FAIONYX-1.1.11-mac-x64.dmg",
       "size": 144339940,
       "sha256": "c5e7a0e7afd1eb46e17f0ee0f02c310f049d68b29280c30f779d425145c1d984",
       "sourceCommit": "69c1e89ba23a007535c77bae65052f19b6d87f58",
@@ -428,14 +428,14 @@
       "nativeDesktop": false,
       "embeddedSourceCommitPresent": true,
       "embeddedRuntimeVersionPresent": true,
-      "metadataFile": "Contents/Resources/kamucl-mac.json",
+      "metadataFile": "Contents/Resources/faionyx-mac.json",
       "runtimeVersion": "44.3.0",
       "minimumSystemVersion": "13.0.0",
       "originalProof": "mac-ui-x64-dmg/mac-job-x64-dmg-ui/job.json",
       "status": "Sixth candidate; limited native results only; no full parity or release"
     },
     {
-      "name": "KAMUCL-1.1.11-linux-x64.tar.gz",
+      "name": "FAIONYX-1.1.11-linux-x64.tar.gz",
       "size": 133185660,
       "sha256": "8a7cfa8608ee1679cff91ad344406faf75f9bfcf0c1fd05c187340af54ec6728",
       "sourceCommit": "69c1e89ba23a007535c77bae65052f19b6d87f58",
@@ -447,10 +447,10 @@
       "nativeDesktop": false,
       "embeddedSourceCommitPresent": true,
       "embeddedRuntimeVersionPresent": true,
-      "metadataFile": "resources/kamucl-linux.json",
+      "metadataFile": "resources/faionyx-linux.json",
       "embeddedIdentity": {
         "schemaVersion": 1,
-        "product": "KAMUCL",
+        "product": "FAIONYX",
         "platform": "linux",
         "arch": "x64",
         "version": "1.1.11",
@@ -462,7 +462,7 @@
       "status": "Sixth candidate; native package check PASS; actual Xvfb WebGL failed; no formal desktop or release"
     },
     {
-      "name": "KAMUCL-1.1.11-linux-x64.deb",
+      "name": "FAIONYX-1.1.11-linux-x64.deb",
       "size": 109170520,
       "sha256": "c6ccfc3098d726327e657f8aabd369ffdc0923edb9797c926753f0604cc08d08",
       "sourceCommit": "69c1e89ba23a007535c77bae65052f19b6d87f58",
@@ -474,10 +474,10 @@
       "nativeDesktop": false,
       "embeddedSourceCommitPresent": true,
       "embeddedRuntimeVersionPresent": true,
-      "metadataFile": "resources/kamucl-linux.json",
+      "metadataFile": "resources/faionyx-linux.json",
       "embeddedIdentity": {
         "schemaVersion": 1,
-        "product": "KAMUCL",
+        "product": "FAIONYX",
         "platform": "linux",
         "arch": "x64",
         "version": "1.1.11",
@@ -489,7 +489,7 @@
       "status": "Sixth candidate; native package check PASS; actual Xvfb WebGL failed; no formal desktop or release"
     },
     {
-      "name": "KAMUCL-1.1.11-linux-x64.AppImage",
+      "name": "FAIONYX-1.1.11-linux-x64.AppImage",
       "size": 109224267,
       "sha256": "d38a5b5e1fe9182e14f06eaf4798dd29c5698a18369319965e74af746893c5d1",
       "sourceCommit": "69c1e89ba23a007535c77bae65052f19b6d87f58",
@@ -501,10 +501,10 @@
       "nativeDesktop": false,
       "embeddedSourceCommitPresent": true,
       "embeddedRuntimeVersionPresent": true,
-      "metadataFile": "resources/kamucl-linux.json",
+      "metadataFile": "resources/faionyx-linux.json",
       "embeddedIdentity": {
         "schemaVersion": 1,
-        "product": "KAMUCL",
+        "product": "FAIONYX",
         "platform": "linux",
         "arch": "x64",
         "version": "1.1.11",
@@ -516,7 +516,7 @@
       "status": "Sixth candidate; native package check PASS; actual Xvfb WebGL failed; no formal desktop or release"
     },
     {
-      "name": "KAMUCL-1.1.11-linux-arm64.tar.gz",
+      "name": "FAIONYX-1.1.11-linux-arm64.tar.gz",
       "size": 134350073,
       "sha256": "a586c21e73b42c16f757c23caea33e654f031aee38a9863a82b77c7fea3b1ffb",
       "sourceCommit": "69c1e89ba23a007535c77bae65052f19b6d87f58",
@@ -528,10 +528,10 @@
       "nativeDesktop": false,
       "embeddedSourceCommitPresent": true,
       "embeddedRuntimeVersionPresent": true,
-      "metadataFile": "resources/kamucl-linux.json",
+      "metadataFile": "resources/faionyx-linux.json",
       "embeddedIdentity": {
         "schemaVersion": 1,
-        "product": "KAMUCL",
+        "product": "FAIONYX",
         "platform": "linux",
         "arch": "arm64",
         "version": "1.1.11",
@@ -543,7 +543,7 @@
       "status": "Sixth candidate; native package check PASS; actual Xvfb WebGL failed; no formal desktop or release"
     },
     {
-      "name": "KAMUCL-1.1.11-linux-arm64.deb",
+      "name": "FAIONYX-1.1.11-linux-arm64.deb",
       "size": 104172912,
       "sha256": "6017d5964dcc4f42207fd67a3ab5df178457d438281297f3a5c0620c49e29b8c",
       "sourceCommit": "69c1e89ba23a007535c77bae65052f19b6d87f58",
@@ -555,10 +555,10 @@
       "nativeDesktop": false,
       "embeddedSourceCommitPresent": true,
       "embeddedRuntimeVersionPresent": true,
-      "metadataFile": "resources/kamucl-linux.json",
+      "metadataFile": "resources/faionyx-linux.json",
       "embeddedIdentity": {
         "schemaVersion": 1,
-        "product": "KAMUCL",
+        "product": "FAIONYX",
         "platform": "linux",
         "arch": "arm64",
         "version": "1.1.11",
@@ -570,7 +570,7 @@
       "status": "Sixth candidate; native package check PASS; actual Xvfb WebGL failed; no formal desktop or release"
     },
     {
-      "name": "KAMUCL-1.1.11-linux-arm64.AppImage",
+      "name": "FAIONYX-1.1.11-linux-arm64.AppImage",
       "size": 103865594,
       "sha256": "a61405b4e0494c54d9b51e0fdf90c98ad4ddb7875029c23ea98e377a2ea69d21",
       "sourceCommit": "69c1e89ba23a007535c77bae65052f19b6d87f58",
@@ -582,10 +582,10 @@
       "nativeDesktop": false,
       "embeddedSourceCommitPresent": true,
       "embeddedRuntimeVersionPresent": true,
-      "metadataFile": "resources/kamucl-linux.json",
+      "metadataFile": "resources/faionyx-linux.json",
       "embeddedIdentity": {
         "schemaVersion": 1,
-        "product": "KAMUCL",
+        "product": "FAIONYX",
         "platform": "linux",
         "arch": "arm64",
         "version": "1.1.11",
@@ -793,7 +793,7 @@
       "commit": "5167500b6c27b9bbdd1e80f22d91d3f5904007eb",
       "mac": {
         "run": 37160588297,
-        "url": "https://github.com/kamubaba-i/KAMUCL/actions/runs/37160588297",
+        "url": "https://github.com/Skrepy0/FAIONYX/actions/runs/37160588297",
         "nativeTests": {
           "arm64": {
             "tests": 857,
@@ -858,7 +858,7 @@
             "skinWalkRecording": {
               "frames": 1,
               "fps": 0,
-              "originalDirectory": "/Users/runner/work/KAMUCL/KAMUCL/out/skin-walk-110-transparent",
+              "originalDirectory": "/Users/runner/work/FAIONYX/FAIONYX/out/skin-walk-110-transparent",
               "skinVisibleInOriginalFrame": false,
               "status": "unaccepted: original frame does not contain the skin preview; pose-only observations cannot replace visible original skin-motion frames"
             },
@@ -906,7 +906,7 @@
             "skinWalkRecording": {
               "frames": 1,
               "fps": 0,
-              "originalDirectory": "/Users/runner/work/KAMUCL/KAMUCL/out/skin-walk-110-transparent",
+              "originalDirectory": "/Users/runner/work/FAIONYX/FAIONYX/out/skin-walk-110-transparent",
               "skinVisibleInOriginalFrame": false,
               "status": "unaccepted: original frame does not contain the skin preview; pose-only observations cannot replace visible original skin-motion frames"
             },
@@ -1006,7 +1006,7 @@
       },
       "linux": {
         "run": 37160588146,
-        "url": "https://github.com/kamubaba-i/KAMUCL/actions/runs/37160588146",
+        "url": "https://github.com/Skrepy0/FAIONYX/actions/runs/37160588146",
         "nativeTests": {
           "arm64": {
             "tests": 857,
@@ -1084,7 +1084,7 @@
       "completeQualification": false,
       "mac": {
         "run": 37163779043,
-        "url": "https://github.com/kamubaba-i/KAMUCL/actions/runs/37163779043",
+        "url": "https://github.com/Skrepy0/FAIONYX/actions/runs/37163779043",
         "nativeTests": {
           "arm64": {
             "tests": 864,
@@ -1112,7 +1112,7 @@
         },
         "overallNativeAcceptance": false,
         "evidenceSummary": "out/mac111/run-37163779043-69c1e89/acceptance-summary.json",
-        "metadataFile": "Contents/Resources/kamucl-mac.json",
+        "metadataFile": "Contents/Resources/faionyx-mac.json",
         "armAPP": {
           "formalGUIComplete": false,
           "failure": "original compositor timestamps must be finite and strictly increasing",
@@ -1383,7 +1383,7 @@
       },
       "linux": {
         "run": 37163779037,
-        "url": "https://github.com/kamubaba-i/KAMUCL/actions/runs/37163779037",
+        "url": "https://github.com/Skrepy0/FAIONYX/actions/runs/37163779037",
         "nativeTests": {
           "x64": {
             "tests": 864,
@@ -1404,7 +1404,7 @@
         "nativePackages": 6,
         "nativeCleanExtractionGate": true,
         "embeddedIdentityVerified": true,
-        "metadataFile": "resources/kamucl-linux.json",
+        "metadataFile": "resources/faionyx-linux.json",
         "runtimeVersion": "44.3.0",
         "cleanExtractedFilesPerArch": {
           "portable": 26,
@@ -1428,7 +1428,7 @@
             "packageIdentity": {
               "metadata": {
                 "schemaVersion": 1,
-                "product": "KAMUCL",
+                "product": "FAIONYX",
                 "platform": "linux",
                 "arch": "arm64",
                 "version": "1.1.11",
@@ -1459,7 +1459,7 @@
             "packageIdentity": {
               "metadata": {
                 "schemaVersion": 1,
-                "product": "KAMUCL",
+                "product": "FAIONYX",
                 "platform": "linux",
                 "arch": "x64",
                 "version": "1.1.11",
@@ -1490,7 +1490,7 @@
             "packageIdentity": {
               "metadata": {
                 "schemaVersion": 1,
-                "product": "KAMUCL",
+                "product": "FAIONYX",
                 "platform": "linux",
                 "arch": "x64",
                 "version": "1.1.11",
@@ -1542,8 +1542,8 @@
       "snapshotSourceCommit": "69c1e89ba23a007535c77bae65052f19b6d87f58",
       "originalRecordedAt": "2026-10-04 08:02 Asia/Hong_Kong",
       "location": "validation.postFifthCorrection.identity.mac",
-      "originalValue": "Contents/Resources/kamucl-build.json sourceCommit/runtimeVersion before signing; actual native observation required",
-      "correction": "Actual packaged file is Contents/Resources/kamucl-mac.json, verified by sixth native APP/DMG identity observations; kamucl-build.json was an incorrect planned documentation name, not an actual native file.",
+      "originalValue": "Contents/Resources/faionyx-build.json sourceCommit/runtimeVersion before signing; actual native observation required",
+      "correction": "Actual packaged file is Contents/Resources/faionyx-mac.json, verified by sixth native APP/DMG identity observations; faionyx-build.json was an incorrect planned documentation name, not an actual native file.",
       "originalNativePackageBytesChanged": false,
       "originalHistoricalObservationDeleted": false
     }
@@ -1554,7 +1554,7 @@
       "recordedAt": "2026-10-04 08:02 Asia/Hong_Kong",
       "artifacts": [
         {
-          "name": "KAMUCL-1.1.11-mac-arm64.zip",
+          "name": "FAIONYX-1.1.11-mac-arm64.zip",
           "size": 127153047,
           "sha256": "20aaa4e8093007c9d52bee82eac0b216b19a93563deb70c7c80d57321eb2e6a4",
           "sourceCommit": "5167500b6c27b9bbdd1e80f22d91d3f5904007eb",
@@ -1569,7 +1569,7 @@
           "status": "fifth native candidate; complete qualification false; new identity revision requires rebuild; no public release"
         },
         {
-          "name": "KAMUCL-1.1.11-mac-arm64.dmg",
+          "name": "FAIONYX-1.1.11-mac-arm64.dmg",
           "size": 136963445,
           "sha256": "770284b3a62746e836d4a7b6902f21388a2fcacd7543eb55606f09d25b0daafc",
           "sourceCommit": "5167500b6c27b9bbdd1e80f22d91d3f5904007eb",
@@ -1584,7 +1584,7 @@
           "status": "fifth native candidate; complete qualification false; new identity revision requires rebuild; no public release"
         },
         {
-          "name": "KAMUCL-1.1.11-mac-x64.zip",
+          "name": "FAIONYX-1.1.11-mac-x64.zip",
           "size": 133313379,
           "sha256": "b521695add53b6d77efd9546da2f537efea1e96b9570e785404a294c71867159",
           "sourceCommit": "5167500b6c27b9bbdd1e80f22d91d3f5904007eb",
@@ -1599,7 +1599,7 @@
           "status": "fifth native candidate; complete qualification false; new identity revision requires rebuild; no public release"
         },
         {
-          "name": "KAMUCL-1.1.11-mac-x64.dmg",
+          "name": "FAIONYX-1.1.11-mac-x64.dmg",
           "size": 144326527,
           "sha256": "1fc3074fafd638ee835eb4cd5da688e315bf7ff2784128395e613aa5ca35bd5b",
           "sourceCommit": "5167500b6c27b9bbdd1e80f22d91d3f5904007eb",
@@ -1614,7 +1614,7 @@
           "status": "fifth native candidate; complete qualification false; new identity revision requires rebuild; no public release"
         },
         {
-          "name": "KAMUCL-1.1.11-linux-x64.tar.gz",
+          "name": "FAIONYX-1.1.11-linux-x64.tar.gz",
           "size": 133185674,
           "sha256": "7ccfa407fe3ce820c924f6ab1a2a8c9e8b7ab818b9a21cf4711c1b4350630fbe",
           "sourceCommit": "5167500b6c27b9bbdd1e80f22d91d3f5904007eb",
@@ -1629,7 +1629,7 @@
           "status": "fifth native candidate; complete qualification false; new identity revision requires rebuild; no public release"
         },
         {
-          "name": "KAMUCL-1.1.11-linux-x64.deb",
+          "name": "FAIONYX-1.1.11-linux-x64.deb",
           "size": 109170472,
           "sha256": "eb74700d492b6ce3ba7d00456c96871ffd2f70962ec1dead39f9942ccdd84269",
           "sourceCommit": "5167500b6c27b9bbdd1e80f22d91d3f5904007eb",
@@ -1644,7 +1644,7 @@
           "status": "fifth native candidate; complete qualification false; new identity revision requires rebuild; no public release"
         },
         {
-          "name": "KAMUCL-1.1.11-linux-x64.AppImage",
+          "name": "FAIONYX-1.1.11-linux-x64.AppImage",
           "size": 109224288,
           "sha256": "cee2d3eb816cc1b2748d68d100b0ec021b11e9993a792f80e3113fbd25c8c6d3",
           "sourceCommit": "5167500b6c27b9bbdd1e80f22d91d3f5904007eb",
@@ -1659,7 +1659,7 @@
           "status": "fifth native candidate; complete qualification false; new identity revision requires rebuild; no public release"
         },
         {
-          "name": "KAMUCL-1.1.11-linux-arm64.tar.gz",
+          "name": "FAIONYX-1.1.11-linux-arm64.tar.gz",
           "size": 134351796,
           "sha256": "84293941f08b38866f4f3bf870fe02cf2928fc0c882b3c03ddec06c6da63bcf3",
           "sourceCommit": "5167500b6c27b9bbdd1e80f22d91d3f5904007eb",
@@ -1674,7 +1674,7 @@
           "status": "fifth native candidate; complete qualification false; new identity revision requires rebuild; no public release"
         },
         {
-          "name": "KAMUCL-1.1.11-linux-arm64.deb",
+          "name": "FAIONYX-1.1.11-linux-arm64.deb",
           "size": 104172876,
           "sha256": "70cbdb6eb6c22304da13c078e76080d253ea389243e1dbbe5ca548e4d96c750b",
           "sourceCommit": "5167500b6c27b9bbdd1e80f22d91d3f5904007eb",
@@ -1689,7 +1689,7 @@
           "status": "fifth native candidate; complete qualification false; new identity revision requires rebuild; no public release"
         },
         {
-          "name": "KAMUCL-1.1.11-linux-arm64.AppImage",
+          "name": "FAIONYX-1.1.11-linux-arm64.AppImage",
           "size": 103865563,
           "sha256": "ca520282989106046c3dbc7a9f2b6aec4f8bfdaa84e2b9aa2d0e38dd60dcafe9",
           "sourceCommit": "5167500b6c27b9bbdd1e80f22d91d3f5904007eb",

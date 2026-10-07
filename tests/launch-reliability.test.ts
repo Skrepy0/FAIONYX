@@ -10,7 +10,7 @@ import { versionInstallHarness } from './helpers/version-install-harness'
 import { invalidLaunchArtifact, ensureLaunchArtifact } from '../src/main/core/launchIntegrity'
 import { ExitJournal } from '../src/main/core/exitJournal'
 
-const temp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-reliability-'))
+const temp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-reliability-'))
 const sha1 = (b: Buffer) => crypto.createHash('sha1').update(b).digest('hex')
 
 test('Maven conflict identity selects child version while preserving classifiers/types and OS rules', async () => {
@@ -71,7 +71,7 @@ test('failed repair cannot pass integrity verification or launch', async () => {
     fs.writeFileSync(path.join(root, 'client.jar'), 'damaged but recoverable original')
     await assert.rejects(ensureLaunchArtifact({ dest: path.join(root, 'client.jar'), url: `http://127.0.0.1:${(server.address() as { port: number }).port}/bad` }, 'official'), /下载失败/)
     assert.equal(fs.readFileSync(path.join(root, 'client.jar'),'utf8'),'damaged but recoverable original')
-    assert(!fs.readdirSync(root).some(n=>n.startsWith('.kamucl-repair-')))
+    assert(!fs.readdirSync(root).some(n=>n.startsWith('.faionyx-repair-')))
   } finally { server.closeAllConnections(); await new Promise<void>(r => server.close(() => r())); fs.rmSync(root, { recursive: true, force: true }) }
 })
 

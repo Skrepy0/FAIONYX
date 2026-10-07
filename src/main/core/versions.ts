@@ -115,30 +115,30 @@ export interface VersionJson {
   javaVersion?: { majorVersion: number }
   libraries?: Library[]
   downloads?: { client?: LibraryArtifact }
-  /** KAMUCL 自定义字段：加载器版本标记 */
+  /** FAIONYX 自定义字段：加载器版本标记 */
   _loader?: 'forge' | 'fabric' | 'quilt' | 'neoforge'
   _loaderVersion?: string
-  /** KAMUCL 自定义字段：实例隔离（启动时游戏目录 = 本版本目录） */
+  /** FAIONYX 自定义字段：实例隔离（启动时游戏目录 = 本版本目录） */
   _gameDir?: boolean
   /** 兼容已有实例描述的显式游戏目录。 */
   gameDirectory?: string
   _gameDirectory?: string
-  /** KAMUCL 自定义字段：来源整合包名称/版本 */
+  /** FAIONYX 自定义字段：来源整合包名称/版本 */
   _modpackName?: string
   _modpackVersion?: string
-  /** KAMUCL 自定义字段：版本独立指定 Java 路径 */
+  /** FAIONYX 自定义字段：版本独立指定 Java 路径 */
   _javaPath?: string
   _javaAuto?: boolean
-  /** KAMUCL 自定义字段：实例级窗口设置覆盖。 */
+  /** FAIONYX 自定义字段：实例级窗口设置覆盖。 */
   _resolution?: GameResolution
-  /** KAMUCL 自定义字段：自定义命名的原版实例记录其真实 MC 版本 id（修复/推断用） */
+  /** FAIONYX 自定义字段：自定义命名的原版实例记录其真实 MC 版本 id（修复/推断用） */
   _mcVersion?: string
-  /** KAMUCL 自定义字段：实例图标（'mob:<内置id>' / 'file:<自定义文件名>'） */
+  /** FAIONYX 自定义字段：实例图标（'mob:<内置id>' / 'file:<自定义文件名>'） */
   _icon?: string
-  /** KAMUCL 自定义字段：首页启动卡专属缩略图（受管绝对路径）。 */
+  /** FAIONYX 自定义字段：首页启动卡专属缩略图（受管绝对路径）。 */
   _thumbnail?: string
   _thumbnailFit?: ImageFit
-  /** KAMUCL 自定义字段：已拍平为自包含实例（合并继承链完成时间），不再依赖基础原版 */
+  /** FAIONYX 自定义字段：已拍平为自包含实例（合并继承链完成时间），不再依赖基础原版 */
   _flattenedAt?: string
 }
 
@@ -184,7 +184,7 @@ export async function fetchVersionManifest(_mirror: MirrorPref, refresh = false,
 
 // ---------------- 版本 json ----------------
 
-/** 同步读取本地版本 json（容错 BOM 头）；versions/ 没有时回退到 .kamucl/base 依赖原版区 */
+/** 同步读取本地版本 json（容错 BOM 头）；versions/ 没有时回退到 .faionyx/base 依赖原版区 */
 export function readVersionJson(id: string): VersionJson {
   if(typeof id!=='string'||!id||id==='.'||id==='..'||/[\\/:\x00]/.test(id))throw new Error('无效的版本 ID')
   let p = versionJsonPath(id)
@@ -321,7 +321,7 @@ function fmtMB(bytes: number): string {
 /**
  * 安装原版（不含加载器），返回最终版本 id。已下载的文件会自动跳过。
  * dest='versions'：作为独立版本安装进 versions/（用户主动安装，支持 instanceName 自定义实例名）
- * dest='base'：作为加载器实例的内部依赖装进 .kamucl/base/（不进版本列表，json/jar 仅供链解析）
+ * dest='base'：作为加载器实例的内部依赖装进 .faionyx/base/（不进版本列表，json/jar 仅供链解析）
  */
 export async function installVanilla(
   ...args: Parameters<typeof installVanillaUnlocked>
@@ -400,12 +400,12 @@ async function installVanillaUnlocked(
             // 2. 客户端 jar
             const client = vj.downloads?.client
             if (client?.url) {
-              // PCL2 本地复用优化：客户端 jar 优先从其他游戏文件夹的 versions 与 .kamucl/base
+              // PCL2 本地复用优化：客户端 jar 优先从其他游戏文件夹的 versions 与 .faionyx/base
               // 里按 大小+sha1 查找相同文件直接复制（多文件夹/加载器依赖原版间不再重复下载）
               const versionDirs = allVersionsDirs()
               const reuseDirs = versionDirs
                 .map((v) => v.dir)
-                .concat(versionDirs.map((v) => path.join(v.folder, '.kamucl', 'base')))
+                .concat(versionDirs.map((v) => path.join(v.folder, '.faionyx', 'base')))
                 .filter((dir) => path.resolve(dir) !== path.resolve(path.dirname(jarPath)))
               await downloadAll(
                 [{ url: client.url, dest: jarPath, sha1: client.sha1, size: client.size, reuseDirs }],
@@ -601,7 +601,7 @@ async function installVersionInFolder(
   return installedId
 }
 
-/** 链底客户端 jar 的实际位置（versions 区优先，缺省时取 .kamucl/base 依赖原版区） */
+/** 链底客户端 jar 的实际位置（versions 区优先，缺省时取 .faionyx/base 依赖原版区） */
 export function clientJarPath(id: string): string {
   return fs.existsSync(versionJsonPath(id)) ? versionJarPath(id) : baseVersionJarPath(id)
 }
@@ -655,7 +655,7 @@ export function resolveVersionChain(id: string): { merged: VersionJson; baseId: 
 /**
  * 把带 inheritsFrom 的实例拍平为自包含实例：
  * 合并链 json（含全部启动所需内容）写回实例 json，client jar 复制进实例目录；
- * 之后基础原版改名/删除均不再影响该实例。原 json 备份为 <id>.json.kamucl-bak。
+ * 之后基础原版改名/删除均不再影响该实例。原 json 备份为 <id>.json.faionyx-bak。
  * 幂等：无 inheritsFrom 时直接返回 false。
  */
 export function flattenInstance(id: string): boolean {
@@ -680,7 +680,7 @@ export function flattenInstance(id: string): boolean {
     fs.copyFileSync(srcJar, destJar)
   }
 
-  fs.copyFileSync(jp, jp + '.kamucl-bak')
+  fs.copyFileSync(jp, jp + '.faionyx-bak')
   fs.writeFileSync(jp, JSON.stringify(merged, null, 2), 'utf-8')
   return true
 }
@@ -737,7 +737,7 @@ export async function installClientJarOnly(id: string, emit: ProgressEmit, signa
 }
 
 /**
- * 把「加载器安装时临时落地的原版条目」迁移进 .kamucl/base 依赖区：
+ * 把「加载器安装时临时落地的原版条目」迁移进 .faionyx/base 依赖区：
  * versions/<mc>/ 下的 json+jar 移走并删除目录，版本列表不再出现多余的原版条目。
  * 安装不完整（.installing 标记在）时整个目录直接删除。
  */
@@ -806,7 +806,7 @@ export function scanInstalledFolder(folder: string, onlyId?: string): {
       const localParent = (id: string): VersionJson | undefined => {
         try {
           const local = versionJsonInFolder(root, id)
-          const localBase = path.join(root, '.kamucl', 'base', id, `${id}.json`)
+          const localBase = path.join(root, '.faionyx', 'base', id, `${id}.json`)
           return parseVersionFile(fs.existsSync(local) ? local : fs.existsSync(localBase) ? localBase : baseVersionJsonPath(id))
         } catch { return undefined }
       }
@@ -815,9 +815,9 @@ export function scanInstalledFolder(folder: string, onlyId?: string): {
         const id = chain.length === 1 ? name : chain.at(-2)!.inheritsFrom!
         const jar = chain.length === 1 ? path.join(dir, name, `${name}.jar`)
           : fs.existsSync(versionJsonInFolder(root, id)) ? path.join(dir, id, `${id}.jar`)
-          : fs.existsSync(path.join(root, '.kamucl', 'base', id, `${id}.json`)) ? path.join(root, '.kamucl', 'base', id, `${id}.jar`)
+          : fs.existsSync(path.join(root, '.faionyx', 'base', id, `${id}.json`)) ? path.join(root, '.faionyx', 'base', id, `${id}.jar`)
           : baseVersionJarPath(id)
-        return readClientVersionEvidence(jar) ?? cachedClientVersionEvidence(chain, [dir, path.join(root, '.kamucl', 'base'), path.dirname(baseVersionDir('_'))])
+        return readClientVersionEvidence(jar) ?? cachedClientVersionEvidence(chain, [dir, path.join(root, '.faionyx', 'base'), path.dirname(baseVersionDir('_'))])
       })
       const item: InstalledVersion = { id: name, mcVersion: resolved.mcVersion, loader: resolved.loader, loaderVersion: resolved.loaderVersion, folder: root }
       if (j._modpackName) item.modpackName = j._modpackName
@@ -985,7 +985,7 @@ export function setVersionThumbnail(id: string, imagePath: string, fit: ImageFit
   if (!['fill', 'fit', 'crop'].includes(fit)) throw new Error('非法的缩略图显示方式')
   const folder = folderOfVersion(id)
   const managed = ensureInstanceThumbnail(imagePath, folder)
-  if (!managed) throw new Error('缩略图不在 KAMUCL 受管目录中或图片已损坏')
+  if (!managed) throw new Error('缩略图不在 FAIONYX 受管目录中或图片已损坏')
   const jsonPath = versionJsonPath(id)
   const version = readVersionJson(id)
   const previous = version._thumbnail

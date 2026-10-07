@@ -1,7 +1,7 @@
 {
   "app": {
-    "bundleName": "com.kamucl.launcher",
-    "vendor": "KAMUCL",
+    "bundleName": "com.faionyx.launcher",
+    "vendor": "FAIONYX",
     "versionCode": 1,
     "versionName": "0.0.0",
     "icon": "$media:app_icon",

@@ -21,7 +21,7 @@ async function audit(proofFile, metadataFile) {
   })
   assert(instance, 'Installed modpack instance missing')
   const directory = path.join(game, 'versions', instance), json = JSON.parse(fs.readFileSync(path.join(directory, instance + '.json')))
-  const managed = JSON.parse(fs.readFileSync(path.join(directory, '.kamucl-modpack.json'))).managedFiles
+  const managed = JSON.parse(fs.readFileSync(path.join(directory, '.faionyx-modpack.json'))).managedFiles
   const candidates = managed.filter(rel => /^(?:mods|resourcepacks|shaderpacks|datapacks|global_packs\/(?:both|datapacks|resourcepacks|required_data|optional_data|required_resources|optional_resources)|(?:config\/)?openloader\/(?:data|resources)|config\/paxi\/(?:datapacks|resourcepacks))\/[^/]+\.(?:jar|zip)(?:\.disabled)?$/i.test(rel))
   const identities = new Map(), locations = []
   for (const rel of candidates) {
@@ -60,7 +60,7 @@ async function audit(proofFile, metadataFile) {
       libraryFiles.add(artifact.path); libraryBytes += verify(file, artifact); libraries++
     }
   }
-  assert(fs.readFileSync(path.join(game, 'kamucl-logs/installer.log'), 'utf8').includes('[退出码 0]'))
+  assert(fs.readFileSync(path.join(game, 'faionyx-logs/installer.log'), 'utf8').includes('[退出码 0]'))
   const start = proof.startedAt ?? events[0].at, timeline = {}
   for (const event of events) for (const lane of event.parallelStages ?? []) {
     const key = lane.id + ':' + lane.state

@@ -1,4 +1,4 @@
-package kamucltest;
+package faionyxtest;
 
 import net.fabricmc.api.ClientModInitializer;
 import java.nio.file.*;
@@ -8,7 +8,7 @@ import java.util.*;
 /** Test-only driver of an unmodified official 26.3 client. Not shipped as a MOD. */
 public final class OfflineGameProbe implements ClientModInitializer {
     public void onInitializeClient() {
-        String base = System.getProperty("kamucl.gameProof");
+        String base = System.getProperty("faionyx.gameProof");
         if (base == null) return;
         Thread driver = new Thread(() -> {
             try {
@@ -66,6 +66,6 @@ public final class OfflineGameProbe implements ClientModInitializer {
                     Thread.sleep(250);
                 }
             } catch(Throwable e) {e.printStackTrace();}
-        },"kamucl-owned-game-proof");driver.setDaemon(true);driver.start();
+        },"faionyx-owned-game-proof");driver.setDaemon(true);driver.start();
     }
 }

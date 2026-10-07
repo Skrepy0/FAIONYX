@@ -44,7 +44,7 @@ test('off input failure stays failure and cannot silently advance to restored-on
 
 test('native snapshot reads real focus and throttling and refuses an ambiguous window without mutation', () => {
   let reads = 0
-  const window = { id: 7, isDestroyed: () => false, getBounds: () => ({ x: 0, y: 25, width: 1024, height: 684 }), isVisible: () => true, isMinimized: () => false, isFocused: () => true, webContents: { id: 8, getURL: () => 'file:///KAMUCL/renderer/index.html', getBackgroundThrottling: () => { reads++; return true } } }
+  const window = { id: 7, isDestroyed: () => false, getBounds: () => ({ x: 0, y: 25, width: 1024, height: 684 }), isVisible: () => true, isMinimized: () => false, isFocused: () => true, webContents: { id: 8, getURL: () => 'file:///FAIONYX/renderer/index.html', getBackgroundThrottling: () => { reads++; return true } } }
   const electron = { BrowserWindow: { getAllWindows: () => [window] }, app: { isHidden: () => false }, screen: { getDisplayMatching: () => ({ id: 2, scaleFactor: 2, displayFrequency: 59.9 }) } }
   const before = nativeSnapshot(electron)
   assert.equal(reads, 1); assert.equal(before.backgroundThrottling, true); assertSameWindow(before, before)

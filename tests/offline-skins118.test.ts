@@ -17,7 +17,7 @@ const decode = async (bytes: Buffer) => {
 const png = (color = '#cf8055', height = 64) => sharp({ create: { width: 64, height, channels: 4, background: color } }).png().toBuffer()
 const deferred = () => { let resolve!: () => void; const promise = new Promise<void>(done => { resolve = done }); return { promise, resolve } }
 async function temporary(work: (dir: string) => Promise<void>) {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'kamucl-offline-skin-'))
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'faionyx-offline-skin-'))
   try { await work(dir) } finally { await fs.rm(dir, { recursive: true, force: true }) }
 }
 

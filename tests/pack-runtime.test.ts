@@ -18,7 +18,7 @@ test('pack owns actual runtime metadata for every loader, with no extra loader w
   assert.throws(() => packRuntimeProfile({ id: 'a', inheritsFrom: 'a' }, 'a', { mcVersion: '26.2', name: 'a', packVersion: '1' }))
 })
 test('reusing an existing loader preserves its files and copies only runtime into pack', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-pack-runtime-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-pack-runtime-'))
   try {
     const source = path.join(root, 'loader')
     fs.mkdirSync(path.join(source, 'saves'), { recursive: true })

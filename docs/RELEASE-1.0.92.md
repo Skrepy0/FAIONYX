@@ -1,4 +1,4 @@
-# KAMUCL 1.0.92
+# FAIONYX 1.0.92
 
 首页右下角标题更新为「参与测试及创作者 / TESTERS & CREATORS」。在原有 BAI_ZHU、AeZz、物晖后，按确认顺序追加牛肉、好好、hun_Bk、J39、略略略、鸦猫、sheri、书九叶、yansan、(x_x;)、小坎坷、MuxYang、八千代、Henry、月を見ていた、Hiro、摇滚高手，共 20 位。
 

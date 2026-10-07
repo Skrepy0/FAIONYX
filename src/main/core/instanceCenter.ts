@@ -17,7 +17,7 @@ import { parseNbt } from './nbt'
 import { withFileJob } from './fileJobs'
 import { externalGameUsesDirectory } from './gameDirectoryUse'
 
-const OMIT = new Set(['versions','libraries','assets','runtimes','runtime','.kamucl','logs','crash-reports','natives','backups','.installing','session.lock','kamucl-logs','.git','launcher_accounts.json','launcher_profiles.json','accounts.json'])
+const OMIT = new Set(['versions','libraries','assets','runtimes','runtime','.faionyx','logs','crash-reports','natives','backups','.installing','session.lock','faionyx-logs','.git','launcher_accounts.json','launcher_profiles.json','accounts.json'])
 export function validateInstanceName(name:string) {
   if(typeof name!=='string'||name.trim()!==name||name.length>120||!name||/[\\/:*?"<>|\x00-\x1f]/.test(name)||/[. ]$/.test(name)||/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(name)||name==='.'||name==='..') throw new Error('实例名称无效，请使用不含路径符号的名称')
   return name
@@ -43,7 +43,7 @@ export async function assertInstanceIdle(dir:string) {
 }
 export async function playerRoots(dir:string,id:string,saves=true,screenshots=false) {
   const names=await fs.promises.readdir(dir)
-  return names.filter(n=>!OMIT.has(n.toLowerCase())&&!n.startsWith('.kamucl-')&&!/\.exe$|\.dll$|\.json\.kamucl-bak$/i.test(n)&&n!==id+'.json'&&n!==id+'.jar'&&(saves||n!=='saves')&&(screenshots||n!=='screenshots'))
+  return names.filter(n=>!OMIT.has(n.toLowerCase())&&!n.startsWith('.faionyx-')&&!/\.exe$|\.dll$|\.json\.faionyx-bak$/i.test(n)&&n!==id+'.json'&&n!==id+'.jar'&&(saves||n!=='saves')&&(screenshots||n!=='screenshots'))
 }
 export async function centerOverview(target:InstanceTarget):Promise<InstanceOverview>{
   const c=centerTarget(target),meta=withGameFolder(c.folder,()=>resolveInstanceMetadata(c.json,id=>{try{return readVersionJson(id)}catch{return undefined}}))
@@ -78,7 +78,7 @@ export async function backupInstance(target:InstanceTarget,title='实例手动�
     await assertInstanceIdle(c.dir)
     const store=instanceBackups(c.dir)
     if(world){safeRelative(world);if(world.includes('/'))throw new Error('无效存档');return store.create(c.dir,['saves/'+world],title,automatic,{type:'world',target:c.target,world},signal,progress)}
-    const stage=await fs.promises.mkdtemp(path.join(app.getPath('temp'),'kamucl-backup-'))
+    const stage=await fs.promises.mkdtemp(path.join(app.getPath('temp'),'faionyx-backup-'))
     try{
       await stageInstance(c,stage,target.id,true,true,signal,progress)
       return await store.create(stage,await fs.promises.readdir(stage),title,automatic,{type:'instance',target:c.target,modState:exportModState(path.join(c.dir,'mods'))},signal,progress)
@@ -94,7 +94,7 @@ export async function cloneInstance(target:InstanceTarget,name:string,destinatio
   return withFileJob(c.dir,signal,()=>withFileJob(path.join(c.dir,'mods'),signal,()=>withFileJob(dest,signal,async()=>{
     await assertInstanceIdle(c.dir)
     if(fs.existsSync(dest))throw new Error('目标实例已存在，请更换名称')
-    const stage=await fs.promises.mkdtemp(path.join(parent,'.kamucl-instance-'))
+    const stage=await fs.promises.mkdtemp(path.join(parent,'.faionyx-instance-'))
     let published=false
     try{
       let state:unknown=exportModState(path.join(c.dir,'mods'))
@@ -154,7 +154,7 @@ export async function restoreWorld(target:InstanceTarget,backupId:string,name:st
     if(exists&&!overwrite)throw new Error('同名存档已存在，请换一个名称或明确选择覆盖')
     const before=JSON.stringify(await scanFiles(c.dir,['saves/'+name],signal))
     if(exists)await backups.create(c.dir,['saves/'+name],'存档覆盖恢复前',false,{type:'world',world:name,target:c.target},signal,progress)
-    const stage=await fs.promises.mkdtemp(path.join(c.dir,'.kamucl-world-')),old=path.join(stage,'old')
+    const stage=await fs.promises.mkdtemp(path.join(c.dir,'.faionyx-world-')),old=path.join(stage,'old')
     let preserve=false
     try{
       await backups.materialize(backupId,stage,signal,progress)
@@ -176,7 +176,7 @@ export async function restoreInstanceInPlace(target:InstanceTarget,backupId:stri
  await backupInstance(target,'实例覆盖恢复前',false,undefined,signal,progress)
  const name='restore-'+crypto.randomUUID()
  const result=await cloneInstance(target,name,c.folder,true,true,signal,progress,backupId)
- const staging=path.join(c.folder,'versions',result.id),old=path.join(c.folder,'versions','.kamucl-restore-old-'+crypto.randomUUID())
+ const staging=path.join(c.folder,'versions',result.id),old=path.join(c.folder,'versions','.faionyx-restore-old-'+crypto.randomUUID())
  let keepOld=false
  try{
   return await withFileJob(c.dir,signal,()=>withFileJob(path.join(c.dir,'mods'),signal,async()=>{

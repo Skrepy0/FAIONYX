@@ -49,7 +49,7 @@ test('独立下载地址接口拒绝无效协议、认证 URL 和失败响应，
 })
 
 for (const corrupt of [false, true]) test(`整合包真实安装编排：包内 ZIP、本地改名 JAR、API 补链、Maven 精确补全，错误内容=${corrupt}`, async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-autocomplete-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-autocomplete-'))
   const game = path.join(root, 'game'), other = path.join(root, 'other'), bytes = [
     Buffer.from('bundle datapack'), Buffer.from('local file'), Buffer.from('maven mod'), Buffer.from('resource zip')
   ]

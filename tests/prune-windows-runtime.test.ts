@@ -9,7 +9,7 @@ import { createRequire } from 'node:module'
 const { pruneWindowsRuntime, OPTIONAL_DXC } = createRequire(import.meta.url)('../scripts/prune-windows-runtime.cjs')
 const hash = (data: Buffer) => crypto.createHash('sha256').update(data).digest('hex')
 function fixture() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-runtime-prune-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-runtime-prune-'))
   const appOutDir = path.join(root, 'output')
   fs.mkdirSync(appOutDir)
   return { root, context: { electronPlatformName: 'win32', arch: 1, appOutDir, packager: { config: { electronVersion: '44.3.0' }, info: { appDir: root } } } }

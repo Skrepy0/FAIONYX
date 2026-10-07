@@ -1,7 +1,7 @@
 // Verify the exact shipped source archive, then build from a fresh extraction.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),{spawnSync}=require('node:child_process'),Zip=require('adm-zip')
 const root=path.resolve(__dirname,'..'),version=require('../package.json').version
-const archive=path.resolve(process.argv[2]||path.join(root,`release/KAMUCL-${version}-source.zip`))
+const archive=path.resolve(process.argv[2]||path.join(root,`release/FAIONYX-${version}-source.zip`))
 const directory=path.join(root,'out','source-audit-'+version+'-'+crypto.randomUUID())
 const proofFile=path.join(root,'out',`source-audit-${version}.json`),sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 const proof={version,archive,directory,verified:false,commands:[]}

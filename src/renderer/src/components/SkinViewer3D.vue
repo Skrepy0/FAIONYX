@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // SPDX-License-Identifier: MIT
-// KAMUCL preview lifecycle and interaction; geometry is skinview3d v3.4.2 (MIT).
+// FAIONYX preview lifecycle and interaction; geometry is skinview3d v3.4.2 (MIT).
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue'
 import { MASCOT_INTERACTIVE } from '../mascotInteraction'
 import { AmbientLight, DirectionalLight, Mesh, NearestFilter, PerspectiveCamera, Raycaster, Scene, SRGBColorSpace, Texture, Vector2, WebGLRenderer } from 'three'

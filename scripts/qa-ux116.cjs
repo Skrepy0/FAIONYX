@@ -5,16 +5,16 @@ const native = require('./qa-native-window115.cjs'), community = require('./qa-c
 const nativeKey = require('./qa-native-key116.cjs')
 module.exports = async function(h) {
   assert.equal(process.platform, 'win32')
-  const directory = path.resolve('out', 'qa-ux116-' + process.env.KAMUCL_TEST_THEME + '-' + crypto.randomUUID())
+  const directory = path.resolve('out', 'qa-ux116-' + process.env.FAIONYX_TEST_THEME + '-' + crypto.randomUUID())
   fs.mkdirSync(directory, { recursive: true })
-  const proof = { complete: false, version: h.version, directory, theme: process.env.KAMUCL_TEST_THEME, observations: [], screenshots: [], classification: 'Actual Windows portable UI, foreground-checked coordinate/keyboard input. Synthetic provider/installation responses, not live services. Actual host display unchanged; 1366x768/DPI geometry is separately unit-tested.' }
+  const proof = { complete: false, version: h.version, directory, theme: process.env.FAIONYX_TEST_THEME, observations: [], screenshots: [], classification: 'Actual Windows portable UI, foreground-checked coordinate/keyboard input. Synthetic provider/installation responses, not live services. Actual host display unchanged; 1366x768/DPI geometry is separately unit-tested.' }
   const save = () => fs.writeFileSync(path.join(directory, 'live.json'), JSON.stringify(proof, null, 2))
   const identity = await h.main(`(()=>{const fs=process.mainModule.require('node:fs'),windows=testElectron.BrowserWindow.getAllWindows().filter(w=>w.webContents.getURL().includes('/renderer/index.html'));if(windows.length!==1)throw Error('Ambiguous owned renderer');const w=windows[0];return{pid:process.pid,ppid:process.ppid,windowId:w.id,webContentsId:w.webContents.id,profile:fs.realpathSync.native(testElectron.app.getPath('userData')),electron:process.versions.electron,arch:process.arch}})()`)
   assert(identity.pid === h.ownedTrack.pid || identity.ppid === h.ownedTrack.pid)
   assert.equal(identity.profile, fs.realpathSync.native(h.profile)); assert.equal(identity.arch, 'x64')
   proof.identity = identity
   const binding = { pid: identity.pid, windowId: identity.windowId, webContentsId: identity.webContentsId }, koffi = path.resolve('node_modules/koffi')
-  const state = async () => ({ native: await h.main(`(()=>{const w=testElectron.BrowserWindow.fromId(${identity.windowId});return{bounds:w.getBounds(),content:w.getContentSize(),zoom:w.webContents.getZoomFactor(),maximized:w.isMaximized(),workArea:testElectron.screen.getDisplayMatching(w.getBounds()).workArea}})()`), renderer: await h.evaluate('({width:innerWidth,height:innerHeight,hasFocus:document.hasFocus(),hidden:document.hidden,theme:document.documentElement.dataset.theme})'), settings: await h.evaluate("window.kamucl.invoke('settings:get')") })
+  const state = async () => ({ native: await h.main(`(()=>{const w=testElectron.BrowserWindow.fromId(${identity.windowId});return{bounds:w.getBounds(),content:w.getContentSize(),zoom:w.webContents.getZoomFactor(),maximized:w.isMaximized(),workArea:testElectron.screen.getDisplayMatching(w.getBounds()).workArea}})()`), renderer: await h.evaluate('({width:innerWidth,height:innerHeight,hasFocus:document.hasFocus(),hidden:document.hidden,theme:document.documentElement.dataset.theme})'), settings: await h.evaluate("window.faionyx.invoke('settings:get')") })
   const foreground = async () => {
     const value = await h.main(`(${native.observeOwned})(${JSON.stringify(binding)},${JSON.stringify(koffi)})`)
     assert.equal(value.foreground, value.hwnd); assert.equal(value.foregroundPid, binding.pid); assert(value.visible && value.focused && !value.minimized)
@@ -103,7 +103,7 @@ module.exports = async function(h) {
     await until('final persisted default-compatible state', state, v => v.settings.uiWindowAutoFit === false && v.native.zoom === 1)
     await h.main(`(()=>{const w=testElectron.BrowserWindow.fromId(${identity.windowId});w.setSize(1360,860);return true})()`)
     await nav('home'); await screenshot('normal-home-final')
-    if(process.env.KAMUCL_INSTALLER_EVENTS116)proof.installProgress=await require('./qa-install-progress116.cjs')({...h,click,nav,screenshot},binding)
+    if(process.env.FAIONYX_INSTALLER_EVENTS116)proof.installProgress=await require('./qa-install-progress116.cjs')({...h,click,nav,screenshot},binding)
     proof.final = await state(); proof.ownedAppMetricsBeforeClose=await h.main('testElectron.app.getAppMetrics().map(row=>({pid:row.pid,type:row.type}))'); proof.complete = true
     fs.writeFileSync(path.join(directory,'summary.json'), JSON.stringify(proof,null,2), { flag:'wx' }); console.log(JSON.stringify({ complete:true, directory, theme:proof.theme }))
   } catch(error) { primary = error; proof.error={ name:error.name, message:error.message, stack:error.stack }; try { const data=Buffer.from((await h.call('Page.captureScreenshot',{format:'png'})).data,'base64');fs.writeFileSync(path.join(directory,'failure.png'),data,{flag:'wx'}) } catch{}; throw error

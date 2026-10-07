@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "product": "KAMUCL",
+  "product": "FAIONYX",
   "version": "1.1.11",
   "createdAt": "2026-10-03T20:09:42.417Z",
   "timezone": "Asia/Hong_Kong",
@@ -1540,7 +1540,7 @@
       }
     ],
     "ipcChannelCount": 280,
-    "ipcScope": "TypeScript AST with as-const/satisfies/freeze unwrapping: IPC/IPC_EVENT/FRP_IPC declarations; literal/resolved ipcMain/ipc handle/on; window.kamucl invoke/on/send and api.ts wrapper calls; ticket helper registration. Dynamic expressions require manual semantic review. Presence is not runtime parity.",
+    "ipcScope": "TypeScript AST with as-const/satisfies/freeze unwrapping: IPC/IPC_EVENT/FRP_IPC declarations; literal/resolved ipcMain/ipc handle/on; window.faionyx invoke/on/send and api.ts wrapper calls; ticket helper registration. Dynamic expressions require manual semantic review. Presence is not runtime parity.",
     "ipcChannels": [
       {
         "channel": "accounts:addOffline",
@@ -4131,7 +4131,7 @@
         "evidenceStatus": "inventory-only"
       },
       {
-        "channel": "kamucl:mem-trim",
+        "channel": "faionyx:mem-trim",
         "declared": [],
         "backend": [],
         "renderer": [
@@ -7705,67 +7705,67 @@
       {
         "file": "src/renderer/src/App.vue",
         "line": 236,
-        "operation": "window.kamucl.send",
+        "operation": "window.faionyx.send",
         "expression": "`window:${action}`"
       },
       {
         "file": "src/renderer/src/api.ts",
         "line": 69,
-        "operation": "window.kamucl.invoke",
+        "operation": "window.faionyx.invoke",
         "expression": "channel"
       },
       {
         "file": "src/renderer/src/api.ts",
         "line": 374,
-        "operation": "window.kamucl.on",
+        "operation": "window.faionyx.on",
         "expression": "channel"
       },
       {
         "file": "src/renderer/src/components/FileManager.vue",
         "line": 140,
-        "operation": "window.kamucl.invoke",
+        "operation": "window.faionyx.invoke",
         "expression": "action==='lock'||action==='unlock'?'mods:setLocked':'mods:setEnabled'"
       },
       {
         "file": "src/renderer/src/components/InstanceCenter.vue",
         "line": 25,
-        "operation": "window.kamucl.invoke",
+        "operation": "window.faionyx.invoke",
         "expression": "channel"
       },
       {
         "file": "src/renderer/src/components/MascotStage.vue",
         "line": 93,
-        "operation": "window.kamucl.send",
+        "operation": "window.faionyx.send",
         "expression": "quit?'window:mascotQuit':'window:close'"
       },
       {
         "file": "src/renderer/src/components/SupplementalModsResult.vue",
         "line": 12,
-        "operation": "window.kamucl.invoke",
+        "operation": "window.faionyx.invoke",
         "expression": "retry?'mods:supplementalRetry':'mods:supplementalKeep'"
       },
       {
         "file": "src/renderer/src/components/connection/VoxLinkPanel.vue",
         "line": 264,
-        "operation": "window.kamucl.invoke",
+        "operation": "window.faionyx.invoke",
         "expression": "channel"
       },
       {
         "file": "src/renderer/src/components/connection/VoxLinkTickets.vue",
         "line": 23,
-        "operation": "window.kamucl.invoke",
+        "operation": "window.faionyx.invoke",
         "expression": "channel"
       },
       {
         "file": "src/renderer/src/views/ProjectionsView.vue",
         "line": 22,
-        "operation": "window.kamucl.invoke",
+        "operation": "window.faionyx.invoke",
         "expression": "channel"
       },
       {
         "file": "src/renderer/src/views/RecordingsView.vue",
         "line": 20,
-        "operation": "window.kamucl.invoke",
+        "operation": "window.faionyx.invoke",
         "expression": "channel"
       }
     ],
@@ -7848,7 +7848,7 @@
         "classification": "startup/lifecycle/host integration"
       },
       {
-        "channel": "kamucl:mem-trim",
+        "channel": "faionyx:mem-trim",
         "required": true,
         "classification": "startup/lifecycle/host integration"
       },
@@ -10679,7 +10679,7 @@
           "version": "1.1.11",
           "capturedSourceCommit": null,
           "artifact": {
-            "path": "release/KAMUCL-1.1.11.exe",
+            "path": "release/FAIONYX-1.1.11.exe",
             "sha256": "dd584c92935c71ebdcd5ca379d0f1f851c9a07b604a9dcdfd6f2a1986e8142c7",
             "size": 97290244
           },
@@ -10990,57 +10990,57 @@
             "asarSHA256": "b03fe16bb64a0bb341069db58b736e3aaeffb8866495f45f1bc4c82dcc64b5f1",
             "artifacts": [
               {
-                "path": "release/KAMUCL-1.1.11.exe",
+                "path": "release/FAIONYX-1.1.11.exe",
                 "sha256": "dd584c92935c71ebdcd5ca379d0f1f851c9a07b604a9dcdfd6f2a1986e8142c7",
                 "size": 97290244
               },
               {
-                "path": "release/KAMUCL-1.1.11-windows-x64.zip",
+                "path": "release/FAIONYX-1.1.11-windows-x64.zip",
                 "sha256": "78d31f0045102c983fa67d586511993312f2901c686b3f75be1d0f95c163bd2f",
                 "size": 97321815
               },
               {
-                "path": "release/KAMUCL-1.1.11-windows-x64-unpacked.zip",
+                "path": "release/FAIONYX-1.1.11-windows-x64-unpacked.zip",
                 "sha256": "676162091dc723ee97ee6309232eca01de24d0fe602ddaa3d2e71d702b2dd881",
                 "size": 143058234
               }
             ],
             "portable": {
               "pass": true,
-              "root": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-8CltD0",
+              "root": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-8CltD0",
               "results": [
                 {
                   "phase": "cold",
                   "firstPaintMs": 343,
                   "electronEntryMs": 4772,
-                  "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-8CltD0\\KAMUCL-runtime\\1.1.11-e54a456dd460309d\\cache.ready",
+                  "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-8CltD0\\FAIONYX-runtime\\1.1.11-e54a456dd460309d\\cache.ready",
                   "cacheMtime": 1791060147623.3047
                 },
                 {
                   "phase": "warm",
                   "firstPaintMs": 190,
                   "electronEntryMs": 112,
-                  "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-8CltD0\\KAMUCL-runtime\\1.1.11-e54a456dd460309d\\cache.ready",
+                  "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-8CltD0\\FAIONYX-runtime\\1.1.11-e54a456dd460309d\\cache.ready",
                   "cacheMtime": 1791060147623.3047
                 }
               ]
             },
             "zipped": {
               "pass": true,
-              "root": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-2iAMCj",
+              "root": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-2iAMCj",
               "results": [
                 {
                   "phase": "cold",
                   "firstPaintMs": 355,
                   "electronEntryMs": 4796,
-                  "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-2iAMCj\\KAMUCL-runtime\\1.1.11-e54a456dd460309d\\cache.ready",
+                  "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-2iAMCj\\FAIONYX-runtime\\1.1.11-e54a456dd460309d\\cache.ready",
                   "cacheMtime": 1791060155166.322
                 },
                 {
                   "phase": "warm",
                   "firstPaintMs": 207,
                   "electronEntryMs": 126,
-                  "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\kamucl startup 中文-2iAMCj\\KAMUCL-runtime\\1.1.11-e54a456dd460309d\\cache.ready",
+                  "cache": "C:\\Users\\ROG\\AppData\\Local\\Temp\\faionyx startup 中文-2iAMCj\\FAIONYX-runtime\\1.1.11-e54a456dd460309d\\cache.ready",
                   "cacheMtime": 1791060155166.322
                 }
               ]

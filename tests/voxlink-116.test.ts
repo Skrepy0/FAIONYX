@@ -51,7 +51,7 @@ test('RUDP uses 1374-byte TURN chunks, authenticates drift before malformed DATA
  const tx=await punchListen(0),rx=await punchListen(0);t.after(()=>{for(const s of [tx,rx])try{s.close()}catch{}});const sizes:number[]=[];rx.on('message',p=>{if(p[2]===RUDP_TYPE_DATA)sizes.push(p.readUInt16BE(11))});const turn=new RudpConn(tx,{address:'127.0.0.1',port:rx.address().port},{codec:{encode:p=>p,decode:p=>p},ownsSocket:false});turn.start();t.after(()=>turn.close());await turn.write(Buffer.alloc(2800));await wait(30);assert.deepEqual(sizes,[1374,1374,52])
 })
 test('tickets keep secrets out of snapshots, stream chosen attachments, encode detail query correctly, mark viewed and remove orphaned secrets',async t=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-tickets-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));const file=path.join(root,'attachment.txt');fs.writeFileSync(file,'chosen attachment');const stat=fs.statSync(file),requests:any[]=[]
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-tickets-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));const file=path.join(root,'attachment.txt');fs.writeFileSync(file,'chosen attachment');const stat=fs.statSync(file),requests:any[]=[]
  const request=async(url:any,init:any)=>{const u=new URL(url),route=u.searchParams.get('route');let body='';if(typeof init.body==='string')body=init.body;else if(init.body)for await(const bytes of init.body)body+=Buffer.from(bytes).toString();requests.push({url:u,route,body});let data:any={}
    if(route==='/ticket/submit')data={id:'fixture-1',ticketSecret:'s+/&=fixture'}
    if(route==='/ticket/detail')data={id:'fixture-1',time:1,description:'problem',attachments:[],messages:[{id:'m1',from:'player',time:2,text:'reply',attachments:[]},{id:'m2',from:'admin',time:3,text:'answer',attachments:[]}]}
@@ -67,7 +67,7 @@ test('tickets keep secrets out of snapshots, stream chosen attachments, encode d
  await service.pollOnce(signal);assert.equal(service.list().length,0);assert(!fs.readFileSync(path.join(root,'tickets.json'),'utf8').includes('sealed:'))
 })
 test('ticket rate limits honor retryAfter; cancellation and changed files do not send attachments',async t=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-ticket-errors-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));let calls=0
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-ticket-errors-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));let calls=0
  const service=new TicketService(path.join(root,'index'),()=> 'https://fixture.invalid/',undefined,(async()=>{calls++;return new Response(JSON.stringify({success:false,error:'RATE_LIMITED',details:{retryAfter:12}}),{status:429})}) as typeof fetch),signal=new AbortController().signal
  await assert.rejects(service.submit('x',[],signal),(e:TicketError)=>e.code==='RATE_LIMITED'&&e.retryAt!>Date.now()+11000);await assert.rejects(service.submit('x',[],signal),/稍后/);assert.equal(calls,1)
  const file=path.join(root,'f');fs.writeFileSync(file,'changed');await assert.rejects(new TicketService(path.join(root,'other'),()=> 'https://fixture.invalid/',undefined,(async()=>{throw Error('must not send')}) as typeof fetch).submit('x',[{path:file,name:'f',size:1,mtime:0}],signal),/变化/)

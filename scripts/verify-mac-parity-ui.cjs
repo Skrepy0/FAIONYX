@@ -315,7 +315,7 @@ module.exports=async function verifyMacParity(h){
  assert.equal(proof.identity.actualUserData,proof.identity.profile,'the observed native profile must equal the owned persistent profile')
  assert.equal(proof.identity.pid,h.ownedTrack.pid);assert.equal(proof.identity.arch,process.arch)
  assert.equal(proof.identity.runtimeVersion,require('../package.json').devDependencies.electron);assert.equal(proof.identity.version,version)
- assert.equal(fs.realpathSync.native(proof.identity.executable),fs.realpathSync.native(process.env.KAMUCL_GUI_APP))
+ assert.equal(fs.realpathSync.native(proof.identity.executable),fs.realpathSync.native(process.env.FAIONYX_GUI_APP))
  await evaluate(`(${installMacParityObserver.toString()})()`)
  const save=()=>fs.writeFileSync(output,JSON.stringify(proof,null,2))
  proof.documentBinding=await evaluate('({timeOrigin:performance.timeOrigin,url:location.href})')
@@ -364,13 +364,13 @@ module.exports=async function verifyMacParity(h){
   const data=Buffer.from((await call('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false})).data,'base64')
   fs.writeFileSync(file,data,{flag:'wx'});const row={screenshot:name+'.png',bytes:data.length,sha256:crypto.createHash('sha256').update(data).digest('hex')};proof.screenshots.push(row);save();return row
  }
- const accounts=()=>evaluate("window.kamucl.invoke('accounts:list')"),selected=()=>evaluate("window.kamucl.invoke('accounts:selected')"),state=()=>evaluate("window.kamucl.invoke('mascots:state')")
+ const accounts=()=>evaluate("window.faionyx.invoke('accounts:list')"),selected=()=>evaluate("window.faionyx.invoke('accounts:selected')"),state=()=>evaluate("window.faionyx.invoke('mascots:state')")
  const firstFile=path.resolve('out/mac-parity-first.json')
  try{
   if(phase==='restart'){
    const first=JSON.parse(fs.readFileSync(firstFile,'utf8'));assert.equal(first.complete,true)
    proof.restart={publicAccountsPersisted:false,mascotCountsPersisted:false,settingsPersisted:false,favoritePersisted:false}
-   const actualAccounts=(await accounts()).map(publicAccount),actualSelected=publicAccount(await selected()),actualState=await state(),settings=await evaluate("window.kamucl.invoke('settings:get')"),favorites=await evaluate("window.kamucl.invoke('mods:favorites')")
+   const actualAccounts=(await accounts()).map(publicAccount),actualSelected=publicAccount(await selected()),actualState=await state(),settings=await evaluate("window.faionyx.invoke('settings:get')"),favorites=await evaluate("window.faionyx.invoke('mods:favorites')")
    assert.deepEqual(actualAccounts,first.persisted.accounts);assert.deepEqual(actualSelected,first.persisted.selected)
    assert.deepEqual(actualState.counts,first.persisted.mascots.counts);assert.deepEqual(actualState.sound,first.persisted.mascots.sound)
    assert.equal(settings.theme,first.persisted.theme);assert.equal(stableHash(settings),first.persisted.settingsSHA256,'all actual settings must survive the native process restart');assert.deepEqual(favorites,first.persisted.favorites)
@@ -396,12 +396,12 @@ module.exports=async function verifyMacParity(h){
    await until('both offline rows appear',()=>evaluate(`document.querySelectorAll('.account-row').length`),n=>n===2)
    await coordinate('.account-row:first-child')
    await until('coordinate account selection persisted',selected,a=>a?.id===ownedAccounts[0].id)
-   proof.offlineAccounts={classification:'Actual offline UI and product IPC persistence; no authenticated-account substitute',accounts:ownedAccounts.map(publicAccount),selected:publicAccount(await selected()),storageStatus:await evaluate("window.kamucl.invoke('app:systemInfo').then(x=>x.credentialStorage)")}
+   proof.offlineAccounts={classification:'Actual offline UI and product IPC persistence; no authenticated-account substitute',accounts:ownedAccounts.map(publicAccount),selected:publicAccount(await selected()),storageStatus:await evaluate("window.faionyx.invoke('app:systemInfo').then(x=>x.credentialStorage)")}
    for(const account of ownedAccounts)assert(!Object.keys(account).some(key=>/token|password|secret/i.test(key)),'public accounts do not contain credentials')
    await screenshot('mac-parity-first-offline-accounts')
    for(const theme of THEMES){
     const custom={colors:{bg:'#171520',card:'#242232',accent:'#8759cd',text:'#f6f2ff',textDim:'#bcb7cc',border:'#4a455c',sidebarBg:'#201d2b',sidebarText:'#e5dff2',bannerText:'#ffffff'}}
-    await evaluate(`window.kamucl.invoke('settings:set',{theme:${JSON.stringify(theme)},${theme==='custom'?'custom:'+JSON.stringify(custom):''}})`)
+    await evaluate(`window.faionyx.invoke('settings:set',{theme:${JSON.stringify(theme)},${theme==='custom'?'custom:'+JSON.stringify(custom):''}})`)
     await reloadDocument(theme,'saved real theme and mounted root '+theme)
     await evaluate(`(${installMacParityObserver.toString()})()`)
     for(const[width,height,zoom]of LAYOUTS){
@@ -421,7 +421,7 @@ module.exports=async function verifyMacParity(h){
    }
    assertNavigationCoverage(proof.navigation)
    await main(`(()=>{const w=testElectron.BrowserWindow.getAllWindows()[0];w.setSize(1280,900);w.webContents.setZoomFactor(1)})()`)
-   await evaluate("window.kamucl.invoke('settings:set',{theme:'black-orange'})");await reloadDocument('black-orange','return theme and mounted root for restart')
+   await evaluate("window.faionyx.invoke('settings:set',{theme:'black-orange'})");await reloadDocument('black-orange','return theme and mounted root for restart')
    await evaluate(`(${installMacParityObserver.toString()})()`)
    await route('settings')
    proof.settingsCategories=[]
@@ -430,11 +430,11 @@ module.exports=async function verifyMacParity(h){
     for(const label of labels){await textCoordinate('.settings-categories',label);const actual=await until('actual settings category '+label,()=>evaluate(`({label:document.querySelector('.settings-categories [aria-current=page]')?.textContent.trim(),scope:document.querySelector('.settings-scopes [aria-current=page]')?.textContent.trim(),body:document.querySelector('.settings-body')?.innerText})`),r=>r.label===label&&r.scope===scope&&!!r.body);proof.settingsCategories.push({...actual,...await screenshot('mac-parity-first-settings-category-'+proof.settingsCategories.length)});save()}
    }
    await route('home')
-   await evaluate("window.kamucl.invoke('mascots:sound',{muted:false,volume:.5})")
-   const legacySeed={batchId:'mac-parity-history-'+crypto.randomUUID(),hits:['q3','qiqi','biyuehu','hongshu','milo','muchuanbei']};await evaluate(`window.kamucl.invoke('mascots:batch',${JSON.stringify(legacySeed)})`);proof.legacySeed={classification:'Disposable historical-data fixture via real product increment IPC, not retired characters rendered or clicked',batch:legacySeed}
+   await evaluate("window.faionyx.invoke('mascots:sound',{muted:false,volume:.5})")
+   const legacySeed={batchId:'mac-parity-history-'+crypto.randomUUID(),hits:['q3','qiqi','biyuehu','hongshu','milo','muchuanbei']};await evaluate(`window.faionyx.invoke('mascots:batch',${JSON.stringify(legacySeed)})`);proof.legacySeed={classification:'Disposable historical-data fixture via real product increment IPC, not retired characters rendered or clicked',batch:legacySeed}
    const baseline=await state();proof.mascotBaseline=baseline
    // Original sources and DOM contacts are observed, never delayed or changed.
-   await evaluate(`(()=>{const p=window.__macParityQueue={clicks:[],contacts:[],audio:[],contexts:[],busyVisible:false};p.originalContext=window.AudioContext;p.originalStart=AudioBufferSourceNode.prototype.start;window.AudioContext=new Proxy(p.originalContext,{construct(t,a){const c=new t(...a);p.contexts.push(c);return c}});AudioBufferSourceNode.prototype.start=function(...args){const role=this.kamuclInitialization?.role==='silent-slap-buffer'?'initialization':'palm',values=this.buffer?.getChannelData(0);let peak=0;if(values)for(const value of values)peak=Math.max(peak,Math.abs(value));p.audio.push({at:performance.now(),audioTime:this.context.currentTime,scheduledAt:args[0]??0,role,duration:this.buffer?.duration,peak});return p.originalStart.apply(this,args)};p.clickObserver=(${createQueueClickObserver.toString()})(p,()=>document.querySelector('.mascot-stage').dataset,()=>performance.now());document.addEventListener('click',p.clickObserver.before,true);document.addEventListener('click',p.clickObserver.after,false);p.observer=new MutationObserver(()=>{const e=document.querySelector('.mascot-stage');if(e){const contacts=Number(e.dataset.contacts);if(contacts>0&&contacts!==p.contacts.at(-1)?.contacts)p.contacts.push({at:performance.now(),contacts,contactAt:Number(e.dataset.contactAt),cycleId:Number(e.dataset.cycleId)})}if(document.body.innerText.includes('拍打队列已满，请稍候'))p.busyVisible=true});p.observer.observe(document.body,{subtree:true,attributes:true,attributeFilter:['data-contacts','data-contact-at'],childList:true})})()`)
+   await evaluate(`(()=>{const p=window.__macParityQueue={clicks:[],contacts:[],audio:[],contexts:[],busyVisible:false};p.originalContext=window.AudioContext;p.originalStart=AudioBufferSourceNode.prototype.start;window.AudioContext=new Proxy(p.originalContext,{construct(t,a){const c=new t(...a);p.contexts.push(c);return c}});AudioBufferSourceNode.prototype.start=function(...args){const role=this.faionyxInitialization?.role==='silent-slap-buffer'?'initialization':'palm',values=this.buffer?.getChannelData(0);let peak=0;if(values)for(const value of values)peak=Math.max(peak,Math.abs(value));p.audio.push({at:performance.now(),audioTime:this.context.currentTime,scheduledAt:args[0]??0,role,duration:this.buffer?.duration,peak});return p.originalStart.apply(this,args)};p.clickObserver=(${createQueueClickObserver.toString()})(p,()=>document.querySelector('.mascot-stage').dataset,()=>performance.now());document.addEventListener('click',p.clickObserver.before,true);document.addEventListener('click',p.clickObserver.after,false);p.observer=new MutationObserver(()=>{const e=document.querySelector('.mascot-stage');if(e){const contacts=Number(e.dataset.contacts);if(contacts>0&&contacts!==p.contacts.at(-1)?.contacts)p.contacts.push({at:performance.now(),contacts,contactAt:Number(e.dataset.contactAt),cycleId:Number(e.dataset.cycleId)})}if(document.body.innerText.includes('拍打队列已满，请稍候'))p.busyVisible=true});p.observer.observe(document.body,{subtree:true,attributes:true,attributeFilter:['data-contacts','data-contact-at'],childList:true})})()`)
    try{
     await coordinate('.brand-avatar')
     const before=await until('model and feedback really ready',()=>evaluate(`(()=>{const e=document.querySelector('.mascot-stage'),b=document.querySelector('[data-hit=kamu]');return{ready:!!e&&!b.disabled&&Number(e.dataset.readyAt)>0&&e.dataset.feedbackPreparation==='decoded',phase:e?.dataset.phase,queue:Number(e?.dataset.queue),contacts:Number(e?.dataset.contacts),count:Number(b?.getAttribute('aria-label')?.match(/累计 (\\d+) 次/)?.[1]),accepted:Number(e?.dataset.acceptedClicks||0),rejected:Number(e?.dataset.rejectedClicks||0)}})()`),r=>r.ready&&r.phase==='front')
@@ -449,7 +449,7 @@ module.exports=async function verifyMacParity(h){
      try{await Promise.all(pending)}catch(error){dispatchError=error;proof.queueDispatchFailure={name:error.name,message:error.message}}
     },7000)
     proof.queueRecording=recording;save();if(dispatchError)throw dispatchError
-    const after=await until('every accepted click contacts and persists then returns front',()=>evaluate(`(async()=>{const e=document.querySelector('.mascot-stage'),b=document.querySelector('[data-hit=kamu]'),saved=await window.kamucl.invoke('mascots:state');return{phase:e.dataset.phase,queue:Number(e.dataset.queue),contacts:Number(e.dataset.contacts),count:Number(b.getAttribute('aria-label').match(/累计 (\\d+) 次/)[1]),persistedCount:saved.counts.kamu}})()`),r=>r.phase==='front'&&r.queue===0&&r.persistedCount===r.count,20000)
+    const after=await until('every accepted click contacts and persists then returns front',()=>evaluate(`(async()=>{const e=document.querySelector('.mascot-stage'),b=document.querySelector('[data-hit=kamu]'),saved=await window.faionyx.invoke('mascots:state');return{phase:e.dataset.phase,queue:Number(e.dataset.queue),contacts:Number(e.dataset.contacts),count:Number(b.getAttribute('aria-label').match(/累计 (\\d+) 次/)[1]),persistedCount:saved.counts.kamu}})()`),r=>r.phase==='front'&&r.queue===0&&r.persistedCount===r.count,20000)
     const ledger=await evaluate(`(()=>{const p=window.__macParityQueue;return{clicks:p.clicks,contacts:p.contacts,audio:p.audio,busyVisible:p.busyVisible}})()`)
     proof.queue={before,after,ledger,recording,classification:'Actual original trusted input queue and synchronous product acceptance/rejection counters, original contact/audio timeline. CDP wall-clock recording is retained diagnostically and is not used as formal presented-FPS evidence.'};save()
     proof.queue.result=assertQueueLedger(ledger,before,after)
@@ -460,9 +460,9 @@ module.exports=async function verifyMacParity(h){
    // handler is substituted. Only the target instance metadata is synthetic.
    proof.realService={source:'modrinth',projectId:'P7dR8mSH',classification:'Actual native UI / real public API and CDN / real prepared dependency plan and commit; synthetic MC1.20.1 Fabric target, not a game-launch claim',complete:false};save()
    const targetMetadata=path.join(games,'versions','联机验证实例','联机验证实例.json'),syntheticTarget=JSON.parse(fs.readFileSync(targetMetadata,'utf8'));syntheticTarget._loaderVersion='0.16.14';fs.writeFileSync(targetMetadata,JSON.stringify(syntheticTarget));proof.realService.syntheticTargetMetadata=syntheticTarget
-   const project=await evaluate("window.kamucl.invoke('community:project','modrinth','P7dR8mSH','mod')")
+   const project=await evaluate("window.faionyx.invoke('community:project','modrinth','P7dR8mSH','mod')")
    assert.equal(project.source,'modrinth');assert.equal(project.projectId,'P7dR8mSH');assert.equal(project.kind,'mod');assert(project.iconUrl?.startsWith('https://'))
-   await evaluate(`window.kamucl.invoke('mods:favorite',${JSON.stringify({source:project.source,projectId:project.projectId,name:project.title,iconUrl:project.iconUrl})},true)`)
+   await evaluate(`window.faionyx.invoke('mods:favorite',${JSON.stringify({source:project.source,projectId:project.projectId,name:project.title,iconUrl:project.iconUrl})},true)`)
    await route('community');await coordinate('[data-ui="community:favorites"]')
    const icon=await until('real favorite icon actually decoded',()=>evaluate(`(()=>{const e=document.querySelector('[data-favorite-key="modrinth:P7dR8mSH"]'),i=e?.querySelector('.favorite-icon img');return{ready:!!i&&i.complete&&i.naturalWidth>0,width:i?.naturalWidth,height:i?.naturalHeight,url:i?.currentSrc,title:e?.innerText}})()`),r=>r.ready,20000)
    proof.realService.project=project;proof.realService.icon=icon;await screenshot('mac-parity-first-real-favorite-icon')
@@ -520,8 +520,8 @@ module.exports=async function verifyMacParity(h){
    proof.realService.installed={relative:path.relative(games,installed),bytes:stats.size,sha1:actualSHA1,sha256:crypto.createHash('sha256').update(bytes).digest('hex'),declaredSHA1:chosen.file.sha1,target:plan.target};proof.realService.complete=true
    await screenshot('mac-parity-first-real-install-complete')
    },()=>collectAndRestoreInstallObserver(main,proof.realService),proof.realService,save)
-   const finalSettings=await evaluate("window.kamucl.invoke('settings:get')")
-   proof.persisted={accounts:(await accounts()).map(publicAccount),selected:publicAccount(await selected()),mascots:await state(),favorites:await evaluate("window.kamucl.invoke('mods:favorites')"),theme:finalSettings.theme,settingsSHA256:stableHash(finalSettings)}
+   const finalSettings=await evaluate("window.faionyx.invoke('settings:get')")
+   proof.persisted={accounts:(await accounts()).map(publicAccount),selected:publicAccount(await selected()),mascots:await state(),favorites:await evaluate("window.faionyx.invoke('mods:favorites')"),theme:finalSettings.theme,settingsSHA256:stableHash(finalSettings)}
    assert.equal(proof.persisted.accounts.length,2);assert.equal(proof.persisted.theme,'black-orange')
   }
   proof.complete=true;proof.finishedAt=new Date().toISOString();save()

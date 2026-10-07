@@ -6,7 +6,7 @@ import os from 'node:os'
 import { recycleFile } from '../src/main/core/recycleFile'
 
 test('file and directory removal delegates the complete target to the recycle operation', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'kamucl-recycle-'))
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'faionyx-recycle-'))
   const source = path.join(root, 'resources'), bin = path.join(root, 'bin')
   await fs.mkdir(source); await fs.mkdir(bin)
   try {
@@ -22,7 +22,7 @@ test('file and directory removal delegates the complete target to the recycle op
 })
 
 test('recycle failure and native no-op preserve original bytes; invalid names and links never reach the native API', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'kamucl-recycle-'))
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'faionyx-recycle-'))
   let calls = 0
   const trash = async () => { calls++; throw new Error('EPERM locked') }
   try {

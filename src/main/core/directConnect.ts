@@ -101,7 +101,7 @@ export function startDirectHost(request: DirectHostRequest): Promise<DirectHostS
     try {
       const endpoints: DirectEndpoint[] = network.addresses.filter(item => item.kind !== 'ipv6' || ipv6Available).slice(0, 10).map(item => ({ host: item.address, port: forwarder.port, kind: item.kind }))
       const messages = [...network.messages, ...network.gateways.filter(item => /CGNAT|上级 NAT/.test(item.diagnosis)).map(item => item.diagnosis)]
-      const owner = `KAMUCL-${crypto.randomUUID().slice(0, 12)}`
+      const owner = `FAIONYX-${crypto.randomUUID().slice(0, 12)}`
       if (request.useUpnp) {
         for (const gateway of gateways.filter(item => ipv4Scope(item.externalAddress) === 'public').slice(0, 2)) {
           signal.throwIfAborted()
@@ -122,8 +122,8 @@ export function startDirectHost(request: DirectHostRequest): Promise<DirectHostS
       signal.throwIfAborted()
       const unique = endpoints.filter((item,index) => endpoints.findIndex(other => endpointAddress(other) === endpointAddress(item)) === index).slice(0,12)
       if (!unique.some(item => item.kind !== 'lan')) messages.push('当前仅可供同一局域网加入，尚无公网房主路径。CGNAT、手机热点、校园网可能限制入站连接；你仍可以加入可达好友的世界。')
-      messages.push('开启房间后需保持 KAMUCL 和游戏运行；退出或关闭局域网世界会断开直连。')
-      const invitation: DirectInvitation = { format:'KAMUCL-DIRECT', version:1, name:version.id, minecraftVersion:version.mcVersion,
+      messages.push('开启房间后需保持 FAIONYX 和游戏运行；退出或关闭局域网世界会断开直连。')
+      const invitation: DirectInvitation = { format:'FAIONYX-DIRECT', version:1, name:version.id, minecraftVersion:version.mcVersion,
         loader:version.loader, loaderVersion:version.loaderVersion, endpoints:unique, expiresAt:new Date(Date.now() + 24*3600000).toISOString() }
       const state: DirectHostState = { active:true, connections:0, endpoints:unique, invite:unique.length ? encodeInvitation(invitation) : undefined,
         localPort:port, exposedPort:forwarder.port, messages, startedAt:new Date().toISOString() }

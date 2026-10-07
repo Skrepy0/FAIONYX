@@ -5,9 +5,9 @@ const fs = require('node:fs'), path = require('node:path'), crypto = require('no
 const native = require('./qa-native-window115.cjs')
 module.exports = async function(h) {
   assert.equal(process.platform, 'win32')
-  const directory = path.resolve('out', 'qa-packs118-' + (process.env.KAMUCL_TEST_THEME || 'black-orange') + '-' + crypto.randomUUID())
+  const directory = path.resolve('out', 'qa-packs118-' + (process.env.FAIONYX_TEST_THEME || 'black-orange') + '-' + crypto.randomUUID())
   fs.mkdirSync(directory, { recursive: true })
-  const proof = { complete: false, version: h.version, theme: process.env.KAMUCL_TEST_THEME, directory, observations: [], screenshots: [], clicks: [], classification: 'Actual owned Windows portable UI, foreground-checked coordinate input and real production ZIP/configuration writes. Private metadata-only client JAR fixtures are never launched. A single synthetic filesystem failure exercises production rollback and the real retry control; no game-screen acceptance.' }
+  const proof = { complete: false, version: h.version, theme: process.env.FAIONYX_TEST_THEME, directory, observations: [], screenshots: [], clicks: [], classification: 'Actual owned Windows portable UI, foreground-checked coordinate input and real production ZIP/configuration writes. Private metadata-only client JAR fixtures are never launched. A single synthetic filesystem failure exercises production rollback and the real retry control; no game-screen acceptance.' }
   const save = () => fs.writeFileSync(path.join(directory, 'live.json'), JSON.stringify(proof, null, 2))
   const identity = await h.main(`(()=>{const f=process.mainModule.require('node:fs'),w=testElectron.BrowserWindow.getAllWindows().filter(w=>w.webContents.getURL().includes('/renderer/index.html'));if(w.length!==1)throw Error('Ambiguous QA renderer');return{pid:process.pid,ppid:process.ppid,windowId:w[0].id,webContentsId:w[0].webContents.id,profile:f.realpathSync.native(testElectron.app.getPath('userData'))}})()`)
   assert(identity.pid === h.ownedTrack.pid || identity.ppid === h.ownedTrack.pid)
@@ -34,7 +34,7 @@ module.exports = async function(h) {
     proof.clicks.push({ label, point, before, after: await foreground() }); save(); await h.wait(160)
   }
   const click = selector => clickElement(element(selector), selector)
-  const invoke = (channel, ...args) => h.evaluate(`window.kamucl.invoke(${JSON.stringify(channel)},...${JSON.stringify(args)})`)
+  const invoke = (channel, ...args) => h.evaluate(`window.faionyx.invoke(${JSON.stringify(channel)},...${JSON.stringify(args)})`)
   const screenshot = async label => {
     await h.wait(300); const before = await foreground(), file = label + '.png'
     const bytes = Buffer.from((await h.call('Page.captureScreenshot', { format: 'png' })).data, 'base64')
@@ -53,7 +53,7 @@ module.exports = async function(h) {
   }
   const sha = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
   const packsIn = (game, key = 'resourcePacks') => JSON.parse(fs.readFileSync(path.join(game, 'options.txt'), 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/).find(line => line.startsWith(key + ':')).slice(key.length + 1))
-  const disk = game => ({ options: fs.readFileSync(path.join(game, 'options.txt'), 'utf8'), state: fs.readFileSync(path.join(game, '.kamucl-default-resourcepacks.json'), 'utf8'), copied: fs.existsSync(path.join(game, 'resourcepacks')) ? fs.readdirSync(path.join(game, 'resourcepacks')).filter(n => n.endsWith('.zip')) : [] })
+  const disk = game => ({ options: fs.readFileSync(path.join(game, 'options.txt'), 'utf8'), state: fs.readFileSync(path.join(game, '.faionyx-default-resourcepacks.json'), 'utf8'), copied: fs.existsSync(path.join(game, 'resourcepacks')) ? fs.readdirSync(path.join(game, 'resourcepacks')).filter(n => n.endsWith('.zip')) : [] })
   const windowState = () => h.main(`(()=>{const w=testElectron.BrowserWindow.fromId(${identity.windowId});return{bounds:w.getBounds(),zoom:w.webContents.getZoomFactor(),maximized:w.isMaximized(),content:w.getContentSize()}})()`)
   let primary, initialWindow
   try {
@@ -68,7 +68,7 @@ module.exports = async function(h) {
       zip.addFile('pack.mcmeta', Buffer.from('\uFEFF' + JSON.stringify({ pack: { pack_format: i ? 15 : 3, min_format: 1, max_format: [1000, 0], supported_formats: [1, 1000], description: filename } })))
       zip.addFile('assets/minecraft/qa118.txt', Buffer.from(filename)); fs.writeFileSync(file, zip.toBuffer(), { flag: 'wx' }); return file
     })
-    const packs = await invoke('defaultPacks:import', sources), names = packs.map(p => 'KAMUCL-default-' + p.id + '-' + p.name)
+    const packs = await invoke('defaultPacks:import', sources), names = packs.map(p => 'FAIONYX-default-' + p.id + '-' + p.name)
     await invoke('settings:set', { resourcePackSync: true })
     const ids = ['材质包验证 § 中文 实例', '1.12.2 材质包备选实例'], games = []
     const personal = ['file/个人 中文 § 包.zip', 'Personal Legacy.zip']
@@ -78,7 +78,7 @@ module.exports = async function(h) {
       const zip = new AdmZip(); zip.addFile('version.json', Buffer.from(JSON.stringify({ id: index ? '1.12.2' : '26.2', pack_version: index ? { resource: 3 } : { resource_major: 88, resource_minor: 0 } }))); fs.writeFileSync(path.join(game, id + '.jar'), zip.toBuffer(), { flag: 'wx' })
       const managed = names.map(n => index ? n : 'file/' + n)
       fs.writeFileSync(path.join(game, 'options.txt'), `\uFEFFlang:zh_cn\r\n\r\nresourcePacks:${JSON.stringify(['vanilla', personal[index], managed[0]])}\r\nincompatibleResourcePacks:${JSON.stringify([personal[index], managed[0]])}\r\ncustom:keep\r\n`, { flag: 'wx' })
-      fs.writeFileSync(path.join(game, '.kamucl-default-resourcepacks.json'), JSON.stringify(managed), { flag: 'wx' })
+      fs.writeFileSync(path.join(game, '.faionyx-default-resourcepacks.json'), JSON.stringify(managed), { flag: 'wx' })
     }
     proof.fixtures = { root: fixtureRoot, games, ids, sources: sources.map(file => ({ file, sha256: sha(file) })), names, personal }
     proof.before = games.map(disk); save()
@@ -88,7 +88,7 @@ module.exports = async function(h) {
     await selectTarget(ids[0])
     // The real filesystem publication fails after options is written. Production
     // rollback restores options and the legacy state, then the actual UI retries.
-    proof.failureSetup = await h.main(`(()=>{const f=process.mainModule.require('node:fs'),original=f.renameSync,expected=${JSON.stringify(path.join(games[0], '.kamucl-default-resourcepacks.json'))};if(globalThis.__qaPacks118)throw Error('Foreign packs failure boundary');const state={failed:false,records:[],restore(){if(f.renameSync!==wrapped)throw Error('Filesystem boundary identity changed');f.renameSync=original;delete globalThis.__qaPacks118;return{complete:f.renameSync===original,records:state.records}}};function wrapped(source,dest){if(!state.failed&&String(dest)===expected){state.failed=true;state.records.push({source:String(source),dest:String(dest),synthetic:true});throw Error('合成：默认材质包实例记录写入失败')}return original.apply(this,arguments)}f.renameSync=wrapped;globalThis.__qaPacks118=state;return{owned:true,target:expected}})()`)
+    proof.failureSetup = await h.main(`(()=>{const f=process.mainModule.require('node:fs'),original=f.renameSync,expected=${JSON.stringify(path.join(games[0], '.faionyx-default-resourcepacks.json'))};if(globalThis.__qaPacks118)throw Error('Foreign packs failure boundary');const state={failed:false,records:[],restore(){if(f.renameSync!==wrapped)throw Error('Filesystem boundary identity changed');f.renameSync=original;delete globalThis.__qaPacks118;return{complete:f.renameSync===original,records:state.records}}};function wrapped(source,dest){if(!state.failed&&String(dest)===expected){state.failed=true;state.records.push({source:String(source),dest:String(dest),synthetic:true});throw Error('合成：默认材质包实例记录写入失败')}return original.apply(this,arguments)}f.renameSync=wrapped;globalThis.__qaPacks118=state;return{owned:true,target:expected}})()`)
     await click('[data-ui="KeysView:packs-reapply"]')
     proof.failureRecovery = await until('failed manual apply releases retry control', async () => ({ failed: await h.main('__qaPacks118.failed'), ui: await h.evaluate("({disabled:document.querySelector('[data-ui=\"KeysView:packs-reapply\"]')?.disabled,text:document.body.innerText})"), disk: disk(games[0]) }), value => value.failed && value.ui.disabled === false && value.ui.text.includes('重新应用失败') && value.disk.options === proof.before[0].options && value.disk.state === proof.before[0].state)
     assert.equal(proof.failureRecovery.disk.copied.length, 2); await screenshot('manual-failure-rollback')
@@ -109,7 +109,7 @@ module.exports = async function(h) {
     assert.equal(fs.readFileSync(path.join(games[1], 'options.txt'), 'utf8'), proof.before[1].options, 'Selecting a target must not apply it')
     await click('[data-ui="KeysView:packs-reapply"]')
     proof.legacy = await until('selected legacy instance receives old identifier format', () => disk(games[1]), value => JSON.parse(value.state).version === 2 && value.options.includes(names[1]))
-    assert.deepEqual(packsIn(games[1]), ['vanilla', personal[1], ...names]); assert(!packsIn(games[1]).some(n => n.startsWith('file/KAMUCL-default-')))
+    assert.deepEqual(packsIn(games[1]), ['vanilla', personal[1], ...names]); assert(!packsIn(games[1]).some(n => n.startsWith('file/FAIONYX-default-')))
     assert.deepEqual(packsIn(games[1], 'incompatibleResourcePacks'), [personal[1], names[1]])
     const beforeGlobalDisable = fs.readFileSync(path.join(games[0], 'options.txt'), 'utf8')
     proof.globalControls = await h.evaluate("Array.from(document.querySelectorAll('.default-packs .pack-enable input[type=checkbox]')).map(e=>({ariaLabel:e.getAttribute('aria-label'),checked:e.checked,disabled:e.disabled,labelId:e.closest('label')?.getAttribute('data-ui')}))")

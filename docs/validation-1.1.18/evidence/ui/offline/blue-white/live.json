@@ -2,7 +2,7 @@
   "complete": true,
   "version": "1.1.18",
   "theme": "blue-white",
-  "directory": "E:\\KAMUCL\\out\\qa-offline118-blue-white-149a0aa3-0446-45a9-9b36-01dea67d8c9a",
+  "directory": "E:\\FAIONYX\\out\\qa-offline118-blue-white-149a0aa3-0446-45a9-9b36-01dea67d8c9a",
   "observations": [
     {
       "label": "real native focus",
@@ -7404,7 +7404,7 @@
     "ppid": 6956,
     "windowId": 1,
     "webContentsId": 1,
-    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 RNUa7A\\profile"
+    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 RNUa7A\\profile"
   },
   "initialViewport": {
     "native": {
@@ -7470,7 +7470,7 @@
   },
   "setup": {
     "complete": true,
-    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 RNUa7A\\profile"
+    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 RNUa7A\\profile"
   },
   "previousAccount": null,
   "accounts": [
@@ -7486,7 +7486,7 @@
     }
   ],
   "source": {
-    "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 RNUa7A\\offline118-custom.png",
+    "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 RNUa7A\\offline118-custom.png",
     "sha256": "f8580d5b181734d194389a95b3e15d9b4f3d44a1c20ed8fb88d878fd9b010303"
   },
   "applied": {
@@ -7525,7 +7525,7 @@
   },
   "recording": {
     "version": "1.1.18",
-    "directory": "E:\\KAMUCL\\out\\offline118-editor-e5046669-a574-4d34-918e-de21592be68c-blue-white",
+    "directory": "E:\\FAIONYX\\out\\offline118-editor-e5046669-a574-4d34-918e-de21592be68c-blue-white",
     "capture": {
       "format": "jpeg",
       "quality": 70,

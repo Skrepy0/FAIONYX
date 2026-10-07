@@ -1,6 +1,6 @@
-# KAMUCL 开发指南
+# FAIONYX 开发指南
 
-这份文档面向第一次参与 KAMUCL 开发的成员，目标是让你能快速启动项目、找到正确的代码层，并安全地提交一个功能改动。
+这份文档面向第一次参与 FAIONYX 开发的成员，目标是让你能快速启动项目、找到正确的代码层，并安全地提交一个功能改动。
 
 ## 1. 环境准备
 
@@ -12,7 +12,7 @@
 
 ### 可选环境
 
-- JDK 17+：构建 KAMUCL Bridge MOD
+- JDK 17+：构建 FAIONYX Bridge MOD
 - .NET Framework：构建 `native/` 下的 Windows 辅助程序（系统通常已自带 `csc.exe`）
 - Java：需要与目标 Minecraft 版本匹配；现代版本通常使用 Java 17 或 Java 21，具体实例可以在启动器中单独配置
 
@@ -148,11 +148,11 @@ $env:JAVA_HOME = 'C:\Program Files\Java\jdk-17'
 node scripts/build-bridge.cjs
 ```
 
-Bridge 只监听 `127.0.0.1`，通过游戏目录中的 `.kamucl-bridge.json` 发现端口和一次性 token。构建脚本会从固定依赖地址下载并校验 Fabric Loader 和 Gson；它是可选组件，缺失不会阻止主程序构建。
+Bridge 只监听 `127.0.0.1`，通过游戏目录中的 `.faionyx-bridge.json` 发现端口和一次性 token。构建脚本会从固定依赖地址下载并校验 Fabric Loader 和 Gson；它是可选组件，缺失不会阻止主程序构建。
 
 ## 8. 数据目录与调试
 
-默认用户数据目录是 Windows 的 `%APPDATA%\KAMUCL`（macOS 为 `~/Library/Application Support/KAMUCL`），设置文件位于 Electron `userData` 目录下。开发调试时建议使用独立临时目录，避免污染个人账号和游戏实例。
+默认用户数据目录是 Windows 的 `%APPDATA%\FAIONYX`（macOS 为 `~/Library/Application Support/FAIONYX`），设置文件位于 Electron `userData` 目录下。开发调试时建议使用独立临时目录，避免污染个人账号和游戏实例。
 
 调试重点：
 

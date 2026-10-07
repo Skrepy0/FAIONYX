@@ -70,7 +70,7 @@ const folderToolsOpen = ref(false)
 const installedSearch = ref('')
 const installedCategory = ref(VERSION_CATEGORY_ALL), categoryManagerOpen = ref(false), categoryBusy = ref(false), categoryError = ref('')
 const categories = computed(() => store.settings?.versionCategories ?? [])
-const categoryOf = (v: InstalledVersion) => versionCategoryOf(store.settings, v.folder, v.id, window.kamucl.platform)
+const categoryOf = (v: InstalledVersion) => versionCategoryOf(store.settings, v.folder, v.id, window.faionyx.platform)
 const categoryLabel = (v: InstalledVersion) => categories.value.find(c => c.id === categoryOf(v))?.name ?? ''
 const categoryCounts = computed(() => Object.fromEntries(categories.value.map(c => [c.id, allInstalled.value.filter(v => categoryOf(v) === c.id).length])))
 watch(categories, list => { if (![VERSION_CATEGORY_ALL, VERSION_CATEGORY_FAVORITES, VERSION_CATEGORY_UNCLASSIFIED, ...list.map(c => c.id)].includes(installedCategory.value)) installedCategory.value = VERSION_CATEGORY_ALL })
@@ -1027,7 +1027,7 @@ async function confirmIsolation() {
           <button
             class="btn btn-danger btn-sm"
             :disabled="folderBusy || folders.length <= 1"
-            title="只解除 KAMUCL 登记，不删除磁盘文件"
+            title="只解除 FAIONYX 登记，不删除磁盘文件"
             @click="folderRemove.open = true"
           >
             解除绑定
@@ -1394,7 +1394,7 @@ async function confirmIsolation() {
       <div v-if="folderRename.open" class="modal-mask" @pointerdown.self="folderRename.open = false">
         <div class="modal">
           <h3 class="modal-title">重命名游戏文件夹</h3>
-          <p class="modal-label">只修改 KAMUCL 中的显示名称，不会改动磁盘路径。</p>
+          <p class="modal-label">只修改 FAIONYX 中的显示名称，不会改动磁盘路径。</p>
           <input
             v-model="folderRename.name"
             class="input"
@@ -1416,7 +1416,7 @@ async function confirmIsolation() {
     <ConfirmModal
       :open="folderRemove.open"
       title="解除游戏文件夹绑定"
-      :message="`只会从 KAMUCL 移除「${currentFolder?.name ?? ''}」的登记。磁盘目录 ${activeFolder} 以及其中的游戏、存档、MOD 和配置都将完整保留。`"
+      :message="`只会从 FAIONYX 移除「${currentFolder?.name ?? ''}」的登记。磁盘目录 ${activeFolder} 以及其中的游戏、存档、MOD 和配置都将完整保留。`"
       :busy="folderRemove.busy"
       @cancel="folderRemove.open = false"
       @confirm="confirmFolderRemove"

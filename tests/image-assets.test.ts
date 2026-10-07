@@ -85,7 +85,7 @@ test('背景与缩略图缓存按各自上限等比缩小且不放大小图', ()
 })
 
 test('受管文件删除边界拒绝父目录、同前缀目录与目录本身', () => {
-  const root = path.resolve('C:/KAMUCL/appearance/backgrounds')
+  const root = path.resolve('C:/FAIONYX/appearance/backgrounds')
   assert.equal(isPathInside(path.join(root, 'safe.jpg'), root), true)
   assert.equal(isPathInside(root, root), false)
   assert.equal(isPathInside(path.resolve(root, '..', 'settings.json'), root), false)

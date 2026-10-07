@@ -31,9 +31,9 @@ class GameWindowSize117 {
     static int Main() {
         SetThreadDpiAwarenessContext(new IntPtr(-4));
         proc=delegate(IntPtr h,uint m,UIntPtr w,IntPtr l) { if(m==0x8001){DestroyWindow(h);return IntPtr.Zero;} if(m==2){PostQuitMessage(0);return IntPtr.Zero;} return DefWindowProc(h,m,w,l); };
-        WC c=new WC { size=(uint)Marshal.SizeOf(typeof(WC)), name="GLFWKamuclSizeFixture117", proc=Marshal.GetFunctionPointerForDelegate(proc), background=new IntPtr(6) };
+        WC c=new WC { size=(uint)Marshal.SizeOf(typeof(WC)), name="GLFWFaionyxSizeFixture117", proc=Marshal.GetFunctionPointerForDelegate(proc), background=new IntPtr(6) };
         if(RegisterClassEx(ref c)==0)return 2;
-        window=CreateWindowEx(0x08000000,c.name,"KAMUCL disposable game size fixture",Normal,100,100,1100,750,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero);
+        window=CreateWindowEx(0x08000000,c.name,"FAIONYX disposable game size fixture",Normal,100,100,1100,750,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero);
         if(window==IntPtr.Zero)return 3;
         Size(1000,600); ShowWindow(window,4); Receipt("ready");
         new Thread(delegate() { SetThreadDpiAwarenessContext(new IntPtr(-4)); string s; while((s=Console.ReadLine())!=null) { if(s=="resize"){Size(1280,720);Receipt(s);} else if(s=="hide"){ShowWindow(window,0);Receipt(s);} else if(s=="show"){ShowWindow(window,4);Receipt(s);} else if(s=="borderless"){SetWindowLong(window,-16,unchecked((int)0x90000000));Receipt(s);} else if(s=="close"){PostMessage(window,0x8001,UIntPtr.Zero,IntPtr.Zero);return;} } PostMessage(window,0x8001,UIntPtr.Zero,IntPtr.Zero); }).Start();

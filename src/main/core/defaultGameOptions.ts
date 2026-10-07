@@ -71,7 +71,7 @@ export function syncDefaultGameOptions(gameDir: string, version: string, state =
   const result = mergeGameOptions(before, state.values, version)
   if (before !== result.text) {
     fs.mkdirSync(gameDir, { recursive: true })
-    const tmp = target + `.kamucl-${process.pid}.tmp`
+    const tmp = target + `.faionyx-${process.pid}.tmp`
     fs.writeFileSync(tmp, result.text, 'utf8')
     fs.renameSync(tmp, target)
     if (fs.readFileSync(target, 'utf8') !== result.text) throw new Error('默认游戏选项写入校验失败')

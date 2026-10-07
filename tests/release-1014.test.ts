@@ -37,14 +37,14 @@ test('skip logic: skipped version not prompted, newer-than-skipped prompts again
 
 test('sha256 sums parser: standard sha256sum format', () => {
   const sums = parseSha256Sums(
-    'a'.repeat(64) + '  KAMUCL-1.0.14.exe\n' + 'b'.repeat(64) + ' *KAMUCL-1.0.14-windows-x64.zip\n'
+    'a'.repeat(64) + '  FAIONYX-1.0.14.exe\n' + 'b'.repeat(64) + ' *FAIONYX-1.0.14-windows-x64.zip\n'
   )
-  assert.equal(sums.get('KAMUCL-1.0.14.exe'), 'a'.repeat(64))
-  assert.equal(sums.get('KAMUCL-1.0.14-windows-x64.zip'), 'b'.repeat(64))
+  assert.equal(sums.get('FAIONYX-1.0.14.exe'), 'a'.repeat(64))
+  assert.equal(sums.get('FAIONYX-1.0.14-windows-x64.zip'), 'b'.repeat(64))
 })
 
 test('download candidates honor source setting: auto=direct+mirror, direct only, mirror only', () => {
-  const url = 'https://github.com/x/KAMUCL-1.0.14.exe'
+  const url = 'https://github.com/x/FAIONYX-1.0.14.exe'
   const auto = updateDownloadCandidates(url, { updateSource: 'auto', updateMirrorUrl: 'https://ghproxy.net/' })
   assert.deepEqual(auto, [url, 'https://ghproxy.net/' + url])
   assert.deepEqual(updateDownloadCandidates(url, { updateSource: 'direct', updateMirrorUrl: '' }), [url])
@@ -64,12 +64,12 @@ test('markdown lite: escapes HTML, renders headings/bold/code/lists/links only',
 
 test('checkLatest against mock server: hasUpdate, cache, 304 etag, silent degrade', async () => {
   const { startMockServer } = await import('./helpers/mockUpdateServer.mjs')
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-upd-'))
-  process.env.KAMUCL_USERDATA_DIR = userData
-  process.env.KAMUCL_VERSION_OVERRIDE = '1.0.0'
+  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-upd-'))
+  process.env.FAIONYX_USERDATA_DIR = userData
+  process.env.FAIONYX_VERSION_OVERRIDE = '1.0.0'
   const server = await startMockServer(0)
   try {
-    process.env.KAMUCL_UPDATE_API_BASE = `http://127.0.0.1:${server.port}`
+    process.env.FAIONYX_UPDATE_API_BASE = `http://127.0.0.1:${server.port}`
     // 第一次：mock latest v99.0.0 → 有更新
     const r1 = await checkLatest(true)
     assert.equal(r1.ok, true)
@@ -88,14 +88,14 @@ test('checkLatest against mock server: hasUpdate, cache, 304 etag, silent degrad
     assert.equal(r3.fromCache, true)
     assert.equal(r3.reason, 'network')
     // 版本比较正确：本地 99.0.1 时 latest 99.0.0 不算更新
-    process.env.KAMUCL_VERSION_OVERRIDE = '99.0.1'
+    process.env.FAIONYX_VERSION_OVERRIDE = '99.0.1'
     const r4 = await checkLatest(false)
     assert.equal(r4.hasUpdate, false)
   } finally {
     await server.close().catch(() => {})
-    delete process.env.KAMUCL_UPDATE_API_BASE
-    delete process.env.KAMUCL_USERDATA_DIR
-    delete process.env.KAMUCL_VERSION_OVERRIDE
+    delete process.env.FAIONYX_UPDATE_API_BASE
+    delete process.env.FAIONYX_USERDATA_DIR
+    delete process.env.FAIONYX_VERSION_OVERRIDE
   }
 })
 
@@ -135,10 +135,10 @@ test('update SFCs compile', () => {
 })
 
 test('sha256File hashes real file content', async () => {
-  const f = path.join(os.tmpdir(), `kamucl-sha-${Date.now()}.bin`)
-  fs.writeFileSync(f, 'kamucl')
+  const f = path.join(os.tmpdir(), `faionyx-sha-${Date.now()}.bin`)
+  fs.writeFileSync(f, 'faionyx')
   const crypto = await import('node:crypto')
-  const expected = crypto.createHash('sha256').update('kamucl').digest('hex')
+  const expected = crypto.createHash('sha256').update('faionyx').digest('hex')
   assert.equal(await sha256File(f), expected)
   fs.rmSync(f, { force: true })
 })

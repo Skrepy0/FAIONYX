@@ -11,19 +11,19 @@ const missing = computed(() => plan.value?.rows.filter(r => r.status === 'missin
 const progress = ref('')
 let offProgress: (() => void) | undefined
 let operation = '', epoch = 0
-onMounted(() => { offProgress = window.kamucl.on('voxlink:mods:progress', value => {
+onMounted(() => { offProgress = window.faionyx.on('voxlink:mods:progress', value => {
   const p = value as { operation: string; installed: number; total: number; file: string; bytes: number; fileSize: number }
   if (p.operation === operation) progress.value = `${p.installed}/${p.total} · ${p.file} · ${(p.bytes / 1048576).toFixed(1)}/${(p.fileSize / 1048576).toFixed(1)} MB`
 }) })
-function cancel() { ++epoch; if (operation) void window.kamucl.invoke('voxlink:mods:cancel', operation); operation = ''; busy.value = false }
+function cancel() { ++epoch; if (operation) void window.faionyx.invoke('voxlink:mods:cancel', operation); operation = ''; busy.value = false }
 function dismiss() { cancel(); emit('dismiss') }
-function cancelDownload() { if (operation) void window.kamucl.invoke('voxlink:mods:cancel', operation); message.value = '正在取消下载…' }
-function join(gate:ModSyncGate='BYPASSED') { cancel();if(gate==='BYPASSED')void window.kamucl.invoke('voxlink:mods:bypass',props.code);emit('join',gate) }
+function cancelDownload() { if (operation) void window.faionyx.invoke('voxlink:mods:cancel', operation); message.value = '正在取消下载…' }
+function join(gate:ModSyncGate='BYPASSED') { cancel();if(gate==='BYPASSED')void window.faionyx.invoke('voxlink:mods:bypass',props.code);emit('join',gate) }
 async function check() {
   if (!props.target || busy.value) return
   const current = ++epoch; operation = crypto.randomUUID(); busy.value = true; message.value = ''; plan.value = null
   try {
-    const result = await window.kamucl.invoke('voxlink:mods:check', { operation, code: props.code, scope: scope.value, target: props.target }) as ModSyncPlan | ModSyncGateResult
+    const result = await window.faionyx.invoke('voxlink:mods:check', { operation, code: props.code, scope: scope.value, target: props.target }) as ModSyncPlan | ModSyncGateResult
     if (current !== epoch) return
     if(result.gate&&result.gate!=='MANIFEST'){join(result.gate);return}
     const manifest=result as ModSyncPlan
@@ -36,7 +36,7 @@ async function download() {
   if (!plan.value || busy.value) return
   const current = ++epoch; operation = crypto.randomUUID(); busy.value = true; message.value = ''
   try {
-    const result = await window.kamucl.invoke('voxlink:mods:download', { operation, plan: plan.value.id, selected: selected.value }) as { message: string }
+    const result = await window.faionyx.invoke('voxlink:mods:download', { operation, plan: plan.value.id, selected: selected.value }) as { message: string }
     if (current !== epoch) return
     done.value = true; message.value = result.message
   } catch (error) { if (current === epoch) message.value = (error as Error).message }

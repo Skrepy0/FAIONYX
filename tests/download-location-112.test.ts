@@ -21,14 +21,14 @@ async function runtime(root: string, rewriteDownload = (url: string) => url) {
     export { closeHttpClient } from './src/main/core/httpClient';
   ` }, bundle: true, write: false, platform: 'node', format: 'cjs', packages: 'external', logLevel: 'silent' }).then(result => result.outputFiles[0].text)
   const output = { exports: {} as any }
-  const electron = { app: { getPath: (name: string) => path.join(root, name), getVersion: () => 'fixture', getName: () => 'KAMUCL-test', isPackaged: false }, BrowserWindow: { getAllWindows: () => [] } }
+  const electron = { app: { getPath: (name: string) => path.join(root, name), getVersion: () => 'fixture', getName: () => 'FAIONYX-test', isPackaged: false }, BrowserWindow: { getAllWindows: () => [] } }
   new Function('require', 'module', 'exports', await compiled)((name: string) => name === 'electron' ? electron : name === 'undici'
     ? { ...requireFixture(name), fetch: (url: string, init: unknown) => requireFixture(name).fetch(rewriteDownload(String(url)), init) }
     : requireFixture(name), output, output.exports)
   return output.exports
 }
 function temporary(t: TestContext) {
-  const base = fs.realpathSync.native(os.tmpdir()), root = fs.mkdtempSync(path.join(base, 'KAMUCL download location 112 '))
+  const base = fs.realpathSync.native(os.tmpdir()), root = fs.mkdtempSync(path.join(base, 'FAIONYX download location 112 '))
   assert(root.startsWith(base + path.sep))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   return root
@@ -99,7 +99,7 @@ test('missing targets and actual settings commit failure preserve prior default,
   assert.equal(api.defaultFolderPath(), later)
   assert.equal(api.gameDir(), later)
   assert.equal(api.getSettings().folders.length, 3)
-  assert(!fs.readdirSync(later).some(file => file.startsWith('.kamucl-write-test-')))
+  assert(!fs.readdirSync(later).some(file => file.startsWith('.faionyx-write-test-')))
 })
 
 test('legacy game directory change updates the shared default, while switch-only and copy retain original files', async t => {

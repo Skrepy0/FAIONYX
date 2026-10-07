@@ -3,7 +3,7 @@ const fs = require('node:fs'), path = require('node:path'), crypto = require('no
 // Historical evidence may exceed one GitHub asset. Each part is an independent
 // ZIP with its own manifest; never publish an incomplete or ambiguous sequence.
 module.exports = function historyAssets(directory, version) {
-  const prefix = `KAMUCL-${version}-validation-history`
+  const prefix = `FAIONYX-${version}-validation-history`
   const names = fs.readdirSync(directory)
   const single = names.includes(prefix + '.zip')
   const indexName = prefix + '-index.json'

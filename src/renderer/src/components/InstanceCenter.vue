@@ -22,7 +22,7 @@ const filtered=computed(()=>worlds.value.filter(w=>w.name.toLowerCase().includes
 const image=computed(()=>shots.value[lightbox.value])
 const fullImage=ref('')
 watch(image,async selected=>{fullImage.value='';if(!selected)return;try{const data=await invoke<string>(IPC.centerFile,target,'preview',selected.id);if(image.value?.id===selected.id)fullImage.value=data}catch(e){error.value=errText(e)}})
-const invoke=<T,>(channel:string,...args:unknown[])=>window.kamucl.invoke(channel,...args) as Promise<T>
+const invoke=<T,>(channel:string,...args:unknown[])=>window.faionyx.invoke(channel,...args) as Promise<T>
 const formatDate=(v:string|number|undefined)=>v?new Date(v).toLocaleString():'未知'
 const size=(bytes:number)=>bytes>=1024**3?(bytes/1024**3).toFixed(1)+' GB':(bytes/1024**2).toFixed(1)+' MB'
 async function refresh(){loading.value=true;error.value='';try{

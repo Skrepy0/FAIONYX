@@ -15,12 +15,12 @@
       "sha256": "30619e367e2a3c746212381f74799d6076aa3cc99e02a200e9e053ad1a31d93c"
     },
     {
-      "file": "bridge/dist/kamucl-bridge-1.0.0.jar",
+      "file": "bridge/dist/faionyx-bridge-1.0.0.jar",
       "bytes": 21041,
       "sha256": "280eb076498ca44c902ca039f7183d246a319d04292546f0d3ef27e9c79c7bc5"
     },
     {
-      "file": "bridge/dist/kamucl-bridge-1.0.1.jar",
+      "file": "bridge/dist/faionyx-bridge-1.0.1.jar",
       "bytes": 21827,
       "sha256": "20e482f85923483641fa84e7e6c737b57411c9b4979efb8f0033b17ad24fc69d"
     },

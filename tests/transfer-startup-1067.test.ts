@@ -28,7 +28,7 @@ test('wire speed ignores callback frequency, delays ETA until warmup and expires
 })
 
 test('SHA256 update-sized transfer uses concurrent ranges; cache hits are zero wire bytes', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(),'kamucl-transfer-'))
+  const root = await fs.mkdtemp(path.join(os.tmpdir(),'faionyx-transfer-'))
   const data = crypto.randomBytes(2*1024*1024)
   const sha256 = crypto.createHash('sha256').update(data).digest('hex')
   let active=0, peak=0, calls=0, wire=0

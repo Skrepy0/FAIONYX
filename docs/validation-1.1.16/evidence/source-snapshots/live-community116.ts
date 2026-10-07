@@ -6,7 +6,7 @@ import assert from 'node:assert/strict'
 import { versionInstallHarness } from '../tests/helpers/version-install-harness'
 async function main(){
 const source=process.argv[2]==='curseforge'?'curseforge':'modrinth'
-const root=fs.mkdtempSync(path.join(os.tmpdir(),'KAMUCL real public search116 ')),records:any[]=[],proof:any={complete:false,classification:'Real public '+source+' metadata through current source; Electron profile is private test adapter, no UI, download or game qualification; headers/credentials not recorded',root,queries:[]}
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'FAIONYX real public search116 ')),records:any[]=[],proof:any={complete:false,classification:'Real public '+source+' metadata through current source; Electron profile is private test adapter, no UI, download or game qualification; headers/credentials not recorded',root,queries:[]}
 const runtime=await versionInstallHarness(root,async(input:any,init:any)=>{
  const url=String(input);assert(['api.modrinth.com','api.curseforge.com','mod.mcimirror.top'].includes(new URL(url).hostname));const row:any={url,startedAt:Date.now()};records.push(row)
  const response=await fetch(input,{...init,signal:AbortSignal.timeout(30000)});row.status=response.status;row.finishedAt=Date.now();return response

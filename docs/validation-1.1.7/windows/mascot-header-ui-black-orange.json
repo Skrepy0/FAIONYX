@@ -1389,7 +1389,7 @@
         "wallTime": 29361.89999999106,
         "documentHidden": true,
         "stageHidden": false,
-        "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:101:29)\n    at MascotAudio.pause (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:181:28)\n    at watch.flush (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918b38a3/re"
+        "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:101:29)\n    at MascotAudio.pause (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:181:28)\n    at watch.flush (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918b38a3/re"
       },
       {
         "method": "resume",
@@ -1399,7 +1399,7 @@
         "wallTime": 29662.69999998808,
         "documentHidden": false,
         "stageHidden": true,
-        "stack": "Error\n    at Original.resume (<anonymous>:9:134)\n    at MascotAudio.unlock (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:137:56)\n    at watch.flush (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:519:20)\n    at callWithErrorHandling (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918b38a3/r"
+        "stack": "Error\n    at Original.resume (<anonymous>:9:134)\n    at MascotAudio.unlock (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:137:56)\n    at watch.flush (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:519:20)\n    at callWithErrorHandling (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918b38a3/r"
       },
       {
         "method": "suspend",
@@ -1409,7 +1409,7 @@
         "wallTime": 30368.19999998808,
         "documentHidden": false,
         "stageHidden": null,
-        "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:101:29)\n    at MascotAudio.pause (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:181:28)\n    at MascotAudio.dispose (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918"
+        "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:101:29)\n    at MascotAudio.pause (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:181:28)\n    at MascotAudio.dispose (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918"
       },
       {
         "method": "suspend",
@@ -1419,7 +1419,7 @@
         "wallTime": 31289.59999999404,
         "documentHidden": false,
         "stageHidden": null,
-        "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:101:29)\n    at MascotAudio.pause (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:181:28)\n    at MascotAudio.dispose (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918"
+        "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:101:29)\n    at MascotAudio.pause (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:181:28)\n    at MascotAudio.dispose (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918"
       },
       {
         "method": "suspend",
@@ -1429,7 +1429,7 @@
         "wallTime": 32871.39999999106,
         "documentHidden": false,
         "stageHidden": null,
-        "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:101:29)\n    at MascotAudio.pause (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:181:28)\n    at MascotAudio.dispose (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918"
+        "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:101:29)\n    at MascotAudio.pause (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:181:28)\n    at MascotAudio.dispose (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918"
       }
     ],
     "stateTransitions": [
@@ -7272,7 +7272,7 @@
         "wallTime": 29361.89999999106,
         "documentHidden": true,
         "stageHidden": false,
-        "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:101:29)\n    at MascotAudio.pause (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:181:28)\n    at watch.flush (file:///C:/Users/ROG/AppData/Local/Temp/KAMUCL%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/KAMUCL-runtime/1.1.7-a5c67623918b38a3/re"
+        "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:101:29)\n    at MascotAudio.pause (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918b38a3/resources/app.asar/out/renderer/assets/MascotStage-hkR71Pay.js:181:28)\n    at watch.flush (file:///C:/Users/ROG/AppData/Local/Temp/FAIONYX%20EXE%20GUI%20%E4%B8%AD%E6%96%87%20DKuWhH/FAIONYX-runtime/1.1.7-a5c67623918b38a3/re"
       }
     ],
     "audioStateTransitions": [

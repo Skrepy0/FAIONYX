@@ -32,7 +32,7 @@ test('NBT 读取器可解析 gzip level.dat 的嵌套 Compound 与标准数值',
 })
 
 test('世界目录递归识别 level.dat，并区分确认信息、推断信息和未知 MOD 依赖', async () => {
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-world-folder-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-world-folder-'))
   const world = path.join(root, 'extra', 'World')
   try {
     await fs.promises.mkdir(path.join(world, 'region'), { recursive: true })
@@ -66,7 +66,7 @@ test('世界目录递归识别 level.dat，并区分确认信息、推断信息�
 })
 
 test('多层 ZIP 存档按内容识别，并只把 pack.mcmeta + assets 判为资源包', async () => {
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-world-zip-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-world-zip-'))
   const file = path.join(root, 'world.zip')
   try {
     const zip = new AdmZip()

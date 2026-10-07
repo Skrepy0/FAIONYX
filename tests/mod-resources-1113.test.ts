@@ -131,7 +131,7 @@ test('1113 catalog parsing skips unused icon decompression while nested dependen
 })
 
 test('1113 scan deduplication separates catalog and icon results while retaining hashes and disabled files', async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-mod-resources-1113-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-mod-resources-1113-'))
   try {
     const zip = new Zip(); zip.addFile('fabric.mod.json', Buffer.from(JSON.stringify({ id: 'fixture', name: 'Fixture', version: '1', icon: 'icon.png' }))); zip.addFile('icon.png', Buffer.alloc(4096, 3))
     const bytes = zip.toBuffer(); fs.writeFileSync(path.join(root, 'a.jar.disabled'), bytes)
@@ -158,7 +158,7 @@ test('1113 scan deduplication separates catalog and icon results while retaining
 })
 
 test('1113 icon serialization retains completion only and survives a failed request without losing caller results', async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-icons-queue-1113-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-icons-queue-1113-'))
   try {
     for (const name of ['a.jar', 'b.jar', 'c.jar']) fs.writeFileSync(path.join(root, name), 'fixture')
     const source = fs.readFileSync('src/main/core/modIcons.ts', 'utf8') + '\nexport const inspectQueue=()=>queue'
@@ -193,7 +193,7 @@ test('1113 version modal disposes closed lists and every late or superseded plan
   const script = fs.readFileSync('src/renderer/src/components/ModVersionModal.vue', 'utf8').match(/<script setup lang="ts">([\s\S]*?)<\/script>/)![1]
   const output = await build({ stdin: { contents: script + '\nexport {load,select,choices,plan}', loader: 'ts', resolveDir: path.resolve('src/renderer/src/components') }, bundle: true, write: false, platform: 'node', format: 'cjs', plugins: [{ name: 'ui-fixture', setup(builder) { builder.onResolve({ filter: /^(vue|\.\.\/api)$/ }, args => ({ path: args.path, namespace: 'fixture' })); builder.onLoad({ filter: /.*/, namespace: 'fixture' }, args => ({ contents: args.path === 'vue' ? 'export const ref=value=>({value});export const onMounted=()=>{};export const onUnmounted=callback=>__h.unmount=callback' : 'export const errText=error=>error.message' })) } }] })
   const pending: Array<{ channel: string; resolve: (value: any) => void }> = [], discarded: string[] = [], h: any = {}
-  const window = { kamucl: { invoke: (channel: string, id: string) => channel === 'mods:versionDiscard' ? (discarded.push(id), Promise.resolve()) : new Promise(resolve => pending.push({ channel, resolve })) } }
+  const window = { faionyx: { invoke: (channel: string, id: string) => channel === 'mods:versionDiscard' ? (discarded.push(id), Promise.resolve()) : new Promise(resolve => pending.push({ channel, resolve })) } }
   const mod = { exports: {} as any }
   new Function('require', 'module', 'exports', 'window', '__h', 'defineProps', 'defineEmits', output.outputFiles[0].text)(req, mod, mod.exports, window, h, () => ({ source: { id: 'instance', folder: 'folder' }, fileName: 'mod.jar' }), () => () => {})
   const ui = mod.exports

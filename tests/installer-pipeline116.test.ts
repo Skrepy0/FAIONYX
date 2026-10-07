@@ -13,7 +13,7 @@ import AdmZip from 'adm-zip'
 import type { ProgressEvent } from '../src/shared/types'
 
 test('Actual Forge pack pipeline reports Java readiness, drains the installer and commits overrides before completion', {timeout:15000}, async () => {
-  const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl installer116 中文 ')), game=path.join(root,'games'), base=path.join(game,'versions','1.20.1')
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx installer116 中文 ')), game=path.join(root,'games'), base=path.join(game,'versions','1.20.1')
   fs.mkdirSync(base,{recursive:true});fs.mkdirSync(path.join(root,'userData'))
   fs.writeFileSync(path.join(base,'1.20.1.json'),JSON.stringify({id:'1.20.1',libraries:[],mainClass:'net.minecraft.client.main.Main'}));fs.writeFileSync(path.join(base,'1.20.1.jar'),'synthetic client; never launched')
   const jar=new AdmZip();jar.addFile('install_profile.json',Buffer.from('{"libraries":[]}'));const archive=jar.toBuffer(), hash=crypto.createHash('sha1').update(archive).digest('hex')
@@ -40,7 +40,7 @@ test('Actual Forge pack pipeline reports Java readiness, drains the installer an
     assert.equal(processor.state,'running');assert.equal(processor.indeterminate,true);assert.match(processor.text,/Java/);assert.equal(spawned,0);assert(events.at(-1)!.overall!<1)
     javaReady.resolve();assert.equal(await work,'Forge fixture116');assert.equal(spawned,1);assert.equal(closed,1);assert.equal(events.filter(e=>e.stage==='done').length,1)
     assert.equal(fs.readFileSync(path.join(base,'1.20.1.jar'),'utf8'),'synthetic client; never launched')
-    if(process.env.KAMUCL_CAPTURE_PIPELINE116==='1'){
+    if(process.env.FAIONYX_CAPTURE_PIPELINE116==='1'){
       const target=path.resolve('out','installer-pipeline116-events-'+crypto.randomUUID()+'.json')
       fs.writeFileSync(target,JSON.stringify({classification:'Original current production Forge pack orchestration events; only Java readiness and installer child are synthetic, no real JVM or game launch',events,spawned,closed,committedConfig:true,sourceHashes:['src/main/core/modpacks.ts','src/main/core/loaders.ts','src/main/core/parallelProgress.ts'].map(file=>({file,sha256:crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')}))},null,2),{flag:'wx'})
       console.log(JSON.stringify({pipelineCapture:target}))

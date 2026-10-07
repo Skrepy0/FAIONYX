@@ -14,7 +14,7 @@ function bytes(root,file,sha,size){
  assert(relative&&!relative.startsWith('..')&&!path.isAbsolute(relative)&&fs.statSync(resolved).isFile(),'证据链接越界或不是文件')
  const b=fs.readFileSync(resolved);if(size!==undefined){assert(Number.isSafeInteger(size)&&size>0);assert.equal(b.length,size,'证据大小已变化')}assert.equal(hash(b),sha,'证据摘要不匹配：'+file);return b
 }
-function assets(version,id){if(id==='windows-x64')return[`KAMUCL-${version}.exe`,`KAMUCL-${version}-windows-x64.zip`,`KAMUCL-${version}-windows-x64-unpacked.zip`];const[p,a]=id.split('-');return(p==='mac'?['dmg','zip']:p==='harmonyos'?['hap']:['AppImage','deb','tar.gz']).map(e=>`KAMUCL-${version}-${p}-${a}.${e}`)}
+function assets(version,id){if(id==='windows-x64')return[`FAIONYX-${version}.exe`,`FAIONYX-${version}-windows-x64.zip`,`FAIONYX-${version}-windows-x64-unpacked.zip`];const[p,a]=id.split('-');return(p==='mac'?['dmg','zip']:p==='harmonyos'?['hap']:['AppImage','deb','tar.gz']).map(e=>`FAIONYX-${version}-${p}-${a}.${e}`)}
 function packageFormat(b,name,arch){
  if(/\.(zip|hap)$/.test(name))assert(b.length>=22&&b.readUInt32LE(0)===0x04034b50,'附件不是ZIP/HAP')
  else if(/\.dmg$/.test(name))assert(b.length>=512&&b.toString('ascii',b.length-512,b.length-508)==='koly','附件不是DMG')

@@ -28,7 +28,7 @@
   "blockingFindings": [],
   "changesMadeByReviewer": "Only out/review119-skin report and verification artifacts; no product, QA, version, build, original evidence edits.",
   "executable": {
-    "file": "E:\\KAMUCL\\release\\KAMUCL-1.1.19.exe",
+    "file": "E:\\FAIONYX\\release\\FAIONYX-1.1.19.exe",
     "bytes": 97323050,
     "sha256": "7b11d4979f1d3afc72397b501770130e3c5e23e2e246deaa70a06276f6a61a65"
   },
@@ -78,7 +78,7 @@
     "execution": "Read saved parent test log; not rerun by this reviewer"
   },
   "package": {
-    "file": "E:\\KAMUCL\\out\\windows-package-1.1.19.json",
+    "file": "E:\\FAIONYX\\out\\windows-package-1.1.19.json",
     "complete": true,
     "portable": true,
     "zipped": true,
@@ -86,7 +86,7 @@
   },
   "flows": [
     {
-      "directory": "E:\\KAMUCL\\out\\qa-skin-layers119-black-orange-435f49aa-3f98-4e68-949c-16d322229f3e",
+      "directory": "E:\\FAIONYX\\out\\qa-skin-layers119-black-orange-435f49aa-3f98-4e68-949c-16d322229f3e",
       "proofSHA256": "15d06eb3d79b0cf7c8fec1185efd7069d97c206146b035390a6a0a1b091b71b2",
       "complete": true,
       "theme": "black-orange",
@@ -182,7 +182,7 @@
       ]
     },
     {
-      "directory": "E:\\KAMUCL\\out\\qa-skin-layers119-blue-white-3baa69ef-9afc-41f8-8327-fe5a71c7c1d9",
+      "directory": "E:\\FAIONYX\\out\\qa-skin-layers119-blue-white-3baa69ef-9afc-41f8-8327-fe5a71c7c1d9",
       "proofSHA256": "308dac75397d88ed36512daafad10ad4a1eb75ee1bd8bcb7bdb09261f936743e",
       "complete": true,
       "theme": "blue-white",
@@ -263,7 +263,7 @@
       ]
     },
     {
-      "directory": "E:\\KAMUCL\\out\\qa-skin-layers119-transparent-ce2a3f69-670c-435e-8b0a-a97ee76fb4e0",
+      "directory": "E:\\FAIONYX\\out\\qa-skin-layers119-transparent-ce2a3f69-670c-435e-8b0a-a97ee76fb4e0",
       "proofSHA256": "df859764f85963f1d2ba5f2ceeef9d5927ca91894a2f60f35adba5944bf79e6a",
       "complete": true,
       "theme": "transparent",
@@ -344,7 +344,7 @@
       ]
     },
     {
-      "directory": "E:\\KAMUCL\\out\\qa-skin-layers119-custom-556a701a-79c9-4bf8-9464-f7351d3a28aa",
+      "directory": "E:\\FAIONYX\\out\\qa-skin-layers119-custom-556a701a-79c9-4bf8-9464-f7351d3a28aa",
       "proofSHA256": "53c4bda70e72c3265cabb6fd8b0c096b01f089bae523b91d0c75f98d7ba7b938",
       "complete": true,
       "theme": "custom",
@@ -425,7 +425,7 @@
       ]
     },
     {
-      "directory": "E:\\KAMUCL\\out\\qa-skin-layers119-black-orange-98375013-8237-4e7a-b98d-cb3528abe6be",
+      "directory": "E:\\FAIONYX\\out\\qa-skin-layers119-black-orange-98375013-8237-4e7a-b98d-cb3528abe6be",
       "proofSHA256": "d8785d651b51d2af499fa7ff27c2e9ccb1ccd2591cb0c39b7c412f2479cabfdc",
       "complete": true,
       "theme": "black-orange",
@@ -523,105 +523,105 @@
   ],
   "manuallyInspectedImages": [
     {
-      "file": "E:\\KAMUCL\\out\\qa-skin-layers119-black-orange-435f49aa-3f98-4e68-949c-16d322229f3e\\zero-alpha-warning.png",
+      "file": "E:\\FAIONYX\\out\\qa-skin-layers119-black-orange-435f49aa-3f98-4e68-949c-16d322229f3e\\zero-alpha-warning.png",
       "sha256": "78ab251df1620f84258f1ff955d966aeebe318145d4e92907a7174224eb2bca5",
       "kind": "original PNG",
       "detail": "original",
       "observation": "Warning text and restore button readable; fixed header/footer visible"
     },
     {
-      "file": "E:\\KAMUCL\\out\\qa-skin-layers119-black-orange-435f49aa-3f98-4e68-949c-16d322229f3e\\blank-outer-painted.png",
+      "file": "E:\\FAIONYX\\out\\qa-skin-layers119-black-orange-435f49aa-3f98-4e68-949c-16d322229f3e\\blank-outer-painted.png",
       "sha256": "a974458eb2978349c776d0ba527f66360ea37383b8d151f7b41959ad5017e54e",
       "kind": "original PNG",
       "detail": "original",
       "observation": "Blank outer-shell head has newly painted visible texel; editor state reflects change"
     },
     {
-      "file": "E:\\KAMUCL\\out\\qa-skin-layers119-black-orange-435f49aa-3f98-4e68-949c-16d322229f3e\\persisted-zero-alpha-warning.png",
+      "file": "E:\\FAIONYX\\out\\qa-skin-layers119-black-orange-435f49aa-3f98-4e68-949c-16d322229f3e\\persisted-zero-alpha-warning.png",
       "sha256": "f33e4803c9533a91ee1f5d41a9b5c34c3b39fa73c67c28c5bc5f6eaf2cbe0e18",
       "kind": "original PNG",
       "detail": "original",
       "observation": "Warning text and restore button readable; fixed header/footer visible"
     },
     {
-      "file": "E:\\KAMUCL\\out\\qa-skin-layers119-blue-white-3baa69ef-9afc-41f8-8327-fe5a71c7c1d9\\zero-alpha-warning.png",
+      "file": "E:\\FAIONYX\\out\\qa-skin-layers119-blue-white-3baa69ef-9afc-41f8-8327-fe5a71c7c1d9\\zero-alpha-warning.png",
       "sha256": "0bbc743120a1473d2db860ec33b4b655d17f12f7029eb291b16c2ad558ae097d",
       "kind": "original PNG",
       "detail": "original",
       "observation": "Warning text and restore button readable; fixed header/footer visible"
     },
     {
-      "file": "E:\\KAMUCL\\out\\qa-skin-layers119-blue-white-3baa69ef-9afc-41f8-8327-fe5a71c7c1d9\\blank-outer-painted.png",
+      "file": "E:\\FAIONYX\\out\\qa-skin-layers119-blue-white-3baa69ef-9afc-41f8-8327-fe5a71c7c1d9\\blank-outer-painted.png",
       "sha256": "50dddf879ac2148c651fa0930b6ba71f7770446d720b98f8ccfce552428a20cf",
       "kind": "original PNG",
       "detail": "original",
       "observation": "Blank outer-shell head has newly painted visible texel; editor state reflects change"
     },
     {
-      "file": "E:\\KAMUCL\\out\\qa-skin-layers119-transparent-ce2a3f69-670c-435e-8b0a-a97ee76fb4e0\\zero-alpha-warning.png",
+      "file": "E:\\FAIONYX\\out\\qa-skin-layers119-transparent-ce2a3f69-670c-435e-8b0a-a97ee76fb4e0\\zero-alpha-warning.png",
       "sha256": "efeda670b43b8f8203118477c318c78470cbffe8600950591551eba233050bf5",
       "kind": "original PNG",
       "detail": "original",
       "observation": "Warning text and restore button readable; fixed header/footer visible"
     },
     {
-      "file": "E:\\KAMUCL\\out\\qa-skin-layers119-transparent-ce2a3f69-670c-435e-8b0a-a97ee76fb4e0\\blank-outer-painted.png",
+      "file": "E:\\FAIONYX\\out\\qa-skin-layers119-transparent-ce2a3f69-670c-435e-8b0a-a97ee76fb4e0\\blank-outer-painted.png",
       "sha256": "fcc80e3d7a11091a42957267e7349cdea5cce2f17f191e8cca1864af90b69d16",
       "kind": "original PNG",
       "detail": "original",
       "observation": "Blank outer-shell head has newly painted visible texel; editor state reflects change"
     },
     {
-      "file": "E:\\KAMUCL\\out\\qa-skin-layers119-custom-556a701a-79c9-4bf8-9464-f7351d3a28aa\\zero-alpha-warning.png",
+      "file": "E:\\FAIONYX\\out\\qa-skin-layers119-custom-556a701a-79c9-4bf8-9464-f7351d3a28aa\\zero-alpha-warning.png",
       "sha256": "1c6fd1c867ca6479cde996bbf82a761c40ecf5593971924ea962dbf3f7b8bdd0",
       "kind": "original PNG",
       "detail": "original",
       "observation": "Warning text and restore button readable; fixed header/footer visible"
     },
     {
-      "file": "E:\\KAMUCL\\out\\qa-skin-layers119-custom-556a701a-79c9-4bf8-9464-f7351d3a28aa\\blank-outer-painted.png",
+      "file": "E:\\FAIONYX\\out\\qa-skin-layers119-custom-556a701a-79c9-4bf8-9464-f7351d3a28aa\\blank-outer-painted.png",
       "sha256": "43363000881e4420d07117b12663ed465c48108933cae9fa26c637c88789641d",
       "kind": "original PNG",
       "detail": "original",
       "observation": "Blank outer-shell head has newly painted visible texel; editor state reflects change"
     },
     {
-      "file": "E:\\KAMUCL\\out\\qa-skin-layers119-black-orange-98375013-8237-4e7a-b98d-cb3528abe6be\\zero-alpha-warning.png",
+      "file": "E:\\FAIONYX\\out\\qa-skin-layers119-black-orange-98375013-8237-4e7a-b98d-cb3528abe6be\\zero-alpha-warning.png",
       "sha256": "be05dc06f5fa25f613299360086a0bda230100438c03199bd2e7c0ada0c28477",
       "kind": "original PNG",
       "detail": "original",
       "observation": "Warning text and restore button readable; fixed header/footer visible"
     },
     {
-      "file": "E:\\KAMUCL\\out\\qa-skin-layers119-black-orange-98375013-8237-4e7a-b98d-cb3528abe6be\\blank-outer-painted.png",
+      "file": "E:\\FAIONYX\\out\\qa-skin-layers119-black-orange-98375013-8237-4e7a-b98d-cb3528abe6be\\blank-outer-painted.png",
       "sha256": "4d51a5051a68e74a5054c7d4a1826e8196004b1c421c9dfb90acb20c3c8d34ff",
       "kind": "original PNG",
       "detail": "original",
       "observation": "Blank outer-shell head has newly painted visible texel; editor state reflects change"
     },
     {
-      "file": "E:\\KAMUCL\\out\\qa-skin-layers119-black-orange-98375013-8237-4e7a-b98d-cb3528abe6be\\persisted-zero-alpha-warning.png",
+      "file": "E:\\FAIONYX\\out\\qa-skin-layers119-black-orange-98375013-8237-4e7a-b98d-cb3528abe6be\\persisted-zero-alpha-warning.png",
       "sha256": "e2cfddd9ef319bc6301e345a7692912f8b566e0aaa7f328336cc6b88969c5565",
       "kind": "original PNG",
       "detail": "original",
       "observation": "Warning text and restore button readable; fixed header/footer visible"
     },
     {
-      "file": "E:\\KAMUCL\\out\\skinlayers119-original-black-orange\\frame-0000.jpg",
+      "file": "E:\\FAIONYX\\out\\skinlayers119-original-black-orange\\frame-0000.jpg",
       "sha256": "eb4cd9a1762a6153fa3f93d865c45457110498e94cc831c641233ae7f7490f2c",
       "kind": "original screencast JPEG",
       "detail": "original",
       "observation": "Blank outer shell before stroke"
     },
     {
-      "file": "E:\\KAMUCL\\out\\skinlayers119-original-black-orange\\frame-0094.jpg",
+      "file": "E:\\FAIONYX\\out\\skinlayers119-original-black-orange\\frame-0094.jpg",
       "sha256": "4b101cffafe5853208fc535a3fb2d6c8acbf73b00421f6f8ca3a15fbd46baed6",
       "kind": "original screencast JPEG",
       "detail": "original",
       "observation": "Visible painted head texel, changed document and undo state"
     },
     {
-      "file": "E:\\KAMUCL\\out\\skinlayers119-original-black-orange\\frame-0188.jpg",
+      "file": "E:\\FAIONYX\\out\\skinlayers119-original-black-orange\\frame-0188.jpg",
       "sha256": "7447c033f935754f3b8cfe16d31e260bbce29e26e392a64a672b67b5e1e897bf",
       "kind": "original screencast JPEG",
       "detail": "original",
@@ -629,7 +629,7 @@
     }
   ],
   "auxiliaryRegression": {
-    "file": "E:\\KAMUCL\\out\\skin-editor-ui-black-orange.json",
+    "file": "E:\\FAIONYX\\out\\skin-editor-ui-black-orange.json",
     "sha256": "a38502bec876d1461d3241614ca4d35f72268910ebb1b0e0c05394e02d58879b",
     "complete": true,
     "version": "1.1.19",
@@ -947,7 +947,7 @@
   },
   "historicalFailures": [
     {
-      "file": "E:\\KAMUCL\\out\\qa-skin-layers119-black-orange-9522dffe-03a6-4788-9958-24719797b75f\\proof.json",
+      "file": "E:\\FAIONYX\\out\\qa-skin-layers119-black-orange-9522dffe-03a6-4788-9958-24719797b75f\\proof.json",
       "sha256": "077094a0f23fb319b5f9f4445e66ee7bbf4d7622e54fb2c4174044e3acbeb1dc",
       "complete": false,
       "version": "1.1.19",
@@ -992,11 +992,11 @@
       },
       "error": {
         "message": "Expected values to be strictly equal:\n\n962 !== 960\n",
-        "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n962 !== 960\n\n    at module.exports (E:\\KAMUCL\\scripts\\qa-skin-layers119.cjs:45:644)\n    at async E:\\KAMUCL\\scripts\\verify-ui-refinement.cjs:235:9"
+        "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n962 !== 960\n\n    at module.exports (E:\\FAIONYX\\scripts\\qa-skin-layers119.cjs:45:644)\n    at async E:\\FAIONYX\\scripts\\verify-ui-refinement.cjs:235:9"
       }
     },
     {
-      "file": "E:\\KAMUCL\\out\\qa-skin-layers119-blue-white-a7a0b98e-b8e2-4af4-b485-5061c3bbadb9\\proof.json",
+      "file": "E:\\FAIONYX\\out\\qa-skin-layers119-blue-white-a7a0b98e-b8e2-4af4-b485-5061c3bbadb9\\proof.json",
       "sha256": "a062f774b4debae80b592d98adf922dc71686c67fd6c466b7f5bf14aeb5c3a40",
       "complete": false,
       "version": "1.1.19",
@@ -1042,11 +1042,11 @@
       },
       "error": {
         "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 10030780\n- 39653372\n",
-        "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 10030780\n- 39653372\n\n    at focus (E:\\KAMUCL\\scripts\\qa-skin-layers119.cjs:14:134)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async click (E:\\KAMUCL\\scripts\\qa-skin-layers119.cjs:20:264)\n    at async newSkin (E:\\KAMUCL\\scripts\\qa-skin-layers119.cjs:28:27)\n    at async module.exports (E:\\KAMUCL\\scripts\\qa-skin-layers119.cjs:48:62)\n    at async E:\\KAMUCL\\scripts\\verify-ui-refinement.cjs:235:9"
+        "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 10030780\n- 39653372\n\n    at focus (E:\\FAIONYX\\scripts\\qa-skin-layers119.cjs:14:134)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async click (E:\\FAIONYX\\scripts\\qa-skin-layers119.cjs:20:264)\n    at async newSkin (E:\\FAIONYX\\scripts\\qa-skin-layers119.cjs:28:27)\n    at async module.exports (E:\\FAIONYX\\scripts\\qa-skin-layers119.cjs:48:62)\n    at async E:\\FAIONYX\\scripts\\verify-ui-refinement.cjs:235:9"
       }
     },
     {
-      "file": "E:\\KAMUCL\\out\\qa-skin-layers119-transparent-1fcdc17a-bc69-4ca2-bfaf-64c871c8e03d\\proof.json",
+      "file": "E:\\FAIONYX\\out\\qa-skin-layers119-transparent-1fcdc17a-bc69-4ca2-bfaf-64c871c8e03d\\proof.json",
       "sha256": "c62b3379c79405eb2b904dae666bd837a871cac9ec18e9596a3acd662dd03019",
       "complete": false,
       "version": "1.1.19",
@@ -1092,7 +1092,7 @@
       },
       "error": {
         "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 56953844\n- 24187210\n",
-        "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 56953844\n- 24187210\n\n    at focus (E:\\KAMUCL\\scripts\\qa-skin-layers119.cjs:14:256)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async click (E:\\KAMUCL\\scripts\\qa-skin-layers119.cjs:20:5)\n    at async module.exports (E:\\KAMUCL\\scripts\\qa-skin-layers119.cjs:62:5)\n    at async E:\\KAMUCL\\scripts\\verify-ui-refinement.cjs:235:9"
+        "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 56953844\n- 24187210\n\n    at focus (E:\\FAIONYX\\scripts\\qa-skin-layers119.cjs:14:256)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async click (E:\\FAIONYX\\scripts\\qa-skin-layers119.cjs:20:5)\n    at async module.exports (E:\\FAIONYX\\scripts\\qa-skin-layers119.cjs:62:5)\n    at async E:\\FAIONYX\\scripts\\verify-ui-refinement.cjs:235:9"
       },
       "focusFailure": {
         "hwnd": 24187210,

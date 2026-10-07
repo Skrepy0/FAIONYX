@@ -149,17 +149,17 @@ function loadKernel32(): Promise<Kernel32Api | null> {
     try {
       const koffi = asKoffi(await import('koffi'))
       const k32 = koffi.load('kernel32.dll')
-      const SA = koffi.struct('KamuclSecurityAttributes', {
+      const SA = koffi.struct('FaionyxSecurityAttributes', {
         nLength: 'uint32', lpSecurityDescriptor: 'void *', bInheritHandle: 'bool'
       })
-      const SI = koffi.struct('KamuclStartupInfoW', {
+      const SI = koffi.struct('FaionyxStartupInfoW', {
         cb: 'uint32', lpReserved: 'void *', lpDesktop: 'void *', lpTitle: 'void *',
         dwX: 'uint32', dwY: 'uint32', dwXSize: 'uint32', dwYSize: 'uint32',
         dwXCountChars: 'uint32', dwYCountChars: 'uint32', dwFillAttribute: 'uint32', dwFlags: 'uint32',
         wShowWindow: 'uint16', wCbReserved2: 'uint16', lpReserved2: 'void *',
         hStdInput: 'uintptr', hStdOutput: 'uintptr', hStdError: 'uintptr'
       })
-      const PI = koffi.struct('KamuclProcessInformation', {
+      const PI = koffi.struct('FaionyxProcessInformation', {
         hProcess: 'uintptr', hThread: 'uintptr', dwProcessId: 'uint32', dwThreadId: 'uint32'
       })
       const createPipe = k32.func('CreatePipe', 'bool', [

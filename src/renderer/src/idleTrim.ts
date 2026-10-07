@@ -2,7 +2,7 @@
  * 渲染层空闲瘦身：窗口静默（最小化/隐藏/遮挡）时暂停可重建缓存并主动触发 GC。
  * 触发双通道：
  * - document.visibilitychange（Electron 在 Windows 上最小化/遮挡即转 hidden，天然覆盖所有场景）
- * - 主进程 minimize/hide 广播（kamucl:mem-trim，与 memTrim.ts 的常量对应；通道串在两处各自局部维护）
+ * - 主进程 minimize/hide 广播（faionyx:mem-trim，与 memTrim.ts 的常量对应；通道串在两处各自局部维护）
  * 主进程 js-flags 已带 --expose-gc，hidden 时调 window.gc?.() 回收已释放引用的堆内存。
  * 大缓存（轮播图预加载、皮肤纹理等）的持有方通过 registerIdleReleasable 注册释放/重建钩子，
  * 本模块不直接持有任何视图引用。
@@ -57,7 +57,7 @@ export function startIdleTrim(): void {
   started = true
   document.addEventListener('visibilitychange', () => applyHiddenState(document.hidden))
   try {
-    window.kamucl.on('kamucl:mem-trim', () => applyHiddenState(true))
+    window.faionyx.on('faionyx:mem-trim', () => applyHiddenState(true))
   } catch {
     /* 桥接不可用（测试环境）时仅靠 visibilitychange 工作 */
   }

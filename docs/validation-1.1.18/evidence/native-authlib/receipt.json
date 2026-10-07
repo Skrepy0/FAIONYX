@@ -4,7 +4,7 @@
   "cases": [
     {
       "id": "1.12.2",
-      "java": "E:\\KAMUCL\\out\\java118-runtime\\unpacked\\zulu8.96.0.205-ca-jre8.0.504-win_x64",
+      "java": "E:\\FAIONYX\\out\\java118-runtime\\unpacked\\zulu8.96.0.205-ca-jre8.0.504-win_x64",
       "complete": true,
       "manifest": {
         "url": "https://piston-meta.mojang.com/v1/packages/832d95b9f40699d4961394dcf6cf549e65f15dc5/1.12.2.json",
@@ -52,7 +52,7 @@
           "sha1": "4ac28ff2f1ddf05dae3043a190451e8c46b73c31"
         }
       ],
-      "output": "[KAMUCL] Offline skin provider ready (local game only)\r\nOFFICIAL_AUTHLIB_SKIN_OK 266\r\n"
+      "output": "[FAIONYX] Offline skin provider ready (local game only)\r\nOFFICIAL_AUTHLIB_SKIN_OK 266\r\n"
     },
     {
       "id": "1.20.1",
@@ -116,7 +116,7 @@
           "sha1": "f48d81adce2abf5ad3cfe463df517952749e03bc"
         }
       ],
-      "output": "[KAMUCL] Offline skin provider ready (local game only)\r\nOFFICIAL_AUTHLIB_SKIN_OK 266\r\n"
+      "output": "[FAIONYX] Offline skin provider ready (local game only)\r\nOFFICIAL_AUTHLIB_SKIN_OK 266\r\n"
     },
     {
       "id": "1.21.11",
@@ -176,7 +176,7 @@
           "sha1": "d9e58ac9c7779ba3bf8142aff6c830617a7fe60f"
         }
       ],
-      "output": "[KAMUCL] Offline skin provider ready (local game only)\r\nOFFICIAL_AUTHLIB_SKIN_OK 266\r\n"
+      "output": "[FAIONYX] Offline skin provider ready (local game only)\r\nOFFICIAL_AUTHLIB_SKIN_OK 266\r\n"
     },
     {
       "id": "26.3",
@@ -236,7 +236,7 @@
           "sha1": "d9e58ac9c7779ba3bf8142aff6c830617a7fe60f"
         }
       ],
-      "output": "[KAMUCL] Offline skin provider ready (local game only)\r\nOFFICIAL_AUTHLIB_SKIN_OK 266\r\n"
+      "output": "[FAIONYX] Offline skin provider ready (local game only)\r\nOFFICIAL_AUTHLIB_SKIN_OK 266\r\n"
     }
   ],
   "injector": {

@@ -140,7 +140,7 @@ async function resetImage() {
             </button>
           </div>
         </div>
-        <p class="thumbnail-note muted">PNG、JPG、JPEG、WebP 会经过尺寸与内容校验，并复制到 KAMUCL 管理目录；原文件移动后不受影响。</p>
+        <p class="thumbnail-note muted">PNG、JPG、JPEG、WebP 会经过尺寸与内容校验，并复制到 FAIONYX 管理目录；原文件移动后不受影响。</p>
       </div>
     </div>
   </Teleport>

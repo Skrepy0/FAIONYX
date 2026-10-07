@@ -1,4 +1,4 @@
-# KAMUCL 1.1.19 皮肤外层修复：独立最终评审
+# FAIONYX 1.1.19 皮肤外层修复：独立最终评审
 
 结论：本批皮肤外层修复通过，未发现阻断缺陷。合理性 **9.3/10**、功能性 **9.2/10**、外观 **8.8/10**；三项分别达到 8.5，不取平均，也不以未覆盖项目补分。审查者未实现本批产品修复；本轮只读取产品/既有证据、运行专项测试和独立验证脚本，只写 `out/review119-skin/` 审查资料。
 
@@ -12,7 +12,7 @@
 
 ## 产品和证据绑定
 
-- 独立重新计算 `release/KAMUCL-1.1.19.exe`：97,323,050 bytes，SHA256 `7b11d4979f1d3afc72397b501770130e3c5e23e2e246deaa70a06276f6a61a65`。
+- 独立重新计算 `release/FAIONYX-1.1.19.exe`：97,323,050 bytes，SHA256 `7b11d4979f1d3afc72397b501770130e3c5e23e2e246deaa70a06276f6a61a65`。
 - [生产输入冻结清单](../production-inputs119-final-prebuild.json) 的 516 个文件逐份检查尺寸和 SHA256，**0 差异**。清单 SHA256 `92f7dd9ba477830fa8d56f685e0d10f4d4535486cc581444a2d97675f754b43c`；独立结果见 [source-freeze-verification.json](source-freeze-verification.json)。
 - [原始独立绑定收据](../gui119-executable-bindings.json) 及 `out/bind119.cjs` 已审阅。另行重算全部 **17** 份保留 EXE、其全部 runtime ASAR；均等于最终 EXE 与包 ASAR `42697b9e8e9e1ef75ae7f9e6fa75eb41658002f235ed9f1bd2ec324c9454e2a1`。**16** 份新模块原 proof/owned ledger 的原始哈希、parent PID、唯一出生时间关联及 awaitedClose 均重新验证。结果见 [binding-verification.json](binding-verification.json)。
 - 绑定强度准确限定为：**事后保留字节哈希 + 原始文件时间 + 唯一 owned-parent PID ledger 关联**。原 proof 没有启动当时的 process.execPath/EXE hash，未事后改写为有。五轮本次专项及原始录屏所属轮有唯一关联；旧完整关闭/忙碌回归仅有已核验 EXE cohort 的辅助关联，不提升为同等逐轮 PID 绑定。

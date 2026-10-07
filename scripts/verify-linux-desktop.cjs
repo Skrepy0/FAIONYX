@@ -13,8 +13,8 @@ const owned = require('./qa-owned-process-119.cjs')
 let recorder, recordLog
 async function runHarness(theme, module, executable) {
   const start = Date.now(), logName = theme + '-' + module + '.log', descriptor = fs.openSync(path.join(proof, logName), 'w')
-  const env = { ...process.env, KAMUCL_GUI_APP: executable, KAMUCL_EXTENSION_GUI: '1', KAMUCL_EXTENSION_ONLY: '1', KAMUCL_SKIP_EXTENSION_BASE: '1', KAMUCL_UI_MODULE: module, KAMUCL_OBSERVER_TRACE_CONTROL119: '1' }
-  delete env.ELECTRON_RUN_AS_NODE; delete env.KAMUCL_GUI_DEV; delete env.KAMUCL_GUI_SOFTWARE
+  const env = { ...process.env, FAIONYX_GUI_APP: executable, FAIONYX_EXTENSION_GUI: '1', FAIONYX_EXTENSION_ONLY: '1', FAIONYX_SKIP_EXTENSION_BASE: '1', FAIONYX_UI_MODULE: module, FAIONYX_OBSERVER_TRACE_CONTROL119: '1' }
+  delete env.ELECTRON_RUN_AS_NODE; delete env.FAIONYX_GUI_DEV; delete env.FAIONYX_GUI_SOFTWARE
   const child = spawn(process.execPath, ['scripts/verify-ui-refinement.cjs', theme], { cwd: root, env, stdio: ['ignore', descriptor, descriptor] })
   const track = owned.trackOwnedChild(child, 'linux-' + theme + '-' + module)
   let timeout
@@ -41,16 +41,16 @@ async function runHarness(theme, module, executable) {
     assert(!/^(Xvfb|Xvnc|Xephyr)$/m.test(processNames), 'A virtual X server is fixture evidence, never native desktop acceptance')
     assert(!/llvmpipe|softpipe|swiftshader|software rasterizer/i.test(report.graphics), 'A software renderer cannot establish native motion acceptance')
   }
-  const prefix = 'KAMUCL-' + version + '-linux-' + arch, archive = path.join(root, 'release', prefix + '.tar.gz')
+  const prefix = 'FAIONYX-' + version + '-linux-' + arch, archive = path.join(root, 'release', prefix + '.tar.gz')
   const receipt = JSON.parse(fs.readFileSync(path.join(root, 'release/linux-proof-' + arch + '-packages/summary.json'), 'utf8'))
   assert.equal(receipt.version, version); assert.equal(receipt.arch, arch); assert.equal(receipt.sourceCommit, report.sourceCommit)
   const asset = receipt.packages.find(p => p.name === prefix + '.tar.gz')
   assert(asset); assert.equal(fs.statSync(archive).size, asset.bytes); assert.equal(sha(archive), asset.sha256)
   report.package = asset
-  const clean = fs.mkdtempSync(path.join(os.tmpdir(), 'KAMUCL Linux native 中文 '))
+  const clean = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX Linux native 中文 '))
   read('/usr/bin/tar', ['-xzf', archive, '-C', clean])
-  const application = path.join(clean, 'KAMUCL'), executable = path.join(application, 'kamucl')
-  const metadata = JSON.parse(fs.readFileSync(path.join(application, 'resources/kamucl-linux.json'), 'utf8'))
+  const application = path.join(clean, 'FAIONYX'), executable = path.join(application, 'faionyx')
+  const metadata = JSON.parse(fs.readFileSync(path.join(application, 'resources/faionyx-linux.json'), 'utf8'))
   assert.equal(metadata.schemaVersion, 1, 'Unknown Linux package identity schema')
   assert.equal(metadata.version, version); assert.equal(metadata.arch, arch); assert.equal(metadata.installationKind, 'portable-directory')
   assert.equal(metadata.sourceCommit, report.sourceCommit, 'Embedded source must match this desktop test checkout')

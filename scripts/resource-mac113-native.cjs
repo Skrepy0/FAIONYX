@@ -88,7 +88,7 @@ function roleGroup(row){
  if(row.role==='native-app-main'||/^Browser(?:$| )/.test(row.role))return'root'
  if(/^java(w)?(?:\.exe)?$/i.test(row.name))return'javaHelpers'
  if(/^(?:terracotta(?:-[\w.-]+)?|voxlink(?:-[\w.-]+)?|frpc)(?:\.exe)?$/i.test(row.name)||/^(?:owned-tool|network-tool)(?:\b|-)/.test(row.role))return'ownedTools'
- if(/^KAMUCL Helper(?:\b| )/i.test(row.name)||/^(?:GPU|Tab|Renderer|Utility|Zygote|Sandbox)(?:\b| )/.test(row.role))return'helpers'
+ if(/^FAIONYX Helper(?:\b| )/i.test(row.name)||/^(?:GPU|Tab|Renderer|Utility|Zygote|Sandbox)(?:\b| )/.test(row.role))return'helpers'
  return'ownedTools'
 }
 function assertConfirmedLifecycleInvalidation(error,row){

@@ -39,7 +39,7 @@ test('keybinding functions survive removal: defaults table, merge, write to opti
   const keys = getDefaultKeys()
   assert(keys['key_key.forward'], 'vanilla forward key exists')
   assert.match(keys['key_key.forward'], /^key\.(keyboard|mouse)\./)
-  const dir = fs.mkdtempSync(require('node:os').tmpdir() + '/kamucl-keys-')
+  const dir = fs.mkdtempSync(require('node:os').tmpdir() + '/faionyx-keys-')
   const file = require('node:path').join(dir, 'options.txt')
   fs.writeFileSync(file, 'lang:zh_cn\nkey_key.forward:key.keyboard.w\n', 'utf8')
   const changed = syncKeysToGameDir(dir, { ...keys, 'key_key.forward': 'key.keyboard.up' })

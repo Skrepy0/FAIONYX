@@ -12,8 +12,8 @@ export async function readOwnedGameWindow(pid: number): Promise<GameWindowSample
   const read = await (nativeReader ??= (async () => {
     const { default: k } = await import('koffi')
     const u = k.load('user32.dll')
-    const rect = k.struct('KamuclGameSizeRect117', { left: 'int32', top: 'int32', right: 'int32', bottom: 'int32' })
-    const callback = k.proto('bool __stdcall KamuclGameSizeEnum117(uintptr hwnd, intptr unused)')
+    const rect = k.struct('FaionyxGameSizeRect117', { left: 'int32', top: 'int32', right: 'int32', bottom: 'int32' })
+    const callback = k.proto('bool __stdcall FaionyxGameSizeEnum117(uintptr hwnd, intptr unused)')
     const enumerate = u.func('EnumWindows', 'bool', [k.pointer(callback), 'intptr'])
     const owner = u.func('GetWindowThreadProcessId', 'uint32', ['uintptr', k.out(k.pointer('uint32'))])
     const visible = u.func('bool __stdcall IsWindowVisible(uintptr)')

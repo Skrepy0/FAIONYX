@@ -1,5 +1,5 @@
 /**
- * KAMUCL 前后端共享类型与 IPC 契约
+ * FAIONYX 前后端共享类型与 IPC 契约
  * 主进程 (src/main) 与渲染进程 (src/renderer) 都必须遵守本文件定义。
  */
 
@@ -100,7 +100,7 @@ export interface GameFolder {
 
 export interface FolderScanResult {
   folder: GameFolder
-  structure: 'minecraft' | 'kamucl' | 'empty' | 'missing'
+  structure: 'minecraft' | 'faionyx' | 'empty' | 'missing'
   status: 'ready' | 'warning' | 'error'
   versions: InstalledVersion[]
   errors: string[]
@@ -134,7 +134,7 @@ export interface InstalledVersion {
   resolution?: GameResolution
   /** 实例图标：'mob:<内置生物头像id>' | 'file:<自定义图标文件名>'（空 = 默认图标） */
   icon?: string
-  /** 首页启动卡专属缩略图；主进程只返回已验证的 KAMUCL 受管文件路径。 */
+  /** 首页启动卡专属缩略图；主进程只返回已验证的 FAIONYX 受管文件路径。 */
   thumbnail?: string
   /** 专属缩略图显示方式。 */
   thumbnailFit?: ImageFit
@@ -190,7 +190,7 @@ export interface JavaInfo {
   vendor?: string
   /** 来源：自动扫描 / 手动添加 */
   source?: 'auto' | 'manual'
-  /** 自动发现入口，例如注册表、PATH、KAMUCL Runtime、本地磁盘。 */
+  /** 自动发现入口，例如注册表、PATH、FAIONYX Runtime、本地磁盘。 */
   sourceDetail?: string
 }
 
@@ -460,7 +460,7 @@ export interface ReleaseInfo {
   assetUrl: string
   /** 资产文件大小（字节） */
   assetSize: number
-  /** 资产文件名（KAMUCL-x.y.z.exe） */
+  /** 资产文件名（FAIONYX-x.y.z.exe） */
   assetName: string
 }
 
@@ -484,7 +484,7 @@ export interface UpdateStateInfo {
   /** 目标版本 */
   to: string
   time: string
-  /** 备份的完整路径（启动器目录 KAMUCL-backup 下） */
+  /** 备份的完整路径（启动器目录 FAIONYX-backup 下） */
   backupPath: string
   /** 备份对应版本号 */
   backupVersion: string
@@ -567,7 +567,7 @@ export interface BackgroundSettings {
 export type ImageFit = 'fill' | 'fit' | 'crop'
 
 export interface LaunchThumbnailSettings {
-  /** KAMUCL userData 受管资源路径；空字符串使用内置轮播。 */
+  /** FAIONYX userData 受管资源路径；空字符串使用内置轮播。 */
   image: string
   /** Ordered managed carousel images; absent means migrate legacy `image`. */
   images?: string[]
@@ -883,7 +883,7 @@ export const IPC = {
   defaultPacksMove: 'defaultPacks:move',
   defaultPacksSetEnabled: 'defaultPacks:setEnabled',
   defaultPacksApply: 'defaultPacks:apply',
-  // 桥接 MOD 实时配置面板（游戏目录 .kamucl-bridge.json 发现 + token 校验，仅本机）
+  // 桥接 MOD 实时配置面板（游戏目录 .faionyx-bridge.json 发现 + token 校验，仅本机）
   bridgeStatus: 'bridge:status', // (versionId: string) => BridgeStatus
   bridgeManifest: 'bridge:manifest', // (versionId: string) => { protocol, params: BridgeParam[] }
   bridgeSet: 'bridge:set', // (versionId: string, id: string, value: unknown) => { ok, value?, notice?, error? }
@@ -1182,7 +1182,7 @@ export interface ServerEntry {
   minecraftVersion?: string
   loader?: LoaderName
   loaderVersion?: string
-  /** KAMUCL 一键启动该条目的时间；servers.dat 本身不包含游玩时间。 */
+  /** FAIONYX 一键启动该条目的时间；servers.dat 本身不包含游玩时间。 */
   lastUsedAt?: string
   lastSeenAt?: string
   source?: 'launcher' | 'minecraft'

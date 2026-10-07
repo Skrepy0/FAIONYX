@@ -17,13 +17,13 @@ function assertScaleContract(entry){
  assert(entry.recording.frames.length>=2&&Number.isFinite(entry.recording.fps)&&entry.recording.fps>0,'original continuous compositor frames required')
 }
 module.exports=async function feedbackScale(h){
- const {call,evaluate,main,nav,wait,version,recordScreencast}=h,theme=process.env.KAMUCL_TEST_THEME||'black-orange'
+ const {call,evaluate,main,nav,wait,version,recordScreencast}=h,theme=process.env.FAIONYX_TEST_THEME||'black-orange'
  assert.equal(version,require('../package.json').version);assert(require('./ui-capabilities.cjs').singleLogo);assert.equal(typeof recordScreencast,'function')
  const runId=new Date().toISOString().replace(/[:.]/g,'-')
  const proof={version,theme,runId,complete:false,classification:'opt-in noninteger feedback scale diagnostic; screenshot requests may affect timing, separate from formal baseline motion acceptance',hardwareListening:'not performed',cases:[]}
  const file='out/feedback-scale-119-'+runId+'-'+theme+'.json',persist=()=>{const content=JSON.stringify(proof,null,2);fs.writeFileSync(file,content);fs.writeFileSync('out/feedback-scale-119-'+theme+'.json',content)}
  const stateExpression=`(()=>{const e=document.querySelector('.mascot-stage'),b=document.querySelector('[data-hit=kamu]'),image=selector=>{const img=e?.querySelector(selector);if(!img)return null;const css=getComputedStyle(img);return{tag:img.tagName,complete:img.complete,width:img.naturalWidth,height:img.naturalHeight,rect:img.getBoundingClientRect().toJSON(),opacity:Number(css.opacity),transform:css.transform,imageRendering:css.imageRendering}};return{at:performance.now(),wallTime:Date.now(),open:!!e,readyAt:Number(e?.dataset.readyAt),disabled:b?.disabled,phase:e?.dataset.phase,queue:Number(e?.dataset.queue||0),contacts:Number(e?.dataset.contacts||0),sounds:Number(e?.dataset.soundsPlayed||0),hidden:document.hidden,documentFocus:document.hasFocus(),count:Number(b?.getAttribute('aria-label')?.match(/累计 (\\d+) 次/)?.[1]),feedbackPreparation:e?.dataset.feedbackPreparation,palmDecodedAt:Number(e?.dataset.feedbackPalmDecodedAt),printDecodedAt:Number(e?.dataset.feedbackPrintDecodedAt),palm:image('.pixel-palm'),print:image('.palm-print'),feedbackRect:e?.querySelector('.mascot-feedback')?.getBoundingClientRect().toJSON()}})()`
- const snapshot=()=>evaluate(stateExpression),saved=()=>evaluate("window.kamucl.invoke('mascots:state')")
+ const snapshot=()=>evaluate(stateExpression),saved=()=>evaluate("window.faionyx.invoke('mascots:state')")
  const until=async(label,predicate)=>{let last;for(let i=0;i<160;i++){last=await snapshot();if(await predicate(last))return last;await wait(20)}proof.failure={label,last};persist();assert.fail(label+': '+JSON.stringify(last))}
  const click=async selector=>{
   const p=await evaluate(`(()=>{const e=document.querySelector(${JSON.stringify(selector)});if(!e||e.disabled)throw Error('Missing or disabled coordinate target');const r=e.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,target=document.elementFromPoint(x,y);if(!r.width||!r.height||target!==e&&!e.contains(target))throw Error('Occluded coordinate target');return{x,y}})()`)

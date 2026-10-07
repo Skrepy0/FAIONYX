@@ -16,7 +16,7 @@ module.exports=async function verifyMascotHeader(h){
  proof.persistence=[]
  const persistenceSnapshot=async()=>{
   const local=await evaluate(`(()=>{const stage=document.querySelector('.mascot-stage'),active=document.activeElement;return{stageOpen:!!stage,stageHidden:stage?.classList.contains('hidden')??null,focused:{hit:active?.dataset?.hit||null,label:active?.getAttribute('aria-label'),disabled:active?.disabled??null},buttons:[...document.querySelectorAll('.mascot-hit')].map(e=>({id:e.dataset.hit,count:Number(e.getAttribute('aria-label').match(/累计 (\\d+) 次/)?.[1]),disabled:e.disabled,focused:e===active}))}})()`)
-  const saved=await evaluate("window.kamucl.invoke('mascots:state')"),ipc=await main('mascotPersistenceTrace')
+  const saved=await evaluate("window.faionyx.invoke('mascots:state')"),ipc=await main('mascotPersistenceTrace')
   return{time:Date.now(),local,saved,ipc}
  }
  const awaitCounts=async(label,expected,closed=false)=>{
@@ -74,7 +74,7 @@ module.exports=async function verifyMascotHeader(h){
  let gesturePreview;for(let i=0;i<30;i++){gesturePreview=await previewSnapshot();if(gesturePreview.previews.find(p=>p.id===previewTarget.id)?.draws>previewTarget.draws)break;await wait(50)}assert(gesturePreview.previews.find(p=>p.id===previewTarget.id)?.draws>previewTarget.draws,'the real camera drag produces new preview draws while the stage stays open');proof.previewLifecycle.gesture=gesturePreview
  await stablePreviews('camera drag settled')
  proof.motion={normal:await evaluate(`({systemReduced:matchMedia('(prefers-reduced-motion: reduce)').matches,stageReduced:document.querySelector('.mascot-stage').classList.contains('reduced'),draws:window.__mascotSoundProof.draws})`)};assert.equal(proof.motion.normal.systemReduced,false);assert.equal(proof.motion.normal.stageReduced,false)
- const before=await evaluate("window.kamucl.invoke('mascots:state')")
+ const before=await evaluate("window.faionyx.invoke('mascots:state')")
  const geometry=await evaluate(`(()=>{const host=document.querySelector('.figure-strip').getBoundingClientRect(),r=JSON.parse(document.querySelector('.mascot-stage').dataset.silhouettes).filter(r=>r.part==='head').sort((a,b)=>a.left-b.left);return{left:host.left+1,right:host.right-1,y:host.top+(r[0].top+r[0].bottom)/2,ids:r.map(r=>r.id)}})()`)
  const move=async(x,y)=>{await call('Input.dispatchMouseEvent',{type:'mouseMoved',button:'none',x,y});pointerPoint={x,y}}
  // Observe every actual rendered DOM feedback frame in the browser. A CDP
@@ -130,18 +130,18 @@ module.exports=async function verifyMascotHeader(h){
  await wait(600)
  let state=await awaitCounts('two full sweeps',Object.fromEntries(geometry.ids.map(id=>[id,(before.counts[id]||0)+2])))
  for(const id of geometry.ids)assert.equal(state.counts[id],(before.counts[id]||0)+2,id+' two full sweeps')
- const stationary={...state.counts};await wait(650);state=await evaluate("window.kamucl.invoke('mascots:state')");assert.deepEqual(state.counts,stationary)
+ const stationary={...state.counts};await wait(650);state=await evaluate("window.faionyx.invoke('mascots:state')");assert.deepEqual(state.counts,stationary)
  proof.checks.push('single-event seven hits, reverse sweep during recoil, simultaneous visual feedback, stationary hold')
  await evaluate('document.querySelector("[data-hit=qiqi]").focus()')
  await call('Input.dispatchKeyEvent',{type:'keyDown',key:' ',code:'Space'});await call('Input.dispatchKeyEvent',{type:'keyUp',key:' ',code:'Space'});await awaitCounts('keyboard Space equivalence',{...stationary,qiqi:stationary.qiqi+1});await wait(500)
- assert.equal((await evaluate("window.kamucl.invoke('mascots:state')")).counts.qiqi,stationary.qiqi+1)
- assert.equal((await evaluate("window.kamucl.invoke('mascots:state')")).order[0],'qiqi')
- const afterKeyboard=await evaluate("window.kamucl.invoke('mascots:state')");await wait(500);assert.deepEqual((await evaluate("window.kamucl.invoke('mascots:state')")).counts,afterKeyboard.counts)
+ assert.equal((await evaluate("window.faionyx.invoke('mascots:state')")).counts.qiqi,stationary.qiqi+1)
+ assert.equal((await evaluate("window.faionyx.invoke('mascots:state')")).order[0],'qiqi')
+ const afterKeyboard=await evaluate("window.faionyx.invoke('mascots:state')");await wait(500);assert.deepEqual((await evaluate("window.faionyx.invoke('mascots:state')")).counts,afterKeyboard.counts)
  proof.checks.push('keyboard equivalence, delayed stable sorting, no stationary reorder counts')
  await screenshot('extension-118-mascot-header')
  // Record the compositor without concurrent PNG readback or geometry polling.
  // A separate second leader fixture below supplies the original 16 PNG proofs.
- const castBefore=await evaluate("window.kamucl.invoke('mascots:state')"),castBaseline=await feedbackSnapshot(),castLeader=castBaseline.poses.reduce((a,b)=>a.position>b.position?a:b).id,castLeaderCount=Math.max(...Object.values(castBefore.counts))+1
+ const castBefore=await evaluate("window.faionyx.invoke('mascots:state')"),castBaseline=await feedbackSnapshot(),castLeader=castBaseline.poses.reduce((a,b)=>a.position>b.position?a:b).id,castLeaderCount=Math.max(...Object.values(castBefore.counts))+1
  assert.equal(castBaseline.poses.find(p=>p.id===castLeader).position,6,'the screencast leader begins at the actual rightmost slot')
  assert.equal(typeof recordScreencast,'function','real compositor screencast helper is required, without reconstructed frames')
  // Separate browser presentation cadence from CDP JPEG delivery. Read only
@@ -193,12 +193,12 @@ module.exports=async function verifyMascotHeader(h){
  proof.performanceBenchmark={...captureBudget,status:captureBudget.passed?'passed':'below-target',acceptance:'separate capture-delivery benchmark; does not replace independent visual, interaction or motion review'}
  if(!captureBudget.passed)console.warn('BENCHMARK BELOW TARGET: actual compositor capture '+screencast.fps+' fps < '+captureBudget.minimumFps+' fps; original timestamps and failure retained; remaining functional checks continue')
  const castExpected={...castBefore.counts,[castLeader]:castLeaderCount};await awaitCounts('screencast leader: all actual hit deltas and persistence exact',castExpected)
- let castSettled;for(let i=0;i<40;i++){castSettled=await feedbackSnapshot();const pose=castSettled.poses.find(p=>p.id===castLeader);if(!pose.walking&&pose.position===0&&castSettled.labels.every(l=>l.opacity===1))break;await wait(60)}assert.equal(castSettled.poses.find(p=>p.id===castLeader).position,0,'screencast most-slapped figure finishes at the LEFT first position');assert.equal((await evaluate("window.kamucl.invoke('mascots:state')")).order[0],castLeader);assert(castSettled.labels.every(l=>l.opacity===1),'screencast labels restore after landing');proof.screencast.settled=castSettled
+ let castSettled;for(let i=0;i<40;i++){castSettled=await feedbackSnapshot();const pose=castSettled.poses.find(p=>p.id===castLeader);if(!pose.walking&&pose.position===0&&castSettled.labels.every(l=>l.opacity===1))break;await wait(60)}assert.equal(castSettled.poses.find(p=>p.id===castLeader).position,0,'screencast most-slapped figure finishes at the LEFT first position');assert.equal((await evaluate("window.faionyx.invoke('mascots:state')")).order[0],castLeader);assert(castSettled.labels.every(l=>l.opacity===1),'screencast labels restore after landing');proof.screencast.settled=castSettled
  fs.writeFileSync('out/mascot-header-screencast-live.json',JSON.stringify(proof.screencast,null,2))
  // Real compositor PNGs include WebGL figures AND actual DOM palm/print layers.
  // Restart a rightmost-to-leftmost leader walk with its own strict count baseline.
- const videoDir=path.resolve('out/mascot-118-frames-'+(process.env.KAMUCL_TEST_THEME||'black-orange'));fs.mkdirSync(videoDir,{recursive:true})
- const leaderBefore=await evaluate("window.kamucl.invoke('mascots:state')"),baseline=await feedbackSnapshot(),leader=baseline.poses.reduce((a,b)=>a.position>b.position?a:b).id,leaderCount=Math.max(...Object.values(leaderBefore.counts))+1
+ const videoDir=path.resolve('out/mascot-118-frames-'+(process.env.FAIONYX_TEST_THEME||'black-orange'));fs.mkdirSync(videoDir,{recursive:true})
+ const leaderBefore=await evaluate("window.faionyx.invoke('mascots:state')"),baseline=await feedbackSnapshot(),leader=baseline.poses.reduce((a,b)=>a.position>b.position?a:b).id,leaderCount=Math.max(...Object.values(leaderBefore.counts))+1
  assert.equal(baseline.poses.find(p=>p.id===leader).position,6,'the separate PNG leader begins at the actual rightmost slot')
  for(let i=leaderBefore.counts[leader]||0;i<leaderCount;i++)await trustedClick('[data-hit='+leader+']')
  const frames=[];for(let i=0;i<16;i++){const live=await feedbackSnapshot(),capture=await call('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false}),name='frame-'+String(i).padStart(3,'0')+'.png';fs.writeFileSync(path.join(videoDir,name),Buffer.from(capture.data,'base64'));frames.push({name,wallTime:Date.now(),...live});await wait(70)}
@@ -207,7 +207,7 @@ module.exports=async function verifyMascotHeader(h){
  assert(new Set(walkingFrames.map(frame=>frame.poses.find(p=>p.id===leader).phase.toFixed(2))).size>=2,'the leg step phase advances with travelled distance')
  for(const frame of frames)for(const pose of frame.poses){assert(Math.abs(pose.footY-1.6)<1e-5&&pose.headForward[2]>.7,'walking remains grounded with actual faces visible');const label=frame.labels.find(l=>l.id===pose.id);assert.equal(label.targetOpacity,pose.walking?0:1,'all visual labels fade during walking and restore on landing')}
  const leaderExpected={...leaderBefore.counts,[leader]:leaderCount};await awaitCounts('new leader walking keeps counts and persistence exact',leaderExpected)
- let settled;for(let i=0;i<40;i++){settled=await feedbackSnapshot();const pose=settled.poses.find(p=>p.id===leader);if(!pose.walking&&pose.position===0&&settled.labels.every(l=>l.opacity===1))break;await wait(60)}assert.equal(settled.poses.find(p=>p.id===leader).position,0,'most slapped character finishes at the LEFT first position');assert.equal((await evaluate("window.kamucl.invoke('mascots:state')")).order[0],leader);assert(settled.labels.every(l=>l.opacity===1),'all labels are restored after the walk settles')
+ let settled;for(let i=0;i<40;i++){settled=await feedbackSnapshot();const pose=settled.poses.find(p=>p.id===leader);if(!pose.walking&&pose.position===0&&settled.labels.every(l=>l.opacity===1))break;await wait(60)}assert.equal(settled.poses.find(p=>p.id===leader).position,0,'most slapped character finishes at the LEFT first position');assert.equal((await evaluate("window.faionyx.invoke('mascots:state')")).order[0],leader);assert(settled.labels.every(l=>l.opacity===1),'all labels are restored after the walk settles')
  proof.animation={frameDirectory:videoDir,frames:frames.map(frame=>({name:frame.name,wallTime:frame.wallTime,poses:frame.poses,feedback:frame.feedback,labels:frame.labels,focusedId:frame.focusedId})),settled,hardwareListening:'not performed'}
  // Exercise the covered-to-exposed boundary on REAL rendered walking geometry.
  // Atomic PointerEvent input is intentionally non-trusted: its same-frame
@@ -234,7 +234,7 @@ module.exports=async function verifyMascotHeader(h){
   }
   return null
  }
- const overlapBefore=await evaluate("window.kamucl.invoke('mascots:state')"),overlapLeader=settled.poses.reduce((a,b)=>a.position>b.position?a:b).id,overlapLeaderCount=Math.max(...Object.values(overlapBefore.counts))+1
+ const overlapBefore=await evaluate("window.faionyx.invoke('mascots:state')"),overlapLeader=settled.poses.reduce((a,b)=>a.position>b.position?a:b).id,overlapLeaderCount=Math.max(...Object.values(overlapBefore.counts))+1
  for(let i=overlapBefore.counts[overlapLeader]||0;i<overlapLeaderCount;i++)await click('[data-hit='+overlapLeader+']')
  const atomic=await evaluate(`(async()=>{const find=${findWalkingOverlap.toString()},stage=document.querySelector('.mascot-stage'),strip=document.querySelector('.figure-strip'),local=()=>Object.fromEntries([...stage.querySelectorAll('.mascot-hit')].map(e=>[e.dataset.hit,Number(e.getAttribute('aria-label').match(/累计 (\\d+) 次/)?.[1])])),samples=[];let candidate;for(let i=0;i<100;i++){await new Promise(resolve=>requestAnimationFrame(resolve));candidate=find();samples.push({time:performance.now(),walking:JSON.parse(stage.dataset.poses).filter(p=>p.walking).map(p=>({id:p.id,position:p.position})),found:!!candidate});if(candidate)break}if(!candidate)return{candidate:null,samples};const events=[];strip.dispatchEvent(new PointerEvent('pointercancel',{bubbles:true,pointerType:'mouse'}));const before=local();for(const [label,point] of [['first',candidate.start],['visibleEdge',candidate.end],['afterExit',candidate.exit],['reentry',candidate.end]]){const event=new PointerEvent('pointermove',{bubbles:true,pointerType:'mouse',clientX:point.x,clientY:point.y});strip.dispatchEvent(event);await Promise.resolve();events.push({label,point,isTrusted:event.isTrusted,counts:local(),sources:window.__mascotSoundProof.events.length,time:performance.now()})}return{candidate,samples,before,events}})()`)
  proof.walkingOverlap={source:'actual live posed Three.js geometry projected to the chosen raster backend; atomic browser-dispatched PointerEvent input (isTrusted=false)',atomic,trusted:{status:'not attempted',samples:[]}}
@@ -277,7 +277,7 @@ module.exports=async function verifyMascotHeader(h){
   await awaitCounts('whole-person '+part+' outside positioning baseline',baselineCounts)
   let settled=false,signature='',stableSince=0
   for(let i=0;i<60;i++){
-   const live=await feedbackSnapshot(),saved=await evaluate("window.kamucl.invoke('mascots:state')"),now=Date.now(),aligned=live.poses.every(p=>!p.walking&&p.position===p.target&&p.target===saved.order.indexOf(p.id)),current=JSON.stringify({poses:live.poses.map(p=>({id:p.id,position:p.position,target:p.target})),order:saved.order,counts:saved.counts})
+   const live=await feedbackSnapshot(),saved=await evaluate("window.faionyx.invoke('mascots:state')"),now=Date.now(),aligned=live.poses.every(p=>!p.walking&&p.position===p.target&&p.target===saved.order.indexOf(p.id)),current=JSON.stringify({poses:live.poses.map(p=>({id:p.id,position:p.position,target:p.target})),order:saved.order,counts:saved.counts})
    const matched=aligned&&Object.entries(baselineCounts).every(([id,count])=>(saved.counts[id]||0)===count)
    if(!matched||current!==signature)stableSince=now
    signature=current;settled=matched&&now-stableSince>=300;preparation.samples.push({time:now,matched,stableMs:now-stableSince,poses:live.poses,counts:saved.counts,order:saved.order})
@@ -321,13 +321,13 @@ module.exports=async function verifyMascotHeader(h){
  assert.equal(await evaluate('document.querySelector(".mascot-stage").classList.contains("reduced")'),true)
  proof.motion.reduced=await evaluate(`({systemReduced:matchMedia('(prefers-reduced-motion: reduce)').matches,stageReduced:document.querySelector('.mascot-stage').classList.contains('reduced'),draws:window.__mascotSoundProof.draws})`);assert.equal(proof.motion.reduced.systemReduced,true)
  const reducedDraws=await evaluate('window.__mascotSoundProof.draws');await wait(200);assert.equal(await evaluate('window.__mascotSoundProof.draws'),reducedDraws,'reduced-motion idle releases the RAF loop')
- const reducedCounts=await evaluate("window.kamucl.invoke('mascots:state')");await click('[data-hit=q3]');await awaitCounts('reduced motion remains interactive',{...reducedCounts.counts,q3:reducedCounts.counts.q3+1})
+ const reducedCounts=await evaluate("window.faionyx.invoke('mascots:state')");await click('[data-hit=q3]');await awaitCounts('reduced motion remains interactive',{...reducedCounts.counts,q3:reducedCounts.counts.q3+1})
  await call('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});await wait(250)
  proof.motion.restored=await evaluate(`({systemReduced:matchMedia('(prefers-reduced-motion: reduce)').matches,stageReduced:document.querySelector('.mascot-stage').classList.contains('reduced'),draws:window.__mascotSoundProof.draws})`);assert.equal(proof.motion.restored.systemReduced,false);assert.equal(proof.motion.restored.stageReduced,false)
  const visibilitySnapshot=async()=>{
   const native=await main(`(()=>{const w=testElectron.BrowserWindow.getAllWindows().find(w=>w.webContents.getURL().includes('/renderer/index.html'));return{isVisible:w.isVisible(),isMinimized:w.isMinimized(),backgroundThrottling:w.webContents.getBackgroundThrottling(),electron:process.versions.electron,platform:process.platform}})()`)
   const renderer=await evaluate(`({documentHidden:document.hidden,visibilityState:document.visibilityState,stageHidden:document.querySelector('.mascot-stage').classList.contains('hidden'),draws:window.__mascotSoundProof.draws,activeSources:window.__mascotSoundProof.active,audioStates:window.__mascotSoundProof.contexts.map(context=>context.state)})`)
-  renderer.nativeVisibility=await evaluate("window.kamucl.invoke('window:visibility')");return{native,renderer}
+  renderer.nativeVisibility=await evaluate("window.faionyx.invoke('window:visibility')");return{native,renderer}
  }
  // Page Visibility can remain "visible" under Electron/macOS CDP focus and
  // background flags. Never spoof it: verify the real native hide event through
@@ -370,7 +370,7 @@ module.exports=async function verifyMascotHeader(h){
  const sample=await evaluate('window.__mascotSoundProof.samples'),wav=Buffer.alloc(44+sample.values.length*2)
  wav.write('RIFF');wav.writeUInt32LE(wav.length-8,4);wav.write('WAVEfmt ',8);wav.writeUInt32LE(16,16);wav.writeUInt16LE(1,20);wav.writeUInt16LE(1,22);wav.writeUInt32LE(sample.sampleRate,24);wav.writeUInt32LE(sample.sampleRate*2,28);wav.writeUInt16LE(2,32);wav.writeUInt16LE(16,34);wav.write('data',36);wav.writeUInt32LE(sample.values.length*2,40);sample.values.forEach((v,i)=>wav.writeInt16LE(Math.round(v*32767),44+i*2));fs.writeFileSync('out/mascot-slap-117.wav',wav)
  await click('[aria-label="互动设置"]');await evaluate("(()=>{const input=document.querySelector('[aria-label=\"拍打音效音量\"]');input.value='32';input.dispatchEvent(new Event('input',{bubbles:true}))})()");await click('[aria-label="静音拍打音效"]');await wait(180)
- const soundBefore=await evaluate('window.__mascotSoundProof.events.length'),beforeMuted=await evaluate("window.kamucl.invoke('mascots:state')");await click('[data-hit=q3]');const mutedCounts={...beforeMuted.counts,q3:beforeMuted.counts.q3+1};await awaitCounts('muted hit still saves once',mutedCounts);assert.equal(await evaluate('window.__mascotSoundProof.events.length'),soundBefore,'mute affects actual sources')
+ const soundBefore=await evaluate('window.__mascotSoundProof.events.length'),beforeMuted=await evaluate("window.faionyx.invoke('mascots:state')");await click('[data-hit=q3]');const mutedCounts={...beforeMuted.counts,q3:beforeMuted.counts.q3+1};await awaitCounts('muted hit still saves once',mutedCounts);assert.equal(await evaluate('window.__mascotSoundProof.events.length'),soundBefore,'mute affects actual sources')
  const previewBeforeClose=await previewSnapshot()
  await click('[aria-label="关闭七人互动"]');await awaitCounts('close flushes and restores the LOGO',mutedCounts,true)
  let previewResumed;for(let i=0;i<30;i++){previewResumed=await previewSnapshot();if(previewResumed.previews.filter(p=>p.connected&&!p.editing).every(p=>p.draws>(previewBeforeClose.previews.find(old=>old.id===p.id)?.draws??Infinity)))break;await wait(50)}assert(previewResumed.previews.some(p=>p.connected&&!p.editing)&&previewResumed.previews.filter(p=>p.connected&&!p.editing).every(p=>p.draws>(previewBeforeClose.previews.find(old=>old.id===p.id)?.draws??Infinity)),'closing the stage resumes actual decorative preview draws on the same contexts');proof.previewLifecycle.afterClose={before:previewBeforeClose,after:previewResumed};proof.checks.push('decorative previews yield to active header, real camera gesture remains usable, same-context preview rendering resumes on close')
@@ -404,30 +404,30 @@ module.exports=async function verifyMascotHeader(h){
  proof.keyboardReady.elapsedMs=Date.now()-keyboardStarted;proof.keyboardReady.timedOut=!proof.keyboardReady.ready
  fs.writeFileSync('out/mascot-header-keyboard-ready-live.json',JSON.stringify({version,...proof.keyboardReady},null,2))
  assert(proof.keyboardReady.ready,'within 6 seconds keyboard LOGO activation must focus the first enabled Minecraft target with real model bounds and native foreground; original observed states retained')
- assert.equal((await evaluate("window.kamucl.invoke('mascots:state')")).counts.q3,closeCount)
+ assert.equal((await evaluate("window.faionyx.invoke('mascots:state')")).counts.q3,closeCount)
  assert.equal(await evaluate('document.querySelector(".stage-tools button").getAttribute("aria-pressed")'),'true')
- const repeatBefore=await evaluate("window.kamucl.invoke('mascots:state')");await call('Input.dispatchKeyEvent',{type:'keyDown',key:' ',code:'Space'});await call('Input.dispatchKeyEvent',{type:'keyDown',key:' ',code:'Space',autoRepeat:true});await call('Input.dispatchKeyEvent',{type:'keyDown',key:' ',code:'Space',autoRepeat:true});await call('Input.dispatchKeyEvent',{type:'keyUp',key:' ',code:'Space'});await awaitCounts('held keyboard Space is exactly one slap',{...repeatBefore.counts,[focusedId]:repeatBefore.counts[focusedId]+1})
- const beforeEscape=await evaluate("window.kamucl.invoke('mascots:state')")
+ const repeatBefore=await evaluate("window.faionyx.invoke('mascots:state')");await call('Input.dispatchKeyEvent',{type:'keyDown',key:' ',code:'Space'});await call('Input.dispatchKeyEvent',{type:'keyDown',key:' ',code:'Space',autoRepeat:true});await call('Input.dispatchKeyEvent',{type:'keyDown',key:' ',code:'Space',autoRepeat:true});await call('Input.dispatchKeyEvent',{type:'keyUp',key:' ',code:'Space'});await awaitCounts('held keyboard Space is exactly one slap',{...repeatBefore.counts,[focusedId]:repeatBefore.counts[focusedId]+1})
+ const beforeEscape=await evaluate("window.faionyx.invoke('mascots:state')")
  await click('[data-hit=q3]');await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape'});await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape'});await awaitCounts('Escape flushes the final hit before closing',{...beforeEscape.counts,q3:beforeEscape.counts.q3+1},true);assert.equal(JSON.parse(fs.readFileSync(path.join(profile,'mascot-counts.json'),'utf8')).counts.q3,beforeEscape.counts.q3+1,'Escape immediately flushes the last hit');assert.equal(await evaluate('document.activeElement.classList.contains("brand-avatar")'),true)
  proof.checks.push('sound/volume persisted, mute, close flush, reopen counts, owned audio context released')
  proof.checks.push('real keyboard LOGO activation, focus entry/restore, Space repeat suppressed, full model corner bounds')
  await main(`(()=>{globalThis.originalMascotBatch=testElectron.ipcMain._invokeHandlers.get('mascots:batch');globalThis.dropMascotAck=true;testElectron.ipcMain.removeHandler('mascots:batch');testElectron.ipcMain.handle('mascots:batch',async(event,value)=>{const result=await originalMascotBatch(event,value);if(dropMascotAck){dropMascotAck=false;throw Error('isolated fixture: committed batch acknowledgement lost')}return result});globalThis.mascotPendingTrace=[];testElectron.ipcMain.on('window:mascotPending',(_event,value)=>mascotPendingTrace.push(value))})()`)
  await trustedClick('[aria-label="打开七人互动彩蛋"]');await wait(650)
- const beforeLostAck=await evaluate("window.kamucl.invoke('mascots:state')");await click('[data-hit=q3]');await click('[aria-label="关闭七人互动"]');await wait(150)
+ const beforeLostAck=await evaluate("window.faionyx.invoke('mascots:state')");await click('[data-hit=q3]');await click('[aria-label="关闭七人互动"]');await wait(150)
  assert.equal(await evaluate('!!document.querySelector(".mascot-stage")'),true,'unknown save acknowledgement keeps the stage open')
  assert.equal(await main('mascotPendingTrace[mascotPendingTrace.length-1]'),true,'failed flush never falsely clears close protection')
  await awaitCounts('committed but lost acknowledgement retries without double count',{...beforeLostAck.counts,q3:beforeLostAck.counts.q3+1})
  await click('[aria-label="关闭七人互动"]');await awaitCounts('close after unknown acknowledgement saves exactly once',{...beforeLostAck.counts,q3:beforeLostAck.counts.q3+1},true);assert.equal(await evaluate('!!document.querySelector(".mascot-stage")'),false);assert.equal(await main('mascotPendingTrace[mascotPendingTrace.length-1]'),false)
  await main(`testElectron.ipcMain.removeHandler('mascots:batch');testElectron.ipcMain.handle('mascots:batch',originalMascotBatch)`)
  proof.checks.push('committed-but-lost acknowledgement retries without duplicates, failed close preserves pending protection')
- const batch={batchId:'gui-117-idempotent-proof',hits:['q3','milo']},beforeBatch=await evaluate("window.kamucl.invoke('mascots:state')")
- await evaluate(`window.kamucl.invoke('mascots:batch',${JSON.stringify(batch)})`);await evaluate(`window.kamucl.invoke('mascots:batch',${JSON.stringify(batch)})`)
- const afterBatch=await evaluate("window.kamucl.invoke('mascots:state')");assert.equal(afterBatch.counts.q3,beforeBatch.counts.q3+1)
- const rejected=await evaluate(`window.kamucl.invoke('mascots:batch',{batchId:'gui-117-idempotent-proof',hits:['qiqi']}).then(()=>false,()=>true)`);assert.equal(rejected,true)
+ const batch={batchId:'gui-117-idempotent-proof',hits:['q3','milo']},beforeBatch=await evaluate("window.faionyx.invoke('mascots:state')")
+ await evaluate(`window.faionyx.invoke('mascots:batch',${JSON.stringify(batch)})`);await evaluate(`window.faionyx.invoke('mascots:batch',${JSON.stringify(batch)})`)
+ const afterBatch=await evaluate("window.faionyx.invoke('mascots:state')");assert.equal(afterBatch.counts.q3,beforeBatch.counts.q3+1)
+ const rejected=await evaluate(`window.faionyx.invoke('mascots:batch',{batchId:'gui-117-idempotent-proof',hits:['qiqi']}).then(()=>false,()=>true)`);assert.equal(rejected,true)
  proof.checks.push('real main IPC retry idempotence and changed-batch rejection')
  const recording=await evaluate(`(async()=>{const proof=window.__mascotSoundProof,all=[];for(const recorder of proof.recorders){if(recorder.state!=='inactive')await new Promise(resolve=>{recorder.addEventListener('stop',resolve,{once:true});recorder.stop()});if(recorder.__chunks.length){const blob=new Blob(recorder.__chunks,{type:'audio/webm'});all.push(Array.from(new Uint8Array(await blob.arrayBuffer())))}}if(all[0]){const decoder=new window.__mascotOriginalAudioContext(),decoded=await decoder.decodeAudioData(new Uint8Array(all[0]).buffer);let peak=0,power=0;for(let c=0;c<decoded.numberOfChannels;c++)for(const value of decoded.getChannelData(c)){peak=Math.max(peak,Math.abs(value));power+=value*value}proof.output={peak,rms:Math.sqrt(power/(decoded.length*decoded.numberOfChannels)),samples:decoded.length,sampleRate:decoded.sampleRate};await decoder.close()}return all})()`)
    if(recording[0]){fs.writeFileSync('out/mascot-sweep-117.webm',Buffer.from(recording[0]));proof.audio.recording='only the stage compressor output, no microphone or system capture';proof.audio.output=await evaluate('window.__mascotSoundProof.output');assert(proof.audio.output.peak>0&&proof.audio.output.peak<.999,'actual recorded mixer output is nonzero and unclipped')}
- proof.audio.lifecycleCalls=await evaluate('window.__mascotSoundProof.audioLifecycleCalls');proof.audio.stateTransitions=await evaluate('window.__mascotSoundProof.audioStateTransitions');proof.finalState=afterBatch;fs.writeFileSync('out/mascot-header-ui-'+(process.env.KAMUCL_TEST_THEME||'black-orange')+'.json',JSON.stringify(proof,null,2));console.log(version+' Minecraft header mascot FUNCTIONAL GUI checks passed; capture benchmark '+proof.performanceBenchmark.status)
+ proof.audio.lifecycleCalls=await evaluate('window.__mascotSoundProof.audioLifecycleCalls');proof.audio.stateTransitions=await evaluate('window.__mascotSoundProof.audioStateTransitions');proof.finalState=afterBatch;fs.writeFileSync('out/mascot-header-ui-'+(process.env.FAIONYX_TEST_THEME||'black-orange')+'.json',JSON.stringify(proof,null,2));console.log(version+' Minecraft header mascot FUNCTIONAL GUI checks passed; capture benchmark '+proof.performanceBenchmark.status)
  await evaluate('(()=>{const h=window.__mascotHooks;window.AudioContext=h.Original;AudioBufferSourceNode.prototype.start=h.start;AudioNode.prototype.connect=h.connect;h.Original.prototype.close=h.close;h.Original.prototype.resume=h.resume;h.Original.prototype.suspend=h.suspend;HTMLCanvasElement.prototype.getContext=h.getContext;WebGL2RenderingContext.prototype.drawElements=h.draw;CanvasRenderingContext2D.prototype.putImageData=h.putImageData})()')
  await main("testElectron.ipcMain.removeHandler('mascots:batch');testElectron.ipcMain.handle('mascots:batch',mascotProofBatchBase);testElectron.ipcMain.removeListener('window:mascotPending',mascotProofPendingListener)")
  await nav('home')

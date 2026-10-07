@@ -20,7 +20,7 @@ function dragResource(event: DragEvent, entry: FsEntry) {
   event.preventDefault(); event.stopPropagation()
   if (store.editMode || batchBusy.value || loading.value || !currentVersion.value) return
   const names = selection.value.has(entry.name) ? [...selection.value] : [entry.name]
-  window.kamucl.send('fs:drag', effectiveRel.value, names, currentVersion.value.folder || activeFolder.value)
+  window.faionyx.send('fs:drag', effectiveRel.value, names, currentVersion.value.folder || activeFolder.value)
 }
 const props = defineProps<{
   /** 页面标题，如「模组」 */
@@ -85,7 +85,7 @@ async function dropResources(event: DragEvent) {
   if (!v) { toast('请先选择当前文件夹中的游戏版本', 'error'); return }
   if (importing.value) return
   const folder = v.folder || activeFolder.value, kind = props.rel
-  const files = Array.from(event.dataTransfer?.files ?? []).map(f => window.kamucl.getFilePath(f)).filter(Boolean)
+  const files = Array.from(event.dataTransfer?.files ?? []).map(f => window.faionyx.getFilePath(f)).filter(Boolean)
   importing.value = true
   try {
     const count = await importResources(files, v.id, folder, kind)
@@ -137,10 +137,10 @@ const filtered = computed(() => {
  const rows=entries.value.filter(e=>(!keyword.value||(e.name+' '+(catalog.value[e.name]?.name||'')).toLowerCase().includes(keyword.value))&&(props.rel!=='mods'||modFilter.value==='all'||modFilter.value==='enabled'&&/\.jar$/i.test(e.name)||modFilter.value==='disabled'&&/\.jar\.disabled$/i.test(e.name)||modFilter.value==='locked'&&catalog.value[e.name]?.locked))
  return rows.sort((a,b)=>sortBy.value==='date'?b.mtime-a.mtime:sortBy.value==='size'?b.size-a.size:a.name.localeCompare(b.name,'zh-CN',{numeric:true}))
 })
-async function loadCatalog(generation:number){if(props.rel!=='mods')return;const v=currentVersion.value;if(!v)return;try{const list=await window.kamucl.invoke('mods:catalog',v.id,v.folder||activeFolder.value) as ManagedMod[];if(generation===loadGeneration){catalog.value=Object.fromEntries(list.map(m=>[m.fileName,m]));catalogError.value=''}}catch(e){if(generation===loadGeneration){catalog.value={};catalogError.value=errText(e)}}}
+async function loadCatalog(generation:number){if(props.rel!=='mods')return;const v=currentVersion.value;if(!v)return;try{const list=await window.faionyx.invoke('mods:catalog',v.id,v.folder||activeFolder.value) as ManagedMod[];if(generation===loadGeneration){catalog.value=Object.fromEntries(list.map(m=>[m.fileName,m]));catalogError.value=''}}catch(e){if(generation===loadGeneration){catalog.value={};catalogError.value=errText(e)}}}
 function selectMod(name:string,checked:boolean){const s=new Set(selection.value);checked?s.add(name):s.delete(name);selection.value=s}
 function selectAll(all=false){const s=new Set(selection.value);for(const e of (all?filtered.value:visibleEntries.value).filter(isModEntry))s.add(e.name);selection.value=s}
-async function batch(action:'enable'|'disable'|'lock'|'unlock',names=[...selection.value]){const v=currentVersion.value;if(!v||batchBusy.value||loading.value||loadError.value)return;const generation=loadGeneration;batchBusy.value=true;try{const results=await window.kamucl.invoke(action==='lock'||action==='unlock'?'mods:setLocked':'mods:setEnabled',v.id,v.folder||activeFolder.value,names,action==='lock'||action==='enable') as ModOperationResult[];const failed=results.filter(r=>!r.ok);toast('已处理 '+(results.length-failed.length)+' 项'+(failed.length?'；'+failed.length+' 项失败：'+failed[0].error:''),failed.length?'error':'success');if(generation===loadGeneration){batchResults.value=results;const remaining=new Set(selection.value);for(const r of results)r.ok?remaining.delete(r.fileName):remaining.add(r.fileName);selection.value=remaining;await load()}}catch(e){toast(errText(e),'error')}finally{batchBusy.value=false}}
+async function batch(action:'enable'|'disable'|'lock'|'unlock',names=[...selection.value]){const v=currentVersion.value;if(!v||batchBusy.value||loading.value||loadError.value)return;const generation=loadGeneration;batchBusy.value=true;try{const results=await window.faionyx.invoke(action==='lock'||action==='unlock'?'mods:setLocked':'mods:setEnabled',v.id,v.folder||activeFolder.value,names,action==='lock'||action==='enable') as ModOperationResult[];const failed=results.filter(r=>!r.ok);toast('已处理 '+(results.length-failed.length)+' 项'+(failed.length?'；'+failed.length+' 项失败：'+failed[0].error:''),failed.length?'error':'success');if(generation===loadGeneration){batchResults.value=results;const remaining=new Set(selection.value);for(const r of results)r.ok?remaining.delete(r.fileName):remaining.add(r.fileName);selection.value=remaining;await load()}}catch(e){toast(errText(e),'error')}finally{batchBusy.value=false}}
 watch([effectiveRel,activeFolder],()=>{selection.value=new Set();batchResults.value=[];catalog.value={};catalogError.value='';localSearch.value='';modFilter.value='all';switchFile.value=''})
 watch([localSearch,modFilter,sortBy],()=>page.value=1)
 

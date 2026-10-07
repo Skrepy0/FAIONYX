@@ -63,7 +63,7 @@ async function favoriteRuntime(invoke: (channel: string, ...args: any[]) => Prom
     plugin.onResolve({ filter: /^\.\/(api|store)$/ }, args => args.importer.endsWith('modFavorites.ts') ? { path: args.path, namespace: 'service' } : undefined)
     plugin.onLoad({ filter: /.*/, namespace: 'service' }, args => ({ contents: args.path === './api' ? 'export function errText(e){return e.message}' : 'export function toast(message){window.failures.push(message)}', loader: 'js' }))
   } }] }).then(result => result.outputFiles[0].text)
-  const runtime = { exports: {} as any }, window = { kamucl: { invoke }, failures: [] as string[] }
+  const runtime = { exports: {} as any }, window = { faionyx: { invoke }, failures: [] as string[] }
   new Function('require', 'module', 'exports', 'window', await favoriteBundle)(createRequire(path.resolve('package.json')), runtime, runtime.exports, window)
   return { ...runtime.exports, failures: window.failures }
 }

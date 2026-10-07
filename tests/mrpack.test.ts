@@ -7,7 +7,7 @@ import AdmZip from 'adm-zip'
 import { probeModpack, restoreModpackUserFiles } from '../src/main/core/modpacks'
 
 async function makePack(index: Record<string, unknown>, extras: Record<string, string> = {}): Promise<{ root: string; file: string }> {
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-mrpack-test-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-mrpack-test-'))
   const file = path.join(root, 'example.mrpack')
   const zip = new AdmZip()
   zip.addFile('modrinth.index.json', Buffer.from(JSON.stringify(index)))
@@ -98,7 +98,7 @@ test('mrpack 拒绝路径穿越、无可信 HTTPS 来源和无校验哈希', asy
 })
 
 test('整合包更新只恢复用户文件，覆盖模式不会带回未知包目录', async () => {
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-pack-restore-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-pack-restore-'))
   const backup = path.join(root, 'backup')
   const update = path.join(root, 'update')
   const overwrite = path.join(root, 'overwrite')

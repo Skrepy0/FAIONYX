@@ -2,7 +2,7 @@
   "complete": false,
   "version": "1.1.18",
   "theme": "black-orange",
-  "directory": "E:\\KAMUCL\\out\\qa-offline118-black-orange-02ef8fc9-39d6-49c9-9492-b283bb6f89f1",
+  "directory": "E:\\FAIONYX\\out\\qa-offline118-black-orange-02ef8fc9-39d6-49c9-9492-b283bb6f89f1",
   "observations": [
     {
       "label": "real native focus",
@@ -210,7 +210,7 @@
     "ppid": 13728,
     "windowId": 1,
     "webContentsId": 1,
-    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 nc83Ah\\profile"
+    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 nc83Ah\\profile"
   },
   "initialViewport": {
     "native": {
@@ -276,7 +276,7 @@
   },
   "setup": {
     "complete": true,
-    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 nc83Ah\\profile"
+    "profile": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 nc83Ah\\profile"
   },
   "previousAccount": null,
   "accounts": [
@@ -292,13 +292,13 @@
     }
   ],
   "source": {
-    "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 nc83Ah\\offline118-custom.png",
+    "file": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 nc83Ah\\offline118-custom.png",
     "sha256": "f8580d5b181734d194389a95b3e15d9b4f3d44a1c20ed8fb88d878fd9b010303"
   },
   "error": {
     "name": "AssertionError",
     "message": "Missing accurate offline hint 经校验",
-    "stack": "AssertionError [ERR_ASSERTION]: Missing accurate offline hint 经校验\n    at module.exports (E:\\KAMUCL\\scripts\\qa-offline118.cjs:133:74)\n    at async E:\\KAMUCL\\scripts\\verify-ui-refinement.cjs:233:9"
+    "stack": "AssertionError [ERR_ASSERTION]: Missing accurate offline hint 经校验\n    at module.exports (E:\\FAIONYX\\scripts\\qa-offline118.cjs:133:74)\n    at async E:\\FAIONYX\\scripts\\verify-ui-refinement.cjs:233:9"
   },
   "restored": {
     "complete": true

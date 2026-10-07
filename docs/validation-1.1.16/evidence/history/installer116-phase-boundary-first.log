@@ -15,7 +15,7 @@
 test at tests\installer-observability116.test.ts:27:1
 ✖ Runtime generation names its waiting prerequisites and becomes running for Java instead of remaining at generic waiting (1.1716ms)
   AssertionError [ERR_ASSERTION]: Nested Java-to-installer phase changes must reach the actual outer pack event immediately
-      at TestContext.<anonymous> (E:\KAMUCL\tests\installer-observability116.test.ts:39:10)
+      at TestContext.<anonymous> (E:\FAIONYX\tests\installer-observability116.test.ts:39:10)
       at Test.runInAsyncScope (node:async_hooks:227:14)
       at Test.run (node:internal/test_runner/test:1306:25)
       at Test.processPendingSubtests (node:internal/test_runner/test:897:18)

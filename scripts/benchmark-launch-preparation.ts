@@ -9,7 +9,7 @@ import { mapLaunchFiles } from '../src/main/core/launchPreparation'
 import { invalidLaunchArtifact } from '../src/main/core/launchIntegrity'
 
 async function main() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl launch benchmark-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx launch benchmark-'))
   try {
     const files = Array.from({ length: 200 }, (_, i) => {
       const data = crypto.randomBytes((i % 8 + 1) * 128 * 1024)

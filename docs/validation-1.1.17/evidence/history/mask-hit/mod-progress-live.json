@@ -1,15 +1,15 @@
 {
   "complete": false,
-  "directory": "E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c",
+  "directory": "E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c",
   "classification": "Actual foreground-checked Windows portable GUI, original production modsPrepare/Commit, streamed files, hash, cancellation and disk transaction. Repository metadata and loopback files are synthetic. No live provider or game launch claim.",
   "cases": [
     {
       "name": "known",
       "rootId": "community_progress_root_known",
       "depId": "community_progress_library_known",
-      "folder": "E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §",
+      "folder": "E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §",
       "instance": "社区 MOD 进度 known",
-      "versionDir": "E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §\\versions\\社区 MOD 进度 known",
+      "versionDir": "E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §\\versions\\社区 MOD 进度 known",
       "mode": {
         "unknown": false,
         "failHash": false,
@@ -36,23 +36,23 @@
       "registration": {
         "folders": [
           {
-            "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\games",
+            "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\games",
             "name": "独立验证目录",
             "isDefault": true
           },
           {
-            "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\second-games",
+            "path": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\second-games",
             "name": "整合包收藏",
             "isDefault": false
           },
           {
-            "path": "E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §",
+            "path": "E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §",
             "name": "游戏 §",
             "isDefault": false
           }
         ],
         "folder": {
-          "path": "E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §",
+          "path": "E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §",
           "name": "游戏 §",
           "isDefault": false
         },
@@ -65,9 +65,9 @@
             "mcVersion": "26.3",
             "loader": "fabric",
             "loaderVersion": "0.19.5",
-            "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\games",
+            "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\games",
             "isolated": true,
-            "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\games\\versions\\26.3 Fabric 生存世界",
+            "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\games\\versions\\26.3 Fabric 生存世界",
             "isolationReason": "detected-content"
           },
           {
@@ -75,9 +75,9 @@
             "mcVersion": "1.21.11",
             "loader": "forge",
             "loaderVersion": "0.19.5",
-            "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\games",
+            "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\games",
             "isolated": true,
-            "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\games\\versions\\1.21.11 Forge",
+            "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\games\\versions\\1.21.11 Forge",
             "isolationReason": "detected-content"
           },
           {
@@ -85,9 +85,9 @@
             "mcVersion": "1.21.11",
             "loader": "fabric",
             "loaderVersion": "0.19.5",
-            "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\games",
+            "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\games",
             "isolated": true,
-            "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\games\\versions\\Mecha Craftaleon 客户端 v10 — 超长名称完整显示测试与更多文字",
+            "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\games\\versions\\Mecha Craftaleon 客户端 v10 — 超长名称完整显示测试与更多文字",
             "isolationReason": "detected-content"
           },
           {
@@ -95,36 +95,36 @@
             "mcVersion": "1.21.5",
             "loader": "fabric",
             "loaderVersion": "0.16.12",
-            "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\games",
+            "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\games",
             "isolated": false,
-            "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\games",
+            "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\games",
             "isolationReason": "shared"
           },
           {
             "id": "联机验证实例",
             "mcVersion": "1.20.1",
             "loader": "fabric",
-            "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\games",
+            "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\games",
             "isolated": true,
-            "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\games\\versions\\联机验证实例",
+            "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\games\\versions\\联机验证实例",
             "isolationReason": "explicit"
           },
           {
             "id": "旧版测试实例",
             "mcVersion": "1.21.11",
             "loaderVersion": "0.19.5",
-            "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\second-games",
+            "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\second-games",
             "isolated": true,
-            "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\second-games\\versions\\旧版测试实例",
+            "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\second-games\\versions\\旧版测试实例",
             "isolationReason": "detected-content"
           },
           {
             "id": "原版建筑存档",
             "mcVersion": "1.21.11",
             "loaderVersion": "0.19.5",
-            "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\second-games",
+            "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\second-games",
             "isolated": true,
-            "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\second-games\\versions\\原版建筑存档",
+            "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\second-games\\versions\\原版建筑存档",
             "isolationReason": "detected-content"
           },
           {
@@ -132,9 +132,9 @@
             "mcVersion": "1.21.11",
             "loader": "neoforge",
             "loaderVersion": "26.2.1",
-            "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\second-games",
+            "folder": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\second-games",
             "isolated": true,
-            "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\KAMUCL EXE GUI 中文 qeC0vV\\second-games\\versions\\26.2 NeoForge",
+            "gameDirectory": "C:\\Users\\ROG\\AppData\\Local\\Temp\\FAIONYX EXE GUI 中文 qeC0vV\\second-games\\versions\\26.2 NeoForge",
             "isolationReason": "detected-content"
           },
           {
@@ -142,24 +142,24 @@
             "mcVersion": "1.20.1",
             "loader": "fabric",
             "loaderVersion": "0.16.0",
-            "folder": "E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §",
+            "folder": "E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §",
             "isolated": true,
-            "gameDirectory": "E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §\\versions\\社区 MOD 进度 known",
+            "gameDirectory": "E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §\\versions\\社区 MOD 进度 known",
             "isolationReason": "explicit"
           }
         ],
         "errors": []
       },
-      "selectedTarget": "社区 MOD 进度 known · 1.20.1 / fabric · E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §",
+      "selectedTarget": "社区 MOD 进度 known · 1.20.1 / fabric · E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §",
       "partial": {
         "backend": {
           "current": {
             "name": "known",
             "rootId": "community_progress_root_known",
             "depId": "community_progress_library_known",
-            "folder": "E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §",
+            "folder": "E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §",
             "instance": "社区 MOD 进度 known",
-            "versionDir": "E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §\\versions\\社区 MOD 进度 known",
+            "versionDir": "E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §\\versions\\社区 MOD 进度 known",
             "mode": {
               "unknown": false,
               "failHash": false,
@@ -329,23 +329,23 @@
       },
       "optOut": {
         "disabled": true,
-        "text": "安装 MOD 与前置社区 MOD 进度 known · MC 1.20.1 · fabric 0.16.0E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §所选 MOD社区模组 § known.jar1.0.0待安装前置必要前置 § known.jar1.0.0查看项目元数据要求：community_progress_library_known *同时下载 1 个必要前置与 MC 1.20.1 / fabric 匹配，递归检测并校验后一起安装。已取消自动下载。必要前置仍未准备好，暂不写入所选 MOD。请先自行安装前置，再点击重新检测；也可勾选后一起下载。已有兼容前置将复用；无法查询、没有兼容版本或出现冲突时会停止，不会当作“无需前置”继续安装。取消重新检测下载前置并安装"
+        "text": "安装 MOD 与前置社区 MOD 进度 known · MC 1.20.1 · fabric 0.16.0E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §所选 MOD社区模组 § known.jar1.0.0待安装前置必要前置 § known.jar1.0.0查看项目元数据要求：community_progress_library_known *同时下载 1 个必要前置与 MC 1.20.1 / fabric 匹配，递归检测并校验后一起安装。已取消自动下载。必要前置仍未准备好，暂不写入所选 MOD。请先自行安装前置，再点击重新检测；也可勾选后一起下载。已有兼容前置将复用；无法查询、没有兼容版本或出现冲突时会停止，不会当作“无需前置”继续安装。取消重新检测下载前置并安装"
       },
       "plan": {
         "exists": true,
         "busy": false,
         "rows": 2,
         "checked": true,
-        "text": "安装 MOD 与前置社区 MOD 进度 known · MC 1.20.1 · fabric 0.16.0E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §所选 MOD社区模组 § known.jar1.0.0待安装前置必要前置 § known.jar1.0.0查看项目元数据要求：community_progress_library_known *同时下载 1 个必要前置与 MC 1.20.1 / fabric 匹配，递归检测并校验后一起安装。已有兼容前置将复用；无法查询、没有兼容版本或出现冲突时会停止，不会当作“无需前置”继续安装。取消下载前置并安装"
+        "text": "安装 MOD 与前置社区 MOD 进度 known · MC 1.20.1 · fabric 0.16.0E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §所选 MOD社区模组 § known.jar1.0.0待安装前置必要前置 § known.jar1.0.0查看项目元数据要求：community_progress_library_known *同时下载 1 个必要前置与 MC 1.20.1 / fabric 匹配，递归检测并校验后一起安装。已有兼容前置将复用；无法查询、没有兼容版本或出现冲突时会停止，不会当作“无需前置”继续安装。取消下载前置并安装"
       },
       "beforeConsent": {
         "current": {
           "name": "known",
           "rootId": "community_progress_root_known",
           "depId": "community_progress_library_known",
-          "folder": "E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §",
+          "folder": "E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §",
           "instance": "社区 MOD 进度 known",
-          "versionDir": "E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §\\versions\\社区 MOD 进度 known",
+          "versionDir": "E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §\\versions\\社区 MOD 进度 known",
           "mode": {
             "unknown": false,
             "failHash": false,
@@ -913,9 +913,9 @@
           "name": "known",
           "rootId": "community_progress_root_known",
           "depId": "community_progress_library_known",
-          "folder": "E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §",
+          "folder": "E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §",
           "instance": "社区 MOD 进度 known",
-          "versionDir": "E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §\\versions\\社区 MOD 进度 known",
+          "versionDir": "E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §\\versions\\社区 MOD 进度 known",
           "mode": {
             "unknown": false,
             "failHash": false,
@@ -1661,7 +1661,7 @@
               "progress": 1,
               "overall": 1,
               "indeterminate": false,
-              "text": "已安装 2 个 MOD 到 E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §\\versions\\社区 MOD 进度 known\\mods",
+              "text": "已安装 2 个 MOD 到 E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §\\versions\\社区 MOD 进度 known\\mods",
               "taskId": "download-1791306664962-4",
               "taskTitle": "安装 MOD 与前置依赖",
               "operationId": "423f5d7d-9490-42ad-a3dc-6ef3dd0c97cc"
@@ -1933,7 +1933,7 @@
   "error": {
     "name": "Error",
     "message": "Actual state did not become ready: coordinate target .dl-toggle",
-    "stack": "Error: Actual state did not become ready: coordinate target .dl-toggle\n    at until (E:\\KAMUCL\\scripts\\qa-ux117.cjs:26:11)\n    at async Object.click (E:\\KAMUCL\\scripts\\qa-ux117.cjs:30:20)\n    at async showTask (E:\\KAMUCL\\scripts\\qa-mod-progress117.cjs:37:5)\n    at async finishInstall (E:\\KAMUCL\\scripts\\qa-mod-progress117.cjs:83:170)\n    at async E:\\KAMUCL\\scripts\\qa-mod-progress117.cjs:102:88\n    at async Object.recordScreencast (E:\\KAMUCL\\scripts\\verify-ui-refinement.cjs:209:70)\n    at async module.exports (E:\\KAMUCL\\scripts\\qa-mod-progress117.cjs:97:31)\n    at async module.exports (E:\\KAMUCL\\scripts\\qa-ux117.cjs:147:61)\n    at async E:\\KAMUCL\\scripts\\verify-ui-refinement.cjs:233:9"
+    "stack": "Error: Actual state did not become ready: coordinate target .dl-toggle\n    at until (E:\\FAIONYX\\scripts\\qa-ux117.cjs:26:11)\n    at async Object.click (E:\\FAIONYX\\scripts\\qa-ux117.cjs:30:20)\n    at async showTask (E:\\FAIONYX\\scripts\\qa-mod-progress117.cjs:37:5)\n    at async finishInstall (E:\\FAIONYX\\scripts\\qa-mod-progress117.cjs:83:170)\n    at async E:\\FAIONYX\\scripts\\qa-mod-progress117.cjs:102:88\n    at async Object.recordScreencast (E:\\FAIONYX\\scripts\\verify-ui-refinement.cjs:209:70)\n    at async module.exports (E:\\FAIONYX\\scripts\\qa-mod-progress117.cjs:97:31)\n    at async module.exports (E:\\FAIONYX\\scripts\\qa-ux117.cjs:147:61)\n    at async E:\\FAIONYX\\scripts\\verify-ui-refinement.cjs:233:9"
   },
   "restored": {
     "complete": true,
@@ -2749,7 +2749,7 @@
           "progress": 1,
           "overall": 1,
           "indeterminate": false,
-          "text": "已安装 2 个 MOD 到 E:\\KAMUCL\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §\\versions\\社区 MOD 进度 known\\mods",
+          "text": "已安装 2 个 MOD 到 E:\\FAIONYX\\out\\qa-mod-progress117-152f50aa-15c0-4981-8c8d-bb3a53e00c8c\\fixture\\known\\游戏 §\\versions\\社区 MOD 进度 known\\mods",
           "taskId": "download-1791306664962-4",
           "taskTitle": "安装 MOD 与前置依赖",
           "operationId": "423f5d7d-9490-42ad-a3dc-6ef3dd0c97cc"

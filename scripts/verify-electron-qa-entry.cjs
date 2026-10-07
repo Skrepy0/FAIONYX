@@ -3,7 +3,7 @@
 const fs = require('node:fs'), path = require('node:path'), os = require('node:os')
 const assert = require('node:assert/strict'), crypto = require('node:crypto')
 const { app } = require('electron'), { isQaMain, loadedAsEntry } = require('./qa-entry.cjs')
-const root = fs.mkdtempSync(path.join(os.tmpdir(), 'KAMUCL QA entry '))
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX QA entry '))
 const proof = path.resolve('out/qa-entry-proof-' + process.platform + '-' + process.arch + '-' + Date.now())
 fs.mkdirSync(proof, { recursive: true }); fs.mkdirSync(path.join(root, 'config')); fs.mkdirSync(path.join(root, 'profile'))
 app.setPath('appData', path.join(root, 'config')); app.setPath('userData', path.join(root, 'profile'))

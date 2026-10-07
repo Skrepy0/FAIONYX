@@ -23,7 +23,7 @@ function installCommunityFixture(config) {
   }
   respond('versions:manifest', () => ['26.3','26.2','1.21.11','1.21.1','1.20.1'].map(id=>({id,type:'release',url:'https://example.invalid/'+id+'.json',releaseTime:'2026-10-06T00:00:00Z',time:'2026-10-06T00:00:00Z'})))
   respond('community:search', q => {
-    const count = 55, items = Array.from({ length: Math.min(q.limit, Math.max(0, count - q.offset)) }, (_, index) => ({ source: 'modrinth', projectId: 'community116-' + (q.offset + index), slug: 'fixture-' + (q.offset + index), title: `GeckoLib 公开合成资源 ${q.keyword} ${q.offset + index}`, originalTitle: 'Synthetic source metadata', description: '用于下拉遮挡与返回搜索验收，不是真实平台项目。', downloads: 100, author: 'KAMUCL QA' }))
+    const count = 55, items = Array.from({ length: Math.min(q.limit, Math.max(0, count - q.offset)) }, (_, index) => ({ source: 'modrinth', projectId: 'community116-' + (q.offset + index), slug: 'fixture-' + (q.offset + index), title: `GeckoLib 公开合成资源 ${q.keyword} ${q.offset + index}`, originalTitle: 'Synthetic source metadata', description: '用于下拉遮挡与返回搜索验收，不是真实平台项目。', downloads: 100, author: 'FAIONYX QA' }))
     return { items, total: count, offset: q.offset, limit: q.limit }
   })
   respond('mods:targets', () => ({ versions: [config.target], errors: [] }))

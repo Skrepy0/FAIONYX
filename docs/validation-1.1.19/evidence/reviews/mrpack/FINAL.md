@@ -1,4 +1,4 @@
-# KAMUCL 1.1.19 MRPACK 独立最终评审
+# FAIONYX 1.1.19 MRPACK 独立最终评审
 
 评审者：java118；时间：2026-10-07 16:36（Asia/Hong_Kong）。评审者未实现本批 MRPACK 产品或产品测试，仅只读审查、执行已有专项并在 out 写诊断。未构建或启动 GUI。
 
@@ -12,7 +12,7 @@
 
 ## 成品和执行绑定
 
-- 最终 EXE：release/KAMUCL-1.1.19.exe，97,323,050 字节；SHA256：`7b11d4979f1d3afc72397b501770130e3c5e23e2e246deaa70a06276f6a61a65`。
+- 最终 EXE：release/FAIONYX-1.1.19.exe，97,323,050 字节；SHA256：`7b11d4979f1d3afc72397b501770130e3c5e23e2e246deaa70a06276f6a61a65`。
 - 实际 ASAR SHA256：`42697b9e8e9e1ef75ae7f9e6fa75eb41658002f235ed9f1bd2ec324c9454e2a1`，与完整 Windows 包验证一致；EXE/ZIP 中文目录冷、热启动均通过。
 - 516 项冻结产品输入由评审者逐项重新计算 SHA256，当前不匹配为 0；四个直接审查文件与独立诊断的源码哈希也一致。
 - 原始 GUI proof 只有 PID/version，没有嵌入可执行文件哈希。单独的 gui119-executable-bindings.json 用保留副本、父 PID/owned ledger、创建与启动时间做运行后关联；评审者对本范围五份保留 EXE、runtime ASAR、ledger 和 proof 哈希重新核对。没有回填或改写原始 proof，也不把关联说成当时观测过 process.execPath。

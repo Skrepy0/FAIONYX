@@ -2,8 +2,8 @@
 // Bundle with esbuild, then run via Electron. Does not read account storage.
 const { app } = require('electron')
 const fs = require('node:fs'), path = require('node:path'), os = require('node:os'), assert = require('node:assert/strict')
-const original = JSON.parse(fs.readFileSync(path.join(app.getPath('appData'), 'kamucl/settings.json'), 'utf8'))
-const qa = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-mod-target-audit-'))
+const original = JSON.parse(fs.readFileSync(path.join(app.getPath('appData'), 'faionyx/settings.json'), 'utf8'))
+const qa = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-mod-target-audit-'))
 app.setPath('userData', qa)
 fs.writeFileSync(path.join(qa, 'settings.json'), JSON.stringify({ folders: original.folders, gameDir: original.gameDir, activeFolder: original.activeFolder }))
 app.whenReady().then(() => {

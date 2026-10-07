@@ -14,7 +14,7 @@ function paletteSaveReady(s){
     s.controls.saveDisabled===false&&s.controls.drawDisabled===false&&!s.controls.error)
 }
 module.exports = async ({ evaluate, call, main, nav, wait, root, screenshot, version }) => {
-  const theme=process.env.KAMUCL_TEST_THEME||'black-orange',ledgerFile='out/skin-palette-state-119-'+theme+'.json'
+  const theme=process.env.FAIONYX_TEST_THEME||'black-orange',ledgerFile='out/skin-palette-state-119-'+theme+'.json'
   const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex')
   const ledger={version,theme,schemaVersion:1,complete:false,startedAt:new Date().toISOString(),maximumSaveMs:6000,classification:'original single-coordinate palette strokes; read-only real document, UV, input and save completion observations; no paint retries',source:{observer:'scripts/verify-skin-editor-ui.cjs:installSkinFixtureDiagnostic',observerSHA256:sha(fs.readFileSync(require.resolve('./verify-skin-editor-ui.cjs'))),paletteScriptSHA256:sha(fs.readFileSync(__filename))},paints:[],saves:[],observations:[]}
   const persist=()=>fs.writeFileSync(ledgerFile,JSON.stringify({...ledger,recordedAt:new Date().toISOString()},null,2))
@@ -32,7 +32,7 @@ module.exports = async ({ evaluate, call, main, nav, wait, root, screenshot, ver
     while(Date.now()-started<preferenceReadiness.maximumMs){
       let timer
       const settings=await Promise.race([
-        evaluate("window.kamucl.invoke('settings:get')"),
+        evaluate("window.faionyx.invoke('settings:get')"),
         new Promise(resolve=>{timer=setTimeout(()=>resolve(null),Math.max(1,preferenceReadiness.maximumMs-(Date.now()-started)))})
       ]).finally(()=>clearTimeout(timer))
       if(!settings)break
@@ -141,7 +141,7 @@ module.exports = async ({ evaluate, call, main, nav, wait, root, screenshot, ver
   settings = await preferencesReady('picked alpha and recent colour persisted',p=>p.recent[0]==='#1177ee'&&p.alpha===128/255)
   await screenshot('skin-palette-117'); await edit('.palette-hex', '#124488'); await evaluate(`document.querySelector('[aria-label="关闭绘制皮肤"]').click()`)
   for(let i=0;i<30&&await evaluate('!!document.querySelector(".skin-editor")');i++)await wait(20)
-  settings=await evaluate("window.kamucl.invoke('settings:get')"); assert.equal(settings.skinEditorPalette.color,'#124488','immediate close flushes the latest colour')
+  settings=await evaluate("window.faionyx.invoke('settings:get')"); assert.equal(settings.skinEditorPalette.color,'#124488','immediate close flushes the latest colour')
   await button('绘制皮肤'); await wait(300)
   assert.equal(await hex(), '#124488'); assert(await evaluate(`!!document.querySelector('[aria-label="使用自定义颜色 #1177ee"]')`)); await layer('outer'); assert.equal(await field('.palette-alpha-number input'), '50.2')
   await evaluate(`document.querySelector('[aria-label="删除自定义颜色 #1177ee"]').click()`)

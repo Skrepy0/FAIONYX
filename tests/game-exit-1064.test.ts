@@ -46,7 +46,7 @@ test('ordinary warnings do not turn a shutdown timeout into a gameplay crash; se
   assert.equal(shouldReportGameCrash({code:1}),true)
 })
 test('shutdown timeout history retains evidence without a fresh crash notice after restart', () => {
-  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-exit-test-')), file=path.join(dir,'exit.json')
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-exit-test-')), file=path.join(dir,'exit.json')
   try {
     const j=new ExitJournal(file), id=j.begin('game',123,'fixture',{logDir:'session-a'})
     j.end(id,4294967288,false,true)

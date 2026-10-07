@@ -9,7 +9,7 @@ import { toast } from '../../store'
 import type { ManagedTunnel } from '../../../../main/core/frpManager'
 import type { FrpNodesResult } from '../../../../main/core/frpNodes'
 
-const kamucl = window.kamucl
+const faionyx = window.faionyx
 const tunnels = ref<ManagedTunnel[]>([])
 const form = reactive({ accessKey: '' })
 const operations = reactive(new Set<string>())
@@ -27,7 +27,7 @@ async function confirmDelete() {
   if (!target || deleting.value) return
   deleting.value = true; deleteError.value = ''
   try {
-    const result = await kamucl.invoke('frp:delete-tunnel', { id: target.id, confirmed: true }) as { remoteDisconnectPending: boolean }
+    const result = await faionyx.invoke('frp:delete-tunnel', { id: target.id, confirmed: true }) as { remoteDisconnectPending: boolean }
     tunnels.value = tunnels.value.filter(t => t.id !== target.id)
     nodesResult.value = null; deleteTarget.value = null
     toast(result.remoteDisconnectPending ? '远端隧道已删除，本地连接已停止；其他设备连接可能尚未断开' : `已从樱花穿透删除「${target.name}」`, result.remoteDisconnectPending ? 'info' : 'success')
@@ -53,7 +53,7 @@ const errText = (e: unknown) => (e instanceof Error ? e.message : String(e)).rep
 watch(() => form.accessKey, () => { nodesResult.value = null })
 async function refreshStatus() {
   try {
-    const result = await kamucl.invoke('frp:status') as { accessKey: string; tunnels: ManagedTunnel[] }
+    const result = await faionyx.invoke('frp:status') as { accessKey: string; tunnels: ManagedTunnel[] }
     if (disposed) return
     tunnels.value = result.tunnels || []
     if (!form.accessKey && result.accessKey) form.accessKey = result.accessKey
@@ -64,7 +64,7 @@ async function control(t: ManagedTunnel, stop: boolean) {
   if (stop) stopping.add(t.id)
   operations.add(t.id); errorMsg.value = ''
   try {
-    await kamucl.invoke(stop ? 'frp:stop' : 'frp:start', { id: t.id })
+    await faionyx.invoke(stop ? 'frp:stop' : 'frp:start', { id: t.id })
     if (stop) toast(`已停止「${t.name}」，下次启动不会自动恢复`, 'success')
   } catch(e) { errorMsg.value = errText(e); toast(errorMsg.value, 'error') }
   finally { operations.delete(t.id); stopping.delete(t.id); await refreshStatus() }
@@ -73,7 +73,7 @@ async function loadNodes(refresh = false, notify = true): Promise<boolean> {
   if (nodesLoading.value) return false
   nodesLoading.value = true; nodesError.value = ''
   try {
-    const result = await kamucl.invoke('frp:nodes', { accessKey: form.accessKey.trim(), refresh }) as FrpNodesResult
+    const result = await faionyx.invoke('frp:nodes', { accessKey: form.accessKey.trim(), refresh }) as FrpNodesResult
     if (!Array.isArray(result?.nodes)) throw new Error('节点列表查询失败，请重试')
     if (!Array.isArray(result.tunnels)) throw new Error('隧道列表查询失败，请检查密钥权限后重试')
     if (disposed) return false
@@ -87,7 +87,7 @@ async function createTunnel() {
   if (creating.value) return
   creating.value = true; errorMsg.value = ''
   try {
-    await kamucl.invoke('frp:create-tunnel', { accessKey: form.accessKey.trim(), tunnel: { name: creation.name, node: Number(creation.node), localPort: Number(creation.localPort), remotePort: Number(creation.remotePort) || undefined } })
+    await faionyx.invoke('frp:create-tunnel', { accessKey: form.accessKey.trim(), tunnel: { name: creation.name, node: Number(creation.node), localPort: Number(creation.localPort), remotePort: Number(creation.remotePort) || undefined } })
     const loaded = await loadNodes(true, false)
     toast(loaded ? '隧道已创建，可在隧道卡片中启动' : '隧道已创建，请刷新列表后查看', loaded ? 'success' : 'info')
   } catch(e) { errorMsg.value = errText(e); toast(errorMsg.value, 'error') }
@@ -98,7 +98,7 @@ async function copyRemote(address: string) { toast(await copyText(address) ? '�
 function onReferenceToggle(event: Event) { if ((event.target as HTMLDetailsElement).open && !nodesResult.value && !nodesLoading.value && form.accessKey.trim()) void loadNodes() }
 let unsubscribe: (() => void) | undefined
 onMounted(async () => {
-  unsubscribe = kamucl.on('frp:event', (raw: unknown) => {
+  unsubscribe = faionyx.on('frp:event', (raw: unknown) => {
     const t = (raw as { tunnel?: ManagedTunnel })?.tunnel
     if (!t || disposed) return
     const index = tunnels.value.findIndex(x => x.id === t.id)

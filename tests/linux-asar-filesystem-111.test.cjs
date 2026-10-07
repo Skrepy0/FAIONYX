@@ -8,20 +8,20 @@ test('actual pinned Electron preserves physical ASAR validation and backup bytes
   timeout: 40000,
   skip: process.platform === 'linux' && !process.env.DISPLAY ? 'No display on native package host; mandatory Xvfb integration runs this actual Electron contract separately' : false
 }, async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'KAMUCL physical-ASAR contract-')), rootIdentity = fs.realpathSync(root)
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX physical-ASAR contract-')), rootIdentity = fs.realpathSync(root)
   fs.mkdirSync(path.resolve('out'), { recursive: true })
   const proof = fs.mkdtempSync(path.resolve('out/linux-asar-proof-')), sourceFile = path.resolve('src/main/core/linuxUpdate.ts')
   const backup = path.join(root, "backup 中文 § O'Neil"), resources = path.join(backup, 'resources'), input = path.join(root, 'input')
   const archive = path.join(resources, 'app.asar'), version = require('../package.json').version
   fs.mkdirSync(resources, { recursive: true }); fs.mkdirSync(input)
-  const packageJSON = { name: 'kamucl-physical-asar-contract', productName: 'KAMUCLContract', version }
+  const packageJSON = { name: 'faionyx-physical-asar-contract', productName: 'FAIONYXContract', version }
   fs.writeFileSync(path.join(input, 'package.json'), JSON.stringify(packageJSON)); fs.writeFileSync(path.join(input, 'payload.txt'), 'original ASAR payload 中文 §')
   await asar.createPackage(input, archive)
-  fs.writeFileSync(path.join(resources, 'kamucl-linux.json'), JSON.stringify({ product: 'KAMUCL', platform: 'linux', arch: process.arch, version, installationKind: 'portable-directory' }))
+  fs.writeFileSync(path.join(resources, 'faionyx-linux.json'), JSON.stringify({ product: 'FAIONYX', platform: 'linux', arch: process.arch, version, installationKind: 'portable-directory' }))
   // The ELF header is a small classifier fixture, never executed. This contract
   // validates actual Electron ASAR operations, not a Linux game/update run.
   const elf = Buffer.alloc(64); elf.write('\x7fELF', 0, 'binary'); elf[4] = 2; elf[5] = 1; elf.writeUInt16LE(process.arch === 'arm64' ? 183 : 62, 18)
-  fs.writeFileSync(path.join(backup, 'kamucl'), elf); fs.chmodSync(path.join(backup, 'kamucl'), 0o755)
+  fs.writeFileSync(path.join(backup, 'faionyx'), elf); fs.chmodSync(path.join(backup, 'faionyx'), 0o755)
   fs.mkdirSync(path.join(backup, 'assets')); fs.writeFileSync(path.join(backup, 'assets', 'source.txt'), 'owned symlink target')
   let symlinkCreated = false, symlinkUnavailable
   try { fs.symlinkSync('source.txt', path.join(backup, 'assets', 'alias.txt')); symlinkCreated = true }
@@ -60,7 +60,7 @@ app.whenReady().then(async () => {
   try { await fs.promises.cp(config.backup, path.join(config.root, 'legacy-copy'), { recursive: true, dereference: true }) } catch (error) { legacyCopyError = { code: error.code, message: error.message } }
   assert(legacyCopyError, 'Legacy patched fs must preserve its observed ASAR copy failure'); report.observations.legacyCopyError = legacyCopyError
   const localProcess = Object.create(process), environment = { ...process.env }; delete environment.APPIMAGE; delete environment.APPDIR; delete environment.APPIMAGE_EXTRACT_AND_RUN
-  Object.defineProperties(localProcess, { platform: { value: 'linux' }, execPath: { value: path.join(config.backup, 'kamucl') }, env: { value: environment } })
+  Object.defineProperties(localProcess, { platform: { value: 'linux' }, execPath: { value: path.join(config.backup, 'faionyx') }, env: { value: environment } })
   const productModule = { exports: {} }, commands = [], boundaryError = Object.assign(Error('STOP_BEFORE_EXTERNAL_TAR'), { code: 'ASAR_CONTRACT_TAR_BOUNDARY' })
   const productRequire = name => {
     if (name === 'electron') return { app: { isPackaged: true, getVersion: () => config.version, getPath: () => profile }, shell: {} }
@@ -76,10 +76,10 @@ app.whenReady().then(async () => {
   report.observations.realProductDirectoryValidation = { passed: true, realArchiveHash: digest(config.archive) }
   await assert.rejects(productModule.exports.stageLinuxBackup(config.backup, config.version), error => error === boundaryError)
   assert.equal(commands.length, 1)
-  const copyRoot = commands[0].args[commands[0].args.indexOf('-C') + 1], copiedArchive = path.join(copyRoot, 'KAMUCL', 'resources', 'app.asar')
+  const copyRoot = commands[0].args[commands[0].args.indexOf('-C') + 1], copiedArchive = path.join(copyRoot, 'FAIONYX', 'resources', 'app.asar')
   assert(raw.lstatSync(copiedArchive).isFile()); assert.equal(digest(copiedArchive), config.baselineHash)
-  assert.equal(raw.readFileSync(path.join(copyRoot, 'KAMUCL', 'assets', 'source.txt'), 'utf8'), 'owned symlink target')
-  if (config.symlinkCreated) { const alias = path.join(copyRoot, 'KAMUCL', 'assets', 'alias.txt'); assert(!raw.lstatSync(alias).isSymbolicLink()); assert.equal(raw.readFileSync(alias, 'utf8'), 'owned symlink target') }
+  assert.equal(raw.readFileSync(path.join(copyRoot, 'FAIONYX', 'assets', 'source.txt'), 'utf8'), 'owned symlink target')
+  if (config.symlinkCreated) { const alias = path.join(copyRoot, 'FAIONYX', 'assets', 'alias.txt'); assert(!raw.lstatSync(alias).isSymbolicLink()); assert.equal(raw.readFileSync(alias, 'utf8'), 'owned symlink target') }
   report.observations.realProductBackupCopy = { rawArchiveIsFile: true, rawArchiveHash: digest(copiedArchive), commands, tarExecuted: false, stagingOrUpdateApplied: false, symlinkDereferenced: config.symlinkCreated }
   assert.equal(process.noAsar ?? null, noAsarBefore); report.globalNoAsarBefore = noAsarBefore; report.globalNoAsarAfter = process.noAsar ?? null
   report.ready = true; report.complete = true; report.finishedAt = new Date().toISOString(); save(); clearTimeout(timer); app.exit(0)
@@ -108,7 +108,7 @@ app.whenReady().then(async () => {
     // are removed. A cleanup failure never replaces its original assertion.
     try {
       assert.equal(fs.realpathSync(root), rootIdentity); assert(fs.lstatSync(root).isDirectory() && !fs.lstatSync(root).isSymbolicLink())
-      assert(path.basename(root).startsWith('KAMUCL physical-ASAR contract-')); fs.rmSync(root, { recursive: true })
+      assert(path.basename(root).startsWith('FAIONYX physical-ASAR contract-')); fs.rmSync(root, { recursive: true })
     } catch (error) {
       if (!originalError) throw error
       try { fs.writeFileSync(path.join(proof, 'cleanup-error.json'), JSON.stringify({ message: error.message, stack: error.stack }, null, 2), { flag: 'wx' }) }

@@ -1,4 +1,4 @@
-package cn.kamucl.bridge;
+package cn.faionyx.bridge;
 
 /**
  * 桥接参数定义：自制 MOD 声明参数元数据，启动器控制面板据此自动生成控件。

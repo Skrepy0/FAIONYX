@@ -1,4 +1,4 @@
-// Original KAMUCL pixel artwork. No remote skin or third-party texture required.
+// Original FAIONYX pixel artwork. No remote skin or third-party texture required.
 // Standard 64×64 classic skin UVs, with transparent unused/outer-layer regions.
 export function fallbackSkinPixels(): Uint8ClampedArray {
   const pixels = new Uint8ClampedArray(64 * 64 * 4)

@@ -1,4 +1,4 @@
-# KAMUCL 1.0.96
+# FAIONYX 1.0.96
 
 2026-09-21 15:44 · Windows x64
 

@@ -36,7 +36,7 @@ if (arch === 'x64') {
   env.MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS = '0'
   env.MVK_CONFIG_USE_MTLHEAP = '0'
 }
-const child = spawn(path.join(app, 'Contents/MacOS/KAMUCL'), ['--remote-debugging-port=9230', '--inspect=9231'], { env, stdio: ['ignore', log, log] })
+const child = spawn(path.join(app, 'Contents/MacOS/FAIONYX'), ['--remote-debugging-port=9230', '--inspect=9231'], { env, stdio: ['ignore', log, log] })
 const wait = ms => new Promise(r => setTimeout(r, ms))
 let ws, mainWs, evaluate, gamePid, gameFolder, debuggerProcess, events = []
 const captureObserver = require('./mac-game-capture-observer.cjs').createGameCaptureObserver({
@@ -75,16 +75,16 @@ async function main() {
   await connectRenderer()
   const folder = await evaluate(`(async()=>{
     window.__gameTestEvents=[];
-    for(const name of ['launchLog','launchState','installDone','progress']) window.kamucl.on('event:'+name,value=>{window.__gameTestEvents.push({name,value});});
-    await window.kamucl.invoke('settings:set',{mirror:'official',javaAuto:true,memoryAuto:false,memoryMB:2048,closeAfterLaunch:false,autoUpdate:false});
-    await window.kamucl.invoke('accounts:addOffline','NativeMacTest');
-    return (await window.kamucl.invoke('folders:list')).active;
+    for(const name of ['launchLog','launchState','installDone','progress']) window.faionyx.on('event:'+name,value=>{window.__gameTestEvents.push({name,value});});
+    await window.faionyx.invoke('settings:set',{mirror:'official',javaAuto:true,memoryAuto:false,memoryMB:2048,closeAfterLaunch:false,autoUpdate:false});
+    await window.faionyx.invoke('accounts:addOffline','NativeMacTest');
+    return (await window.faionyx.invoke('folders:list')).active;
   })()`)
   gameFolder = folder
   // Force the reported fresh-install scenario, even if the runner image has Java 25.
-  console.log('Hidden runner runtimes', await evaluate(`(async()=>{const list=await window.kamucl.invoke('java:list');const hidden=list.filter(j=>j.major>=25).map(j=>j.path);await window.kamucl.invoke('settings:set',{javaHidden:hidden});return hidden;})()`))
+  console.log('Hidden runner runtimes', await evaluate(`(async()=>{const list=await window.faionyx.invoke('java:list');const hidden=list.filter(j=>j.major>=25).map(j=>j.path);await window.faionyx.invoke('settings:set',{javaHidden:hidden});return hidden;})()`))
   const version = process.env.MAC_GAME_VERSION || '26.2'
-  await evaluate(`window.kamucl.invoke('versions:install',${JSON.stringify(version)},{loader:'fabric',loaderVersion:'0.19.5'})`)
+  await evaluate(`window.faionyx.invoke('versions:install',${JSON.stringify(version)},{loader:'fabric',loaderVersion:'0.19.5'})`)
   let installed
   for (let i = 0; i < 600; i++) {
     const batch = await evaluate('window.__gameTestEvents.splice(0)'); events.push(...batch)
@@ -111,12 +111,12 @@ async function main() {
   fs.mkdirSync(classes,{recursive:true});fs.mkdirSync(path.join(path.dirname(idPath),'mods'),{recursive:true})
   const loader=path.join(folder,'libraries/net/fabricmc/fabric-loader/0.19.5/fabric-loader-0.19.5.jar')
   execFileSync(path.join(process.env.JAVA_HOME,'bin/javac'),['--release','17','-cp',loader,'-d',classes,'scripts/fixtures/MacDemoProbe.java'])
-  fs.writeFileSync(path.join(classes,'fabric.mod.json'),JSON.stringify({schemaVersion:1,id:'kamucl_native_demo_probe',version:'1',environment:'client',entrypoints:{client:['kamucltest.MacDemoProbe']}}))
+  fs.writeFileSync(path.join(classes,'fabric.mod.json'),JSON.stringify({schemaVersion:1,id:'faionyx_native_demo_probe',version:'1',environment:'client',entrypoints:{client:['faionyxtest.MacDemoProbe']}}))
   execFileSync(path.join(process.env.JAVA_HOME,'bin/jar'),['cf',path.join(path.dirname(idPath),'mods/native-demo-test-only.jar'),'-C',classes,'.'])
   metadata.arguments ??= {}; metadata.arguments.game ??= []
-  metadata.arguments.jvm ??=[];metadata.arguments.jvm.push('-Dkamucl.nativeProofTrigger='+trigger)
+  metadata.arguments.jvm ??=[];metadata.arguments.jvm.push('-Dfaionyx.nativeProofTrigger='+trigger)
   metadata.arguments.game.push('--demo'); fs.writeFileSync(idPath, JSON.stringify(metadata))
-  await evaluate(`window.kamucl.invoke('game:launch',${JSON.stringify(installed.installedId)},null,${JSON.stringify(folder)})`)
+  await evaluate(`window.faionyx.invoke('game:launch',${JSON.stringify(installed.installedId)},null,${JSON.stringify(folder)})`)
   let nativeWindow, lastState
   for (let i = 0; i < 240; i++) {
     const batch = await evaluate('window.__gameTestEvents.splice(0)'); events.push(...batch)
@@ -126,7 +126,7 @@ async function main() {
     }
     // launch PID is persisted by the real launcher; never discover/kill unrelated Java processes.
     if (!gamePid) {
-      const homes = [path.join(process.env.HOME, 'Library/Application Support/kamucl'), path.join(process.env.HOME, 'Library/Application Support/KAMUCL')]
+      const homes = [path.join(process.env.HOME, 'Library/Application Support/faionyx'), path.join(process.env.HOME, 'Library/Application Support/FAIONYX')]
       for (const home of homes) {
         try { const info = JSON.parse(fs.readFileSync(path.join(home, 'running-game.json'), 'utf8')); if (info.versionId === installed.installedId) gamePid = info.pid } catch {}
       }
@@ -191,7 +191,7 @@ async function main() {
   })
   await captureObserver.capture('dock-reopen.png', child.pid)
   assert(dockReopen.ready, 'Dock reopen forgot the live game: within 10 seconds require real current-window boot/state replay, live owned PID and visible 游戏运行中; original observations saved')
-  await evaluate(`window.__gameTestEvents=[];for(const name of ['launchLog','launchState'])window.kamucl.on('event:'+name,value=>window.__gameTestEvents.push({name,value}));`)
+  await evaluate(`window.__gameTestEvents=[];for(const name of ['launchLog','launchState'])window.faionyx.on('event:'+name,value=>window.__gameTestEvents.push({name,value}));`)
   const helper=path.join(app,'Contents/Resources/app.asar.unpacked/out/main/MacGameWindow')
   execFileSync('/usr/bin/open',['-a',app]);await wait(1500)
   assert.equal(Number(execFileSync(fixture,['--front-pid'],{encoding:'utf8'}).trim()),child.pid,'launcher must own focus before game focus test')

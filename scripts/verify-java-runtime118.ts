@@ -16,10 +16,10 @@ async function main() {
     sources[name] = crypto.createHash('sha256').update(await fs.readFile(path.join('src/main/core', name))).digest('hex')
   }
   const paths = [
-    process.env.KAMUCL_TEST_JAVA8 ?? path.resolve('out/java118-runtime/unpacked/zulu8.96.0.205-ca-jre8.0.504-win_x64/bin/java.exe'),
-    process.env.KAMUCL_TEST_JAVA17 ?? 'C:/Program Files/Java/jdk-17/bin/java.exe',
-    process.env.KAMUCL_TEST_JAVA21 ?? 'C:/Program Files/Java/jdk-21.0.12/bin/java.exe',
-    process.env.KAMUCL_TEST_JAVA25 ?? 'C:/Program Files/Java/jdk-25.0.2/bin/java.exe'
+    process.env.FAIONYX_TEST_JAVA8 ?? path.resolve('out/java118-runtime/unpacked/zulu8.96.0.205-ca-jre8.0.504-win_x64/bin/java.exe'),
+    process.env.FAIONYX_TEST_JAVA17 ?? 'C:/Program Files/Java/jdk-17/bin/java.exe',
+    process.env.FAIONYX_TEST_JAVA21 ?? 'C:/Program Files/Java/jdk-21.0.12/bin/java.exe',
+    process.env.FAIONYX_TEST_JAVA25 ?? 'C:/Program Files/Java/jdk-25.0.2/bin/java.exe'
   ]
   const runtimes: JavaInfo[] = []
   for (const candidate of paths) {

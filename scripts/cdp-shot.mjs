@@ -1,9 +1,9 @@
-/** CDP Page.captureScreenshot：截 KAMUCL 渲染页（不受遮挡窗口影响）。用法：node scripts/cdp-shot.mjs out.png */
+/** CDP Page.captureScreenshot：截 FAIONYX 渲染页（不受遮挡窗口影响）。用法：node scripts/cdp-shot.mjs out.png */
 import fs from 'node:fs'
 const out = process.argv[2] || 'cdp-shot.png'
 const targets = await (await fetch('http://127.0.0.1:9222/json/list')).json()
-const page = targets.find((t) => t.type === 'page' && t.title === 'KAMUCL')
-if (!page) throw new Error('KAMUCL page not found')
+const page = targets.find((t) => t.type === 'page' && t.title === 'FAIONYX')
+if (!page) throw new Error('FAIONYX page not found')
 const socket = new WebSocket(page.webSocketDebuggerUrl)
 await new Promise((resolve, reject) => {
   socket.addEventListener('open', () => {

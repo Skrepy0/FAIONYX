@@ -1,14 +1,14 @@
 {
   "schema": "windows115-owned-native-final",
   "application": {
-    "file": "E:\\KAMUCL\\release\\KAMUCL-1.1.15.exe",
+    "file": "E:\\FAIONYX\\release\\FAIONYX-1.1.15.exe",
     "sha256": "4822890c6cc94353a16687d812fdfb0be9379dad1c0258ef4b1a35c14d686df9"
   },
   "startedAt": "2026-10-06T10:12:26.120Z",
   "runs": [
     {
       "name": "blue-white",
-      "logFile": "E:\\KAMUCL\\out\\acceptance-1.1.15\\window-final-6f6c1dc7-bdb4-4470-be67-09c02421ef23\\blue-white.log",
+      "logFile": "E:\\FAIONYX\\out\\acceptance-1.1.15\\window-final-6f6c1dc7-bdb4-4470-be67-09c02421ef23\\blue-white.log",
       "startedAt": "2026-10-06T10:12:26.184Z",
       "pid": 31080,
       "close": {
@@ -23,7 +23,7 @@
     },
     {
       "name": "transparent",
-      "logFile": "E:\\KAMUCL\\out\\acceptance-1.1.15\\window-final-6f6c1dc7-bdb4-4470-be67-09c02421ef23\\transparent.log",
+      "logFile": "E:\\FAIONYX\\out\\acceptance-1.1.15\\window-final-6f6c1dc7-bdb4-4470-be67-09c02421ef23\\transparent.log",
       "startedAt": "2026-10-06T10:12:59.674Z",
       "pid": 48720,
       "close": {
@@ -38,7 +38,7 @@
     },
     {
       "name": "black-orange",
-      "logFile": "E:\\KAMUCL\\out\\acceptance-1.1.15\\window-final-6f6c1dc7-bdb4-4470-be67-09c02421ef23\\black-orange.log",
+      "logFile": "E:\\FAIONYX\\out\\acceptance-1.1.15\\window-final-6f6c1dc7-bdb4-4470-be67-09c02421ef23\\black-orange.log",
       "startedAt": "2026-10-06T10:13:33.049Z",
       "pid": 4168,
       "close": {
@@ -53,7 +53,7 @@
     },
     {
       "name": "opacity",
-      "logFile": "E:\\KAMUCL\\out\\acceptance-1.1.15\\window-final-6f6c1dc7-bdb4-4470-be67-09c02421ef23\\opacity.log",
+      "logFile": "E:\\FAIONYX\\out\\acceptance-1.1.15\\window-final-6f6c1dc7-bdb4-4470-be67-09c02421ef23\\opacity.log",
       "startedAt": "2026-10-06T10:14:06.733Z",
       "pid": 54816,
       "close": {
@@ -68,7 +68,7 @@
     },
     {
       "name": "package",
-      "logFile": "E:\\KAMUCL\\out\\acceptance-1.1.15\\window-final-6f6c1dc7-bdb4-4470-be67-09c02421ef23\\package.log",
+      "logFile": "E:\\FAIONYX\\out\\acceptance-1.1.15\\window-final-6f6c1dc7-bdb4-4470-be67-09c02421ef23\\package.log",
       "startedAt": "2026-10-06T10:14:09.181Z",
       "pid": 37456,
       "close": {

@@ -1,12 +1,12 @@
-# KAMUCL 1.1.5 · macOS
+# FAIONYX 1.1.5 · macOS
 
 本次以当前 1.1.5 源码补齐 macOS 支持，不递增版本，也不替换已有 Windows 发布附件。两种架构共享同一套界面、主题、皮肤预览与玻璃启动动画。
 
 ## 安装
 
-- Apple Silicon（M1/M2/M3/M4 等）选择 `KAMUCL-1.1.5-mac-arm64.dmg`。
-- Intel Mac 选择 `KAMUCL-1.1.5-mac-x64.dmg`。
-- 打开 DMG，将 `KAMUCL.app` 拖入“应用程序”，然后从应用程序中启动。ZIP 包解压后也按此方式放置。
+- Apple Silicon（M1/M2/M3/M4 等）选择 `FAIONYX-1.1.5-mac-arm64.dmg`。
+- Intel Mac 选择 `FAIONYX-1.1.5-mac-x64.dmg`。
+- 打开 DMG，将 `FAIONYX.app` 拖入“应用程序”，然后从应用程序中启动。ZIP 包解压后也按此方式放置。
 - 包使用本地 ad-hoc 签名，未使用 Apple Developer ID，也未公证。如果系统拦截，请在确认下载来自本仓库后，到“系统设置 → 隐私与安全性”确认打开。无需关闭系统整体安全保护。
 - 对照 Release 的 `SHA256SUMS.txt`，可在终端执行 `shasum -a 256 下载的文件路径`。
 
@@ -20,7 +20,7 @@ Terracotta 0.4.2 和 SakuraFRP 0.51.0-sakura-14 使用官方 Mac 客户端，按
 
 更新选择本架构的 ZIP，经 SHA256、应用标识、架构与签名检查后，等待下次启动应用。请先移出只读 DMG，不要直接在挂载卷内使用更新功能。设置内可选择本地 ZIP，也可从备份回退。
 
-更新会在应用旁保留 `.KAMUCL-backup-标识.app`。如果新应用未能正常启动，不会为自动回退而强杀游戏；可在 Finder 按 `Command+Shift+.` 显示隐藏文件，将新应用改名保留后，把该备份改名为 `KAMUCL.app`。游戏、账户和设置存放在用户数据目录，不随应用包替换。
+更新会在应用旁保留 `.FAIONYX-backup-标识.app`。如果新应用未能正常启动，不会为自动回退而强杀游戏；可在 Finder 按 `Command+Shift+.` 显示隐藏文件，将新应用改名保留后，把该备份改名为 `FAIONYX.app`。游戏、账户和设置存放在用户数据目录，不随应用包替换。
 
 ## 构建与验证
 

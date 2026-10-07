@@ -5,7 +5,7 @@ import './styles.css'
 import './ui-system.css'
 import { installModalFocus } from './modalFocus'
 
-document.documentElement.dataset.platform = window.kamucl.platform
+document.documentElement.dataset.platform = window.faionyx.platform
 createApp(App).mount('#app')
 
 // 空闲瘦身挂在全局入口：不依赖任何视图生命周期，静默期暂停可重建缓存并触发 GC

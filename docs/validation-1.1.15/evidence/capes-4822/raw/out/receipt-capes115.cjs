@@ -5,9 +5,9 @@ const digest=bytes=>crypto.createHash('sha256').update(bytes).digest('hex')
 const record=file=>{const full=fs.realpathSync.native(file),stat=fs.lstatSync(file);assert(stat.isFile()&&!stat.isSymbolicLink());const bytes=fs.readFileSync(full);return{file:full,bytes:bytes.length,sha256:digest(bytes)}}
 function bind(directory,{requiredSuccess=false}={}){
  const root=fs.realpathSync.native(directory),proofFile=path.join(root,'proof.json'),raw=fs.readFileSync(proofFile),proof=JSON.parse(raw),allowed=[record(proofFile)]
- assert.equal(proof.schema,'kamucl-capes115-real-ui');assert.equal(proof.version,'1.1.15');assert(['transparent','black-orange','blue-white','custom'].includes(proof.theme))
+ assert.equal(proof.schema,'faionyx-capes115-real-ui');assert.equal(proof.version,'1.1.15');assert(['transparent','black-orange','blue-white','custom'].includes(proof.theme))
  const add=(name,expected)=>{assert.equal(path.basename(name),name,'Only explicit local evidence filenames allowed');const row=record(path.join(root,name));assert.equal(path.dirname(row.file),root);if(expected){assert.equal(row.sha256,expected.sha256);if(expected.bytes!==undefined)assert.equal(row.bytes,expected.bytes)}allowed.push(row);return row}
- const result={schema:'kamucl-capes115-immutable-binding',generatedAt:new Date().toISOString(),proof:allowed[0],theme:proof.theme,
+ const result={schema:'faionyx-capes115-immutable-binding',generatedAt:new Date().toISOString(),proof:allowed[0],theme:proof.theme,
   success:proof.complete===true,classification:proof.classification,root:proof.root,profile:proof.profile,application:proof.application??null,identity:proof.identity??null,
   observedFixtureType:'Synthetic Microsoft account/profile IPC; SHA-pinned public PNG originals. No actual Microsoft login, original user aliases, game launch, human hearing or motion FPS qualification claimed',
   sourceProvenanceAvailable:Array.isArray(proof.qaSources)&&Array.isArray(proof.observerSources),checks:[],historicalError:proof.error??null}
@@ -62,7 +62,7 @@ module.exports={bind}
 if(require.main===module){
  const args=process.argv.slice(2),requiredSuccess=args[0]==='--require-success';if(requiredSuccess)args.shift();assert(args.length>=2,'Usage: node out/receipt-capes115.cjs [--require-success] output.json proof-directory [...proof-directory]')
  const output=path.resolve(args.shift());assert(!fs.existsSync(output),'Never overwrite an existing evidence receipt');const runs=args.map(directory=>bind(directory,{requiredSuccess})),themes=runs.filter(run=>run.qualifiedFunctionalEvidence).map(run=>run.theme)
- const receipt={schema:'kamucl-capes115-final-or-history-receipt',generatedAt:new Date().toISOString(),requiredSuccess,runs,
+ const receipt={schema:'faionyx-capes115-final-or-history-receipt',generatedAt:new Date().toISOString(),requiredSuccess,runs,
   allFourThemesQualified:['transparent','black-orange','blue-white','custom'].every(theme=>themes.includes(theme)),classification:'Original per-run evidence, file hashes and actual owned inputs; historical failures remain separate. No visual score or public account behavior inferred.'}
  fs.writeFileSync(output,JSON.stringify(receipt,null,2),{flag:'wx'});console.log(JSON.stringify({output,runs:runs.length,allFourThemesQualified:receipt.allFourThemesQualified,receipt:record(output)}))
 }

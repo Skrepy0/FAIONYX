@@ -59,7 +59,7 @@ function installRendererObserver() {
   }
   for (const Type of [window.WebGLRenderingContext,window.WebGL2RenderingContext]) if(Type) for(const key of ['drawElements','drawArrays','drawElementsInstanced','drawArraysInstanced']) hook(Type.prototype,key,(context)=>{const id=contextId(context),c=p.contexts[id];c.calls++;c.methods[key]=(c.methods[key]||0)+1;p.draws.push({at:performance.now(),id,method:key,kind:c.canvas.kind})})
   hook(CanvasRenderingContext2D.prototype,'putImageData',context=>{const id=contextId(context),c=p.contexts[id];c.calls++;c.methods.putImageData=(c.methods.putImageData||0)+1;p.draws.push({at:performance.now(),id,method:'putImageData',kind:c.canvas.kind})})
-  hook(AudioBufferSourceNode.prototype,'start',(source,args)=>{if(source.buffer)p.sources.push({at:performance.now(),when:args[0]??0,audioTime:source.context.currentTime,state:source.context.state,duration:source.buffer.duration,role:source.kamuclInitialization?.role||'palm',hidden:document.hidden})})
+  hook(AudioBufferSourceNode.prototype,'start',(source,args)=>{if(source.buffer)p.sources.push({at:performance.now(),when:args[0]??0,audioTime:source.context.currentTime,state:source.context.state,duration:source.buffer.duration,role:source.faionyxInitialization?.role||'palm',hidden:document.hidden})})
   p.onVisibility=e=>p.visibility.push({at:performance.now(),type:e.type,hidden:document.hidden,focus:document.hasFocus()})
   document.addEventListener('visibilitychange',p.onVisibility);window.addEventListener('focus',p.onVisibility);window.addEventListener('blur',p.onVisibility)
   function feedbackState(image){
@@ -86,13 +86,13 @@ function installRendererObserver() {
 }
 
 async function diagnostic(h) {
-  if(process.env.KAMUCL_OBSERVER_ABA119==='1')return require('./verify-kamu-observer-aba-119.cjs')(h)
-  if(process.env.KAMUCL_OBSERVER_TRACE_CONTROL119==='1')return require('./verify-kamu-observer-aba-119.cjs')(h,{traceControl:true})
+  if(process.env.FAIONYX_OBSERVER_ABA119==='1')return require('./verify-kamu-observer-aba-119.cjs')(h)
+  if(process.env.FAIONYX_OBSERVER_TRACE_CONTROL119==='1')return require('./verify-kamu-observer-aba-119.cjs')(h,{traceControl:true})
   const {call,evaluate,main,nav,wait,version,recordScreencast,screenshot}=h
   if(await main('process.platform')!=='darwin')return
-  const theme=process.env.KAMUCL_TEST_THEME||'black-orange',file=`out/kamu-native-compositor-diagnostic-119-${theme}.json`
+  const theme=process.env.FAIONYX_TEST_THEME||'black-orange',file=`out/kamu-native-compositor-diagnostic-119-${theme}.json`
   const proof={version,complete:false,classification:'QA-only native vibrancy ABA diagnostic; not normal theme screenshots, not a substitute for header or motion acceptance',hardwareListening:'not performed',trace:'not enabled; primary cadence measured without tracing overhead',cases:[]}
-  const persist=()=>fs.writeFileSync(file,JSON.stringify(proof,null,2)),saved=()=>evaluate("window.kamucl.invoke('mascots:state')")
+  const persist=()=>fs.writeFileSync(file,JSON.stringify(proof,null,2)),saved=()=>evaluate("window.faionyx.invoke('mascots:state')")
   const nativeScreenshot=(name,native)=>{
     const b=native.bounds,rect=[b.x,b.y,b.width,b.height].map(Math.round);assert(rect.every(Number.isFinite)&&rect[2]>0&&rect[3]>0,'native capture requires actual valid window bounds')
     const output=path.resolve('out',`kamu-native-compositor-119-${name}-native-${theme}.png`)

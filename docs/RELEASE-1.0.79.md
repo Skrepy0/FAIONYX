@@ -1,4 +1,4 @@
-# KAMUCL v1.0.79 — 模组更新与 NeoForge 修复
+# FAIONYX v1.0.79 — 模组更新与 NeoForge 修复
 
 本次用户诊断包来自 1.0.77，记录的是 NeoForge 26.2.0.88 安装器依赖下载失败，随后启动修复再次发生 `fetch failed`；该包没有截图中 Fabric API 更新失败的具体异常。检查代码及复现后修复了以下路径。
 

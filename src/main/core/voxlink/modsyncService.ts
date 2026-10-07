@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-// VoxLink 721c7fae ModSync contract; KAMUCL instance and transactional download adaptation.
+// VoxLink 721c7fae ModSync contract; FAIONYX instance and transactional download adaptation.
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
@@ -107,7 +107,7 @@ export class ModSyncService {
       const owned = this.plans.get(payload.plan)
       if (!owned || owned.expires < Date.now()) throw new Error('模组清单已过期，请重新检查')
       const controller = this.begin(payload.operation), signal = controller.signal
-      const staging = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-voxlink-mods-'))
+      const staging = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-voxlink-mods-'))
       let installed = 0
       try {
         const context = await targetContext(owned.plan.target)

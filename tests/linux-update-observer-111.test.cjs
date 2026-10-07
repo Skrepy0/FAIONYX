@@ -102,7 +102,7 @@ test('actual pinned Electron main and sandboxed private renderer expose observed
   timeout: 40000,
   skip: process.platform === 'linux' && !process.env.DISPLAY ? 'No display on package host; mandatory native-integration executes this actual browser contract under Xvfb' : false
 }, async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'KAMUCL update-context contract-')), rootIdentity = fs.realpathSync(root)
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX update-context contract-')), rootIdentity = fs.realpathSync(root)
   fs.mkdirSync(path.resolve('out'), { recursive: true }); const proof = fs.mkdtempSync(path.resolve('out/linux-context-proof-'))
   const port = await freePort(), mainPort = await freePort(), entry = path.join(root, 'fixture.cjs'), html = path.join(root, 'index.html'), second = path.join(root, 'next.html'), receipt = path.join(proof, 'verification.json')
   fs.writeFileSync(html, '<!doctype html><body>private context contract</body>'); fs.writeFileSync(second, '<!doctype html><body>next owned context</body>')
@@ -148,7 +148,7 @@ app.whenReady().then(async()=>{if(process.versions.electron!==config.version)thr
     const timer = setTimeout(() => { if (child.exitCode === null && child.signalCode === null) child.kill('SIGTERM') }, 5000)
     try { await closed; assert.equal(outcome.code, 0); assert.equal(outcome.signal, null) } catch (error) { failedCleanup(error) } finally { clearTimeout(timer) }
     for (const [name, content] of [['stdout-original.log', stdout], ['stderr-original.log', stderr]]) try { fs.writeFileSync(path.join(proof, name), content, { flag: 'wx' }) } catch (error) { failedCleanup(error) }
-    try { assert.equal(fs.realpathSync(root), rootIdentity); assert(fs.lstatSync(root).isDirectory() && !fs.lstatSync(root).isSymbolicLink()); assert(path.basename(root).startsWith('KAMUCL update-context contract-')); fs.rmSync(root, { recursive: true }) } catch (error) { failedCleanup(error) }
+    try { assert.equal(fs.realpathSync(root), rootIdentity); assert(fs.lstatSync(root).isDirectory() && !fs.lstatSync(root).isSymbolicLink()); assert(path.basename(root).startsWith('FAIONYX update-context contract-')); fs.rmSync(root, { recursive: true }) } catch (error) { failedCleanup(error) }
     if (primary) try { fs.writeFileSync(path.join(proof, 'parent-error.json'), JSON.stringify({ message: primary.message, stack: primary.stack, secondaryErrors }, null, 2), { flag: 'wx' }) } catch { /* Original child/observation failure remains primary. */ }
   }
   if (primary) throw primary

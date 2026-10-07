@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-// New KAMUCL orchestration using VoxLink Java signaling fields (ConnectionManager / SignalingClient,
+// New FAIONYX orchestration using VoxLink Java signaling fields (ConnectionManager / SignalingClient,
 // AUGUHDAR/VoxLink baseline 924845e897d8fb36dca2474ade30e675278559d0; updated contract c475faa98cca16d4a2eeef4422c862c36091e1fc).
 import dgram from 'node:dgram'
 import { setTimeout as delay } from 'node:timers/promises'

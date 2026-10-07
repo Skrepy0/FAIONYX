@@ -12,7 +12,7 @@ export async function validateModFile(dir:string,name:string,sha1?:string){safeM
 export async function replaceModFiles(dir:string,items:ModReplacement[],validate?:()=>Promise<void>,signal?:AbortSignal,onProgress?:(fraction:number)=>void){
  const names=new Set<string>(),olds=new Set<string>()
  for(const i of items){safeModName(i.name);if(!/^[a-f0-9]{40}$/i.test(i.sha1)||!i.url?.startsWith('https://'))throw new Error('文件缺少可信哈希或下载地址');const k=i.name.toLowerCase();if(names.has(k))throw new Error('目标文件名重复：'+i.name);names.add(k);if(i.oldName){safeModName(i.oldName);if(olds.has(i.oldName.toLowerCase()))throw new Error('重复的源文件');olds.add(i.oldName.toLowerCase());await validateModFile(dir,i.oldName,i.oldSha1)}}
- const stage=await fs.promises.mkdtemp(path.join(path.dirname(dir),'.kamucl-mod-change-')),backups:Array<{original:string;backup:string}>=[],written:Array<{file:string;sha1:string}>=[]
+ const stage=await fs.promises.mkdtemp(path.join(path.dirname(dir),'.faionyx-mod-change-')),backups:Array<{original:string;backup:string}>=[],written:Array<{file:string;sha1:string}>=[]
  let canClean=true
  let phase='下载新模组'
  try{
@@ -46,6 +46,6 @@ export async function replaceModFiles(dir:string,items:ModReplacement[],validate
  }finally{
   // Keep recoverable originals when an outside change prevented rollback.
   const parent=path.resolve(path.dirname(dir));const resolved=path.resolve(stage)
-  if(canClean&&path.dirname(resolved)===parent&&path.basename(resolved).startsWith('.kamucl-mod-change-'))await fs.promises.rm(resolved,{recursive:true,force:true})
+  if(canClean&&path.dirname(resolved)===parent&&path.basename(resolved).startsWith('.faionyx-mod-change-'))await fs.promises.rm(resolved,{recursive:true,force:true})
  }
 }

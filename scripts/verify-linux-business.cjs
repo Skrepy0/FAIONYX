@@ -66,8 +66,8 @@ async function freePort() {
 }
 async function verifyPackagedUpdate(root, report, tracks, proof) {
   const transactionRoot = fs.mkdtempSync(path.join(root, "update 中文 § O'Neil-")), rootIdentity = fs.lstatSync(transactionRoot)
-  const target = path.join(transactionRoot, 'KAMUCL'), exe = path.join(target, 'kamucl')
-  const archive = path.resolve('release', 'KAMUCL-' + report.version + '-linux-' + process.arch + '.tar.gz')
+  const target = path.join(transactionRoot, 'FAIONYX'), exe = path.join(target, 'faionyx')
+  const archive = path.resolve('release', 'FAIONYX-' + report.version + '-linux-' + process.arch + '.tar.gz')
   execFileSync('/usr/bin/tar', ['-xzf', archive, '-C', transactionRoot], { timeout: 60000 })
   const baselineHash = sha(path.join(target, 'resources/app.asar'))
   const packagedJSON = JSON.parse(require('@electron/asar').extractFile(path.join(target, 'resources/app.asar'), 'package.json').toString('utf8'))
@@ -120,7 +120,7 @@ async function verifyPackagedUpdate(root, report, tracks, proof) {
     assert.equal(identity.pid, child.pid); assert.equal(identity.exe, exe); assert.equal(identity.platform, 'linux'); assert.equal(identity.arch, process.arch)
     assert.equal(identity.name, applicationName); assert.equal(identity.userData, profile); actualProfile = identity.userData
     const renderer = await openOwnedInspector({ url: rendererTarget.webSocketDebuggerUrl, port: rendererPort, rendererURL: rendererTarget.url, role: 'renderer', ...owned }); sockets.push(renderer.socket)
-    for (let i = 0; i < 80 && Date.now() < deadline; i++) { if (await renderer.evaluate("!!window.kamucl?.invoke && document.body?.innerText.includes('" + report.version + "')" , { startupDeadline: true })) return { track, renderer, main }; await wait(250) }
+    for (let i = 0; i < 80 && Date.now() < deadline; i++) { if (await renderer.evaluate("!!window.faionyx?.invoke && document.body?.innerText.includes('" + report.version + "')" , { startupDeadline: true })) return { track, renderer, main }; await wait(250) }
     throw Error('Actual renderer did not expose its production IPC')
   }
   const marker = path.join(profile, 'linux-update.json'), claim = marker + '.applying'
@@ -140,7 +140,7 @@ async function verifyPackagedUpdate(root, report, tracks, proof) {
   const result = { name: 'actual packaged portable update, tamper rejection and retained-backup rollback', passed: false, publicOnlineUpdate: false, crossVersionUpdate: false, mode: 'local same version', nativeDesktop: false }
   await preserveBusinessFailure(result, async () => {
     let current = await start()
-    await current.renderer.evaluate("window.kamucl.invoke('update:applyLocal'," + JSON.stringify({ filePath: archive }) + ')')
+    await current.renderer.evaluate("window.faionyx.invoke('update:applyLocal'," + JSON.stringify({ filePath: archive }) + ')')
     const staged = json(marker), file = staged.file; assert(file.startsWith(profile + path.sep))
     const logFile = path.join(profile, 'linux-updater.log'), previousLog = fs.existsSync(logFile) ? fs.readFileSync(logFile) : Buffer.alloc(0)
     fs.appendFileSync(file, 'tampered-after-approval'); current.renderer.socket.close(); current.main.socket.close(); await stopOwnedChild(current.track)
@@ -150,11 +150,11 @@ async function verifyPackagedUpdate(root, report, tracks, proof) {
     try { flag.text = fs.readFileSync(flagFile, 'utf8'); flag.state = 'present' } catch (error) { if (error.code !== 'ENOENT') throw error }
     result.tamperedTransaction = observeTamperedRejection({ staged, failed: json(claim + '.failed'), actualSize: fs.statSync(file).size, actualSHA256: sha(file), targetSHA256: sha(path.join(target, 'resources/app.asar')), baselineSHA256: baselineHash, previousLog, currentLog: fs.readFileSync(logFile), flag })
     fs.renameSync(claim + '.failed', claim + '.tamper-proof')
-    await current.renderer.evaluate("window.kamucl.invoke('update:applyLocal'," + JSON.stringify({ filePath: archive }) + ')')
+    await current.renderer.evaluate("window.faionyx.invoke('update:applyLocal'," + JSON.stringify({ filePath: archive }) + ')')
     const approved = json(marker); current.renderer.socket.close(); current.main.socket.close(); await stopOwnedChild(current.track)
     const installed = await startApplying(); assert.equal(installed.transaction.id, approved.id); assert(fs.lstatSync(installed.state.backupPath).isDirectory()); assert.equal(sha(path.join(target, 'resources/app.asar')), baselineHash)
     result.update = installed; await stopRestart(); fs.renameSync(claim + '.completed', claim + '.update-proof')
-    current = await start(); await current.renderer.evaluate("window.kamucl.invoke('update:restoreBackup')")
+    current = await start(); await current.renderer.evaluate("window.faionyx.invoke('update:restoreBackup')")
     assert.equal(json(marker).mode, 'rollback'); const rollback = json(marker)
     current.renderer.socket.close(); current.main.socket.close(); await stopOwnedChild(current.track)
     result.rollback = await startApplying(); assert.equal(result.rollback.transaction.id, rollback.id); assert.equal(result.rollback.transaction.mode, 'rollback'); assert.equal(sha(path.join(target, 'resources/app.asar')), baselineHash)
@@ -179,9 +179,9 @@ function packagedWindowDirectories(application) {
 async function verifyOwnedX11(root, report, tracks) {
   assert(process.env.DISPLAY, 'This native window protocol fixture requires X11/XWayland')
   const applicationRoot = fs.mkdtempSync(path.join(root, 'packaged-window-helper-'))
-  execFileSync('/usr/bin/tar', ['-xzf', path.resolve('release', 'KAMUCL-' + report.version + '-linux-' + process.arch + '.tar.gz'), '-C', applicationRoot], { timeout: 60000 })
-  const application = path.join(applicationRoot, 'KAMUCL')
-  const metadata = JSON.parse(fs.readFileSync(path.join(application, 'resources/kamucl-linux.json'), 'utf8'))
+  execFileSync('/usr/bin/tar', ['-xzf', path.resolve('release', 'FAIONYX-' + report.version + '-linux-' + process.arch + '.tar.gz'), '-C', applicationRoot], { timeout: 60000 })
+  const application = path.join(applicationRoot, 'FAIONYX')
+  const metadata = JSON.parse(fs.readFileSync(path.join(application, 'resources/faionyx-linux.json'), 'utf8'))
   assert.equal(metadata.sourceCommit, report.sourceCommit); assert.equal(metadata.arch, report.arch); assert.equal(metadata.runtimeVersion, report.electron)
   const { logicalDirectory, helperDirectory } = packagedWindowDirectories(application)
   const helper = path.join(helperDirectory, 'LinuxGameWindow')
@@ -189,7 +189,7 @@ async function verifyOwnedX11(root, report, tracks) {
 #include <X11/Xatom.h>
 #include <unistd.h>
 #include <iostream>
-int main(){Display*d=XOpenDisplay(nullptr);if(!d)return 2;Window w=XCreateSimpleWindow(d,DefaultRootWindow(d),30,30,320,200,0,0,0xffffff);unsigned long pid=getpid();XChangeProperty(d,w,XInternAtom(d,"_NET_WM_PID",False),XA_CARDINAL,32,PropModeReplace,(unsigned char*)&pid,1);Atom del=XInternAtom(d,"WM_DELETE_WINDOW",False);XSetWMProtocols(d,w,&del,1);XStoreName(d,w,"KAMUCL owned Linux protocol fixture");XMapWindow(d,w);XFlush(d);std::cout<<"READY "<<pid<<" "<<w<<std::endl;for(;;){XEvent e;XNextEvent(d,&e);if(e.type==ClientMessage&&e.xclient.message_type==XInternAtom(d,"WM_PROTOCOLS",False)&&Atom(e.xclient.data.l[0])==del){std::cout<<"NORMAL WM_DELETE_WINDOW"<<std::endl;XDestroyWindow(d,w);XCloseDisplay(d);return 0;}}}`
+int main(){Display*d=XOpenDisplay(nullptr);if(!d)return 2;Window w=XCreateSimpleWindow(d,DefaultRootWindow(d),30,30,320,200,0,0,0xffffff);unsigned long pid=getpid();XChangeProperty(d,w,XInternAtom(d,"_NET_WM_PID",False),XA_CARDINAL,32,PropModeReplace,(unsigned char*)&pid,1);Atom del=XInternAtom(d,"WM_DELETE_WINDOW",False);XSetWMProtocols(d,w,&del,1);XStoreName(d,w,"FAIONYX owned Linux protocol fixture");XMapWindow(d,w);XFlush(d);std::cout<<"READY "<<pid<<" "<<w<<std::endl;for(;;){XEvent e;XNextEvent(d,&e);if(e.type==ClientMessage&&e.xclient.message_type==XInternAtom(d,"WM_PROTOCOLS",False)&&Atom(e.xclient.data.l[0])==del){std::cout<<"NORMAL WM_DELETE_WINDOW"<<std::endl;XDestroyWindow(d,w);XCloseDisplay(d);return 0;}}}`
   const sourceFile = path.join(root, 'owned-window.cpp'), executable = path.join(root, 'owned-window')
   fs.writeFileSync(sourceFile, source); execFileSync('g++', ['-std=c++17', sourceFile, '-lX11', '-o', executable], { timeout: 60000 })
   // Production __dirname is inside the ASAR. The product resolves its unpacked
@@ -266,7 +266,7 @@ async function main() {
     await assert.rejects(Promise.resolve().then(() => native.assertLinuxElf(fs.readFileSync(process.execPath).subarray(0, 64), process.arch === 'x64' ? 'arm64' : 'x64')))
     report.steps.push({ name: 'actual runtime ELF architecture and opposite-ABI rejection', passed: true, executableSHA256: sha(process.execPath) })
     const updates = await loadCore('src/main/core/linuxUpdate.ts')
-    const prefix = 'KAMUCL-' + report.version + '-linux-' + process.arch
+    const prefix = 'FAIONYX-' + report.version + '-linux-' + process.arch
     const payloads = ['tar.gz', 'AppImage', 'deb'].map(format => ({ format, file: path.resolve('release', prefix + '.' + format) }))
     for (const payload of payloads) {
       assert(fs.lstatSync(payload.file).isFile())

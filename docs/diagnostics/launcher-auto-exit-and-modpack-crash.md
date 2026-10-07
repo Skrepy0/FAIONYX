@@ -1,4 +1,4 @@
-# KAMUCL 启动器自动退出与整合包闪退诊断
+# FAIONYX 启动器自动退出与整合包闪退诊断
 
 诊断日期：2026-09-04
 
@@ -10,9 +10,9 @@
 
 ### 1.1 “启动游戏后自动退出启动器”
 
-- **已被代码证明：** KAMUCL 在 `spawn()` 返回后立即把状态标记为 `running`，并在开启自动退出时固定等待 1500 ms 后关闭窗口；关闭最后一个窗口会调用 `app.quit()`。这里的 `running` 只表示 Java 子进程创建成功，不表示 Minecraft 已完成认证、资源加载或进入主菜单。
+- **已被代码证明：** FAIONYX 在 `spawn()` 返回后立即把状态标记为 `running`，并在开启自动退出时固定等待 1500 ms 后关闭窗口；关闭最后一个窗口会调用 `app.quit()`。这里的 `running` 只表示 Java 子进程创建成功，不表示 Minecraft 已完成认证、资源加载或进入主菜单。
 - **已被复现证明：** 纯净版 1.21.11 在自动退出开启时，Java 进程均在启动器退出的同一时间窗口内消失；三次观测存活时间约为 1.26–1.57 秒，尚不足以完成 Minecraft 初始化。
-- **已被代码排除：** 自动退出调用链没有调用 KAMUCL 的 `killGame()`，也没有找到递归终止进程树、显式关闭 Windows Job Object、清理游戏目录/原生库或销毁认证会话的代码。
+- **已被代码排除：** 自动退出调用链没有调用 FAIONYX 的 `killGame()`，也没有找到递归终止进程树、显式关闭 Windows Job Object、清理游戏目录/原生库或销毁认证会话的代码。
 - **高可信推断：** Java 作为 Electron 的直接、未脱离子进程启动，并继承了上层进程的 Windows Job/生命周期约束；启动器及其包装进程结束时，系统级任务/监督器连带终止 Java。测试中 Electron 与 Java 均返回 `IsProcessInJob=true`，且开发版和便携版都复现。现有取证只能证明二者“各自在某个 Job 中”，尚未读取 Job 对象标识，因此“处于同一个带 kill-on-close 的 Job”仍属于高可信推断，而不是已完全证明的事实。
 - **不支持的解释：** 当前没有证据表明是临时目录、IPC 管道、认证会话或原生库被提前清理后由 Minecraft 自行退出；实测退出紧贴启动器退出，且没有形成 Minecraft 崩溃报告。
 
@@ -40,7 +40,7 @@
 ## 2. 证据来源与安全处理
 
 1. 用户提供的 `新建 文本文档.txt`：包含完整 Forge 1.20.1 启动命令与崩溃栈。分析时已将用户名、UUID、access token、用户主目录等视为敏感信息；本报告不复制这些字段。
-2. 当前机器的 KAMUCL 源码与构建产物。
+2. 当前机器的 FAIONYX 源码与构建产物。
 3. 当前机器上的纯净版 1.21.11、离线账户与 Java 21 运行时。
 4. PowerShell/CIM 的 `Win32_Process` 父 PID、创建时间观测，以及 Win32 `IsProcessInJob` 查询。
 5. Electron DevTools Protocol 只读/调用测试辅助脚本 `scripts/cdp-eval.mjs`。脚本不依赖第三方包，也不写入账户数据。
@@ -92,8 +92,8 @@
 ### 5.3 0.6.5 便携构建复现
 
 ```text
-KAMUCL-0.6.5.exe (PID 83492)
-└─ KAMUCL.exe (PID 68908)
+FAIONYX-0.6.5.exe (PID 83492)
+└─ FAIONYX.exe (PID 68908)
    └─ java.exe (PID 77608)
 ```
 

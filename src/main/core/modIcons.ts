@@ -10,7 +10,7 @@ import { httpFetch } from './httpClient'
 type Identity = { fileName: string; sha1: string; fingerprint?: number; iconDataUrl?: string }
 type JsonRequest = (url: string, body?: unknown, headers?: Record<string, string>) => Promise<any>
 const MR = 'https://api.modrinth.com/v2'
-const UA = { 'User-Agent': 'KAMUCL (github.com/kamubaba-i/KAMUCL)' }
+const UA = { 'User-Agent': 'FAIONYX (github.com/Skrepy0/FAIONYX)' }
 async function request(url: string, body?: unknown, headers = {}): Promise<any> {
   const response = await httpFetch(url, { method: body ? 'POST' : 'GET', body: body ? JSON.stringify(body) : undefined,
     headers: { ...UA, 'Content-Type': 'application/json', ...headers }, signal: AbortSignal.timeout(8000) })

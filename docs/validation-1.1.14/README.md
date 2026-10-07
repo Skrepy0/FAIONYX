@@ -1,4 +1,4 @@
-# KAMUCL 1.1.14 — Mac ARM64 恢复构建
+# FAIONYX 1.1.14 — Mac ARM64 恢复构建
 
 本批恢复用户要求的 Mac ARM64，与 Windows x64 共用界面、素材、动效及收藏安装逻辑。Intel Mac、Linux、鸿蒙及资源占用优化仍不在本批范围。已发布 1.1.13 和原证据不覆盖、不改写。
 

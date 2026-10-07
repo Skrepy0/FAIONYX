@@ -1,14 +1,14 @@
 {
   "schema": "windows115-owned-native-final",
   "application": {
-    "file": "E:\\KAMUCL\\release\\KAMUCL-1.1.15.exe",
+    "file": "E:\\FAIONYX\\release\\FAIONYX-1.1.15.exe",
     "sha256": "4822890c6cc94353a16687d812fdfb0be9379dad1c0258ef4b1a35c14d686df9"
   },
   "startedAt": "2026-10-06T10:09:42.971Z",
   "runs": [
     {
       "name": "blue-white",
-      "logFile": "E:\\KAMUCL\\out\\acceptance-1.1.15\\window-final-870f7760-81ae-4102-9032-7a37417108f9\\blue-white.log",
+      "logFile": "E:\\FAIONYX\\out\\acceptance-1.1.15\\window-final-870f7760-81ae-4102-9032-7a37417108f9\\blue-white.log",
       "startedAt": "2026-10-06T10:09:43.040Z",
       "pid": 52840,
       "close": {

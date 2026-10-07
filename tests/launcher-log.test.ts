@@ -47,7 +47,7 @@ test('修剪选择保留最近 keep 份，时间戳相同的按毫秒后缀视�
 })
 
 test('目录级修剪真的删除超量归档且不动 current', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'kamucl-log-test-'))
+  const dir = mkdtempSync(join(tmpdir(), 'faionyx-log-test-'))
   try {
     const names = []
     for (let d = 1; d <= 9; d++) {
@@ -99,9 +99,9 @@ test('级别过滤：阈值比较与环境变量解析', () => {
   assert(!levelAtLeast('debug', 'info'))
   assert(levelAtLeast('error', 'warn'))
   assert.equal(minimumLevelFromEnv({}), 'debug')
-  assert.equal(minimumLevelFromEnv({ KAMUCL_LOG_LEVEL: 'warn' }), 'warn')
-  assert.equal(minimumLevelFromEnv({ KAMUCL_LOG_LEVEL: 'ERROR' }), 'error')
-  assert.equal(minimumLevelFromEnv({ KAMUCL_LOG_LEVEL: 'nonsense' }), 'debug')
+  assert.equal(minimumLevelFromEnv({ FAIONYX_LOG_LEVEL: 'warn' }), 'warn')
+  assert.equal(minimumLevelFromEnv({ FAIONYX_LOG_LEVEL: 'ERROR' }), 'error')
+  assert.equal(minimumLevelFromEnv({ FAIONYX_LOG_LEVEL: 'nonsense' }), 'debug')
 })
 
 test('日志入口在 electron app 不可用时静默，绝不影响业务', () => {

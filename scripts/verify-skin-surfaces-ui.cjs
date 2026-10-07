@@ -29,5 +29,5 @@ require.cache[modulePath].exports=async ctx=>{
  await main('testElectron.BrowserWindow.getAllWindows()[0].webContents.setZoomFactor(1);testElectron.BrowserWindow.getAllWindows()[0].setSize(1280,900)')
  fs.writeFileSync('out/skin-surfaces-ui.json',JSON.stringify(result,null,2));console.log('PASS both arm models, body/leg UVs and skin editor minimum/zoom layout')
 }
-process.env.KAMUCL_EXTENSION_GUI='1';process.env.KAMUCL_EXTENSION_ONLY='1'
+process.env.FAIONYX_EXTENSION_GUI='1';process.env.FAIONYX_EXTENSION_ONLY='1'
 require('./verify-ui-refinement.cjs')

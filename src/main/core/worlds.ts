@@ -600,7 +600,7 @@ function readVersionJsonIn(folder: string, id: string): VersionJson {
 function registeredFolder(input: string): string {
   const target = canonicalPath(input)
   const found = listGameFolders().folders.find((folder) => samePath(folder.path, target))
-  if (!found) throw new Error('目标游戏文件夹未在 KAMUCL 中登记')
+  if (!found) throw new Error('目标游戏文件夹未在 FAIONYX 中登记')
   return found.path
 }
 

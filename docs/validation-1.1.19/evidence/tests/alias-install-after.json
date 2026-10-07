@@ -1,6 +1,6 @@
 {
   "classification": "Actual production MRPACK installation orchestration, localhost HTTP and temporary filesystem with synthetic runtime/mod bytes. No native game or GUI.",
-  "root": "E:\\KAMUCL\\out\\review119-mrpack-readonly\\actual-alias-11f444bc-5e5f-4abc-affc-8ff785c8e2c9",
+  "root": "E:\\FAIONYX\\out\\review119-mrpack-readonly\\actual-alias-11f444bc-5e5f-4abc-affc-8ff785c8e2c9",
   "at": "2026-10-07T08:08:16.683Z",
   "sources": {
     "src/main/core/modpacks.ts": "842b7a859373b6403d9209757c8b56896a154fc44e41e8eea8aec32c8deb99e6",

@@ -1,4 +1,4 @@
-# KAMUCL 提交规范
+# FAIONYX 提交规范
 
 本文档约定 Git Commit 和 Pull Request 的格式，让提交历史可检索、可回溯，便于版本发布和问题定位。
 

@@ -7,14 +7,14 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 const digest = (bytes, algorithm = 'sha256') => crypto.createHash(algorithm).update(bytes).digest('hex')
 const input = path.resolve(process.argv[2] || '')
 assert(fs.statSync(input).isFile(), 'Supply the private PCL exported ZIP')
-const root = path.resolve(process.env.KAMUCL_PCL_QA_ROOT || fs.mkdtempSync(path.resolve('out/pcl-real-119-')))
+const root = path.resolve(process.env.FAIONYX_PCL_QA_ROOT || fs.mkdtempSync(path.resolve('out/pcl-real-119-')))
 assert(root.startsWith(path.resolve('out') + path.sep), 'QA root must remain under ignored out')
 const profile = path.join(root, 'profile'), games = path.join(root, 'games'), proofFile = path.join(root, 'proof.json')
 fs.mkdirSync(profile, { recursive: true }); fs.mkdirSync(games, { recursive: true })
 if (!fs.existsSync(path.join(profile, 'settings.json'))) fs.writeFileSync(path.join(profile, 'settings.json'), JSON.stringify({ gameDir: games, activeFolder: games, folders: [{ path: games, name: 'Isolated PCL acceptance', isDefault: true }], autoUpdate: false, mirror: 'official', memoryAuto: false, memoryMB: 3072, closeAfterLaunch: false, javaAuto: true }))
 const previous = fs.existsSync(proofFile) ? JSON.parse(fs.readFileSync(proofFile)) : null
 if (previous) fs.copyFileSync(proofFile, path.join(root, 'proof-attempt-' + Date.now() + '.json'))
-const proof = { version: require('../package.json').version, product: process.env.KAMUCL_PCL_APP ? 'supplied production executable' : 'built development entry', archiveSHA256: digest(fs.readFileSync(input)), root, startedAt: new Date().toISOString(), realServices: true, fixtureTransport: false, attempts: previous ? [...(previous.attempts || []), { startedAt: previous.startedAt, finishedAt: previous.finishedAt, error: previous.error, installedId: previous.installedId, classification: previous.classification }] : [], complete: false, events: [] }
+const proof = { version: require('../package.json').version, product: process.env.FAIONYX_PCL_APP ? 'supplied production executable' : 'built development entry', archiveSHA256: digest(fs.readFileSync(input)), root, startedAt: new Date().toISOString(), realServices: true, fixtureTransport: false, attempts: previous ? [...(previous.attempts || []), { startedAt: previous.startedAt, finishedAt: previous.finishedAt, error: previous.error, installedId: previous.installedId, classification: previous.classification }] : [], complete: false, events: [] }
 assert.equal(proof.archiveSHA256, '7890ac1dbf08c116173adcb1929ed46d701cf99c0538e87847b7296d1edf25a3')
 const save = () => fs.writeFileSync(proofFile, JSON.stringify(proof, null, 2))
 const port = async () => { const server = net.createServer(); await new Promise(r => server.listen(0, '127.0.0.1', r)); const value = server.address().port; await new Promise(r => server.close(r)); return value }
@@ -68,8 +68,8 @@ async function verifyFiles(id) {
 (async () => {
   const rendererPort = await port(), mainPort = await port(), log = fs.openSync(path.join(root, 'launcher.log'), 'a')
   const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE
-  const app = process.env.KAMUCL_PCL_APP || path.resolve('node_modules/electron/dist/electron.exe')
-  child = spawn(app, [...(process.env.KAMUCL_PCL_APP ? [] : ['.']), `--user-data-dir=${profile}`, `--remote-debugging-port=${rendererPort}`, `--inspect=127.0.0.1:${mainPort}`], { env, stdio: ['ignore', log, log], windowsHide: true })
+  const app = process.env.FAIONYX_PCL_APP || path.resolve('node_modules/electron/dist/electron.exe')
+  child = spawn(app, [...(process.env.FAIONYX_PCL_APP ? [] : ['.']), `--user-data-dir=${profile}`, `--remote-debugging-port=${rendererPort}`, `--inspect=127.0.0.1:${mainPort}`], { env, stdio: ['ignore', log, log], windowsHide: true })
   fs.closeSync(log)
   ws = await connect(`http://127.0.0.1:${rendererPort}/json`, p => p.url.includes('/renderer/index.html'))
   mainWs = await connect(`http://127.0.0.1:${mainPort}/json`, p => !!p.webSocketDebuggerUrl)
@@ -77,19 +77,19 @@ async function verifyFiles(id) {
   const runtime = await main("(()=>{const require=process.mainModule.require.bind(process.mainModule),app=require('electron').app,fs=require('node:fs'),path=require('node:path'),entry=path.join(app.getAppPath(),JSON.parse(fs.readFileSync(path.join(app.getAppPath(),'package.json'))).main);return{userData:app.getPath('userData'),version:app.getVersion(),entry,mainSHA256:require('node:crypto').createHash('sha256').update(fs.readFileSync(entry)).digest('hex')}})()")
   assert.equal(path.resolve(runtime.userData).toLowerCase(), profile.toLowerCase(), 'Profile isolation must hold')
   proof.runtime = runtime; save()
-  await evaluate("(()=>{window.__pclRealEvents=[];for(const name of ['progress','installDone','taskDone','launchState','launchLog'])window.kamucl.on('event:'+name,value=>window.__pclRealEvents.push({name,value,at:Date.now()}))})()")
-  const settings = await evaluate("window.kamucl.invoke('settings:get')")
+  await evaluate("(()=>{window.__pclRealEvents=[];for(const name of ['progress','installDone','taskDone','launchState','launchLog'])window.faionyx.on('event:'+name,value=>window.__pclRealEvents.push({name,value,at:Date.now()}))})()")
+  const settings = await evaluate("window.faionyx.invoke('settings:get')")
   assert.equal(path.resolve(settings.gameDir).toLowerCase(), games.toLowerCase()); assert.equal(settings.folders.length, 1)
   const hasClassifier = await main("process.mainModule.require('electron').ipcMain._invokeHandlers.has('import:probe')")
-  proof.classification = hasClassifier ? await evaluate(`window.kamucl.invoke('import:probe',${JSON.stringify(input)})`) : { pending: true, reason: 'pre-change production entry lacks classifier; legacy modpack:probe still real' }
+  proof.classification = hasClassifier ? await evaluate(`window.faionyx.invoke('import:probe',${JSON.stringify(input)})`) : { pending: true, reason: 'pre-change production entry lacks classifier; legacy modpack:probe still real' }
   if (hasClassifier) assert.equal(proof.classification.kind, 'modpack')
   // Sanitize the private pack name in evidence; retain the generic resource counts.
   if (proof.classification.info) for (const key of ['name', 'innerName', 'fileName']) if (key in proof.classification.info) proof.classification.info[key] = '[private PCL pack]'
-  proof.probe = await evaluate(`window.kamucl.invoke('modpack:probe',${JSON.stringify(input)})`)
+  proof.probe = await evaluate(`window.faionyx.invoke('modpack:probe',${JSON.stringify(input)})`)
   for (const key of ['name', 'innerName', 'fileName']) if (key in proof.probe) proof.probe[key] = '[private PCL pack]'; assert.equal(proof.probe.mcVersion, '1.20.1'); assert.equal(proof.probe.loaderVersion, '47.4.23'); save()
-  let id = process.env.KAMUCL_PCL_EXISTING_ID
+  let id = process.env.FAIONYX_PCL_EXISTING_ID
   if (!id) {
-    const result = await evaluate(`window.kamucl.invoke('modpack:install',${JSON.stringify(input)},{instanceName:${JSON.stringify(process.env.KAMUCL_PCL_INSTANCE_NAME || 'PCL-real-119')},targetFolder:${JSON.stringify(games)}})`)
+    const result = await evaluate(`window.faionyx.invoke('modpack:install',${JSON.stringify(input)},{instanceName:${JSON.stringify(process.env.FAIONYX_PCL_INSTANCE_NAME || 'PCL-real-119')},targetFolder:${JSON.stringify(games)}})`)
     activeTask = result?.taskId || result?.id || (typeof result === 'string' ? result : null)
     proof.installStartResponse = result; save(); let done
     for (let i = 0; i < 3600; i++) {
@@ -101,10 +101,10 @@ async function verifyFiles(id) {
     assert(done, 'Real install timed out after 60 minutes'); proof.installResult = done; save(); assert(done.ok, 'Real installation failed: ' + JSON.stringify(done)); id = done.versionId
   }
   proof.installedId = id; await verifyFiles(id); save()
-  if (process.env.KAMUCL_PCL_NO_LAUNCH !== '1') {
-    await evaluate("window.kamucl.invoke('accounts:addOffline','PCLAcceptance')")
-    proof.java = await evaluate("window.kamucl.invoke('java:list')"); save()
-    await evaluate(`window.kamucl.invoke('game:launch',${JSON.stringify(id)},null,${JSON.stringify(games)})`)
+  if (process.env.FAIONYX_PCL_NO_LAUNCH !== '1') {
+    await evaluate("window.faionyx.invoke('accounts:addOffline','PCLAcceptance')")
+    proof.java = await evaluate("window.faionyx.invoke('java:list')"); save()
+    await evaluate(`window.faionyx.invoke('game:launch',${JSON.stringify(id)},null,${JSON.stringify(games)})`)
     let ready = false
     for (let i = 0; i < 240; i++) {
       const events = await drain(), state = events.filter(e => e.name === 'launchState').at(-1)?.value
@@ -172,7 +172,7 @@ async function verifyFiles(id) {
 })().catch(error => { proof.error = String(error.stack || error); proof.finishedAt = new Date().toISOString(); save(); console.error(error); process.exitCode = 1 }).finally(async () => {
   // Only the PID recorded by this disposable launcher can be stopped.
   if (ownGamePid) try { process.kill(ownGamePid) } catch {}
-  if (activeTask && !proof.installResult && evaluate) try { await evaluate(`window.kamucl.invoke('tasks:cancel',${JSON.stringify(activeTask)})`) } catch {}
+  if (activeTask && !proof.installResult && evaluate) try { await evaluate(`window.faionyx.invoke('tasks:cancel',${JSON.stringify(activeTask)})`) } catch {}
   if (main) try { await main("process.mainModule.require('electron').app.quit()") } catch {}
   ws?.close(); mainWs?.close(); if (child && child.exitCode === null) { await wait(2000); if (child.exitCode === null) child.kill() }
 })

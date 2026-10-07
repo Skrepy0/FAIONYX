@@ -14,20 +14,20 @@ import { fetchSha256Sums } from '../src/main/core/selfUpdate'
 
 const hash = (data: Buffer | string) => crypto.createHash('sha256').update(data).digest('hex')
 test('update checksum lookup stays on the selected release when latest changes', async () => {
-  const requested: string[] = [], hint = 'https://github.com/kamubaba-i/KAMUCL/releases/download/v1.0.77/KAMUCL-1.0.77.exe'
-  const sums = await fetchSha256Sums(hint, async url => { requested.push(url); return new Response(hash('77') + '  KAMUCL-1.0.77.exe') })
-  assert.equal(sums?.get('KAMUCL-1.0.77.exe'), hash('77'))
+  const requested: string[] = [], hint = 'https://github.com/Skrepy0/FAIONYX/releases/download/v1.0.77/FAIONYX-1.0.77.exe'
+  const sums = await fetchSha256Sums(hint, async url => { requested.push(url); return new Response(hash('77') + '  FAIONYX-1.0.77.exe') })
+  assert.equal(sums?.get('FAIONYX-1.0.77.exe'), hash('77'))
   assert.deepEqual(requested, [hint.replace(/[^/]+$/, 'SHA256SUMS.txt')])
   assert.equal(await fetchSha256Sums(hint, async url => url.endsWith('/latest')
     ? Response.json({ assets: [{ name: 'SHA256SUMS.txt', browser_download_url: 'https://example.com/SHA256SUMS.txt' }] })
-    : new Response(hash('78') + '  KAMUCL-1.0.78.exe')), null)
+    : new Response(hash('78') + '  FAIONYX-1.0.78.exe')), null)
 })
 function fixture() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'KAMUCL 更新 [验证] ')), target = path.join(root, '我的启动器.exe')
-  const file = path.join(root, 'KAMUCL-update', 'payload', 'KAMUCL-1.0.78.exe')
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX 更新 [验证] ')), target = path.join(root, '我的启动器.exe')
+  const file = path.join(root, 'FAIONYX-update', 'payload', 'FAIONYX-1.0.78.exe')
   fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(target, 'old'); fs.writeFileSync(file, 'new')
   const t: UpdateTransaction = { schema: 1, id: crypto.randomUUID(), target, file, sha256: hash('new'), size: 3, from: '1.0.77', mode: 'upgrade',
-    release: { version: '1.0.78', assetName: 'KAMUCL-1.0.78.exe', assetUrl: '', assetSize: 3, publishedAt: '', body: '' } }
+    release: { version: '1.0.78', assetName: 'FAIONYX-1.0.78.exe', assetUrl: '', assetSize: 3, publishedAt: '', body: '' } }
   return { root, target, file, t }
 }
 test('update marker roundtrip is target scoped; changed payload and invalid paths cannot apply', async () => {
@@ -52,7 +52,7 @@ test('native updater keeps the original filename, accepts an immediately closed 
     fs.writeFileSync(source, `using System; using System.IO; class Receipt { static void Main() {
       string d=AppDomain.CurrentDomain.BaseDirectory;
       File.AppendAllText(Path.Combine(d,"launches.txt"),"started\\n");
-      File.Copy(Path.Combine(d,"ack-fixture.json"),Path.Combine(d,".kamuclupdate.applying.receipt.json"),true);
+      File.Copy(Path.Combine(d,"ack-fixture.json"),Path.Combine(d,".faionyxupdate.applying.receipt.json"),true);
     } }`)
     const csc = path.join(process.env.WINDIR!, 'Microsoft.NET', 'Framework64', 'v4.0.30319', 'csc.exe')
     const compile = spawnSync(csc, ['/nologo', '/target:winexe', '/out:' + f.file, source], { windowsHide: true, encoding: 'utf8' })
@@ -61,7 +61,7 @@ test('native updater keeps the original filename, accepts an immediately closed 
     const claim = updateMarker(f.target) + '.applying'
     atomicUpdateJson(claim, f.t); atomicUpdateJson(path.join(f.root, 'ack-fixture.json'), { id: f.t.id, version: f.t.release.version })
     // A same-version filename beside the original must remain untouched.
-    const collision = path.join(f.root, 'KAMUCL-1.0.78.exe'); fs.writeFileSync(collision, 'unrelated')
+    const collision = path.join(f.root, 'FAIONYX-1.0.78.exe'); fs.writeFileSync(collision, 'unrelated')
     const script = path.join(f.root, 'update.ps1')
     const spec = { oldExe: f.target, newExe: f.file, backupDir: path.join(f.root, 'backups'), mainPid: 99999999, stateDir: f.root, transaction: f.t, oldSha256: hash('old') }
     fs.writeFileSync(script, '\uFEFF' + buildUpdaterScript(spec))

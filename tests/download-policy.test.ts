@@ -77,7 +77,7 @@ async function notModifiedFixture(handler: http.RequestListener) {
     handler(req, res)
   })
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-304-policy-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-304-policy-'))
   downloadLimiter.configure(DEFAULT_DOWNLOAD_LIMITS); resetHostHealthForTest()
   return { root, requests, base: `http://127.0.0.1:${(server.address() as { port: number }).port}`, close: async () => {
     server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve()))
@@ -200,7 +200,7 @@ test('404 不重试同一 URL，立即切换备用地址', async () => {
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
   const address = server.address()
   assert.ok(address && typeof address !== 'string')
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-fallback-test-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-fallback-test-'))
   const dest = path.join(root, 'resource.jar')
   try {
     const base = `http://127.0.0.1:${address.port}`
@@ -239,7 +239,7 @@ test('临时 503 使用退避重试，内容哈希错误则直接切换来源', 
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
   const address = server.address()
   assert.ok(address && typeof address !== 'string')
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-retry-test-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-retry-test-'))
   try {
     const base = `http://127.0.0.1:${address.port}`
     await downloadFile(`${base}/flaky`, path.join(root, 'flaky.bin'))
@@ -278,7 +278,7 @@ test('404 持续响应体被关闭后切换来源，不遗留幽灵网络流', a
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
   const address = server.address()
   assert.ok(address && typeof address !== 'string')
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-response-close-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-response-close-'))
   let timeout: NodeJS.Timeout | undefined
   try {
     const base = `http://127.0.0.1:${address.port}`

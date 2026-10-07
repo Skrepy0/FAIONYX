@@ -2,7 +2,7 @@
   "runId": 36926471866,
   "headSha": "cdaa9dedf203811b4516f450078ed7a86cde759a",
   "version": "1.1.7",
-  "url": "https://github.com/kamubaba-i/KAMUCL/actions/runs/36926471866",
+  "url": "https://github.com/Skrepy0/FAIONYX/actions/runs/36926471866",
   "status": "completed",
   "conclusion": "success",
   "verifiedAt": "2026-10-01T21:18:20.992Z",
@@ -17,8 +17,8 @@
         "node_id": "MDg6QXJ0aWZhY3QxMTE5Mzk2OTAzOA==",
         "name": "mac-arm64",
         "size_in_bytes": 213418492,
-        "url": "https://api.github.com/repos/kamubaba-i/KAMUCL/actions/artifacts/11193969038",
-        "archive_download_url": "https://api.github.com/repos/kamubaba-i/KAMUCL/actions/artifacts/11193969038/zip",
+        "url": "https://api.github.com/repos/Skrepy0/FAIONYX/actions/artifacts/11193969038",
+        "archive_download_url": "https://api.github.com/repos/Skrepy0/FAIONYX/actions/artifacts/11193969038/zip",
         "expired": false,
         "digest": "sha256:582f4e135cab8c655ab40778a7e9d44d4727d0fafd51cb5e33d01fb753f83c81",
         "created_at": "2026-10-01T21:14:58Z",
@@ -68,14 +68,14 @@
       "nativeDMG": {
         "version": "1.1.7",
         "arch": "arm64",
-        "binary": "/Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/MacOS/KAMUCL: Mach-O 64-bit executable arm64\n",
+        "binary": "/Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/MacOS/FAIONYX: Mach-O 64-bit executable arm64\n",
         "mainUI": true,
         "macUI": {
           "platform": "darwin",
           "customButtons": 0,
           "logoTop": 39,
           "folderStatus": "ready",
-          "folderPath": "/Users/runner/Library/Application Support/.kamucl"
+          "folderPath": "/Users/runner/Library/Application Support/.faionyx"
         },
         "skin": {
           "facePixels": 2883,
@@ -139,13 +139,13 @@
           ],
           "difference": 25
         },
-        "url": "file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/index.html"
+        "url": "file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/index.html"
       },
       "extensionAttempt": {
         "complete": true,
         "error": null,
         "startedAt": "2026-10-01T21:10:32.156Z",
-        "executable": "/Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/MacOS/KAMUCL",
+        "executable": "/Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/MacOS/FAIONYX",
         "copied": [
           "extension-ui-black-orange.json",
           "skin-palette-ui-black-orange.json",
@@ -173,7 +173,7 @@
       },
       "legacy": {
         "version": "1.1.7",
-        "root": "/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/KAMUCL EXE GUI 中文 LcsZKk",
+        "root": "/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/FAIONYX EXE GUI 中文 LcsZKk",
         "complete": true,
         "readiness": [
           {
@@ -2324,7 +2324,7 @@
               "wallTime": 30388,
               "documentHidden": true,
               "stageHidden": false,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:515:15)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/as"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:515:15)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/as"
             },
             {
               "method": "resume",
@@ -2334,7 +2334,7 @@
               "wallTime": 30406.79999999999,
               "documentHidden": false,
               "stageHidden": true,
-              "stack": "Error\n    at Original.resume (<anonymous>:9:134)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:137:56)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:519:20)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/index-D_eyqMrP.js:1964:19)\n    at callWithAsyncErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/a"
+              "stack": "Error\n    at Original.resume (<anonymous>:9:134)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:137:56)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:519:20)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/index-D_eyqMrP.js:1964:19)\n    at callWithAsyncErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/a"
             },
             {
               "method": "suspend",
@@ -2344,7 +2344,7 @@
               "wallTime": 30407.5,
               "documentHidden": false,
               "stageHidden": false,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:515:15)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/as"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:515:15)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/as"
             },
             {
               "method": "suspend",
@@ -2354,7 +2354,7 @@
               "wallTime": 30417.5,
               "documentHidden": false,
               "stageHidden": true,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:138:33)"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:138:33)"
             },
             {
               "method": "resume",
@@ -2364,7 +2364,7 @@
               "wallTime": 30703.5,
               "documentHidden": false,
               "stageHidden": true,
-              "stack": "Error\n    at Original.resume (<anonymous>:9:134)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:137:56)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:519:20)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/index-D_eyqMrP.js:1964:19)\n    at callWithAsyncErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/a"
+              "stack": "Error\n    at Original.resume (<anonymous>:9:134)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:137:56)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:519:20)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/index-D_eyqMrP.js:1964:19)\n    at callWithAsyncErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/a"
             },
             {
               "method": "suspend",
@@ -2374,7 +2374,7 @@
               "wallTime": 31398,
               "documentHidden": false,
               "stageHidden": null,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at MascotAudio.dispose (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:185:10)\n    at file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStag"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at MascotAudio.dispose (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:185:10)\n    at file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStag"
             },
             {
               "method": "suspend",
@@ -2384,7 +2384,7 @@
               "wallTime": 32362.29999999999,
               "documentHidden": false,
               "stageHidden": null,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at MascotAudio.dispose (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:185:10)\n    at file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStag"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at MascotAudio.dispose (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:185:10)\n    at file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStag"
             },
             {
               "method": "suspend",
@@ -2394,7 +2394,7 @@
               "wallTime": 33964.19999999995,
               "documentHidden": false,
               "stageHidden": null,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at MascotAudio.dispose (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:185:10)\n    at file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStag"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at MascotAudio.dispose (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:185:10)\n    at file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStag"
             }
           ],
           "stateTransitions": [
@@ -8283,7 +8283,7 @@
               "wallTime": 30388,
               "documentHidden": true,
               "stageHidden": false,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:515:15)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/as"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:515:15)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/as"
             },
             {
               "method": "resume",
@@ -8293,7 +8293,7 @@
               "wallTime": 30406.79999999999,
               "documentHidden": false,
               "stageHidden": true,
-              "stack": "Error\n    at Original.resume (<anonymous>:9:134)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:137:56)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:519:20)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/index-D_eyqMrP.js:1964:19)\n    at callWithAsyncErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/a"
+              "stack": "Error\n    at Original.resume (<anonymous>:9:134)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:137:56)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:519:20)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/index-D_eyqMrP.js:1964:19)\n    at callWithAsyncErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/a"
             },
             {
               "method": "suspend",
@@ -8303,7 +8303,7 @@
               "wallTime": 30407.5,
               "documentHidden": false,
               "stageHidden": false,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:515:15)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/as"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:515:15)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/as"
             },
             {
               "method": "suspend",
@@ -8313,7 +8313,7 @@
               "wallTime": 30417.5,
               "documentHidden": false,
               "stageHidden": true,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:138:33)"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:138:33)"
             }
           ],
           "audioStateTransitions": [
@@ -8410,8 +8410,8 @@
           "builtin:farmer",
           "builtin:camp",
           "builtin:sunset",
-          "/private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/KAMUCL EXE GUI 中文 LcsZKk/profile/appearance/launch-thumbnails/fac045ba-9402-4962-92a4-ebbce3ff9bce.jpg",
-          "/private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/KAMUCL EXE GUI 中文 LcsZKk/profile/appearance/launch-thumbnails/c3bffa24-6453-4002-909c-3325597e156a.jpg"
+          "/private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/FAIONYX EXE GUI 中文 LcsZKk/profile/appearance/launch-thumbnails/fac045ba-9402-4962-92a4-ebbce3ff9bce.jpg",
+          "/private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/FAIONYX EXE GUI 中文 LcsZKk/profile/appearance/launch-thumbnails/c3bffa24-6453-4002-909c-3325597e156a.jpg"
         ],
         "themeRoundtrip": true,
         "externalBothSources": true,
@@ -9376,7 +9376,7 @@
           "binaryReady": true,
           "running": false,
           "toolVersion": "0.4.2",
-          "binaryPath": "/Users/runner/work/KAMUCL/KAMUCL/out/mac-tools-cFpqMe/terracotta/terracotta-0.4.2-macos-arm64"
+          "binaryPath": "/Users/runner/work/FAIONYX/FAIONYX/out/mac-tools-cFpqMe/terracotta/terracotta-0.4.2-macos-arm64"
         },
         "apiState": {
           "index": 0,
@@ -9392,8 +9392,8 @@
           "t": {
             "schema": 1,
             "id": "49f4c13b-588a-49ca-acb2-cc90e5e1ecf9",
-            "target": "/private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/KAMUCL 更新 O'Neil hTkYLN/KAMUCL.app",
-            "file": "/Users/runner/Library/Application Support/KAMUCL/mac-updates/258897a6-8b26-46e7-a688-2bbf4e0c5424/KAMUCL-1.1.7-mac-arm64.zip",
+            "target": "/private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/FAIONYX 更新 O'Neil hTkYLN/FAIONYX.app",
+            "file": "/Users/runner/Library/Application Support/FAIONYX/mac-updates/258897a6-8b26-46e7-a688-2bbf4e0c5424/FAIONYX-1.1.7-mac-arm64.zip",
             "sha256": "5358c627b5520e0b3358a45592e83fab748053ed2122ba808ca8f4f3ae539003",
             "size": 100115685,
             "from": "1.1.7",
@@ -9403,7 +9403,7 @@
               "body": "",
               "assetUrl": "",
               "assetSize": 100115685,
-              "assetName": "KAMUCL-1.1.7-mac-arm64.zip"
+              "assetName": "FAIONYX-1.1.7-mac-arm64.zip"
             },
             "mode": "local",
             "installedHash": "4908a1ab9783ce342486bbc7e399dbf8d45572757ba80916625a6bcdcf00ab2b",
@@ -9413,7 +9413,7 @@
             "from": "1.1.7",
             "to": "1.1.7",
             "time": "2026-10-01T21:14:17.558Z",
-            "backupPath": "/private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/KAMUCL 更新 O'Neil hTkYLN/.KAMUCL-backup-49f4c13b-588a-49ca-acb2-cc90e5e1ecf9.app",
+            "backupPath": "/private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/FAIONYX 更新 O'Neil hTkYLN/.FAIONYX-backup-49f4c13b-588a-49ca-acb2-cc90e5e1ecf9.app",
             "backupVersion": "1.1.7",
             "result": "ok"
           }
@@ -9422,8 +9422,8 @@
           "t": {
             "schema": 1,
             "id": "d04b0c79-8c8f-4d64-b5da-9437318dd55f",
-            "target": "/private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/KAMUCL 更新 O'Neil hTkYLN/KAMUCL.app",
-            "file": "/Users/runner/Library/Application Support/KAMUCL/mac-updates/ecef34db-28b2-4758-bcd5-f9a3186e5a9e/KAMUCL-1.1.7-mac-arm64.zip",
+            "target": "/private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/FAIONYX 更新 O'Neil hTkYLN/FAIONYX.app",
+            "file": "/Users/runner/Library/Application Support/FAIONYX/mac-updates/ecef34db-28b2-4758-bcd5-f9a3186e5a9e/FAIONYX-1.1.7-mac-arm64.zip",
             "sha256": "d2cbc262ed21f88acd268fe715d5dfc8255cf1d10cffc497d58c9b8d9a1ba16f",
             "size": 100115685,
             "from": "1.1.7",
@@ -9432,7 +9432,7 @@
               "publishedAt": "",
               "body": "",
               "assetUrl": "",
-              "assetName": "KAMUCL-1.1.7-mac-arm64.zip",
+              "assetName": "FAIONYX-1.1.7-mac-arm64.zip",
               "assetSize": 100115685
             },
             "mode": "rollback",
@@ -9443,7 +9443,7 @@
             "from": "1.1.7",
             "to": "1.1.7",
             "time": "2026-10-01T21:14:43.103Z",
-            "backupPath": "/private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/KAMUCL 更新 O'Neil hTkYLN/.KAMUCL-backup-d04b0c79-8c8f-4d64-b5da-9437318dd55f.app",
+            "backupPath": "/private/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/FAIONYX 更新 O'Neil hTkYLN/.FAIONYX-backup-d04b0c79-8c8f-4d64-b5da-9437318dd55f.app",
             "backupVersion": "1.1.7",
             "result": "ok"
           }
@@ -9455,7 +9455,7 @@
       "glass": {
         "normal": {
           "complete": true,
-          "root": "/Users/runner/work/KAMUCL/KAMUCL/out/glass-startup-BfLzw8",
+          "root": "/Users/runner/work/FAIONYX/FAIONYX/out/glass-startup-BfLzw8",
           "pointerDisplacement": 31.667902754353847,
           "lateAssembly": true,
           "readinessGate": true,
@@ -9463,7 +9463,7 @@
         },
         "reduced": {
           "complete": true,
-          "root": "/Users/runner/work/KAMUCL/KAMUCL/out/glass-startup-5EFk0b",
+          "root": "/Users/runner/work/FAIONYX/FAIONYX/out/glass-startup-5EFk0b",
           "reducedMotion": true,
           "readinessGate": true,
           "cleanup": true
@@ -9471,21 +9471,21 @@
       },
       "hashes": [
         {
-          "name": "KAMUCL-1.1.7-mac-arm64.zip",
+          "name": "FAIONYX-1.1.7-mac-arm64.zip",
           "sha256": "b47f41452e5da44d6858aab17ef5d2d54c30f4e4d1c70730a50c2cb89920c0ad",
           "bytes": 100115685,
-          "original": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-arm64\\KAMUCL-1.1.7-mac-arm64.zip"
+          "original": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-arm64\\FAIONYX-1.1.7-mac-arm64.zip"
         },
         {
-          "name": "KAMUCL-1.1.7-mac-arm64.dmg",
+          "name": "FAIONYX-1.1.7-mac-arm64.dmg",
           "sha256": "b9a3a14afa1a7e7dd5912191b236b30074ac5c27adf2c8fe8350efe1e9164fde",
           "bytes": 108630414,
-          "original": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-arm64\\KAMUCL-1.1.7-mac-arm64.dmg"
+          "original": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-arm64\\FAIONYX-1.1.7-mac-arm64.dmg"
         }
       ],
-      "artifactDirectory": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-arm64",
-      "evidenceDirectory": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-arm64",
-      "jobLog": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\job-arm64.log"
+      "artifactDirectory": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-arm64",
+      "evidenceDirectory": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-arm64",
+      "jobLog": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\job-arm64.log"
     },
     "x64": {
       "jobId": 110584936085,
@@ -9497,8 +9497,8 @@
         "node_id": "MDg6QXJ0aWZhY3QxMTE5NDU0NzUwOQ==",
         "name": "mac-x64",
         "size_in_bytes": 229190379,
-        "url": "https://api.github.com/repos/kamubaba-i/KAMUCL/actions/artifacts/11194547509",
-        "archive_download_url": "https://api.github.com/repos/kamubaba-i/KAMUCL/actions/artifacts/11194547509/zip",
+        "url": "https://api.github.com/repos/Skrepy0/FAIONYX/actions/artifacts/11194547509",
+        "archive_download_url": "https://api.github.com/repos/Skrepy0/FAIONYX/actions/artifacts/11194547509/zip",
         "expired": false,
         "digest": "sha256:0a02d05daf50d3a1af90942c539b91a9269d3ecfac56eafc2e071177799e467f",
         "created_at": "2026-10-01T21:16:05Z",
@@ -9548,14 +9548,14 @@
       "nativeDMG": {
         "version": "1.1.7",
         "arch": "x64",
-        "binary": "/Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/MacOS/KAMUCL: Mach-O 64-bit executable x86_64\n",
+        "binary": "/Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/MacOS/FAIONYX: Mach-O 64-bit executable x86_64\n",
         "mainUI": true,
         "macUI": {
           "platform": "darwin",
           "customButtons": 0,
           "logoTop": 39,
           "folderStatus": "ready",
-          "folderPath": "/Users/runner/Library/Application Support/.kamucl"
+          "folderPath": "/Users/runner/Library/Application Support/.faionyx"
         },
         "skin": {
           "facePixels": 2914,
@@ -9619,13 +9619,13 @@
           ],
           "difference": 24.100000000000005
         },
-        "url": "file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/index.html"
+        "url": "file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/index.html"
       },
       "extensionAttempt": {
         "complete": true,
         "error": null,
         "startedAt": "2026-10-01T21:11:06.514Z",
-        "executable": "/Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/MacOS/KAMUCL",
+        "executable": "/Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/MacOS/FAIONYX",
         "copied": [
           "extension-ui-black-orange.json",
           "skin-palette-ui-black-orange.json",
@@ -9653,7 +9653,7 @@
       },
       "legacy": {
         "version": "1.1.7",
-        "root": "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/KAMUCL EXE GUI 中文 97Vndi",
+        "root": "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/FAIONYX EXE GUI 中文 97Vndi",
         "complete": true,
         "readiness": [
           {
@@ -11916,7 +11916,7 @@
               "wallTime": 34551.59999999998,
               "documentHidden": true,
               "stageHidden": false,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:515:15)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/as"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:515:15)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/as"
             },
             {
               "method": "resume",
@@ -11926,7 +11926,7 @@
               "wallTime": 34572.30000000005,
               "documentHidden": false,
               "stageHidden": true,
-              "stack": "Error\n    at Original.resume (<anonymous>:9:134)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:137:56)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:519:20)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/index-D_eyqMrP.js:1964:19)\n    at callWithAsyncErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/a"
+              "stack": "Error\n    at Original.resume (<anonymous>:9:134)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:137:56)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:519:20)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/index-D_eyqMrP.js:1964:19)\n    at callWithAsyncErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/a"
             },
             {
               "method": "suspend",
@@ -11936,7 +11936,7 @@
               "wallTime": 34653.70000000007,
               "documentHidden": false,
               "stageHidden": false,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:515:15)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/as"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:515:15)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/as"
             },
             {
               "method": "suspend",
@@ -11946,7 +11946,7 @@
               "wallTime": 34654.09999999998,
               "documentHidden": false,
               "stageHidden": true,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:138:33)"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:138:33)"
             },
             {
               "method": "resume",
@@ -11956,7 +11956,7 @@
               "wallTime": 35033.59999999998,
               "documentHidden": false,
               "stageHidden": true,
-              "stack": "Error\n    at Original.resume (<anonymous>:9:134)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:137:56)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:519:20)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/index-D_eyqMrP.js:1964:19)\n    at callWithAsyncErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/a"
+              "stack": "Error\n    at Original.resume (<anonymous>:9:134)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:137:56)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:519:20)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/index-D_eyqMrP.js:1964:19)\n    at callWithAsyncErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/a"
             },
             {
               "method": "suspend",
@@ -11966,7 +11966,7 @@
               "wallTime": 36180.09999999998,
               "documentHidden": false,
               "stageHidden": null,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at MascotAudio.dispose (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:185:10)\n    at file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStag"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at MascotAudio.dispose (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:185:10)\n    at file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStag"
             },
             {
               "method": "suspend",
@@ -11976,7 +11976,7 @@
               "wallTime": 38719,
               "documentHidden": false,
               "stageHidden": null,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at MascotAudio.dispose (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:185:10)\n    at file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStag"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at MascotAudio.dispose (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:185:10)\n    at file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStag"
             },
             {
               "method": "suspend",
@@ -11986,7 +11986,7 @@
               "wallTime": 41066.40000000002,
               "documentHidden": false,
               "stageHidden": null,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at MascotAudio.dispose (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:185:10)\n    at file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStag"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at MascotAudio.dispose (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:185:10)\n    at file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStag"
             }
           ],
           "stateTransitions": [
@@ -15556,7 +15556,7 @@
               "wallTime": 34551.59999999998,
               "documentHidden": true,
               "stageHidden": false,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:515:15)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/as"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:515:15)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/as"
             },
             {
               "method": "resume",
@@ -15566,7 +15566,7 @@
               "wallTime": 34572.30000000005,
               "documentHidden": false,
               "stageHidden": true,
-              "stack": "Error\n    at Original.resume (<anonymous>:9:134)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:137:56)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:519:20)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/index-D_eyqMrP.js:1964:19)\n    at callWithAsyncErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/a"
+              "stack": "Error\n    at Original.resume (<anonymous>:9:134)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:137:56)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:519:20)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/index-D_eyqMrP.js:1964:19)\n    at callWithAsyncErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/a"
             },
             {
               "method": "suspend",
@@ -15576,7 +15576,7 @@
               "wallTime": 34653.70000000007,
               "documentHidden": false,
               "stageHidden": false,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:515:15)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/as"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.pause (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:181:28)\n    at watch.flush (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:515:15)\n    at callWithErrorHandling (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/as"
             },
             {
               "method": "suspend",
@@ -15586,7 +15586,7 @@
               "wallTime": 34654.09999999998,
               "documentHidden": false,
               "stageHidden": true,
-              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/KAMUCL.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:138:33)"
+              "stack": "Error\n    at Original.suspend (<anonymous>:10:136)\n    at MascotAudio.suspend (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:101:29)\n    at MascotAudio.unlock (file:///Users/runner/work/_temp/dmg-mount/FAIONYX.app/Contents/Resources/app.asar/out/renderer/assets/MascotStage-C-IaSdTL.js:138:33)"
             }
           ],
           "audioStateTransitions": [
@@ -15683,8 +15683,8 @@
           "builtin:farmer",
           "builtin:camp",
           "builtin:sunset",
-          "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/KAMUCL EXE GUI 中文 97Vndi/profile/appearance/launch-thumbnails/4dc0b63d-b600-4a68-979e-4f670ab890b1.jpg",
-          "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/KAMUCL EXE GUI 中文 97Vndi/profile/appearance/launch-thumbnails/6ebd7e8a-0d34-4a1d-8741-753e271b0734.jpg"
+          "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/FAIONYX EXE GUI 中文 97Vndi/profile/appearance/launch-thumbnails/4dc0b63d-b600-4a68-979e-4f670ab890b1.jpg",
+          "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/FAIONYX EXE GUI 中文 97Vndi/profile/appearance/launch-thumbnails/6ebd7e8a-0d34-4a1d-8741-753e271b0734.jpg"
         ],
         "themeRoundtrip": true,
         "externalBothSources": true,
@@ -16649,7 +16649,7 @@
           "binaryReady": true,
           "running": false,
           "toolVersion": "0.4.2",
-          "binaryPath": "/Users/runner/work/KAMUCL/KAMUCL/out/mac-tools-HpEZgi/terracotta/terracotta-0.4.2-macos-x86_64"
+          "binaryPath": "/Users/runner/work/FAIONYX/FAIONYX/out/mac-tools-HpEZgi/terracotta/terracotta-0.4.2-macos-x86_64"
         },
         "apiState": {
           "index": 0,
@@ -16665,8 +16665,8 @@
           "t": {
             "schema": 1,
             "id": "b683570b-f73a-4c65-9eb5-f3838d6d84a1",
-            "target": "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/KAMUCL 更新 O'Neil Cqxegn/KAMUCL.app",
-            "file": "/Users/runner/Library/Application Support/KAMUCL/mac-updates/83bc85d2-4a4b-4706-bf6e-78a77afad5ed/KAMUCL-1.1.7-mac-x64.zip",
+            "target": "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/FAIONYX 更新 O'Neil Cqxegn/FAIONYX.app",
+            "file": "/Users/runner/Library/Application Support/FAIONYX/mac-updates/83bc85d2-4a4b-4706-bf6e-78a77afad5ed/FAIONYX-1.1.7-mac-x64.zip",
             "sha256": "82db9d1b3c932ef14268b388e12181430bfb3b86fa3ea8fd7c177398e18aa9ef",
             "size": 106255717,
             "from": "1.1.7",
@@ -16676,7 +16676,7 @@
               "body": "",
               "assetUrl": "",
               "assetSize": 106255717,
-              "assetName": "KAMUCL-1.1.7-mac-x64.zip"
+              "assetName": "FAIONYX-1.1.7-mac-x64.zip"
             },
             "mode": "local",
             "installedHash": "b985d7a686fc1d471e49ecfd55d1a5a3a3aa9a3bf0eef0bcfd47c9678177a7d3",
@@ -16686,7 +16686,7 @@
             "from": "1.1.7",
             "to": "1.1.7",
             "time": "2026-10-01T21:15:16.647Z",
-            "backupPath": "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/KAMUCL 更新 O'Neil Cqxegn/.KAMUCL-backup-b683570b-f73a-4c65-9eb5-f3838d6d84a1.app",
+            "backupPath": "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/FAIONYX 更新 O'Neil Cqxegn/.FAIONYX-backup-b683570b-f73a-4c65-9eb5-f3838d6d84a1.app",
             "backupVersion": "1.1.7",
             "result": "ok"
           }
@@ -16695,8 +16695,8 @@
           "t": {
             "schema": 1,
             "id": "0ed3f502-ee3f-4d95-b927-89aa1139b9a8",
-            "target": "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/KAMUCL 更新 O'Neil Cqxegn/KAMUCL.app",
-            "file": "/Users/runner/Library/Application Support/KAMUCL/mac-updates/85281b64-2512-4adc-9385-060c66883c3a/KAMUCL-1.1.7-mac-x64.zip",
+            "target": "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/FAIONYX 更新 O'Neil Cqxegn/FAIONYX.app",
+            "file": "/Users/runner/Library/Application Support/FAIONYX/mac-updates/85281b64-2512-4adc-9385-060c66883c3a/FAIONYX-1.1.7-mac-x64.zip",
             "sha256": "2bfb646f2b382fec99620d7acdb66eab01f6b29ed2ef0cf22a14c35cbc649f00",
             "size": 106255717,
             "from": "1.1.7",
@@ -16705,7 +16705,7 @@
               "publishedAt": "",
               "body": "",
               "assetUrl": "",
-              "assetName": "KAMUCL-1.1.7-mac-x64.zip",
+              "assetName": "FAIONYX-1.1.7-mac-x64.zip",
               "assetSize": 106255717
             },
             "mode": "rollback",
@@ -16716,7 +16716,7 @@
             "from": "1.1.7",
             "to": "1.1.7",
             "time": "2026-10-01T21:15:45.881Z",
-            "backupPath": "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/KAMUCL 更新 O'Neil Cqxegn/.KAMUCL-backup-0ed3f502-ee3f-4d95-b927-89aa1139b9a8.app",
+            "backupPath": "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/FAIONYX 更新 O'Neil Cqxegn/.FAIONYX-backup-0ed3f502-ee3f-4d95-b927-89aa1139b9a8.app",
             "backupVersion": "1.1.7",
             "result": "ok"
           }
@@ -16728,7 +16728,7 @@
       "glass": {
         "normal": {
           "complete": true,
-          "root": "/Users/runner/work/KAMUCL/KAMUCL/out/glass-startup-qDSqJN",
+          "root": "/Users/runner/work/FAIONYX/FAIONYX/out/glass-startup-qDSqJN",
           "pointerDisplacement": 44.90453617853145,
           "lateAssembly": true,
           "readinessGate": true,
@@ -16736,7 +16736,7 @@
         },
         "reduced": {
           "complete": true,
-          "root": "/Users/runner/work/KAMUCL/KAMUCL/out/glass-startup-mSjGiX",
+          "root": "/Users/runner/work/FAIONYX/FAIONYX/out/glass-startup-mSjGiX",
           "reducedMotion": true,
           "readinessGate": true,
           "cleanup": true
@@ -16744,47 +16744,47 @@
       },
       "hashes": [
         {
-          "name": "KAMUCL-1.1.7-mac-x64.zip",
+          "name": "FAIONYX-1.1.7-mac-x64.zip",
           "sha256": "57ff3cbae85fdf991d592e1b2c1fe8b4ab7dd08cab353562f2598740be15af24",
           "bytes": 106255717,
-          "original": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-x64\\KAMUCL-1.1.7-mac-x64.zip"
+          "original": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-x64\\FAIONYX-1.1.7-mac-x64.zip"
         },
         {
-          "name": "KAMUCL-1.1.7-mac-x64.dmg",
+          "name": "FAIONYX-1.1.7-mac-x64.dmg",
           "sha256": "9063d7ec7ed938ba55ab1faa5f8cb2a81f1660554584c5930bda7f0c813a9cb8",
           "bytes": 115803274,
-          "original": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-x64\\KAMUCL-1.1.7-mac-x64.dmg"
+          "original": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-x64\\FAIONYX-1.1.7-mac-x64.dmg"
         }
       ],
-      "artifactDirectory": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-x64",
-      "evidenceDirectory": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-x64",
-      "jobLog": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\job-x64.log"
+      "artifactDirectory": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-x64",
+      "evidenceDirectory": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-x64",
+      "jobLog": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\job-x64.log"
     }
   },
   "artifacts": [
     {
-      "name": "KAMUCL-1.1.7-mac-arm64.zip",
+      "name": "FAIONYX-1.1.7-mac-arm64.zip",
       "sha256": "b47f41452e5da44d6858aab17ef5d2d54c30f4e4d1c70730a50c2cb89920c0ad",
       "bytes": 100115685,
-      "original": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-arm64\\KAMUCL-1.1.7-mac-arm64.zip"
+      "original": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-arm64\\FAIONYX-1.1.7-mac-arm64.zip"
     },
     {
-      "name": "KAMUCL-1.1.7-mac-arm64.dmg",
+      "name": "FAIONYX-1.1.7-mac-arm64.dmg",
       "sha256": "b9a3a14afa1a7e7dd5912191b236b30074ac5c27adf2c8fe8350efe1e9164fde",
       "bytes": 108630414,
-      "original": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-arm64\\KAMUCL-1.1.7-mac-arm64.dmg"
+      "original": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-arm64\\FAIONYX-1.1.7-mac-arm64.dmg"
     },
     {
-      "name": "KAMUCL-1.1.7-mac-x64.zip",
+      "name": "FAIONYX-1.1.7-mac-x64.zip",
       "sha256": "57ff3cbae85fdf991d592e1b2c1fe8b4ab7dd08cab353562f2598740be15af24",
       "bytes": 106255717,
-      "original": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-x64\\KAMUCL-1.1.7-mac-x64.zip"
+      "original": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-x64\\FAIONYX-1.1.7-mac-x64.zip"
     },
     {
-      "name": "KAMUCL-1.1.7-mac-x64.dmg",
+      "name": "FAIONYX-1.1.7-mac-x64.dmg",
       "sha256": "9063d7ec7ed938ba55ab1faa5f8cb2a81f1660554584c5930bda7f0c813a9cb8",
       "bytes": 115803274,
-      "original": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-x64\\KAMUCL-1.1.7-mac-x64.dmg"
+      "original": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-x64\\FAIONYX-1.1.7-mac-x64.dmg"
     }
   ],
   "limits": [
@@ -16800,7 +16800,7 @@
       "status": "completed",
       "conclusion": "success",
       "headSha": "cdaa9dedf203811b4516f450078ed7a86cde759a",
-      "url": "https://github.com/kamubaba-i/KAMUCL/actions/runs/36926471866"
+      "url": "https://github.com/Skrepy0/FAIONYX/actions/runs/36926471866"
     }
   ],
   "attemptHistory": [
@@ -16824,43 +16824,43 @@
     }
   ],
   "attemptNote": "Both architectures were freshly executed in attempt 1 of this run. No successful result or release asset from an earlier run was inherited.",
-  "artifactDirectory": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866",
+  "artifactDirectory": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866",
   "copied": [
     {
-      "file": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-arm64\\KAMUCL-1.1.7-mac-arm64.zip",
-      "name": "KAMUCL-1.1.7-mac-arm64.zip",
+      "file": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-arm64\\FAIONYX-1.1.7-mac-arm64.zip",
+      "name": "FAIONYX-1.1.7-mac-arm64.zip",
       "sha256": "b47f41452e5da44d6858aab17ef5d2d54c30f4e4d1c70730a50c2cb89920c0ad",
-      "copied": "E:\\KAMUCL\\release\\KAMUCL-1.1.7-mac-arm64.zip"
+      "copied": "E:\\FAIONYX\\release\\FAIONYX-1.1.7-mac-arm64.zip"
     },
     {
-      "file": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-arm64\\KAMUCL-1.1.7-mac-arm64.dmg",
-      "name": "KAMUCL-1.1.7-mac-arm64.dmg",
+      "file": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-arm64\\FAIONYX-1.1.7-mac-arm64.dmg",
+      "name": "FAIONYX-1.1.7-mac-arm64.dmg",
       "sha256": "b9a3a14afa1a7e7dd5912191b236b30074ac5c27adf2c8fe8350efe1e9164fde",
-      "copied": "E:\\KAMUCL\\release\\KAMUCL-1.1.7-mac-arm64.dmg"
+      "copied": "E:\\FAIONYX\\release\\FAIONYX-1.1.7-mac-arm64.dmg"
     },
     {
-      "file": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-arm64\\SHA256SUMS-mac-arm64.txt",
+      "file": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-arm64\\SHA256SUMS-mac-arm64.txt",
       "name": "SHA256SUMS-mac-arm64.txt",
       "sha256": "4025f771d715258c51f124dad34cc880172e8eb75ec1757cf4c3a60ee7bea631",
-      "copied": "E:\\KAMUCL\\release\\SHA256SUMS-mac-arm64.txt"
+      "copied": "E:\\FAIONYX\\release\\SHA256SUMS-mac-arm64.txt"
     },
     {
-      "file": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-x64\\KAMUCL-1.1.7-mac-x64.zip",
-      "name": "KAMUCL-1.1.7-mac-x64.zip",
+      "file": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-x64\\FAIONYX-1.1.7-mac-x64.zip",
+      "name": "FAIONYX-1.1.7-mac-x64.zip",
       "sha256": "57ff3cbae85fdf991d592e1b2c1fe8b4ab7dd08cab353562f2598740be15af24",
-      "copied": "E:\\KAMUCL\\release\\KAMUCL-1.1.7-mac-x64.zip"
+      "copied": "E:\\FAIONYX\\release\\FAIONYX-1.1.7-mac-x64.zip"
     },
     {
-      "file": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-x64\\KAMUCL-1.1.7-mac-x64.dmg",
-      "name": "KAMUCL-1.1.7-mac-x64.dmg",
+      "file": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-x64\\FAIONYX-1.1.7-mac-x64.dmg",
+      "name": "FAIONYX-1.1.7-mac-x64.dmg",
       "sha256": "9063d7ec7ed938ba55ab1faa5f8cb2a81f1660554584c5930bda7f0c813a9cb8",
-      "copied": "E:\\KAMUCL\\release\\KAMUCL-1.1.7-mac-x64.dmg"
+      "copied": "E:\\FAIONYX\\release\\FAIONYX-1.1.7-mac-x64.dmg"
     },
     {
-      "file": "E:\\KAMUCL\\out\\mac-117-latest\\36926471866\\mac-x64\\SHA256SUMS-mac-x64.txt",
+      "file": "E:\\FAIONYX\\out\\mac-117-latest\\36926471866\\mac-x64\\SHA256SUMS-mac-x64.txt",
       "name": "SHA256SUMS-mac-x64.txt",
       "sha256": "3c3019c6879d14b0b5dc1c629173a9068de48be692c3e15a3b860098ed562709",
-      "copied": "E:\\KAMUCL\\release\\SHA256SUMS-mac-x64.txt"
+      "copied": "E:\\FAIONYX\\release\\SHA256SUMS-mac-x64.txt"
     }
   ],
   "complete": true

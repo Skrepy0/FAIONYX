@@ -16,7 +16,7 @@ class Worker implements TunnelWorker {
   async stop() { if(this.state.status==='running') this.stops++;this.state={...this.state,status:'stopped',pid:null};this.sink({type:'stopped',status:'stopped'}) }
 }
 function fixture(t: test.TestContext, validate?: (key:string,id:string)=>Promise<any>) {
-  const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-frp-multi-')),file=path.join(root,'frp-tunnels.json')
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-frp-multi-')),file=path.join(root,'frp-tunnels.json')
   t.after(()=>fs.rmSync(root,{recursive:true,force:true}))
   const workers: Worker[]=[]
   const deps={read:()=>readFrpRegistry(file),save:(data:any)=>writeFrpRegistry(file,data),worker:()=>{const w=new Worker();workers.push(w);return w},validate:validate || (async(_key:string,id:string)=>({id:Number(id),name:'世界 '+id,nodeName:'节点',localIp:'127.0.0.1',localPort:25565}))}

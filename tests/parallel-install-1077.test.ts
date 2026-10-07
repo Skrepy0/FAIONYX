@@ -62,7 +62,7 @@ test('并行进度按各阶段权重累积，不因一个阶段完成提前达�
 })
 
 test('预取无哈希文件只写独立暂存目录，明确提交后才写实例，清理不碰实例', async () => {
-  const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-prefetch-'))
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-prefetch-'))
   const body=Buffer.from('mod fixture'),dest=path.join(root,'instance','mods','a.jar'),cache=path.join(root,'cache')
   const server=http.createServer((_req,res)=>res.end(body))
   await new Promise<void>(r=>server.listen(0,'127.0.0.1',r))
@@ -77,7 +77,7 @@ test('预取无哈希文件只写独立暂存目录，明确提交后才写实�
 })
 
 for (const outcome of ['success', 'failure', 'cancel'] as const) test(`真实四阶段并行整合包：${outcome}；成功后提交，失败取消后无迟到写入`, {timeout:15000}, async () => {
-  const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-parallel-pack-')),game=path.join(root,'game'),id='并行导入'
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-parallel-pack-')),game=path.join(root,'game'),id='并行导入'
   fs.mkdirSync(game)
   const bodies=Object.fromEntries(['lib','client','asset','mod'].map(name=>[name,Buffer.from('fixture-'+name)]))
   const index=Buffer.from(JSON.stringify({objects:{sound:{hash:sha1(bodies.asset),size:bodies.asset.length}}}))

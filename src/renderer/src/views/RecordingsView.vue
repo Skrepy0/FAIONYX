@@ -17,7 +17,7 @@ const folderOptions = computed(() => [{ value: '', label: '全部已绑定文件
 watch(() => JSON.stringify([activeFolder.value, store.settings?.folders]), () => { void refresh(true) })
 watch(folderOptions, options => { if (!options.some(o => o.value === folderFilter.value)) folderFilter.value = '' })
 watch(() => store.fsRefreshTick, () => { if (!busy.value) void refresh() })
-const invoke = <T,>(channel: string, ...args: unknown[]) => window.kamucl.invoke(channel, ...args) as Promise<T>
+const invoke = <T,>(channel: string, ...args: unknown[]) => window.faionyx.invoke(channel, ...args) as Promise<T>
 const filtered = computed(() => data.value.entries.filter(e => (!folderFilter.value || e.folder === folderFilter.value) && (kind.value === 'all' || e.kind === kind.value) && (source.value === 'all' || (source.value === 'library' ? e.library : !e.library)) && `${e.name} ${e.source} ${e.directory}`.toLowerCase().includes(query.value.trim().toLowerCase())))
 const pages = computed(() => Math.max(1, Math.ceil(filtered.value.length / 40)))
 const rows = computed(() => filtered.value.slice((page.value - 1) * 40, page.value * 40))
@@ -33,7 +33,7 @@ async function refresh(silent = false) {
 function drag(event: DragEvent, entry: RecordingEntry) {
   event.preventDefault(); event.stopPropagation()
   if (busy.value || loading.value || store.editMode) return
-  window.kamucl.send('recordings:drag', selected.value.includes(entry.id) ? [...selected.value] : [entry.id])
+  window.faionyx.send('recordings:drag', selected.value.includes(entry.id) ? [...selected.value] : [entry.id])
 }
 function autoRefresh() { if (!busy.value && !loading.value && !selected.value.length && !target.value && document.visibilityState === 'visible') void refresh(true) }
 function selectPage() { const ids = rows.value.map(e => e.id); selected.value = ids.every(id => selected.value.includes(id)) ? selected.value.filter(id => !ids.includes(id)) : [...new Set([...selected.value, ...ids])] }

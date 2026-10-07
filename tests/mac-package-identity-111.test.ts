@@ -9,7 +9,7 @@ import { createRequire } from 'node:module'
 const { IDENTITY_FILE, createMacIdentity, readMacPackageIdentity, collectMacWorldHashes, assertMacNormalGameExit } = createRequire(path.resolve('package.json'))('./scripts/mac-package-identity.cjs')
 const sha = (bytes: Buffer | string) => crypto.createHash('sha256').update(bytes).digest('hex')
 function fixture(arch: 'arm64' | 'x64' = 'arm64') {
-  const app = fs.mkdtempSync(path.join(os.tmpdir(), 'KAMUCL Mac identity fixture '))
+  const app = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX Mac identity fixture '))
   const resources = path.join(app, 'Contents', 'Resources'); fs.mkdirSync(resources, { recursive: true })
   const bytes = Buffer.from('synthetic ASAR fixture; no native package claim')
   fs.writeFileSync(path.join(resources, 'app.asar'), bytes)
@@ -59,7 +59,7 @@ test('Mac identity rejects absent metadata, payload tampering, wrong native ABI 
 })
 
 test('Mac saved-world receipt hashes actual level and region bytes without copying private worlds', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'KAMUCL world hash fixture '))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX world hash fixture '))
   try {
     const region = path.join(root, 'dimensions', 'minecraft', 'overworld', 'region'); fs.mkdirSync(region, { recursive: true })
     fs.writeFileSync(path.join(root, 'level.dat'), 'synthetic level')

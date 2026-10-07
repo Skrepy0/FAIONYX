@@ -109,13 +109,13 @@ function verifyCarouselEventBatch(batch,cursor){
 }
 module.exports=async({call,evaluate,main,click,nav,screenshot,wait,root,profile,version})=>{
  const textClick=async(scope,text)=>evaluate(`(()=>{const b=[...document.querySelectorAll(${JSON.stringify(scope+' button')})].find(e=>e.textContent.trim()===${JSON.stringify(text)});if(!b)throw Error('Missing '+${JSON.stringify(text)});b.click()})()`);
- const settings=()=>evaluate("window.kamucl.invoke('settings:get')");
+ const settings=()=>evaluate("window.faionyx.invoke('settings:get')");
  const original=await settings();
  const motionReadiness=[],favoriteReadiness=[],favoritePickerReadiness=[],carouselResourceReadiness=[],motionPreference={fixture:'prefers-reduced-motion: no-preference'};let result;
  const writeLiveProof=()=>fs.writeFileSync('out/gallery-favorites-motion-live.json',JSON.stringify({version,motionPreference,motionReadiness,favoriteReadiness,favoritePickerReadiness,carouselResourceReadiness},null,2));
  const motionSnapshot=async()=>{
   const native=await main("(()=>{const w=testElectron.BrowserWindow.getAllWindows().find(w=>w.webContents.getURL().includes('/renderer/index.html'));return{isVisible:w.isVisible(),isMinimized:w.isMinimized(),focused:w.isFocused(),bounds:w.getBounds(),backgroundThrottling:w.webContents.getBackgroundThrottling(),platform:process.platform,electron:process.versions.electron}})()");
-  const renderer=await evaluate("(async()=>{const s=await window.kamucl.invoke('settings:get');return{documentHidden:document.hidden,visibilityState:document.visibilityState,motion:document.documentElement.dataset.motion,reduceMotion:s.reduceMotion,systemReduced:matchMedia('(prefers-reduced-motion: reduce)').matches,nativeVisibility:await window.kamucl.invoke('window:visibility'),stageHidden:document.querySelector('.mascot-stage')?.classList.contains('hidden')??null,images:document.querySelectorAll('.hero-image').length,timers:window.__galleryTimers?.size??null}})()");
+  const renderer=await evaluate("(async()=>{const s=await window.faionyx.invoke('settings:get');return{documentHidden:document.hidden,visibilityState:document.visibilityState,motion:document.documentElement.dataset.motion,reduceMotion:s.reduceMotion,systemReduced:matchMedia('(prefers-reduced-motion: reduce)').matches,nativeVisibility:await window.faionyx.invoke('window:visibility'),stageHidden:document.querySelector('.mascot-stage')?.classList.contains('hidden')??null,images:document.querySelectorAll('.hero-image').length,timers:window.__galleryTimers?.size??null}})()");
   return{native,renderer};
  };
  const activateGallery=async(label,expectedTimers)=>{
@@ -138,7 +138,7 @@ module.exports=async({call,evaluate,main,click,nav,screenshot,wait,root,profile,
  };
  const favoriteTargets=[{title:'外置收藏 MR',key:'modrinth:galleryMr'},{title:'外置收藏 CF',key:'curseforge:987654'}];
  const favoriteSnapshot=async()=>{
-  const renderer=await evaluate(`(async()=>{const targets=${JSON.stringify(favoriteTargets)};return{buttons:[...document.querySelectorAll('.result-favorite')].map(b=>{const label=b.getAttribute('aria-label')||'';return{key:targets.find(t=>label.endsWith(t.title))?.key??null,label,pressed:b.getAttribute('aria-pressed')==='true',busy:b.disabled}}),persistentKeys:(await window.kamucl.invoke('mods:favorites')).map(f=>f.key),failureNotice:document.body.innerText.includes('收藏写入失败'),downloadModal:!!document.querySelector('.download-modal')}})()`);
+  const renderer=await evaluate(`(async()=>{const targets=${JSON.stringify(favoriteTargets)};return{buttons:[...document.querySelectorAll('.result-favorite')].map(b=>{const label=b.getAttribute('aria-label')||'';return{key:targets.find(t=>label.endsWith(t.title))?.key??null,label,pressed:b.getAttribute('aria-pressed')==='true',busy:b.disabled}}),persistentKeys:(await window.faionyx.invoke('mods:favorites')).map(f=>f.key),failureNotice:document.body.innerText.includes('收藏写入失败'),downloadModal:!!document.querySelector('.download-modal')}})()`);
   const fixture=await main('({writes:favoriteFixtureWrites,pending:favoriteFixturePending,trace:favoriteFixtureTrace})');
   const diskKeys=JSON.parse(fs.readFileSync(path.join(profile,'mod-favorites.json'),'utf8')).map(f=>f.key);
   return{at:Date.now(),renderer,fixture,diskKeys};
@@ -162,7 +162,7 @@ module.exports=async({call,evaluate,main,click,nav,screenshot,wait,root,profile,
  try{
  const sources=[path.join(root,'gallery-one.png'),path.join(root,'gallery-two.png')];
  await main(`(()=>{const fs=process.mainModule.require('node:fs');for(const [i,file]of ${JSON.stringify(sources)}.entries()){const b=Buffer.alloc(16*16*4);for(let j=0;j<b.length;j+=4){b[j]=i?30:80;b[j+1]=120;b[j+2]=i?180:220;b[j+3]=255}fs.writeFileSync(file,testElectron.nativeImage.createFromBitmap(b,{width:16,height:16}).toPNG())}testElectron.dialog.showOpenDialog=async()=>({canceled:false,filePaths:${JSON.stringify(sources)}})})()`);
- const imported=await evaluate("window.kamucl.invoke('appearance:importLaunchThumbnail')");
+ const imported=await evaluate("window.faionyx.invoke('appearance:importLaunchThumbnail')");
  const images=imported.launchThumbnail.images;assert(images.length>=2);assert(images.every(file=>fs.existsSync(file)));
  await call('Page.reload');await wait(1400);
  await evaluate(`(${require('./verify-mac-parity-ui.cjs').installMacParityObserver.toString()})()`)
@@ -213,8 +213,8 @@ module.exports=async({call,evaluate,main,click,nav,screenshot,wait,root,profile,
  const finalEventBatch=await evaluate(`window.__carouselPresentation.stop(${eventCursor.offset})`);verifyCarouselEventBatch(finalEventBatch,eventCursor);assert.equal(finalEventBatch.closed,true);carouselResourceReadiness.push({finalEventBatch,classification:'Atomic stop and remaining original event closure; tail is retained and never used to manufacture a completed cycle'});writeLiveProof()
  assert(cycleComplete,'all eight logical images must rotate through one complete actual timer cycle without retaining more than three DOM image layers');carouselResourceReadiness.push({complete:true,expectedKeys,rotation,fixtureDurationsSeconds:1});writeLiveProof()
  // Theme code uses bundled IDs directly, remaps managed references, and keeps disabled data.
- const code=await evaluate("window.kamucl.invoke('appearance:exportTheme')");const payload=JSON.parse(gunzipSync(Buffer.from(code.slice(8),'base64')));assert(payload.launchThumbnail.order.includes('builtin:piston'));assert(payload.launchThumbnail.disabled[0].startsWith('image-'));
- const roundtrip=await evaluate(`window.kamucl.invoke('appearance:importTheme',${JSON.stringify(code)},true)`);assert(roundtrip.launchThumbnail.order.includes('builtin:piston'));assert(roundtrip.launchThumbnail.disabled.includes(roundtrip.launchThumbnail.images[0]));assert.deepEqual(roundtrip.launchThumbnail.images.map(file=>fs.readFileSync(file)),images.map(file=>fs.readFileSync(file)));
+ const code=await evaluate("window.faionyx.invoke('appearance:exportTheme')");const payload=JSON.parse(gunzipSync(Buffer.from(code.slice(8),'base64')));assert(payload.launchThumbnail.order.includes('builtin:piston'));assert(payload.launchThumbnail.disabled[0].startsWith('image-'));
+ const roundtrip=await evaluate(`window.faionyx.invoke('appearance:importTheme',${JSON.stringify(code)},true)`);assert(roundtrip.launchThumbnail.order.includes('builtin:piston'));assert(roundtrip.launchThumbnail.disabled.includes(roundtrip.launchThumbnail.images[0]));assert.deepEqual(roundtrip.launchThumbnail.images.map(file=>fs.readFileSync(file)),images.map(file=>fs.readFileSync(file)));
  // Two sources on external cards; clicking a favorite never opens the download dialog.
  await main("globalThis.favoriteFixtureFail=false;globalThis.favoriteFixtureWrites=0;globalThis.favoriteFixturePending=0;globalThis.favoriteFixtureTrace=[];globalThis.favoriteFixtureStore=testElectron.ipcMain._invokeHandlers.get('mods:favorite');testElectron.ipcMain.removeHandler('mods:favorite');testElectron.ipcMain.handle('mods:favorite',async(...args)=>{const write=++favoriteFixtureWrites,key=args[1].source+':'+args[1].projectId;favoriteFixturePending++;favoriteFixtureTrace.push({type:'start',at:Date.now(),write,key,enabled:args[2]});try{if(favoriteFixtureFail)throw Error('隔离验证：收藏写入失败');await new Promise(r=>setTimeout(r,80));const list=await favoriteFixtureStore(...args);favoriteFixtureTrace.push({type:'confirmed',at:Date.now(),write,key,keys:list.map(f=>f.key)});return list}catch(error){favoriteFixtureTrace.push({type:'failed',at:Date.now(),write,key,error:error.message});throw error}finally{favoriteFixturePending--}});testElectron.ipcMain.removeHandler('community:search');testElectron.ipcMain.handle('community:search',()=>({items:[{source:'modrinth',projectId:'galleryMr',title:'外置收藏 MR',downloads:123,updatedAt:'2026-10-02',description:'隔离搜索数据'},{source:'curseforge',projectId:'987654',title:'外置收藏 CF',downloads:456,updatedAt:'2026-10-02',description:'隔离搜索数据'}],total:2}));testElectron.ipcMain.removeHandler('community:files');testElectron.ipcMain.handle('community:files',(_e,s,p)=>[{source:s,projectId:p,fileId:'fixture',version:'fixture',fileName:'fixture.jar',gameVersions:['26.3'],loaders:['fabric'],releaseType:'release',size:1,url:'https://fixture.invalid/fixture.jar'}]);");
  await nav('community');await wait(250);assert.equal(await evaluate('document.querySelectorAll(".result-favorite").length'),2);
@@ -234,14 +234,14 @@ module.exports=async({call,evaluate,main,click,nav,screenshot,wait,root,profile,
   if(pickerReady)break;
  }
  assert(pickerReady,'both target favorite rows must settle as selected compatible Fabric metadata; every retained row must be selected or explicitly unlinked/skipped, with exact summary and completed ticket requests');await textClick('.modal-actions','取消');
- await evaluate(`window.kamucl.invoke('settings:set',{launchThumbnail:${JSON.stringify(original.launchThumbnail)}})`);await nav('home');await evaluate('window.setInterval=window.__gallerySet;window.clearInterval=window.__galleryClear');
+ await evaluate(`window.faionyx.invoke('settings:set',{launchThumbnail:${JSON.stringify(original.launchThumbnail)}})`);await nav('home');await evaluate('window.setInterval=window.__gallerySet;window.clearInterval=window.__galleryClear');
  result={version,builtins:7,mixed:true,disabledPreservesFiles:true,zeroAndSingleNoTimer:true,mixedOrder:reordered,logicalPlaylistCount:expectedKeys.length,completeRealRotation:cycleComplete,maxDecodedLayers:Math.max(...carouselResourceReadiness.filter(row=>row.snapshot).map(row=>row.snapshot.images.length)),themeRoundtrip:true,externalBothSources:true,detailAndInstallSynced:true,writeFailureRecoverable:true,serviceClassification:'Isolated synthetic search, compatibility metadata and injected write failure; no real downloads or game installation in this module.'};
  }finally{
   const finalObserverClosure=await evaluate('window.__carouselPresentation?.stop(0)??null');if(finalObserverClosure){carouselResourceReadiness.push({finalObserverClosure,classification:'Original full observation buffer from installation through atomic disconnection, including failure paths'});writeLiveProof()}
   await call('Emulation.setEmulatedMedia',{features:[]});await wait(80);motionPreference.restored=await motionSnapshot();
   writeLiveProof();
  }
- fs.writeFileSync('out/gallery-favorites-ui-'+(process.env.KAMUCL_TEST_THEME||'black-orange')+'.json',JSON.stringify({...result,motionPreference,motionReadiness,favoriteReadiness,favoritePickerReadiness,carouselResourceReadiness},null,2));console.log('Gallery and external favorites GUI checks passed');
+ fs.writeFileSync('out/gallery-favorites-ui-'+(process.env.FAIONYX_TEST_THEME||'black-orange')+'.json',JSON.stringify({...result,motionPreference,motionReadiness,favoriteReadiness,favoritePickerReadiness,carouselResourceReadiness},null,2));console.log('Gallery and external favorites GUI checks passed');
 };
 module.exports.verifyRetainedCarousel=verifyRetainedCarousel;
 Object.assign(module.exports,{readMountedEnabledPlaylist,readMountedCarousel,verifyCarouselReadiness,installCarouselPresentationObserver,verifyCarouselEventBatch});

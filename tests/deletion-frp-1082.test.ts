@@ -31,7 +31,7 @@ test('FRP UTF-8 任意字节分片、独立输出流及无换行尾部', () => {
 })
 
 test('删除失败不预删描述文件或存档；固定目录、拒绝越界及占用', async t => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'kamucl-delete-1082-'))
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'faionyx-delete-1082-'))
   t.after(() => fs.rm(root, { recursive: true, force: true }))
   const dir = path.join(root, 'versions', '中文 版本')
   await fs.mkdir(path.join(dir, 'saves'), { recursive: true })
@@ -53,7 +53,7 @@ test('删除失败不预删描述文件或存档；固定目录、拒绝越界�
 })
 
 test('删除拒绝目录链接，不接触链接目标', async t => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'kamucl-links-1082-'))
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'faionyx-links-1082-'))
   t.after(() => fs.rm(root, { recursive: true, force: true }))
   await fs.mkdir(path.join(root, 'versions')); await fs.mkdir(path.join(root, 'outside'))
   await fs.symlink(path.join(root, 'outside'), path.join(root, 'versions', 'linked'), 'junction')

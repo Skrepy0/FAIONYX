@@ -1,10 +1,10 @@
-# VoxLink 对接核对（KAMUCL 1.0.91）
+# VoxLink 对接核对（FAIONYX 1.0.91）
 
 基准：VoxLink `main` 提交 `721c7fae05851971996e49a3ad0e595d5aa9a053`，完整阅读 `docs/launcher-integration.md`，并核对对应 Java 实现。参考克隆位于开发机 `out/voxlink-reference-1091`，没有修改该仓库。构建不依赖这个克隆。上游文档提及的服务端 `ws.go` 不在该克隆内，WebSocket 帧依据文档及 Java 客户端核对。
 
 ## 核对与适配
 
-| 功能 | 上游依据 | KAMUCL 实现 |
+| 功能 | 上游依据 | FAIONYX 实现 |
 | --- | --- | --- |
 | 相关链接 | 契约第 1 节、RelatedLinksScreen | `shared/voxlinkLinks.ts` 与 RelatedLinks 弹窗，保留 8 项原名称和地址 |
 | 信令 | 契约 HTTP/WS 章节、SignalingWsTransport | session/api：WS 优先、3 秒建连、id=0 推送、HTTP 兜底、重新登记 poll 身份、10/30/60 秒重连、90 秒看门狗、取消时释放请求 |

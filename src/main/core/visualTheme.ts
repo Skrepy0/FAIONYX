@@ -24,14 +24,14 @@ export function exportVisualTheme(preview?:Partial<Settings>):string {
  if(launchThumbnail.durations)launchThumbnail.durations=Object.fromEntries(Object.entries(launchThumbnail.durations).map(([p,d])=>[launchKey(p),d]))
  const payload=JSON.stringify({format:2,theme:s.theme,custom:s.custom,homeLayout:s.homeLayout,background,launchThumbnail,visualDesign:cleanDesign(s.visualDesign),assets})
  if(Buffer.byteLength(payload)>MAX)throw new Error('主题图片过大，请减少图片后导出（上限64MiB）')
- return 'KAMUCL2.'+gzipSync(payload).toString('base64')
+ return 'FAIONYX2.'+gzipSync(payload).toString('base64')
 }
 export async function importVisualTheme(code:string,preview=false):Promise<Settings>{
  if(typeof code!=='string'||code.length>MAX*2)throw new Error('主题码无效或过大')
  const value=code.trim();let p:any
- if(value.startsWith('KAMUCL2.'))p=JSON.parse(gunzipSync(Buffer.from(value.slice(8),'base64'),{maxOutputLength:MAX}).toString('utf8'))
- else if(value.startsWith('KAMUCL.'))p={format:2,theme:'custom',custom:{colors:JSON.parse(Buffer.from(value.slice(7),'base64').toString('utf8')).colors}}
- else throw new Error('请粘贴完整的 KAMUCL 主题码')
+ if(value.startsWith('FAIONYX2.'))p=JSON.parse(gunzipSync(Buffer.from(value.slice(8),'base64'),{maxOutputLength:MAX}).toString('utf8'))
+ else if(value.startsWith('FAIONYX.'))p={format:2,theme:'custom',custom:{colors:JSON.parse(Buffer.from(value.slice(7),'base64').toString('utf8')).colors}}
+ else throw new Error('请粘贴完整的 FAIONYX 主题码')
  if(p.format!==2||!['custom','blue-white','black-orange','white-pink','black-pink','transparent'].includes(p.theme))throw new Error('不支持的主题格式')
  const colors={...DEFAULT_CUSTOM_THEME.colors};for(const key of Object.keys(colors) as (keyof typeof colors)[])if(/^#[a-f0-9]{6}$/i.test(p.custom?.colors?.[key]))colors[key]=p.custom.colors[key]
  const current=getSettings()

@@ -26,7 +26,7 @@ export function registerSkinEditorIpc(getWin: () => BrowserWindow | null) {
     if (variant !== 'classic' && variant !== 'slim') throw new Error('无效的皮肤模型')
     const account = { ...selectedAccount()! }, bytes = png(value)
     if (account.type === 'offline') return applyOfflineSkinBytes(bytes, variant, account.id, '绘制皮肤.png')
-    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'kamucl-skin-'))
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'faionyx-skin-'))
     const file = path.join(dir, 'skin.png')
     try { await fs.writeFile(file, bytes); return await uploadSkin(file, variant, account.id) }
     finally { await fs.rm(dir, { recursive: true, force: true }) }

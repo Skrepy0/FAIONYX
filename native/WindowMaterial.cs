@@ -1,4 +1,4 @@
-// Complete KAMUCL's native startup fade and invalidate its cached style.
+// Complete FAIONYX's native startup fade and invalidate its cached style.
 using System;
 using System.Runtime.InteropServices;
 

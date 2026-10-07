@@ -34,7 +34,7 @@ export function createCommandWorld(gameDirectory: string, clientJar: string): { 
   const version = JSON.parse(zip.readAsText('version.json')) as { id: string; world_version: number; stable?: boolean; series_id?: string }
   if (!supportsQuickPlayMultiplayer(version.id)) throw new Error('此 Minecraft 版本不支持官方单人 Quick Play（需要 1.20+）；请在游戏内新建世界并开启命令')
   if (!Number.isInteger(version.world_version) || version.world_version < 0) throw new Error('客户端缺少真实世界数据版本，未创建存档')
-  const id = `KAMUCL-Test-${new Date().toISOString().replace(/[:.]/g, '-')}-${crypto.randomBytes(3).toString('hex')}`
+  const id = `FAIONYX-Test-${new Date().toISOString().replace(/[:.]/g, '-')}-${crypto.randomBytes(3).toString('hex')}`
   const destination = path.join(gameDirectory, 'saves', id)
   fs.mkdirSync(path.dirname(destination), { recursive: true })
   fs.mkdirSync(destination) // exclusive, never reuses an existing world

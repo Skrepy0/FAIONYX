@@ -16,7 +16,7 @@ const hash = (data: Buffer) => crypto.createHash('sha1').update(data).digest('he
 async function fixture(handler: http.RequestListener) {
   const server = http.createServer(handler)
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-tail-1100-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-tail-1100-'))
   return { root, url: `http://127.0.0.1:${(server.address() as { port: number }).port}`, close: async () => {
     server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve()))
     fs.rmSync(root, { recursive: true, force: true }); resetHostHealthForTest(); downloadLimiter.configure(DEFAULT_DOWNLOAD_LIMITS)
@@ -93,7 +93,7 @@ test('大文件尚未完成时小文件队列已被处理，全部请求仍遵�
 })
 
 test('并行覆盖文件解压保留内容、真实进度和取消后的写入终止', async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-extract-1100-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-extract-1100-'))
   try {
     const core = await versionInstallHarness(root), zip = new AdmZip(), updates: number[] = []
     for (let i = 0; i < 80; i++) zip.addFile('overrides/config/' + i + '.json', Buffer.from('file-' + i))

@@ -8,7 +8,7 @@ import { createRequire } from 'node:module'
 import { analyzeDiagnosticText } from '../src/main/core/diagnosticRules'
 import { selectDiagnosticSession } from '../src/main/core/diagnosticSession'
 async function harness(){
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'kamucl-center-')),folder=path.join(root,'game'),other=path.join(root,'other'),user=path.join(root,'user')
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'faionyx-center-')),folder=path.join(root,'game'),other=path.join(root,'other'),user=path.join(root,'user')
  for(const d of [folder,other,user])fs.mkdirSync(d,{recursive:true})
  const dir=path.join(folder,'versions','source');fs.mkdirSync(path.join(dir,'mods'),{recursive:true});fs.mkdirSync(path.join(dir,'saves','world'),{recursive:true})
  fs.writeFileSync(path.join(dir,'source.json'),JSON.stringify({id:'source',_gameDir:true,_mcVersion:'1.21.1',mainClass:'net.minecraft.client.Main',downloads:{client:{url:'https://example.invalid/client.jar'}}}))
@@ -55,7 +55,7 @@ test('1058 diagnostics separate same-name instances, select newest session and r
 })
 
 test('1058 overwrite restore preserves a manual recovery record and rejects changed source',async()=>{
- const h=await harness();try{const t={folder:h.folder,id:'source'},b=await h.api.backupInstance(t);fs.writeFileSync(path.join(h.dir,'options.txt'),'new-settings');await h.api.restoreInstanceInPlace(t,b.id);assert.equal(fs.readFileSync(path.join(h.dir,'options.txt'),'utf8'),'lang:zh_cn');const records=await h.api.instanceBackups(h.dir).list();assert.ok(records.some((r:any)=>r.title==='实例覆盖恢复前'));await assert.rejects(()=>h.api.restoreInstanceInPlace(t,b.id,undefined,()=>fs.writeFileSync(path.join(h.dir,'options.txt'),'changed-during-restore')),/发生变化/);assert.equal(fs.readFileSync(path.join(h.dir,'options.txt'),'utf8'),'changed-during-restore');assert.ok(!fs.readdirSync(path.dirname(h.dir)).some(n=>n.startsWith('.kamucl-restore-old-')))}finally{h.cleanup()}
+ const h=await harness();try{const t={folder:h.folder,id:'source'},b=await h.api.backupInstance(t);fs.writeFileSync(path.join(h.dir,'options.txt'),'new-settings');await h.api.restoreInstanceInPlace(t,b.id);assert.equal(fs.readFileSync(path.join(h.dir,'options.txt'),'utf8'),'lang:zh_cn');const records=await h.api.instanceBackups(h.dir).list();assert.ok(records.some((r:any)=>r.title==='实例覆盖恢复前'));await assert.rejects(()=>h.api.restoreInstanceInPlace(t,b.id,undefined,()=>fs.writeFileSync(path.join(h.dir,'options.txt'),'changed-during-restore')),/发生变化/);assert.equal(fs.readFileSync(path.join(h.dir,'options.txt'),'utf8'),'changed-during-restore');assert.ok(!fs.readdirSync(path.dirname(h.dir)).some(n=>n.startsWith('.faionyx-restore-old-')))}finally{h.cleanup()}
 })
 
 test('1058 world restore defaults to a new copy and protects explicit overwrite',async()=>{

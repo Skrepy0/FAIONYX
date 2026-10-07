@@ -14,7 +14,7 @@ const integration = path.join(root, 'platforms/harmonyos')
 const cache = path.join(root, 'out/toolcache/harmonyos')
 const output = path.join(root, 'out/harmonyos')
 const project = path.join(output, 'project')
-const marker = '.kamucl-generated-harmony-project'
+const marker = '.faionyx-generated-harmony-project'
 const digest = buffer => crypto.createHash('sha256').update(buffer).digest('hex')
 const json = async file => JSON.parse(await fs.readFile(file, 'utf8'))
 const json5 = async file => JSON5.parse(await fs.readFile(file, 'utf8'))
@@ -168,7 +168,7 @@ async function prepare() {
   await saveJson(path.join(project, 'web_engine/oh-package.json5'), enginePackage)
   for (const location of ['AppScope/resources/base/element/string.json', 'electron/src/main/resources/base/element/string.json', 'electron/src/main/resources/zh_CN/element/string.json', 'electron/src/main/resources/en_US/element/string.json']) {
     const data = await json(path.join(project, location))
-    for (const text of data.string) if (['app_name', 'EntryAbility_label', 'StatusBarEntryAbility_label'].includes(text.name)) text.value = 'KAMUCL'
+    for (const text of data.string) if (['app_name', 'EntryAbility_label', 'StatusBarEntryAbility_label'].includes(text.name)) text.value = 'FAIONYX'
     await saveJson(path.join(project, location), data)
   }
   for (const location of ['AppScope/resources/base/media/app_icon.png', 'AppScope/resources/base/media/startIcon.png', 'electron/src/main/resources/base/media/app_icon.png', 'electron/src/main/resources/base/media/startIcon.png']) {

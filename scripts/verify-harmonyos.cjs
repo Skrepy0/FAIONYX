@@ -31,7 +31,7 @@ async function verify() {
   const engine = await readJson(path.join(project, 'web_engine/src/main/module.json5'))
   const stagedPackage = await readJson(path.join(appDir, 'package.json'))
   assert(profile.app.signingConfigs.length === 0 && !profile.app.products.some(product => product.signingConfig), 'Upstream signing configuration leaked into project')
-  assert(nativeApp.app.bundleName === 'com.kamucl.launcher' && nativeApp.app.versionName === pkg.version, 'Wrong native app identity')
+  assert(nativeApp.app.bundleName === 'com.faionyx.launcher' && nativeApp.app.versionName === pkg.version, 'Wrong native app identity')
   assert(!nativeApp.app.multiAppMode, 'Upstream multiple application instances are still enabled')
   assert(entry.module.deviceTypes.join(',') === '2in1' && engine.module.deviceTypes.join(',') === '2in1', 'Target must be the native HarmonyOS PC')
   assert(entry.module.abilities.find(ability => ability.name === 'EntryAbility').launchType === 'specified', 'Native focus/multiwindow route changed')

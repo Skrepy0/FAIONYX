@@ -60,7 +60,7 @@ test('caption hook preserves native dragging and closes all three dropdowns', ()
   const main = read('src/main/index.ts'), app = read('src/renderer/src/App.vue')
   assert.match(main, /hookWindowMessage\(0x00A1/)
   assert.match(main, /wParam.readUInt32LE\(0\) === 2/)
-  assert.match(app, /window.kamucl.on\('window:caption-pointerdown', closeTopDropdowns\)/)
+  assert.match(app, /window.faionyx.on\('window:caption-pointerdown', closeTopDropdowns\)/)
   assert.match(app, /function closeTopDropdowns\(\) \{\s+noticeOpen.value = false\s+dlOpen.value = false\s+notesOpen.value = false/)
 })
 

@@ -1,9 +1,9 @@
 {
-  "name": "kamucl",
-  "productName": "KAMUCL",
+  "name": "faionyx",
+  "productName": "FAIONYX",
   "version": "1.1.19",
-  "description": "KAMUCL - 简约美观的一键式 Minecraft 启动器",
-  "homepage": "https://github.com/kamubaba-i/KAMUCL",
+  "description": "FAIONYX - FLY の Minecraft 启动器",
+  "homepage": "https://github.com/Skrepy0/FAIONYX",
   "main": "out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
@@ -21,8 +21,8 @@
     "license:check": "node scripts/check-licenses.cjs"
   },
   "build": {
-    "appId": "com.kamucl.launcher",
-    "productName": "KAMUCL",
+    "appId": "com.faionyx.launcher",
+    "productName": "FAIONYX",
     "directories": {
       "output": "release"
     },
@@ -48,8 +48,8 @@
       "out/main/GameWindowFocus.exe",
       "out/main/MacGameWindow",
       "out/main/LinuxGameWindow",
-      "out/main/kamucl-bridge.jar",
-      "out/main/kamucl-offline-skin.jar"
+      "out/main/faionyx-bridge.jar",
+      "out/main/faionyx-offline-skin.jar"
     ],
     "beforePack": "scripts/portable-build-hook.cjs",
     "afterPack": "scripts/verify-windows-runtime.cjs",
@@ -74,12 +74,12 @@
         "portable",
         "zip"
       ],
-      "artifactName": "KAMUCL-${version}-windows-${arch}.${ext}",
+      "artifactName": "FAIONYX-${version}-windows-${arch}.${ext}",
       "icon": "build/icon.png"
     },
     "portable": {
       "unpackDirName": false,
-      "artifactName": "KAMUCL-${version}.exe"
+      "artifactName": "FAIONYX-${version}.exe"
     },
     "appImage": {
       "executableArgs": []
@@ -92,25 +92,25 @@
       "category": "public.app-category.games",
       "icon": "build/icon-512.png",
       "identity": null,
-      "artifactName": "KAMUCL-${version}-mac-${arch}.${ext}"
+      "artifactName": "FAIONYX-${version}-mac-${arch}.${ext}"
     },
     "linux": {
-      "maintainer": "kamubaba-i <325699197+kamubaba-i@users.noreply.github.com>",
+      "maintainer": "Skrepy-i <155234406+Skrepy0@users.noreply.github.com>",
       "target": [
         "AppImage",
         "deb",
         "tar.gz"
       ],
       "category": "Game",
-      "executableName": "kamucl",
+      "executableName": "faionyx",
       "icon": "build/icon-512.png",
-      "artifactName": "KAMUCL-${version}-linux-${arch}.${ext}",
+      "artifactName": "FAIONYX-${version}-linux-${arch}.${ext}",
       "desktop": {
         "entry": {
-          "Name": "KAMUCL",
+          "Name": "FAIONYX",
           "Comment": "Minecraft launcher",
           "Categories": "Game;",
-          "StartupWMClass": "KAMUCL"
+          "StartupWMClass": "FAIONYX"
         }
       },
       "synopsis": "Minecraft launcher"

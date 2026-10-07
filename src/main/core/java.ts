@@ -323,7 +323,7 @@ function quickCandidates(runWhere = true): JavaCandidate[] {
     for (const sub of fs.readdirSync(runtimesDir())) {
       const home = path.join(runtimesDir(), sub)
       // Windows 结构 bin/java.exe；macOS 结构 Contents/Home/bin/java
-      addCandidate(candidates, home, 'KAMUCL Runtime')
+      addCandidate(candidates, home, 'FAIONYX Runtime')
     }
   } catch {
     /* 目录不存在 */
@@ -366,7 +366,7 @@ function writePersistentCache(list: JavaInfo[]): void {
     const payload: JavaScanCacheFile = { version: 1, scannedAt: Date.now(), list }
     fs.writeFileSync(file, JSON.stringify(payload, null, 2), 'utf-8')
   } catch (error) {
-    console.warn('[KAMUCL] Java 扫描缓存写入失败:', error)
+    console.warn('[FAIONYX] Java 扫描缓存写入失败:', error)
   }
 }
 
@@ -469,7 +469,7 @@ export function listJavaSummary(): Promise<JavaInfo[]> {
     await Promise.all(Array.from({ length: Math.min(4, pending.length) }, worker))
     const hidden = new Set((settings.javaHidden ?? []).map(pathKey))
     const list = sortJava(found.filter(j => !hidden.has(pathKey(j.path))))
-    console.info(`[KAMUCL] Java summary: ${list.length} runtimes, ${Date.now() - started} ms (persistent probe cache enabled)`)
+    console.info(`[FAIONYX] Java summary: ${list.length} runtimes, ${Date.now() - started} ms (persistent probe cache enabled)`)
     javaLog.info(`Java 概览扫描完成：${list.length} 个运行时（耗时 ${Date.now() - started}ms）`)
     return list
   })().finally(() => { summaryPending = undefined })
@@ -629,7 +629,7 @@ async function windowsScanRoots(drives: string[], signal?: AbortSignal): Promise
     [path.join(userHome, '.gradle', 'jdks'), 'Gradle JDK', 5],
     [path.join(userHome, '.lunarclient'), 'Lunar Client Runtime', 7],
     [path.join(userHome, '.badlion'), 'Badlion Runtime', 7],
-    [runtimesDir(), 'KAMUCL Runtime', 7]
+    [runtimesDir(), 'FAIONYX Runtime', 7]
   ]
   for (const [directory, label, maxDepth] of userRoots) {
     addScanRoot(roots, { directory, label, maxDepth, maxDirectories: 16000 })
@@ -731,7 +731,7 @@ function scanProgress(emit: ProgressEmit | undefined, progress: number, text: st
 }
 
 /**
- * 后台完整扫描：注册表、环境变量、KAMUCL/其他启动器 Runtime，以及全部固定磁盘
+ * 后台完整扫描：注册表、环境变量、FAIONYX/其他启动器 Runtime，以及全部固定磁盘
  * 的常见 Java 目录。每个结果都通过实际启动目标 Java 验证。
  */
 export async function scanJavaInstallations(options: JavaScanOptions = {}): Promise<JavaInfo[]> {
@@ -1019,7 +1019,7 @@ async function downloadAndExtractJava(need: number, emit: ProgressEmit, architec
       const relativeExe = path.relative(source, exe)
       fs.renameSync(source, target)
       const installedPath = path.join(target, relativeExe)
-      const info = probeCache.put(installedPath, { ...verified, path: installedPath, source: 'auto', sourceDetail: `KAMUCL Runtime · ${pkg.provider}` })
+      const info = probeCache.put(installedPath, { ...verified, path: installedPath, source: 'auto', sourceDetail: `FAIONYX Runtime · ${pkg.provider}` })
       const persisted = readPersistentCache()
       scanCache = { time: Date.now(), list: sortJava([...(scanCache?.list ?? persisted?.list ?? []), info]), complete: scanCache?.complete ?? !!persisted }
       if (persisted) writePersistentCache(sortJava([...persisted.list, info]))

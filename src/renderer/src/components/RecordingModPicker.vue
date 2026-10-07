@@ -16,7 +16,7 @@ watch(() => [props.mc, props.loader, kind.value, retry.value], async (_v, _p, cl
   if (!kind.value || !props.loader) return
   busy.value = true
   try {
-    const list = await window.kamucl.invoke('recordings:modVersions', kind.value, props.mc, props.loader) as CommunityFile[]
+    const list = await window.faionyx.invoke('recordings:modVersions', kind.value, props.mc, props.loader) as CommunityFile[]
     if (stale) return
     choices.value = list; file.value = list.find(f => f.releaseType === 'release')?.fileId || list[0]?.fileId || ''
     emit('update:modelValue', { kind: kind.value as RecordingKind, fileId: file.value })

@@ -1,7 +1,7 @@
 // Exact built product in a disposable profile. Service fixtures are labeled below.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict')
 module.exports=async({call,evaluate,main,nav,wait,screenshot,recordScreencast,version,profile,ws,ownedTrack})=>{
- const proof={version,theme:process.env.KAMUCL_TEST_THEME,service:'Favorite artwork metadata fixtures; UI, settings storage, image rendering and WebGL are the actual product',checks:[],samples:[]}
+ const proof={version,theme:process.env.FAIONYX_TEST_THEME,service:'Favorite artwork metadata fixtures; UI, settings storage, image rendering and WebGL are the actual product',checks:[],samples:[]}
  const save=()=>fs.writeFileSync(`out/appearance-motion-${proof.theme}-110.json`,JSON.stringify(proof,null,2))
  let nativeLayoutScene=null
  const ready=async(expr,label)=>{let result;for(let i=0;i<100;i++){result=await evaluate(expr);if(result)return result;await wait(100)}throw Error(label+' timed out')}
@@ -43,10 +43,10 @@ module.exports=async({call,evaluate,main,nav,wait,screenshot,recordScreencast,ve
   await call('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});await nav('home')
   await ready("document.querySelector('.viewer3d')?.dataset.animationState==='walk'",'resumed walk')
   await call('Emulation.setFocusEmulationEnabled',{enabled:false})
-  await main('testElectron.BrowserWindow.getAllWindows()[0].minimize()');await ready("window.kamucl.invoke('window:visibility').then(visible=>!visible)",'native minimize visibility')
+  await main('testElectron.BrowserWindow.getAllWindows()[0].minimize()');await ready("window.faionyx.invoke('window:visibility').then(visible=>!visible)",'native minimize visibility')
   const hidden=await pose();await wait(450);assert.equal((await pose()).seconds,hidden.seconds)
   await main('testElectron.BrowserWindow.getAllWindows()[0].restore();testElectron.BrowserWindow.getAllWindows()[0].focus()')
-  await ready("window.kamucl.invoke('window:visibility')",'native restore');const restoreA=await pose();await wait(400);assert((await pose()).seconds>restoreA.seconds)
+  await ready("window.faionyx.invoke('window:visibility')",'native restore');const restoreA=await pose();await wait(400);assert((await pose()).seconds>restoreA.seconds)
   proof.checks.push('OS reduced mode neutral stance, correct settings explanation, no hidden animation, restore resumes')
   proof.walkCapture={classification:'actual naturally walking model, visibly in the viewport; no extra animation or interpolated frames',nativeWindow:await main("(()=>{const w=testElectron.BrowserWindow.getAllWindows()[0];if(process.platform==='darwin')testElectron.app.focus({steal:true});w.show();w.focus();return{platform:process.platform,visible:w.isVisible(),focused:w.isFocused(),minimized:w.isMinimized(),appHideCapability:typeof testElectron.app.isHidden==='function',appHidden:typeof testElectron.app.isHidden==='function'?testElectron.app.isHidden():null}})()")};save()
   proof.walkCapture.focusSamples=[]
@@ -57,7 +57,7 @@ module.exports=async({call,evaluate,main,nav,wait,screenshot,recordScreencast,ve
     await wait(100)
   }
   assert(proof.walkCapture.nativeWindow.visible&&proof.walkCapture.nativeWindow.focused&&!proof.walkCapture.nativeWindow.minimized&&!proof.walkCapture.nativeWindow.appHidden,'walking capture requires observed native focus, not merely a request to focus')
-  await ready("!document.hidden&&window.kamucl.invoke('window:visibility')",'walking capture actual native visibility')
+  await ready("!document.hidden&&window.faionyx.invoke('window:visibility')",'walking capture actual native visibility')
   await evaluate("document.querySelector('.viewer3d').scrollIntoView({block:'center',inline:'nearest',behavior:'instant'})");await wait(280)
   proof.walkCapture.bounds=await evaluate("(()=>{const e=document.querySelector('.viewer3d canvas'),r=e.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2),gl=e.getContext('webgl2')||e.getContext('webgl');return{x:r.x,y:r.y,width:r.width,height:r.height,viewportWidth:innerWidth,viewportHeight:innerHeight,hitVisible:hit===e,contextWebGL:gl?{type:gl.constructor.name,lost:gl.isContextLost()}:null}})()");save()
   const bounds=proof.walkCapture.bounds
@@ -107,15 +107,15 @@ module.exports=async({call,evaluate,main,nav,wait,screenshot,recordScreencast,ve
   const wallpaper=path.join(nativeUserData,'appearance','backgrounds','qa-wallpaper.png')
   fs.mkdirSync(path.dirname(wallpaper),{recursive:true})
   await require('sharp')(Buffer.from('<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg"><rect width="800" height="600" fill="#c43a9a"/><circle cx="400" cy="300" r="240" fill="#2d8bb0"/></svg>')).png().toFile(wallpaper)
-  const patch=image=>`window.kamucl.invoke('settings:set',{background:{mode:'image',image:${JSON.stringify(image)},opacity:.7,blur:12,fit:'crop'}}).then(s=>s.background)`
+  const patch=image=>`window.faionyx.invoke('settings:set',{background:{mode:'image',image:${JSON.stringify(image)},opacity:.7,blur:12,fit:'crop'}}).then(s=>s.background)`
   const alias=path.join(profile,'appearance','backgrounds','qa-wallpaper.png')
   if(alias!==wallpaper){
     const aliasStat=fs.statSync(alias),actualStat=fs.statSync(wallpaper)
     assert.equal(aliasStat.dev,actualStat.dev);assert.equal(aliasStat.ino,actualStat.ino)
-    proof.background.aliasObservation={classification:'diagnostic of the original fixture alias; not a product success assertion',path:alias,canonical:fs.realpathSync(alias),set:await evaluate(patch(alias)),get:await evaluate("window.kamucl.invoke('settings:get').then(s=>s.background)")};save()
+    proof.background.aliasObservation={classification:'diagnostic of the original fixture alias; not a product success assertion',path:alias,canonical:fs.realpathSync(alias),set:await evaluate(patch(alias)),get:await evaluate("window.faionyx.invoke('settings:get').then(s=>s.background)")};save()
   }
   proof.background.set=await evaluate(patch(wallpaper))
-  proof.background.get=await evaluate("window.kamucl.invoke('settings:get').then(s=>s.background)");save()
+  proof.background.get=await evaluate("window.faionyx.invoke('settings:get').then(s=>s.background)");save()
   assert.equal(proof.background.get.mode,'image');assert.equal(fs.realpathSync(proof.background.get.image),fs.realpathSync(wallpaper))
   const previousTimeOrigin=await evaluate('performance.timeOrigin'),reloadStarted=performance.now()
   await call('Page.reload')
@@ -139,15 +139,15 @@ module.exports=async({call,evaluate,main,nav,wait,screenshot,recordScreencast,ve
   await screenshot('110-wallpaper-glass-home')
   await nav('settings');await evaluate("document.querySelector('[data-section=thumbnail]').open=true")
   await coordinateClick('[aria-label="随机播放启动卡图片"]')
-  const thumbnail=await evaluate("window.kamucl.invoke('settings:get').then(s=>s.launchThumbnail)");assert.equal(thumbnail.randomPlayback,true)
+  const thumbnail=await evaluate("window.faionyx.invoke('settings:get').then(s=>s.launchThumbnail)");assert.equal(thumbnail.randomPlayback,true)
   const order=thumbnail.order;assert(order.length>=7)
   await screenshot('110-random-playback-controls');await nav('home')
-  await evaluate("window.kamucl.invoke('settings:set',{launchThumbnail:{intervalSeconds:1}})");await call('Page.reload');await wait(2000)
+  await evaluate("window.faionyx.invoke('settings:set',{launchThumbnail:{intervalSeconds:1}})");await call('Page.reload');await wait(2000)
   const paths=[];for(let i=0;i<9;i++){const src=await evaluate("document.querySelector('.hero-image.active')?.getAttribute('src')");assert(src,'actual active carousel image');paths.push(src);await wait(1050)}
   assert(new Set(paths).size>=3,'enabled random carousel actually changes pictures')
   proof.carouselObserved=paths
-  assert.equal((await evaluate("window.kamucl.invoke('settings:get').then(s=>s.launchThumbnail.randomPlayback)")),true)
-  assert.deepEqual((await evaluate("window.kamucl.invoke('settings:get').then(s=>s.launchThumbnail.order)")),order)
+  assert.equal((await evaluate("window.faionyx.invoke('settings:get').then(s=>s.launchThumbnail.randomPlayback)")),true)
+  assert.deepEqual((await evaluate("window.faionyx.invoke('settings:get').then(s=>s.launchThumbnail.order)")),order)
   proof.checks.push('trusted coordinate random-playback toggle persists across reload without changing saved ordering')
   // Actual favorite storage; old record backfill uses a service fixture. Serve
   // Intercept only the fixture artwork URL: actual Chromium image decode,
@@ -170,9 +170,9 @@ module.exports=async({call,evaluate,main,nav,wait,screenshot,recordScreencast,ve
     await main(`testElectron.BrowserWindow.getAllWindows()[0].setSize(${width},${height});testElectron.BrowserWindow.getAllWindows()[0].webContents.setZoomFactor(${zoom})`)
     await nav('settings');await evaluate("document.querySelector('[data-section=thumbnail]').open=true")
     await coordinateClick('[aria-label="随机播放启动卡图片"]')
-    await ready("window.kamucl.invoke('settings:get').then(s=>s.launchThumbnail.randomPlayback===false)",'coordinate toggle off')
+    await ready("window.faionyx.invoke('settings:get').then(s=>s.launchThumbnail.randomPlayback===false)",'coordinate toggle off')
     for(const type of ['keyDown','keyUp']){const params={type,key:' ',code:'Space',windowsVirtualKeyCode:32};if(nativeLayoutScene)(proof.layoutInputs??=[]).push({atUnixMs:Date.now(),scene:nativeLayoutScene,method:'Input.dispatchKeyEvent',params});await call('Input.dispatchKeyEvent',params)}
-    await ready("window.kamucl.invoke('settings:get').then(s=>s.launchThumbnail.randomPlayback===true)",'keyboard checkbox toggle on')
+    await ready("window.faionyx.invoke('settings:get').then(s=>s.launchThumbnail.randomPlayback===true)",'keyboard checkbox toggle on')
     const layout=await evaluate("(()=>{const e=document.querySelector('[aria-label=\"随机播放启动卡图片\"]'),r=e.getBoundingClientRect();return{width:innerWidth,height:innerHeight,left:r.left,right:r.right,top:r.top,bottom:r.bottom}})()")
     assert(layout.left>=0&&layout.right<=layout.width&&layout.top>=0&&layout.bottom<=layout.height)
     if(process.platform==='darwin'){const native=await main("(()=>{const w=testElectron.BrowserWindow.getAllWindows()[0];return{bounds:w.getBounds(),contentBounds:w.getContentBounds(),zoom:w.webContents.getZoomFactor(),scale:testElectron.screen.getDisplayMatching(w.getBounds()).scaleFactor}})()"),renderer=await evaluate("({innerWidth,innerHeight,devicePixelRatio})");assert.equal(native.zoom,zoom);assert(Math.abs(native.contentBounds.width/native.zoom-renderer.innerWidth)<2&&Math.abs(native.contentBounds.height/native.zoom-renderer.innerHeight)<2,'Native layout and real renderer viewport must agree');proof.layout.push({width,height,zoom,...layout,requested:{width,height,zoom},native,renderer,screenshotName:`110-random-keyboard-${width}-${zoom}.png`})}else proof.layout.push({width,height,zoom,...layout});await screenshot(`110-random-keyboard-${width}-${zoom}`)

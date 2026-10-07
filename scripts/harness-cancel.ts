@@ -7,7 +7,7 @@ import os from 'node:os'
 
 async function main() {
   const task = registerTask('取消链路自测', 'download')
-  const dest = path.join(os.tmpdir(), `kamucl-cancel-test-${Date.now()}.jar`)
+  const dest = path.join(os.tmpdir(), `faionyx-cancel-test-${Date.now()}.jar`)
   const url = 'https://piston-data.mojang.com/v1/objects/2dc72797acbc1b63fc16a11c4ac393605f453754/client.jar'
   let lastPct = 0
   const timer = setTimeout(() => {

@@ -8,4 +8,4 @@ fi
 export APPDIR
 export PATH="${APPDIR}:${PATH}"
 export LD_LIBRARY_PATH="${APPDIR}/usr/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
-exec "${APPDIR}/kamucl" "$@"
+exec "${APPDIR}/faionyx" "$@"

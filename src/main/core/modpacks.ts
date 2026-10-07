@@ -201,7 +201,7 @@ async function openPackZip(filePath: string, signal?: AbortSignal, nested = fals
           await zip.close?.()
           return await openPackZip(filePath, signal, true, bytes)
         }
-        temporary = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-pack-entry-'))
+        temporary = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-pack-entry-'))
         const innerFile = path.join(temporary, 'inner.mrpack')
         await writePackEntry(packs[0], innerFile, signal)
         await zip.close?.()
@@ -836,7 +836,7 @@ interface PackTransactionManifest {
   installedAt: string
 }
 
-const PACK_MANIFEST = '.kamucl-modpack.json'
+const PACK_MANIFEST = '.faionyx-modpack.json'
 const PRESERVE_ROOTS = new Set([
   'saves',
   'mods',
@@ -903,7 +903,7 @@ function requestedGameFolder(input?: string): string {
   if (!input) input = defaultFolderPath()
   const target = canonicalPath(input)
   const registered = state.folders.find((folder) => samePath(folder.path, target))
-  if (!registered) throw new Error('目标游戏文件夹未在 KAMUCL 中登记')
+  if (!registered) throw new Error('目标游戏文件夹未在 FAIONYX 中登记')
   return registered.path
 }
 
@@ -1048,7 +1048,7 @@ async function installModpackInFolder(filePath: string, emit: ProgressEmit, opts
     const currentDir = versionDir(id)
     await backupInstance({folder:targetFolder,id},'整合包覆盖前',true,undefined,opts?.signal)
     oldManaged = readManagedFiles(currentDir)
-    backupDir = path.join(path.dirname(currentDir), `.${path.basename(currentDir)}.kamucl-backup-${crypto.randomUUID()}`)
+    backupDir = path.join(path.dirname(currentDir), `.${path.basename(currentDir)}.faionyx-backup-${crypto.randomUUID()}`)
     fs.renameSync(currentDir, backupDir)
   } else if (action === 'rename') {
     id = requestedName
@@ -1234,7 +1234,7 @@ async function installModpackInFolder(filePath: string, emit: ProgressEmit, opts
         const before = fs.existsSync(optionsFile) ? fs.readFileSync(optionsFile, 'utf-8') : ''
         fs.writeFileSync(optionsFile, mergeKeysIntoOptions(before, getDefaultKeys()), 'utf-8')
       } catch (error) {
-        console.warn('[KAMUCL] 整合包键位替换失败（不影响安装）:', error)
+        console.warn('[FAIONYX] 整合包键位替换失败（不影响安装）:', error)
       }
     }
 

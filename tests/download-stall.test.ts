@@ -9,7 +9,7 @@ import { downloadFile, transferTimeouts, slowSpeedThresholds, resetHostHealthFor
 import { downloadLimiter, DEFAULT_DOWNLOAD_LIMITS } from '../src/main/core/downloadLimits'
 
 test('大文件持续约0.1MB/s时换源续传；最后来源较慢仍能完成', { timeout: 6000 }, async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-slow-source-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-slow-source-'))
   const payload = Buffer.alloc(256 * 1024, 37)
   const previous = { ...slowSpeedThresholds }
   Object.assign(slowSpeedThresholds, { largeFileBytes: 128 * 1024, largeWindowMs: 150 })
@@ -51,7 +51,7 @@ test('大文件持续约0.1MB/s时换源续传；最后来源较慢仍能完成'
 
 for (const stall of ['headers', 'empty-body', 'partial-body', 'trickle-before-warmup'] as const) {
   test(`下载 ${stall} 停滞会退出并续传换源，释放唯一并发名额`, { timeout: 6000 }, async () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-stall-'))
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-stall-'))
     const payload = Buffer.alloc(8192, 42)
     const requests: string[] = []
     const ranges: string[] = []

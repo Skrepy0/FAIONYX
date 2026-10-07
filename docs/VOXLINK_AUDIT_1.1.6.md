@@ -37,7 +37,7 @@ Node 事件/AbortController 替代 Java 执行器、锁与 Future；常量按对
 避免使用已释放的初始 ICE socket 映射。热备请求也报告其待用 socket 的映射，
 候选者回报新映射，房主只转发本次指定候选者的回执；重复通知复用同一探测。
 玩家中继使用当前模板的 relaySocketCount，
-在明确传入 punchAuth 的 KAMUCL 中继链路上按目标加入者 ID 派生同一密钥。
+在明确传入 punchAuth 的 FAIONYX 中继链路上按目标加入者 ID 派生同一密钥。
 这些启动器适配通过回环检查，但尚未验证与所有上游 Java 客户端组合的公网互通。
 
 Launcher 无法调用 Minecraft mod 内的程序化重连接口。

@@ -26,11 +26,11 @@ test('OS exit releases resource guards before log close; save/kill requests do n
 })
 
 async function harness() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'KAMUCL bridge upgrade 中文 ')), dir = path.join(root, 'mods')
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX bridge upgrade 中文 ')), dir = path.join(root, 'mods')
   fs.mkdirSync(dir)
-  const old = fs.readFileSync('tests/fixtures/kamucl-bridge-1.0.0.jar'), file = path.join(dir, '自定义名称.jar'), bundled = path.join(root, 'bundled.jar')
+  const old = fs.readFileSync('tests/fixtures/faionyx-bridge-1.0.0.jar'), file = path.join(dir, '自定义名称.jar'), bundled = path.join(root, 'bundled.jar')
   fs.writeFileSync(file, old)
-  const zip = new AdmZip(); zip.addFile('fabric.mod.json', Buffer.from(JSON.stringify({ id: 'kamucl-bridge', version: '1.0.1' }))); zip.writeZip(bundled)
+  const zip = new AdmZip(); zip.addFile('fabric.mod.json', Buffer.from(JSON.stringify({ id: 'faionyx-bridge', version: '1.0.1' }))); zip.writeZip(bundled)
   const state: any = { running: false, locked: false, backups: [], protect: async (_dir: string, names: string[]) => { state.backups.push(names.map(name => fs.readFileSync(path.join(dir, name)))) } }
   const mocks: Record<string, string> = {
     changeProtection: 'export const protectModChange=(...a)=>h.protect(...a)',

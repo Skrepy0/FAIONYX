@@ -26,14 +26,14 @@ test('resolveJavaExecutable double-decodes GBK java.home for JRE in CJK game dir
   assert.match(source, /encoding: 'buffer'/)
   assert.match(source, /new TextDecoder\('gbk'\)/)
   // 真实冒烟：本机有 Java 时解析出真实可执行文件
-  const probe = process.env.KAMUCL_TEST_JAVA ?? 'C:\\Program Files\\Java\\jdk-25.0.2\\bin\\java.exe'
+  const probe = process.env.FAIONYX_TEST_JAVA ?? 'C:\\Program Files\\Java\\jdk-25.0.2\\bin\\java.exe'
   if (!fs.existsSync(probe)) return
   const resolved = await java.resolveJavaExecutable(probe)
   assert(/\\bin\\java\.exe$/i.test(resolved), resolved)
   assert(fs.existsSync(resolved))
   // 真实中文路径复现（用户报告）：中文目录 junction 下的 JDK 17 必须解析成功
-  // 路径基于本机 LOCALAPPDATA 拼接，不硬编码用户名；可用 KAMUCL_TEST_CJK_JAVA 覆盖
-  const cjk = process.env.KAMUCL_TEST_CJK_JAVA
+  // 路径基于本机 LOCALAPPDATA 拼接，不硬编码用户名；可用 FAIONYX_TEST_CJK_JAVA 覆盖
+  const cjk = process.env.FAIONYX_TEST_CJK_JAVA
     ?? (process.env.LOCALAPPDATA ? process.env.LOCALAPPDATA + '\\Temp\\opencode\\中文路径\\jdk17\\bin\\java.exe' : '')
   if (fs.existsSync(cjk)) {
     const cjkResolved = await java.resolveJavaExecutable(cjk)

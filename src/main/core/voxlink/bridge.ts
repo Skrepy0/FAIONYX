@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// KAMUCL stream adapter: backpressure and lifecycle are owned by Node sockets.
+// FAIONYX stream adapter: backpressure and lifecycle are owned by Node sockets.
 import net from 'node:net'
 import { RudpConn } from './rudp'
 export const BRIDGE_BUF_SIZE = 32768, BRIDGE_IDLE_TIMEOUT_MS = 30000, BRIDGE_DIAL_WINDOW_MS = 10000, BRIDGE_DIAL_RETRY_MS = 1000, BRIDGE_DIAL_TIMEOUT_MS = 2000

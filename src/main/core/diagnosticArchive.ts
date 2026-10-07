@@ -36,7 +36,7 @@ async function readTextTail(file: string): Promise<{
     if (includedBytes > 0) await handle.read(buffer, 0, includedBytes, stat.size - includedBytes)
     const truncated = stat.size > includedBytes
     return {
-      text: `${truncated ? `[KAMUCL] 日志过大，仅包含末尾 ${includedBytes} 字节。\n` : ''}${buffer.toString('utf-8')}`,
+      text: `${truncated ? `[FAIONYX] 日志过大，仅包含末尾 ${includedBytes} 字节。\n` : ''}${buffer.toString('utf-8')}`,
       originalBytes: stat.size,
       includedBytes,
       modifiedAt: stat.mtime.toISOString(),
@@ -78,7 +78,7 @@ async function addSanitizedLog(
     }
     if (spec.missingPlaceholder) {
       zip.addBuffer(
-        Buffer.from(`[KAMUCL] 此项${entry.status === 'missing' ? '不存在' : '无法读取'}；请查看 manifest.json。\n`),
+        Buffer.from(`[FAIONYX] 此项${entry.status === 'missing' ? '不存在' : '无法读取'}；请查看 manifest.json。\n`),
         spec.archivePath
       )
     }

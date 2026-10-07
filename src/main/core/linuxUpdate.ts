@@ -61,10 +61,10 @@ export function readLinuxUpdate(file = marker()): (UpdateTransaction & { install
 export const clearLinuxUpdate = () => fs.rmSync(marker(), { force: true })
 export const blockedLinuxVersion = () => (readLinuxUpdate(claim()) ?? readLinuxUpdate(claim() + '.failed'))?.release.version
 async function verifyDirectory(dir: string, version: string): Promise<void> {
-  assertLinuxManifest(await fs.promises.readFile(path.join(dir, 'resources/kamucl-linux.json'), 'utf8'), version, 'portable-directory')
-  const fd = await fs.promises.open(path.join(dir, 'kamucl'), 'r')
+  assertLinuxManifest(await fs.promises.readFile(path.join(dir, 'resources/faionyx-linux.json'), 'utf8'), version, 'portable-directory')
+  const fd = await fs.promises.open(path.join(dir, 'faionyx'), 'r')
   try { const bytes = Buffer.alloc(64); await fd.read(bytes, 0, 64, 0); assertLinuxElf(bytes) } finally { await fd.close() }
-  await fs.promises.access(path.join(dir, 'kamucl'), fs.constants.X_OK)
+  await fs.promises.access(path.join(dir, 'faionyx'), fs.constants.X_OK)
   if (!(await physicalFs.promises.stat(path.join(dir, 'resources/app.asar'))).isFile()) throw Error('Linux 更新包缺少应用归档')
 }
 export async function verifyLinuxAppImage(file: string, version: string): Promise<void> {
@@ -80,7 +80,7 @@ export async function verifyLinuxAppImage(file: string, version: string): Promis
       for (let i = block.indexOf('hsqs'); i >= 0 && i <= length - 4; i = block.indexOf('hsqs', i + 1)) {
         if (++candidates > 64) throw Error('AppImage 文件系统候选数量异常')
         try {
-          const raw = (await run('/usr/bin/unsquashfs', ['-o', String(offset - carry + i), '-cat', file, 'resources/kamucl-linux.json'], { timeout: 10000, maxBuffer: 8192 })).stdout
+          const raw = (await run('/usr/bin/unsquashfs', ['-o', String(offset - carry + i), '-cat', file, 'resources/faionyx-linux.json'], { timeout: 10000, maxBuffer: 8192 })).stdout
           assertLinuxManifest(raw, version, 'appimage'); return
         } catch { /* binary text may also contain the magic */ }
       }
@@ -92,7 +92,7 @@ export async function verifyLinuxAppImage(file: string, version: string): Promis
 export async function verifyLinuxDeb(file: string, version: string): Promise<void> {
   const { stdout } = await run('/usr/bin/dpkg-deb', ['-f', file, 'Package', 'Version', 'Architecture'], { timeout: 15000 })
   const values = Object.fromEntries(stdout.trim().split('\n').map(line => line.split(/:\s*/, 2)))
-  if (values.Package !== 'kamucl' || values.Version !== version || values.Architecture !== (process.arch === 'arm64' ? 'arm64' : 'amd64')) throw Error('DEB 包名称、版本或架构不匹配')
+  if (values.Package !== 'faionyx' || values.Version !== version || values.Architecture !== (process.arch === 'arm64' ? 'arm64' : 'amd64')) throw Error('DEB 包名称、版本或架构不匹配')
 }
 export async function validateLinuxPendingUpdate(t: UpdateTransaction): Promise<void> {
   await validateUpdatePayload(t)
@@ -115,10 +115,10 @@ async function hash(file: string): Promise<string> {
   return value
 }
 export function linuxUpdaterScript(t: UpdateTransaction, staged: string, oldHash: string, newHash: string, pid: number, stateDir: string, kind: InstallationKind): string {
-  const backup = path.join(path.dirname(t.target), '.KAMUCL-backup-' + t.id + (kind === 'appimage' ? '.AppImage' : ''))
+  const backup = path.join(path.dirname(t.target), '.FAIONYX-backup-' + t.id + (kind === 'appimage' ? '.AppImage' : ''))
   const applying = path.join(stateDir, 'linux-update.json.applying')
   const state = JSON.stringify({ from: t.from, to: t.release.version, time: new Date().toISOString(), backupPath: backup, backupVersion: t.from, result: 'applied' })
-  const executable = kind === 'appimage' ? t.target : path.join(t.target, 'kamucl')
+  const executable = kind === 'appimage' ? t.target : path.join(t.target, 'faionyx')
   return [
     '#!/bin/sh', 'set -eu', 'exec >>' + q(path.join(stateDir, 'linux-updater.log')) + ' 2>&1',
     "fail() { printf '%s' 'Linux 更新未完成，原程序和备份已保留。' >" + q(path.join(stateDir, 'update-failed.flag')) + '; mv -f ' + q(applying) + ' ' + q(applying + '.failed') + ' 2>/dev/null || true; }',
@@ -183,8 +183,8 @@ export async function applyLinuxUpdateOnStartup(): Promise<boolean> {
       atomicUpdateJson(path.join(data(), 'linux-installer-handoff.json'), { package: t.file, version: t.release.version, time: new Date().toISOString(), status: 'awaiting-system-confirmation' })
       clearLinuxUpdate(); return false
     }
-    const stageRoot = fs.mkdtempSync(path.join(path.dirname(t.target), '.KAMUCL-update-'))
-    const staged = path.join(stageRoot, kind === 'appimage' ? path.basename(t.target) : 'KAMUCL')
+    const stageRoot = fs.mkdtempSync(path.join(path.dirname(t.target), '.FAIONYX-update-'))
+    const staged = path.join(stageRoot, kind === 'appimage' ? path.basename(t.target) : 'FAIONYX')
     if (kind === 'appimage') { await fs.promises.copyFile(t.file, staged); await fs.promises.chmod(staged, 0o755) }
     else { await run('/usr/bin/tar', ['--extract', '--gzip', '--file', t.file, '--directory', stageRoot, '--no-same-owner', '--no-same-permissions'], { timeout: 120000 }); await verifyDirectory(staged, t.release.version) }
     const oldHash = await hash(hashTarget(t.target, kind)), installedHash = await hash(hashTarget(staged, kind))
@@ -216,8 +216,8 @@ export async function stageLinuxBackup(backup: string, version: string): Promise
   if (kind === 'appimage') { await verifyLinuxAppImage(backup, version); await fs.promises.copyFile(backup, file) }
   else {
     await verifyDirectory(backup, version)
-    const copy = path.join(dir, 'KAMUCL'); await physicalFs.promises.cp(backup, copy, { recursive: true, dereference: true })
-    await run('/usr/bin/tar', ['--format=ustar', '--dereference', '-czf', file, '-C', dir, 'KAMUCL'], { timeout: 120000 })
+    const copy = path.join(dir, 'FAIONYX'); await physicalFs.promises.cp(backup, copy, { recursive: true, dereference: true })
+    await run('/usr/bin/tar', ['--format=ustar', '--dereference', '-czf', file, '-C', dir, 'FAIONYX'], { timeout: 120000 })
   }
   await stageLinuxUpdate({ version, assetName, assetSize: fs.statSync(file).size, assetUrl: '', body: '', publishedAt: '' }, file, await hash(file), 'rollback')
 }

@@ -25,8 +25,8 @@ async function command(file, args, directory, env, logfile) {
 }
 
 async function tools() {
-  const directory = process.env.KAMUCL_HARMONY_COMMAND_LINE_TOOLS
-  if (!directory) return { available: false, reason: 'KAMUCL_HARMONY_COMMAND_LINE_TOOLS is unset; no authorized DevEco/Command Line Tools installation was found.' }
+  const directory = process.env.FAIONYX_HARMONY_COMMAND_LINE_TOOLS
+  if (!directory) return { available: false, reason: 'FAIONYX_HARMONY_COMMAND_LINE_TOOLS is unset; no authorized DevEco/Command Line Tools installation was found.' }
   const resolved = path.resolve(directory)
   const suffix = process.platform === 'win32' ? '.bat' : ''
   const hvigor = path.join(resolved, 'bin', 'hvigorw' + suffix)
@@ -40,7 +40,7 @@ async function tools() {
 async function main() {
   await fs.mkdir(output, { recursive: true })
   const toolset = await tools()
-  const prepared = await exists(path.join(output, 'engineering-evidence.json')) && await exists(path.join(project, '.kamucl-generated-harmony-project'))
+  const prepared = await exists(path.join(output, 'engineering-evidence.json')) && await exists(path.join(project, '.faionyx-generated-harmony-project'))
   const evidence = {
     schemaVersion: 1, createdAt: new Date().toISOString(), version: JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8')).version,
     prepared, sdkAvailable: toolset.available, sdkReason: toolset.reason || null,

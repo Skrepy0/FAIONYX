@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-// Original authors: AUGUHDAR / VoxLink contributors. TypeScript modifications: KAMUCL contributors.
+// Original authors: AUGUHDAR / VoxLink contributors. TypeScript modifications: FAIONYX contributors.
 // See THIRD_PARTY_NOTICES.md and licenses/LGPL-3.0.txt; root MIT does not apply to this adaptation.
 /** VoxLink's TURN relay wire protocol v1 (not RFC TURN).
  * Ported from TurnRelayClient.java, upstream 6b11d93 / 1.1.5, LGPL-3.0.

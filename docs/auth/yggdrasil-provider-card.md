@@ -1,6 +1,6 @@
-# KAMUCL 外置 Yggdrasil 提供商卡片
+# FAIONYX 外置 Yggdrasil 提供商卡片
 
-KAMUCL 支持把提供商配置拖入启动器任意页面，或在“账号 → 外置 Yggdrasil 登录”中粘贴。导入后只会先联网识别并展示结果；用户点击“确认保存”前不会写入配置。
+FAIONYX 支持把提供商配置拖入启动器任意页面，或在“账号 → 外置 Yggdrasil 登录”中粘贴。导入后只会先联网识别并展示结果；用户点击“确认保存”前不会写入配置。
 
 ## 标准 JSON 格式
 
@@ -25,7 +25,7 @@ KAMUCL 支持把提供商配置拖入启动器任意页面，或在“账号 →
 - authlib-injector 标准拖拽 URI：`authlib-injector:yggdrasil-server:{URL 编码后的 API Root}`。
 - 浏览器提供的 `text/plain` 或 `text/uri-list` URL。
 
-KAMUCL 会跟随正常 HTTP 重定向，并处理 `X-Authlib-Injector-API-Location`（ALI）标头，再读取 API 元数据中的 `meta.serverName` 与 `skinDomains`。
+FAIONYX 会跟随正常 HTTP 重定向，并处理 `X-Authlib-Injector-API-Location`（ALI）标头，再读取 API 元数据中的 `meta.serverName` 与 `skinDomains`。
 
 ## 安全行为
 

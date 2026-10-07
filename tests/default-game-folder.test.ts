@@ -6,9 +6,9 @@ import test from 'node:test'
 import { ensureDefaultGameFolder } from '../src/main/core/defaultGameFolder'
 
 test('首次运行创建内置目录，可重复调用且保留现有文件', () => {
-  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-first-run-'))
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-first-run-'))
   try {
-    const root = path.join(temp, '.kamucl')
+    const root = path.join(temp, '.faionyx')
     ensureDefaultGameFolder(temp, [{ path: root }])
     assert(fs.statSync(root).isDirectory())
     fs.writeFileSync(path.join(root, 'keep.txt'), 'saved')
@@ -18,11 +18,11 @@ test('首次运行创建内置目录，可重复调用且保留现有文件', ()
 })
 
 test('不创建或替换用户缺失的外置目录，真实错误保持可见', () => {
-  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-external-'))
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-external-'))
   try {
     const external = path.join(temp, 'missing-disk')
     ensureDefaultGameFolder(temp, [{ path: external }])
     assert.equal(fs.existsSync(external), false)
-    assert.equal(fs.existsSync(path.join(temp, '.kamucl')), false)
+    assert.equal(fs.existsSync(path.join(temp, '.faionyx')), false)
   } finally { fs.rmSync(temp, { recursive: true, force: true }) }
 })

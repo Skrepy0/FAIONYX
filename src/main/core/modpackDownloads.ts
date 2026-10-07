@@ -9,7 +9,7 @@ import { throwIfCancelled, waitIfTaskPaused } from './tasks'
 /** Keep verified immutable downloads outside the instance transaction, so rollback/reimport can reuse them. */
 export async function prepareModpackFiles(
   tasks: DownloadTask[], progress: AllProgressFn, mirror: MirrorPref, signal?: AbortSignal,
-  cacheRoot = path.join(defaultFolderPath(), '.kamucl', 'modpack-cache')
+  cacheRoot = path.join(defaultFolderPath(), '.faionyx', 'modpack-cache')
 ): Promise<{ install: (signal?: AbortSignal) => Promise<void>; dispose: () => Promise<void> }> {
   let temporary = ''
   await fs.promises.mkdir(cacheRoot, { recursive: true })
@@ -43,7 +43,7 @@ function validHash(task: DownloadTask): string {
     : task.sha1 && /^[a-f\d]{40}$/i.test(task.sha1) ? 'sha1:' + task.sha1.toLowerCase() : ''
 }
 
-export function modpackCachedFile(file: { sha1: string; fileName: string }, cacheRoot = path.join(defaultFolderPath(), '.kamucl', 'modpack-cache')): string {
+export function modpackCachedFile(file: { sha1: string; fileName: string }, cacheRoot = path.join(defaultFolderPath(), '.faionyx', 'modpack-cache')): string {
   const hash = validHash({ sha1: file.sha1, url: '', dest: '' })
   if (!hash) throw new Error('整合包文件 SHA1 无效')
   const ext = path.extname(file.fileName).toLowerCase()

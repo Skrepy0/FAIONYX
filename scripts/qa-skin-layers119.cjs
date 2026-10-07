@@ -4,7 +4,7 @@ const native=require('./qa-native-window115.cjs')
 const sharp=require('sharp')
 const installDiagnostic=require('./verify-skin-editor-ui.cjs').installSkinFixtureDiagnostic
 module.exports=async h=>{
-  const legacy=process.env.KAMUCL_LAYER_EXPECT_LEGACY==='1',theme=process.env.KAMUCL_TEST_THEME||'black-orange'
+  const legacy=process.env.FAIONYX_LAYER_EXPECT_LEGACY==='1',theme=process.env.FAIONYX_TEST_THEME||'black-orange'
   const directory=path.resolve('out','qa-skin-layers119-'+(legacy?'baseline-':'')+theme+'-'+crypto.randomUUID());fs.mkdirSync(directory,{recursive:true})
   const proof={version:h.version,theme,legacy,complete:false,directory,steps:[],screenshots:[],classification:'Owned actual Electron window, trusted coordinates and keyboard; read-only mounted Vue/canvas observation. Synthetic account/profile only; no game or server request.'}
   const save=()=>fs.writeFileSync(directory+'/proof.json',JSON.stringify(proof,null,2))
@@ -40,7 +40,7 @@ module.exports=async h=>{
   }
   try{
     await h.call('Emulation.setFocusEmulationEnabled',{enabled:false});await h.main(`(${native.focusOwned})(${JSON.stringify(binding)},${JSON.stringify(koffi)})`);await focus()
-    const size=JSON.parse(process.env.KAMUCL_119_WINDOW||'[960,620,1]');assert(size.length===3&&size.every(Number.isFinite));
+    const size=JSON.parse(process.env.FAIONYX_119_WINDOW||'[960,620,1]');assert(size.length===3&&size.every(Number.isFinite));
     await h.main(`(()=>{const w=testElectron.BrowserWindow.fromId(${binding.windowId});w.unmaximize();w.setSize(${size[0]},${size[1]});w.webContents.setZoomFactor(${size[2]});return true})()`);await h.wait(250)
     proof.window={requested:{width:size[0],height:size[1],zoom:size[2]},actual:await h.main(`(()=>{const w=testElectron.BrowserWindow.fromId(${binding.windowId});return{bounds:w.getBounds(),contentBounds:w.getContentBounds(),zoom:w.webContents.getZoomFactor(),displayScaleFactor:testElectron.screen.getDisplayMatching(w.getBounds()).scaleFactor}})()`),renderer:await h.evaluate("({inner:{width:innerWidth,height:innerHeight},client:{width:document.documentElement.clientWidth,height:document.documentElement.clientHeight},visual:{width:visualViewport.width,height:visualViewport.height,scale:visualViewport.scale},devicePixelRatio})")};assert(Math.abs(proof.window.actual.bounds.width-size[0])<=3);assert(Math.abs(proof.window.actual.bounds.height-size[1])<=3);assert.equal(proof.window.actual.zoom,size[2]);assert.equal(proof.window.renderer.visual.scale,1);assert(Math.abs(proof.window.renderer.devicePixelRatio-proof.window.actual.displayScaleFactor*size[2])<0.000001);for(const dimension of ['width','height']){assert(Math.abs(proof.window.renderer.client[dimension]-proof.window.renderer.visual[dimension])<1);assert(Math.abs(proof.window.renderer.visual[dimension]-proof.window.actual.contentBounds[dimension]/size[2])<1)};proof.window.qualification='Native DIP request, observed minimum and Windows 125% rounding; same pre-existing 118 bounds tolerance <=3 DIP and original <1 CSS pixel viewport comparison, not exact physical pixel claim';save()
     await h.nav('skins');await click(selector('.skin-editor-entry'),'open editor');await until('mounted',"!!document.querySelector('.skin-editor canvas')")
@@ -51,7 +51,7 @@ module.exports=async h=>{
     assert.equal(sampled.rgba.filter((_,i)=>i%4===3).reduce((n,v)=>n+(v>0),0),initial.rgba.filter((_,i)=>i%4===3).reduce((n,v)=>n+(v>0),0))
     if(legacy){assert.equal(sampled.palette.alpha,0);await input('[aria-label="HEX 颜色"]','#29b6f6');await tool('绘制');await head();const invisible=await snapshot('legacy new color still invisible');assert.equal(invisible.palette.alpha,0);assert(invisible.rgba.every((v,i)=>i%4!==3||v===initial.rgba[i]));await newSkin();assert.equal((await snapshot('legacy new document retains invisible brush')).palette.alpha,0);proof.reproduced=true;proof.complete=true;return}
     assert.equal(sampled.palette.alpha,1);assert.equal(sampled.palette.color,'#ff5722');await tool('绘制');
-    if(process.env.KAMUCL_119_RECORD==='1'){proof.recording=await h.recordScreencast('skinlayers119-original',head,1000);save()}else await head();
+    if(process.env.FAIONYX_119_RECORD==='1'){proof.recording=await h.recordScreencast('skinlayers119-original',head,1000);save()}else await head();
     const painted=await snapshot('blank outer painted');assert.notDeepEqual(painted.rgba,initial.rgba);assert(painted.rgba.some((v,i)=>i%4===3&&initial.rgba[i]===0&&v===255));await shot('blank-outer-painted')
     await tool('撤销');const undone=await snapshot('undo outer pixel');assert.deepEqual(undone.rgba,initial.rgba);await tool('重做');assert.deepEqual((await snapshot('redo outer pixel')).rgba,painted.rgba)
     await tool('橡皮');await head();assert.deepEqual((await snapshot('erase outer pixel')).rgba,initial.rgba);await tool('绘制');await input('[aria-label="画笔透明度百分比"]','50');await head();const translucent=await snapshot('translucent outer pixel');assert(translucent.rgba.some((v,i)=>i%4===3&&initial.rgba[i]===0&&v>0&&v<255));await tool('吸色');await head();const picked=await snapshot('sample existing translucent outer');assert(picked.palette.alpha>0&&picked.palette.alpha<1)

@@ -19,7 +19,7 @@
 
 独立重新计算最终 EXE SHA256：`a0427950efe94c5ffc5f05cca9dcc33b79bab96293cfde7e0c89a2f7198be887`，文件大小 97,323,101 字节。实际 `release/win-unpacked/resources/app.asar` SHA256 为 `b9481c10abfe8256d6889dec2224337a4f6d57a1e313554880a13c8f2f187247`，与[包验证](evidence/build/windows-package.json)一致；便携 EXE 与 ZIP 的中文目录冷/热启动均通过。
 
-实际 ASAR 中 `out/main/modFavorites-BkLfw7T-.js` 的 SHA256 为 `3435a1e62ea8ad8d3ff18debb6896f6e59dbc2d96b79cfb8ca38523fc09329a7`，确认包含固定依赖校验代码。实际解包的 `kamucl-offline-skin.jar` SHA256 为 `5c6d9d267a78fc169c48fc92a93b25cef0c1859715d2da5de49d2a3067cdc185`；六个 class 全为 major 52，并与本批生成的对应 class 字节一致。
+实际 ASAR 中 `out/main/modFavorites-BkLfw7T-.js` 的 SHA256 为 `3435a1e62ea8ad8d3ff18debb6896f6e59dbc2d96b79cfb8ca38523fc09329a7`，确认包含固定依赖校验代码。实际解包的 `faionyx-offline-skin.jar` SHA256 为 `5c6d9d267a78fc169c48fc92a93b25cef0c1859715d2da5de49d2a3067cdc185`；六个 class 全为 major 52，并与本批生成的对应 class 字节一致。
 
 已独立校验四主题各 20 张皮肤截图，以及社区摘要中的 11 张截图：共 **91 张，哈希不匹配为 0**。人工查看过各主题的主页面、确认弹窗、小窗口颜色/HEX 控件、账号切换，以及社区状态保持/取消前置和真实游戏截图。公开副本与原始摘要的 SHA256 一致。完整文件绑定见 [EVIDENCE_BINDINGS.json](EVIDENCE_BINDINGS.json)；本文仅声称独立校验了上述截图、下表关键摘要和包装条目，没有把所有录像帧计为逐帧人工审查。
 

@@ -532,7 +532,7 @@
     "rendererHooksRestored": true,
     "mainHooksRestored": true,
     "scope": "independent production-window native minimize/restore and mascot-stage close only; no whole-window destruction, GC, baseline FPS, or hardware-listening inference",
-    "root": "E:/KAMUCL/release/validation-1.1.9/Delivery/Active-Production-Lifecycle-Windows-download304",
+    "root": "E:/FAIONYX/release/validation-1.1.9/Delivery/Active-Production-Lifecycle-Windows-download304",
     "productCommit": "07a1d87c0710ab070b763172d27dcf7cebd6547b",
     "qaCommit": "07a1d87c0710ab070b763172d27dcf7cebd6547b",
     "exeSHA256": "11a8f16142a0f40519adb2203a91ee7bf74b2ab35ef456729e5034a8fc0aafef",
@@ -716,7 +716,7 @@
         "sha256": "36c257df9ba326c244013b35706e7b48fd6655778f08190791ed274a0ea1731c",
         "officialHashMatched": true,
         "files": 4890,
-        "extracted": "E:\\KAMUCL\\out\\mac-119-stall-attribution-final\\mac-arm64\\extracted",
+        "extracted": "E:\\FAIONYX\\out\\mac-119-stall-attribution-final\\mac-arm64\\extracted",
         "closed0": true,
         "classification": "Original acquired Mac reference only; deferred outside current delivery, no new Mac release or complete qualitative certification",
         "receipt": {
@@ -736,7 +736,7 @@
         "sha256": "efd610a0db1e74761770c8cde5470edc17a6ed8267a1ac4e94469e00e770876a",
         "officialHashMatched": true,
         "files": 4652,
-        "extracted": "E:\\KAMUCL\\out\\mac-119-stall-attribution-final\\mac-x64\\extracted",
+        "extracted": "E:\\FAIONYX\\out\\mac-119-stall-attribution-final\\mac-x64\\extracted",
         "closed0": true,
         "classification": "Original acquired Mac reference only; deferred outside current delivery, no new Mac release or complete qualitative certification",
         "receipt": {

@@ -11,7 +11,7 @@ import {
 } from '../src/main/core/folderPaths'
 
 test('游戏根目录识别支持根目录、versions 目录与 .minecraft 上级目录', async () => {
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-folders-test-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-folders-test-'))
   const minecraft = path.join(root, '.minecraft')
   await fs.promises.mkdir(path.join(minecraft, 'versions'), { recursive: true })
   try {
@@ -25,7 +25,7 @@ test('游戏根目录识别支持根目录、versions 目录与 .minecraft 上�
 })
 
 test('路径身份会消除点段、尾分隔符，并在可用时解析 junction', async () => {
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'kamucl-folder-id-test-'))
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-folder-id-test-'))
   const target = path.join(root, 'target')
   const link = path.join(root, 'junction')
   await fs.promises.mkdir(target)

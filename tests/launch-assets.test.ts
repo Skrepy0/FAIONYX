@@ -8,7 +8,7 @@ import { prepareLaunchAssets, type AssetTransfer } from '../src/main/core/launch
 
 const sha = (data: string | Buffer) => crypto.createHash('sha1').update(data).digest('hex')
 function fixture() {
-  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-assets-'))
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-assets-'))
   const own = path.join(temp, 'other-launcher', 'assets'), shared = path.join(temp, 'default', 'assets')
   const game = path.join(temp, 'other-launcher', 'versions', 'renamed')
   const text = Buffer.from('{"language.name":"简体中文","menu.singleplayer":"单人游戏"}')

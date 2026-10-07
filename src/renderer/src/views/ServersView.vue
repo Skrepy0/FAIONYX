@@ -114,7 +114,7 @@ async function pingOne(s: ServerEntry) {
 onMounted(() => {
   document.addEventListener('visibilitychange', hideAddresses)
   window.addEventListener('blur', hideAddresses)
-  offWindowVisibility = window.kamucl.on('window:visibility', visible => { if (visible !== true) hideAddresses() })
+  offWindowVisibility = window.faionyx.on('window:visibility', visible => { if (visible !== true) hideAddresses() })
   void load()
   if (!store.installed.length) void refreshInstalled()
 })
@@ -296,7 +296,7 @@ async function doLaunch(s: ServerEntry, versionId: string) {
   } finally { launchBusy.value = false }
 }
 
-/** 仅更新 KAMUCL 的实例关联；绝不写回或覆盖 Minecraft 的 servers.dat。 */
+/** 仅更新 FAIONYX 的实例关联；绝不写回或覆盖 Minecraft 的 servers.dat。 */
 async function onBind(s: ServerEntry, token: string) {
   if (bindingId.value) return
   bindingId.value = s.id
@@ -432,10 +432,10 @@ async function copyAddress(s: ServerEntry) {
           <h3 class="modal-title">删除服务器</h3>
           <p data-ui="ServersView:76f7cd862f50" class="confirm-text">
             <template v-if="delModal.batch">
-              确定要从 KAMUCL 删除所选的 {{ selectedCount }} 个服务器吗？这只会删除启动器记录，不会修改 Minecraft 的 servers.dat；下次同步时，游戏内仍存在的条目可能再次出现。
+              确定要从 FAIONYX 删除所选的 {{ selectedCount }} 个服务器吗？这只会删除启动器记录，不会修改 Minecraft 的 servers.dat；下次同步时，游戏内仍存在的条目可能再次出现。
             </template>
             <template v-else>
-              确定要从 KAMUCL 删除「{{ publicName(delModal.target) }}」吗？这只会删除启动器记录，不会修改 Minecraft 的 servers.dat；下次同步时，游戏内仍存在的条目可能再次出现。
+              确定要从 FAIONYX 删除「{{ publicName(delModal.target) }}」吗？这只会删除启动器记录，不会修改 Minecraft 的 servers.dat；下次同步时，游戏内仍存在的条目可能再次出现。
             </template>
           </p>
           <div class="modal-actions">

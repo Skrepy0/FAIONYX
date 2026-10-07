@@ -1,18 +1,18 @@
 {
   "complete": true,
   "application": {
-    "file": "E:\\KAMUCL\\release\\KAMUCL-1.1.17.exe",
+    "file": "E:\\FAIONYX\\release\\FAIONYX-1.1.17.exe",
     "sha256": "4517bdbb98b180c797f4e800a0d5c6d24b055db125876a3d27bf1b175332de2e"
   },
-  "directory": "E:\\KAMUCL\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c",
+  "directory": "E:\\FAIONYX\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c",
   "runs": [
     {
       "theme": "black-orange",
       "application": {
-        "file": "E:\\KAMUCL\\release\\KAMUCL-1.1.17.exe",
+        "file": "E:\\FAIONYX\\release\\FAIONYX-1.1.17.exe",
         "sha256": "4517bdbb98b180c797f4e800a0d5c6d24b055db125876a3d27bf1b175332de2e"
       },
-      "logFile": "E:\\KAMUCL\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\black-orange.log",
+      "logFile": "E:\\FAIONYX\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\black-orange.log",
       "fullEditorRegression": true,
       "qualification": "Core, MOD progress and full editor suite",
       "startedAt": "2026-10-06T17:46:23.242Z",
@@ -45371,13 +45371,13 @@
         "available": true,
         "classification": "Original Windows Win32_Process PID/parent/creation-time snapshot. Each generation is a separate identity, descendants require an actual live owned parent; PID reuse alone never grants ownership. Previously seen exact identities remain tracked after parents exit. No name/command-line matching or signals."
       },
-      "proofDirectory": "E:\\KAMUCL\\out\\qa-ux117-black-orange-1527bafa-385e-4419-8b2a-85f4b48123e4",
+      "proofDirectory": "E:\\FAIONYX\\out\\qa-ux117-black-orange-1527bafa-385e-4419-8b2a-85f4b48123e4",
       "log": {
-        "file": "E:\\KAMUCL\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\black-orange.log",
+        "file": "E:\\FAIONYX\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\black-orange.log",
         "sha256": "f5fe89dfdc80794dc3c5261dcef70b643dd90a6d176570216d16160c691e1e14"
       },
       "summary": {
-        "file": "E:\\KAMUCL\\out\\qa-ux117-black-orange-1527bafa-385e-4419-8b2a-85f4b48123e4\\summary.json",
+        "file": "E:\\FAIONYX\\out\\qa-ux117-black-orange-1527bafa-385e-4419-8b2a-85f4b48123e4\\summary.json",
         "sha256": "a8464cfb552caa349ed99c2af7dfe3ed18b8abda5dc35619a36bc982df9fa10f"
       },
       "complete": true
@@ -45385,10 +45385,10 @@
     {
       "theme": "blue-white",
       "application": {
-        "file": "E:\\KAMUCL\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\紧凑 ZIP 中文 路径\\KAMUCL-1.1.17.exe",
+        "file": "E:\\FAIONYX\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\紧凑 ZIP 中文 路径\\FAIONYX-1.1.17.exe",
         "sha256": "4517bdbb98b180c797f4e800a0d5c6d24b055db125876a3d27bf1b175332de2e"
       },
-      "logFile": "E:\\KAMUCL\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\blue-white.log",
+      "logFile": "E:\\FAIONYX\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\blue-white.log",
       "fullEditorRegression": false,
       "qualification": "Core and MOD progress suite; full editor validation is outside this run and requires separately bound original evidence",
       "startedAt": "2026-10-06T17:49:48.759Z",
@@ -59780,13 +59780,13 @@
         "available": true,
         "classification": "Original Windows Win32_Process PID/parent/creation-time snapshot. Each generation is a separate identity, descendants require an actual live owned parent; PID reuse alone never grants ownership. Previously seen exact identities remain tracked after parents exit. No name/command-line matching or signals."
       },
-      "proofDirectory": "E:\\KAMUCL\\out\\qa-ux117-blue-white-ad8811f3-2131-450f-811f-ec9d6c2a9205",
+      "proofDirectory": "E:\\FAIONYX\\out\\qa-ux117-blue-white-ad8811f3-2131-450f-811f-ec9d6c2a9205",
       "log": {
-        "file": "E:\\KAMUCL\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\blue-white.log",
+        "file": "E:\\FAIONYX\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\blue-white.log",
         "sha256": "f67a9027ee73db8d5b377991b1162fe64cbf16708d6fe68b030e8ed111e53ad7"
       },
       "summary": {
-        "file": "E:\\KAMUCL\\out\\qa-ux117-blue-white-ad8811f3-2131-450f-811f-ec9d6c2a9205\\summary.json",
+        "file": "E:\\FAIONYX\\out\\qa-ux117-blue-white-ad8811f3-2131-450f-811f-ec9d6c2a9205\\summary.json",
         "sha256": "637b959ab5e1e77c4c6f1914a73b07fb2b165ffe34f8f8b2f03704195f435c53"
       },
       "complete": true
@@ -59794,10 +59794,10 @@
     {
       "theme": "transparent",
       "application": {
-        "file": "E:\\KAMUCL\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\展开 ZIP 中文 路径\\KAMUCL.exe",
+        "file": "E:\\FAIONYX\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\展开 ZIP 中文 路径\\FAIONYX.exe",
         "sha256": "e3e9fc2717a82c9cd0e5c381658b5dadaf5aa95ed008cb6e2626af94ae00650c"
       },
-      "logFile": "E:\\KAMUCL\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\transparent.log",
+      "logFile": "E:\\FAIONYX\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\transparent.log",
       "fullEditorRegression": false,
       "qualification": "Core and MOD progress suite; full editor validation is outside this run and requires separately bound original evidence",
       "startedAt": "2026-10-06T17:51:15.894Z",
@@ -71805,13 +71805,13 @@
         "available": true,
         "classification": "Original Windows Win32_Process PID/parent/creation-time snapshot. Each generation is a separate identity, descendants require an actual live owned parent; PID reuse alone never grants ownership. Previously seen exact identities remain tracked after parents exit. No name/command-line matching or signals."
       },
-      "proofDirectory": "E:\\KAMUCL\\out\\qa-ux117-transparent-7ea8f162-3975-464e-8a34-2b404b1f1b62",
+      "proofDirectory": "E:\\FAIONYX\\out\\qa-ux117-transparent-7ea8f162-3975-464e-8a34-2b404b1f1b62",
       "log": {
-        "file": "E:\\KAMUCL\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\transparent.log",
+        "file": "E:\\FAIONYX\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\transparent.log",
         "sha256": "45e1257589dfb21b96fcaeeaf9dc3535340a7582793f0a82a5c53565f1ea9c65"
       },
       "summary": {
-        "file": "E:\\KAMUCL\\out\\qa-ux117-transparent-7ea8f162-3975-464e-8a34-2b404b1f1b62\\summary.json",
+        "file": "E:\\FAIONYX\\out\\qa-ux117-transparent-7ea8f162-3975-464e-8a34-2b404b1f1b62\\summary.json",
         "sha256": "455d9f9e17a5b27373803ed4b422ab7b2c61bc3121991e7fb1d6a4277685c44d"
       },
       "complete": true
@@ -71819,10 +71819,10 @@
     {
       "theme": "custom",
       "application": {
-        "file": "E:\\KAMUCL\\release\\KAMUCL-1.1.17.exe",
+        "file": "E:\\FAIONYX\\release\\FAIONYX-1.1.17.exe",
         "sha256": "4517bdbb98b180c797f4e800a0d5c6d24b055db125876a3d27bf1b175332de2e"
       },
-      "logFile": "E:\\KAMUCL\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\custom.log",
+      "logFile": "E:\\FAIONYX\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\custom.log",
       "fullEditorRegression": false,
       "qualification": "Core and MOD progress suite; full editor validation is outside this run and requires separately bound original evidence",
       "startedAt": "2026-10-06T17:52:36.591Z",
@@ -84809,13 +84809,13 @@
         "available": true,
         "classification": "Original Windows Win32_Process PID/parent/creation-time snapshot. Each generation is a separate identity, descendants require an actual live owned parent; PID reuse alone never grants ownership. Previously seen exact identities remain tracked after parents exit. No name/command-line matching or signals."
       },
-      "proofDirectory": "E:\\KAMUCL\\out\\qa-ux117-custom-fff7d6e3-8119-4296-b94d-793f0fdc23b1",
+      "proofDirectory": "E:\\FAIONYX\\out\\qa-ux117-custom-fff7d6e3-8119-4296-b94d-793f0fdc23b1",
       "log": {
-        "file": "E:\\KAMUCL\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\custom.log",
+        "file": "E:\\FAIONYX\\out\\acceptance-1.1.17\\ui-cf150c4a-f296-4e0f-8fa7-32391556e91c\\custom.log",
         "sha256": "cf889795049477c4a34418f9b4168d1673fbf2e5acef6b325d42c46f639df27a"
       },
       "summary": {
-        "file": "E:\\KAMUCL\\out\\qa-ux117-custom-fff7d6e3-8119-4296-b94d-793f0fdc23b1\\summary.json",
+        "file": "E:\\FAIONYX\\out\\qa-ux117-custom-fff7d6e3-8119-4296-b94d-793f0fdc23b1\\summary.json",
         "sha256": "76ecd69e22be0d4950cff966dcf49f35253d71157c173356cb7cf164194f0431"
       },
       "complete": true

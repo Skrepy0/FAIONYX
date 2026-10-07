@@ -81,7 +81,7 @@ export function checkTarget(newDir: string, needBytes: number): DirCheckResult {
   try {
     fs.mkdirSync(resolved, { recursive: true })
     // 权限测试：创建并删除一个临时文件
-    const probe = path.join(resolved, `.kamucl-probe-${Date.now()}`)
+    const probe = path.join(resolved, `.faionyx-probe-${Date.now()}`)
     fs.writeFileSync(probe, 'ok')
     fs.rmSync(probe, { force: true })
   } catch (e) {

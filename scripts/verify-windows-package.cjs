@@ -7,12 +7,12 @@ const version = require('../package.json').version
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex')
 const packageRoot = path.resolve('release/win-unpacked')
 const archive = path.join(packageRoot, 'resources/app.asar')
-const packageFile = `release/KAMUCL-${version}.exe`
-const zipFile = `release/KAMUCL-${version}-windows-x64.zip`
+const packageFile = `release/FAIONYX-${version}.exe`
+const zipFile = `release/FAIONYX-${version}-windows-x64.zip`
 const zip = new Zip(zipFile), name = path.basename(packageFile)
 assert.equal(zip.getEntry(name).header.method, 0, 'EXE must use standard ZIP Store')
 assert.equal(hash(zip.readFile(name)), hash(fs.readFileSync(packageFile)))
-const zipRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'KAMUCL ZIP 中文 '))
+const zipRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX ZIP 中文 '))
 // Exercise the Windows-supplied extractor as well as adm-zip reading above.
 const extract = spawnSync('tar', ['-xf', path.resolve(zipFile), '-C', zipRoot], { windowsHide: true, encoding: 'utf8' })
 assert.ifError(extract.error); assert.equal(extract.status, 0, extract.stderr)
@@ -39,7 +39,7 @@ function visit(dir) {
   }
 }
 visit(packageRoot)
-const unpackedFile = `release/KAMUCL-${version}-windows-x64-unpacked.zip`
+const unpackedFile = `release/FAIONYX-${version}-windows-x64-unpacked.zip`
 const unpackedZip = new Zip(unpackedFile)
 const unpackedFiles = unpackedZip.getEntries().filter(e => !e.isDirectory)
 assert.equal(unpackedFiles.length, files.length, 'Unpacked fallback file count')

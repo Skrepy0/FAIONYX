@@ -12,7 +12,7 @@
 - 分数 DPI 的尺寸换算在启动恢复时测量并有限次校正，不监听 resize 做反馈调整，避免重开后累积 1～2 像素的尺寸误差。
 - Mac 发布命令与 CI 显式保留已验证的 Electron 33.4.11。44.3.0 在 Intel 云测试机出现 EGL/GPU 初始化失败，不能将 Windows 内核升级直接用于 Mac。未使用禁用硬件加速或降低皮肤渲染验收要求来绕过失败。
 
-上游依据：[Electron PR 47386](https://github.com/electron/electron/pull/47386) 说明旧内核透明状态和 DWM 扩展客户区不同步的问题。使用官方 Electron 发行包，没有复制上游源代码到 KAMUCL。
+上游依据：[Electron PR 47386](https://github.com/electron/electron/pull/47386) 说明旧内核透明状态和 DWM 扩展客户区不同步的问题。使用官方 Electron 发行包，没有复制上游源代码到 FAIONYX。
 
 ## 验证
 

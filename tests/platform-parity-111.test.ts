@@ -16,10 +16,10 @@ test('HarmonyOS has a distinct ABI and cannot select a Linux JVM or update paylo
 
 test('Linux updates preserve CPU architecture and actual installation form', () => {
   for (const arch of ['x64', 'arm64']) {
-    assert.equal(updateArtifactName('1.1.11', 'linux', arch, 'appimage'), `KAMUCL-1.1.11-linux-${arch}.AppImage`)
-    assert.equal(updateArtifactName('1.1.11', 'linux', arch, 'deb'), `KAMUCL-1.1.11-linux-${arch}.deb`)
-    assert.equal(updateArtifactName('1.1.11', 'linux', arch, 'portable-directory'), `KAMUCL-1.1.11-linux-${arch}.tar.gz`)
-    assert.equal(updateArtifactName('1.1.11', 'darwin', arch, 'mac-app'), `KAMUCL-1.1.11-mac-${arch}.zip`)
+    assert.equal(updateArtifactName('1.1.11', 'linux', arch, 'appimage'), `FAIONYX-1.1.11-linux-${arch}.AppImage`)
+    assert.equal(updateArtifactName('1.1.11', 'linux', arch, 'deb'), `FAIONYX-1.1.11-linux-${arch}.deb`)
+    assert.equal(updateArtifactName('1.1.11', 'linux', arch, 'portable-directory'), `FAIONYX-1.1.11-linux-${arch}.tar.gz`)
+    assert.equal(updateArtifactName('1.1.11', 'darwin', arch, 'mac-app'), `FAIONYX-1.1.11-mac-${arch}.zip`)
   }
   assert.throws(() => updateArtifactName('1.1.11', 'linux', 'ia32', 'deb'), /架构/)
   assert.equal(platformInfo('linux', 'arm64', 'deb').systemMemoryOrganizing, false)

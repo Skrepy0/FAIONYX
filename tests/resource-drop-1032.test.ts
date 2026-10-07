@@ -9,7 +9,7 @@ import { trackLaunchState, instanceLaunchBusy, type LaunchTracking } from '../sr
 import type { InstalledVersion } from '../src/shared/types'
 
 test('resource drops use selected folder and instance gameDir for each category, preserve originals and collisions', t => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kamucl-drop-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-drop-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   const a = path.join(root, 'A'), b = path.join(root, 'B'), src = path.join(root, 'source')
   fs.mkdirSync(src)

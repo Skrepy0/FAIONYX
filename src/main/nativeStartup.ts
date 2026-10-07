@@ -14,7 +14,7 @@ export function showStartupWindow(window: BrowserWindow, animated = true) {
     window.setOpacity(p * p * (3 - 2 * p))
     if (p === 1) {
       clearInterval(fade)
-      window.emit('kamucl:startup-opacity-complete')
+      window.emit('faionyx:startup-opacity-complete')
     }
   }, 16)
 }
@@ -59,7 +59,7 @@ export function createNativeStartup(signal: string, pid: number) {
       main = window
       window.once('ready-to-show', () => { gate.painted = true; update() })
       window.once('closed', cleanup)
-      const fail = (message: string) => { if (revealed) return; cleanup(); void dialog.showMessageBox({ type: 'error', title: 'KAMUCL 初始化失败', message }); window.close() }
+      const fail = (message: string) => { if (revealed) return; cleanup(); void dialog.showMessageBox({ type: 'error', title: 'FAIONYX 初始化失败', message }); window.close() }
       window.webContents.once('render-process-gone', (_e, details) => fail(`主界面进程退出：${details.reason}`))
       window.webContents.once('did-fail-load', (_e, code, description, _url, isMainFrame) => { if (isMainFrame && code !== -3) fail(`无法加载主界面：${description}`) })
       update()
