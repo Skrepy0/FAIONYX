@@ -9,11 +9,83 @@
   --card-pad: 20px;
   --radius-md: 10px;
 }
-html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; pointer-events: none; user-select: none; }
-canvas { position: fixed; inset: 0; width: 100%; height: 100%; }
-#caption { position: fixed; left: 50%; top: calc(50% + 135px); transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--card-pad); border: 1px solid #ffffff24; border-radius: var(--radius-md); background: #172021b8; color: #f5f8f6; font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; font-size: var(--text-xs); line-height: 1.5; white-space: nowrap; }
-#caption strong { font-size: var(--text-xl); letter-spacing: 4px; font-weight: 650; }
-#caption { width: 220px; height: 86px; box-sizing: border-box; justify-content: center; border-radius: 14px; }
-#caption strong { letter-spacing: 0; font-weight: 700; }
-body.leaving { opacity: 0; transition: opacity 320ms ease; }
-@media (prefers-reduced-motion: reduce) { body.leaving { transition-duration: 1ms; } }
+
+/* 关键：锁定视口、消除默认边距、三层隐藏滚动条 */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* 常规隐藏 */
+  overscroll-behavior: none; /* 阻止触控板/触屏的回弹滚动 */
+  background: transparent;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 万一某个 UA 仍然绘制滚动条，直接把它宽度设为 0 */
+html {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* canvas 用 fixed + inset 铺满，避免 inline 基线间隙撑高页面 */
+canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block; /* 关键：消除 inline 元素底部约 4px 基线空隙 */
+}
+
+/* 说明：JS 中查询的是 #stage，这里同步改成 #stage，否则样式不生效 */
+#stage {
+  position: fixed;
+  left: 50%;
+  top: calc(50% + 135px);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--card-pad);
+  box-sizing: border-box;
+  width: 220px;
+  height: 86px;
+  border: 1px solid #ffffff24;
+  border-radius: 14px;
+  background: #172021b8;
+  color: #f5f8f6;
+  font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  white-space: nowrap;
+}
+#stage strong {
+  font-size: var(--text-xl);
+  letter-spacing: 0;
+  font-weight: 700;
+}
+
+body.leaving {
+  opacity: 0;
+  transition: opacity 320ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  body.leaving {
+    transition-duration: 1ms;
+  }
+}

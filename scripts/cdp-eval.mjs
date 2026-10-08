@@ -34,8 +34,8 @@ const result = await new Promise((resolve, reject) => {
         params: {
           expression,
           awaitPromise: true,
-          returnByValue: true
-        }
+          returnByValue: true,
+        },
       })
     )
   })

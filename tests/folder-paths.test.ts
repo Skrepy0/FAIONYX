@@ -3,12 +3,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
-import {
-  canonicalPath,
-  pathIdentity,
-  resolveMinecraftRoot,
-  samePath
-} from '../src/main/core/folderPaths'
+import { canonicalPath, pathIdentity, resolveMinecraftRoot, samePath } from '../src/main/core/folderPaths'
 
 test('游戏根目录识别支持根目录、versions 目录与 .minecraft 上级目录', async () => {
   const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-folders-test-'))

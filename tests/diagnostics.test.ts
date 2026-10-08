@@ -4,15 +4,8 @@ import os from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import AdmZip from 'adm-zip'
-import {
-  redactDiagnosticPath,
-  redactDiagnosticText,
-  safeDiagnosticFilePart
-} from '../src/main/core/diagnostics'
-import {
-  writeDiagnosticArchive,
-  type DiagnosticManifestEntry
-} from '../src/main/core/diagnosticArchive'
+import { redactDiagnosticPath, redactDiagnosticText, safeDiagnosticFilePart } from '../src/main/core/diagnostics'
+import { writeDiagnosticArchive, type DiagnosticManifestEntry } from '../src/main/core/diagnosticArchive'
 
 test('诊断日志会脱敏启动 token、认证头、密码、查询参数和用户目录', () => {
   const known = 'known-session-secret'
@@ -23,7 +16,7 @@ test('诊断日志会脱敏启动 token、认证头、密码、查询参数和�
     '{"refresh_token":"refresh-value"}',
     `url=https://example.test/callback?token=query-token&ok=1`,
     `known=${known}`,
-    'C:\\Users\\Alice\\AppData\\Roaming\\.minecraft'
+    'C:\\Users\\Alice\\AppData\\Roaming\\.minecraft',
   ].join('\n')
   const output = redactDiagnosticText(input, [known])
 
@@ -35,7 +28,7 @@ test('诊断日志会脱敏启动 token、认证头、密码、查询参数和�
     'refresh-value',
     'query-token',
     known,
-    'C:\\Users\\Alice'
+    'C:\\Users\\Alice',
   ]) {
     assert.equal(output.includes(secret), false, `仍包含敏感信息：${secret}`)
   }
@@ -58,7 +51,7 @@ test('诊断归档生成真实 ZIP，记录缺失项并脱敏每份文本', asyn
   await fs.promises.writeFile(source, `Authorization: Bearer ${secret}\nOK\n`, 'utf-8')
   const manifest: { schemaVersion: number; files: DiagnosticManifestEntry[] } = {
     schemaVersion: 1,
-    files: []
+    files: [],
   }
   try {
     await writeDiagnosticArchive(
@@ -66,19 +59,14 @@ test('诊断归档生成真实 ZIP，记录缺失项并脱敏每份文本', asyn
       manifest,
       [
         { archivePath: 'minecraft/latest.log', source },
-        { archivePath: 'minecraft/debug.log', source: missing, missingPlaceholder: true }
+        { archivePath: 'minecraft/debug.log', source: missing, missingPlaceholder: true },
       ],
       `summary ${secret}`,
       [secret]
     )
     const zip = new AdmZip(destination)
     const names = zip.getEntries().map((entry) => entry.entryName)
-    assert.deepEqual(names.sort(), [
-      'manifest.json',
-      'minecraft/debug.log',
-      'minecraft/latest.log',
-      'summary.txt'
-    ])
+    assert.deepEqual(names.sort(), ['manifest.json', 'minecraft/debug.log', 'minecraft/latest.log', 'summary.txt'])
     const allText = zip
       .getEntries()
       .map((entry) => entry.getData().toString('utf-8'))

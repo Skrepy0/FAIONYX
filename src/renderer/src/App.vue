@@ -12,7 +12,6 @@ import { useNavigationBubble } from './composables/useNavigationBubble'
 import { usePlatformUpdate } from './composables/usePlatformUpdate'
 const { updateReadyMessage } = usePlatformUpdate()
 import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, provide, reactive, ref, watch } from 'vue'
-import { MASCOT_INTERACTIVE } from './mascotInteraction'
 import type { Component } from 'vue'
 import { backgroundImageEffect } from '@shared/appearancePolicy'
 import { taskProgressPercent } from '@shared/taskProgress'
@@ -41,20 +40,29 @@ import {
   resumeTask,
   selectFile,
   skipUpdateVersion,
-  startUpdateDownload
+  startUpdateDownload,
 } from './api'
 import type { ReleaseInfo } from '@shared/types'
 import { QQ_GROUP_NUMBER } from '@shared/branding'
 import UpdateModal from './components/UpdateModal.vue'
-import { applyLaunchState, dismissTask, enterEditMode, exitEditMode, finalizeTask, markNoticesRead, recordLastPlayed, refreshAccounts, refreshInstalled, resetProgressMono, stageLabel, store, toast, upsertTaskProgress } from './store'
+import {
+  applyLaunchState,
+  dismissTask,
+  enterEditMode,
+  exitEditMode,
+  finalizeTask,
+  markNoticesRead,
+  recordLastPlayed,
+  refreshAccounts,
+  refreshInstalled,
+  resetProgressMono,
+  stageLabel,
+  store,
+  toast,
+  upsertTaskProgress,
+} from './store'
 import type { ViewName } from './store'
-import type {
-  CustomTheme,
-  ModpackInfo,
-  ThemeName,
-  WorldImportInfo,
-  YggdrasilProviderInput
-} from '@shared/types'
+import type { CustomTheme, ModpackInfo, ThemeName, WorldImportInfo, YggdrasilProviderInput } from '@shared/types'
 import { DEFAULT_CUSTOM_THEME, THEME_PRESETS } from '@shared/types'
 import { readableCustomColors } from '@shared/themeContrast'
 import { managedImageUrl } from './managedAssets'
@@ -72,17 +80,6 @@ const GameView = defineAsyncComponent(() => import('./views/GameView.vue'))
 const ModsView = defineAsyncComponent(() => import('./views/ModsView.vue'))
 const RecordingsView = defineAsyncComponent(() => import('./views/RecordingsView.vue'))
 const ProjectionsView = defineAsyncComponent(() => import('./views/ProjectionsView.vue'))
-const MascotStage = defineAsyncComponent(() => import('./components/MascotStage.vue'))
-const mascotOpen = ref(false)
-const mascotReady = ref(false)
-const mascotBusy = ref(false)
-const mascotSoftware = ref(false)
-// Give the active logo interaction priority over decorative skin previews.
-provide(MASCOT_INTERACTIVE, computed(() => mascotOpen.value && (!mascotReady.value || mascotBusy.value)))
-const mascotRef = ref<{flush:()=>Promise<void>}>()
-const mascotKeyboard = ref(false)
-function openMascots(event:MouseEvent){if(mascotOpen.value)return;mascotKeyboard.value=event.detail===0;mascotReady.value=false;mascotSoftware.value=false;mascotOpen.value=true}
-function closeMascots(){mascotOpen.value=false;mascotBusy.value=false;void nextTick(()=>document.querySelector<HTMLButtonElement>('.brand-avatar')?.focus())}
 const PacksView = defineAsyncComponent(() => import('./views/PacksView.vue'))
 const ShadersView = defineAsyncComponent(() => import('./views/ShadersView.vue'))
 const KeysView = defineAsyncComponent(() => import('./views/KeysView.vue'))
@@ -93,7 +90,7 @@ const ServersView = defineAsyncComponent(() => import('./views/ServersView.vue')
 const FriendConnectView = defineAsyncComponent(() => import('./views/FriendConnectView.vue'))
 const SettingsView = defineAsyncComponent(() => import('./views/SettingsView.vue'))
 const AccountsView = defineAsyncComponent(() => import('./views/AccountsView.vue'))
-import brandHead from './assets/splash-face.png'
+import icon from './assets/icon.png'
 
 // Vite 的全局 define 在 script 中解析；模板直接访问会被 Vue 当作组件实例字段。
 const appVersion = __APP_VERSION__
@@ -115,7 +112,7 @@ const viewMap: Record<ViewName, Component> = {
   servers: ServersView,
   friends: FriendConnectView,
   settings: SettingsView,
-  accounts: AccountsView
+  accounts: AccountsView,
 }
 
 const currentComponent = computed(() => viewMap[store.currentView])
@@ -124,90 +121,92 @@ const navItems: Array<{ key: ViewName; label: string; icon: string }> = [
   {
     key: 'home',
     label: '首页',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></svg>'
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></svg>',
   },
   {
     key: 'game',
     label: '游戏版本',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="11" rx="5.5"/><path d="M7.5 10.8v3.4M5.8 12.5h3.4"/><circle cx="15.6" cy="11.9" r="0.6" fill="currentColor" stroke="none"/><circle cx="18" cy="13.6" r="0.6" fill="currentColor" stroke="none"/></svg>'
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="11" rx="5.5"/><path d="M7.5 10.8v3.4M5.8 12.5h3.4"/><circle cx="15.6" cy="11.9" r="0.6" fill="currentColor" stroke="none"/><circle cx="18" cy="13.6" r="0.6" fill="currentColor" stroke="none"/></svg>',
   },
   {
     key: 'friends',
     label: '联机',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M2 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 4 5"/></svg>'
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M2 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 4 5"/></svg>',
   },
   {
     key: 'keys',
     label: '默认配置',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>'
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>',
   },
   {
     key: 'skins',
     label: '皮肤',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4-6 3 2 5 3-1v9h8v-9l3 1 2-5-6-3a3 3 0 0 1-6 0Z"/></svg>'
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4-6 3 2 5 3-1v9h8v-9l3 1 2-5-6-3a3 3 0 0 1-6 0Z"/></svg>',
   },
   {
     key: 'community',
     label: '社区资源',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a13.5 13.5 0 0 1 0 18"/><path d="M12 3a13.5 13.5 0 0 0 0 18"/></svg>'
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a13.5 13.5 0 0 1 0 18"/><path d="M12 3a13.5 13.5 0 0 0 0 18"/></svg>',
   },
   {
     key: 'settings',
     label: '设置',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06-.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>'
-  }
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06-.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>',
+  },
 ]
 
 /** 功能禁用判定 */
-const isFeatureOff = (key: string): boolean =>
-  (store.settings?.disabledFeatures ?? []).includes(key)
+const isFeatureOff = (key: string): boolean => (store.settings?.disabledFeatures ?? []).includes(key)
 
 /** 过滤禁用功能后的主导航 */
-const visibleNavItems = computed(() =>
-  navItems.filter((n) => !isFeatureOff(n.key))
-)
+const visibleNavItems = computed(() => navItems.filter((n) => !isFeatureOff(n.key)))
 
 /** 过滤禁用功能后的资源管理子项 */
-const visibleResourceSubItems = computed(() =>
-  resourceSubItems.filter((s) => !isFeatureOff(s.key))
-)
+const visibleResourceSubItems = computed(() => resourceSubItems.filter((s) => !isFeatureOff(s.key)))
 
 /** 资源管理子级菜单（模组/资源包/光影包），按游戏版本管理对应目录 */
 const resourceSubItems: Array<{ key: ViewName; label: string; icon: string }> = [
   {
     key: 'mods',
     label: '模组',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/></svg>'
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/></svg>',
   },
   {
     key: 'packs',
     label: '资源包',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>'
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>',
   },
   {
     key: 'shaders',
     label: '光影包',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
   },
 
-  { key: 'recordings', label: '录像', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="14" height="14" rx="3"/><path d="m17 10 4-3v10l-4-3"/></svg>' },
-  { key: 'projections', label: '投影', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 9 5v8l-9 5-9-5V8zM3 8l9 5 9-5M12 13v8"/></svg>' },
+  {
+    key: 'recordings',
+    label: '录像',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="14" height="14" rx="3"/><path d="m17 10 4-3v10l-4-3"/></svg>',
+  },
+  {
+    key: 'projections',
+    label: '投影',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 9 5v8l-9 5-9-5V8zM3 8l9 5 9-5M12 13v8"/></svg>',
+  },
   {
     key: 'bridge',
     label: 'MOD 面板',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="3.5"/></svg>'
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="3.5"/></svg>',
   },
   {
     key: 'servers',
     label: '服务器',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>'
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>',
   },
-
 ]
 
 /** 资源管理组是否展开（默认折叠；当前在其中任一子页时强制展开高亮） */
 const resourceExpanded = ref(localStorage.getItem('faionyx.resourceExpanded') === 'true')
-watch(resourceExpanded, value => localStorage.setItem('faionyx.resourceExpanded', String(value)))
+watch(resourceExpanded, (value) => localStorage.setItem('faionyx.resourceExpanded', String(value)))
 const inResourceGroup = computed(() =>
   ['mods', 'packs', 'shaders', 'bridge', 'servers', 'recordings', 'projections'].includes(store.currentView)
 )
@@ -216,11 +215,29 @@ const inResourceGroup = computed(() =>
 const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 const systemMotion = ref(motionQuery.matches)
 const reducedMotion = computed(() => systemMotion.value || store.settings?.reduceMotion === true)
-watch(reducedMotion, value => { document.documentElement.dataset.motion = value ? 'reduced' : 'full' }, { immediate: true })
-document.addEventListener('visibilitychange', () => { document.documentElement.dataset.visibility = document.hidden ? 'hidden' : 'visible' })
-const onMotionChange = () => { systemMotion.value = motionQuery.matches }
-const routeDuration = computed(() => reducedMotion.value ? 0 : { enter: 180, leave: 80 })
-const { navEl, bubbleStyle, selectionStyle, retarget: retargetNav, reset: resetNav, focusOut: navFocusOut, measure: measureNav } = useNavigationBubble(
+watch(
+  reducedMotion,
+  (value) => {
+    document.documentElement.dataset.motion = value ? 'reduced' : 'full'
+  },
+  { immediate: true }
+)
+document.addEventListener('visibilitychange', () => {
+  document.documentElement.dataset.visibility = document.hidden ? 'hidden' : 'visible'
+})
+const onMotionChange = () => {
+  systemMotion.value = motionQuery.matches
+}
+const routeDuration = computed(() => (reducedMotion.value ? 0 : { enter: 180, leave: 80 }))
+const {
+  navEl,
+  bubbleStyle,
+  selectionStyle,
+  retarget: retargetNav,
+  reset: resetNav,
+  focusOut: navFocusOut,
+  measure: measureNav,
+} = useNavigationBubble(
   computed(() => store.currentView),
   computed(() => [resourceExpanded.value, inResourceGroup.value, visibleNavItems.value, visibleResourceSubItems.value])
 )
@@ -228,7 +245,6 @@ const { navEl, bubbleStyle, selectionStyle, retarget: retargetNav, reset: resetN
 /** 关闭启动器不影响游戏：游戏在跑时点关闭先提示一次，再真正关闭 */
 let closeHintShown = false
 const win = async (action: 'minimize' | 'maximize' | 'close') => {
-  if(action==='close'&&mascotRef.value){try{await mascotRef.value.flush()}catch(error){toast('互动次数尚未保存：'+errText(error),'error');return}}
   if (action === 'close' && store.launchState?.status === 'running' && !closeHintShown) {
     closeHintShown = true
     toast('关闭启动器不影响游戏，游戏继续运行', 'info')
@@ -246,7 +262,14 @@ const updateModal = reactive<{
   taskId: string
   slowHint: boolean
   rollback: boolean
-}>({ open: false, release: null, state: 'found', taskId: '', slowHint: false, rollback: false })
+}>({
+  open: false,
+  release: null,
+  state: 'found',
+  taskId: '',
+  slowHint: false,
+  rollback: false,
+})
 
 /** 内测群号：设置覆盖优先，默认 shared/branding 常量 */
 const qqGroup = computed(() => store.settings?.qqGroupNumber?.trim() || QQ_GROUP_NUMBER)
@@ -325,7 +348,9 @@ async function checkConfigStatus() {
   try {
     const s = await getConfigStatus()
     if (s.mismatch === 'newer') configMismatch.value = true
-  } catch { /* 检查失败不打扰 */ }
+  } catch {
+    /* 检查失败不打扰 */
+  }
 }
 async function onConfigReset() {
   try {
@@ -371,7 +396,11 @@ let internalDrag = false
 /** 最近一次 dragover 时间戳：浏览器对拖出窗口/异常手势会停发事件，超时兜底防覆盖层残留 */
 let lastDragoverAt = 0
 let dragWatchdog: ReturnType<typeof setInterval> | null = null
-function endDrag() { internalDrag = false; dragDepth = 0; dragActive.value = false }
+function endDrag() {
+  internalDrag = false
+  dragDepth = 0
+  dragActive.value = false
+}
 
 /** 覆盖层激活期间启动看门狗：1.5s 没有任何拖拽事件即强制复位 */
 function startDragWatchdog() {
@@ -389,8 +418,7 @@ function stopDragWatchdog() {
 }
 watch(dragActive, (active) => (active ? startDragWatchdog() : stopDragWatchdog()))
 
-const dragHasFiles = (e: DragEvent) =>
-  Array.from(e.dataTransfer?.types ?? []).includes('Files')
+const dragHasFiles = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes('Files')
 const dragHasProviderText = (e: DragEvent) => {
   const types = Array.from(e.dataTransfer?.types ?? [])
   return types.includes('text/plain') || types.includes('text/uri-list')
@@ -409,18 +437,39 @@ const looksLikeYggdrasilProvider = (value: string): boolean => {
 
 const resourceDropPage = () => ['keys', 'mods', 'packs', 'shaders'].includes(store.currentView)
 function onDragEnter(e: DragEvent) {
-  if(store.editMode){e.preventDefault();e.stopImmediatePropagation();endDrag();return}
-  if (resourceDropPage()) { if (dragHasFiles(e)) e.preventDefault(); endDrag(); return }
+  if (store.editMode) {
+    e.preventDefault()
+    e.stopImmediatePropagation()
+    endDrag()
+    return
+  }
+  if (resourceDropPage()) {
+    if (dragHasFiles(e)) e.preventDefault()
+    endDrag()
+    return
+  }
   if (!dragHasSupportedData(e)) return
   e.preventDefault()
   dragDepth++
   dragActive.value = showsImportOverlay(Array.from(e.dataTransfer?.types ?? []), internalDrag)
-  if (dragActive.value) { dlOpen.value = false; noticeOpen.value = false }
+  if (dragActive.value) {
+    dlOpen.value = false
+    noticeOpen.value = false
+  }
 }
 
 function onDragOver(e: DragEvent) {
-  if(store.editMode){e.preventDefault();e.stopImmediatePropagation();endDrag();return}
-  if (resourceDropPage()) { if (dragHasFiles(e)) e.preventDefault(); endDrag(); return }
+  if (store.editMode) {
+    e.preventDefault()
+    e.stopImmediatePropagation()
+    endDrag()
+    return
+  }
+  if (resourceDropPage()) {
+    if (dragHasFiles(e)) e.preventDefault()
+    endDrag()
+    return
+  }
   if (!dragHasSupportedData(e)) return
   e.preventDefault() // 必须 preventDefault 才允许 drop
   lastDragoverAt = Date.now()
@@ -435,13 +484,20 @@ function onDragLeave(e: DragEvent) {
 }
 
 function onDrop(e: DragEvent) {
-  if(store.editMode){e.preventDefault();e.stopImmediatePropagation();endDrag();return}
+  if (store.editMode) {
+    e.preventDefault()
+    e.stopImmediatePropagation()
+    endDrag()
+    return
+  }
   // MRPACK is unambiguously a whole pack, even on a local resource page.
   // Ordinary ZIP/JAR drops retain that page's existing batch import behavior.
-  const mrpackDrop = dragHasFiles(e) && Array.from(e.dataTransfer?.files ?? []).some(file => /\.mrpack$/i.test(file.name))
+  const mrpackDrop = dragHasFiles(e) && Array.from(e.dataTransfer?.files ?? []).some((file) => /\.mrpack$/i.test(file.name))
   if (mrpackDrop) e.stopPropagation()
   if (resourceDropPage() && !mrpackDrop) {
-    endDrag(); e.preventDefault(); e.stopPropagation()
+    endDrag()
+    e.preventDefault()
+    e.stopPropagation()
     if (dragHasFiles(e)) {
       if (store.resourceDropHandler) store.resourceDropHandler(e)
       else toast('页面正在加载，请稍后再拖入', 'info')
@@ -453,11 +509,11 @@ function onDrop(e: DragEvent) {
   dragActive.value = false
   if (!dragHasSupportedData(e)) return
   e.preventDefault()
-  dlOpen.value = false; noticeOpen.value = false
+  dlOpen.value = false
+  noticeOpen.value = false
   const dropped = Array.from(e.dataTransfer?.files ?? [])
   if (!dropped.length) {
-    const text =
-      e.dataTransfer?.getData('text/plain') || e.dataTransfer?.getData('text/uri-list') || ''
+    const text = e.dataTransfer?.getData('text/plain') || e.dataTransfer?.getData('text/uri-list') || ''
     if (looksLikeYggdrasilProvider(text)) {
       routeYggdrasilImport({ kind: 'text', value: text })
     }
@@ -503,7 +559,7 @@ const modDrop = reactive({ open: false, files: [] as string[] })
 const worldModal = reactive({
   open: false,
   filePath: '',
-  info: null as WorldImportInfo | null
+  info: null as WorldImportInfo | null,
 })
 
 let importProbeRevision = 0
@@ -525,12 +581,12 @@ async function routeSingleImport(filePath: string, _displayName: string) {
 const FORMAT_LABEL: Record<ModpackInfo['format'], string> = {
   mrpack: 'Modrinth (.mrpack)',
   curseforge: 'CurseForge',
-  fullpack: '完整客户端包'
+  fullpack: '完整客户端包',
 }
 const FORMAT_TAG_CLASS: Record<ModpackInfo['format'], string> = {
   mrpack: 'tag-success',
   curseforge: 'tag-gold',
-  fullpack: 'tag-cyan'
+  fullpack: 'tag-cyan',
 }
 
 interface ModpackModal {
@@ -560,22 +616,15 @@ const mpModal = reactive<ModpackModal>({
   conflictAction: 'rename',
   existingId: '',
   confirmReplace: false,
-  keySyncOverride: false
+  keySyncOverride: false,
 })
 
 const mpFormatLabel = computed(() => (mpModal.info ? FORMAT_LABEL[mpModal.info.format] : ''))
-const mpFormatTagClass = computed(() =>
-  mpModal.info ? FORMAT_TAG_CLASS[mpModal.info.format] : ''
-)
-const normalizeMpName = (value: string) =>
-  value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-US')
-const mpExistingInFolder = computed(() =>
-  (mpModal.info?.existingInstances ?? []).filter((item) => item.folder === mpModal.targetFolder)
-)
+const mpFormatTagClass = computed(() => (mpModal.info ? FORMAT_TAG_CLASS[mpModal.info.format] : ''))
+const normalizeMpName = (value: string) => value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-US')
+const mpExistingInFolder = computed(() => (mpModal.info?.existingInstances ?? []).filter((item) => item.folder === mpModal.targetFolder))
 const mpNameConflict = computed(() =>
-  mpExistingInFolder.value.find(
-    (item) => normalizeMpName(item.id) === normalizeMpName(mpModal.customName)
-  )
+  mpExistingInFolder.value.find((item) => normalizeMpName(item.id) === normalizeMpName(mpModal.customName))
 )
 const mpRelatedExisting = computed(() => {
   const result = mpExistingInFolder.value.filter(
@@ -583,9 +632,7 @@ const mpRelatedExisting = computed(() => {
   )
   return [...new Map(result.map((item) => [item.id, item])).values()]
 })
-const mpNeedsReplaceConfirm = computed(
-  () => mpModal.conflictAction === 'update' || mpModal.conflictAction === 'overwrite'
-)
+const mpNeedsReplaceConfirm = computed(() => mpModal.conflictAction === 'update' || mpModal.conflictAction === 'overwrite')
 
 function fmtPackBytes(bytes: number): string {
   if (!bytes) return '大小未知'
@@ -628,13 +675,14 @@ async function openModpackImport(filePath: string, knownInfo?: ModpackInfo) {
     info: null,
     nameSource: 'file' as const,
     customName: '',
-    targetFolder: store.settings?.folders.find(folder => folder.isDefault)?.path || store.settings?.activeFolder || store.settings?.gameDir || '',
+    targetFolder:
+      store.settings?.folders.find((folder) => folder.isDefault)?.path || store.settings?.activeFolder || store.settings?.gameDir || '',
     conflictAction: 'rename' as const,
     existingId: '',
-    confirmReplace: false
+    confirmReplace: false,
   })
   try {
-    const info = knownInfo ?? await probeModpack(filePath)
+    const info = knownInfo ?? (await probeModpack(filePath))
     // 防止解析期间用户又发起了另一次导入，旧结果覆盖新弹窗
     if (mpModal.filePath === filePath) {
       mpModal.info = info
@@ -682,7 +730,7 @@ function confirmModpackImport() {
     conflictAction: mpModal.conflictAction,
     existingId: mpModal.existingId || undefined,
     confirmReplace: mpNeedsReplaceConfirm.value && mpModal.confirmReplace,
-    keySyncOverride: mpModal.keySyncOverride
+    keySyncOverride: mpModal.keySyncOverride,
   }).catch((e) => {
     toast('整合包安装失败：' + errText(e), 'error')
   })
@@ -707,13 +755,18 @@ function toggleNotices() {
 }
 
 // ---------------- 启动失败日志导出 ----------------
-const launchFail = reactive({ open: false, title: '', text: '', exporting: false })
+const launchFail = reactive({
+  open: false,
+  title: '',
+  text: '',
+  exporting: false,
+})
 
 async function onExportLogs() {
   if (launchFail.exporting) return
   launchFail.exporting = true
   try {
-    const p = await exportLaunchLogs(store.launchingVersionId,store.launchingFolder)
+    const p = await exportLaunchLogs(store.launchingVersionId, store.launchingFolder)
     if (p) {
       toast(`错误日志已导出：${p}`, 'success')
       launchFail.open = false
@@ -747,10 +800,7 @@ function onGlobalPointerDown(event: PointerEvent) {
   closeTopDropdowns()
 }
 const activeTaskCount = computed(
-  () =>
-    store.tasks.filter(
-      (t) => t.status === 'running' || t.status === 'paused' || t.status === 'cancelling'
-    ).length
+  () => store.tasks.filter((t) => t.status === 'running' || t.status === 'paused' || t.status === 'cancelling').length
 )
 const launcherHealth = computed(() => {
   if (store.launchState?.status === 'error') {
@@ -759,7 +809,7 @@ const launcherHealth = computed(() => {
   if (activeTaskCount.value) {
     return { tone: 'busy', text: `${activeTaskCount.value} 项后台任务进行中` }
   }
-  return { tone: 'ok', text: '全部系统运行正常' }
+  return { tone: 'ok', text: '系统无异常' }
 })
 
 async function onPauseTask(id: string) {
@@ -789,7 +839,12 @@ async function onCancelTask(id: string) {
   try {
     const found = await cancelTask(id)
     if (!found) {
-      finalizeTask({ taskId: id, ok: false, cancelled: true, error: '任务已结束' })
+      finalizeTask({
+        taskId: id,
+        ok: false,
+        cancelled: true,
+        error: '任务已结束',
+      })
       toast('任务已结束或不存在', 'info')
     }
   } catch (e) {
@@ -824,7 +879,7 @@ const failedBackground = ref('')
 const bgImages = computed(() => {
   const bg = appearancePreview.value?.background
   if (!bg || bg.mode !== 'image') return [] as string[]
-  return bg.images?.length ? bg.images : (bg.image ? [bg.image] : [])
+  return bg.images?.length ? bg.images : bg.image ? [bg.image] : []
 })
 const BG_INDEX_KEY = 'faionyx:bg-last-index'
 const currentBgIndex = ref(0)
@@ -895,7 +950,7 @@ const bgStyle = computed(() => {
   if (bg.mode === 'color') {
     return {
       background: bg.color,
-      opacity: String(bg.opacity)
+      opacity: String(bg.opacity),
     }
   }
   if (bg.mode === 'image' && currentBgImage.value && failedBackground.value !== currentBgImage.value) {
@@ -907,7 +962,7 @@ const bgStyle = computed(() => {
       backgroundSize: size,
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
-      ...backgroundImageEffect(bg)
+      ...backgroundImageEffect(bg),
     }
   }
   return null
@@ -949,7 +1004,7 @@ const CUSTOM_VARS = [
   '--glass-blur',
   '--sidebar-w',
   '--banner-h',
-  '--radius'
+  '--radius',
 ]
 
 /** 解析 #rrggbb 并计算相对亮度（0-1），非法输入按暗色处理 */
@@ -982,10 +1037,7 @@ function applyCustomVars(custom: CustomTheme, theme: ThemeName) {
   st.setProperty('--accent', accent)
   st.setProperty('--accent-2', accent2)
   st.setProperty('--accent-deep', accentDeep)
-  st.setProperty(
-    '--accent-grad',
-    `linear-gradient(135deg, ${accent2} 0%, ${accent} 55%, ${accentDeep} 100%)`
-  )
+  st.setProperty('--accent-grad', `linear-gradient(135deg, ${accent2} 0%, ${accent} 55%, ${accentDeep} 100%)`)
   st.setProperty('--accent-soft', `color-mix(in srgb, ${accent} 14%, transparent)`)
   st.setProperty('--on-accent', hexLuminance(accent) > 0.6 ? '#1a1208' : '#ffffff')
   st.setProperty('--bg', colors.bg)
@@ -1011,10 +1063,7 @@ function applyCustomVars(custom: CustomTheme, theme: ThemeName) {
   st.setProperty('--cyan-soft', dark ? 'rgba(158, 215, 233, 0.13)' : 'rgba(14, 116, 144, 0.1)')
   st.setProperty('--shadow', dark ? '0 2px 8px rgba(0, 0, 0, 0.16)' : '0 2px 8px rgba(31, 50, 85, 0.045)')
   st.setProperty('--shadow-lg', dark ? '0 20px 55px rgba(0, 0, 0, 0.42)' : '0 20px 55px rgba(31, 50, 85, 0.18)')
-  st.setProperty(
-    '--shell-surface',
-    `color-mix(in srgb, ${colors.bg} ${dark ? 30 : 42}%, transparent)`
-  )
+  st.setProperty('--shell-surface', `color-mix(in srgb, ${colors.bg} ${dark ? 30 : 42}%, transparent)`)
   st.setProperty('--glass-blur', '28px')
   // 图一布局是全部主题共享的固定骨架；旧 layout 字段只保留兼容，不再改变结构。
   st.setProperty('--sidebar-w', '208px')
@@ -1035,10 +1084,7 @@ function applyTheme(theme?: ThemeName, custom?: CustomTheme) {
     return
   }
   const preset = THEME_PRESETS[selected] ?? THEME_PRESETS.transparent
-  applyCustomVars(
-    { colors: preset.colors, layout: DEFAULT_CUSTOM_THEME.layout },
-    selected
-  )
+  applyCustomVars({ colors: preset.colors, layout: DEFAULT_CUSTOM_THEME.layout }, selected)
 }
 
 // settings 未加载时按亮色应用；加载完成 / 修改后 watch 触发立即生效
@@ -1051,7 +1097,10 @@ watch(
 
 // ---------------- 个性化点选编辑模式 ----------------
 function onEditKeydown(e: KeyboardEvent) {
-  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'e') { e.preventDefault(); void enterEditMode() }
+  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'e') {
+    e.preventDefault()
+    void enterEditMode()
+  }
 }
 
 // ---------------- 初始化与事件订阅 ----------------
@@ -1077,8 +1126,17 @@ onMounted(async () => {
   window.addEventListener('keydown', onEditKeydown)
   // Teleports are outside .shell; capture above their masks without accepting
   // internal text/image drags or invoking the import handler twice.
-  const dragStart = () => { internalDrag = true }
-  const dragEvents = { dragenter: onDragEnter, dragover: onDragOver, dragleave: onDragLeave, drop: onDrop, dragstart: dragStart, dragend: endDrag }
+  const dragStart = () => {
+    internalDrag = true
+  }
+  const dragEvents = {
+    dragenter: onDragEnter,
+    dragover: onDragOver,
+    dragleave: onDragLeave,
+    drop: onDrop,
+    dragstart: dragStart,
+    dragend: endDrag,
+  }
   for (const [type, listener] of Object.entries(dragEvents)) {
     window.addEventListener(type, listener as EventListener, true)
     offs.push(() => window.removeEventListener(type, listener as EventListener, true))
@@ -1091,7 +1149,7 @@ onMounted(async () => {
     window.faionyx.on('window:caption-pointerdown', closeTopDropdowns),
     window.faionyx.on('files:dragError', (error) => toast('无法拖出文件：' + String(error), 'error')),
     onProgress((e) => {
-      if (e.manualFiles && !store.tasks.some(t => t.manualFiles?.token === e.manualFiles?.token)) dlOpen.value = true
+      if (e.manualFiles && !store.tasks.some((t) => t.manualFiles?.token === e.manualFiles?.token)) dlOpen.value = true
       store.progress = e
       if (e.versionId) store.installProgress[e.versionId] = e
       upsertTaskProgress(e)
@@ -1133,7 +1191,12 @@ onMounted(async () => {
       if (r.ok) {
         store.failedInstalls.delete(r.versionId)
         const favorites = r.favoriteModsResult
-        toast(favorites ? `版本 ${r.versionId} 安装完成；${favorites.baseOnly ? '已按确认不安装收藏模组' : `已安装 ${favorites.installed} 项收藏模组及 ${favorites.dependencies} 项必要前置，跳过 ${favorites.skipped.length} 项`}。模组目录：${favorites.modsDirectory}` : `版本 ${r.versionId} 安装完成`, 'success')
+        toast(
+          favorites
+            ? `版本 ${r.versionId} 安装完成；${favorites.baseOnly ? '已按确认不安装收藏模组' : `已安装 ${favorites.installed} 项收藏模组及 ${favorites.dependencies} 项必要前置，跳过 ${favorites.skipped.length} 项`}。模组目录：${favorites.modsDirectory}`
+            : `版本 ${r.versionId} 安装完成`,
+          'success'
+        )
         void refreshInstalled()
       } else if (r.cancelled) {
         // 用户主动取消：不记失败、不弹错误（taskDone 已提示）
@@ -1170,7 +1233,11 @@ onMounted(async () => {
         launchFail.title = '游戏启动失败'
         launchFail.text = s.text
       } else if (s.status === 'exited') {
-        if (s.savedWindowSize?.scope === 'global' && store.settings && JSON.stringify(store.settings.resolution) === JSON.stringify(s.savedWindowSize.previous)) {
+        if (
+          s.savedWindowSize?.scope === 'global' &&
+          store.settings &&
+          JSON.stringify(store.settings.resolution) === JSON.stringify(s.savedWindowSize.previous)
+        ) {
           store.settings.resolution = { ...s.savedWindowSize.resolution }
         }
         if (s.savedWindowSize?.scope === 'instance') void refreshInstalled().catch(() => undefined)
@@ -1183,8 +1250,7 @@ onMounted(async () => {
         }
         // 游戏退出后只扫描刚运行的实例，避免共享 servers.dat 被错误关联到其他版本。
         const exitedVersionId = s.versionId || store.launchingVersionId
-        const exitedFolder =
-          s.folder || store.launchingFolder || (store.settings?.activeFolder ?? store.settings?.gameDir)
+        const exitedFolder = s.folder || store.launchingFolder || (store.settings?.activeFolder ?? store.settings?.gameDir)
         void import('./api').then(({ syncServersFromDat }) =>
           syncServersFromDat(exitedVersionId || undefined, exitedFolder).catch(() => undefined)
         )
@@ -1198,17 +1264,16 @@ onMounted(async () => {
     void checkConfigStatus()
     await Promise.all([
       refreshAccounts().then(() => window.faionyx.send('boot:stage', 'accounts')),
-      refreshInstalled().then(() => window.faionyx.send('boot:stage', 'instances'))
+      refreshInstalled().then(() => window.faionyx.send('boot:stage', 'instances')),
     ])
-        // 启动自检：发现上次下载未完成的残缺版本，提示去已安装页处理
-        const broken = store.installed.filter((v) => v.incomplete)
-        if (broken.length) {
-          toast(
-            `检测到 ${broken.length} 个版本下载未完成（${broken.map((b) => b.id).join('、')}），可在「游戏版本 → 已安装」继续下载或删除残留`,
-            'info'
-          )
-        }
-
+    // 启动自检：发现上次下载未完成的残缺版本，提示去已安装页处理
+    const broken = store.installed.filter((v) => v.incomplete)
+    if (broken.length) {
+      toast(
+        `检测到 ${broken.length} 个版本下载未完成（${broken.map((b) => b.id).join('、')}），可在「游戏版本 → 已安装」继续下载或删除残留`,
+        'info'
+      )
+    }
   } catch (e) {
     toast('初始化失败：' + errText(e), 'error')
   } finally {
@@ -1218,12 +1283,12 @@ onMounted(async () => {
     await nextTick()
     await document.fonts.ready
     // Decode rendered assets after async account/skin/thumbnail bindings have settled.
-    await Promise.all([...document.images].map(img => img.decode().catch(() => undefined)))
+    await Promise.all([...document.images].map((img) => img.decode().catch(() => undefined)))
     await nextTick()
     await waitForBootTasks()
     sealBootTasks()
     window.faionyx.send('boot:stage', 'assets')
-    await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
     window.faionyx.send('boot:stage', 'paint')
     window.faionyx.send('boot:renderer-ready')
   }
@@ -1241,327 +1306,466 @@ onUnmounted(() => {
 <template>
   <SupplementalModsResult />
   <LaunchNotice />
-  <InstanceCenter v-if="instanceCenter.target" :key="instanceCenter.target.folder+instanceCenter.target.id" />
+  <InstanceCenter v-if="instanceCenter.target" :key="instanceCenter.target.folder + instanceCenter.target.id" />
   <Teleport :to="designStageReady ? '#design-preview-host' : 'body'" :disabled="!designStageReady">
-  <!-- 自定义背景层（纯色/图片 + 透明度 + 模糊） -->
-  <div data-ui="App:870373af1ab7" v-if="bgStyle" class="app-bg" :style="bgStyle"></div>
-  <div data-ui="App:e8c1fdc22711"
-    class="shell"
-    :class="{ 'edit-mode': store.editMode, 'has-bg': !!bgStyle, 'mascots-active': mascotOpen, 'mascots-software': mascotOpen&&mascotSoftware }"
-
-  >
-    <!-- ============ 左侧边栏（宽度 --sidebar-w） ============ -->
-    <aside data-ui="App:25064d2bb910" class="sidebar" data-edit="sidebar">
-      <!-- Logo 区 -->
-      <div data-ui="App:fc5fc8ba7e96" class="logo-area">
-        <div class="brand-slot">
-        <button class="brand-avatar" :class="{'avatar-open':mascotOpen&&mascotReady,'avatar-preparing':mascotOpen&&!mascotReady}" :tabindex="mascotOpen?-1:0" aria-label="打开卡慕互动彩蛋" :aria-expanded="mascotOpen" :aria-busy="mascotOpen&&!mascotReady" :title="mascotOpen&&!mascotReady?'正在准备卡慕…':'打开卡慕互动彩蛋'" @click="openMascots"><img data-ui="App:0f39bd9dbfd2" class="brand-head" :src="brandHead" alt="KaMuaMua 的 Minecraft 头像" /></button>
-        <MascotStage v-if="mascotOpen" ref="mascotRef" :focus-on-ready="mascotKeyboard" @ready="mascotReady=true" @activity="mascotBusy=$event" @render-mode="mascotSoftware=$event" @close="closeMascots"/>
+    <!-- 自定义背景层（纯色/图片 + 透明度 + 模糊） -->
+    <div data-ui="App:870373af1ab7" v-if="bgStyle" class="app-bg" :style="bgStyle"></div>
+    <div
+      data-ui="App:e8c1fdc22711"
+      class="shell"
+      :class="{
+        'edit-mode': store.editMode,
+        'has-bg': !!bgStyle,
+      }"
+    >
+      <!-- ============ 左侧边栏（宽度 --sidebar-w） ============ -->
+      <aside data-ui="App:25064d2bb910" class="sidebar" data-edit="sidebar">
+        <!-- Logo 区 -->
+        <div data-ui="App:fc5fc8ba7e96" class="logo-area">
+          <div class="brand-slot">
+            <button class="brand-avatar" aria-label="FAIONYX" title="FAIONYX">
+              <img data-ui="App:0f39bd9dbfd2" class="brand-icon" :src="icon" alt="FAIONYX" />
+            </button>
+          </div>
+          <div data-ui="App:7494cda29e47" class="logo-text">
+            <span data-ui="App:c396a9ff34cb" class="logo-name">FAIONYX</span>
+            <span data-ui="App:31accf043a9a" class="logo-version">v{{ appVersion }}</span>
+          </div>
         </div>
-        <div data-ui="App:7494cda29e47" class="logo-text">
-          <span data-ui="App:c396a9ff34cb" class="logo-name">FAIONYX</span>
-          <span data-ui="App:31accf043a9a" class="logo-version">v{{ appVersion }}</span>
-        </div>
-      </div>
 
-      <!-- 导航 -->
-      <nav data-ui="App:adafe645f766" ref="navEl" class="nav" aria-label="主导航" @pointerover="retargetNav" @pointerleave="resetNav" @focusin="retargetNav" @focusout="navFocusOut" @scroll.passive="measureNav">
-        <div data-ui="App:763b7368d7c7" class="nav-bubble" :style="bubbleStyle" aria-hidden="true"></div>
-        <div class="nav-selection" :style="selectionStyle" aria-hidden="true"></div>
-        <template v-for="item in visibleNavItems" :key="item.key">
-          <button data-ui="App:e2cd389fbd0f"
-            class="nav-item"
-            :data-nav="item.key"
-            :class="{ active: store.currentView === item.key }"
-            :aria-current="store.currentView === item.key ? 'page' : undefined"
-            @click="store.currentView = item.key"
-          >
-            <span data-ui="App:1480740577df" class="nav-icon" v-html="item.icon"></span>
-            <span data-ui="App:f8a0bfe85bf9" class="nav-label">{{ item.label }}</span>
-          </button>
-
-          <!-- 资源管理子级菜单（插在「游戏版本」之后） -->
-          <template v-if="item.key === 'game'">
-            <button data-ui="App:7080ad4eb8e0"
-              class="nav-item nav-parent"
-              data-nav="resources"
-              :class="{ 'group-active': inResourceGroup }"
-              :aria-expanded="resourceExpanded || inResourceGroup"
-              aria-controls="resource-navigation"
-              @click="resourceExpanded = !resourceExpanded"
+        <!-- 导航 -->
+        <nav
+          data-ui="App:adafe645f766"
+          ref="navEl"
+          class="nav"
+          aria-label="主导航"
+          @pointerover="retargetNav"
+          @pointerleave="resetNav"
+          @focusin="retargetNav"
+          @focusout="navFocusOut"
+          @scroll.passive="measureNav"
+        >
+          <div data-ui="App:763b7368d7c7" class="nav-bubble" :style="bubbleStyle" aria-hidden="true"></div>
+          <div class="nav-selection" :style="selectionStyle" aria-hidden="true"></div>
+          <template v-for="item in visibleNavItems" :key="item.key">
+            <button
+              data-ui="App:e2cd389fbd0f"
+              class="nav-item"
+              :data-nav="item.key"
+              :class="{ active: store.currentView === item.key }"
+              :aria-current="store.currentView === item.key ? 'page' : undefined"
+              @click="store.currentView = item.key"
             >
-              <span data-ui="App:48f397d463e5" class="nav-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M3 11h18"/></svg>
-              </span>
-              <span data-ui="App:215ddb49217f" class="nav-label">资源管理</span>
-              <svg
-                class="nav-caret"
-                :class="{ open: resourceExpanded || inResourceGroup }"
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              <span data-ui="App:1480740577df" class="nav-icon" v-html="item.icon"></span>
+              <span data-ui="App:f8a0bfe85bf9" class="nav-label">{{ item.label }}</span>
+            </button>
+
+            <!-- 资源管理子级菜单（插在「游戏版本」之后） -->
+            <template v-if="item.key === 'game'">
+              <button
+                data-ui="App:7080ad4eb8e0"
+                class="nav-item nav-parent"
+                data-nav="resources"
+                :class="{ 'group-active': inResourceGroup }"
+                :aria-expanded="resourceExpanded || inResourceGroup"
+                aria-controls="resource-navigation"
+                @click="resourceExpanded = !resourceExpanded"
               >
-                <path d="m9 6 6 6-6 6" />
+                <span data-ui="App:48f397d463e5" class="nav-icon">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+                    <path d="M3 11h18" />
+                  </svg>
+                </span>
+                <span data-ui="App:215ddb49217f" class="nav-label">资源管理</span>
+                <svg
+                  class="nav-caret"
+                  :class="{ open: resourceExpanded || inResourceGroup }"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="m9 6 6 6-6 6" />
+                </svg>
+              </button>
+              <!-- 收起时 inert，键盘导航不会落入隐藏的资源菜单。 -->
+              <div
+                data-ui="App:60e2cab1729e"
+                id="resource-navigation"
+                class="nav-sub"
+                :class="{ open: resourceExpanded || inResourceGroup }"
+                :inert="!(resourceExpanded || inResourceGroup)"
+              >
+                <div data-ui="App:23fdfa0f7cd4" class="nav-sub-inner">
+                  <button
+                    data-ui="App:98aaad3e10e8"
+                    v-for="sub in visibleResourceSubItems"
+                    :key="sub.key"
+                    class="nav-item nav-sub-item"
+                    :data-nav="sub.key"
+                    :class="{ active: store.currentView === sub.key }"
+                    :aria-current="store.currentView === sub.key ? 'page' : undefined"
+                    @click="store.currentView = sub.key"
+                  >
+                    <span data-ui="App:1025aa4e9a68" class="nav-icon" v-html="sub.icon"></span>
+                    <span data-ui="App:6f84d207dfdd" class="nav-label">{{ sub.label }}</span>
+                  </button>
+                </div>
+              </div>
+            </template>
+          </template>
+        </nav>
+
+        <button
+          data-ui="App:f81b37b0f9eb"
+          class="sidebar-health"
+          :class="`is-${launcherHealth.tone}`"
+          title="打开通知中心"
+          @click="toggleNotices"
+        >
+          <i data-ui="App:8534bb11ef26"></i>
+          <span data-ui="App:8c2f3c89a0dd">{{ launcherHealth.text }}</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        </button>
+      </aside>
+
+      <!-- ============ 右侧（顶栏 + 内容） ============ -->
+      <div data-ui="App:f900e94b908a" class="main-area">
+        <!-- 顶部栏（可拖拽） -->
+        <header data-ui="App:db645f1637b0" class="topbar" data-edit="topbar" @pointerdown="onTopbarPointerDown">
+          <button
+            data-ui="App:3cd32ab47022"
+            v-if="canGoBack && store.currentView !== 'home'"
+            class="top-back"
+            :disabled="!canGoBack"
+            title="返回上一个页面"
+            @click="goBack"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+          </button>
+          <div class="topbar-spacer">
+            <CreatorMotto :disabled="store.editMode" />
+          </div>
+
+          <div data-ui="App:5f4d42b34aae" class="top-actions">
+            <button data-ui="App:e7efd70d16b8" v-if="store.currentView !== 'home'" class="top-btn dl-toggle" @click="dlOpen = !dlOpen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v11" />
+                <path d="m7 10 5 5 5-5" />
+                <path d="M4 21h16" />
+              </svg>
+              下载
+              <span data-ui="App:1585a95f110a" v-if="activeTaskCount" class="dl-badge">{{ activeTaskCount }}</span>
+            </button>
+            <button data-ui="App:0995359279d1" v-if="store.currentView !== 'home'" class="top-btn" @click="onImportClick">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 15V4" />
+                <path d="m7 8 5-5 5 5" />
+                <path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
+              </svg>
+              导入
+            </button>
+            <button
+              data-ui="App:50549c4d6612"
+              v-if="store.currentView === 'home' && activeTaskCount"
+              class="top-icon-btn dl-toggle"
+              title="下载中心"
+              @click="dlOpen = !dlOpen"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v11" />
+                <path d="m7 10 5 5 5-5" />
+                <path d="M4 21h16" />
+              </svg>
+              <span data-ui="App:34ac91e6ba07" class="dl-badge compact">{{ activeTaskCount }}</span>
+            </button>
+            <button
+              data-ui="App:0a28f190d06e"
+              v-if="store.currentView === 'home'"
+              class="top-icon-btn dl-toggle"
+              title="更新日志"
+              @click="notesOpen = !notesOpen"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9" />
+                <path d="M3 4v5h5" />
+                <path d="M12 7v5l3.5 2" />
               </svg>
             </button>
-            <!-- 收起时 inert，键盘导航不会落入隐藏的资源菜单。 -->
-            <div data-ui="App:60e2cab1729e" id="resource-navigation" class="nav-sub" :class="{ open: resourceExpanded || inResourceGroup }" :inert="!(resourceExpanded || inResourceGroup)">
-              <div data-ui="App:23fdfa0f7cd4" class="nav-sub-inner">
-                <button data-ui="App:98aaad3e10e8"
-                  v-for="sub in visibleResourceSubItems"
-                  :key="sub.key"
-                  class="nav-item nav-sub-item"
-                  :data-nav="sub.key"
-                  :class="{ active: store.currentView === sub.key }"
-                  :aria-current="store.currentView === sub.key ? 'page' : undefined"
-                  @click="store.currentView = sub.key"
-                >
-                  <span data-ui="App:1025aa4e9a68" class="nav-icon" v-html="sub.icon"></span>
-                  <span data-ui="App:6f84d207dfdd" class="nav-label">{{ sub.label }}</span>
+            <button data-ui="App:b3baec2490ab" class="top-icon-btn" title="通知" @click="toggleNotices">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+              </svg>
+              <span data-ui="App:9fb26325a181" v-if="store.noticesUnread" class="bell-dot"></span>
+            </button>
+
+            <template v-if="!isMac">
+              <span data-ui="App:2d64ba8e392c" class="top-divider"></span>
+
+              <button data-ui="App:e3e46a2d0aaf" class="win-btn" title="最小化" @click="win('minimize')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M5 12h14" />
+                </svg>
+              </button>
+              <button data-ui="App:bd7bf1eb0182" class="win-btn" title="最大化/还原" @click="win('maximize')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <rect x="6" y="6" width="12" height="12" rx="1.5" />
+                </svg>
+              </button>
+              <button data-ui="App:f3cf1f9c86a5" class="win-btn win-close" title="关闭" @click="win('close')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M6 6l12 12M18 6 6 18" />
+                </svg>
+              </button>
+            </template>
+          </div>
+
+          <!-- 通知中心下拉 -->
+          <Teleport to="body">
+            <div data-ui="App:8e1aef347238" v-if="noticeOpen" class="notice-mask" @click="noticeOpen = false"></div>
+            <div data-ui="App:9730228f244a" v-if="noticeOpen" class="notice-panel">
+              <div data-ui="App:e6028868bd80" class="notice-head">
+                <span data-ui="App:43feec7b6fd3" class="notice-title">通知</span>
+                <button data-ui="App:da706702d37c" class="btn btn-ghost btn-sm" :disabled="!store.notices.length" @click="clearNotices">
+                  清空
                 </button>
               </div>
-            </div>
-          </template>
-        </template>
-      </nav>
-
-      <button data-ui="App:f81b37b0f9eb"
-        class="sidebar-health"
-        :class="`is-${launcherHealth.tone}`"
-        title="打开通知中心"
-        @click="toggleNotices"
-      >
-        <i data-ui="App:8534bb11ef26"></i>
-        <span data-ui="App:8c2f3c89a0dd">{{ launcherHealth.text }}</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-      </button>
-    </aside>
-
-    <!-- ============ 右侧（顶栏 + 内容） ============ -->
-    <div data-ui="App:f900e94b908a" class="main-area">
-      <!-- 顶部栏（可拖拽） -->
-      <header data-ui="App:db645f1637b0" class="topbar"  data-edit="topbar" @pointerdown="onTopbarPointerDown">
-        <button data-ui="App:3cd32ab47022"
-          v-if="canGoBack && store.currentView !== 'home'"
-          class="top-back"
-          :disabled="!canGoBack"
-          title="返回上一个页面"
-          @click="goBack"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-        </button>
-        <div class="topbar-spacer"><CreatorMotto :disabled="store.editMode" /></div>
-
-        <div data-ui="App:5f4d42b34aae" class="top-actions">
-          <button data-ui="App:e7efd70d16b8" v-if="store.currentView !== 'home'" class="top-btn dl-toggle" @click="dlOpen = !dlOpen">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 3v11" />
-              <path d="m7 10 5 5 5-5" />
-              <path d="M4 21h16" />
-            </svg>
-            下载
-            <span data-ui="App:1585a95f110a" v-if="activeTaskCount" class="dl-badge">{{ activeTaskCount }}</span>
-          </button>
-          <button data-ui="App:0995359279d1" v-if="store.currentView !== 'home'" class="top-btn" @click="onImportClick">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 15V4" />
-              <path d="m7 8 5-5 5 5" />
-              <path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
-            </svg>
-            导入
-          </button>
-          <button data-ui="App:50549c4d6612"
-            v-if="store.currentView === 'home' && activeTaskCount"
-            class="top-icon-btn dl-toggle"
-            title="下载中心"
-            @click="dlOpen = !dlOpen"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11" /><path d="m7 10 5 5 5-5" /><path d="M4 21h16" /></svg>
-            <span data-ui="App:34ac91e6ba07" class="dl-badge compact">{{ activeTaskCount }}</span>
-          </button>
-          <button data-ui="App:0a28f190d06e" v-if="store.currentView === 'home'" class="top-icon-btn dl-toggle" title="更新日志" @click="notesOpen = !notesOpen">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 12a9 9 0 1 0 9-9" />
-              <path d="M3 4v5h5" />
-              <path d="M12 7v5l3.5 2" />
-            </svg>
-          </button>
-          <button data-ui="App:b3baec2490ab" class="top-icon-btn" title="通知" @click="toggleNotices">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.7 21a2 2 0 0 1-3.4 0" />
-            </svg>
-            <span data-ui="App:9fb26325a181" v-if="store.noticesUnread" class="bell-dot"></span>
-          </button>
-
-          <template v-if="!isMac">
-          <span data-ui="App:2d64ba8e392c" class="top-divider"></span>
-
-          <button data-ui="App:e3e46a2d0aaf" class="win-btn" title="最小化" @click="win('minimize')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <path d="M5 12h14" />
-            </svg>
-          </button>
-          <button data-ui="App:bd7bf1eb0182" class="win-btn" title="最大化/还原" @click="win('maximize')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <rect x="6" y="6" width="12" height="12" rx="1.5" />
-            </svg>
-          </button>
-          <button data-ui="App:f3cf1f9c86a5" class="win-btn win-close" title="关闭" @click="win('close')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <path d="M6 6l12 12M18 6 6 18" />
-            </svg>
-          </button>
-          </template>
-        </div>
-
-        <!-- 通知中心下拉 -->
-        <Teleport to="body">
-          <div data-ui="App:8e1aef347238" v-if="noticeOpen" class="notice-mask" @click="noticeOpen = false"></div>
-          <div data-ui="App:9730228f244a" v-if="noticeOpen" class="notice-panel">
-            <div data-ui="App:e6028868bd80" class="notice-head">
-              <span data-ui="App:43feec7b6fd3" class="notice-title">通知</span>
-              <button data-ui="App:da706702d37c" class="btn btn-ghost btn-sm" :disabled="!store.notices.length" @click="clearNotices">清空</button>
-            </div>
-            <div data-ui="App:84df1441fafa" v-if="!store.notices.length" class="notice-empty">暂无通知</div>
-            <div data-ui="App:b4daafdb8870" v-else class="notice-list">
-              <div data-ui="App:a73122485a3f" v-for="n in store.notices" :key="n.id" class="notice-item" :class="'notice-' + n.type">
-                <span data-ui="App:adb2057c5de6" class="notice-dot"></span>
-                <div data-ui="App:2278766c3c3f" class="notice-body">
-                  <p data-ui="App:e0e95443c7b4" class="notice-text">{{ n.text }}</p>
-                  <button v-if="n.exitTarget" class="btn btn-sm" @click="openInstanceCenter(n.exitTarget,'diagnostics'); noticeOpen = false">查看原因</button>
-                  <span data-ui="App:9f929a457637" class="notice-time">{{ fmtNoticeTime(n.time) }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Teleport>
-
-        <!-- 更新日志下拉（首页标题栏秒表入口）：内置各版本改动，无网络依赖 -->
-        <Teleport to="body">
-          <div data-ui="App:c07fadcedfba" v-if="notesOpen" class="notice-mask" @click="notesOpen = false"></div>
-          <div data-ui="App:8e6f6e3d72b8" v-if="notesOpen" class="notice-panel notes-panel">
-            <div data-ui="App:aeac05a751bf" class="notice-head">
-              <span data-ui="App:6919eb62e967" class="notice-title">更新日志</span>
-              <span data-ui="App:632f2221de5a" class="muted">{{ latestUpdateNote()?.version }} · {{ latestUpdateNote()?.date }}</span>
-            </div>
-            <div data-ui="App:27bd32aa001a" class="notes-list">
-              <section data-ui="App:f14cd0f7ca63" v-for="note in updateNotes" :key="note.version" class="note-version">
-                <h4 data-ui="App:7f4b6a7ad79d" class="note-head">
-                  <span data-ui="App:5860d27f0ee9" class="note-ver">{{ note.version }}</span>
-                  <span data-ui="App:21f2f31213b2" class="muted">{{ note.date }}</span>
-                </h4>
-                <ul data-ui="App:2ce63f856bef" class="note-changes">
-                  <li data-ui="App:f7a2ec78fb95" v-for="(c, i) in note.changes" :key="i">{{ c }}</li>
-                </ul>
-              </section>
-            </div>
-          </div>
-        </Teleport>
-
-        <!-- 下载中心下拉：版本安装/整合包导入/资源下载统一任务列表，支持取消 -->
-        <Teleport to="body">
-          <div data-ui="App:32e6a4482be2" v-if="dlOpen" class="notice-mask" @click="dlOpen = false"></div>
-          <div data-ui="App:17d738b19ef5" v-if="dlOpen" class="notice-panel dl-panel">
-            <div data-ui="App:1960026275b2" class="notice-head">
-              <span data-ui="App:9bb15b429862" class="notice-title">下载中心</span>
-              <button data-ui="App:93f5c2a356cd" class="btn btn-ghost btn-sm" @click="dlOpen = false; store.currentView = 'game'">
-                去版本下载
-              </button>
-            </div>
-            <div data-ui="App:61130e12d278" v-if="!store.tasks.length" class="notice-empty">没有进行中的任务</div>
-            <div data-ui="App:9f518a7bbb67" v-else class="notice-list">
-              <div data-ui="App:ac5c4222257f" v-for="t in store.tasks" :key="t.id" :data-task-id="t.id" class="dl-item" :class="'dl-' + t.status">
-                <div data-ui="App:1147e17bfe61" class="dl-item-head">
-                  <span data-ui="App:a4f0a4d42456" class="dl-title" :title="t.title">{{ t.title }}</span>
-                  <span data-ui="App:7faad0b50853" v-if="t.status === 'running'" class="dl-actions">
-                    <button data-ui="App:4db86123aef2" class="btn btn-ghost btn-sm" @click="onPauseTask(t.id)">暂停</button>
-                    <button data-ui="App:4f9c2f515cb9" class="btn btn-ghost btn-sm" @click="onCancelTask(t.id)">取消</button>
-                  </span>
-                  <span data-ui="App:03cdc173529c" v-else-if="t.status === 'paused'" class="dl-actions">
-                    <button data-ui="App:7cae05871ea8" class="btn btn-ghost btn-sm" @click="onResumeTask(t.id)">继续</button>
-                    <button data-ui="App:13a915056e72" class="btn btn-ghost btn-sm" @click="onCancelTask(t.id)">取消</button>
-                  </span>
-                  <button data-ui="App:ea8947fe4164" v-else-if="t.status === 'cancelling'" class="btn btn-ghost btn-sm" disabled>
-                    正在取消…
-                  </button>
-                  <button data-ui="App:d19e1566b2b8" v-else class="dl-dismiss" title="移除记录" @click="dismissTask(t.id)">×</button>
-                </div>
-                <div data-ui="App:a1b294f53a4e" class="dl-sub muted">
-                  <template v-if="t.status === 'running'">
-                    {{ taskSubText(t) ? taskSubText(t) + ' · ' : '' }}{{ t.indeterminate ? '正在计算总量' : '总进度 ' + taskProgressPercent(t) + '%' }}{{ taskEtaText(t.etaSeconds) }}
-                    <span v-if="t.speed && t.speed > 0"> · {{ formatSpeed(t.speed) }}</span>
-                  </template>
-                  <template v-else-if="t.status === 'paused'">已暂停 · {{ t.indeterminate ? '总量未知' : taskProgressPercent(t) + '%' }}</template>
-                  <template v-else-if="t.status === 'cancelling'">正在停止网络与后台任务…</template>
-                  <template v-else-if="t.status === 'done'">已完成</template>
-                  <template v-else-if="t.status === 'cancelled'">已取消</template>
-                  <template v-else>
-                    失败于「{{ stageLabel(t.stage || 'error') }}」阶段：{{ t.error }}
-                  </template>
-                </div>
-                <ModpackSupplement v-if="t.manualFiles && (t.status === 'running' || t.status === 'paused')" :request="t.manualFiles" :paused="t.status === 'paused'" />
-                <div data-ui="App:c299fc9739a0" v-if="t.status === 'running' || t.status === 'paused' || t.status === 'cancelling'" class="dl-bar" :class="{ 'is-indeterminate': t.indeterminate && t.status === 'running' }">
-                  <div data-ui="App:21050ee2a501" class="dl-bar-fill" :style="{ width: t.indeterminate ? '35%' : taskProgressPercent(t) + '%' }"></div>
-                </div>
-                <div data-ui="download.parallel-stages" v-if="t.parallelStages?.length && (t.status === 'running' || t.status === 'paused')" class="dl-stages">
-                  <div v-for="lane in t.parallelStages" :key="lane.id" :data-ui="'download.stage.' + lane.id" class="dl-stage" :class="{ 'is-done': lane.state === 'done' }">
-                    <div class="dl-stage-heading">
-                      <span>{{ lane.label }}</span>
-                      <span class="muted">{{ lane.state === 'done' ? '已就绪' : lane.state === 'waiting' ? '准备中' : lane.indeterminate ? '处理中' : taskProgressPercent({ status: 'running', progress: lane.progress }) + '%' }}</span>
-                    </div>
-                    <div class="dl-stage-detail muted" :title="lane.text">{{ lane.text }}</div>
-                    <div v-if="!lane.indeterminate" class="dl-bar"><div class="dl-bar-fill" :style="{ width: taskProgressPercent({ status: lane.state === 'done' ? 'done' : 'running', progress: lane.progress }) + '%' }"></div></div>
+              <div data-ui="App:84df1441fafa" v-if="!store.notices.length" class="notice-empty">暂无通知</div>
+              <div data-ui="App:b4daafdb8870" v-else class="notice-list">
+                <div data-ui="App:a73122485a3f" v-for="n in store.notices" :key="n.id" class="notice-item" :class="'notice-' + n.type">
+                  <span data-ui="App:adb2057c5de6" class="notice-dot"></span>
+                  <div data-ui="App:2278766c3c3f" class="notice-body">
+                    <p data-ui="App:e0e95443c7b4" class="notice-text">
+                      {{ n.text }}
+                    </p>
+                    <button
+                      v-if="n.exitTarget"
+                      class="btn btn-sm"
+                      @click="
+                        openInstanceCenter(n.exitTarget, 'diagnostics')
+                        noticeOpen = false
+                      "
+                    >
+                      查看原因
+                    </button>
+                    <span data-ui="App:9f929a457637" class="notice-time">{{ fmtNoticeTime(n.time) }}</span>
                   </div>
                 </div>
               </div>
             </div>
+          </Teleport>
+
+          <!-- 更新日志下拉（首页标题栏秒表入口）：内置各版本改动，无网络依赖 -->
+          <Teleport to="body">
+            <div data-ui="App:c07fadcedfba" v-if="notesOpen" class="notice-mask" @click="notesOpen = false"></div>
+            <div data-ui="App:8e6f6e3d72b8" v-if="notesOpen" class="notice-panel notes-panel">
+              <div data-ui="App:aeac05a751bf" class="notice-head">
+                <span data-ui="App:6919eb62e967" class="notice-title">更新日志</span>
+                <span data-ui="App:632f2221de5a" class="muted">{{ latestUpdateNote()?.version }} · {{ latestUpdateNote()?.date }}</span>
+              </div>
+              <div data-ui="App:27bd32aa001a" class="notes-list">
+                <section data-ui="App:f14cd0f7ca63" v-for="note in updateNotes" :key="note.version" class="note-version">
+                  <h4 data-ui="App:7f4b6a7ad79d" class="note-head">
+                    <span data-ui="App:5860d27f0ee9" class="note-ver">{{ note.version }}</span>
+                    <span data-ui="App:21f2f31213b2" class="muted">{{ note.date }}</span>
+                  </h4>
+                  <ul data-ui="App:2ce63f856bef" class="note-changes">
+                    <li data-ui="App:f7a2ec78fb95" v-for="(c, i) in note.changes" :key="i">
+                      {{ c }}
+                    </li>
+                  </ul>
+                </section>
+              </div>
+            </div>
+          </Teleport>
+
+          <!-- 下载中心下拉：版本安装/整合包导入/资源下载统一任务列表，支持取消 -->
+          <Teleport to="body">
+            <div data-ui="App:32e6a4482be2" v-if="dlOpen" class="notice-mask" @click="dlOpen = false"></div>
+            <div data-ui="App:17d738b19ef5" v-if="dlOpen" class="notice-panel dl-panel">
+              <div data-ui="App:1960026275b2" class="notice-head">
+                <span data-ui="App:9bb15b429862" class="notice-title">下载中心</span>
+                <button
+                  data-ui="App:93f5c2a356cd"
+                  class="btn btn-ghost btn-sm"
+                  @click="
+                    dlOpen = false
+                    store.currentView = 'game'
+                  "
+                >
+                  去版本下载
+                </button>
+              </div>
+              <div data-ui="App:61130e12d278" v-if="!store.tasks.length" class="notice-empty">没有进行中的任务</div>
+              <div data-ui="App:9f518a7bbb67" v-else class="notice-list">
+                <div
+                  data-ui="App:ac5c4222257f"
+                  v-for="t in store.tasks"
+                  :key="t.id"
+                  :data-task-id="t.id"
+                  class="dl-item"
+                  :class="'dl-' + t.status"
+                >
+                  <div data-ui="App:1147e17bfe61" class="dl-item-head">
+                    <span data-ui="App:a4f0a4d42456" class="dl-title" :title="t.title">{{ t.title }}</span>
+                    <span data-ui="App:7faad0b50853" v-if="t.status === 'running'" class="dl-actions">
+                      <button data-ui="App:4db86123aef2" class="btn btn-ghost btn-sm" @click="onPauseTask(t.id)">暂停</button>
+                      <button data-ui="App:4f9c2f515cb9" class="btn btn-ghost btn-sm" @click="onCancelTask(t.id)">取消</button>
+                    </span>
+                    <span data-ui="App:03cdc173529c" v-else-if="t.status === 'paused'" class="dl-actions">
+                      <button data-ui="App:7cae05871ea8" class="btn btn-ghost btn-sm" @click="onResumeTask(t.id)">继续</button>
+                      <button data-ui="App:13a915056e72" class="btn btn-ghost btn-sm" @click="onCancelTask(t.id)">取消</button>
+                    </span>
+                    <button data-ui="App:ea8947fe4164" v-else-if="t.status === 'cancelling'" class="btn btn-ghost btn-sm" disabled>
+                      正在取消…
+                    </button>
+                    <button data-ui="App:d19e1566b2b8" v-else class="dl-dismiss" title="移除记录" @click="dismissTask(t.id)">×</button>
+                  </div>
+                  <div data-ui="App:a1b294f53a4e" class="dl-sub muted">
+                    <template v-if="t.status === 'running'">
+                      {{ taskSubText(t) ? taskSubText(t) + ' · ' : ''
+                      }}{{ t.indeterminate ? '正在计算总量' : '总进度 ' + taskProgressPercent(t) + '%' }}{{ taskEtaText(t.etaSeconds) }}
+                      <span v-if="t.speed && t.speed > 0"> · {{ formatSpeed(t.speed) }}</span>
+                    </template>
+                    <template v-else-if="t.status === 'paused'"
+                      >已暂停 · {{ t.indeterminate ? '总量未知' : taskProgressPercent(t) + '%' }}</template
+                    >
+                    <template v-else-if="t.status === 'cancelling'">正在停止网络与后台任务…</template>
+                    <template v-else-if="t.status === 'done'">已完成</template>
+                    <template v-else-if="t.status === 'cancelled'">已取消</template>
+                    <template v-else> 失败于「{{ stageLabel(t.stage || 'error') }}」阶段：{{ t.error }} </template>
+                  </div>
+                  <ModpackSupplement
+                    v-if="t.manualFiles && (t.status === 'running' || t.status === 'paused')"
+                    :request="t.manualFiles"
+                    :paused="t.status === 'paused'"
+                  />
+                  <div
+                    data-ui="App:c299fc9739a0"
+                    v-if="t.status === 'running' || t.status === 'paused' || t.status === 'cancelling'"
+                    class="dl-bar"
+                    :class="{
+                      'is-indeterminate': t.indeterminate && t.status === 'running',
+                    }"
+                  >
+                    <div
+                      data-ui="App:21050ee2a501"
+                      class="dl-bar-fill"
+                      :style="{
+                        width: t.indeterminate ? '35%' : taskProgressPercent(t) + '%',
+                      }"
+                    ></div>
+                  </div>
+                  <div
+                    data-ui="download.parallel-stages"
+                    v-if="t.parallelStages?.length && (t.status === 'running' || t.status === 'paused')"
+                    class="dl-stages"
+                  >
+                    <div
+                      v-for="lane in t.parallelStages"
+                      :key="lane.id"
+                      :data-ui="'download.stage.' + lane.id"
+                      class="dl-stage"
+                      :class="{ 'is-done': lane.state === 'done' }"
+                    >
+                      <div class="dl-stage-heading">
+                        <span>{{ lane.label }}</span>
+                        <span class="muted">{{
+                          lane.state === 'done'
+                            ? '已就绪'
+                            : lane.state === 'waiting'
+                              ? '准备中'
+                              : lane.indeterminate
+                                ? '处理中'
+                                : taskProgressPercent({
+                                    status: 'running',
+                                    progress: lane.progress,
+                                  }) + '%'
+                        }}</span>
+                      </div>
+                      <div class="dl-stage-detail muted" :title="lane.text">
+                        {{ lane.text }}
+                      </div>
+                      <div v-if="!lane.indeterminate" class="dl-bar">
+                        <div
+                          class="dl-bar-fill"
+                          :style="{
+                            width:
+                              taskProgressPercent({
+                                status: lane.state === 'done' ? 'done' : 'running',
+                                progress: lane.progress,
+                              }) + '%',
+                          }"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Teleport>
+        </header>
+
+        <!-- 内容区（:duration 显式给出过渡时长：窗口被遮挡/最小化时 transitionend 不会触发，setTimeout 兜底防切换卡死） -->
+        <main data-ui="App:4f03b68b3168" class="content">
+          <Transition name="fade" :duration="routeDuration">
+            <div data-ui="App:ece4739a5266" :key="store.currentView" class="route-view">
+              <component :is="currentComponent" />
+            </div>
+          </Transition>
+        </main>
+      </div>
+
+      <Toasts />
+
+      <!-- 启动器自更新弹窗（发现新版本/下载中/下载完成三态） -->
+      <UpdateModal
+        v-if="updateModal.open && updateModal.release"
+        :release="updateModal.release"
+        :current-version="appVersion"
+        :state="updateModal.state"
+        :percent="updatePercent"
+        :speed-text="updateSpeedText"
+        :slow-hint="updateModal.slowHint"
+        :qq-group="qqGroup"
+        :rollback="updateModal.rollback"
+        @update-now="onUpdateNow"
+        @later="onUpdateLater"
+        @skip="onUpdateSkip"
+        @cancel-download="onUpdateCancelDownload"
+        @install-now="onUpdateInstallNow"
+        @close="updateModal.open = false"
+      />
+
+      <!-- 配置文件版本不兼容（回退后旧版读到新版配置） -->
+      <div data-ui="App:78cc4acb6895" v-if="configMismatch" class="menu-overlay cfg-mismatch-mask">
+        <div data-ui="App:242f0b62f9c2" class="card cfg-mismatch-modal" role="dialog" aria-label="配置不兼容">
+          <h3 data-ui="App:02fbfeb3a028" class="upd-modal-title">配置文件版本不兼容</h3>
+          <p data-ui="App:4de81003067a" class="muted">
+            当前配置文件由更新版本的启动器创建，可能包含本版本不认识的格式。可以继续尝试使用（可能异常），或重置为默认设置（原配置会自动备份）。
+          </p>
+          <div data-ui="App:296426110d1e" class="upd-modal-actions">
+            <button data-ui="App:84897164b21e" class="btn btn-ghost" @click="configMismatch = false">继续尝试</button>
+            <button data-ui="App:889590063f51" class="btn btn-danger" @click="onConfigReset">重置设置</button>
           </div>
-        </Teleport>
-      </header>
-
-      <!-- 内容区（:duration 显式给出过渡时长：窗口被遮挡/最小化时 transitionend 不会触发，setTimeout 兜底防切换卡死） -->
-      <main data-ui="App:4f03b68b3168" class="content">
-        <Transition name="fade" :duration="routeDuration">
-          <div data-ui="App:ece4739a5266" :key="store.currentView" class="route-view">
-            <component :is="currentComponent" />
-          </div>
-        </Transition>
-      </main>
-    </div>
-
-    <Toasts />
-
-    <!-- 启动器自更新弹窗（发现新版本/下载中/下载完成三态） -->
-    <UpdateModal
-      v-if="updateModal.open && updateModal.release"
-      :release="updateModal.release"
-      :current-version="appVersion"
-      :state="updateModal.state"
-      :percent="updatePercent"
-      :speed-text="updateSpeedText"
-      :slow-hint="updateModal.slowHint"
-      :qq-group="qqGroup"
-      :rollback="updateModal.rollback"
-      @update-now="onUpdateNow"
-      @later="onUpdateLater"
-      @skip="onUpdateSkip"
-      @cancel-download="onUpdateCancelDownload"
-      @install-now="onUpdateInstallNow"
-      @close="updateModal.open = false"
-    />
-
-    <!-- 配置文件版本不兼容（回退后旧版读到新版配置） -->
-    <div data-ui="App:78cc4acb6895" v-if="configMismatch" class="menu-overlay cfg-mismatch-mask">
-      <div data-ui="App:242f0b62f9c2" class="card cfg-mismatch-modal" role="dialog" aria-label="配置不兼容">
-        <h3 data-ui="App:02fbfeb3a028" class="upd-modal-title">配置文件版本不兼容</h3>
-        <p data-ui="App:4de81003067a" class="muted">当前配置文件由更新版本的启动器创建，可能包含本版本不认识的格式。可以继续尝试使用（可能异常），或重置为默认设置（原配置会自动备份）。</p>
-        <div data-ui="App:296426110d1e" class="upd-modal-actions">
-          <button data-ui="App:84897164b21e" class="btn btn-ghost" @click="configMismatch = false">继续尝试</button>
-          <button data-ui="App:889590063f51" class="btn btn-danger" @click="onConfigReset">重置设置</button>
         </div>
       </div>
     </div>
-
-  </div>
   </Teleport>
   <EditPanel v-if="store.editMode" />
 
@@ -1582,24 +1786,44 @@ onUnmounted(() => {
   <!-- MOD 拖入即装确认弹窗 -->
   <ModDropModal :open="modDrop.open" :files="modDrop.files" @close="modDrop.open = false" />
 
-  <WorldImportModal
-    :open="worldModal.open"
-    :file-path="worldModal.filePath"
-    :info="worldModal.info"
-    @close="worldModal.open = false"
-  />
+  <WorldImportModal :open="worldModal.open" :file-path="worldModal.filePath" :info="worldModal.info" @close="worldModal.open = false" />
 
   <!-- 启动失败：提示 + 导出错误日志 -->
   <Teleport to="body">
     <div data-ui="App:9d63fadc1ed6" v-if="launchFail.open" class="modal-mask" @pointerdown.self="launchFail.open = false">
       <div data-ui="App:a55c730a5660" class="modal launchfail-modal">
-        <h3 data-ui="App:ffddaed1dca5" class="modal-title">{{ launchFail.title }}</h3>
-        <p data-ui="App:9ede176a5a84" class="launchfail-text">{{ launchFail.text }}</p>
+        <h3 data-ui="App:ffddaed1dca5" class="modal-title">
+          {{ launchFail.title }}
+        </h3>
+        <p data-ui="App:9ede176a5a84" class="launchfail-text">
+          {{ launchFail.text }}
+        </p>
         <div data-ui="App:b5caea38dc55" class="modal-actions">
-          <button class="btn btn-ghost" @click="openInstanceCenter({id:store.launchingVersionId,folder:store.launchingFolder},'diagnostics'); launchFail.open=false">查看原因</button>
+          <button
+            class="btn btn-ghost"
+            @click="
+              openInstanceCenter({ id: store.launchingVersionId, folder: store.launchingFolder }, 'diagnostics')
+              launchFail.open = false
+            "
+          >
+            查看原因
+          </button>
           <button data-ui="App:bbc871d022c8" class="btn btn-ghost" @click="launchFail.open = false">关闭</button>
           <button data-ui="App:43f37fe4338f" class="btn btn-gold" :disabled="launchFail.exporting" @click="onExportLogs">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11" /><path d="m7 10 5 5 5-5" /><path d="M4 21h16" /></svg>
+            <svg
+              viewBox="0 0 24 24"
+              width="14"
+              height="14"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 3v11" />
+              <path d="m7 10 5 5 5-5" />
+              <path d="M4 21h16" />
+            </svg>
             {{ launchFail.exporting ? '导出中…' : '导出错误日志' }}
           </button>
         </div>
@@ -1625,17 +1849,15 @@ onUnmounted(() => {
             <span data-ui="App:01e576fd177a" class="tag" :class="mpFormatTagClass">{{ mpFormatLabel }}</span>
             <span data-ui="App:efee1a142b01" class="tag">MC {{ mpModal.info.mcVersion }}</span>
             <span data-ui="App:cbc7743772be" v-if="mpModal.info.loader" class="tag tag-gold">
-              {{ mpModal.info.loader
-              }}{{ mpModal.info.loaderVersion ? ' ' + mpModal.info.loaderVersion : '' }}
+              {{ mpModal.info.loader }}{{ mpModal.info.loaderVersion ? ' ' + mpModal.info.loaderVersion : '' }}
             </span>
-            <span data-ui="App:84ba06a0c358"
-              v-if="mpModal.info.version && mpModal.info.version !== mpModal.info.innerName"
-              class="tag"
+            <span data-ui="App:84ba06a0c358" v-if="mpModal.info.version && mpModal.info.version !== mpModal.info.innerName" class="tag"
               >版本 {{ mpModal.info.version }}</span
             >
           </div>
           <p data-ui="App:94bfb09f6b96" class="mp-summary">
-            {{ mpModal.info.fileCount }} 个清单文件 · {{ fmtPackBytes(mpModal.info.downloadBytes) }}
+            {{ mpModal.info.fileCount }} 个清单文件 ·
+            {{ fmtPackBytes(mpModal.info.downloadBytes) }}
             <span data-ui="App:b63322e9dda7" v-if="mpModal.info.hasOverrides"> · overrides</span>
             <span data-ui="App:99b02870d974" v-if="mpModal.info.hasClientOverrides"> · client-overrides</span>
           </p>
@@ -1643,13 +1865,15 @@ onUnmounted(() => {
           <p data-ui="App:596a49ffb57e" class="mp-label">目标游戏文件夹</p>
           <select data-ui="App:274944e712ba" v-model="mpModal.targetFolder" class="select" @change="onMpTargetFolderChange">
             <option v-for="folder in store.settings?.folders || []" :key="folder.path" :value="folder.path">
-              {{ folder.name }}{{ folder.isDefault ? '（默认）' : '' }} · {{ folder.path }}
+              {{ folder.name }}{{ folder.isDefault ? '（默认）' : '' }} ·
+              {{ folder.path }}
             </option>
           </select>
 
           <p data-ui="App:7b097008a36b" class="mp-label">实例命名</p>
           <div data-ui="App:72a2299fc011" class="mp-name-opts">
-            <button data-ui="App:3a719b866a06"
+            <button
+              data-ui="App:3a719b866a06"
               class="mp-name-opt"
               :class="{ active: mpModal.nameSource === 'file' }"
               @click="setMpNameSource('file')"
@@ -1660,7 +1884,8 @@ onUnmounted(() => {
                 <span data-ui="App:70d3893f031f" class="mp-name-value">{{ mpModal.info.fileName }}</span>
               </span>
             </button>
-            <button data-ui="App:a2e1c9d8bd28"
+            <button
+              data-ui="App:a2e1c9d8bd28"
               class="mp-name-opt"
               :class="{ active: mpModal.nameSource === 'inner' }"
               @click="setMpNameSource('inner')"
@@ -1672,18 +1897,64 @@ onUnmounted(() => {
               </span>
             </button>
           </div>
-          <input data-ui="App:2b301f17a937" v-model="mpModal.customName" class="input mp-custom-name" maxlength="120" placeholder="自定义实例名称" @input="mpModal.confirmReplace = false; mpModal.error = ''" />
+          <input
+            data-ui="App:2b301f17a937"
+            v-model="mpModal.customName"
+            class="input mp-custom-name"
+            maxlength="120"
+            placeholder="自定义实例名称"
+            @input="
+              mpModal.confirmReplace = false
+              mpModal.error = ''
+            "
+          />
 
           <div data-ui="App:fc46c9326814" v-if="mpRelatedExisting.length" class="mp-conflict">
             <strong data-ui="App:e35ef0415ba0">检测到实例冲突或相同整合包版本</strong>
             <span data-ui="App:e671a36e2cab">
-              {{ mpRelatedExisting.map(item => `${item.id}${item.samePackVersion ? '（同包同版本）' : ''}`).join('、') }}
+              {{ mpRelatedExisting.map((item) => `${item.id}${item.samePackVersion ? '（同包同版本）' : ''}`).join('、') }}
             </span>
             <div data-ui="App:109bf3c86358" class="mp-conflict-actions">
-              <label data-ui="App:f85325e79d42"><input data-ui="App:00222a19c9fa" v-model="mpModal.conflictAction" type="radio" value="rename" @change="onMpConflictActionChange" /> 重新命名</label>
-              <label data-ui="App:acbdff7eee51"><input data-ui="App:614b9af91bd3" v-model="mpModal.conflictAction" type="radio" value="new" @change="onMpConflictActionChange" /> 作为新实例安装（自动加序号）</label>
-              <label data-ui="App:89f12da61d4f"><input data-ui="App:6dc0ad1f778f" v-model="mpModal.conflictAction" type="radio" value="update" @change="onMpConflictActionChange" /> 更新现有实例</label>
-              <label data-ui="App:9a75f39d2361"><input data-ui="App:2e73bdfaa685" v-model="mpModal.conflictAction" type="radio" value="overwrite" @change="onMpConflictActionChange" /> 覆盖安装</label>
+              <label data-ui="App:f85325e79d42"
+                ><input
+                  data-ui="App:00222a19c9fa"
+                  v-model="mpModal.conflictAction"
+                  type="radio"
+                  value="rename"
+                  @change="onMpConflictActionChange"
+                />
+                重新命名</label
+              >
+              <label data-ui="App:acbdff7eee51"
+                ><input
+                  data-ui="App:614b9af91bd3"
+                  v-model="mpModal.conflictAction"
+                  type="radio"
+                  value="new"
+                  @change="onMpConflictActionChange"
+                />
+                作为新实例安装（自动加序号）</label
+              >
+              <label data-ui="App:89f12da61d4f"
+                ><input
+                  data-ui="App:6dc0ad1f778f"
+                  v-model="mpModal.conflictAction"
+                  type="radio"
+                  value="update"
+                  @change="onMpConflictActionChange"
+                />
+                更新现有实例</label
+              >
+              <label data-ui="App:9a75f39d2361"
+                ><input
+                  data-ui="App:2e73bdfaa685"
+                  v-model="mpModal.conflictAction"
+                  type="radio"
+                  value="overwrite"
+                  @change="onMpConflictActionChange"
+                />
+                覆盖安装</label
+              >
             </div>
 
             <template v-if="mpNeedsReplaceConfirm">
@@ -1702,7 +1973,9 @@ onUnmounted(() => {
               </div>
               <label data-ui="App:76acdea2ae5a" class="mp-replace-confirm">
                 <input data-ui="App:8c2c4f6d4693" v-model="mpModal.confirmReplace" type="checkbox" />
-                <span data-ui="App:84709e2c73a5">我已确认上述影响范围，并同意{{ mpModal.conflictAction === 'update' ? '更新' : '覆盖' }}所选实例。</span>
+                <span data-ui="App:84709e2c73a5"
+                  >我已确认上述影响范围，并同意{{ mpModal.conflictAction === 'update' ? '更新' : '覆盖' }}所选实例。</span
+                >
               </label>
             </template>
           </div>
@@ -1710,13 +1983,17 @@ onUnmounted(() => {
           <!-- 默认按键冲突：检测到作者预设键位且已开启默认按键同步时，给出替换选项（默认不替换） -->
           <label data-ui="App:0e88d6c50d0d" v-if="mpModal.info?.hasPresetKeys && store.settings?.keySync" class="mp-keysync-opt">
             <input data-ui="App:e3245af7e07a" v-model="mpModal.keySyncOverride" type="checkbox" />
-            <span data-ui="App:25de5e67e1b9">该整合包含作者预设键位（options.txt）。用启动器默认按键替换预设键位；其余设置保留。不勾选则保留作者预设。</span>
+            <span data-ui="App:25de5e67e1b9"
+              >该整合包含作者预设键位（options.txt）。用启动器默认按键替换预设键位；其余设置保留。不勾选则保留作者预设。</span
+            >
           </label>
 
           <p data-ui="App:9feeb075e091" v-if="mpNameConflict && mpModal.conflictAction === 'rename'" class="mp-error">
             名称「{{ mpModal.customName }}」已存在，请重新命名或选择其他处理方式。
           </p>
-          <p data-ui="App:88ee270d21af" v-if="mpModal.error" class="mp-error">{{ mpModal.error }}</p>
+          <p data-ui="App:88ee270d21af" v-if="mpModal.error" class="mp-error">
+            {{ mpModal.error }}
+          </p>
 
           <div data-ui="App:ca67c0af2cc9" class="mp-actions">
             <button data-ui="App:20064d25fb9e" class="btn btn-ghost" @click="closeModpackImport">取消</button>
@@ -1726,7 +2003,9 @@ onUnmounted(() => {
 
         <!-- 解析失败 -->
         <template v-else>
-          <p data-ui="App:597453576b07" class="mp-error">{{ mpModal.error || '无法解析该整合包' }}</p>
+          <p data-ui="App:597453576b07" class="mp-error">
+            {{ mpModal.error || '无法解析该整合包' }}
+          </p>
           <div data-ui="App:bea4b4fe18e5" class="mp-actions">
             <button data-ui="App:4ff5fe62cac3" class="btn btn-ghost" @click="closeModpackImport">关闭</button>
           </div>
@@ -1734,7 +2013,6 @@ onUnmounted(() => {
       </div>
     </div>
   </Teleport>
-
 </template>
 
 <style scoped>
@@ -1742,14 +2020,67 @@ onUnmounted(() => {
    compositor dependency graph, including native GPU paths. Defer only web blur
    while the interaction is open; theme alpha/colors and native material stay.
    The original glass rules resume immediately when the LOGO is restored. */
-.shell.mascots-active,.shell.mascots-active :deep(*){backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-.brand-slot{position:relative;z-index:5;width:48px;height:72px;flex-shrink:0;display:grid;place-items:center}.brand-avatar{display:block;background:transparent;border:0;padding:0;border-radius:12px;cursor:pointer;transition:opacity .38s,transform .38s;flex-shrink:0}.brand-avatar:focus-visible{outline:2px solid var(--accent);outline-offset:4px}.brand-avatar.avatar-preparing{opacity:.75;transform:scale(.94)}.brand-avatar.avatar-open{opacity:0;transform:translateY(-14px) scale(.65);pointer-events:none}
+.brand-slot {
+  position: relative;
+  z-index: 5;
+  width: 48px;
+  height: 72px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+.brand-avatar {
+  display: block;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition:
+    opacity 0.38s,
+    transform 0.38s;
+  flex-shrink: 0;
+}
+.brand-avatar:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.brand-avatar.avatar-preparing {
+  opacity: 0.75;
+  transform: scale(0.94);
+}
+.brand-avatar.avatar-open {
+  opacity: 0;
+  transform: translateY(-14px) scale(0.65);
+  pointer-events: none;
+}
 /* 配置不兼容弹窗 */
-@media (prefers-reduced-motion: reduce) { .brand-avatar { transition-duration: .1s; } }
-.cfg-mismatch-mask { z-index: 9600; display: grid; place-items: center; }
-.cfg-mismatch-modal { width: min(460px, 90vw); padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; }
-.upd-modal-title { margin: 0; font-size: 17px; }
-.upd-modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+@media (prefers-reduced-motion: reduce) {
+  .brand-avatar {
+    transition-duration: 0.1s;
+  }
+}
+.cfg-mismatch-mask {
+  z-index: 9600;
+  display: grid;
+  place-items: center;
+}
+.cfg-mismatch-modal {
+  width: min(460px, 90vw);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.upd-modal-title {
+  margin: 0;
+  font-size: 17px;
+}
+.upd-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
 .shell {
   display: flex;
   width: 100%;
@@ -1760,7 +2091,7 @@ onUnmounted(() => {
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
   border-radius: var(--radius-md);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 /* 自定义背景层：垫底铺满，不拦截交互 */
 .app-bg {
@@ -1801,14 +2132,14 @@ onUnmounted(() => {
   padding: 0 var(--space-4);
   flex-shrink: 0;
 }
-.brand-head {
+.brand-icon {
   width: 42px;
   height: 42px;
   flex-shrink: 0;
   image-rendering: pixelated;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255,255,255,.26);
-  box-shadow: 0 3px 12px rgba(0,0,0,.18);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.18);
 }
 .logo-text {
   display: flex;
@@ -1847,13 +2178,15 @@ onUnmounted(() => {
   height: var(--space-7);
   padding: 0 var(--space-4);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 0;
   background: transparent;
   color: var(--sidebar-text);
   font-size: var(--text-md);
   font-family: inherit;
   cursor: pointer;
-  transition: color var(--motion-fast) ease, background var(--motion-fast) ease;
+  transition:
+    color var(--motion-fast) ease,
+    background var(--motion-fast) ease;
   flex-shrink: 0;
   position: relative;
   z-index: 1;
@@ -1871,11 +2204,15 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   pointer-events: none;
-  border-radius: var(--radius-md);
+  border-radius: 0;
   background: linear-gradient(135deg, color-mix(in srgb, var(--accent-soft) 80%, transparent), var(--hover));
   border: none;
   box-shadow: 0 3px 12px #00000008;
-  transition: transform 300ms cubic-bezier(.22, 1, .36, 1), width 300ms cubic-bezier(.22, 1, .36, 1), height 300ms cubic-bezier(.22, 1, .36, 1), opacity 120ms ease;
+  transition:
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 120ms ease;
   will-change: transform;
 }
 .nav-selection {
@@ -1883,13 +2220,20 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   pointer-events: none;
-  border-radius: var(--radius-md);
+  border-radius: 0;
   box-shadow: inset 3px 0 0 var(--accent);
   z-index: 2;
-  transition: transform 300ms cubic-bezier(.22, 1, .36, 1), width 300ms cubic-bezier(.22, 1, .36, 1), height 300ms cubic-bezier(.22, 1, .36, 1), opacity 120ms ease;
+  transition:
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 120ms ease;
 }
 @media (prefers-reduced-motion: reduce) {
-  .nav-bubble, .nav-selection { transition: none; }
+  .nav-bubble,
+  .nav-selection {
+    transition: none;
+  }
 }
 .nav-icon {
   display: flex;
@@ -1910,7 +2254,9 @@ onUnmounted(() => {
 .nav-item.active .nav-label {
   font-weight: 600;
 }
-.nav-parent.group-active { color: var(--text); }
+.nav-parent.group-active {
+  color: var(--text);
+}
 
 /* 资源管理子级菜单 */
 .nav-parent .nav-caret {
@@ -1930,7 +2276,10 @@ onUnmounted(() => {
   grid-template-rows: 0fr;
   opacity: 0;
   margin: 0;
-  transition: grid-template-rows var(--motion-normal) var(--ease-out), opacity 0.22s ease, margin var(--motion-normal) var(--ease-out);
+  transition:
+    grid-template-rows var(--motion-normal) var(--ease-out),
+    opacity 0.22s ease,
+    margin var(--motion-normal) var(--ease-out);
 }
 .nav-sub.open {
   grid-template-rows: 1fr;
@@ -1947,7 +2296,9 @@ onUnmounted(() => {
 .nav-sub .nav-sub-item {
   opacity: 0;
   transform: translateY(-4px);
-  transition: opacity var(--motion-fast) ease, transform var(--motion-normal) var(--ease-out);
+  transition:
+    opacity var(--motion-fast) ease,
+    transform var(--motion-normal) var(--ease-out);
   transition-delay: 0s;
 }
 .nav-sub.open .nav-sub-item {
@@ -1956,7 +2307,10 @@ onUnmounted(() => {
   transition-delay: 0s;
 }
 @media (prefers-reduced-motion: reduce) {
-  .nav-sub, .nav-sub .nav-sub-item { transition: none; }
+  .nav-sub,
+  .nav-sub .nav-sub-item {
+    transition: none;
+  }
 }
 .nav-sub-item {
   height: 40px;
@@ -2089,12 +2443,27 @@ onUnmounted(() => {
   height: 16px;
 }
 
-.topbar-spacer { flex: 1; min-width: 0; align-self: stretch; }
+.topbar-spacer {
+  flex: 1;
+  min-width: 0;
+  align-self: stretch;
+}
 @media (max-width: 1050px) {
-  .topbar-spacer { overflow: hidden; }
-  .topbar-spacer > .creator-motto { visibility: hidden; }
-  .top-actions { flex-shrink: 0; }
-  .top-actions .top-btn { white-space: nowrap; flex-shrink: 0; padding-inline: 6px; gap: 4px; }
+  .topbar-spacer {
+    overflow: hidden;
+  }
+  .topbar-spacer > .creator-motto {
+    visibility: hidden;
+  }
+  .top-actions {
+    flex-shrink: 0;
+  }
+  .top-actions .top-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-inline: 6px;
+    gap: 4px;
+  }
 }
 .top-actions {
   display: flex;
@@ -2116,7 +2485,9 @@ onUnmounted(() => {
   font-size: var(--text-sm);
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 .top-btn:hover {
   background: var(--card-2);
@@ -2139,7 +2510,9 @@ onUnmounted(() => {
   background: transparent;
   color: var(--text-dim);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 .top-icon-btn:hover {
   background: var(--card-2);
@@ -2312,12 +2685,39 @@ onUnmounted(() => {
   background: linear-gradient(90deg, var(--accent-2), var(--accent));
   transition: width 0.3s ease;
 }
-.dl-stages { display: grid; gap: 10px; margin-top: 14px; }
-.dl-stage { min-width: 0; padding: 9px 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--card-2); }
-.dl-stage-heading { display: flex; justify-content: space-between; gap: 8px; font-size: var(--text-xs); font-weight: 600; }
-.dl-stage-detail { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-xs); margin-top: 3px; }
-.dl-stage .dl-bar { height: 3px; margin-top: 6px; }
-.dl-stage.is-done .dl-stage-heading { color: var(--accent); }
+.dl-stages {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+.dl-stage {
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--card-2);
+}
+.dl-stage-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+.dl-stage-detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  margin-top: 3px;
+}
+.dl-stage .dl-bar {
+  height: 3px;
+  margin-top: 6px;
+}
+.dl-stage.is-done .dl-stage-heading {
+  color: var(--accent);
+}
 .dl-bar.is-indeterminate .dl-bar-fill {
   animation: dl-indeterminate 1.25s ease-in-out infinite;
 }
@@ -2410,7 +2810,9 @@ onUnmounted(() => {
   background: transparent;
   color: var(--text-dim);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 .win-btn svg {
   width: 15px;
@@ -2529,7 +2931,10 @@ onUnmounted(() => {
   font-family: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
 }
 .mp-name-opt:hover {
   border-color: var(--text-dim);
@@ -2544,11 +2949,15 @@ onUnmounted(() => {
   border-radius: 50%;
   border: 2px solid var(--text-dim);
   flex-shrink: 0;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 .mp-name-opt.active .mp-radio {
   border-color: var(--accent);
-  box-shadow: inset 0 0 0 3px var(--card), inset 0 0 0 8px var(--accent);
+  box-shadow:
+    inset 0 0 0 3px var(--card),
+    inset 0 0 0 8px var(--accent);
 }
 .mp-name-text {
   display: flex;
@@ -2604,8 +3013,15 @@ onUnmounted(() => {
   cursor: pointer;
   line-height: 1.4;
 }
-.mp-conflict-actions label:hover, .mp-replace-confirm:hover { background: var(--card-2); }
-.mp-conflict-actions label:has(input:checked), .mp-replace-confirm:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.mp-conflict-actions label:hover,
+.mp-replace-confirm:hover {
+  background: var(--card-2);
+}
+.mp-conflict-actions label:has(input:checked),
+.mp-replace-confirm:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
 .mp-keysync-opt {
   display: flex;
   align-items: flex-start;
@@ -2619,9 +3035,19 @@ onUnmounted(() => {
   font-size: var(--text-xs);
   color: var(--text-dim);
 }
-.mp-keysync-opt:hover { background: var(--card-2); }
-.mp-keysync-opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
-.mp-keysync-opt input { accent-color: var(--accent); margin-top: 2px; flex-shrink: 0; }
+.mp-keysync-opt:hover {
+  background: var(--card-2);
+}
+.mp-keysync-opt:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.mp-keysync-opt input {
+  accent-color: var(--accent);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
 .mp-conflict input {
   accent-color: var(--accent);
   width: 18px;

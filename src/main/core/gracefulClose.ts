@@ -32,7 +32,7 @@ export function requestGameWindowClose(child: GameProcessHandle): Promise<void> 
   closeLog.info(`向游戏进程 pid=${pid} 发送正常关闭消息（WM_CLOSE）`)
   const script = `$ErrorActionPreference='Stop'; $gameProcess=[System.Diagnostics.Process]::GetProcessById(${pid}); if (-not $gameProcess.CloseMainWindow()) { throw 'Minecraft has no responsive main window; exit from inside the game.' }`
   return new Promise((resolve, reject) => {
-    execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { windowsHide: true, timeout: 6000 }, error => {
+    execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { windowsHide: true, timeout: 6000 }, (error) => {
       if (error) {
         closeLog.warn(`pid=${pid} 正常退出请求失败，请在游戏内保存退出`, error)
         reject(new Error('无法发送正常退出请求，请在游戏内保存退出；不会自动强杀'))
@@ -54,15 +54,22 @@ export function focusGameWindow(child: GameProcessHandle, timeoutMs = 30000): Pr
   closeLog.debug(`拉起游戏窗口聚焦助手：pid=${pid}，超时 ${timeoutMs}ms`)
   const helper = join(__dirname, 'GameWindowFocus.exe').replace('app.asar', 'app.asar.unpacked')
   return new Promise((resolve, reject) => {
-    const worker = execFile(helper, [String(pid), String(timeoutMs)], { windowsHide: true, timeout: timeoutMs + 2000 }, (error, _stdout, stderr) => {
-      child.off('exit', cancel)
-      if (child.exitCode !== null || child.signalCode !== null) return resolve()
-      if (error) {
-        closeLog.warn(`游戏窗口聚焦未完成：pid=${pid}`, error)
-        reject(new Error(stderr.trim() || '游戏窗口前台激活失败或超时'))
-      } else resolve()
-    })
-    const cancel = () => { worker.kill() } // Only our helper, never the game.
+    const worker = execFile(
+      helper,
+      [String(pid), String(timeoutMs)],
+      { windowsHide: true, timeout: timeoutMs + 2000 },
+      (error, _stdout, stderr) => {
+        child.off('exit', cancel)
+        if (child.exitCode !== null || child.signalCode !== null) return resolve()
+        if (error) {
+          closeLog.warn(`游戏窗口聚焦未完成：pid=${pid}`, error)
+          reject(new Error(stderr.trim() || '游戏窗口前台激活失败或超时'))
+        } else resolve()
+      }
+    )
+    const cancel = () => {
+      worker.kill()
+    } // Only our helper, never the game.
     child.once('exit', cancel)
   })
 }
@@ -70,12 +77,17 @@ export function focusGameWindow(child: GameProcessHandle, timeoutMs = 30000): Pr
 function macGameWindow(child: GameProcessHandle, action: 'focus' | 'close', timeoutMs: number): Promise<void> {
   const helper = join(__dirname, 'MacGameWindow').replace('app.asar', 'app.asar.unpacked')
   return new Promise((resolve, reject) => {
-    const worker = execFile(helper, [action, String(child.pid), String(timeoutMs)], { timeout: timeoutMs + 2000 }, (error, _stdout, stderr) => {
-      child.off('exit', cancel)
-      if (child.exitCode !== null || child.signalCode !== null) return resolve()
-      if (error) reject(new Error(stderr.trim() || '游戏窗口操作未完成，请在游戏内保存并退出'))
-      else resolve()
-    })
+    const worker = execFile(
+      helper,
+      [action, String(child.pid), String(timeoutMs)],
+      { timeout: timeoutMs + 2000 },
+      (error, _stdout, stderr) => {
+        child.off('exit', cancel)
+        if (child.exitCode !== null || child.signalCode !== null) return resolve()
+        if (error) reject(new Error(stderr.trim() || '游戏窗口操作未完成，请在游戏内保存并退出'))
+        else resolve()
+      }
+    )
     const cancel = () => worker.kill()
     child.once('exit', cancel)
   })
@@ -84,12 +96,17 @@ function macGameWindow(child: GameProcessHandle, action: 'focus' | 'close', time
 function linuxGameWindow(child: GameProcessHandle, action: 'focus' | 'close', timeoutMs: number): Promise<void> {
   const helper = join(__dirname, 'LinuxGameWindow').replace('app.asar', 'app.asar.unpacked')
   return new Promise((resolve, reject) => {
-    const worker = execFile(helper, [action, String(child.pid), String(timeoutMs)], { timeout: timeoutMs + 2000 }, (error, _stdout, stderr) => {
-      child.off('exit', cancel)
-      if (child.exitCode !== null || child.signalCode !== null) return resolve()
-      if (error) reject(new Error(stderr.trim() || 'Linux 游戏窗口操作失败，请确认 X11/XWayland 可用；正常关窗不会强杀游戏'))
-      else resolve()
-    })
+    const worker = execFile(
+      helper,
+      [action, String(child.pid), String(timeoutMs)],
+      { timeout: timeoutMs + 2000 },
+      (error, _stdout, stderr) => {
+        child.off('exit', cancel)
+        if (child.exitCode !== null || child.signalCode !== null) return resolve()
+        if (error) reject(new Error(stderr.trim() || 'Linux 游戏窗口操作失败，请确认 X11/XWayland 可用；正常关窗不会强杀游戏'))
+        else resolve()
+      }
+    )
     const cancel = () => worker.kill()
     child.once('exit', cancel)
   })
@@ -150,32 +167,68 @@ function loadKernel32(): Promise<Kernel32Api | null> {
       const koffi = asKoffi(await import('koffi'))
       const k32 = koffi.load('kernel32.dll')
       const SA = koffi.struct('FaionyxSecurityAttributes', {
-        nLength: 'uint32', lpSecurityDescriptor: 'void *', bInheritHandle: 'bool'
+        nLength: 'uint32',
+        lpSecurityDescriptor: 'void *',
+        bInheritHandle: 'bool',
       })
       const SI = koffi.struct('FaionyxStartupInfoW', {
-        cb: 'uint32', lpReserved: 'void *', lpDesktop: 'void *', lpTitle: 'void *',
-        dwX: 'uint32', dwY: 'uint32', dwXSize: 'uint32', dwYSize: 'uint32',
-        dwXCountChars: 'uint32', dwYCountChars: 'uint32', dwFillAttribute: 'uint32', dwFlags: 'uint32',
-        wShowWindow: 'uint16', wCbReserved2: 'uint16', lpReserved2: 'void *',
-        hStdInput: 'uintptr', hStdOutput: 'uintptr', hStdError: 'uintptr'
+        cb: 'uint32',
+        lpReserved: 'void *',
+        lpDesktop: 'void *',
+        lpTitle: 'void *',
+        dwX: 'uint32',
+        dwY: 'uint32',
+        dwXSize: 'uint32',
+        dwYSize: 'uint32',
+        dwXCountChars: 'uint32',
+        dwYCountChars: 'uint32',
+        dwFillAttribute: 'uint32',
+        dwFlags: 'uint32',
+        wShowWindow: 'uint16',
+        wCbReserved2: 'uint16',
+        lpReserved2: 'void *',
+        hStdInput: 'uintptr',
+        hStdOutput: 'uintptr',
+        hStdError: 'uintptr',
       })
       const PI = koffi.struct('FaionyxProcessInformation', {
-        hProcess: 'uintptr', hThread: 'uintptr', dwProcessId: 'uint32', dwThreadId: 'uint32'
+        hProcess: 'uintptr',
+        hThread: 'uintptr',
+        dwProcessId: 'uint32',
+        dwThreadId: 'uint32',
       })
       const createPipe = k32.func('CreatePipe', 'bool', [
-        koffi.out(koffi.pointer('uintptr')), koffi.out(koffi.pointer('uintptr')), koffi.pointer(SA), 'uint32'
+        koffi.out(koffi.pointer('uintptr')),
+        koffi.out(koffi.pointer('uintptr')),
+        koffi.pointer(SA),
+        'uint32',
       ])
       const setHandleInformation = k32.func('SetHandleInformation', 'bool', ['uintptr', 'uint32', 'uint32'])
       const createProcessW = k32.func('CreateProcessW', 'bool', [
-        'void *', 'void *', 'void *', 'void *', 'bool', 'uint32', 'void *', 'void *',
-        koffi.pointer(SI), koffi.out(koffi.pointer(PI))
+        'void *',
+        'void *',
+        'void *',
+        'void *',
+        'bool',
+        'uint32',
+        'void *',
+        'void *',
+        koffi.pointer(SI),
+        koffi.out(koffi.pointer(PI)),
       ])
       const resumeThread = k32.func('ResumeThread', 'uint32', ['uintptr'])
       const closeHandle = k32.func('CloseHandle', 'bool', ['uintptr'])
       const terminateProcess = k32.func('TerminateProcess', 'bool', ['uintptr', 'uint32'])
       const getExitCodeProcess = k32.func('GetExitCodeProcess', 'bool', ['uintptr', koffi.out(koffi.pointer('uint32'))])
       const readFile = k32.func('ReadFile', 'bool', ['uintptr', 'void *', 'uint32', koffi.out(koffi.pointer('uint32')), 'void *'])
-      const peekNamedPipe = k32.func('PeekNamedPipe', 'bool', ['uintptr', 'void *', 'uint32', 'void *', koffi.out(koffi.pointer('uint32')), 'void *'])
+      const peekNamedPipe = k32.func('PeekNamedPipe', 'bool', [
+        'uintptr',
+        'void *',
+        'uint32',
+        'void *',
+        koffi.out(koffi.pointer('uint32')),
+        'void *',
+      ])
       const waitForSingleObject = k32.func('WaitForSingleObject', 'uint32', ['uintptr', 'uint32'])
 
       const makePipe = (): { read: number; write: number } | null => {
@@ -186,14 +239,30 @@ function loadKernel32(): Promise<Kernel32Api | null> {
         return { read: Number(readBuf.readBigUInt64LE()), write: Number(writeBuf.readBigUInt64LE()) }
       }
       const buildSi = (stdOut: number, stdErr: number): Record<string, unknown> => ({
-        cb: koffi.sizeof(SI), lpReserved: null, lpDesktop: null, lpTitle: null,
-        dwX: 0, dwY: 0, dwXSize: 0, dwYSize: 0, dwXCountChars: 0, dwYCountChars: 0,
-        dwFillAttribute: 0, dwFlags: stdOut || stdErr ? STARTF_USESTDHANDLES : 0, wShowWindow: 0, wCbReserved2: 0,
-        lpReserved2: null, hStdInput: 0, hStdOutput: stdOut, hStdError: stdErr
+        cb: koffi.sizeof(SI),
+        lpReserved: null,
+        lpDesktop: null,
+        lpTitle: null,
+        dwX: 0,
+        dwY: 0,
+        dwXSize: 0,
+        dwYSize: 0,
+        dwXCountChars: 0,
+        dwYCountChars: 0,
+        dwFillAttribute: 0,
+        dwFlags: stdOut || stdErr ? STARTF_USESTDHANDLES : 0,
+        wShowWindow: 0,
+        wCbReserved2: 0,
+        lpReserved2: null,
+        hStdInput: 0,
+        hStdOutput: stdOut,
+        hStdError: stdErr,
       })
       return {
         createPipe: makePipe,
-        uninherit: (handle) => { setHandleInformation(handle, HANDLE_FLAG_INHERIT, 0) },
+        uninherit: (handle) => {
+          setHandleInformation(handle, HANDLE_FLAG_INHERIT, 0)
+        },
         createProcess: (cmdline, stdOut, stdErr, cwd) => {
           const cmdBuf = Buffer.from(cmdline + '\0', 'utf16le')
           const pi = { hProcess: 0, hThread: 0, dwProcessId: 0, dwThreadId: 0 }
@@ -201,22 +270,41 @@ function loadKernel32(): Promise<Kernel32Api | null> {
           // handles (including Chromium sockets/file locks owned by the old app).
           // lpCurrentDirectory 显式传游戏目录：缺省会继承启动器 runtime 目录（游戏相对路径读取全错）
           const cwdBuf = cwd ? Buffer.from(cwd + '\0', 'utf16le') : null
-          if (!createProcessW(null, cmdBuf, null, null, !!(stdOut || stdErr), CREATE_NO_WINDOW | CREATE_SUSPENDED, null, cwdBuf, buildSi(stdOut, stdErr), pi)) return null
+          if (
+            !createProcessW(
+              null,
+              cmdBuf,
+              null,
+              null,
+              !!(stdOut || stdErr),
+              CREATE_NO_WINDOW | CREATE_SUSPENDED,
+              null,
+              cwdBuf,
+              buildSi(stdOut, stdErr),
+              pi
+            )
+          )
+            return null
           return { pid: pi.dwProcessId, hProcess: pi.hProcess, hThread: pi.hThread }
         },
-        resumeThread: (handle) => { resumeThread(handle) },
-        close: (handle) => { if (handle) closeHandle(handle) },
+        resumeThread: (handle) => {
+          resumeThread(handle)
+        },
+        close: (handle) => {
+          if (handle) closeHandle(handle)
+        },
         terminate: (handle, exitCode) => terminateProcess(handle, exitCode) === true,
-        waitForExit: (handle) => new Promise((resolve) => {
-          // Infinite FFI waits and idle ReadFile calls exhaust the shared worker pool:
-          // a second JVM then blocks writing its very first mod-discovery messages.
-          // A zero-timeout probe never occupies a worker while the game is alive.
-          const check = (): void => {
-            if (waitForSingleObject(handle, 0) === 0x00000102) setTimeout(check, 250)
-            else resolve()
-          }
-          check()
-        }),
+        waitForExit: (handle) =>
+          new Promise((resolve) => {
+            // Infinite FFI waits and idle ReadFile calls exhaust the shared worker pool:
+            // a second JVM then blocks writing its very first mod-discovery messages.
+            // A zero-timeout probe never occupies a worker while the game is alive.
+            const check = (): void => {
+              if (waitForSingleObject(handle, 0) === 0x00000102) setTimeout(check, 250)
+              else resolve()
+            }
+            check()
+          }),
         getExitCode: (handle) => {
           const out = Buffer.alloc(4)
           return getExitCodeProcess(handle, out) ? out.readUInt32LE(0) : STILL_ACTIVE
@@ -243,16 +331,25 @@ function loadKernel32(): Promise<Kernel32Api | null> {
             while (drained < 1024 * 1024 && performance.now() - started < 4) {
               // This handle has exactly one reader. Never ask ReadFile for more
               // than PeekNamedPipe reports: an empty anonymous pipe would block.
-              if (!peekNamedPipe(handle, null, 0, null, available, null)) { finish(); return }
+              if (!peekNamedPipe(handle, null, 0, null, available, null)) {
+                finish()
+                return
+              }
               const count = Math.min(available.readUInt32LE(0), buf.length)
               if (!count) {
                 timer = setTimeout(step, idleDelay)
                 idleDelay = Math.min(100, idleDelay + 10)
                 return
               }
-              if (!readFile(handle, buf, count, got, null)) { finish(); return }
+              if (!readFile(handle, buf, count, got, null)) {
+                finish()
+                return
+              }
               const n = got.readUInt32LE(0)
-              if (!n) { finish(); return }
+              if (!n) {
+                finish()
+                return
+              }
               drained += n
               idleDelay = 10
               push(Buffer.from(buf.subarray(0, n)))
@@ -262,7 +359,7 @@ function loadKernel32(): Promise<Kernel32Api | null> {
           }
           immediate = setImmediate(step)
           return finish
-        }
+        },
       }
     } catch (error) {
       closeLog.warn('koffi 加载失败，游戏进程回退 node spawn（退出启动器可能连带关闭游戏）', error)
@@ -278,7 +375,10 @@ export function windowsQuote(arg: string): string {
   let out = '"'
   let backslashes = 0
   for (const ch of arg) {
-    if (ch === '\\') { backslashes++; continue }
+    if (ch === '\\') {
+      backslashes++
+      continue
+    }
     if (ch === '"') out += '\\'.repeat(backslashes * 2 + 1) + '"'
     else out += '\\'.repeat(backslashes) + ch
     backslashes = 0
@@ -314,9 +414,12 @@ export class DetachedGameProcess extends EventEmitter implements GameProcessHand
       this.emit('exit', this.exitCode, this.signalCode)
       // Match ChildProcess: final diagnostics may still be in the stdout/stderr pipes.
       // A descendant retaining a pipe must not leave launcher state stuck forever.
-      await new Promise<void>(resolve => {
+      await new Promise<void>((resolve) => {
         const timer = setTimeout(resolve, 2000)
-        void Promise.all(this.outputClosed).then(() => { clearTimeout(timer); resolve() })
+        void Promise.all(this.outputClosed).then(() => {
+          clearTimeout(timer)
+          resolve()
+        })
       })
       for (const stop of this.stopOutput) stop()
       this.emit('close', this.exitCode, this.signalCode)
@@ -325,12 +428,22 @@ export class DetachedGameProcess extends EventEmitter implements GameProcessHand
 
   /** Read available output only; EOF or bounded post-exit cleanup closes our read handle. */
   private pump(api: Kernel32Api, readHandle: number): Readable {
-    const stream = new Readable({ read() { /* 推模式：数据到达即 push */ } })
+    const stream = new Readable({
+      read() {
+        /* 推模式：数据到达即 push */
+      },
+    })
     let finish!: () => void
-    this.outputClosed.push(new Promise<void>(resolve => { finish = resolve }))
+    this.outputClosed.push(
+      new Promise<void>((resolve) => {
+        finish = resolve
+      })
+    )
     const stop = api.pumpStream(
       readHandle,
-      (chunk) => { stream.push(chunk) },
+      (chunk) => {
+        stream.push(chunk)
+      },
       () => {
         api.close(readHandle)
         stream.push(null)
@@ -370,19 +483,22 @@ export async function spawnGameProcess(
     const outPipe = api.createPipe()
     const errPipe = api.createPipe()
     if (!outPipe || !errPipe) {
-      api.close(outPipe?.read ?? 0); api.close(outPipe?.write ?? 0)
-      api.close(errPipe?.read ?? 0); api.close(errPipe?.write ?? 0)
+      api.close(outPipe?.read ?? 0)
+      api.close(outPipe?.write ?? 0)
+      api.close(errPipe?.read ?? 0)
+      api.close(errPipe?.write ?? 0)
       throw new Error('进程启动失败：无法创建输出管道')
     }
     // 只有写端需要被子进程继承；读端显式清除继承位
     api.uninherit(outPipe.read)
     api.uninherit(errPipe.read)
     const cmdline = [javaPath, ...args].map(windowsQuote).join(' ')
-      const created = api.createProcess(cmdline, outPipe.write, errPipe.write, options.cwd)
+    const created = api.createProcess(cmdline, outPipe.write, errPipe.write, options.cwd)
     api.close(outPipe.write)
     api.close(errPipe.write)
     if (!created) {
-      api.close(outPipe.read); api.close(errPipe.read)
+      api.close(outPipe.read)
+      api.close(errPipe.read)
       closeLog.error(`CreateProcessW 创建游戏进程失败：${javaPath}`)
       throw new Error('进程启动失败：系统拒绝创建游戏进程（CreateProcessW）')
     }
@@ -400,11 +516,14 @@ export async function spawnGameProcess(
   options.signal?.throwIfAborted()
   const proc = spawn(javaPath, args, {
     cwd: options.cwd,
-    ...(process.platform !== 'win32' ? { detached: true } : {})
+    ...(process.platform !== 'win32' ? { detached: true } : {}),
   })
   await new Promise<void>((resolve, reject) => {
     proc.once('error', reject)
-    proc.once('spawn', () => { proc.removeListener('error', reject); resolve() })
+    proc.once('spawn', () => {
+      proc.removeListener('error', reject)
+      resolve()
+    })
   })
   return proc as unknown as GameProcessHandle
 }

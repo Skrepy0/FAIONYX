@@ -8,7 +8,7 @@ import {
   sniffImageFormat,
   validateImageInput,
   type ImageDimensions,
-  type ManagedImagePurpose
+  type ManagedImagePurpose,
 } from './imageAssetPolicy'
 
 const HEADER_LIMIT = 1024 * 1024
@@ -70,7 +70,7 @@ function wrapNativeImage(image: NativeImage): DecodedImage {
     },
     async toJPEG(quality: number) {
       return image.toJPEG(quality)
-    }
+    },
   }
 }
 
@@ -82,7 +82,7 @@ export function createNativeImageCodec(): ImageCodec {
       const image = nativeImage.createFromBuffer(data)
       if (image.isEmpty()) return null
       return wrapNativeImage(image)
-    }
+    },
   }
 }
 
@@ -117,11 +117,7 @@ export function inspectImageFile(sourcePath: string): InspectedImage {
   const source = fs.realpathSync(path.resolve(sourcePath))
   const stat = fs.statSync(source)
   if (!stat.isFile()) throw new Error('所选路径不是图片文件')
-  const dimensions = validateImageInput(
-    source,
-    stat.size,
-    readImageDimensions(readHeader(source, stat.size))
-  )
+  const dimensions = validateImageInput(source, stat.size, readImageDimensions(readHeader(source, stat.size)))
   return { path: source, bytes: stat.size, dimensions }
 }
 
@@ -130,10 +126,7 @@ export function inspectImageFile(sourcePath: string): InspectedImage {
  * WebP 无主进程内置解码器：头校验通过且尺寸已在用途上限内时原样入缓存（渲染层 Chromium 原生支持），
  * 超上限则拒绝并引导改用可缩放的 PNG/JPG。
  */
-export async function encodeManagedImage(
-  sourcePath: string,
-  purpose: ManagedImagePurpose
-): Promise<EncodedManagedImage> {
+export async function encodeManagedImage(sourcePath: string, purpose: ManagedImagePurpose): Promise<EncodedManagedImage> {
   const inspected = inspectImageFile(sourcePath)
   const data = await fs.promises.readFile(inspected.path)
   return encodeManagedImageBuffer(data, inspected.path, purpose)
@@ -222,6 +215,6 @@ export async function encodeManagedImageBuffer(
     data: encoded,
     extension: preserveAlpha ? '.png' : '.jpg',
     width: target.width,
-    height: target.height
+    height: target.height,
   }
 }

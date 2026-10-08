@@ -52,9 +52,7 @@ class Reader {
     this.ensure(8)
     const value = this.buf.readBigInt64BE(this.off)
     this.off += 8
-    return value >= BigInt(Number.MIN_SAFE_INTEGER) && value <= BigInt(Number.MAX_SAFE_INTEGER)
-      ? Number(value)
-      : value.toString()
+    return value >= BigInt(Number.MIN_SAFE_INTEGER) && value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : value.toString()
   }
   float(): number {
     this.ensure(4)
@@ -182,7 +180,9 @@ class Writer {
     this.parts.push(b)
   }
   long(v: bigint): void {
-    const b = Buffer.alloc(8); b.writeBigInt64BE(v); this.parts.push(b)
+    const b = Buffer.alloc(8)
+    b.writeBigInt64BE(v)
+    this.parts.push(b)
   }
   string(v: string): void {
     const b = Buffer.from(v, 'utf-8')
@@ -207,7 +207,8 @@ function writePayload(w: Writer, type: number, value: unknown): void {
       break
     case 9: {
       const list = value as NbtList
-      w.byte(list.itemType); w.int(list.values.length)
+      w.byte(list.itemType)
+      w.int(list.values.length)
       for (const item of list.values) writePayload(w, list.itemType, item)
       break
     }
@@ -239,7 +240,10 @@ function tagTypeOf(v: unknown): number {
 }
 
 export class NbtList {
-  constructor(public itemType: number, public values: unknown[]) {}
+  constructor(
+    public itemType: number,
+    public values: unknown[]
+  ) {}
 }
 
 /** 序列化根 Compound 为 NBT 二进制 */

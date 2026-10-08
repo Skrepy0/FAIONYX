@@ -1,39 +1,95 @@
-const test = require('node:test'), assert = require('node:assert/strict')
-const fs = require('node:fs'), path = require('node:path'), os = require('node:os'), crypto = require('node:crypto')
-const { execFileSync } = require('node:child_process'), { build } = require('esbuild')
+const test = require('node:test'),
+  assert = require('node:assert/strict')
+const fs = require('node:fs'),
+  path = require('node:path'),
+  os = require('node:os'),
+  crypto = require('node:crypto')
+const { execFileSync } = require('node:child_process'),
+  { build } = require('esbuild')
 const asar = require('@electron/asar')
-const hash = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
+const hash = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
 
-test('actual pinned Electron preserves physical ASAR validation and backup bytes through the real Linux product boundary', {
-  timeout: 40000,
-  skip: process.platform === 'linux' && !process.env.DISPLAY ? 'No display on native package host; mandatory Xvfb integration runs this actual Electron contract separately' : false
-}, async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX physical-ASAR contract-')), rootIdentity = fs.realpathSync(root)
-  fs.mkdirSync(path.resolve('out'), { recursive: true })
-  const proof = fs.mkdtempSync(path.resolve('out/linux-asar-proof-')), sourceFile = path.resolve('src/main/core/linuxUpdate.ts')
-  const backup = path.join(root, "backup 中文 § O'Neil"), resources = path.join(backup, 'resources'), input = path.join(root, 'input')
-  const archive = path.join(resources, 'app.asar'), version = require('../package.json').version
-  fs.mkdirSync(resources, { recursive: true }); fs.mkdirSync(input)
-  const packageJSON = { name: 'faionyx-physical-asar-contract', productName: 'FAIONYXContract', version }
-  fs.writeFileSync(path.join(input, 'package.json'), JSON.stringify(packageJSON)); fs.writeFileSync(path.join(input, 'payload.txt'), 'original ASAR payload 中文 §')
-  await asar.createPackage(input, archive)
-  fs.writeFileSync(path.join(resources, 'faionyx-linux.json'), JSON.stringify({ product: 'FAIONYX', platform: 'linux', arch: process.arch, version, installationKind: 'portable-directory' }))
-  // The ELF header is a small classifier fixture, never executed. This contract
-  // validates actual Electron ASAR operations, not a Linux game/update run.
-  const elf = Buffer.alloc(64); elf.write('\x7fELF', 0, 'binary'); elf[4] = 2; elf[5] = 1; elf.writeUInt16LE(process.arch === 'arm64' ? 183 : 62, 18)
-  fs.writeFileSync(path.join(backup, 'faionyx'), elf); fs.chmodSync(path.join(backup, 'faionyx'), 0o755)
-  fs.mkdirSync(path.join(backup, 'assets')); fs.writeFileSync(path.join(backup, 'assets', 'source.txt'), 'owned symlink target')
-  let symlinkCreated = false, symlinkUnavailable
-  try { fs.symlinkSync('source.txt', path.join(backup, 'assets', 'alias.txt')); symlinkCreated = true }
-  catch (error) { if (!['EPERM', 'EACCES'].includes(error.code)) throw error; symlinkUnavailable = { code: error.code, message: error.message } }
-  const compiled = await build({ entryPoints: [sourceFile], bundle: true, platform: 'node', format: 'cjs', packages: 'external', write: false })
-  // Expose a private function only in the test's private compiled copy. Shipping
-  // exports and the product source remain unchanged by this observation.
-  const productBundle = path.join(root, 'product-bundle.cjs')
-  fs.writeFileSync(productBundle, compiled.outputFiles[0].text + '\nmodule.exports.__verifyDirectory = verifyDirectory;\n')
-  const fixture = path.join(root, 'fixture.cjs'), receipt = path.join(proof, 'verification.json')
-  const config = { root, backup, archive, productBundle, receipt, version, packageJSON, baselineHash: hash(archive), sourceSHA256: hash(sourceFile), executableSHA256: hash(require('electron')), symlinkCreated, symlinkUnavailable }
-  fs.writeFileSync(fixture, `
+test(
+  'actual pinned Electron preserves physical ASAR validation and backup bytes through the real Linux product boundary',
+  {
+    timeout: 40000,
+    skip:
+      process.platform === 'linux' && !process.env.DISPLAY
+        ? 'No display on native package host; mandatory Xvfb integration runs this actual Electron contract separately'
+        : false,
+  },
+  async () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX physical-ASAR contract-')),
+      rootIdentity = fs.realpathSync(root)
+    fs.mkdirSync(path.resolve('out'), { recursive: true })
+    const proof = fs.mkdtempSync(path.resolve('out/linux-asar-proof-')),
+      sourceFile = path.resolve('src/main/core/linuxUpdate.ts')
+    const backup = path.join(root, "backup 中文 § O'Neil"),
+      resources = path.join(backup, 'resources'),
+      input = path.join(root, 'input')
+    const archive = path.join(resources, 'app.asar'),
+      version = require('../package.json').version
+    fs.mkdirSync(resources, { recursive: true })
+    fs.mkdirSync(input)
+    const packageJSON = { name: 'faionyx-physical-asar-contract', productName: 'FAIONYXContract', version }
+    fs.writeFileSync(path.join(input, 'package.json'), JSON.stringify(packageJSON))
+    fs.writeFileSync(path.join(input, 'payload.txt'), 'original ASAR payload 中文 §')
+    await asar.createPackage(input, archive)
+    fs.writeFileSync(
+      path.join(resources, 'faionyx-linux.json'),
+      JSON.stringify({ product: 'FAIONYX', platform: 'linux', arch: process.arch, version, installationKind: 'portable-directory' })
+    )
+    // The ELF header is a small classifier fixture, never executed. This contract
+    // validates actual Electron ASAR operations, not a Linux game/update run.
+    const elf = Buffer.alloc(64)
+    elf.write('\x7fELF', 0, 'binary')
+    elf[4] = 2
+    elf[5] = 1
+    elf.writeUInt16LE(process.arch === 'arm64' ? 183 : 62, 18)
+    fs.writeFileSync(path.join(backup, 'faionyx'), elf)
+    fs.chmodSync(path.join(backup, 'faionyx'), 0o755)
+    fs.mkdirSync(path.join(backup, 'assets'))
+    fs.writeFileSync(path.join(backup, 'assets', 'source.txt'), 'owned symlink target')
+    let symlinkCreated = false,
+      symlinkUnavailable
+    try {
+      fs.symlinkSync('source.txt', path.join(backup, 'assets', 'alias.txt'))
+      symlinkCreated = true
+    } catch (error) {
+      if (!['EPERM', 'EACCES'].includes(error.code)) throw error
+      symlinkUnavailable = { code: error.code, message: error.message }
+    }
+    const compiled = await build({
+      entryPoints: [sourceFile],
+      bundle: true,
+      platform: 'node',
+      format: 'cjs',
+      packages: 'external',
+      write: false,
+    })
+    // Expose a private function only in the test's private compiled copy. Shipping
+    // exports and the product source remain unchanged by this observation.
+    const productBundle = path.join(root, 'product-bundle.cjs')
+    fs.writeFileSync(productBundle, compiled.outputFiles[0].text + '\nmodule.exports.__verifyDirectory = verifyDirectory;\n')
+    const fixture = path.join(root, 'fixture.cjs'),
+      receipt = path.join(proof, 'verification.json')
+    const config = {
+      root,
+      backup,
+      archive,
+      productBundle,
+      receipt,
+      version,
+      packageJSON,
+      baselineHash: hash(archive),
+      sourceSHA256: hash(sourceFile),
+      executableSHA256: hash(require('electron')),
+      symlinkCreated,
+      symlinkUnavailable,
+    }
+    fs.writeFileSync(
+      fixture,
+      `
 const fs = require('node:fs'), raw = require('original-fs'), path = require('node:path'), crypto = require('node:crypto'), vm = require('node:vm'), assert = require('node:assert/strict')
 const { app } = require('electron'), config = ${JSON.stringify(config)}
 const profile = path.join(config.root, 'profile'), appData = path.join(config.root, 'config')
@@ -84,35 +140,65 @@ app.whenReady().then(async () => {
   assert.equal(process.noAsar ?? null, noAsarBefore); report.globalNoAsarBefore = noAsarBefore; report.globalNoAsarAfter = process.noAsar ?? null
   report.ready = true; report.complete = true; report.finishedAt = new Date().toISOString(); save(); clearTimeout(timer); app.exit(0)
 }).catch(error => { report.error = { name: error.name, message: error.message, code: error.code, stack: error.stack }; save(); clearTimeout(timer); app.exit(1) })
-`)
-  const environment = { ...process.env }; delete environment.ELECTRON_RUN_AS_NODE
-  let originalError
-  try {
-    const stdout = execFileSync(require('electron'), [fixture], { env: environment, encoding: 'utf8', timeout: 30000, maxBuffer: 1024 * 1024 })
-    fs.writeFileSync(path.join(proof, 'stdout-original.log'), stdout, { flag: 'wx' })
-    const report = JSON.parse(fs.readFileSync(receipt, 'utf8'))
-    assert.equal(report.complete, true); assert.equal(report.ready, true); assert.equal(report.nativeDesktop, false); assert.equal(report.fullUpdateTransaction, false)
-    assert.equal(report.actual.platform, process.platform); assert.equal(report.actual.arch, process.arch); assert.equal(report.actual.sourceSHA256, hash(sourceFile))
-    assert.equal(report.actual.executableSHA256, hash(require('electron'))); assert.equal(report.observations.realProductBackupCopy.rawArchiveHash, config.baselineHash)
-    console.log('ASAR_PHYSICAL_PROOF ' + receipt)
-  } catch (error) {
-    originalError = error
+`
+    )
+    const environment = { ...process.env }
+    delete environment.ELECTRON_RUN_AS_NODE
+    let originalError
     try {
-      fs.writeFileSync(path.join(proof, 'parent-error.json'), JSON.stringify({ message: error.message, code: error.status ?? error.code, stack: error.stack }, null, 2), { flag: 'wx' })
-      if (!fs.existsSync(path.join(proof, 'stdout-original.log'))) fs.writeFileSync(path.join(proof, 'stdout-original.log'), error.stdout ?? '', { flag: 'wx' })
-      fs.writeFileSync(path.join(proof, 'stderr-original.log'), error.stderr ?? '', { flag: 'wx' })
-    } catch { /* The original operation/child failure remains the test result. */ }
-    throw error
-  } finally {
-    // The owned native child has closed (including timeout) before private files
-    // are removed. A cleanup failure never replaces its original assertion.
-    try {
-      assert.equal(fs.realpathSync(root), rootIdentity); assert(fs.lstatSync(root).isDirectory() && !fs.lstatSync(root).isSymbolicLink())
-      assert(path.basename(root).startsWith('FAIONYX physical-ASAR contract-')); fs.rmSync(root, { recursive: true })
+      const stdout = execFileSync(require('electron'), [fixture], {
+        env: environment,
+        encoding: 'utf8',
+        timeout: 30000,
+        maxBuffer: 1024 * 1024,
+      })
+      fs.writeFileSync(path.join(proof, 'stdout-original.log'), stdout, { flag: 'wx' })
+      const report = JSON.parse(fs.readFileSync(receipt, 'utf8'))
+      assert.equal(report.complete, true)
+      assert.equal(report.ready, true)
+      assert.equal(report.nativeDesktop, false)
+      assert.equal(report.fullUpdateTransaction, false)
+      assert.equal(report.actual.platform, process.platform)
+      assert.equal(report.actual.arch, process.arch)
+      assert.equal(report.actual.sourceSHA256, hash(sourceFile))
+      assert.equal(report.actual.executableSHA256, hash(require('electron')))
+      assert.equal(report.observations.realProductBackupCopy.rawArchiveHash, config.baselineHash)
+      console.log('ASAR_PHYSICAL_PROOF ' + receipt)
     } catch (error) {
-      if (!originalError) throw error
-      try { fs.writeFileSync(path.join(proof, 'cleanup-error.json'), JSON.stringify({ message: error.message, stack: error.stack }, null, 2), { flag: 'wx' }) }
-      catch { /* Cleanup evidence cannot replace the original child/assertion failure. */ }
+      originalError = error
+      try {
+        fs.writeFileSync(
+          path.join(proof, 'parent-error.json'),
+          JSON.stringify({ message: error.message, code: error.status ?? error.code, stack: error.stack }, null, 2),
+          { flag: 'wx' }
+        )
+        if (!fs.existsSync(path.join(proof, 'stdout-original.log')))
+          fs.writeFileSync(path.join(proof, 'stdout-original.log'), error.stdout ?? '', { flag: 'wx' })
+        fs.writeFileSync(path.join(proof, 'stderr-original.log'), error.stderr ?? '', { flag: 'wx' })
+      } catch {
+        /* The original operation/child failure remains the test result. */
+      }
+      throw error
+    } finally {
+      // The owned native child has closed (including timeout) before private files
+      // are removed. A cleanup failure never replaces its original assertion.
+      try {
+        assert.equal(fs.realpathSync(root), rootIdentity)
+        assert(fs.lstatSync(root).isDirectory() && !fs.lstatSync(root).isSymbolicLink())
+        assert(path.basename(root).startsWith('FAIONYX physical-ASAR contract-'))
+        fs.rmSync(root, { recursive: true })
+      } catch (error) {
+        if (!originalError) throw error
+        try {
+          fs.writeFileSync(
+            path.join(proof, 'cleanup-error.json'),
+            JSON.stringify({ message: error.message, stack: error.stack }, null, 2),
+            { flag: 'wx' }
+          )
+        } catch {
+          /* Cleanup evidence cannot replace the original child/assertion failure. */
+        }
+      }
     }
   }
-})
+)

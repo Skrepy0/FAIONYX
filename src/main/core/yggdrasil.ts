@@ -10,7 +10,7 @@ import type {
   YggdrasilProvider,
   YggdrasilProviderCandidate,
   YggdrasilProviderInput,
-  YggdrasilRuntimeInfo
+  YggdrasilRuntimeInfo,
 } from '../../shared/types'
 import { getSettings } from './settings'
 import {
@@ -21,7 +21,7 @@ import {
   normalizeYggdrasilUrl,
   parseProviderInput,
   providerId,
-  resolveProviderEndpoints
+  resolveProviderEndpoints,
 } from './yggdrasilProvider'
 
 const MAX_METADATA_BYTES = 2 * 1024 * 1024
@@ -100,7 +100,7 @@ function cleanProvider(value: unknown): YggdrasilProvider | null {
       accountServer: item.accountServer,
       sessionServer: item.sessionServer,
       servicesUrl: item.servicesUrl,
-      skinDomains: normalizeSkinDomains(item.skinDomains ?? [])
+      skinDomains: normalizeSkinDomains(item.skinDomains ?? []),
     }
     const endpoints = resolveProviderEndpoints(descriptor)
     return {
@@ -109,8 +109,7 @@ function cleanProvider(value: unknown): YggdrasilProvider | null {
       ...endpoints,
       skinDomains: descriptor.skinDomains,
       insecure: endpoints.insecure,
-      metadataFetchedAt:
-        typeof item.metadataFetchedAt === 'string' ? item.metadataFetchedAt : new Date(0).toISOString()
+      metadataFetchedAt: typeof item.metadataFetchedAt === 'string' ? item.metadataFetchedAt : new Date(0).toISOString(),
     }
   } catch {
     return null
@@ -121,9 +120,7 @@ export function listProviders(): YggdrasilProvider[] {
   if (providersCache) return providersCache.map((provider) => ({ ...provider }))
   try {
     const raw = JSON.parse(fs.readFileSync(providersFile(), 'utf-8')) as unknown
-    providersCache = Array.isArray(raw)
-      ? raw.map(cleanProvider).filter((provider): provider is YggdrasilProvider => !!provider)
-      : []
+    providersCache = Array.isArray(raw) ? raw.map(cleanProvider).filter((provider): provider is YggdrasilProvider => !!provider) : []
   } catch {
     providersCache = []
   }
@@ -145,9 +142,7 @@ export function findProvider(id: string): YggdrasilProvider {
 function assertSecure(urls: string[], allowInsecure: boolean): void {
   const insecure = urls.some((value) => normalizeYggdrasilUrl(value).startsWith('http:'))
   if (insecure && !allowInsecure) {
-    throw new Error(
-      'INSECURE_YGGDRASIL:该认证服务使用明文 HTTP，账号和密码可能被窃听。勾选风险确认后才能继续。'
-    )
+    throw new Error('INSECURE_YGGDRASIL:该认证服务使用明文 HTTP，账号和密码可能被窃听。勾选风险确认后才能继续。')
   }
 }
 
@@ -198,7 +193,7 @@ async function fetchMetadataAt(inputUrl: string, allowInsecure: boolean): Promis
   const first = await fetch(initial, {
     headers: { Accept: 'application/json' },
     redirect: 'follow',
-    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS)
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
   })
   if (!first.ok) throw new Error(`认证服务元数据请求失败（HTTP ${first.status}）`)
   const firstUrl = normalizeYggdrasilUrl(first.url || initial)
@@ -212,7 +207,7 @@ async function fetchMetadataAt(inputUrl: string, allowInsecure: boolean): Promis
     ? await fetch(resolved, {
         headers: { Accept: 'application/json' },
         redirect: 'follow',
-        signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS)
+        signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
       })
     : first
   if (!response.ok) throw new Error(`认证服务 API Root 请求失败（HTTP ${response.status}）`)
@@ -231,9 +226,7 @@ function metadataName(data: Record<string, unknown>): string | undefined {
 
 function metadataSkinDomains(data: Record<string, unknown>): string[] {
   return normalizeSkinDomains(
-    Array.isArray(data.skinDomains)
-      ? data.skinDomains.filter((value): value is string => typeof value === 'string')
-      : []
+    Array.isArray(data.skinDomains) ? data.skinDomains.filter((value): value is string => typeof value === 'string') : []
   )
 }
 
@@ -242,55 +235,36 @@ function cacheMetadata(id: string, raw: string): void {
   fs.writeFileSync(path.join(metadataDirectory(), `${id}.json`), raw, 'utf-8')
 }
 
-export async function probeProvider(
-  input: YggdrasilProviderInput,
-  allowInsecure = false
-): Promise<YggdrasilProviderCandidate> {
+export async function probeProvider(input: YggdrasilProviderInput, allowInsecure = false): Promise<YggdrasilProviderCandidate> {
   const descriptor = parseProviderInput(input)
   assertSecure(
-    [
-      descriptor.apiRoot,
-      descriptor.authServer,
-      descriptor.accountServer,
-      descriptor.sessionServer,
-      descriptor.servicesUrl
-    ].filter((value): value is string => !!value),
+    [descriptor.apiRoot, descriptor.authServer, descriptor.accountServer, descriptor.sessionServer, descriptor.servicesUrl].filter(
+      (value): value is string => !!value
+    ),
     allowInsecure
   )
   const metadata = await fetchMetadataAt(descriptor.apiRoot, allowInsecure)
   const endpoints = resolveProviderEndpoints(descriptor, metadata.apiRoot)
-  assertSecure(
-    [endpoints.apiRoot, endpoints.authServer, endpoints.accountServer, endpoints.sessionServer],
-    allowInsecure
-  )
+  assertSecure([endpoints.apiRoot, endpoints.authServer, endpoints.accountServer, endpoints.sessionServer], allowInsecure)
   const id = providerId(endpoints.apiRoot)
   probedMetadata.set(id, metadata.raw)
   return {
     id,
     name: descriptor.name || metadataName(metadata.data) || new URL(endpoints.apiRoot).hostname,
     ...endpoints,
-    skinDomains: normalizeSkinDomains([
-      ...descriptor.skinDomains,
-      ...metadataSkinDomains(metadata.data)
-    ]),
+    skinDomains: normalizeSkinDomains([...descriptor.skinDomains, ...metadataSkinDomains(metadata.data)]),
     insecure: endpoints.insecure,
     metadataFetchedAt: new Date().toISOString(),
     sourceLabel: descriptor.sourceLabel,
-    aliRedirected: metadata.aliRedirected
+    aliRedirected: metadata.aliRedirected,
   }
 }
 
-export function saveProvider(
-  candidate: YggdrasilProviderCandidate,
-  allowInsecure = false
-): YggdrasilProvider[] {
+export function saveProvider(candidate: YggdrasilProviderCandidate, allowInsecure = false): YggdrasilProvider[] {
   const cleaned = cleanProvider(candidate)
   if (!cleaned) throw new Error('提供商配置无效，请重新探测')
   if (cleaned.id !== candidate.id) throw new Error('提供商 API Root 与探测结果不一致')
-  assertSecure(
-    [cleaned.apiRoot, cleaned.authServer, cleaned.accountServer, cleaned.sessionServer],
-    allowInsecure
-  )
+  assertSecure([cleaned.apiRoot, cleaned.authServer, cleaned.accountServer, cleaned.sessionServer], allowInsecure)
   const list = listProviders()
   const index = list.findIndex((provider) => provider.id === cleaned.id)
   if (index >= 0) list[index] = cleaned
@@ -321,7 +295,10 @@ async function readYggError(response: Response, fallback: string): Promise<Error
     const data = JSON.parse(raw) as { errorMessage?: unknown; error?: unknown; cause?: unknown }
     detail = String(data.errorMessage ?? data.cause ?? data.error ?? '')
   } catch {
-    detail = raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+    detail = raw
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
   }
   if (response.status === 403) return new Error(detail || '账号或密码错误，或账号尚未激活')
   if (response.status === 429) return new Error('认证请求过于频繁，请稍后再试')
@@ -334,7 +311,7 @@ async function postYgg(url: string, body: unknown): Promise<YggResponse> {
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(body),
     redirect: 'error',
-    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS)
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
   })
   if (!response.ok) throw await readYggError(response, '认证服务请求失败')
   if (response.status === 204) return {}
@@ -347,7 +324,9 @@ async function postYgg(url: string, body: unknown): Promise<YggResponse> {
 }
 
 function cleanProfile(value: YggProfile): YggdrasilProfileChoice | null {
-  const id = String(value?.id ?? '').replace(/-/g, '').toLowerCase()
+  const id = String(value?.id ?? '')
+    .replace(/-/g, '')
+    .toLowerCase()
   const name = String(value?.name ?? '').trim()
   if (!/^[0-9a-f]{32}$/.test(id) || !name) return null
   return { id, name }
@@ -384,11 +363,7 @@ function accountFromResponse(
   const clientToken = String(response.clientToken ?? fallbackClientToken ?? '')
   if (!accessToken || !clientToken) throw new Error('认证服务未返回完整令牌')
   const uuid = uuidWithHyphens(profile.id)
-  const id = `ygg-${crypto
-    .createHash('sha256')
-    .update(`${provider.id}\u0000${identifier}\u0000${profile.id}`)
-    .digest('hex')
-    .slice(0, 32)}`
+  const id = `ygg-${crypto.createHash('sha256').update(`${provider.id}\u0000${identifier}\u0000${profile.id}`).digest('hex').slice(0, 32)}`
   return {
     id,
     type: 'yggdrasil',
@@ -401,7 +376,7 @@ function accountFromResponse(
     apiRoot: provider.apiRoot,
     loginIdentifier: identifier,
     userId: typeof response.user?.id === 'string' ? response.user.id : undefined,
-    userProperties: cleanProperties(response.user?.properties)
+    userProperties: cleanProperties(response.user?.properties),
   }
 }
 
@@ -417,17 +392,13 @@ async function selectSingleProfile(
     accessToken,
     clientToken,
     selectedProfile: profile,
-    requestUser: true
+    requestUser: true,
   })
   if (!response.user && user) response.user = user
   return accountFromResponse(provider, identifier, response, clientToken)
 }
 
-export async function authenticate(
-  providerIdValue: string,
-  identifierValue: string,
-  passwordValue: string
-): Promise<YggdrasilLoginResult> {
+export async function authenticate(providerIdValue: string, identifierValue: string, passwordValue: string): Promise<YggdrasilLoginResult> {
   const provider = findProvider(providerIdValue)
   const identifier = identifierValue.trim()
   const password = passwordValue
@@ -439,7 +410,7 @@ export async function authenticate(
     username: identifier,
     password,
     clientToken,
-    requestUser: true
+    requestUser: true,
   })
   const accessToken = String(response.accessToken ?? '')
   const returnedClientToken = String(response.clientToken ?? clientToken)
@@ -447,24 +418,15 @@ export async function authenticate(
   if (response.selectedProfile) {
     return {
       status: 'complete',
-      account: accountFromResponse(provider, identifier, response, returnedClientToken)
+      account: accountFromResponse(provider, identifier, response, returnedClientToken),
     }
   }
-  const profiles = (response.availableProfiles ?? [])
-    .map(cleanProfile)
-    .filter((profile): profile is YggdrasilProfileChoice => !!profile)
+  const profiles = (response.availableProfiles ?? []).map(cleanProfile).filter((profile): profile is YggdrasilProfileChoice => !!profile)
   if (!profiles.length) throw new Error('此账号没有可用角色，请先在皮肤站创建角色')
   if (profiles.length === 1) {
     return {
       status: 'complete',
-      account: await selectSingleProfile(
-        provider,
-        identifier,
-        accessToken,
-        returnedClientToken,
-        profiles[0],
-        response.user
-      )
+      account: await selectSingleProfile(provider, identifier, accessToken, returnedClientToken, profiles[0], response.user),
     }
   }
   const challengeId = crypto.randomUUID()
@@ -476,29 +438,19 @@ export async function authenticate(
     clientToken: returnedClientToken,
     profiles,
     user: response.user,
-    expiresAt
+    expiresAt,
   })
   return { status: 'select-profile', challengeId, providerName: provider.name, profiles, expiresAt }
 }
 
-export async function completeProfileSelection(
-  challengeId: string,
-  profileIdValue: string
-): Promise<Account> {
+export async function completeProfileSelection(challengeId: string, profileIdValue: string): Promise<Account> {
   const pending = pendingProfiles.get(challengeId)
   pendingProfiles.delete(challengeId)
   if (!pending || pending.expiresAt < Date.now()) throw new Error('角色选择已过期，请重新登录')
   const profileId = profileIdValue.replace(/-/g, '').toLowerCase()
   const profile = pending.profiles.find((item) => item.id === profileId)
   if (!profile) throw new Error('所选角色不在本次登录响应中')
-  return await selectSingleProfile(
-    pending.provider,
-    pending.identifier,
-    pending.accessToken,
-    pending.clientToken,
-    profile,
-    pending.user
-  )
+  return await selectSingleProfile(pending.provider, pending.identifier, pending.accessToken, pending.clientToken, profile, pending.user)
 }
 
 async function validateCredentials(account: Account, provider: YggdrasilProvider): Promise<boolean> {
@@ -508,7 +460,7 @@ async function validateCredentials(account: Account, provider: YggdrasilProvider
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ accessToken: account.accessToken, clientToken: account.clientToken }),
     redirect: 'error',
-    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS)
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
   })
   return response.status === 204
 }
@@ -523,17 +475,12 @@ export async function refreshAccount(account: Account): Promise<Account> {
     response = await postYgg(endpointUrl(provider.authServer, 'refresh'), {
       accessToken: account.accessToken,
       clientToken: account.clientToken,
-      requestUser: true
+      requestUser: true,
     })
   } catch (error) {
     throw new Error(`外置登录已失效，请重新输入密码：${error instanceof Error ? error.message : String(error)}`)
   }
-  const refreshed = accountFromResponse(
-    provider,
-    account.loginIdentifier ?? account.username,
-    response,
-    account.clientToken
-  )
+  const refreshed = accountFromResponse(provider, account.loginIdentifier ?? account.username, response, account.clientToken)
   if (refreshed.uuid !== account.uuid) throw new Error('刷新响应的角色与原账号不一致，请重新登录')
   return { ...account, ...refreshed, id: account.id }
 }
@@ -546,7 +493,7 @@ export async function invalidateAccount(account: Account): Promise<void> {
     const provider = findProvider(account.providerId)
     await postYgg(endpointUrl(provider.authServer, 'invalidate'), {
       accessToken: account.accessToken,
-      clientToken: account.clientToken
+      clientToken: account.clientToken,
     })
   } catch {
     // 本地退出必须始终可用；远端令牌会自然失效或由用户在皮肤站撤销。
@@ -568,9 +515,7 @@ export async function providerMetadata(provider: YggdrasilProvider): Promise<str
       parseMetadata(cached)
       return cached
     } catch {
-      throw new Error(
-        `无法获取 ${provider.name} 元数据，且没有可用缓存：${error instanceof Error ? error.message : String(error)}`
-      )
+      throw new Error(`无法获取 ${provider.name} 元数据，且没有可用缓存：${error instanceof Error ? error.message : String(error)}`)
     }
   }
 }
@@ -603,7 +548,7 @@ function cleanArtifact(value: unknown): InjectorArtifact | null {
     build_number: Number(item.build_number),
     version: String(item.version),
     download_url: url.toString(),
-    checksums: { sha256 }
+    checksums: { sha256 },
   }
 }
 
@@ -637,7 +582,7 @@ async function fetchInjectorArtifact(): Promise<InjectorArtifact> {
     try {
       const response = await fetch(source, {
         headers: { Accept: 'application/json' },
-        signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS)
+        signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
       })
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
       const artifact = cleanArtifact(JSON.parse(await responseTextLimited(response, 128 * 1024)))
@@ -662,15 +607,13 @@ async function downloadInjector(): Promise<string> {
   }
   const response = await fetch(artifact.download_url, {
     redirect: 'follow',
-    signal: AbortSignal.timeout(60_000)
+    signal: AbortSignal.timeout(60_000),
   })
   if (!response.ok) throw new Error(`authlib-injector 下载失败（HTTP ${response.status}）`)
   const finalDownloadUrl = new URL(response.url || artifact.download_url)
   if (
     finalDownloadUrl.protocol !== 'https:' ||
-    !['authlib-injector.yushi.moe', 'bmclapi2.bangbang93.com'].includes(
-      finalDownloadUrl.hostname
-    )
+    !['authlib-injector.yushi.moe', 'bmclapi2.bangbang93.com'].includes(finalDownloadUrl.hostname)
   ) {
     throw new Error('authlib-injector 下载发生了不可信重定向')
   }
@@ -706,17 +649,14 @@ export async function runtimeInfo(): Promise<YggdrasilRuntimeInfo> {
     path: jar,
     version: artifact.version,
     buildNumber: artifact.build_number,
-    sha256: actual
+    sha256: actual,
   }
 }
 
 export async function launchArguments(account: Account): Promise<string[]> {
   if (account.type !== 'yggdrasil' || !account.providerId) return []
   const provider = findProvider(account.providerId)
-  const [jar, metadata] = await Promise.all([
-    ensureAuthlibInjector(),
-    providerMetadata(provider)
-  ])
+  const [jar, metadata] = await Promise.all([ensureAuthlibInjector(), providerMetadata(provider)])
   return buildAuthlibInjectorArguments(jar, provider.apiRoot, metadata)
 }
 
@@ -724,18 +664,16 @@ export async function externalProfile(account: Account): Promise<ProfileSkins> {
   if (account.type !== 'yggdrasil' || !account.providerId) throw new Error('不是外置登录账号')
   const provider = findProvider(account.providerId)
   const profileId = account.uuid.replace(/-/g, '')
-  const response = await fetch(
-    `${endpointUrl(provider.sessionServer, `session/minecraft/profile/${profileId}`)}?unsigned=false`,
-    { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS) }
-  )
+  const response = await fetch(`${endpointUrl(provider.sessionServer, `session/minecraft/profile/${profileId}`)}?unsigned=false`, {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+  })
   if (!response.ok) throw await readYggError(response, '获取外置角色材质失败')
   const data = (await response.json()) as {
     name?: unknown
     properties?: Array<{ name?: unknown; value?: unknown }>
   }
-  const textureProperty = data.properties?.find(
-    (property) => property.name === 'textures' && typeof property.value === 'string'
-  )
+  const textureProperty = data.properties?.find((property) => property.name === 'textures' && typeof property.value === 'string')
   let payload: {
     textures?: {
       SKIN?: { url?: unknown; metadata?: { model?: unknown } }
@@ -759,13 +697,10 @@ export async function externalProfile(account: Account): Promise<ProfileSkins> {
             {
               url: skinUrl,
               variant: payload.textures?.SKIN?.metadata?.model === 'slim' ? 'slim' : 'classic',
-              state: 'ACTIVE'
-            }
+              state: 'ACTIVE',
+            },
           ]
         : [],
-    capes:
-      capeUrl && isAllowedTextureUrl(capeUrl, provider)
-        ? [{ id: 'external', alias: provider.name, active: true, url: capeUrl }]
-        : []
+    capes: capeUrl && isAllowedTextureUrl(capeUrl, provider) ? [{ id: 'external', alias: provider.name, active: true, url: capeUrl }] : [],
   }
 }

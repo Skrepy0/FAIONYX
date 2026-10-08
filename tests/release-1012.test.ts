@@ -57,6 +57,11 @@ test('KeysView compiles after options removal', () => {
   const { descriptor, errors } = parse(source)
   assert.deepEqual(errors, [])
   const script = compileScript(descriptor, { id: 'KeysView.vue' })
-  const result = compileTemplate({ source: descriptor.template!.content, filename: 'KeysView.vue', id: 'KeysView.vue', compilerOptions: { bindingMetadata: script.bindings } })
+  const result = compileTemplate({
+    source: descriptor.template!.content,
+    filename: 'KeysView.vue',
+    id: 'KeysView.vue',
+    compilerOptions: { bindingMetadata: script.bindings },
+  })
   assert.deepEqual(result.errors, [])
 })

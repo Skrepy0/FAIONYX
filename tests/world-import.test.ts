@@ -17,8 +17,8 @@ function levelDat(name = '测试世界', version = '1.20.1'): Buffer {
         GameType: 1,
         hardcore: 0,
         Version: { Name: version, Id: 3465 },
-        Forge: { Marker: 1 }
-      }
+        Forge: { Marker: 1 },
+      },
     })
   )
 }
@@ -82,7 +82,10 @@ test('多层 ZIP 存档按内容识别，并只把 pack.mcmeta + assets 判为�
     const candidate = result.candidates[0]
     assert.equal(candidate.id, 'wrapper/World')
     assert.equal(candidate.worldName, '压缩世界')
-    assert.deepEqual(candidate.resourcePacks.map((pack) => pack.name), ['Fancy'])
+    assert.deepEqual(
+      candidate.resourcePacks.map((pack) => pack.name),
+      ['Fancy']
+    )
   } finally {
     await fs.promises.rm(root, { recursive: true, force: true })
   }

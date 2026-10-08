@@ -20,35 +20,62 @@ test('VoxLink room names have a shared neutral default and reject invalid input'
 
 test('VoxLink create flow preserves rejected names, focuses the field, and submits only on user retry', async () => {
   const bundle = await build({
-    entryPoints: ['src/renderer/src/components/connection/VoxLinkPanel.vue'], bundle: true, write: false,
-    platform: 'node', format: 'cjs', packages: 'external', alias: { '@shared': path.resolve('src/shared') },
-    plugins: [{ name: 'voxlink-setup', setup(b) {
-      b.onResolve({ filter: /^\.\.\/\.\.\/(api|store)$/ }, args => ({ path: args.path.split('/').at(-1)!, external: true }))
-      b.onLoad({ filter: /\.vue$/ }, args => {
-        if (!args.path.endsWith('VoxLinkPanel.vue')) return { contents: 'export default {}', loader: 'js' }
-        const { descriptor } = parse(fs.readFileSync(args.path, 'utf8'))
-        return { contents: compileScript(descriptor, { id: args.path }).content, loader: 'ts', resolveDir: path.dirname(args.path) }
-      })
-    } }]
+    entryPoints: ['src/renderer/src/components/connection/VoxLinkPanel.vue'],
+    bundle: true,
+    write: false,
+    platform: 'node',
+    format: 'cjs',
+    packages: 'external',
+    alias: { '@shared': path.resolve('src/shared') },
+    plugins: [
+      {
+        name: 'voxlink-setup',
+        setup(b) {
+          b.onResolve({ filter: /^\.\.\/\.\.\/(api|store)$/ }, (args) => ({ path: args.path.split('/').at(-1)!, external: true }))
+          b.onLoad({ filter: /\.vue$/ }, (args) => {
+            if (!args.path.endsWith('VoxLinkPanel.vue')) return { contents: 'export default {}', loader: 'js' }
+            const { descriptor } = parse(fs.readFileSync(args.path, 'utf8'))
+            return { contents: compileScript(descriptor, { id: args.path }).content, loader: 'ts', resolveDir: path.dirname(args.path) }
+          })
+        },
+      },
+    ],
   })
   const calls: any[] = []
-  let blocked = true, focusCount = 0
+  let blocked = true,
+    focusCount = 0
   const require = createRequire(path.resolve('package.json'))
   const module = { exports: {} as any }
   new Function('require', 'module', 'exports', 'window', bundle.outputFiles[0].text)(
-    (name: string) => name === 'vue' ? { ...vue, onMounted: () => {}, onUnmounted: () => {} }
-      : name === 'store' ? { toast: () => {} } : name === 'api' ? {} : require(name),
-    module, module.exports, { faionyx: { invoke: async (channel: string, payload: any) => {
-      calls.push({ channel, payload })
-      if (channel === 'voxlink:start' && blocked) throw new Error('APIError: CONTENT_BLOCKED: 内容不合规')
-      return channel === 'voxlink:start' ? { ok: true } : { state: 'hosting', room: { name: '好友生存' } }
-    } } }
+    (name: string) =>
+      name === 'vue'
+        ? { ...vue, onMounted: () => {}, onUnmounted: () => {} }
+        : name === 'store'
+          ? { toast: () => {} }
+          : name === 'api'
+            ? {}
+            : require(name),
+    module,
+    module.exports,
+    {
+      faionyx: {
+        invoke: async (channel: string, payload: any) => {
+          calls.push({ channel, payload })
+          if (channel === 'voxlink:start' && blocked) throw new Error('APIError: CONTENT_BLOCKED: 内容不合规')
+          return channel === 'voxlink:start' ? { ok: true } : { state: 'hosting', room: { name: '好友生存' } }
+        },
+      },
+    }
   )
   const scope = vue.effectScope()
   const state = scope.run(() => module.exports.default.setup({}, { expose: () => {} }))
   state.instances.value = [{ id: 'fixture', folder: 'C:/fixture', mcVersion: '1.20.1' }]
   state.instanceKey.value = JSON.stringify(['C:/fixture', 'fixture'])
-  state.roomNameInput.value = { focus: () => { focusCount++ } }
+  state.roomNameInput.value = {
+    focus: () => {
+      focusCount++
+    },
+  }
   try {
     state.roomName.value = '  '
     await state.startHost()
@@ -68,8 +95,10 @@ test('VoxLink create flow preserves rejected names, focuses the field, and submi
     assert.equal(state.error.value, '')
     blocked = false
     await state.startHost()
-    assert.equal(calls.filter(c => c.channel === 'voxlink:start').length, 2)
+    assert.equal(calls.filter((c) => c.channel === 'voxlink:start').length, 2)
     assert.equal(calls[1].payload.roomName, '好友生存')
     assert.equal(state.busy.value, false)
-  } finally { scope.stop() }
+  } finally {
+    scope.stop()
+  }
 })

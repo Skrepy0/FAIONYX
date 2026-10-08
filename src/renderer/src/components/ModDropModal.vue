@@ -8,7 +8,12 @@ import ModInstallDialog from './ModInstallDialog.vue'
 import MarqueeText from './MarqueeText.vue'
 import { errText, installVersion, onInstallDone, parseMods, getModTargets } from '../api'
 import { selectInstance, selectedInstance, displayVersionName, refreshInstalled, store, toast } from '../store'
-import { matchesVersionRange as matchRange, modMatchesInstance as modMatchesVersion, instanceKey, modMismatchReasons } from '@shared/modCompatibility'
+import {
+  matchesVersionRange as matchRange,
+  modMatchesInstance as modMatchesVersion,
+  instanceKey,
+  modMismatchReasons,
+} from '@shared/modCompatibility'
 import type { InstalledVersion, LoaderName, ModInfo } from '@shared/types'
 
 const props = defineProps<{
@@ -24,7 +29,10 @@ const scanErrors = ref<string[]>([])
 let scanGeneration = 0
 const mods = ref<ModInfo[]>([])
 const selectedVersion = ref('')
-function syncDropSelection(){const t=allTargets.value.find(v=>instanceKey(v)===selectedVersion.value);if(t)void selectInstance(t.id,t.folder)}
+function syncDropSelection() {
+  const t = allTargets.value.find((v) => instanceKey(v) === selectedVersion.value)
+  if (t) void selectInstance(t.id, t.folder)
+}
 const installing = ref(false)
 const modRequest = ref<{ target: InstalledVersion; input: { paths: string[] } } | null>(null)
 
@@ -32,7 +40,12 @@ const modRequest = ref<{ target: InstalledVersion; input: { paths: string[] } } 
 const validMods = computed(() => mods.value.filter((m) => !m.error))
 /** 解析失败（非 MOD/损坏） */
 const failedMods = computed(() => mods.value.filter((m) => !!m.error))
-const mismatchDetails = computed(() => allTargets.value.map(v => ({ v, reasons: validMods.value.flatMap(m => modMismatchReasons(m, v).map(reason => `${m.name || m.id}：${reason}`)) })))
+const mismatchDetails = computed(() =>
+  allTargets.value.map((v) => ({
+    v,
+    reasons: validMods.value.flatMap((m) => modMismatchReasons(m, v).map((reason) => `${m.name || m.id}：${reason}`)),
+  }))
+)
 
 /** 每个 MOD 匹配到的版本 id 集合 */
 const matchMap = computed(() => {
@@ -56,7 +69,7 @@ const bestEffortVersions = computed(() => {
     .map((v) => ({
       v,
       ok: validMods.value.filter((m) => modMatchesVersion(m, v)),
-      bad: validMods.value.filter((m) => !modMatchesVersion(m, v))
+      bad: validMods.value.filter((m) => !modMatchesVersion(m, v)),
     }))
     .filter((x) => x.ok.length > 0)
     .sort((a, b) => b.ok.length - a.ok.length)
@@ -76,7 +89,7 @@ const LOADER_TAG: Record<LoaderName, string> = {
   forge: 'Forge',
   neoforge: 'NeoForge',
   fabric: 'Fabric',
-  quilt: 'Quilt'
+  quilt: 'Quilt',
 }
 
 // ---------------- 打开时解析 ----------------
@@ -94,7 +107,10 @@ watch(
       allTargets.value = scanned.versions
       scanErrors.value = scanned.errors
       // 默认选中交集第一个
-      const first = commonVersions.value.find(v => selectedInstance.value && instanceKey(v) === instanceKey(selectedInstance.value)) ?? commonVersions.value[0] ?? bestEffortVersions.value[0]?.v
+      const first =
+        commonVersions.value.find((v) => selectedInstance.value && instanceKey(v) === instanceKey(selectedInstance.value)) ??
+        commonVersions.value[0] ??
+        bestEffortVersions.value[0]?.v
       selectedVersion.value = first ? instanceKey(first) : ''
     } catch (e) {
       toast('MOD 识别失败：' + errText(e), 'error')
@@ -107,20 +123,18 @@ watch(
 
 // ---------------- 分支动作 ----------------
 async function onInstallSelected() {
-  const selected = allTargets.value.find(v => instanceKey(v) === selectedVersion.value)
+  const selected = allTargets.value.find((v) => instanceKey(v) === selectedVersion.value)
   if (!selected || installing.value) return
   const vid = selected.id
   // 部分匹配分支下只装入兼容的 MOD
   const targets = validMods.value.filter((m) =>
-    branch.value === 'matched'
-      ? true
-      : bestEffortVersions.value.find((x) => instanceKey(x.v) === selectedVersion.value)?.ok.includes(m)
+    branch.value === 'matched' ? true : bestEffortVersions.value.find((x) => instanceKey(x.v) === selectedVersion.value)?.ok.includes(m)
   )
   if (!targets.length) {
     toast('所选版本与全部 MOD 均不兼容', 'error')
     return
   }
-  modRequest.value = { target: selected, input: { paths: targets.map(m => m.filePath) } }
+  modRequest.value = { target: selected, input: { paths: targets.map((m) => m.filePath) } }
 }
 
 /** 「下载新版本」：跳游戏版本页，提示装完后再装入 */
@@ -143,24 +157,19 @@ async function onAutoDownload() {
       if (m.loader) loaderCount.set(m.loader, (loaderCount.get(m.loader) ?? 0) + 1)
     }
     const loader = [...loaderCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]
-    if (validMods.value.some(m => m.loader !== loader)) throw new Error('不同加载器的 MOD 不能装入同一实例，请分批导入')
+    if (validMods.value.some((m) => m.loader !== loader)) throw new Error('不同加载器的 MOD 不能装入同一实例，请分批导入')
     if (!loader) throw new Error('没有可识别的加载器类型')
     // 取发布清单中满足所有该 loader MOD 范围的最高 release
     const { getManifest } = await import('../api')
     const manifest = await getManifest()
     const releases = manifest.filter((v) => v.type === 'release')
-    const target = releases.find((v) =>
-      validMods.value.every((m) => !m.loader || matchRange(m.mcRange, v.id))
-    )
+    const target = releases.find((v) => validMods.value.every((m) => !m.loader || matchRange(m.mcRange, v.id)))
     if (!target) throw new Error('没有找到兼容的正式版 MC')
     // 加载器版本维度：取该加载器适配该 MC 的最新版本，且满足 MOD 声明的 loader 版本范围
     const { listLoaders } = await import('../api')
     const loaderVersions = await listLoaders(loader, target.id)
     if (!loaderVersions.length) throw new Error(`${LOADER_TAG[loader]} 没有适配 ${target.id} 的版本`)
-    const loaderVersion =
-      loaderVersions.find((lv) =>
-        validMods.value.every((m) => !m.loaderRange || matchRange(m.loaderRange, lv))
-      )
+    const loaderVersion = loaderVersions.find((lv) => validMods.value.every((m) => !m.loaderRange || matchRange(m.loaderRange, lv)))
     if (!loaderVersion) throw new Error('没有同时满足全部 MOD 区间要求的加载器版本')
     // Fabric 模组自动携带最新 Fabric API（绝大多数 Fabric MOD 需要）
     let fabricApi: string | undefined
@@ -174,7 +183,8 @@ async function onAutoDownload() {
       }
     }
     const filePaths = validMods.value.map((m) => m.filePath)
-    const destinationFolder = store.settings?.folders.find(folder => folder.isDefault)?.path || store.settings?.activeFolder || store.settings?.gameDir || ''
+    const destinationFolder =
+      store.settings?.folders.find((folder) => folder.isDefault)?.path || store.settings?.activeFolder || store.settings?.gameDir || ''
     emit('close')
     toast(
       `开始自动下载 ${target.id} + ${LOADER_TAG[loader]} ${loaderVersion}${fabricApi ? ' + Fabric API' : ''}，完成后将自动装入 ${filePaths.length} 个 MOD`,
@@ -205,15 +215,11 @@ async function onAutoDownload() {
 }
 
 /** 版本下载完成后自动装入 MOD：installedId 优先，缺失时按 MC 版本 + 加载器兜底定位实例 */
-async function autoInstallMods(
-  filePaths: string[],
-  installedId: string | undefined,
-  folder: string
-) {
+async function autoInstallMods(filePaths: string[], installedId: string | undefined, folder: string) {
   try {
     await refreshInstalled()
     const scanned = await getModTargets()
-    const v = scanned.versions.find(v => v.id === installedId && v.folder === folder)
+    const v = scanned.versions.find((v) => v.id === installedId && v.folder === folder)
     if (!v) throw new Error('未找到本次安装的确切实例，请重新拖入 MOD')
     modRequest.value = { target: v, input: { paths: filePaths } }
   } catch (e) {
@@ -241,7 +247,10 @@ const modCompatOf = (m: ModInfo): string[] => matchMap.value[m.filePath] ?? []
         </div>
 
         <template v-else>
-          <div v-if="scanErrors.length" class="none-hint">部分目录或实例未能完整扫描；修复后请重新拖入。<div v-for="error in scanErrors" :key="error">{{ error }}</div></div>
+          <div v-if="scanErrors.length" class="none-hint">
+            部分目录或实例未能完整扫描；修复后请重新拖入。
+            <div v-for="error in scanErrors" :key="error">{{ error }}</div>
+          </div>
           <!-- 识别结果列表 -->
           <div class="mod-list">
             <div v-for="m in mods" :key="m.filePath + m.fileName" class="mod-row" :class="{ failed: !!m.error }">
@@ -249,8 +258,8 @@ const modCompatOf = (m: ModInfo): string[] => matchMap.value[m.filePath] ?? []
               <span v-else class="mod-icon mod-icon-empty">{{ (m.name || m.fileName).charAt(0) }}</span>
               <div class="mod-meta">
                 <div class="mod-title-row">
-                  <MarqueeText class="mod-name" :text="m.name || m.fileName"/>
-                  <MarqueeText v-if="m.version" class="muted" :text="'v' + m.version"/>
+                  <MarqueeText class="mod-name" :text="m.name || m.fileName" />
+                  <MarqueeText v-if="m.version" class="muted" :text="'v' + m.version" />
                   <span v-if="m.loader" class="tag">{{ LOADER_TAG[m.loader] }}</span>
                 </div>
                 <div class="mod-sub muted">
@@ -272,9 +281,17 @@ const modCompatOf = (m: ModInfo): string[] => matchMap.value[m.filePath] ?? []
           <template v-if="branch === 'matched'">
             <p class="modal-label">选择装入版本（{{ commonVersions.length }} 个版本可装入全部 {{ validMods.length }} 个 MOD）</p>
             <div class="ver-list">
-              <label v-for="v in commonVersions" :key="instanceKey(v)" class="ver-option" :class="{ active: selectedVersion === instanceKey(v) }">
+              <label
+                v-for="v in commonVersions"
+                :key="instanceKey(v)"
+                class="ver-option"
+                :class="{ active: selectedVersion === instanceKey(v) }"
+              >
                 <input v-model="selectedVersion" @change="syncDropSelection" type="radio" :value="instanceKey(v)" />
-                <span class="ver-name">{{ displayVersionName(v) }}<small>{{ v.mcVersion }} · {{ v.loader }} {{ v.loaderVersion || '版本未知' }}<br />{{ v.folder }}</small></span>
+                <span class="ver-name"
+                  >{{ displayVersionName(v)
+                  }}<small>{{ v.mcVersion }} · {{ v.loader }} {{ v.loaderVersion || '版本未知' }}<br />{{ v.folder }}</small></span
+                >
                 <span v-if="v.isolated" class="tag">已隔离</span>
               </label>
             </div>
@@ -289,13 +306,19 @@ const modCompatOf = (m: ModInfo): string[] => matchMap.value[m.filePath] ?? []
 
           <!-- 分支：部分匹配 -->
           <template v-else-if="branch === 'partial'">
-            <p class="modal-label">
-              没有能装入全部 MOD 的版本，以下为可装入部分 MOD 的版本（不兼容项将被跳过）：
-            </p>
+            <p class="modal-label">没有能装入全部 MOD 的版本，以下为可装入部分 MOD 的版本（不兼容项将被跳过）：</p>
             <div class="ver-list">
-              <label v-for="x in bestEffortVersions" :key="instanceKey(x.v)" class="ver-option" :class="{ active: selectedVersion === instanceKey(x.v) }">
+              <label
+                v-for="x in bestEffortVersions"
+                :key="instanceKey(x.v)"
+                class="ver-option"
+                :class="{ active: selectedVersion === instanceKey(x.v) }"
+              >
                 <input v-model="selectedVersion" type="radio" :value="instanceKey(x.v)" />
-                <span class="ver-name">{{ displayVersionName(x.v) }}<small>{{ x.v.mcVersion }} · {{ x.v.loader }} {{ x.v.loaderVersion || '版本未知' }}<br />{{ x.v.folder }}</small></span>
+                <span class="ver-name"
+                  >{{ displayVersionName(x.v)
+                  }}<small>{{ x.v.mcVersion }} · {{ x.v.loader }} {{ x.v.loaderVersion || '版本未知' }}<br />{{ x.v.folder }}</small></span
+                >
                 <span class="muted">可装 {{ x.ok.length }}/{{ validMods.length }}</span>
               </label>
             </div>
@@ -311,11 +334,18 @@ const modCompatOf = (m: ModInfo): string[] => matchMap.value[m.filePath] ?? []
           <!-- 分支：全无匹配 -->
           <template v-else-if="branch === 'none'">
             <div class="none-hint">
-              <p>{{ scanErrors.length ? '尚不能确认所有本地实例的兼容性，请先处理扫描错误。' : `已扫描全部注册目录中的 ${allTargets.length} 个实例，未找到满足 MOD 元数据要求的版本。` }}</p>
+              <p>
+                {{
+                  scanErrors.length
+                    ? '尚不能确认所有本地实例的兼容性，请先处理扫描错误。'
+                    : `已扫描全部注册目录中的 ${allTargets.length} 个实例，未找到满足 MOD 元数据要求的版本。`
+                }}
+              </p>
               <details v-if="allTargets.length">
                 <summary>查看逐个实例的匹配原因</summary>
                 <div v-for="item in mismatchDetails" :key="instanceKey(item.v)" class="mismatch-item">
-                  <strong>{{ displayVersionName(item.v) }}</strong><small>{{ item.v.folder }}</small>
+                  <strong>{{ displayVersionName(item.v) }}</strong
+                  ><small>{{ item.v.folder }}</small>
                   <p v-for="reason in item.reasons" :key="reason">{{ reason }}</p>
                 </div>
               </details>
@@ -337,15 +367,41 @@ const modCompatOf = (m: ModInfo): string[] => matchMap.value[m.filePath] ?? []
       </div>
     </div>
   </Teleport>
-  <ModInstallDialog v-if="modRequest" :target="modRequest.target" :input="modRequest.input" @close="modRequest = null" @installed="modRequest = null; emit('close')"/>
+  <ModInstallDialog
+    v-if="modRequest"
+    :target="modRequest.target"
+    :input="modRequest.input"
+    @close="modRequest = null"
+    @installed="
+      modRequest = null
+      emit('close')
+    "
+  />
 </template>
 
 <style scoped>
-.mismatch-item { padding: var(--space-2) 0; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
-.mismatch-item small { display: block; opacity: .75; font-size: var(--text-xs); }
-.mismatch-item p { margin: var(--space-1) 0; font-size: var(--text-xs); }
-.mismatch-item strong { font-size: var(--text-sm); }
-summary { cursor: pointer; padding: var(--space-2) 0; font-size: var(--text-sm); }
+.mismatch-item {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+.mismatch-item small {
+  display: block;
+  opacity: 0.75;
+  font-size: var(--text-xs);
+}
+.mismatch-item p {
+  margin: var(--space-1) 0;
+  font-size: var(--text-xs);
+}
+.mismatch-item strong {
+  font-size: var(--text-sm);
+}
+summary {
+  cursor: pointer;
+  padding: var(--space-2) 0;
+  font-size: var(--text-sm);
+}
 .moddrop-modal {
   width: 520px;
   max-height: 82vh;
@@ -446,7 +502,9 @@ summary { cursor: pointer; padding: var(--space-2) 0; font-size: var(--text-sm);
   border-radius: var(--radius-md);
   background: var(--card-2);
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 .ver-option.active {
   border-color: var(--accent);
@@ -455,7 +513,13 @@ summary { cursor: pointer; padding: var(--space-2) 0; font-size: var(--text-sm);
 .ver-option input {
   accent-color: var(--accent);
 }
-.ver-name small { display: block; font-weight: 400; font-size: var(--text-xs); color: var(--text-dim); margin-top: var(--space-1); }
+.ver-name small {
+  display: block;
+  font-weight: 400;
+  font-size: var(--text-xs);
+  color: var(--text-dim);
+  margin-top: var(--space-1);
+}
 .ver-name {
   flex: 1;
   font-size: var(--text-sm);

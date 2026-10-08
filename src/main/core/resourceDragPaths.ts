@@ -18,7 +18,7 @@ export function dragPath(root: string, relative: string): string {
 }
 export function dragResourceFilesSync(directory: string, names: unknown): string[] {
   if (!Array.isArray(names) || !names.length || names.length > 1000) throw new Error('每次可拖出 1–1000 个文件，请分批选择')
-  return [...new Set(names)].map(name => {
+  return [...new Set(names)].map((name) => {
     if (typeof name !== 'string' || name.includes('/') || name.includes('\\')) throw new Error('无效的文件名')
     return dragPath(directory, name)
   })

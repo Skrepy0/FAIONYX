@@ -27,12 +27,7 @@
   "typescript": true,
   "license": true,
   "build": true,
-  "themes": [
-    "transparent",
-    "black-orange",
-    "blue-white",
-    "custom"
-  ],
+  "themes": ["transparent", "black-orange", "blue-white", "custom"],
   "nativeStartup": {
     "firstPaintMs": 266,
     "assemblyMs": 3438,

@@ -58,7 +58,12 @@ test('1.0.20 changed SFCs compile', () => {
     const { descriptor, errors } = parse(source)
     assert.deepEqual(errors, [], file)
     const script = compileScript(descriptor, { id: file })
-    const result = compileTemplate({ source: descriptor.template!.content, filename: file, id: file, compilerOptions: { bindingMetadata: script.bindings } })
+    const result = compileTemplate({
+      source: descriptor.template!.content,
+      filename: file,
+      id: file,
+      compilerOptions: { bindingMetadata: script.bindings },
+    })
     assert.deepEqual(result.errors, [], file)
   }
 })

@@ -20,13 +20,43 @@ const files = import.meta.glob('../../../../licenses/*.txt', { query: '?raw', im
 </template>
 
 <style scoped>
-.license-text { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 13px; user-select: text; }
-.notices-markdown { font-size: 13px; user-select: text; }
-.notices-markdown :deep(h4) { font-size: 16px; line-height: 1.4; margin: 22px 0 10px; }
-.notices-markdown :deep(h4:first-child) { margin-top: 0; }
-.notices-markdown :deep(p) { margin: 7px 0; }
-.notices-markdown :deep(a) { color: var(--accent); text-decoration: underline; overflow-wrap: anywhere; }
-.notices-markdown :deep(code) { background: var(--card-2); padding: 2px 5px; border-radius: 4px; }
-summary { cursor: pointer; padding: 12px 0; }
-h2 { margin: 0; }
+.license-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  font-size: 13px;
+  user-select: text;
+}
+.notices-markdown {
+  font-size: 13px;
+  user-select: text;
+}
+.notices-markdown :deep(h4) {
+  font-size: 16px;
+  line-height: 1.4;
+  margin: 22px 0 10px;
+}
+.notices-markdown :deep(h4:first-child) {
+  margin-top: 0;
+}
+.notices-markdown :deep(p) {
+  margin: 7px 0;
+}
+.notices-markdown :deep(a) {
+  color: var(--accent);
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+.notices-markdown :deep(code) {
+  background: var(--card-2);
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+summary {
+  cursor: pointer;
+  padding: 12px 0;
+}
+h2 {
+  margin: 0;
+}
 </style>

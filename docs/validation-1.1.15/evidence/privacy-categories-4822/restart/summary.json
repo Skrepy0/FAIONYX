@@ -40,10 +40,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -123,10 +120,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -210,10 +204,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -429,10 +420,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -11142,17 +11130,9 @@
             ],
             "rows": 2,
             "detailName": "服务器IP为地址已隐藏欢迎加入",
-            "rowNames": [
-              "服务器IP为地址已隐藏欢迎加入",
-              "IP地址已隐藏欢迎加入"
-            ],
-            "descriptions": [
-              "IP地址已隐藏欢迎加入"
-            ],
-            "statuses": [
-              "在线1 ms",
-              "在线1 ms"
-            ]
+            "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+            "descriptions": ["IP地址已隐藏欢迎加入"],
+            "statuses": ["在线1 ms", "在线1 ms"]
           }
         }
       ],
@@ -11244,10 +11224,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -11327,10 +11304,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -11414,10 +11388,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -11633,10 +11604,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -11830,10 +11798,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -11913,10 +11878,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -12000,10 +11962,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -12219,10 +12178,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -12284,10 +12240,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -12367,10 +12320,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -12450,10 +12400,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -12533,10 +12480,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -12620,10 +12564,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -12839,10 +12780,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -12904,10 +12842,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -12987,10 +12922,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -13074,10 +13006,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -13293,10 +13222,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -13456,10 +13382,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -13539,10 +13462,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -13626,10 +13546,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -13845,10 +13762,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -13910,10 +13824,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -13993,10 +13904,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -14080,10 +13988,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -14299,10 +14204,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -24885,17 +24787,9 @@
             ],
             "rows": 2,
             "detailName": "服务器IP为地址已隐藏欢迎加入",
-            "rowNames": [
-              "服务器IP为地址已隐藏欢迎加入",
-              "IP地址已隐藏欢迎加入"
-            ],
-            "descriptions": [
-              "IP地址已隐藏欢迎加入"
-            ],
-            "statuses": [
-              "在线1 ms",
-              "在线1 ms"
-            ]
+            "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+            "descriptions": ["IP地址已隐藏欢迎加入"],
+            "statuses": ["在线1 ms", "在线1 ms"]
           }
         }
       ],
@@ -35562,17 +35456,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -46107,17 +45993,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     }
   ],
@@ -46326,10 +46204,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -46381,10 +46256,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -46435,10 +46307,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -46490,10 +46359,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -46579,10 +46445,7 @@
       "width": 962,
       "height": 622
     },
-    "minimumSize": [
-      960,
-      620
-    ],
+    "minimumSize": [960, 620],
     "zoom": 1.25,
     "focused": true,
     "visible": true,
@@ -47119,9 +46982,7 @@
       }
     },
     "disabledFeatures": [],
-    "favoriteVersions": [
-      "联机验证实例"
-    ],
+    "favoriteVersions": ["联机验证实例"],
     "versionCategories": [
       {
         "id": "1762de2a-59e8-4dbf-bb92-117a36b87e75",
@@ -47177,15 +47038,7 @@
       "image": "",
       "fit": "crop",
       "images": [],
-      "order": [
-        "builtin:piston",
-        "builtin:brewer",
-        "builtin:cannon",
-        "builtin:cactus",
-        "builtin:farmer",
-        "builtin:camp",
-        "builtin:sunset"
-      ],
+      "order": ["builtin:piston", "builtin:brewer", "builtin:cannon", "builtin:cactus", "builtin:farmer", "builtin:camp", "builtin:sunset"],
       "disabled": [],
       "randomPlayback": false,
       "intervalSeconds": 6.5,
@@ -47229,10 +47082,7 @@
         "width": 962,
         "height": 622
       },
-      "minimumSize": [
-        960,
-        620
-      ],
+      "minimumSize": [960, 620],
       "zoom": 1.25,
       "focused": true,
       "visible": true,
@@ -47316,10 +47166,7 @@
         "width": 1360,
         "height": 860
       },
-      "minimumSize": [
-        960,
-        620
-      ],
+      "minimumSize": [960, 620],
       "zoom": 1.25,
       "focused": true,
       "visible": true,
@@ -49289,9 +49136,7 @@
       }
     },
     "disabledFeatures": [],
-    "favoriteVersions": [
-      "联机验证实例"
-    ],
+    "favoriteVersions": ["联机验证实例"],
     "versionCategories": [
       {
         "id": "1762de2a-59e8-4dbf-bb92-117a36b87e75",
@@ -49347,15 +49192,7 @@
       "image": "",
       "fit": "crop",
       "images": [],
-      "order": [
-        "builtin:piston",
-        "builtin:brewer",
-        "builtin:cannon",
-        "builtin:cactus",
-        "builtin:farmer",
-        "builtin:camp",
-        "builtin:sunset"
-      ],
+      "order": ["builtin:piston", "builtin:brewer", "builtin:cannon", "builtin:cactus", "builtin:farmer", "builtin:camp", "builtin:sunset"],
       "disabled": [],
       "randomPlayback": false,
       "intervalSeconds": 6.5,

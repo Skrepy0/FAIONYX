@@ -21,9 +21,19 @@ import { createSSRApp } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 
 test('reported ImmortalersDelight: BootstrapLauncher + fmlloader + FML arguments, renamed instance', () => {
-  const metadata = resolveInstanceMetadata({ id: '任意重命名', mainClass: 'cpw.mods.bootstraplauncher.BootstrapLauncher', libraries: [{ name: 'net.minecraftforge:fmlloader:1.20.1-47.4.10' }], arguments: { game: ['--fml.forgeVersion', '47.4.10', '--fml.mcVersion', '1.20.1', '--launchTarget', 'forgeclient'] } }, () => undefined)
+  const metadata = resolveInstanceMetadata(
+    {
+      id: '任意重命名',
+      mainClass: 'cpw.mods.bootstraplauncher.BootstrapLauncher',
+      libraries: [{ name: 'net.minecraftforge:fmlloader:1.20.1-47.4.10' }],
+      arguments: { game: ['--fml.forgeVersion', '47.4.10', '--fml.mcVersion', '1.20.1', '--launchTarget', 'forgeclient'] },
+    },
+    () => undefined
+  )
   const zip = new AdmZip()
-  zip.addFile('META-INF/mods.toml', Buffer.from(`modLoader="javafml"
+  zip.addFile(
+    'META-INF/mods.toml',
+    Buffer.from(`modLoader="javafml"
 loaderVersion="[47,)"
 [[mods]]
 modId='immortalersdelight' # literal strings and comments are valid TOML
@@ -43,7 +53,8 @@ versionRange="[47,)"
 [[dependencies.immortalersdelight]]
 modId="farmersdelight"
 mandatory=true
-versionRange="[1.2,)"`))
+versionRange="[1.2,)"`)
+  )
   const mod = parseModArchive(zip, 'fixture.jar', 'fixture.jar')
   assert.equal(mod.error, undefined)
   assert.deepEqual(mod.requirements, [{ id: 'farmersdelight', range: '[1.2,)' }])
@@ -56,23 +67,57 @@ test('FML argument-only and library-only profiles cover older NeoForge, modern F
   for (const [loader, lib, args, mc, lv] of [
     ['forge', 'net.minecraftforge:fmlloader:1.20.1-47.4.10', [], '1.20.1', '47.4.10'],
     ['forge', 'net.minecraftforge:forge:1.12.2-14.23.5.2860:universal', [], '1.12.2', '14.23.5.2860'],
-    ['neoforge', 'net.neoforged.fancymodloader:loader:6.0.18', ['--fml.mcVersion=1.21.4', '--fml.neoForgeVersion=21.4.157'], '1.21.4', '21.4.157'],
-    ['neoforge', 'net.neoforged.fancymodloader:loader:11.0.16', ['--fml.mcVersion', '26.2', '--fml.neoForgeVersion', '26.2.0.66'], '26.2', '26.2.0.66'],
+    [
+      'neoforge',
+      'net.neoforged.fancymodloader:loader:6.0.18',
+      ['--fml.mcVersion=1.21.4', '--fml.neoForgeVersion=21.4.157'],
+      '1.21.4',
+      '21.4.157',
+    ],
+    [
+      'neoforge',
+      'net.neoforged.fancymodloader:loader:11.0.16',
+      ['--fml.mcVersion', '26.2', '--fml.neoForgeVersion', '26.2.0.66'],
+      '26.2',
+      '26.2.0.66',
+    ],
     ['fabric', 'net.fabricmc:fabric-loader:0.19.3', [], '1.20.1', '0.19.3'],
-    ['quilt', 'org.quiltmc:quilt-loader:0.28.0', [], '1.20.1', '0.28.0']
+    ['quilt', 'org.quiltmc:quilt-loader:0.28.0', [], '1.20.1', '0.28.0'],
   ] as const) {
-    const found = resolveInstanceMetadata({ id: 'misleading display name 99.99', clientVersion: mc, mainClass: 'cpw.mods.bootstraplauncher.BootstrapLauncher', libraries: [{ name: lib }], arguments: { game: [...args] } }, () => undefined)
+    const found = resolveInstanceMetadata(
+      {
+        id: 'misleading display name 99.99',
+        clientVersion: mc,
+        mainClass: 'cpw.mods.bootstraplauncher.BootstrapLauncher',
+        libraries: [{ name: lib }],
+        arguments: { game: [...args] },
+      },
+      () => undefined
+    )
     assert.deepEqual([found.loader, found.mcVersion, found.loaderVersion], [loader, mc, lv])
     assert(matchesVersionRange(`[${lv},)`, found.loaderVersion!))
   }
 })
 
 test('multiloader descriptors, required vs optional/server dependencies, bundled providers', () => {
-  const zip = new AdmZip(), child = new AdmZip()
+  const zip = new AdmZip(),
+    child = new AdmZip()
   child.addFile('fabric.mod.json', Buffer.from(JSON.stringify({ id: 'bundled', version: '2.1' })))
   zip.addFile('inner.jar', child.toBuffer())
-  zip.addFile('fabric.mod.json', Buffer.from(JSON.stringify({ id: 'multi', version: '1.0', jars: [{ file: 'inner.jar' }], depends: { minecraft: '>=1.20 <1.21', fabricloader: '>=0.15', bundled: '>=2', fabric: '*' } })))
-  zip.addFile('META-INF/neoforge.mods.toml', Buffer.from(`[[mods]]
+  zip.addFile(
+    'fabric.mod.json',
+    Buffer.from(
+      JSON.stringify({
+        id: 'multi',
+        version: '1.0',
+        jars: [{ file: 'inner.jar' }],
+        depends: { minecraft: '>=1.20 <1.21', fabricloader: '>=0.15', bundled: '>=2', fabric: '*' },
+      })
+    )
+  )
+  zip.addFile(
+    'META-INF/neoforge.mods.toml',
+    Buffer.from(`[[mods]]
 modId="multi"
 version="1.0"
 [[dependencies.multi]]
@@ -85,11 +130,12 @@ type="optional"
 [[dependencies.multi]]
 modId="serveronly"
 type="required"
-side="SERVER"`))
+side="SERVER"`)
+  )
   const mod = parseModArchive(zip, 'fixture.jar', 'fixture.jar')
   assert(modMatchesInstance(mod, { id: 'x', mcVersion: '26.2', loader: 'neoforge' }))
   assert(modMatchesInstance(mod, { id: 'x', mcVersion: '1.20.1', loader: 'fabric', loaderVersion: '0.16' }))
-  assert(mod.provides?.some(p => p.id === 'bundled' && p.version === '2.1'))
+  assert(mod.provides?.some((p) => p.id === 'bundled' && p.version === '2.1'))
   assert.deepEqual(missingRequirements([mod], { id: 'x', mcVersion: '1.20.1', loader: 'fabric' }, [mod]), [{ id: 'fabric', range: '*' }])
   assert.deepEqual(missingRequirements([mod], { id: 'x', mcVersion: '26.2', loader: 'neoforge' }, [mod]), [])
 })
@@ -103,21 +149,57 @@ test('community filters apply to actual MC and normalized Loader, never filename
 
 test('dependency graph respects required edges, pinned versions, cycles and incompatible loaders', async () => {
   const target: InstalledVersion = { id: 'x', mcVersion: '1.20.1', loader: 'forge' }
-  const make = (id: string): CommunityFile => ({ fileId: id, source: 'modrinth', projectId: id, fileName: id + '.jar', version: '1', gameVersions: ['1.20.1'], loaders: ['Forge'], url: 'https://example.invalid/' + id, size: 1, date: '', releaseType: 'release' })
-  const a = make('a'), b = make('b')
-  a.dependencies = [{ fileId: 'b', required: true }, { projectId: 'optional', required: false }]
+  const make = (id: string): CommunityFile => ({
+    fileId: id,
+    source: 'modrinth',
+    projectId: id,
+    fileName: id + '.jar',
+    version: '1',
+    gameVersions: ['1.20.1'],
+    loaders: ['Forge'],
+    url: 'https://example.invalid/' + id,
+    size: 1,
+    date: '',
+    releaseType: 'release',
+  })
+  const a = make('a'),
+    b = make('b')
+  a.dependencies = [
+    { fileId: 'b', required: true },
+    { projectId: 'optional', required: false },
+  ]
   b.dependencies = [{ fileId: 'a', required: true }]
-  const repo = { files: async () => { throw new Error('optional must not fetch') }, exact: async (_s: unknown, _p: unknown, id: string) => id === 'a' ? a : b, find: async () => undefined }
-  assert.deepEqual((await dependencyGraph([a], target, repo)).map(f => f.fileId), ['b', 'a'])
+  const repo = {
+    files: async () => {
+      throw new Error('optional must not fetch')
+    },
+    exact: async (_s: unknown, _p: unknown, id: string) => (id === 'a' ? a : b),
+    find: async () => undefined,
+  }
+  assert.deepEqual(
+    (await dependencyGraph([a], target, repo)).map((f) => f.fileId),
+    ['b', 'a']
+  )
   await assert.rejects(dependencyGraph([a], { ...target, loader: 'fabric' }, repo), /不支持/)
 })
 
 test('modified Vue components compile with real scripts and templates', () => {
-  for (const name of ['views/CommunityView.vue', 'components/ModDropModal.vue', 'components/ModInstallDialog.vue', 'components/MarqueeText.vue']) {
+  for (const name of [
+    'views/CommunityView.vue',
+    'components/ModDropModal.vue',
+    'components/ModInstallDialog.vue',
+    'components/MarqueeText.vue',
+  ]) {
     const source = fs.readFileSync('src/renderer/src/' + name, 'utf8')
-    const { descriptor, errors } = parse(source); assert.deepEqual(errors, [])
+    const { descriptor, errors } = parse(source)
+    assert.deepEqual(errors, [])
     const script = compileScript(descriptor, { id: name })
-    const template = compileTemplate({ source: descriptor.template!.content, filename: name, id: name, compilerOptions: { bindingMetadata: script.bindings } })
+    const template = compileTemplate({
+      source: descriptor.template!.content,
+      filename: name,
+      id: name,
+      compilerOptions: { bindingMetadata: script.bindings },
+    })
     assert.deepEqual(template.errors, [], name)
   }
 })
@@ -126,47 +208,110 @@ test('real dependency download waits for consent, verifies JAR and commits into 
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-dependencies-test-'))
   let requests = 0
   const jar = (id: string, depends = {}) => {
-    const zip = new AdmZip(); zip.addFile('fabric.mod.json', Buffer.from(JSON.stringify({ id, version: '1.2.3', depends: { minecraft: '>=1.20 <1.21', fabricloader: '>=0.15', ...depends } }))); return zip.toBuffer()
+    const zip = new AdmZip()
+    zip.addFile(
+      'fabric.mod.json',
+      Buffer.from(JSON.stringify({ id, version: '1.2.3', depends: { minecraft: '>=1.20 <1.21', fabricloader: '>=0.15', ...depends } }))
+    )
+    return zip.toBuffer()
   }
-  const dependency = jar('front'), source = path.join(root, 'my-mod.jar')
+  const dependency = jar('front'),
+    source = path.join(root, 'my-mod.jar')
   fs.writeFileSync(source, jar('test_mod', { front: '>=1.2' }))
-  const server = http.createServer((_req, res) => { requests++; res.writeHead(200, { 'content-length': dependency.length }); res.end(dependency) })
-  await new Promise<void>(r => server.listen(0, '127.0.0.1', r))
-  const target: InstalledVersion = { id: '自定义名称', folder: root, gameDirectory: path.join(root, 'isolated'), isolated: true, mcVersion: '1.20.1', loader: 'fabric', loaderVersion: '0.16.0' }
-  const file: CommunityFile = { source: 'modrinth', projectId: 'front', fileId: 'front-1', fileName: 'front.jar', version: '1.2.3', url: `http://127.0.0.1:${(server.address() as any).port}/front.jar`, sha1: crypto.createHash('sha1').update(dependency).digest('hex'), size: dependency.length, gameVersions: ['1.20.1'], loaders: ['fabric'], date: '', releaseType: 'release' }
+  const server = http.createServer((_req, res) => {
+    requests++
+    res.writeHead(200, { 'content-length': dependency.length })
+    res.end(dependency)
+  })
+  await new Promise<void>((r) => server.listen(0, '127.0.0.1', r))
+  const target: InstalledVersion = {
+    id: '自定义名称',
+    folder: root,
+    gameDirectory: path.join(root, 'isolated'),
+    isolated: true,
+    mcVersion: '1.20.1',
+    loader: 'fabric',
+    loaderVersion: '0.16.0',
+  }
+  const file: CommunityFile = {
+    source: 'modrinth',
+    projectId: 'front',
+    fileId: 'front-1',
+    fileName: 'front.jar',
+    version: '1.2.3',
+    url: `http://127.0.0.1:${(server.address() as any).port}/front.jar`,
+    sha1: crypto.createHash('sha1').update(dependency).digest('hex'),
+    size: dependency.length,
+    gameVersions: ['1.20.1'],
+    loaders: ['fabric'],
+    date: '',
+    releaseType: 'release',
+  }
   const repo = { files: async () => [file], exact: async () => file, find: async () => file }
   try {
     const cancelled = await prepareModInstall(target, { paths: [source] }, () => {}, undefined, repo)
     assert.equal(requests, 0, 'must not download a dependency before confirmation')
-    assert.equal(cancelled.files.filter(f => f.dependency).length, 1)
+    assert.equal(cancelled.files.filter((f) => f.dependency).length, 1)
     discardModPlan(cancelled.id)
     assert(!fs.existsSync(target.gameDirectory!))
     const changed = await prepareModInstall(target, { paths: [source] }, () => {}, undefined, repo)
     let validationCount = 0
-    await assert.rejects(executeModPlan(changed.id, true, () => {
-      if (++validationCount === 2) throw new Error('游戏已开始运行')
-      return target
-    }, () => {}), /游戏已开始运行/)
+    await assert.rejects(
+      executeModPlan(
+        changed.id,
+        true,
+        () => {
+          if (++validationCount === 2) throw new Error('游戏已开始运行')
+          return target
+        },
+        () => {}
+      ),
+      /游戏已开始运行/
+    )
     assert(!fs.existsSync(target.gameDirectory!), 'a session starting during download must prevent all writes')
     assert.equal(requests, 1)
     const plan = await prepareModInstall(target, { paths: [source] }, () => {}, undefined, repo)
-    await executeModPlan(plan.id, true, () => target, () => {})
+    await executeModPlan(
+      plan.id,
+      true,
+      () => target,
+      () => {}
+    )
     assert.equal(requests, 2)
     assert.deepEqual(fs.readdirSync(path.join(target.gameDirectory!, 'mods')).sort(), ['front.jar', 'my-mod.jar'])
     assert(!fs.existsSync(path.join(root, 'mods')))
     const repeat = await prepareModInstall(target, { paths: [source] }, () => {}, undefined, repo)
     assert.equal(repeat.missing.length, 0)
-    assert.equal(repeat.files.filter(f => f.dependency).length, 0)
-    await executeModPlan(repeat.id, true, () => target, () => {})
+    assert.equal(repeat.files.filter((f) => f.dependency).length, 0)
+    await executeModPlan(
+      repeat.id,
+      true,
+      () => target,
+      () => {}
+    )
     assert.equal(requests, 2)
     assert.equal(fs.readdirSync(path.join(target.gameDirectory!, 'mods')).length, 2)
-    await assert.rejects(executeModPlan(plan.id, true, () => target, () => {}), /过期/)
-  } finally { server.closeAllConnections(); await new Promise<void>(r => server.close(() => r())); fs.rmSync(root, { recursive: true, force: true }) }
+    await assert.rejects(
+      executeModPlan(
+        plan.id,
+        true,
+        () => target,
+        () => {}
+      ),
+      /过期/
+    )
+  } finally {
+    server.closeAllConnections()
+    await new Promise<void>((r) => server.close(() => r()))
+    fs.rmSync(root, { recursive: true, force: true })
+  }
 })
 
 test('multi-mod JAR must satisfy every same-loader descriptor, including a Forge FML-only bound', () => {
   const zip = new AdmZip()
-  zip.addFile('META-INF/mods.toml', Buffer.from(`modLoader='javafml'
+  zip.addFile(
+    'META-INF/mods.toml',
+    Buffer.from(`modLoader='javafml'
 loaderVersion='[47,)'
 [[mods]]
 modId='first'
@@ -177,7 +322,8 @@ modId='minecraft'
 versionRange='[1.20,1.22)'
 [[dependencies.second]]
 modId='minecraft'
-versionRange='[1.20.1,1.21)'`))
+versionRange='[1.20.1,1.21)'`)
+  )
   const mod = parseModArchive(zip, 'multi.jar', 'multi.jar')
   assert(modMatchesInstance(mod, { id: 'ignored', mcVersion: '1.20.1', loader: 'forge', loaderVersion: '47.4.10' }))
   assert(!modMatchesInstance(mod, { id: 'ignored', mcVersion: '1.21', loader: 'forge', loaderVersion: '47.4.10' }))
@@ -187,10 +333,12 @@ versionRange='[1.20.1,1.21)'`))
 test('external runtime reuse follows exact coordinates, preserves existing bytes and does not copy unrelated versions', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-runtime-test-'))
   try {
-    const source = path.join(root, 'external'), shared = path.join(root, 'shared')
+    const source = path.join(root, 'external'),
+      shared = path.join(root, 'shared')
     for (const ver of ['26.2.0.66', '26.2.0.99']) {
       const file = path.join(source, 'libraries/net/neoforged/minecraft-client-patched', ver, `minecraft-client-patched-${ver}.jar`)
-      fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, ver)
+      fs.mkdirSync(path.dirname(file), { recursive: true })
+      fs.writeFileSync(file, ver)
     }
     const profile = { id: 'misleading-name', arguments: { game: ['--fml.neoForgeVersion', '26.2.0.66'] } }
     assert.equal(reuseExternalRuntimeLibraries(profile, [source], shared, []), 1)
@@ -199,31 +347,66 @@ test('external runtime reuse follows exact coordinates, preserves existing bytes
     assert.equal(reuseExternalRuntimeLibraries(profile, [source], shared, []), 0)
     assert.equal(fs.readFileSync(target, 'utf8'), 'existing')
     assert.deepEqual(fs.readdirSync(path.dirname(path.dirname(target))), ['26.2.0.66'])
-  } finally { fs.rmSync(root, { recursive: true, force: true }) }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true })
+  }
 })
 
 test('community component actually renders empty-instance filter fallback (not compile-only)', async () => {
-  const bundle = await build({ entryPoints: ['src/renderer/src/views/CommunityView.vue'], bundle: true, write: false, format: 'cjs', platform: 'node', packages: 'external', alias: { '@shared': path.resolve('src/shared') }, plugins: [{ name: 'vue-unit', setup(b) {
-    b.onLoad({ filter: /\.vue$/ }, args => {
-      const { descriptor } = parse(fs.readFileSync(args.path, 'utf8'))
-      return { contents: compileScript(descriptor, { id: args.path, inlineTemplate: true }).content, loader: 'ts', resolveDir: path.dirname(args.path) }
-    })
-  } }] })
+  const bundle = await build({
+    entryPoints: ['src/renderer/src/views/CommunityView.vue'],
+    bundle: true,
+    write: false,
+    format: 'cjs',
+    platform: 'node',
+    packages: 'external',
+    alias: { '@shared': path.resolve('src/shared') },
+    plugins: [
+      {
+        name: 'vue-unit',
+        setup(b) {
+          b.onLoad({ filter: /\.vue$/ }, (args) => {
+            const { descriptor } = parse(fs.readFileSync(args.path, 'utf8'))
+            return {
+              contents: compileScript(descriptor, { id: args.path, inlineTemplate: true }).content,
+              loader: 'ts',
+              resolveDir: path.dirname(args.path),
+            }
+          })
+        },
+      },
+    ],
+  })
   const exported = { exports: {} as any }
   const previousStorage = globalThis.localStorage
   Object.defineProperty(globalThis, 'localStorage', { value: { getItem: () => null }, configurable: true })
   try {
-    new Function('require', 'module', 'exports', bundle.outputFiles[0].text)(createRequire(path.resolve('package.json')), exported, exported.exports)
+    new Function('require', 'module', 'exports', bundle.outputFiles[0].text)(
+      createRequire(path.resolve('package.json')),
+      exported,
+      exported.exports
+    )
     const html = await renderToString(createSSRApp(exported.exports.default))
     assert(html.includes('选择版本') && html.includes('使用当前实例'))
     // Every route transition has a DOM wrapper even when a view also owns Teleports.
-    assert.match(fs.readFileSync('src/renderer/src/App.vue', 'utf8'), /<Transition name="fade" :duration="routeDuration">\s*<div[^>]*class="route-view"/)
-  } finally { Object.defineProperty(globalThis, 'localStorage', { value: previousStorage, configurable: true }) }
+    assert.match(
+      fs.readFileSync('src/renderer/src/App.vue', 'utf8'),
+      /<Transition name="fade" :duration="routeDuration">\s*<div[^>]*class="route-view"/
+    )
+  } finally {
+    Object.defineProperty(globalThis, 'localStorage', { value: previousStorage, configurable: true })
+  }
 })
 
 test('nested version any/all preserve boolean precedence and Quilt has its own bare-version semantics', () => {
   const range = dependencyRange({ all: [{ any: ['=1.20.1', { all: ['>=26.2', '<26.3'] }] }, '<26.2.1'] })
-  for (const [version, expected] of [['1.20.1', true], ['1.20.2', false], ['26.2', true], ['26.2.1', false], ['26.3', false]] as const) {
+  for (const [version, expected] of [
+    ['1.20.1', true],
+    ['1.20.2', false],
+    ['26.2', true],
+    ['26.2.1', false],
+    ['26.3', false],
+  ] as const) {
     assert.equal(matchesVersionRange(range, version), expected, version)
   }
   assert(!matchesVersionRange(dependencyRange('1.20.1'), '1.20.2'))
@@ -231,88 +414,205 @@ test('nested version any/all preserve boolean precedence and Quilt has its own b
   assert(!matchesVersionRange(dependencyRange('1.20.1', 'quilt'), '2.0.0'))
   assert(!matchesVersionRange(dependencyRange({ any: [] }), '1.20.1'))
   const zip = new AdmZip()
-  zip.addFile('quilt.mod.json', Buffer.from(JSON.stringify({ quilt_loader: { id: 'quilt_test', version: '1.0.0', depends: ['org.quiltmc:qsl', { id: 'minecraft', versions: { all: ['>=1.20.1', '<1.21'] } }, { id: 'quilt_loader', versions: '>=0.20' }, { id: 'server_only', environment: 'server' }] } })))
+  zip.addFile(
+    'quilt.mod.json',
+    Buffer.from(
+      JSON.stringify({
+        quilt_loader: {
+          id: 'quilt_test',
+          version: '1.0.0',
+          depends: [
+            'org.quiltmc:qsl',
+            { id: 'minecraft', versions: { all: ['>=1.20.1', '<1.21'] } },
+            { id: 'quilt_loader', versions: '>=0.20' },
+            { id: 'server_only', environment: 'server' },
+          ],
+        },
+      })
+    )
+  )
   const mod = parseModArchive(zip, 'quilt.jar', 'quilt.jar')
   assert.equal(mod.error, undefined)
   assert(modMatchesInstance(mod, { id: 'renamed', mcVersion: '1.20.4', loader: 'quilt', loaderVersion: '0.28.0' }))
   assert.deepEqual(mod.requirements, [{ id: 'qsl', range: '*' }])
 })
 
-async function pinnedTransactionFixture(options: { transitive?: boolean; pinned?: boolean; existingVersion?: 1 | 2; hashes?: boolean; cycle?: boolean; wrongExact?: boolean }, work: (fixture: {
-  target: InstalledVersion; rootFile: CommunityFile; repo: DependencyRepository; existing: string; one: Buffer; two: Buffer; requests: string[]
-}) => Promise<void>) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-pinned118-')), game = path.join(root, 'isolated'), directory = path.join(game, 'mods')
+async function pinnedTransactionFixture(
+  options: { transitive?: boolean; pinned?: boolean; existingVersion?: 1 | 2; hashes?: boolean; cycle?: boolean; wrongExact?: boolean },
+  work: (fixture: {
+    target: InstalledVersion
+    rootFile: CommunityFile
+    repo: DependencyRepository
+    existing: string
+    one: Buffer
+    two: Buffer
+    requests: string[]
+  }) => Promise<void>
+) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-pinned118-')),
+    game = path.join(root, 'isolated'),
+    directory = path.join(game, 'mods')
   fs.mkdirSync(directory, { recursive: true })
   const jar = (id: string, version: string, depends: Record<string, string> = {}) => {
-    const zip = new AdmZip(); zip.addFile('fabric.mod.json', Buffer.from(JSON.stringify({ id, version, depends: { minecraft: '1.20.1', fabricloader: '>=0.15', ...depends } }))); return zip.toBuffer()
+    const zip = new AdmZip()
+    zip.addFile(
+      'fabric.mod.json',
+      Buffer.from(JSON.stringify({ id, version, depends: { minecraft: '1.20.1', fabricloader: '>=0.15', ...depends } }))
+    )
+    return zip.toBuffer()
   }
   // The JAR's broad range deliberately permits v1. The repository's pinned v2
   // must independently remain binding throughout the real install transaction.
-  const one = jar('front', '1.0.0'), two = jar('front', '2.0.0'), rootBytes = jar('root', '1.0.0', options.transitive ? { middle: '>=1' } : { front: '>=1' }), middleBytes = jar('middle', '1.0.0', { front: '>=1' })
-  const existing = path.join(directory, 'front-existing.jar'); fs.writeFileSync(existing, options.existingVersion === 2 ? two : one)
-  const requests: string[] = [], content = new Map([['/root.jar', rootBytes], ['/middle.jar', middleBytes], ['/front-v2.jar', two]])
+  const one = jar('front', '1.0.0'),
+    two = jar('front', '2.0.0'),
+    rootBytes = jar('root', '1.0.0', options.transitive ? { middle: '>=1' } : { front: '>=1' }),
+    middleBytes = jar('middle', '1.0.0', { front: '>=1' })
+  const existing = path.join(directory, 'front-existing.jar')
+  fs.writeFileSync(existing, options.existingVersion === 2 ? two : one)
+  const requests: string[] = [],
+    content = new Map([
+      ['/root.jar', rootBytes],
+      ['/middle.jar', middleBytes],
+      ['/front-v2.jar', two],
+    ])
   const server = http.createServer((request, response) => {
-    requests.push(request.url!); const bytes = content.get(request.url!); if (!bytes) { response.writeHead(404); response.end(); return }
-    response.writeHead(200, { 'content-length': bytes.length }); response.end(bytes)
+    requests.push(request.url!)
+    const bytes = content.get(request.url!)
+    if (!bytes) {
+      response.writeHead(404)
+      response.end()
+      return
+    }
+    response.writeHead(200, { 'content-length': bytes.length })
+    response.end(bytes)
   })
-  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
   const address = `http://127.0.0.1:${(server.address() as any).port}`
-  const file = (projectId: string, fileId: string, fileName: string, bytes: Buffer, version = '1.0.0'): CommunityFile => ({ source: 'modrinth', projectId, fileId, fileName, version, url: address + '/' + fileName,
-    ...(options.hashes === false ? {} : { sha1: crypto.createHash('sha1').update(bytes).digest('hex') }), size: bytes.length, gameVersions: ['1.20.1'], loaders: ['fabric'], date: '', releaseType: 'release' })
-  const rootFile = file('root', 'root-v1', 'root.jar', rootBytes), middleFile = file('middle', 'middle-v1', 'middle.jar', middleBytes), frontFile = file('front', 'front-v2', 'front-v2.jar', two, '2.0.0')
+  const file = (projectId: string, fileId: string, fileName: string, bytes: Buffer, version = '1.0.0'): CommunityFile => ({
+    source: 'modrinth',
+    projectId,
+    fileId,
+    fileName,
+    version,
+    url: address + '/' + fileName,
+    ...(options.hashes === false ? {} : { sha1: crypto.createHash('sha1').update(bytes).digest('hex') }),
+    size: bytes.length,
+    gameVersions: ['1.20.1'],
+    loaders: ['fabric'],
+    date: '',
+    releaseType: 'release',
+  })
+  const rootFile = file('root', 'root-v1', 'root.jar', rootBytes),
+    middleFile = file('middle', 'middle-v1', 'middle.jar', middleBytes),
+    frontFile = file('front', 'front-v2', 'front-v2.jar', two, '2.0.0')
   const frontEdge = { projectId: 'front', ...(options.pinned === false ? {} : { fileId: 'front-v2' }), required: true }
   rootFile.dependencies = options.transitive ? [{ projectId: 'middle', required: true }] : [frontEdge]
   middleFile.dependencies = [frontEdge]
   if (options.cycle) frontFile.dependencies = [{ projectId: 'root', fileId: 'root-v1', required: true }]
-  const files = new Map([['root-v1', rootFile], ['middle-v1', middleFile], ['front-v2', frontFile]])
-  const repo = { exact: async (_source: unknown, _project: unknown, id: string) => options.wrongExact && id === 'front-v2' ? { ...frontFile, fileId: 'front-v1' } : files.get(id)!,
-    files: async (_source: unknown, project: string) => [project === 'middle' ? middleFile : frontFile], find: async (id: string) => id === 'middle' ? middleFile : frontFile }
-  const target: InstalledVersion = { id: 'pinned fixture', folder: root, gameDirectory: game, isolated: true, mcVersion: '1.20.1', loader: 'fabric', loaderVersion: '0.16.0' }
-  try { await work({ target, rootFile, repo, existing, one, two, requests }) }
-  finally { server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve())); fs.rmSync(root, { recursive: true, force: true }) }
+  const files = new Map([
+    ['root-v1', rootFile],
+    ['middle-v1', middleFile],
+    ['front-v2', frontFile],
+  ])
+  const repo = {
+    exact: async (_source: unknown, _project: unknown, id: string) =>
+      options.wrongExact && id === 'front-v2' ? { ...frontFile, fileId: 'front-v1' } : files.get(id)!,
+    files: async (_source: unknown, project: string) => [project === 'middle' ? middleFile : frontFile],
+    find: async (id: string) => (id === 'middle' ? middleFile : frontFile),
+  }
+  const target: InstalledVersion = {
+    id: 'pinned fixture',
+    folder: root,
+    gameDirectory: game,
+    isolated: true,
+    mcVersion: '1.20.1',
+    loader: 'fabric',
+    loaderVersion: '0.16.0',
+  }
+  try {
+    await work({ target, rootFile, repo, existing, one, two, requests })
+  } finally {
+    server.closeAllConnections()
+    await new Promise<void>((resolve) => server.close(() => resolve()))
+    fs.rmSync(root, { recursive: true, force: true })
+  }
 }
 
 test('118 direct and transitive repository pins reject a different installed provider before writing any MOD', async () => {
-  for (const transitive of [false, true]) await pinnedTransactionFixture({ transitive }, async f => {
-    const plan = await prepareModInstall(f.target, { file: f.rootFile }, () => {}, undefined, f.repo)
-    assert(plan.files.some(file => file.dependency && file.fileName === 'front-v2.jar'))
-    await assert.rejects(executeModPlan(plan.id, true, () => f.target, () => {}), /前置版本冲突.*front.*front-v2.*未写入任何 MOD/)
-    assert(f.requests.includes('/front-v2.jar'), 'the actual pinned JAR was downloaded and verified')
-    assert.deepEqual(fs.readdirSync(path.dirname(f.existing)), ['front-existing.jar'])
-    assert.deepEqual(fs.readFileSync(f.existing), f.one)
-  })
+  for (const transitive of [false, true])
+    await pinnedTransactionFixture({ transitive }, async (f) => {
+      const plan = await prepareModInstall(f.target, { file: f.rootFile }, () => {}, undefined, f.repo)
+      assert(plan.files.some((file) => file.dependency && file.fileName === 'front-v2.jar'))
+      await assert.rejects(
+        executeModPlan(
+          plan.id,
+          true,
+          () => f.target,
+          () => {}
+        ),
+        /前置版本冲突.*front.*front-v2.*未写入任何 MOD/
+      )
+      assert(f.requests.includes('/front-v2.jar'), 'the actual pinned JAR was downloaded and verified')
+      assert.deepEqual(fs.readdirSync(path.dirname(f.existing)), ['front-existing.jar'])
+      assert.deepEqual(fs.readFileSync(f.existing), f.one)
+    })
 })
 
 test('118 pinned reuse requires exact bytes, supports different filenames and missing repository hashes, and tolerates a pinned root cycle', async () => {
-  for (const hashes of [true, false]) await pinnedTransactionFixture({ hashes, existingVersion: 2, cycle: true }, async f => {
-    const plan = await prepareModInstall(f.target, { file: f.rootFile }, () => {}, undefined, f.repo)
-    assert.equal(plan.files.filter(file => file.dependency).length, hashes ? 0 : 1)
-    await executeModPlan(plan.id, true, () => f.target, () => {})
-    assert.deepEqual(fs.readdirSync(path.dirname(f.existing)).sort(), ['front-existing.jar', 'root.jar'])
-    assert.deepEqual(fs.readFileSync(f.existing), f.two)
-    assert.equal(f.requests.filter(url => url === '/front-v2.jar').length, hashes ? 0 : 1)
-  })
+  for (const hashes of [true, false])
+    await pinnedTransactionFixture({ hashes, existingVersion: 2, cycle: true }, async (f) => {
+      const plan = await prepareModInstall(f.target, { file: f.rootFile }, () => {}, undefined, f.repo)
+      assert.equal(plan.files.filter((file) => file.dependency).length, hashes ? 0 : 1)
+      await executeModPlan(
+        plan.id,
+        true,
+        () => f.target,
+        () => {}
+      )
+      assert.deepEqual(fs.readdirSync(path.dirname(f.existing)).sort(), ['front-existing.jar', 'root.jar'])
+      assert.deepEqual(fs.readFileSync(f.existing), f.two)
+      assert.equal(f.requests.filter((url) => url === '/front-v2.jar').length, hashes ? 0 : 1)
+    })
 })
 
-test('118 a pinned provider changed during confirmation is rechecked even when preparation skipped its download', async () => pinnedTransactionFixture({ existingVersion: 2 }, async f => {
-  const plan = await prepareModInstall(f.target, { file: f.rootFile }, () => {}, undefined, f.repo)
-  assert.equal(plan.files.filter(file => file.dependency).length, 0)
-  fs.writeFileSync(f.existing, f.one)
-  await assert.rejects(executeModPlan(plan.id, true, () => f.target, () => {}), /未写入任何 MOD.*精确版本 front-v2.*已变化/)
-  assert.deepEqual(fs.readdirSync(path.dirname(f.existing)), ['front-existing.jar'])
-  assert.deepEqual(fs.readFileSync(f.existing), f.one)
-  assert.equal(f.requests.filter(url => url === '/front-v2.jar').length, 0)
-}))
+test('118 a pinned provider changed during confirmation is rechecked even when preparation skipped its download', async () =>
+  pinnedTransactionFixture({ existingVersion: 2 }, async (f) => {
+    const plan = await prepareModInstall(f.target, { file: f.rootFile }, () => {}, undefined, f.repo)
+    assert.equal(plan.files.filter((file) => file.dependency).length, 0)
+    fs.writeFileSync(f.existing, f.one)
+    await assert.rejects(
+      executeModPlan(
+        plan.id,
+        true,
+        () => f.target,
+        () => {}
+      ),
+      /未写入任何 MOD.*精确版本 front-v2.*已变化/
+    )
+    assert.deepEqual(fs.readdirSync(path.dirname(f.existing)), ['front-existing.jar'])
+    assert.deepEqual(fs.readFileSync(f.existing), f.one)
+    assert.equal(f.requests.filter((url) => url === '/front-v2.jar').length, 0)
+  }))
 
-test('118 an unpinned compatible installed dependency still survives without a duplicate or forced upgrade', async () => pinnedTransactionFixture({ pinned: false }, async f => {
-  const plan = await prepareModInstall(f.target, { file: f.rootFile }, () => {}, undefined, f.repo)
-  await executeModPlan(plan.id, true, () => f.target, () => {})
-  assert.deepEqual(fs.readdirSync(path.dirname(f.existing)).sort(), ['front-existing.jar', 'root.jar'])
-  assert.deepEqual(fs.readFileSync(f.existing), f.one)
-}))
+test('118 an unpinned compatible installed dependency still survives without a duplicate or forced upgrade', async () =>
+  pinnedTransactionFixture({ pinned: false }, async (f) => {
+    const plan = await prepareModInstall(f.target, { file: f.rootFile }, () => {}, undefined, f.repo)
+    await executeModPlan(
+      plan.id,
+      true,
+      () => f.target,
+      () => {}
+    )
+    assert.deepEqual(fs.readdirSync(path.dirname(f.existing)).sort(), ['front-existing.jar', 'root.jar'])
+    assert.deepEqual(fs.readFileSync(f.existing), f.one)
+  }))
 
-test('118 an exact repository lookup returning another file ID is rejected while the instance remains unchanged', async () => pinnedTransactionFixture({ wrongExact: true }, async f => {
-  await assert.rejects(prepareModInstall(f.target, { file: f.rootFile }, () => {}, undefined, f.repo), /前置版本冲突/)
-  assert.deepEqual(fs.readdirSync(path.dirname(f.existing)), ['front-existing.jar'])
-  assert.deepEqual(fs.readFileSync(f.existing), f.one)
-}))
+test('118 an exact repository lookup returning another file ID is rejected while the instance remains unchanged', async () =>
+  pinnedTransactionFixture({ wrongExact: true }, async (f) => {
+    await assert.rejects(
+      prepareModInstall(f.target, { file: f.rootFile }, () => {}, undefined, f.repo),
+      /前置版本冲突/
+    )
+    assert.deepEqual(fs.readdirSync(path.dirname(f.existing)), ['front-existing.jar'])
+    assert.deepEqual(fs.readFileSync(f.existing), f.one)
+  }))

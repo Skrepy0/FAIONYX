@@ -19,16 +19,14 @@ interface FaionyxBridge {
 }
 
 interface Window {
-  faionyx: FaionyxBridge;
+  faionyx: FaionyxBridge
   faionyxSplash: {
-    ready(): void;
-    assembled(): void;
-    finished(): void;
-    failed(message: string): void;
-    onPointer(callback: (point: { x: number; y: number }) => void): () => void;
-    onState(
-      callback: (state: import("../../shared/startup").BootState) => void,
-    ): () => void;
-    onReveal(callback: () => void): () => void;
-  };
+    ready(): void
+    assembled(): void
+    finished(): void
+    failed(message: string): void
+    onPointer(callback: (point: { x: number; y: number }) => void): () => void
+    onState(callback: (state: import('../../shared/startup').BootState) => void): () => void
+    onReveal(callback: () => void): () => void
+  }
 }

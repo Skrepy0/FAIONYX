@@ -33,15 +33,15 @@
 
 ## 静态问题与复核记录
 
-| ID | 问题 | 当前状态 |
-|---|---|---|
-| QA-001 | 旧验收仅 `1.1.9` 进入单卡慕测试，`1.1.10` 错用七人横扫；导入、选择与本轮 UX 漏测。 | 当前入口已改为 `ui-capabilities.cjs`，Mac 必测清单加入单卡慕、PCL、选择与四主题 `ux110`。代码已复核，原生执行证据待收。 |
-| QA-002 | Mac 旧材质验收按黑紫 96% 底色说明，与 1.1.10 的 30%／26% 基线不符。 | 当前 Mac 脚本说明已修正，保留真实桌面底色切换的透明效果检查。新版视觉实测待收。 |
-| AUTH-001 | `accounts.ts` 的磁盘密文缓存仅在加载时更新；刷新令牌保存后密钥环锁定，再次保存会覆写回旧密文。 | 已发送主 agent；当前 `persist` 成功写入后已同步清空并重建缓存，静态修复复核完成。锁定恢复和删除账号的回归证据待收。 |
-| UPDATE-001 | 初版 Linux 更新器在新应用未确认就绪时仅保留备份，未自动恢复旧程序；与既有失败回滚结果可能不一致。 | 当前代码已加入未就绪回滚：只终止 PID 与进程启动时间均一致的本次应用，再核对新旧摘要、恢复备份并重启旧版。TAR 也拒绝空路径段和重复目标。静态复核完成，真实桌面故障注入与原生安装器交接仍待测。 |
-| GATE-001 | 原发布门控仅查摘要、布尔值与分数；一份声称 `synthetic fixture only`、无原生帧的 JSON 可在隔离负例中代替全部证据并放行。 | 已修复为下述 schema 2。41 项协议测试通过，包含真实文件哈希、伪来源、旧身份、漏项、低采集帧率及不足 9 分的拒绝。协议测试使用临时合成文件，不是新平台产品验收。 |
-| QA-003 | `ux110` 文本日志仍打印 `PASS 1.1.10`。 | 收到的四主题 JSON 与截图显示实际版本 1.1.11；不能按文字日志推断执行旧版。最终证据仍需补源码身份和原生命令回执，当前限于局部回归。 |
-| QA-004 | 最新 gallery118 在旧 `metadataRequests.length===2` 处失败，实际为 8；1.1.10 自动图标补元数据与手动关联共用查询，旧总数不再对应两次关联。 | 已独立复核修订：真实 favoriteLink handler 包装精确记录两次参数、先拒绝后确认，并保留实际存储 keys、收藏时间、SHA1 合并与对话框关闭断言；详情检查每次为正确 MOD 来源，并要求两平台都实际调用。所有元数据请求继续保留。修订是替换无效观测点，没有放宽真实业务结果；复跑证据待收，历史失败不得覆盖。 |
+| ID         | 问题                                                                                                                                     | 当前状态                                                                                                                                                                                                                                                                                          |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| QA-001     | 旧验收仅 `1.1.9` 进入单卡慕测试，`1.1.10` 错用七人横扫；导入、选择与本轮 UX 漏测。                                                       | 当前入口已改为 `ui-capabilities.cjs`，Mac 必测清单加入单卡慕、PCL、选择与四主题 `ux110`。代码已复核，原生执行证据待收。                                                                                                                                                                           |
+| QA-002     | Mac 旧材质验收按黑紫 96% 底色说明，与 1.1.10 的 30%／26% 基线不符。                                                                      | 当前 Mac 脚本说明已修正，保留真实桌面底色切换的透明效果检查。新版视觉实测待收。                                                                                                                                                                                                                   |
+| AUTH-001   | `accounts.ts` 的磁盘密文缓存仅在加载时更新；刷新令牌保存后密钥环锁定，再次保存会覆写回旧密文。                                           | 已发送主 agent；当前 `persist` 成功写入后已同步清空并重建缓存，静态修复复核完成。锁定恢复和删除账号的回归证据待收。                                                                                                                                                                               |
+| UPDATE-001 | 初版 Linux 更新器在新应用未确认就绪时仅保留备份，未自动恢复旧程序；与既有失败回滚结果可能不一致。                                        | 当前代码已加入未就绪回滚：只终止 PID 与进程启动时间均一致的本次应用，再核对新旧摘要、恢复备份并重启旧版。TAR 也拒绝空路径段和重复目标。静态复核完成，真实桌面故障注入与原生安装器交接仍待测。                                                                                                     |
+| GATE-001   | 原发布门控仅查摘要、布尔值与分数；一份声称 `synthetic fixture only`、无原生帧的 JSON 可在隔离负例中代替全部证据并放行。                  | 已修复为下述 schema 2。41 项协议测试通过，包含真实文件哈希、伪来源、旧身份、漏项、低采集帧率及不足 9 分的拒绝。协议测试使用临时合成文件，不是新平台产品验收。                                                                                                                                     |
+| QA-003     | `ux110` 文本日志仍打印 `PASS 1.1.10`。                                                                                                   | 收到的四主题 JSON 与截图显示实际版本 1.1.11；不能按文字日志推断执行旧版。最终证据仍需补源码身份和原生命令回执，当前限于局部回归。                                                                                                                                                                 |
+| QA-004     | 最新 gallery118 在旧 `metadataRequests.length===2` 处失败，实际为 8；1.1.10 自动图标补元数据与手动关联共用查询，旧总数不再对应两次关联。 | 已独立复核修订：真实 favoriteLink handler 包装精确记录两次参数、先拒绝后确认，并保留实际存储 keys、收藏时间、SHA1 合并与对话框关闭断言；详情检查每次为正确 MOD 来源，并要求两平台都实际调用。所有元数据请求继续保留。修订是替换无效观测点，没有放宽真实业务结果；复跑证据待收，历史失败不得覆盖。 |
 
 ## 已复核的 Windows 局部回归
 
@@ -53,12 +53,12 @@
 
 原始 `Page.startScreencast` 帧逐个核对存在与摘要、时间严格递增，所有帧均保留。独立查看自定义主题的第 0、75 帧可见实际手臂和腿部姿态变化。下表是原始采集频率，不能称为显示器呈现帧率，也不能代表启动碎片和彩蛋的完整动效评审。
 
-| 主题 | 原始帧数 | 原始时长（秒） | 按原始时间计算的采集 FPS | 最大原始间隔（秒） |
-|---|---:|---:|---:|---:|
-| transparent | 151 | 1.4869189262390137 | 100.87974357782058 | 0.014821052551269531 |
-| black-orange | 151 | 1.4971139430999756 | 100.19277469916875 | 0.015316009521484375 |
-| blue-white | 150 | 1.489361047744751 | 100.04290109884481 | 0.015627145767211914 |
-| custom | 150 | 1.4893040657043457 | 100.04672882534065 | 0.015031099319458008 |
+| 主题         | 原始帧数 |     原始时长（秒） | 按原始时间计算的采集 FPS |   最大原始间隔（秒） |
+| ------------ | -------: | -----------------: | -----------------------: | -------------------: |
+| transparent  |      151 | 1.4869189262390137 |       100.87974357782058 | 0.014821052551269531 |
+| black-orange |      151 | 1.4971139430999756 |       100.19277469916875 | 0.015316009521484375 |
+| blue-white   |      150 |  1.489361047744751 |       100.04290109884481 | 0.015627145767211914 |
+| custom       |      150 | 1.4893040657043457 |       100.04672882534065 | 0.015031099319458008 |
 
 另核对 `out/windows-package-1.1.11.json` 与对应日志：干净目录的 EXE／ZIP 冷、暖启动及解包比较记录完成，ASAR 摘要为 `b03fe16bb64a0bb341069db58b736e3aaeffb8866495f45f1bc4c82dcc64b5f1`。这仍未覆盖全部 63 项功能、真实账号和服务、实际游戏及更新回滚、15 页与主题／状态／缩放组合、完整音效听测和最终源码身份。Windows 的三项分数继续为 **未评分**，完整一致性为未通过验收；其他平台状态没有被此证据填充。
 
@@ -80,11 +80,18 @@
   "platformId": "mac-arm64",
   "architecture": "arm64",
   "runtimeVersion": "44.3.0",
-  "artifactSHA256": {"全部本平台最终附件名称": "实际 SHA256"},
-  "host": {"platform": "mac", "architecture": "arm64", "osVersion": "macOS 13.7", "displayFrequency": 60},
-  "run": {"id": "原生命令 ID", "source": "native-desktop", "command": "实际命令", "exitCode": 0, "startedAt": "ISO 时间", "endedAt": "ISO 时间"},
-  "payload": {"nativeReceipt": "receipt.json"},
-  "attachments": [{"id": "receipt.json", "role": "native-receipt", "path": "仓库相对路径", "sha256": "实际 SHA256", "size": 123}]
+  "artifactSHA256": { "全部本平台最终附件名称": "实际 SHA256" },
+  "host": { "platform": "mac", "architecture": "arm64", "osVersion": "macOS 13.7", "displayFrequency": 60 },
+  "run": {
+    "id": "原生命令 ID",
+    "source": "native-desktop",
+    "command": "实际命令",
+    "exitCode": 0,
+    "startedAt": "ISO 时间",
+    "endedAt": "ISO 时间"
+  },
+  "payload": { "nativeReceipt": "receipt.json" },
+  "attachments": [{ "id": "receipt.json", "role": "native-receipt", "path": "仓库相对路径", "sha256": "实际 SHA256", "size": 123 }]
 }
 ```
 
@@ -94,16 +101,16 @@
 
 八类证据全部必需：
 
-| kind | payload 与原始附件要求 |
-|---|---|
-| native-run | `checks` 有 nativeBuild、nativeDesktop、credentialsRestart。`installations` 逐个列出全部附件，每项 `checks` 有 cleanInstall、coldStartup、warmStartup；`embedded` 有实际解包的 version、sourceCommit、runtimeVersion、architecture、applicationSHA256。必要检查必须 status=passed、expected=true、actual=true，不能把预期改为失败。 |
-| screenshots | `captures` 每项有 attachment、theme、route、state、zoom、viewport、windowSize；对应真实 PNG／JPEG。必须有全部 15 页×四主题组合，以及 1／1.25／1.5 缩放与 960×620 最小窗口记录。windowSize 是实际原生逻辑窗口边界，viewport 是实际 CSS 视口，分别观测；不由文件名推断。 |
-| original-video | `recordingAttachment` 指向 original-frame-manifest，`interpolated:false`；原始清单也绑定全部源码／产物身份，并保留 source 与 `frames:[{file,timestamp}]`。payload.frames 用 index、attachment、timestamp 精确绑定每个 frame 图片。至少 10 帧、0.7 秒，有像素变化，按原始时间计算达到 min(30,实测刷新率)；刷新率缺失按 30。原始录像也应保留，不能重采样改写原始时间。 |
-| frame-timings | recordingRef 指向 original-video ID；fps、minimum、elapsed、frames 必须精确等于从其原始帧重算的数值。禁止四舍五入后伪称原始值。 |
-| native-game | gamePID、launchCommand、world.saved、world.fileSHA256、normalExit.code=0、normalExit.saved、java.architecture 与 nativeABI，以及 game-screenshot、game-log。Harmony 必须 openharmony-arm64；Linux ABI 不能充当鸿蒙。Mac ARM 的旧 LWJGL 仅在显式 rosetta-legacy-lwjgl 时接受游戏 x64，并单列兼容路径。 |
-| update-rollback | checks 有 upgrade、bad-payload-rejected、startup-failure-rolls-back、manual-restore，全部 true；beforeSHA256=restoredSHA256，并附 update-log。仅保留备份、仅下载或仅唤起安装器不满足。 |
-| function-matrix | functions 与库存的全部功能 ID 一一对应，不能漏项、重复或新增未知项；每行 status=passed、evidenceRefs 引用实际操作证据。被引用 payload.functionAssertions 对同 ID 记录 name、status、expected、actual，预期实际一致。不能循环引用评分或功能矩阵本身。非 Windows 的 settings-04 仅接受 approved-exception 与 non-windows-memory-organizer；其他功能不可据此豁免。63 项当前基线与 15 页库存不能删行缩短验收；新增项目也必须纳入。 |
-| independent-review | reviewer.role=independent、reviewer.id 与顶层一致；criticalDefects=[]、unverifiedRequired=[]；scores.visual／interaction／motion 各 9–10，不能平均。三类 evidenceRefs 分别关联截图、完整功能与游戏/回滚、原始录屏与帧时间；未知或自引用 ID 不接受。 |
+| kind               | payload 与原始附件要求                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| native-run         | `checks` 有 nativeBuild、nativeDesktop、credentialsRestart。`installations` 逐个列出全部附件，每项 `checks` 有 cleanInstall、coldStartup、warmStartup；`embedded` 有实际解包的 version、sourceCommit、runtimeVersion、architecture、applicationSHA256。必要检查必须 status=passed、expected=true、actual=true，不能把预期改为失败。                                                                                            |
+| screenshots        | `captures` 每项有 attachment、theme、route、state、zoom、viewport、windowSize；对应真实 PNG／JPEG。必须有全部 15 页×四主题组合，以及 1／1.25／1.5 缩放与 960×620 最小窗口记录。windowSize 是实际原生逻辑窗口边界，viewport 是实际 CSS 视口，分别观测；不由文件名推断。                                                                                                                                                         |
+| original-video     | `recordingAttachment` 指向 original-frame-manifest，`interpolated:false`；原始清单也绑定全部源码／产物身份，并保留 source 与 `frames:[{file,timestamp}]`。payload.frames 用 index、attachment、timestamp 精确绑定每个 frame 图片。至少 10 帧、0.7 秒，有像素变化，按原始时间计算达到 min(30,实测刷新率)；刷新率缺失按 30。原始录像也应保留，不能重采样改写原始时间。                                                           |
+| frame-timings      | recordingRef 指向 original-video ID；fps、minimum、elapsed、frames 必须精确等于从其原始帧重算的数值。禁止四舍五入后伪称原始值。                                                                                                                                                                                                                                                                                                |
+| native-game        | gamePID、launchCommand、world.saved、world.fileSHA256、normalExit.code=0、normalExit.saved、java.architecture 与 nativeABI，以及 game-screenshot、game-log。Harmony 必须 openharmony-arm64；Linux ABI 不能充当鸿蒙。Mac ARM 的旧 LWJGL 仅在显式 rosetta-legacy-lwjgl 时接受游戏 x64，并单列兼容路径。                                                                                                                          |
+| update-rollback    | checks 有 upgrade、bad-payload-rejected、startup-failure-rolls-back、manual-restore，全部 true；beforeSHA256=restoredSHA256，并附 update-log。仅保留备份、仅下载或仅唤起安装器不满足。                                                                                                                                                                                                                                         |
+| function-matrix    | functions 与库存的全部功能 ID 一一对应，不能漏项、重复或新增未知项；每行 status=passed、evidenceRefs 引用实际操作证据。被引用 payload.functionAssertions 对同 ID 记录 name、status、expected、actual，预期实际一致。不能循环引用评分或功能矩阵本身。非 Windows 的 settings-04 仅接受 approved-exception 与 non-windows-memory-organizer；其他功能不可据此豁免。63 项当前基线与 15 页库存不能删行缩短验收；新增项目也必须纳入。 |
+| independent-review | reviewer.role=independent、reviewer.id 与顶层一致；criticalDefects=[]、unverifiedRequired=[]；scores.visual／interaction／motion 各 9–10，不能平均。三类 evidenceRefs 分别关联截图、完整功能与游戏/回滚、原始录屏与帧时间；未知或自引用 ID 不接受。                                                                                                                                                                            |
 
 当前四主题 Windows 局部报告缺少完整功能、最终源码绑定和上述原始回执协议，因此仍应保持 partial，不能用适配器补一个 `native=true` 即通过正式门控。合成协议测试正例仅验证读取规则，必须与真实产品验收分开保存。
 

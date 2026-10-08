@@ -5,13 +5,7 @@ import os from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import { downloadAll } from '../src/main/core/download'
-import {
-  abortableDelay,
-  cancelTaskAndWait,
-  finishTask,
-  isCancelError,
-  registerTask
-} from '../src/main/core/tasks'
+import { abortableDelay, cancelTaskAndWait, finishTask, isCancelError, registerTask } from '../src/main/core/tasks'
 
 const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -56,7 +50,7 @@ test('取消会中断流、等待 worker 退出、清理 .part，并阻止新子
   const outcome = downloadAll(
     [
       { url: `http://127.0.0.1:${address.port}/slow`, dest: first },
-      { url: `http://127.0.0.1:${address.port}/queued`, dest: second }
+      { url: `http://127.0.0.1:${address.port}/queued`, dest: second },
     ],
     undefined,
     1,

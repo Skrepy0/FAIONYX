@@ -36,9 +36,7 @@ test('skip logic: skipped version not prompted, newer-than-skipped prompts again
 })
 
 test('sha256 sums parser: standard sha256sum format', () => {
-  const sums = parseSha256Sums(
-    'a'.repeat(64) + '  FAIONYX-1.0.14.exe\n' + 'b'.repeat(64) + ' *FAIONYX-1.0.14-windows-x64.zip\n'
-  )
+  const sums = parseSha256Sums('a'.repeat(64) + '  FAIONYX-1.0.14.exe\n' + 'b'.repeat(64) + ' *FAIONYX-1.0.14-windows-x64.zip\n')
   assert.equal(sums.get('FAIONYX-1.0.14.exe'), 'a'.repeat(64))
   assert.equal(sums.get('FAIONYX-1.0.14-windows-x64.zip'), 'b'.repeat(64))
 })
@@ -48,7 +46,9 @@ test('download candidates honor source setting: auto=direct+mirror, direct only,
   const auto = updateDownloadCandidates(url, { updateSource: 'auto', updateMirrorUrl: 'https://ghproxy.net/' })
   assert.deepEqual(auto, [url, 'https://ghproxy.net/' + url])
   assert.deepEqual(updateDownloadCandidates(url, { updateSource: 'direct', updateMirrorUrl: '' }), [url])
-  assert.deepEqual(updateDownloadCandidates(url, { updateSource: 'mirror', updateMirrorUrl: 'https://m.example/' }), ['https://m.example/' + url])
+  assert.deepEqual(updateDownloadCandidates(url, { updateSource: 'mirror', updateMirrorUrl: 'https://m.example/' }), [
+    'https://m.example/' + url,
+  ])
 })
 
 test('markdown lite: escapes HTML, renders headings/bold/code/lists/links only', () => {
@@ -101,7 +101,19 @@ test('checkLatest against mock server: hasUpdate, cache, 304 etag, silent degrad
 
 test('update wiring: IPC channels registered, startup auto-check, skip persisted, QQ group configurable', () => {
   const ipc = read('src/main/ipc.ts')
-  for (const ch of ['updateCheck', 'updateSkip', 'updateStart', 'updateApply', 'updateListReleases', 'updateGetState', 'updateRestoreBackup', 'updatePickLocalFile', 'updateApplyLocal', 'updateGetConfigStatus', 'updateResetSettings']) {
+  for (const ch of [
+    'updateCheck',
+    'updateSkip',
+    'updateStart',
+    'updateApply',
+    'updateListReleases',
+    'updateGetState',
+    'updateRestoreBackup',
+    'updatePickLocalFile',
+    'updateApplyLocal',
+    'updateGetConfigStatus',
+    'updateResetSettings',
+  ]) {
     assert.match(ipc, new RegExp(`IPC\\.${ch}`), ch)
   }
   const index = read('src/main/index.ts')
@@ -124,12 +136,21 @@ test('update wiring: IPC channels registered, startup auto-check, skip persisted
 })
 
 test('update SFCs compile', () => {
-  for (const file of ['src/renderer/src/components/UpdateModal.vue', 'src/renderer/src/views/SettingsView.vue', 'src/renderer/src/App.vue']) {
+  for (const file of [
+    'src/renderer/src/components/UpdateModal.vue',
+    'src/renderer/src/views/SettingsView.vue',
+    'src/renderer/src/App.vue',
+  ]) {
     const source = read(file)
     const { descriptor, errors } = parse(source)
     assert.deepEqual(errors, [], file)
     const script = compileScript(descriptor, { id: file })
-    const result = compileTemplate({ source: descriptor.template!.content, filename: file, id: file, compilerOptions: { bindingMetadata: script.bindings } })
+    const result = compileTemplate({
+      source: descriptor.template!.content,
+      filename: file,
+      id: file,
+      compilerOptions: { bindingMetadata: script.bindings },
+    })
     assert.deepEqual(result.errors, [], file)
   }
 })

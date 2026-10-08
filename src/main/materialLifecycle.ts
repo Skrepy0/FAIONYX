@@ -19,13 +19,18 @@ export function trackMaterialLifecycle(
         // a completed startup fade; it must never reassign material or bounds.
         restoreFrame(startupRevealed)
         lastRefresh = Date.now()
-      } catch (error) { report(`Desktop acrylic refresh failed: ${String(error)}`) }
+      } catch (error) {
+        report(`Desktop acrylic refresh failed: ${String(error)}`)
+      }
     }, 120)
   }
   for (const event of ['maximize', 'unmaximize', 'restore', 'show', 'leave-full-screen']) window.on(event, refresh)
   // Electron's setOpacity(1) leaves WS_EX_LAYERED behind. Release it only
   // after our own native fade has finished, never in the middle of the fade.
-  window.on('faionyx:startup-opacity-complete', () => { startupRevealed = true; refresh() })
+  window.on('faionyx:startup-opacity-complete', () => {
+    startupRevealed = true
+    refresh()
+  })
 
   // Alt+Tab/Win+D can need a frame repair, but focus belongs to the same queue
   // as maximize/show/restore. Never schedule a second independent compositor pass.
@@ -33,6 +38,10 @@ export function trackMaterialLifecycle(
     if (!pending && Date.now() - lastRefresh < 1000) return
     refresh()
   })
-  window.on('closed', () => { closed = true; clearTimeout(pending); pending = undefined })
+  window.on('closed', () => {
+    closed = true
+    clearTimeout(pending)
+    pending = undefined
+  })
   return refresh
 }

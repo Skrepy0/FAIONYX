@@ -12,16 +12,17 @@ import { samePath } from './folderPaths'
 const launchFolder = new AsyncLocalStorage<{ active: string; shared: string }>()
 /** Freeze an accepted launch's directory across async authentication/downloads and UI folder changes. */
 export function withGameFolder<T>(folder: string, action: () => T): T {
-  const shared = launchFolder.getStore()?.shared ?? getSettings().folders.find(f => f.isDefault)?.path ?? folder
+  const shared = launchFolder.getStore()?.shared ?? getSettings().folders.find((f) => f.isDefault)?.path ?? folder
   return launchFolder.run({ active: folder, shared }, action)
 }
 
 /** New downloads use the persisted default; explicit import/retry targets remain bound to their folder. */
 export function withDownloadFolder<T>(folder: string | undefined, action: () => T): T {
   const requested = folder || defaultFolderPath()
-  const registered = getSettings().folders.find(item => samePath(item.path, requested))
+  const registered = getSettings().folders.find((item) => samePath(item.path, requested))
   if (!registered) throw new Error('下载文件夹未绑定或已解除绑定，请重新选择默认下载位置')
-  if (!fs.existsSync(registered.path) || !fs.statSync(registered.path).isDirectory()) throw new Error('下载文件夹已不存在，请重新选择默认下载位置')
+  if (!fs.existsSync(registered.path) || !fs.statSync(registered.path).isDirectory())
+    throw new Error('下载文件夹已不存在，请重新选择默认下载位置')
   return withGameFolder(registered.path, action)
 }
 

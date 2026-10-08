@@ -21,21 +21,42 @@ export function atomicUpdateJson(file: string, data: unknown): void {
   fs.mkdirSync(path.dirname(file), { recursive: true })
   const tmp = file + '.' + randomUUID() + '.tmp'
   const fd = fs.openSync(tmp, 'wx')
-  try { fs.writeFileSync(fd, JSON.stringify(data, null, 2)); fs.fsyncSync(fd) } finally { fs.closeSync(fd) }
-  try { fs.renameSync(tmp, file) } finally { fs.rmSync(tmp, { force: true }) }
+  try {
+    fs.writeFileSync(fd, JSON.stringify(data, null, 2))
+    fs.fsyncSync(fd)
+  } finally {
+    fs.closeSync(fd)
+  }
+  try {
+    fs.renameSync(tmp, file)
+  } finally {
+    fs.rmSync(tmp, { force: true })
+  }
 }
 
 export function readUpdateTransaction(file: string, target: string): UpdateTransaction | null {
   try {
     const t = JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, '')) as UpdateTransaction
     const rel = path.relative(path.join(path.dirname(target), 'FAIONYX-update'), t.file)
-    const key = (p: string) => process.platform === 'win32' ? path.resolve(p).toLowerCase() : path.resolve(p)
-    if (t.schema !== 1 || !/^[a-f\d-]{36}$/i.test(t.id) || key(t.target) !== key(target)
-      || !rel || rel.startsWith('..') || path.isAbsolute(rel) || !/^[a-f\d]{64}$/i.test(t.sha256)
-      || !Number.isSafeInteger(t.size) || t.size <= 0 || !/^\d+\.\d+\.\d+$/.test(t.release?.version)
-      || !['upgrade', 'rollback', 'local'].includes(t.mode)) return null
+    const key = (p: string) => (process.platform === 'win32' ? path.resolve(p).toLowerCase() : path.resolve(p))
+    if (
+      t.schema !== 1 ||
+      !/^[a-f\d-]{36}$/i.test(t.id) ||
+      key(t.target) !== key(target) ||
+      !rel ||
+      rel.startsWith('..') ||
+      path.isAbsolute(rel) ||
+      !/^[a-f\d]{64}$/i.test(t.sha256) ||
+      !Number.isSafeInteger(t.size) ||
+      t.size <= 0 ||
+      !/^\d+\.\d+\.\d+$/.test(t.release?.version) ||
+      !['upgrade', 'rollback', 'local'].includes(t.mode)
+    )
+      return null
     return t
-  } catch { return null }
+  } catch {
+    return null
+  }
 }
 
 export async function validateUpdatePayload(t: UpdateTransaction): Promise<void> {

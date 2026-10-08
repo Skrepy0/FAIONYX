@@ -7,10 +7,13 @@ function platformValue(platform) {
 }
 
 function parseReleaseArgs(argv) {
-  assert(Array.isArray(argv) && argv.every(value => typeof value === 'string'), 'Release arguments must be strings')
-  const options = { platform: 'all', dryRun: false, notesPath: null }, seen = new Set()
+  assert(Array.isArray(argv) && argv.every((value) => typeof value === 'string'), 'Release arguments must be strings')
+  const options = { platform: 'all', dryRun: false, notesPath: null },
+    seen = new Set()
   for (let index = 0; index < argv.length; index++) {
-    const raw = argv[index], equals = raw.indexOf('='), flag = equals < 0 ? raw : raw.slice(0, equals)
+    const raw = argv[index],
+      equals = raw.indexOf('='),
+      flag = equals < 0 ? raw : raw.slice(0, equals)
     if (!['--platform', '--dry-run', '--notes-file'].includes(flag)) throw Error('Unknown release argument: ' + flag)
     if (seen.has(flag)) throw Error('Duplicate release argument: ' + flag)
     seen.add(flag)
@@ -32,8 +35,8 @@ function productAssetNames(version, platform = 'all') {
   platformValue(platform)
   const prefix = `FAIONYX-${version}`
   const windows = [`${prefix}.exe`, `${prefix}-windows-x64.zip`, `${prefix}-windows-x64-unpacked.zip`]
-  const mac = ['arm64', 'x64'].flatMap(arch => ['dmg', 'zip'].map(ext => `${prefix}-mac-${arch}.${ext}`))
-  const linux = ['x64', 'arm64'].flatMap(arch => ['AppImage', 'deb', 'tar.gz'].map(ext => `${prefix}-linux-${arch}.${ext}`))
+  const mac = ['arm64', 'x64'].flatMap((arch) => ['dmg', 'zip'].map((ext) => `${prefix}-mac-${arch}.${ext}`))
+  const linux = ['x64', 'arm64'].flatMap((arch) => ['AppImage', 'deb', 'tar.gz'].map((ext) => `${prefix}-linux-${arch}.${ext}`))
   return platform === 'windows' ? windows : [...windows, ...mac, ...(platform === 'desktop' ? linux : [])]
 }
 
@@ -44,7 +47,10 @@ function releaseAssetNames(version, platform = 'all') {
 }
 
 function assertUniqueAssetNames(names) {
-  assert(Array.isArray(names) && names.every(name => typeof name === 'string' && name && !/[\\/\0]/.test(name)), 'Release assets must have ordinary basenames')
+  assert(
+    Array.isArray(names) && names.every((name) => typeof name === 'string' && name && !/[\\/\0]/.test(name)),
+    'Release assets must have ordinary basenames'
+  )
   assert.equal(new Set(names).size, names.length, 'Duplicate release asset name')
 }
 
@@ -53,7 +59,10 @@ function assertRemotePlatformScope(assets, version, platform) {
   if (platform !== 'windows') return
   assert(Array.isArray(assets), 'Remote release asset list required for Windows scope verification')
   const deferredMac = new Set(productAssetNames(version, 'all').slice(3))
-  if (assets.some(asset => deferredMac.has(asset?.name))) throw Error('Windows-only release contains deferred Mac assets; preserve remote assets and existing release visibility, stop this publication')
+  if (assets.some((asset) => deferredMac.has(asset?.name)))
+    throw Error(
+      'Windows-only release contains deferred Mac assets; preserve remote assets and existing release visibility, stop this publication'
+    )
 }
 
 module.exports = { parseReleaseArgs, productAssetNames, releaseAssetNames, assertUniqueAssetNames, assertRemotePlatformScope }

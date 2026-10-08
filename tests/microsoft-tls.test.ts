@@ -3,7 +3,12 @@ import assert from 'node:assert/strict'
 import { certificateError, microsoftEndpoint } from '../src/main/core/microsoftTls'
 
 test('正版认证拒绝 HTTP、凭据 URL、非官方域名与伪造子域', () => {
-  for (const value of ['http://login.microsoftonline.com/consumers', 'https://login.microsoftonline.com.evil.test/token', 'https://xsts.auth.xboxlive.com:8443/x', 'https://user:pass@api.minecraftservices.com/x'])
+  for (const value of [
+    'http://login.microsoftonline.com/consumers',
+    'https://login.microsoftonline.com.evil.test/token',
+    'https://xsts.auth.xboxlive.com:8443/x',
+    'https://user:pass@api.minecraftservices.com/x',
+  ])
     assert.throws(() => microsoftEndpoint(value))
   assert.equal(microsoftEndpoint('https://api.minecraftservices.com/minecraft/profile').hostname, 'api.minecraftservices.com')
 })

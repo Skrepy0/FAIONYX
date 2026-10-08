@@ -6,7 +6,9 @@ export function matchingModProgress(event: ProgressEvent, operationId: string, b
   return busy && !!operationId && event.operationId === operationId ? { ...event } : undefined
 }
 export function modProgressPercent(event: ProgressEvent): number | undefined {
-  return event.indeterminate ? undefined : taskProgressPercent({ status: event.stage === 'done' ? 'done' : 'running', progress: event.overall ?? event.progress })
+  return event.indeterminate
+    ? undefined
+    : taskProgressPercent({ status: event.stage === 'done' ? 'done' : 'running', progress: event.overall ?? event.progress })
 }
 export function modProgressBytes(bytes: number | undefined): string {
   if (bytes == null || !Number.isFinite(bytes) || bytes < 0) return ''

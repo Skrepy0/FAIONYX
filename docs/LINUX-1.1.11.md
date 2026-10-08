@@ -28,12 +28,12 @@ Ubuntu 24.04 两架构及 26.04 x64 的三次 Xvfb compatibility 预检均在 `x
 
 ## 当前证据
 
-| 环境 | 当前原生构建 | 当前真实桌面、游戏与完整验收 |
-| --- | --- | --- |
-| Ubuntu 24.04 x64 | 第六三格式、内嵌 source69／runtime44.3 和原生解压检查通过 | Xvfb 实际应用在 llvmpipe 上 WebGL 失败；真实桌面／游戏未验 |
+| 环境               | 当前原生构建                                              | 当前真实桌面、游戏与完整验收                               |
+| ------------------ | --------------------------------------------------------- | ---------------------------------------------------------- |
+| Ubuntu 24.04 x64   | 第六三格式、内嵌 source69／runtime44.3 和原生解压检查通过 | Xvfb 实际应用在 llvmpipe 上 WebGL 失败；真实桌面／游戏未验 |
 | Ubuntu 24.04 ARM64 | 第六三格式、内嵌 source69／runtime44.3 和原生解压检查通过 | Xvfb 实际应用在 llvmpipe 上 WebGL 失败；真实桌面／游戏未验 |
-| Ubuntu 26.04 x64 | 使用第六 24.04 x64 原生包；无该 OS 独立构建 | Xvfb 实际应用在 llvmpipe 上 WebGL 失败；真实桌面／游戏未验 |
-| Ubuntu 26.04 ARM64 | 未执行 | 无 hosted 预检；真实桌面／游戏未验 |
+| Ubuntu 26.04 x64   | 使用第六 24.04 x64 原生包；无该 OS 独立构建               | Xvfb 实际应用在 llvmpipe 上 WebGL 失败；真实桌面／游戏未验 |
+| Ubuntu 26.04 ARM64 | 未执行                                                    | 无 hosted 预检；真实桌面／游戏未验                         |
 
 Linux 专项测试在当前 Windows 开发机上为 7 项通过、1 项跳过，类型检查通过。通过项覆盖凭据保护、ELF 架构、TAR 路径与完整性、包身份和 AppImage 安全拒绝；跳过项是在 Linux 真正运行更新 shell、交换文件与失败恢复的回归。它们不证明 Linux GUI、密钥服务、系统安装器、游戏或帧率已通过。
 
@@ -69,13 +69,13 @@ npm run dist:linux
 
 `dist:linux` 会构建 Java 桥、编译 Linux X11 窗口助手、完成生产构建，再生成当前架构的以下文件，并调用包验证器：
 
-| 文件 | 用途 |
-| --- | --- |
-| `FAIONYX-1.1.11-linux-x64.AppImage` 或 `…-arm64.AppImage` | 单文件 AppImage |
-| `FAIONYX-1.1.11-linux-x64.deb` 或 `…-arm64.deb` | 系统安装包；内部架构为 amd64／arm64 |
-| `FAIONYX-1.1.11-linux-x64.tar.gz` 或 `…-arm64.tar.gz` | 用户目录便携包，根目录为 FAIONYX |
-| `SHA256SUMS-linux-x64.txt` 或 `SHA256SUMS-linux-arm64.txt` | 三种成品的 SHA256 |
-| `linux-proof-架构-packages/summary.json` | 源提交、架构、包大小、SHA256 与解压检查结果 |
+| 文件                                                       | 用途                                        |
+| ---------------------------------------------------------- | ------------------------------------------- |
+| `FAIONYX-1.1.11-linux-x64.AppImage` 或 `…-arm64.AppImage`  | 单文件 AppImage                             |
+| `FAIONYX-1.1.11-linux-x64.deb` 或 `…-arm64.deb`            | 系统安装包；内部架构为 amd64／arm64         |
+| `FAIONYX-1.1.11-linux-x64.tar.gz` 或 `…-arm64.tar.gz`      | 用户目录便携包，根目录为 FAIONYX            |
+| `SHA256SUMS-linux-x64.txt` 或 `SHA256SUMS-linux-arm64.txt` | 三种成品的 SHA256                           |
+| `linux-proof-架构-packages/summary.json`                   | 源提交、架构、包大小、SHA256 与解压检查结果 |
 
 输出在 `release/`。构建器保留完整 Electron 运行库和资源；AppImage 使用项目自己的 [AppRun](../scripts/linux-AppRun.sh)，不自动关闭 Chromium sandbox。最终发布还须核对成品与最终提交一致，不能把补改前的包绑定补改后的提交。
 

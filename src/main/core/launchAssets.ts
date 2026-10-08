@@ -2,17 +2,34 @@ import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 
-interface AssetObject { hash: string; size?: number }
-interface AssetIndex { objects: Record<string, AssetObject>; virtual?: boolean; map_to_resources?: boolean }
-export interface AssetTransfer { url: string; dest: string; sha1?: string; size?: number }
-interface AssetVersion { assets?: string; assetIndex?: { id: string; url?: string; sha1?: string; size?: number } }
+interface AssetObject {
+  hash: string
+  size?: number
+}
+interface AssetIndex {
+  objects: Record<string, AssetObject>
+  virtual?: boolean
+  map_to_resources?: boolean
+}
+export interface AssetTransfer {
+  url: string
+  dest: string
+  sha1?: string
+  size?: number
+}
+interface AssetVersion {
+  assets?: string
+  assetIndex?: { id: string; url?: string; sha1?: string; size?: number }
+}
 
 function validFile(file: string, object: AssetObject, verifyHash = false): boolean {
   try {
     const stat = fs.statSync(file)
     if (!stat.isFile() || (object.size !== undefined && stat.size !== object.size)) return false
     return !verifyHash || crypto.createHash('sha1').update(fs.readFileSync(file)).digest('hex') === object.hash
-  } catch { return false }
+  } catch {
+    return false
+  }
 }
 
 function readIndex(file: string, sha1?: string): AssetIndex | null {
@@ -23,12 +40,18 @@ function readIndex(file: string, sha1?: string): AssetIndex | null {
     if (!index.objects || typeof index.objects !== 'object' || Array.isArray(index.objects)) return null
     for (const [name, object] of Object.entries(index.objects)) {
       // Names are later materialized for old clients; do not allow an index to escape its root.
-      if (!name || /[\\:]/.test(name) || name.split('/').some(p => !p || p === '.' || p === '..')) return null
-      if (!object || !/^[a-f0-9]{40}$/i.test(object.hash) ||
-        (object.size !== undefined && (!Number.isSafeInteger(object.size) || object.size < 0))) return null
+      if (!name || /[\\:]/.test(name) || name.split('/').some((p) => !p || p === '.' || p === '..')) return null
+      if (
+        !object ||
+        !/^[a-f0-9]{40}$/i.test(object.hash) ||
+        (object.size !== undefined && (!Number.isSafeInteger(object.size) || object.size < 0))
+      )
+        return null
     }
     return index
-  } catch { return null }
+  } catch {
+    return null
+  }
 }
 
 const objectFile = (root: string, hash: string) => path.join(root, 'objects', hash.slice(0, 2), hash)
@@ -45,12 +68,16 @@ export async function prepareLaunchAssets(
 ): Promise<{ root: string; indexId: string; gameAssets: string }> {
   const indexId = version.assetIndex?.id ?? version.assets ?? 'legacy'
   if (!/^[a-zA-Z0-9_.-]+$/.test(indexId) || indexId === '.' || indexId === '..') throw new Error('游戏资源索引名称无效')
-  const candidates = [...new Set([...roots, fallbackRoot].map(p => path.resolve(p)))]
+  const candidates = [...new Set([...roots, fallbackRoot].map((p) => path.resolve(p)))]
   let root = path.resolve(fallbackRoot)
   let index: AssetIndex | null = null
   for (const candidate of candidates) {
     const found = readIndex(path.join(candidate, 'indexes', `${indexId}.json`), version.assetIndex?.sha1)
-    if (found) { root = candidate; index = found; break }
+    if (found) {
+      root = candidate
+      index = found
+      break
+    }
   }
   if (!index) {
     const ref = version.assetIndex
@@ -68,16 +95,23 @@ export async function prepareLaunchAssets(
     const language = /(?:^|\/)lang\//.test(name) || name.endsWith('pack.mcmeta')
     if (!validFile(dest, object, language)) {
       // Hash-addressed assets can be safely reused across registered game folders.
-      const existing = candidates.filter(p => p !== root).map(p => objectFile(p, object.hash))
-        .find(file => validFile(file, object, true))
+      const existing = candidates
+        .filter((p) => p !== root)
+        .map((p) => objectFile(p, object.hash))
+        .find((file) => validFile(file, object, true))
       if (existing) {
         fs.mkdirSync(path.dirname(dest), { recursive: true })
         fs.copyFileSync(existing, dest)
       } else {
-        tasks.set(object.hash, { url: `https://resources.download.minecraft.net/${object.hash.slice(0, 2)}/${object.hash}`, dest, sha1: object.hash, size: object.size })
+        tasks.set(object.hash, {
+          url: `https://resources.download.minecraft.net/${object.hash.slice(0, 2)}/${object.hash}`,
+          dest,
+          sha1: object.hash,
+          size: object.size,
+        })
       }
     }
-    if (++checked % 128 === 0) await new Promise<void>(resolve => setImmediate(resolve))
+    if (++checked % 128 === 0) await new Promise<void>((resolve) => setImmediate(resolve))
   }
   if (tasks.size) {
     await transfer([...tasks.values()])
@@ -86,8 +120,11 @@ export async function prepareLaunchAssets(
     }
   }
 
-  const gameAssets = index.map_to_resources ? path.join(gameDirectory, 'resources')
-    : index.virtual ? path.join(root, 'virtual', indexId) : root
+  const gameAssets = index.map_to_resources
+    ? path.join(gameDirectory, 'resources')
+    : index.virtual
+      ? path.join(root, 'virtual', indexId)
+      : root
   if (index.virtual || index.map_to_resources) {
     for (const [name, object] of Object.entries(index.objects)) {
       const dest = path.join(gameAssets, ...name.split('/'))
@@ -95,7 +132,7 @@ export async function prepareLaunchAssets(
         fs.mkdirSync(path.dirname(dest), { recursive: true })
         fs.copyFileSync(objectFile(root, object.hash), dest)
       }
-      if (++checked % 128 === 0) await new Promise<void>(resolve => setImmediate(resolve))
+      if (++checked % 128 === 0) await new Promise<void>((resolve) => setImmediate(resolve))
     }
   }
   return { root, indexId, gameAssets }

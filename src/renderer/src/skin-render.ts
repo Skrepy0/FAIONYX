@@ -16,7 +16,6 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
   })
 }
 
-
 /**
  * 旧版皮肤判定：宽为 64 的整数倍且高为宽的一半（如 64×32 / 128×64 HD）。
  */
@@ -37,9 +36,7 @@ export function migrateLegacySkin(img: HTMLImageElement): HTMLImageElement | HTM
  * classic 右臂背面右缘一列（x=54, y=20..32）有像素内容，slim 该列落在手臂之外、全透明。
  * 检测失败返回 null，由调用方回退到档案提供的 variant。
  */
-export function detectSkinVariant(
-  source: HTMLImageElement | HTMLCanvasElement
-): 'slim' | 'classic' | null {
+export function detectSkinVariant(source: HTMLImageElement | HTMLCanvasElement): 'slim' | 'classic' | null {
   try {
     const canvas = document.createElement('canvas')
     canvas.width = 64
@@ -70,7 +67,7 @@ const BASE_PARTS: Part[] = [
   [44, 20, 4, 12, 0, 8], // 右臂
   [36, 52, 4, 12, 12, 8], // 左臂
   [4, 20, 4, 12, 4, 20], // 右腿
-  [20, 52, 4, 12, 8, 20] // 左腿
+  [20, 52, 4, 12, 8, 20], // 左腿
 ]
 
 /** 外层（hat / 衣袖 / 裤腿 / 外套），叠加在对应基础层之上 */
@@ -80,15 +77,10 @@ const OVERLAY_PARTS: Part[] = [
   [44, 36, 4, 12, 0, 8], // 右臂外层
   [52, 52, 4, 12, 12, 8], // 左臂外层
   [4, 36, 4, 12, 4, 20], // 右腿外层
-  [4, 52, 4, 12, 8, 20] // 左腿外层
+  [4, 52, 4, 12, 8, 20], // 左腿外层
 ]
 
-function drawParts(
-  img: CanvasImageSource,
-  parts: Part[],
-  ctx: CanvasRenderingContext2D,
-  scale: number
-) {
+function drawParts(img: CanvasImageSource, parts: Part[], ctx: CanvasRenderingContext2D, scale: number) {
   for (const [sx, sy, sw, sh, dx, dy] of parts) {
     ctx.drawImage(img, sx, sy, sw, sh, dx * scale, dy * scale, sw * scale, sh * scale)
   }
@@ -99,10 +91,7 @@ function drawParts(
  * 旧版 64×32 皮肤会先迁移再渲染（否则左肢区域为空）。
  * source 可为 https url（textures.minecraft.net）/ dataUrl / 已加载的 HTMLImageElement。
  */
-export async function renderSkinFront(
-  source: HTMLImageElement | string,
-  scale = 10
-): Promise<string> {
+export async function renderSkinFront(source: HTMLImageElement | string, scale = 10): Promise<string> {
   try {
     const img = typeof source === 'string' ? await loadImage(source) : source
     const skin = migrateLegacySkin(img)
@@ -124,10 +113,7 @@ export async function renderSkinFront(
  * 渲染皮肤方块头像：裁头部基础层 (8,8) 8×8 + 外层 hat (40,8) 8×8 叠加，
  * 最近邻放大到 scale，返回 dataURL；失败返回 ''。
  */
-export async function renderSkinHead(
-  source: HTMLImageElement | string,
-  scale = 64
-): Promise<string> {
+export async function renderSkinHead(source: HTMLImageElement | string, scale = 64): Promise<string> {
   try {
     const img = typeof source === 'string' ? await loadImage(source) : source
     const canvas = document.createElement('canvas')
@@ -149,14 +135,11 @@ export async function renderSkinHead(
  * 标准化 64×32、22×17、46×22 及其 HD 图集；正面区域按图集倍率裁剪 (1,1) 10×16。
  * 最近邻放大到 w×h，保持像素风。
  */
-export async function renderCape(
-  source: HTMLImageElement | string,
-  w = 100,
-  h = 160
-): Promise<string> {
+export async function renderCape(source: HTMLImageElement | string, w = 100, h = 160): Promise<string> {
   try {
     const img = typeof source === 'string' ? await loadImage(source) : source
-    const atlas = normalizeCape(img), scale = atlas.width / 64
+    const atlas = normalizeCape(img),
+      scale = atlas.width / 64
     const canvas = document.createElement('canvas')
     canvas.width = w
     canvas.height = h

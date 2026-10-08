@@ -31,9 +31,7 @@ export class ProgressEventGuard {
     const candidate = Number.isFinite(raw) ? clamp01(raw) : this.last
     this.last = Math.max(this.last, candidate)
     const etaSeconds =
-      event.etaSeconds != null && Number.isFinite(event.etaSeconds) && event.etaSeconds >= 0
-        ? Math.round(event.etaSeconds)
-        : undefined
+      event.etaSeconds != null && Number.isFinite(event.etaSeconds) && event.etaSeconds >= 0 ? Math.round(event.etaSeconds) : undefined
     return { ...event, overall: this.last, etaSeconds }
   }
 }
@@ -47,5 +45,5 @@ export const VERSION_INSTALL_STAGE_RANGES: Readonly<Record<string, StageRange>> 
   'loader-dependencies': [0.905, 0.94],
   'loader-process': [0.94, 0.95],
   'fabric-api': [0.96, 0.995],
-  done: [1, 1]
+  done: [1, 1],
 }

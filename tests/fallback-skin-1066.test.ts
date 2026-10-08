@@ -6,14 +6,27 @@ test('离线默认皮肤覆盖头、躯干、左右四肢的全部基础 UV，�
   const data = fallbackSkinPixels()
   const alpha = (x: number, y: number) => data[(y * 64 + x) * 4 + 3]
   const faces = [
-    [8, 0, 16, 8], [0, 8, 32, 8], [20, 16, 16, 4], [16, 20, 24, 12],
-    ...[[0, 16], [40, 16], [16, 48], [32, 48]].flatMap(([x, y]) => [[x + 4, y, 8, 4], [x, y + 4, 16, 12]])
+    [8, 0, 16, 8],
+    [0, 8, 32, 8],
+    [20, 16, 16, 4],
+    [16, 20, 24, 12],
+    ...[
+      [0, 16],
+      [40, 16],
+      [16, 48],
+      [32, 48],
+    ].flatMap(([x, y]) => [
+      [x + 4, y, 8, 4],
+      [x, y + 4, 16, 12],
+    ]),
   ]
   const covered = new Set<number>()
-  for (const [x, y, w, h] of faces) for (let row = y; row < y + h; row++) for (let col = x; col < x + w; col++) {
-    assert.equal(alpha(col, row), 255, `基础 UV 不透明：${col},${row}`)
-    covered.add(row * 64 + col)
-  }
+  for (const [x, y, w, h] of faces)
+    for (let row = y; row < y + h; row++)
+      for (let col = x; col < x + w; col++) {
+        assert.equal(alpha(col, row), 255, `基础 UV 不透明：${col},${row}`)
+        covered.add(row * 64 + col)
+      }
   for (let i = 0; i < 4096; i++) if (!covered.has(i)) assert.equal(data[i * 4 + 3], 0, `外层/空白 UV：${i}`)
 })
 

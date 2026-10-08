@@ -33,19 +33,14 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/187/237/256/256/636838220281305559.png",
             "downloads": 2040017,
             "updatedAt": "2019-10-02T12:37:27.17Z",
-            "categories": [
-              "Technology",
-              "Addons"
-            ],
+            "categories": ["Technology", "Addons"],
             "originalTitle": "Avaritia IO"
           }
         ],
         "total": 1,
         "offset": 0,
         "limit": 20,
-        "warnings": [
-          "MC百科中文名称关联：仅使用百科条目明确链接且当前版本／加载器筛选匹配的来源项目。"
-        ]
+        "warnings": ["MC百科中文名称关联：仅使用百科条目明确链接且当前版本／加载器筛选匹配的来源项目。"]
       },
       "requests": [
         {
@@ -92,12 +87,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/Axb71oHN/ecf72195eaab5554e812db61562732df4a234141_96.webp",
             "downloads": 728,
             "updatedAt": "2026-07-19T03:57:57.190074+00:00",
-            "categories": [
-              "fabric",
-              "forge",
-              "game-mechanics",
-              "magic"
-            ],
+            "categories": ["fabric", "forge", "game-mechanics", "magic"],
             "originalTitle": "Chaos Witch's Origin Grimoire__混沌魔女的起源魔导书"
           },
           {
@@ -110,21 +100,14 @@
             "iconUrl": "https://cdn.modrinth.com/data/3BeIrqZR/icon.png",
             "downloads": 3037439,
             "updatedAt": "2026-07-26T16:43:12.799850+00:00",
-            "categories": [
-              "adventure",
-              "fabric",
-              "forge",
-              "quilt"
-            ],
+            "categories": ["adventure", "fabric", "forge", "quilt"],
             "originalTitle": "Origins"
           }
         ],
         "total": 2,
         "offset": 0,
         "limit": 20,
-        "warnings": [
-          "MC百科中文名称关联：仅使用百科条目明确链接且当前版本／加载器筛选匹配的来源项目。"
-        ]
+        "warnings": ["MC百科中文名称关联：仅使用百科条目明确链接且当前版本／加载器筛选匹配的来源项目。"]
       },
       "requests": [
         {
@@ -183,20 +166,14 @@
             "iconUrl": "https://cdn.modrinth.com/data/FiDptjtR/39f2455c7b3938fb575b86f0e5f268981252682c_96.webp",
             "downloads": 473973,
             "updatedAt": "2023-07-01T18:58:20.124614+00:00",
-            "categories": [
-              "adventure",
-              "fabric",
-              "quilt"
-            ],
+            "categories": ["adventure", "fabric", "quilt"],
             "originalTitle": "Origins: Classes"
           }
         ],
         "total": 1,
         "offset": 0,
         "limit": 20,
-        "warnings": [
-          "MC百科中文名称关联：仅使用百科条目明确链接且当前版本／加载器筛选匹配的来源项目。"
-        ]
+        "warnings": ["MC百科中文名称关联：仅使用百科条目明确链接且当前版本／加载器筛选匹配的来源项目。"]
       },
       "requests": [
         {
@@ -243,18 +220,14 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/1720/272/256/256/639094003048654215.jpg",
             "downloads": 1299210,
             "updatedAt": "2026-09-29T09:29:05.923Z",
-            "categories": [
-              "Addons"
-            ],
+            "categories": ["Addons"],
             "originalTitle": "Touhou Little Maid: Spell"
           }
         ],
         "total": 1,
         "offset": 0,
         "limit": 20,
-        "warnings": [
-          "MC百科中文名称关联：仅使用百科条目明确链接且当前版本／加载器筛选匹配的来源项目。"
-        ]
+        "warnings": ["MC百科中文名称关联：仅使用百科条目明确链接且当前版本／加载器筛选匹配的来源项目。"]
       },
       "requests": [
         {
@@ -301,18 +274,14 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/1094/963/256/256/638639860775632975.jpg",
             "downloads": 1849121,
             "updatedAt": "2026-10-06T13:52:59.41Z",
-            "categories": [
-              "Armor, Tools, and Weapons"
-            ],
+            "categories": ["Armor, Tools, and Weapons"],
             "originalTitle": "Re:Avaritia[Forge/Fabric/Neoforge]"
           }
         ],
         "total": 1,
         "offset": 0,
         "limit": 20,
-        "warnings": [
-          "MC百科中文名称关联：仅使用百科条目明确链接且当前版本／加载器筛选匹配的来源项目。"
-        ]
+        "warnings": ["MC百科中文名称关联：仅使用百科条目明确链接且当前版本／加载器筛选匹配的来源项目。"]
       },
       "requests": [
         {
@@ -354,9 +323,7 @@
         "total": 0,
         "offset": 0,
         "limit": 20,
-        "warnings": [
-          "MC百科中文检索暂不可用，已保留原中文关键词和内置别名检索；可稍后重试。"
-        ]
+        "warnings": ["MC百科中文检索暂不可用，已保留原中文关键词和内置别名检索；可稍后重试。"]
       },
       "requests": [
         {
@@ -391,9 +358,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/1952/318/256/256/639209977335437030.png",
             "downloads": 8586,
             "updatedAt": "2026-09-27T01:03:15.503Z",
-            "categories": [
-              "Addons"
-            ],
+            "categories": ["Addons"],
             "originalTitle": "车万女仆：爱憎分明 [Touhou Little Maid：Love & Loathe]"
           },
           {
@@ -406,9 +371,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/2026/815/256/256/639241303350321274.jpg",
             "downloads": 697,
             "updatedAt": "2026-10-03T16:46:23.213Z",
-            "categories": [
-              "Miscellaneous"
-            ],
+            "categories": ["Miscellaneous"],
             "originalTitle": "车万女仆档案（迁移）管理器（Maid File Manager）"
           },
           {
@@ -421,9 +384,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/2020/200/256/256/639238287925381345.png",
             "downloads": 580,
             "updatedAt": "2026-09-10T13:08:51.437Z",
-            "categories": [
-              "Miscellaneous"
-            ],
+            "categories": ["Miscellaneous"],
             "originalTitle": "MaidReform"
           },
           {
@@ -436,10 +397,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/2086/394/256/256/639265523051433713.png",
             "downloads": 12,
             "updatedAt": "2026-10-04T13:50:26.997Z",
-            "categories": [
-              "Energy, Fluid, and Item Transport",
-              "Utility & QoL"
-            ],
+            "categories": ["Energy, Fluid, and Item Transport", "Utility & QoL"],
             "originalTitle": "[GTM] 血汗工厂-移植版"
           },
           {
@@ -452,19 +410,14 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/1991/879/256/256/639226501094234826.png",
             "downloads": 105,
             "updatedAt": "2026-09-03T13:17:46.057Z",
-            "categories": [
-              "Utility & QoL",
-              "Mobs"
-            ],
+            "categories": ["Utility & QoL", "Mobs"],
             "originalTitle": "[车万女仆_超时空救援]TLM Beyond Space"
           }
         ],
         "total": 5,
         "offset": 0,
         "limit": 20,
-        "warnings": [
-          "MC百科中文检索暂不可用，已保留原中文关键词和内置别名检索；可稍后重试。"
-        ]
+        "warnings": ["MC百科中文检索暂不可用，已保留原中文关键词和内置别名检索；可稍后重试。"]
       },
       "requests": [
         {
@@ -505,9 +458,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/1952/318/256/256/639209977335437030.png",
             "downloads": 8586,
             "updatedAt": "2026-09-27T01:03:15.503Z",
-            "categories": [
-              "Addons"
-            ],
+            "categories": ["Addons"],
             "originalTitle": "车万女仆：爱憎分明 [Touhou Little Maid：Love & Loathe]"
           },
           {
@@ -520,9 +471,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/2026/815/256/256/639241303350321274.jpg",
             "downloads": 699,
             "updatedAt": "2026-10-03T16:46:23.213Z",
-            "categories": [
-              "Miscellaneous"
-            ],
+            "categories": ["Miscellaneous"],
             "originalTitle": "车万女仆档案（迁移）管理器（Maid File Manager）"
           },
           {
@@ -535,9 +484,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/2020/200/256/256/639238287925381345.png",
             "downloads": 580,
             "updatedAt": "2026-09-10T13:08:51.437Z",
-            "categories": [
-              "Miscellaneous"
-            ],
+            "categories": ["Miscellaneous"],
             "originalTitle": "MaidReform"
           },
           {
@@ -550,10 +497,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/2086/394/256/256/639265523051433713.png",
             "downloads": 12,
             "updatedAt": "2026-10-04T13:50:26.997Z",
-            "categories": [
-              "Energy, Fluid, and Item Transport",
-              "Utility & QoL"
-            ],
+            "categories": ["Energy, Fluid, and Item Transport", "Utility & QoL"],
             "originalTitle": "[GTM] 血汗工厂-移植版"
           },
           {
@@ -566,19 +510,14 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/1991/879/256/256/639226501094234826.png",
             "downloads": 105,
             "updatedAt": "2026-09-03T13:17:46.057Z",
-            "categories": [
-              "Utility & QoL",
-              "Mobs"
-            ],
+            "categories": ["Utility & QoL", "Mobs"],
             "originalTitle": "[车万女仆_超时空救援]TLM Beyond Space"
           }
         ],
         "total": 5,
         "offset": 0,
         "limit": 20,
-        "warnings": [
-          "MC百科中文检索暂不可用，已保留原中文关键词和内置别名检索；可稍后重试。"
-        ]
+        "warnings": ["MC百科中文检索暂不可用，已保留原中文关键词和内置别名检索；可稍后重试。"]
       },
       "requests": [
         {
@@ -602,9 +541,5 @@
       ]
     }
   ],
-  "receipts": [
-    "five-live-receipt.json",
-    "additional-live-receipt.json",
-    "reavaritia-live-receipt.json"
-  ]
+  "receipts": ["five-live-receipt.json", "additional-live-receipt.json", "reavaritia-live-receipt.json"]
 }

@@ -26,14 +26,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/nvQzSEkH/b04217bc2b7dc524c4d12f81ff42cc1cefb9b0fc_96.webp",
             "downloads": 69916724,
             "updatedAt": "2026-10-02T23:51:19.115984+00:00",
-            "categories": [
-              "fabric",
-              "forge",
-              "library",
-              "neoforge",
-              "quilt",
-              "utility"
-            ],
+            "categories": ["fabric", "forge", "library", "neoforge", "quilt", "utility"],
             "originalTitle": "Jade 🔍"
           },
           {
@@ -46,11 +39,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/fThnVRli/b04217bc2b7dc524c4d12f81ff42cc1cefb9b0fc_96.webp",
             "downloads": 4421518,
             "updatedAt": "2026-08-31T13:33:57.227038+00:00",
-            "categories": [
-              "fabric",
-              "quilt",
-              "utility"
-            ],
+            "categories": ["fabric", "quilt", "utility"],
             "originalTitle": "Jade Addons (Fabric)"
           },
           {
@@ -88,13 +77,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/pYHupcoN/40fc43edfd1d271d90c0b4090c1d1ca40eea135b_96.webp",
             "downloads": 976146,
             "updatedAt": "2026-06-11T18:04:37.640071+00:00",
-            "categories": [
-              "decoration",
-              "fabric",
-              "food",
-              "forge",
-              "neoforge"
-            ],
+            "categories": ["decoration", "fabric", "food", "forge", "neoforge"],
             "originalTitle": "Jaden's Nether Expansion Delight"
           },
           {
@@ -107,12 +90,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/zNKzjsZM/2dd6cc9aad3a4f8770eec5c1cb933e24811fd46c_96.webp",
             "downloads": 185482,
             "updatedAt": "2026-04-18T23:47:08.881402+00:00",
-            "categories": [
-              "fabric",
-              "forge",
-              "neoforge",
-              "utility"
-            ],
+            "categories": ["fabric", "forge", "neoforge", "utility"],
             "originalTitle": "Jade VS"
           },
           {
@@ -125,13 +103,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/GAJkSU0A/38ee611da99c5df77cc1d17d3f963550ace9b52c_96.webp",
             "downloads": 72975,
             "updatedAt": "2026-02-25T02:07:08.137308+00:00",
-            "categories": [
-              "fabric",
-              "forge",
-              "mobs",
-              "neoforge",
-              "utility"
-            ],
+            "categories": ["fabric", "forge", "mobs", "neoforge", "utility"],
             "originalTitle": "Jade Modded Entities"
           },
           {
@@ -144,10 +116,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/QkuvZ0z8/9742f6c7a36483f1d88b4ecde74f12b1ede437e2_96.webp",
             "downloads": 4038,
             "updatedAt": "2024-12-29T07:09:58.666238+00:00",
-            "categories": [
-              "fabric",
-              "utility"
-            ],
+            "categories": ["fabric", "utility"],
             "originalTitle": "Jade's Hit Effects"
           },
           {
@@ -160,10 +129,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/tEjbd4J4/da95f30d7b6d579e511b555efe075e61bc8e230c_96.webp",
             "downloads": 2104,
             "updatedAt": "2023-07-18T14:53:00.234919+00:00",
-            "categories": [
-              "fabric",
-              "game-mechanics"
-            ],
+            "categories": ["fabric", "game-mechanics"],
             "originalTitle": "Jade Feet"
           },
           {
@@ -176,10 +142,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/hHZ7qdO4/da07e374e64632e0b026bbe61697423adc387e6c_96.webp",
             "downloads": 222,
             "updatedAt": "2025-08-06T16:31:02.204937+00:00",
-            "categories": [
-              "decoration",
-              "fabric"
-            ],
+            "categories": ["decoration", "fabric"],
             "originalTitle": "jade's plushies"
           },
           {
@@ -192,20 +155,14 @@
             "iconUrl": "https://cdn.modrinth.com/data/kfEow3K7/35020c5c3c412ff26ef07be29cea225a9bd8fe2a_96.webp",
             "downloads": 4771,
             "updatedAt": "2024-09-05T01:40:47.520763+00:00",
-            "categories": [
-              "fabric",
-              "quilt",
-              "utility"
-            ],
+            "categories": ["fabric", "quilt", "utility"],
             "originalTitle": "VoluBind"
           }
         ],
         "total": 14,
         "offset": 0,
         "limit": 10,
-        "warnings": [
-          "中文别名检索：玉 → jade"
-        ]
+        "warnings": ["中文别名检索：玉 → jade"]
       }
     },
     {
@@ -231,13 +188,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/u6dRKJwZ/4a3f18ac0d096c9f8e9176984c44be4e58f94c89_96.webp",
             "downloads": 80590811,
             "updatedAt": "2026-10-05T09:39:59.471381+00:00",
-            "categories": [
-              "fabric",
-              "forge",
-              "library",
-              "neoforge",
-              "utility"
-            ],
+            "categories": ["fabric", "forge", "library", "neoforge", "utility"],
             "originalTitle": "Just Enough Items (JEI)"
           },
           {
@@ -250,14 +201,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/gbJLUhZP/2f17d94bd8f7b58897a2502adee7742c4dc24d50_96.webp",
             "downloads": 4012239,
             "updatedAt": "2025-01-21T15:35:57.013465+00:00",
-            "categories": [
-              "decoration",
-              "fabric",
-              "forge",
-              "neoforge",
-              "optimization",
-              "utility"
-            ],
+            "categories": ["decoration", "fabric", "forge", "neoforge", "optimization", "utility"],
             "originalTitle": "Distraction Free Recipes (EMI / REI / JEI)"
           },
           {
@@ -270,11 +214,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/EiEOyeoL/811288640d83ece9b8e88bf2f6d715ad685636c9_96.webp",
             "downloads": 251071,
             "updatedAt": "2023-10-04T09:40:37.544852+00:00",
-            "categories": [
-              "fabric",
-              "forge",
-              "utility"
-            ],
+            "categories": ["fabric", "forge", "utility"],
             "originalTitle": "JEITweaker"
           },
           {
@@ -287,14 +227,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/mgJmej0q/f464aaa1d3af9d0adae5ac1f3daf211b9eefd53b_96.webp",
             "downloads": 122722,
             "updatedAt": "2026-06-17T18:31:34.024018+00:00",
-            "categories": [
-              "fabric",
-              "forge",
-              "management",
-              "neoforge",
-              "optimization",
-              "utility"
-            ],
+            "categories": ["fabric", "forge", "management", "neoforge", "optimization", "utility"],
             "originalTitle": "JEI Trim Hider"
           },
           {
@@ -307,12 +240,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/YYrsrQ6q/d3282c075f06a8fa1965a0d6801563dc295f910a.png",
             "downloads": 63565,
             "updatedAt": "2026-09-30T12:55:29.057658+00:00",
-            "categories": [
-              "fabric",
-              "forge",
-              "neoforge",
-              "utility"
-            ],
+            "categories": ["fabric", "forge", "neoforge", "utility"],
             "originalTitle": "JEI / REI / EMI WorldGen"
           },
           {
@@ -325,12 +253,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/c39iXKSf/d225527219dec8d42d1ae343495a3f6daec1e528_96.webp",
             "downloads": 26964,
             "updatedAt": "2026-10-01T08:10:10.178749+00:00",
-            "categories": [
-              "fabric",
-              "forge",
-              "neoforge",
-              "utility"
-            ],
+            "categories": ["fabric", "forge", "neoforge", "utility"],
             "originalTitle": "Universal Enchantment Info (JEI/REI/EMI/RRV)"
           },
           {
@@ -343,11 +266,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/dSSxF1d4/506a5a6cbc296694d828893a27abcc19226652a5_96.webp",
             "downloads": 10465,
             "updatedAt": "2025-08-14T14:44:19.381235+00:00",
-            "categories": [
-              "fabric",
-              "forge",
-              "utility"
-            ],
+            "categories": ["fabric", "forge", "utility"],
             "originalTitle": "JEI Hover Search"
           },
           {
@@ -360,11 +279,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/8FtYXJhp/d09475f47064598d4eaf04e711cc3068e4f55053_96.webp",
             "downloads": 25536,
             "updatedAt": "2026-08-28T07:46:46.013184+00:00",
-            "categories": [
-              "fabric",
-              "neoforge",
-              "utility"
-            ],
+            "categories": ["fabric", "neoforge", "utility"],
             "originalTitle": "SpectrumJEI"
           },
           {
@@ -377,10 +292,7 @@
             "iconUrl": "https://cdn.modrinth.com/data/FaJv0NSi/20183803d00033b93a6eb6a175f6ad6ef29d023f_96.webp",
             "downloads": 24591,
             "updatedAt": "2026-03-28T06:59:55.608012+00:00",
-            "categories": [
-              "fabric",
-              "utility"
-            ],
+            "categories": ["fabric", "utility"],
             "originalTitle": "TechRebornJEI"
           },
           {
@@ -393,19 +305,14 @@
             "iconUrl": "https://cdn.modrinth.com/data/k4jSlOb9/d2529e088891208a06b25670814f614a3a073fe4.png",
             "downloads": 21774,
             "updatedAt": "2025-07-27T19:42:56.047698+00:00",
-            "categories": [
-              "fabric",
-              "utility"
-            ],
+            "categories": ["fabric", "utility"],
             "originalTitle": "AlloyForgeryJEI"
           }
         ],
         "total": 180,
         "offset": 0,
         "limit": 10,
-        "warnings": [
-          "中文别名检索：jei、rei、emi"
-        ]
+        "warnings": ["中文别名检索：jei、rei、emi"]
       }
     }
   ],

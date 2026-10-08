@@ -39,6 +39,14 @@ test('modpack text selection cannot dismiss on mouse release; conflict cards are
     const { descriptor, errors } = parse(source)
     assert.deepEqual(errors, [])
     const script = compileScript(descriptor, { id: file })
-    assert.deepEqual(compileTemplate({ source: descriptor.template!.content, filename: file, id: file, compilerOptions: { bindingMetadata: script.bindings } }).errors, [])
+    assert.deepEqual(
+      compileTemplate({
+        source: descriptor.template!.content,
+        filename: file,
+        id: file,
+        compilerOptions: { bindingMetadata: script.bindings },
+      }).errors,
+      []
+    )
   }
 })

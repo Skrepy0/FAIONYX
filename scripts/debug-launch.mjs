@@ -34,8 +34,8 @@ const merged = {
   libraries: chain.flatMap((c) => c.libraries ?? []),
   arguments: {
     game: parentFirst.flatMap((c) => c.arguments?.game ?? []),
-    jvm: parentFirst.flatMap((c) => c.arguments?.jvm ?? [])
-  }
+    jvm: parentFirst.flatMap((c) => c.arguments?.jvm ?? []),
+  },
 }
 
 // rules（windows）：无一匹配 → 拒绝
@@ -68,13 +68,19 @@ for (const lib of merged.libraries) {
   if (!rel && lib.name && lib.url) rel = mavenPath(lib.name)
   if (rel) {
     const p = path.join(libRoot, rel)
-    if (!seen.has(p)) { seen.add(p); artifacts.push(p) }
+    if (!seen.has(p)) {
+      seen.add(p)
+      artifacts.push(p)
+    }
   }
   const nkey = lib.natives?.windows?.replace('${arch}', '64')
   const nat = nkey && lib.downloads?.classifiers?.[nkey]
   if (nat?.path) {
     const p = path.join(libRoot, nat.path)
-    if (!seen.has(p)) { seen.add(p); natives.push(p) }
+    if (!seen.has(p)) {
+      seen.add(p)
+      natives.push(p)
+    }
   }
 }
 const missing = [...artifacts, ...natives].filter((p) => !fs.existsSync(p))
@@ -118,7 +124,7 @@ const vars = {
   launcher_version: 'debug',
   classpath,
   library_directory: libRoot,
-  classpath_separator: ';'
+  classpath_separator: ';',
 }
 const expand = (entries) =>
   (entries ?? []).flatMap((e) => {
@@ -129,10 +135,15 @@ const expand = (entries) =>
 const subst = (s) => s.replace(/\$\{(\w+)\}/g, (m, k) => vars[k] ?? m)
 
 const jvmArgs = [
-  '-Xmx4096M', '-Xms1024M', '-XX:+UseG1GC', '-XX:+ParallelRefProcEnabled',
-  '-XX:MaxGCPauseMillis=200', '-Dfile.encoding=UTF-8',
-  `-Djava.library.path=${nativesDir}`, `-Djna.tmpdir=${nativesDir}`,
-  ...expand(merged.arguments.jvm).map(subst)
+  '-Xmx4096M',
+  '-Xms1024M',
+  '-XX:+UseG1GC',
+  '-XX:+ParallelRefProcEnabled',
+  '-XX:MaxGCPauseMillis=200',
+  '-Dfile.encoding=UTF-8',
+  `-Djava.library.path=${nativesDir}`,
+  `-Djna.tmpdir=${nativesDir}`,
+  ...expand(merged.arguments.jvm).map(subst),
 ]
 const gameArgs = expand(merged.arguments.game).map(subst)
 const args = [...jvmArgs, '-cp', classpath, merged.mainClass, ...gameArgs]
@@ -156,4 +167,8 @@ proc.on('exit', (code) => {
   console.log(text.slice(0, 3000))
   process.exit(0)
 })
-setTimeout(() => { console.log('60s 超时仍在运行（说明可能启动成功！），结束进程'); proc.kill(); process.exit(0) }, 60000)
+setTimeout(() => {
+  console.log('60s 超时仍在运行（说明可能启动成功！），结束进程')
+  proc.kill()
+  process.exit(0)
+}, 60000)

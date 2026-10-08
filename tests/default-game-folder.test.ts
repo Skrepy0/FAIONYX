@@ -14,7 +14,9 @@ test('首次运行创建内置目录，可重复调用且保留现有文件', ()
     fs.writeFileSync(path.join(root, 'keep.txt'), 'saved')
     ensureDefaultGameFolder(temp, [{ path: root }])
     assert.equal(fs.readFileSync(path.join(root, 'keep.txt'), 'utf8'), 'saved')
-  } finally { fs.rmSync(temp, { recursive: true, force: true }) }
+  } finally {
+    fs.rmSync(temp, { recursive: true, force: true })
+  }
 })
 
 test('不创建或替换用户缺失的外置目录，真实错误保持可见', () => {
@@ -24,5 +26,7 @@ test('不创建或替换用户缺失的外置目录，真实错误保持可见',
     ensureDefaultGameFolder(temp, [{ path: external }])
     assert.equal(fs.existsSync(external), false)
     assert.equal(fs.existsSync(path.join(temp, '.faionyx')), false)
-  } finally { fs.rmSync(temp, { recursive: true, force: true }) }
+  } finally {
+    fs.rmSync(temp, { recursive: true, force: true })
+  }
 })

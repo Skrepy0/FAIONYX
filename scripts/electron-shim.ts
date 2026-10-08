@@ -11,7 +11,7 @@ export const app = {
     return appData
   },
   getVersion: () => '0.0.0-harness',
-  getName: () => 'faionyx'
+  getName: () => 'faionyx',
 }
 export const ipcMain = { handle: () => undefined, on: () => undefined }
 export const dialog = { showOpenDialog: async () => ({ canceled: true, filePaths: [] }), showSaveDialog: async () => ({ canceled: true }) }
@@ -19,7 +19,7 @@ export const shell = { openPath: async () => '', showItemInFolder: () => undefin
 export const screen = {
   getPrimaryDisplay: () => ({ bounds: { x: 0, y: 0, width: 1920, height: 1080 }, workAreaSize: { width: 1920, height: 1040 } }),
   getDisplayNearestPoint: () => ({ workAreaSize: { width: 1920, height: 1040 } }),
-  getCursorScreenPoint: () => ({ x: 0, y: 0 })
+  getCursorScreenPoint: () => ({ x: 0, y: 0 }),
 }
 export const nativeTheme = { themeSource: 'system' }
 export class BrowserWindow {}

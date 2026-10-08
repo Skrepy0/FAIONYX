@@ -10,7 +10,13 @@ export interface PlatformInfo {
   nativeGameRuntime: 'supported' | 'requires-verification' | 'unsupported'
 }
 export function productPlatform(platform: string): ProductPlatform {
-  const platforms: Record<string, ProductPlatform> = { win32: 'windows', darwin: 'macos', linux: 'linux', openharmony: 'harmonyos', ohos: 'harmonyos' }
+  const platforms: Record<string, ProductPlatform> = {
+    win32: 'windows',
+    darwin: 'macos',
+    linux: 'linux',
+    openharmony: 'harmonyos',
+    ohos: 'harmonyos',
+  }
   return platforms[platform] ?? 'unsupported'
 }
 export function productArchitecture(arch: string): ProductArchitecture {
@@ -20,12 +26,20 @@ export function minecraftRuleOs(platform: string): 'windows' | 'osx' | 'linux' |
   return platform === 'win32' ? 'windows' : platform === 'darwin' ? 'osx' : platform === 'linux' ? 'linux' : 'unsupported'
 }
 export function requireDesktopGamePlatform(platform: string): void {
-  if (minecraftRuleOs(platform) === 'unsupported') throw new Error('当前平台的原生 Java 与游戏运行链尚未验证，不能使用 Linux 或 Windows 运行库代替。')
+  if (minecraftRuleOs(platform) === 'unsupported')
+    throw new Error('当前平台的原生 Java 与游戏运行链尚未验证，不能使用 Linux 或 Windows 运行库代替。')
 }
 export function platformInfo(platform: string, arch: string, installation: InstallationKind): PlatformInfo {
-  const os = productPlatform(platform), architecture = productArchitecture(arch)
-  return { platform: os, architecture, installation, systemMemoryOrganizing: os === 'windows',
-    nativeGameRuntime: os === 'harmonyos' ? 'requires-verification' : os === 'unsupported' || architecture === 'unsupported' ? 'unsupported' : 'supported' }
+  const os = productPlatform(platform),
+    architecture = productArchitecture(arch)
+  return {
+    platform: os,
+    architecture,
+    installation,
+    systemMemoryOrganizing: os === 'windows',
+    nativeGameRuntime:
+      os === 'harmonyos' ? 'requires-verification' : os === 'unsupported' || architecture === 'unsupported' ? 'unsupported' : 'supported',
+  }
 }
 
 export function updateArtifactName(version: string, platform: string, arch: string, installation: InstallationKind): string {

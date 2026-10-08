@@ -19,10 +19,10 @@
 
 ## Last verified artifacts
 
-| 文件 | 字节 | SHA256 |
-| --- | ---: | --- |
-| KAMUCL-1.1.19.exe | 97323050 | 7b11d4979f1d3afc72397b501770130e3c5e23e2e246deaa70a06276f6a61a65 |
-| KAMUCL-1.1.19-windows-x64.zip | 97355049 | 9cae56424bdc95b309a7aab937c673bd2c407801a17dce339bd516c2cfc3bcc4 |
+| 文件                                   |      字节 | SHA256                                                           |
+| -------------------------------------- | --------: | ---------------------------------------------------------------- |
+| KAMUCL-1.1.19.exe                      |  97323050 | 7b11d4979f1d3afc72397b501770130e3c5e23e2e246deaa70a06276f6a61a65 |
+| KAMUCL-1.1.19-windows-x64.zip          |  97355049 | 9cae56424bdc95b309a7aab937c673bd2c407801a17dce339bd516c2cfc3bcc4 |
 | KAMUCL-1.1.19-windows-x64-unpacked.zip | 142990165 | 6bc7a4ef2da326e01915559abf77480754722a291dfab233b37cb9e2e5948dde |
 
 ## Completed

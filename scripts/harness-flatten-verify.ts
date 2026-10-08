@@ -22,10 +22,15 @@ async function main() {
 
     console.log('== 启动 flatten 实例 neoforge-26.1.2.103（基础原版已消失） ==')
     let running = false
-    await launch('neoforge-26.1.2.103', () => undefined, () => undefined, (s) => {
-      if (s.status === 'running') running = true
-      console.log('  STATE:', s.status, s.text)
-    })
+    await launch(
+      'neoforge-26.1.2.103',
+      () => undefined,
+      () => undefined,
+      (s) => {
+        if (s.status === 'running') running = true
+        console.log('  STATE:', s.status, s.text)
+      }
+    )
     if (!running) {
       console.log('  [FAIL] 未进入 running')
       process.exitCode = 1

@@ -1,8 +1,7 @@
 import os from 'node:os'
 import path from 'node:path'
 
-const TOKEN_KEYS =
-  '(?:access[_-]?token|refresh[_-]?token|client[_-]?token|session[_-]?(?:id|key)|password|authorization)'
+const TOKEN_KEYS = '(?:access[_-]?token|refresh[_-]?token|client[_-]?token|session[_-]?(?:id|key)|password|authorization)'
 
 /**
  * 脱敏待导出的日志与启动参数。调用方还可传入本次会话中已知的真实密钥；

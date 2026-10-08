@@ -18,33 +18,40 @@ const props = defineProps<{
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void; (e: 'change', value: string): void }>()
 
 const open = ref(false)
-const menuEl=ref<HTMLElement>(), active=ref(0)
+const menuEl = ref<HTMLElement>(),
+  active = ref(0)
 const buttonEl = ref<HTMLElement | null>(null)
 const menuStyle = ref<Record<string, string>>({})
 const menuId = useId()
 
-const currentOption = computed(() => props.options.find(o => o.value === props.modelValue))
-const currentLabel = computed(() =>
-  props.options.find((o) => o.value === props.modelValue)?.label ?? props.placeholder ?? '请选择'
-)
+const currentOption = computed(() => props.options.find((o) => o.value === props.modelValue))
+const currentLabel = computed(() => props.options.find((o) => o.value === props.modelValue)?.label ?? props.placeholder ?? '请选择')
 
 function toggle() {
   if (props.disabled) return
-  if (open.value) { close(); return }
+  if (open.value) {
+    close()
+    return
+  }
   const rect = buttonEl.value?.getBoundingClientRect()
   if (rect) {
-    const below = Math.max(0, innerHeight - rect.bottom - 18), above = Math.max(0, rect.top - 18)
+    const below = Math.max(0, innerHeight - rect.bottom - 18),
+      above = Math.max(0, rect.top - 18)
     const desired = Math.min(props.maxHeight ?? 320, innerHeight - 24)
     const maxH = Math.min(desired, Math.max(below, above))
     const up = below < Math.min(desired, 220) && above > below
-    const width = Math.min(rect.width, innerWidth - 24), left = Math.max(12, Math.min(rect.left, innerWidth - width - 12))
+    const width = Math.min(rect.width, innerWidth - 24),
+      left = Math.max(12, Math.min(rect.left, innerWidth - width - 12))
     menuStyle.value = up
       ? { left: left + 'px', bottom: innerHeight - rect.top + 6 + 'px', width: width + 'px', maxHeight: maxH + 'px' }
       : { left: left + 'px', top: rect.bottom + 6 + 'px', width: width + 'px', maxHeight: Math.min(desired, below) + 'px' }
   }
-  active.value = Math.max(0, props.options.findIndex(o => o.value === props.modelValue))
+  active.value = Math.max(
+    0,
+    props.options.findIndex((o) => o.value === props.modelValue)
+  )
   open.value = true
-  void nextTick(() => menuEl.value?.querySelector<HTMLElement>('[data-focused=true]')?.scrollIntoView({block:'nearest'}))
+  void nextTick(() => menuEl.value?.querySelector<HTMLElement>('[data-focused=true]')?.scrollIntoView({ block: 'nearest' }))
   addEventListener('pointerdown', onPointerDown, true)
   addEventListener('keydown', onKeydown, true)
   addEventListener('resize', close)
@@ -57,15 +64,39 @@ function close() {
   removeEventListener('resize', close)
   removeEventListener('scroll', onScroll, true)
 }
-function onScroll(event: Event) { if (!menuEl.value?.contains(event.target as Node)) close() }
+function onScroll(event: Event) {
+  if (!menuEl.value?.contains(event.target as Node)) close()
+}
 function onPointerDown(e: PointerEvent) {
-  if(!menuEl.value?.contains(e.target as Node)&&!buttonEl.value?.contains(e.target as Node))close()
+  if (!menuEl.value?.contains(e.target as Node) && !buttonEl.value?.contains(e.target as Node)) close()
 }
 function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Tab') { close(); return }
-  if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close();buttonEl.value?.focus()}
-  if(['ArrowUp','ArrowDown','Home','End'].includes(e.key)){e.preventDefault();e.stopImmediatePropagation();active.value=e.key==='Home'?0:e.key==='End'?props.options.length-1:Math.max(0,Math.min(props.options.length-1,active.value+(e.key==='ArrowDown'?1:-1)));void nextTick(()=>menuEl.value?.querySelector<HTMLElement>('[data-focused=true]')?.scrollIntoView({block:'nearest'}))}
-  if(e.key==='Enter'&&props.options[active.value]){e.preventDefault();e.stopImmediatePropagation();choose(props.options[active.value].value)}
+  if (e.key === 'Tab') {
+    close()
+    return
+  }
+  if (e.key === 'Escape') {
+    e.preventDefault()
+    e.stopImmediatePropagation()
+    close()
+    buttonEl.value?.focus()
+  }
+  if (['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) {
+    e.preventDefault()
+    e.stopImmediatePropagation()
+    active.value =
+      e.key === 'Home'
+        ? 0
+        : e.key === 'End'
+          ? props.options.length - 1
+          : Math.max(0, Math.min(props.options.length - 1, active.value + (e.key === 'ArrowDown' ? 1 : -1)))
+    void nextTick(() => menuEl.value?.querySelector<HTMLElement>('[data-focused=true]')?.scrollIntoView({ block: 'nearest' }))
+  }
+  if (e.key === 'Enter' && props.options[active.value]) {
+    e.preventDefault()
+    e.stopImmediatePropagation()
+    choose(props.options[active.value].value)
+  }
 }
 function choose(value: string) {
   emit('update:modelValue', value)
@@ -73,12 +104,18 @@ function choose(value: string) {
   close()
   buttonEl.value?.focus({ preventScroll: true })
 }
-watch(() => props.disabled, value => { if (value) close() })
+watch(
+  () => props.disabled,
+  (value) => {
+    if (value) close()
+  }
+)
 onBeforeUnmount(close)
 </script>
 
 <template>
-  <button data-ui="SelectMenu:cad40d2db882"
+  <button
+    data-ui="SelectMenu:cad40d2db882"
     v-bind="$attrs"
     ref="buttonEl"
     type="button"
@@ -91,30 +128,66 @@ onBeforeUnmount(close)
     :title="[currentLabel, currentOption?.description].filter(Boolean).join('\n')"
     @click="toggle"
   >
-    <span data-ui="SelectMenu:bbb0a3638540" class="select-menu-label"><span>{{ currentLabel }}</span><small v-if="currentOption?.description">{{ currentOption.description }}</small></span>
-    <svg class="select-menu-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+    <span data-ui="SelectMenu:bbb0a3638540" class="select-menu-label"
+      ><span>{{ currentLabel }}</span
+      ><small v-if="currentOption?.description">{{ currentOption.description }}</small></span
+    >
+    <svg
+      class="select-menu-chevron"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
   </button>
   <Teleport to="body">
     <Transition name="popover">
-    <div data-ui="SelectMenu:3ebdff14f591" v-if="open" :id="menuId" ref="menuEl" class="select-menu-float" @wheel.stop :style="menuStyle" role="listbox">
-      <button data-ui="SelectMenu:439e3aacaaa9"
-        v-for="(o,i) in props.options"
-        :data-focused="active===i"
-        :key="o.value"
-        type="button"
-        class="select-menu-option"
-        :class="{ active: o.value === props.modelValue }"
-        role="option"
-        :aria-selected="o.value === props.modelValue"
-        :title="[o.label, o.description].filter(Boolean).join('\n')"
-        @click="choose(o.value)"
+      <div
+        data-ui="SelectMenu:3ebdff14f591"
+        v-if="open"
+        :id="menuId"
+        ref="menuEl"
+        class="select-menu-float"
+        @wheel.stop
+        :style="menuStyle"
+        role="listbox"
       >
-        <span data-ui="SelectMenu:cd6bf191d88f" class="select-menu-option-label"><span>{{ o.label }}</span><small v-if="o.description">{{ o.description }}</small></span>
-        <svg v-if="o.value === props.modelValue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
-      </button>
-      <div data-ui="SelectMenu:1d0ad7174b00" v-if="!props.options.length" class="select-menu-empty">无可选项</div>
-    </div>
-      </Transition>
+        <button
+          data-ui="SelectMenu:439e3aacaaa9"
+          v-for="(o, i) in props.options"
+          :data-focused="active === i"
+          :key="o.value"
+          type="button"
+          class="select-menu-option"
+          :class="{ active: o.value === props.modelValue }"
+          role="option"
+          :aria-selected="o.value === props.modelValue"
+          :title="[o.label, o.description].filter(Boolean).join('\n')"
+          @click="choose(o.value)"
+        >
+          <span data-ui="SelectMenu:cd6bf191d88f" class="select-menu-option-label"
+            ><span>{{ o.label }}</span
+            ><small v-if="o.description">{{ o.description }}</small></span
+          >
+          <svg
+            v-if="o.value === props.modelValue"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+        </button>
+        <div data-ui="SelectMenu:1d0ad7174b00" v-if="!props.options.length" class="select-menu-empty">无可选项</div>
+      </div>
+    </Transition>
   </Teleport>
 </template>
 
@@ -133,14 +206,40 @@ onBeforeUnmount(close)
   font-size: var(--text-sm);
   font-family: inherit;
   cursor: pointer;
-  transition: border-color 180ms ease, background 180ms ease, box-shadow 220ms ease;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 220ms ease;
 }
-.select-menu-btn:hover:not(.disabled) { border-color: var(--accent-deep, var(--accent)); }
-.select-menu-btn.open { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-.select-menu-btn.disabled { opacity: 0.55; cursor: not-allowed; }
-.select-menu-label { flex: 1; min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.select-menu-chevron { width: 14px; height: 14px; flex-shrink: 0; color: var(--text-dim); transition: transform 0.18s ease; }
-.select-menu-btn.open .select-menu-chevron { transform: rotate(180deg); }
+.select-menu-btn:hover:not(.disabled) {
+  border-color: var(--accent-deep, var(--accent));
+}
+.select-menu-btn.open {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.select-menu-btn.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.select-menu-label {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.select-menu-chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--text-dim);
+  transition: transform 0.18s ease;
+}
+.select-menu-btn.open .select-menu-chevron {
+  transform: rotate(180deg);
+}
 .select-menu-float {
   -webkit-app-region: no-drag;
   position: fixed;
@@ -175,11 +274,65 @@ onBeforeUnmount(close)
   cursor: pointer;
   transition: background 0.12s ease;
 }
-.select-menu-option svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--accent); }
-.select-menu-option:hover,.select-menu-option[data-focused=true] { background: var(--hover); }
-.select-menu-option.active { background: var(--accent-soft); color: color-mix(in srgb, var(--text) 86%, var(--accent)); font-weight: 600; }
-.select-menu-option-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.select-menu-empty { display: flex; align-items: center; justify-content: center; min-height: var(--row-h); padding: var(--space-3); color: var(--text-dim); font-size: var(--text-xs); text-align: center; }
-@media (prefers-reduced-motion: reduce) { .select-menu-btn, .select-menu-chevron, .select-menu-option { transition: none; } }
-.select-menu-label,.select-menu-option-label{display:grid;gap:3px}.select-menu-label>span,.select-menu-option-label>span,.select-menu-label small,.select-menu-option-label small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.select-menu-label small,.select-menu-option-label small{font-size:12px;color:var(--text-dim);font-weight:400}.select-menu-float{max-width:calc(100vw - 24px)}
+.select-menu-option svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+.select-menu-option:hover,
+.select-menu-option[data-focused='true'] {
+  background: var(--hover);
+}
+.select-menu-option.active {
+  background: var(--accent-soft);
+  color: color-mix(in srgb, var(--text) 86%, var(--accent));
+  font-weight: 600;
+}
+.select-menu-option-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.select-menu-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--row-h);
+  padding: var(--space-3);
+  color: var(--text-dim);
+  font-size: var(--text-xs);
+  text-align: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .select-menu-btn,
+  .select-menu-chevron,
+  .select-menu-option {
+    transition: none;
+  }
+}
+.select-menu-label,
+.select-menu-option-label {
+  display: grid;
+  gap: 3px;
+}
+.select-menu-label > span,
+.select-menu-option-label > span,
+.select-menu-label small,
+.select-menu-option-label small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.select-menu-label small,
+.select-menu-option-label small {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 400;
+}
+.select-menu-float {
+  max-width: calc(100vw - 24px);
+}
 </style>

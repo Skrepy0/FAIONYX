@@ -19,17 +19,24 @@ import { parseFrpLine, frpLineReader } from './frpLog'
 export const DEFAULT_LOCAL_HOST = '127.0.0.1'
 
 /** 官方 frpc 直链（amd64 Windows；用户可在管理面板自行替换为对应架构）。 */
-export const FRPC_OFFICIAL_URL_WIN_AMD64 =
-  'https://nya.globalslb.net/natfrp/client/frpc/0.51.0-sakura-14/frpc_windows_amd64.exe'
+export const FRPC_OFFICIAL_URL_WIN_AMD64 = 'https://nya.globalslb.net/natfrp/client/frpc/0.51.0-sakura-14/frpc_windows_amd64.exe'
 
 export function frpcAsset(platform = process.platform, arch = process.arch): { url: string; sha256?: string } {
   if (platform === 'win32') return { url: FRPC_OFFICIAL_URL_WIN_AMD64 }
-  if (platform === 'linux' && (arch === 'x64' || arch === 'arm64')) return {
-    url: `https://nya.globalslb.net/natfrp/client/frpc/0.51.0-sakura-14/frpc_linux_${arch === 'x64' ? 'amd64' : 'arm64'}`,
-    sha256: arch === 'x64' ? '8d3fcf1e24537719c36c6270c122fcdc09954d22ae9dd74105241675e6dce4d0' : '7f1bf530eb6b46b47e9b1e4bb022d689b5f26f5132581c29c5f43d922a42e595'
-  }
-  const sha256 = arch === 'arm64' ? '465db9daea0e14e3adaa89926640afa8b44737dadc1cf0b75f9b091850d2e331'
-    : arch === 'x64' ? '74ee362350314dd5ac8936fbe2299fc76671051e10beb46c8dd37c36a4503935' : undefined
+  if (platform === 'linux' && (arch === 'x64' || arch === 'arm64'))
+    return {
+      url: `https://nya.globalslb.net/natfrp/client/frpc/0.51.0-sakura-14/frpc_linux_${arch === 'x64' ? 'amd64' : 'arm64'}`,
+      sha256:
+        arch === 'x64'
+          ? '8d3fcf1e24537719c36c6270c122fcdc09954d22ae9dd74105241675e6dce4d0'
+          : '7f1bf530eb6b46b47e9b1e4bb022d689b5f26f5132581c29c5f43d922a42e595',
+    }
+  const sha256 =
+    arch === 'arm64'
+      ? '465db9daea0e14e3adaa89926640afa8b44737dadc1cf0b75f9b091850d2e331'
+      : arch === 'x64'
+        ? '74ee362350314dd5ac8936fbe2299fc76671051e10beb46c8dd37c36a4503935'
+        : undefined
   if (platform !== 'darwin' || !sha256) throw new Error(`樱花穿透暂不支持 ${platform}/${arch}`)
   return { url: `https://nya.globalslb.net/natfrp/client/frpc/0.51.0-sakura-14/frpc_darwin_${arch === 'x64' ? 'amd64' : 'arm64'}`, sha256 }
 }
@@ -41,14 +48,7 @@ export interface FrpConfig {
   localPort: number
 }
 
-export type FrpStatus =
-  | 'idle'
-  | 'starting'
-  | 'running'
-  | 'auth_failed'
-  | 'tunnel_offline'
-  | 'error'
-  | 'stopped'
+export type FrpStatus = 'idle' | 'starting' | 'running' | 'auth_failed' | 'tunnel_offline' | 'error' | 'stopped'
 
 export interface FrpState {
   status: FrpStatus
@@ -124,7 +124,7 @@ function readConfig(): FrpConfig | null {
     return {
       accessKey: parsed.accessKey,
       tunnelId: parsed.tunnelId,
-      localPort: typeof parsed.localPort === 'number' ? parsed.localPort : 0
+      localPort: typeof parsed.localPort === 'number' ? parsed.localPort : 0,
     }
   } catch {
     return null
@@ -144,7 +144,7 @@ export function saveFrpConfig(cfg: FrpConfig): FrpConfig {
   const next: FrpConfig = {
     accessKey: String(cfg.accessKey ?? '').trim(),
     tunnelId: String(cfg.tunnelId ?? '').trim(),
-    localPort: Number(cfg.localPort ?? 0) || 0
+    localPort: Number(cfg.localPort ?? 0) || 0,
   }
   writeConfig(next)
   return next
@@ -166,10 +166,11 @@ export function ensureFrpcInstalled(onLog?: (line: string) => void): Promise<str
     })
     .catch((err: unknown) => {
       const msg = err instanceof Error ? err.message : String(err)
-      throw new Error(
-        `frpc 下载失败：${msg}。请检查网络后重试，官方下载地址：${asset.url}`
-      )
-    }).finally(() => { installingFrpc = null })
+      throw new Error(`frpc 下载失败：${msg}。请检查网络后重试，官方下载地址：${asset.url}`)
+    })
+    .finally(() => {
+      installingFrpc = null
+    })
   return installingFrpc
 }
 
@@ -177,16 +178,17 @@ function killProcessTree(pid: number): void {
   if (!pid) return
   if (process.platform !== 'win32') {
     // Only the private group we created; never another client or the JVM group.
-    try { process.kill(-pid, 'SIGTERM') } catch { /* already stopped */ }
+    try {
+      process.kill(-pid, 'SIGTERM')
+    } catch {
+      /* already stopped */
+    }
     return
   }
   try {
     // taskkill /T /F /PID <pid> 兜底：frpc 子进程不会因 parent.kill 全部退出
     const { spawn: spawnSync } = require('node:child_process') as typeof import('node:child_process')
-    spawnSync('taskkill', ['/T', '/F', '/PID', String(pid)], { stdio: 'ignore', windowsHide: true }).on(
-      'error',
-      () => undefined
-    )
+    spawnSync('taskkill', ['/T', '/F', '/PID', String(pid)], { stdio: 'ignore', windowsHide: true }).on('error', () => undefined)
   } catch {
     /* ignore */
   }
@@ -201,7 +203,6 @@ interface RunningSession {
   logs: FrpLogEntry[]
   status: FrpStatus
 }
-
 
 const MAX_LOGS = 200
 
@@ -241,7 +242,7 @@ export class FrpController {
         pid: null,
         startedAt: null,
         message: '尚未启动',
-        logs: []
+        logs: [],
       }
     }
     return {
@@ -251,7 +252,7 @@ export class FrpController {
       pid: this.session.pid,
       startedAt: this.session.startedAt,
       message: this.statusMessage(this.session),
-      logs: this.session.logs.slice()
+      logs: this.session.logs.slice(),
     }
   }
 
@@ -286,7 +287,7 @@ export class FrpController {
     if (!tunnelId) throw new Error('请填写隧道 ID')
 
     const target = await ensureFrpcInstalled()
-    if (epoch !== this.epoch) throw new Error("启动已取消")
+    if (epoch !== this.epoch) throw new Error('启动已取消')
     const saved = { accessKey, tunnelId, localPort }
 
     const args: string[] = ['-f', `${accessKey}:${tunnelId}`, '--disable_log_color']
@@ -294,7 +295,7 @@ export class FrpController {
     const proc = spawn(target, args, {
       windowsHide: true,
       detached: process.platform !== 'win32',
-      stdio: ['ignore', 'pipe', 'pipe']
+      stdio: ['ignore', 'pipe', 'pipe'],
     })
     const pid = proc.pid ?? 0
 
@@ -305,7 +306,7 @@ export class FrpController {
       remoteAddress: null,
       startedAt,
       logs: [],
-      status: 'starting'
+      status: 'starting',
     }
     this.session = newSession
 
@@ -317,8 +318,8 @@ export class FrpController {
       data: {
         ts: startedAt,
         stream: 'system',
-        text: `启动命令: ${target} -f ${maskKey(accessKey)}:${saved.tunnelId}`
-      }
+        text: `启动命令: ${target} -f ${maskKey(accessKey)}:${saved.tunnelId}`,
+      },
     })
 
     let addressPriority = 0
@@ -336,12 +337,17 @@ export class FrpController {
       }
       if (parsed.status && parsed.status !== newSession.status) {
         newSession.status = parsed.status
-        emit({ type: 'status', status: parsed.status, remoteAddress: newSession.remoteAddress ?? undefined, message: this.statusMessage(newSession) })
+        emit({
+          type: 'status',
+          status: parsed.status,
+          remoteAddress: newSession.remoteAddress ?? undefined,
+          message: this.statusMessage(newSession),
+        })
       }
     }
 
     for (const stream of ['stdout', 'stderr'] as const) {
-      const reader = frpLineReader(line => handleLine(stream, line))
+      const reader = frpLineReader((line) => handleLine(stream, line))
       proc[stream]?.on('data', reader.write)
       proc[stream]?.on('end', reader.end)
     }
@@ -420,4 +426,3 @@ export class FrpController {
     this.sink = null
   }
 }
-

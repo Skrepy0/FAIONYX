@@ -21,18 +21,12 @@ async function main() {
     const destinationStat = fs.statSync(destination)
     before += sourceStat.size
     after += destinationStat.size
-    console.log(
-      `${target}: ${(sourceStat.size / 1024).toFixed(0)}KB -> ` +
-      `${(destinationStat.size / 1024).toFixed(0)}KB webp`
-    )
+    console.log(`${target}: ${(sourceStat.size / 1024).toFixed(0)}KB -> ` + `${(destinationStat.size / 1024).toFixed(0)}KB webp`)
   }
-  console.log(
-    `total: ${(before / 1024).toFixed(0)}KB -> ${(after / 1024).toFixed(0)}KB ` +
-    `(-${((before - after) / 1024).toFixed(0)}KB)`
-  )
+  console.log(`total: ${(before / 1024).toFixed(0)}KB -> ${(after / 1024).toFixed(0)}KB ` + `(-${((before - after) / 1024).toFixed(0)}KB)`)
 }
 
-main().catch(error => {
+main().catch((error) => {
   console.error(error)
   process.exit(1)
 })

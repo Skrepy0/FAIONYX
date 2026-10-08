@@ -13,19 +13,24 @@ export async function runParallelTasks<T extends readonly unknown[]>(
   let failed = false
   let failure: unknown
   try {
-    const results = await Promise.allSettled(tasks.map(async task => {
-      try {
-        throwIfCancelled(controller.signal)
-        return await task(controller.signal)
-      } catch (error) {
-        if (!failed) { failed = true; failure = error }
-        controller.abort(error)
-        throw error
-      }
-    }))
+    const results = await Promise.allSettled(
+      tasks.map(async (task) => {
+        try {
+          throwIfCancelled(controller.signal)
+          return await task(controller.signal)
+        } catch (error) {
+          if (!failed) {
+            failed = true
+            failure = error
+          }
+          controller.abort(error)
+          throw error
+        }
+      })
+    )
     if (failed) throw failure
     throwIfCancelled(signal)
-    return results.map(result => (result as PromiseFulfilledResult<unknown>).value) as unknown as T
+    return results.map((result) => (result as PromiseFulfilledResult<unknown>).value) as unknown as T
   } finally {
     signal?.removeEventListener('abort', abort)
   }

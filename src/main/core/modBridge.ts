@@ -24,7 +24,9 @@ export function bridgeInstalled(versionId: string): boolean {
       const info = parseModFile(path.join(modsDir, name))
       if (info.id === 'faionyx-bridge') return true
     }
-  } catch { /* mods 目录不存在视为未安装 */ }
+  } catch {
+    /* mods 目录不存在视为未安装 */
+  }
   return false
 }
 
@@ -93,7 +95,14 @@ export function readDiscovery(versionId: string): BridgeDiscovery | null {
     const port = Number(raw.port)
     if (!Number.isInteger(port) || port <= 0 || port > 65535) return null
     if (typeof raw.token !== 'string' || raw.token.length < 16) return null
-    return { protocol: 1, port, token: raw.token, modVersion: String(raw.modVersion ?? ''), pid: Number(raw.pid ?? 0), startedAt: Number(raw.startedAt ?? 0) }
+    return {
+      protocol: 1,
+      port,
+      token: raw.token,
+      modVersion: String(raw.modVersion ?? ''),
+      pid: Number(raw.pid ?? 0),
+      startedAt: Number(raw.startedAt ?? 0),
+    }
   } catch {
     return null
   }
@@ -104,7 +113,7 @@ async function call(discovery: BridgeDiscovery, pathname: string, body?: unknown
     method: body === undefined ? 'GET' : 'POST',
     signal: AbortSignal.timeout(timeoutMs),
     headers: body === undefined ? {} : { 'Content-Type': 'application/json', 'X-Faionyx-Token': discovery.token },
-    body: body === undefined ? undefined : JSON.stringify(body)
+    body: body === undefined ? undefined : JSON.stringify(body),
   })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
@@ -138,11 +147,20 @@ export async function bridgeManifest(versionId: string): Promise<{ protocol: num
 }
 
 /** 修改参数：以 MOD 返回的实际结果为准（value 回读自 MOD 端校验后的值）。 */
-export async function bridgeSet(versionId: string, id: string, value: unknown): Promise<{ ok: boolean; value?: unknown; notice?: string; error?: string }> {
+export async function bridgeSet(
+  versionId: string,
+  id: string,
+  value: unknown
+): Promise<{ ok: boolean; value?: unknown; notice?: string; error?: string }> {
   const discovery = readDiscovery(versionId)
   if (!discovery) return { ok: false, error: '未发现桥接服务：游戏未运行或未安装桥接 MOD' }
   try {
-    return (await call(discovery, 'set', { id: String(id ?? ''), value })) as { ok: boolean; value?: unknown; notice?: string; error?: string }
+    return (await call(discovery, 'set', { id: String(id ?? ''), value })) as {
+      ok: boolean
+      value?: unknown
+      notice?: string
+      error?: string
+    }
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : String(error) }
   }

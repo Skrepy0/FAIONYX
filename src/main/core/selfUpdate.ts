@@ -55,8 +55,11 @@ function cacheFile(): string {
 function readCache(): CheckCache | null {
   try {
     const j = JSON.parse(fs.readFileSync(cacheFile(), 'utf-8'))
-    if (j && typeof j === 'object' && (!j.source || j.source === apiBase()) && (!j.latest || trustedUpdateRelease(j.latest))) return j as CheckCache
-  } catch { /* 无缓存 */ }
+    if (j && typeof j === 'object' && (!j.source || j.source === apiBase()) && (!j.latest || trustedUpdateRelease(j.latest)))
+      return j as CheckCache
+  } catch {
+    /* 无缓存 */
+  }
   return null
 }
 
@@ -69,7 +72,11 @@ function writeCache(cache: CheckCache): void {
   }
 }
 
-interface GhAsset { name?: string; browser_download_url?: string; size?: number }
+interface GhAsset {
+  name?: string
+  browser_download_url?: string
+  size?: number
+}
 interface GhRelease {
   tag_name?: string
   name?: string
@@ -96,7 +103,7 @@ function toReleaseInfo(j: GhRelease): ReleaseInfo | null {
     body: String(j.body ?? ''),
     assetUrl: asset?.browser_download_url ?? '',
     assetSize: Number(asset?.size ?? 0),
-    assetName: asset?.name ?? ''
+    assetName: asset?.name ?? '',
   }
   return trustedUpdateRelease(release) ? release : null
 }
@@ -112,8 +119,8 @@ async function ghFetch(url: string, etag?: string): Promise<Response> {
         headers: {
           Accept: 'application/vnd.github+json',
           'User-Agent': 'FAIONYX-Launcher',
-          ...(etag ? { 'If-None-Match': etag } : {})
-        }
+          ...(etag ? { 'If-None-Match': etag } : {}),
+        },
       })
     } catch (e) {
       if (attempt === 1) throw e
@@ -234,7 +241,10 @@ export function parseSha256Sums(text: string): Map<string, string> {
 }
 
 /** Resolve the requested release's checksums, never a different latest version's manifest. */
-export async function fetchSha256Sums(releaseAssetUrlHint?: string, fetcher: typeof ghFetch = ghFetch): Promise<Map<string, string> | null> {
+export async function fetchSha256Sums(
+  releaseAssetUrlHint?: string,
+  fetcher: typeof ghFetch = ghFetch
+): Promise<Map<string, string> | null> {
   const urls: string[] = []
   const expectedName = releaseAssetUrlHint?.split('/').at(-1)
   const read = async (url: string): Promise<Map<string, string> | null> => {
@@ -243,7 +253,9 @@ export async function fetchSha256Sums(releaseAssetUrlHint?: string, fetcher: typ
       if (!res.ok) return null
       const sums = parseSha256Sums(await res.text())
       return sums.size && (!expectedName || sums.has(expectedName)) ? sums : null
-    } catch { return null }
+    } catch {
+      return null
+    }
   }
   if (releaseAssetUrlHint) {
     const exact = await read(releaseAssetUrlHint.replace(/[^/]+$/, 'SHA256SUMS.txt'))
@@ -259,7 +271,9 @@ export async function fetchSha256Sums(releaseAssetUrlHint?: string, fetcher: typ
       const sums = (json.assets ?? []).find((a) => a.name === 'SHA256SUMS.txt')
       if (sums?.browser_download_url) urls.push(sums.browser_download_url)
     }
-  } catch { /* 继续用候选 */ }
+  } catch {
+    /* 继续用候选 */
+  }
   for (const url of urls) {
     const sums = await read(url)
     if (sums) return sums

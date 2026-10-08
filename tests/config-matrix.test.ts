@@ -37,7 +37,6 @@ test('version comparison: 26.x > all 1.x; numeric segments (1.21.11 > 1.21.9); s
   assert.equal(parseSnapshotId('1.21.11'), null)
 })
 
-
 test('mergeKeysIntoOptions: overwrite registered keys, keep other lines, LF endings, trailing newline', () => {
   const before = 'lang:zh_cn\r\nfov:0.5\r\ncustomLine:keep\n'
   const after = mergeKeysIntoOptions(before, { fov: '0.75', graphicsPreset: '"fancy"' })

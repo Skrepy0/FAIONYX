@@ -29,44 +29,44 @@ const ASSETS: Record<string, { pkg: string; sha256: string; packageSha256: strin
     pkg: `terracotta-${TC_VERSION}-linux-x86_64-pkg.tar.gz`,
     packageSha256: '675c4fd6c74d49ed8165151ba2be5b6582e0af20fb6d912074543c2484b1e10a',
     sha256: 'dc8eed0338a1888743ab38468d88b9dd8a60d60c29df072adba7c8d2edaf7937',
-    exe: `terracotta-${TC_VERSION}-linux-x86_64`
+    exe: `terracotta-${TC_VERSION}-linux-x86_64`,
   },
   'linux-arm64': {
     pkg: `terracotta-${TC_VERSION}-linux-arm64-pkg.tar.gz`,
     packageSha256: '845285ff264ac5fbc16db1a1605ad190e7fa64196516068cc309de5a1d2bf66d',
     sha256: '1cc03ed2ccaab8a7b64e8eb375ccfb8c1d4cd28f4c1a242fe3b492522f9f4aad',
-    exe: `terracotta-${TC_VERSION}-linux-arm64`
+    exe: `terracotta-${TC_VERSION}-linux-arm64`,
   },
   'win32-x64': {
     pkg: `terracotta-${TC_VERSION}-windows-x86_64-pkg.tar.gz`,
     packageSha256: '07ebe139e3ca5f74576e58b1a96efe59abdfbe148d3f1a49bfdca8b6f70745f0',
     sha256: '74c10568a7fea9c1d38cf8d2d4ca90baf1517f8e5a26c63d3349db70bc449796',
-    exe: `terracotta-${TC_VERSION}-windows-x86_64.exe`
+    exe: `terracotta-${TC_VERSION}-windows-x86_64.exe`,
   },
   'win32-arm64': {
     pkg: `terracotta-${TC_VERSION}-windows-arm64-pkg.tar.gz`,
     packageSha256: 'acfab0a87a02dedc6dab7c05303186c8907f56f815548b693fb3324358da7d14',
     sha256: '782c2fa911488d487447694acca6b17fa68304c87023fb6814b83a167fc2845f',
-    exe: `terracotta-${TC_VERSION}-windows-arm64.exe`
+    exe: `terracotta-${TC_VERSION}-windows-arm64.exe`,
   },
   'darwin-arm64': {
     pkg: `terracotta-${TC_VERSION}-macos-arm64-pkg.tar.gz`,
     packageSha256: '13de7f9ce8733971b23493fabbe7e16d480f1e0d16a6265b4861f5a01bbecb60',
     sha256: '14a6cfa98e841c33b552f2291b0637461f37813c0bb3d29c6b56a59cb5e6714a',
-    exe: `terracotta-${TC_VERSION}-macos-arm64`
+    exe: `terracotta-${TC_VERSION}-macos-arm64`,
   },
   'darwin-x64': {
     pkg: `terracotta-${TC_VERSION}-macos-x86_64-pkg.tar.gz`,
     packageSha256: '16306157d89423ce79fa901cdb75a6386ec1a9b1bd43a5d47c2c47cf01a16b86',
     sha256: '07899429515f7646fd6c271acb39a2d3a34d330547b1d2682c2e3311db07aa0a',
-    exe: `terracotta-${TC_VERSION}-macos-x86_64`
-  }
+    exe: `terracotta-${TC_VERSION}-macos-x86_64`,
+  },
 }
 const DOWNLOAD_BASES = [
   `https://github.com/burningtnt/Terracotta/releases/download/v${TC_VERSION}`,
   `https://gitee.com/burningtnt/Terracotta/releases/download/v${TC_VERSION}`,
   `https://cnb.cool/HMCL-Terracotta/Terracotta/-/releases/download/v${TC_VERSION}`,
-  `https://mirror.ghproxy.com/https://github.com/burningtnt/Terracotta/releases/download/v${TC_VERSION}`
+  `https://mirror.ghproxy.com/https://github.com/burningtnt/Terracotta/releases/download/v${TC_VERSION}`,
 ]
 const START_TOTAL_TIMEOUT_MS = 120_000
 const PORT_POLL_MS = 500
@@ -148,7 +148,10 @@ async function ensureBinary(signal: AbortSignal): Promise<string> {
         signal.throwIfAborted()
         await extractTarGz(pkgPath, tcDir())
         if (!fs.existsSync(exe)) throw new Error(`压缩包内未找到 ${asset.exe}`)
-        if (!(await verifySha256(exe, asset.sha256))) { await fs.promises.rm(exe, {force:true}); throw new Error('陶瓦 EXE 校验失败') }
+        if (!(await verifySha256(exe, asset.sha256))) {
+          await fs.promises.rm(exe, { force: true })
+          throw new Error('陶瓦 EXE 校验失败')
+        }
         fs.rmSync(pkgPath, { force: true })
         if (process.platform !== 'win32') await fs.promises.chmod(exe, 0o755)
         emit('log', { level: 'info', msg: '陶瓦官方二进制就绪（已通过 SHA-256 校验）' })
@@ -161,22 +164,40 @@ async function ensureBinary(signal: AbortSignal): Promise<string> {
       }
     }
   }
-  throw new Error(`陶瓦二进制下载失败：${(lastErr as Error)?.message ?? '全部镜像不可用'}。可到 https://github.com/burningtnt/Terracotta/releases 手动下载后放到 ${tcDir()}`)
+  throw new Error(
+    `陶瓦二进制下载失败：${(lastErr as Error)?.message ?? '全部镜像不可用'}。可到 https://github.com/burningtnt/Terracotta/releases 手动下载后放到 ${tcDir()}`
+  )
 }
 
 async function download(url: string, file: string, signal: AbortSignal, redirects = 0): Promise<void> {
   signal.throwIfAborted()
   if (redirects > 5) throw new Error('下载重定向过多')
   await new Promise<void>((resolve, reject) => {
-    const req = (url.startsWith('https:') ? https : http).get(url, { signal, timeout: 20_000 }, res => {
+    const req = (url.startsWith('https:') ? https : http).get(url, { signal, timeout: 20_000 }, (res) => {
       if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        res.resume(); download(new URL(res.headers.location, url).href, file, signal, redirects + 1).then(resolve, reject); return
+        res.resume()
+        download(new URL(res.headers.location, url).href, file, signal, redirects + 1).then(resolve, reject)
+        return
       }
-      if (res.statusCode !== 200) { res.resume(); reject(new Error('HTTP ' + res.statusCode)); return }
+      if (res.statusCode !== 200) {
+        res.resume()
+        reject(new Error('HTTP ' + res.statusCode))
+        return
+      }
       const total = Number(res.headers['content-length']) || 0
-      let downloaded = 0, lastUpdate = 0
-      res.on('data', chunk => { downloaded += chunk.length; if (Date.now() - lastUpdate > 200) { lastUpdate = Date.now(); setState({downloaded, total}) } })
-      pipeline(res, fs.createWriteStream(file), {signal}).then(() => { setState({downloaded, total}); resolve() }, reject)
+      let downloaded = 0,
+        lastUpdate = 0
+      res.on('data', (chunk) => {
+        downloaded += chunk.length
+        if (Date.now() - lastUpdate > 200) {
+          lastUpdate = Date.now()
+          setState({ downloaded, total })
+        }
+      })
+      pipeline(res, fs.createWriteStream(file), { signal }).then(() => {
+        setState({ downloaded, total })
+        resolve()
+      }, reject)
     })
     req.on('timeout', () => req.destroy(new Error('下载连接超时，请重试')))
     req.on('error', reject)
@@ -184,7 +205,7 @@ async function download(url: string, file: string, signal: AbortSignal, redirect
 }
 
 async function extractTarGz(tarGz: string, destDir: string): Promise<void> {
-  const raw = await promisify(zlib.gunzip)(await fs.promises.readFile(tarGz), {maxOutputLength: 256 * 1024 * 1024})
+  const raw = await promisify(zlib.gunzip)(await fs.promises.readFile(tarGz), { maxOutputLength: 256 * 1024 * 1024 })
   let off = 0
   while (off + 512 <= raw.length) {
     const header = raw.subarray(off, off + 512)
@@ -222,7 +243,9 @@ async function startProcess(): Promise<number> {
   // v0.4.2 uses temp_dir()/terracotta for its Unix lock, logs and service.
   // A unique TMPDIR prevents --hmcl from attaching to or replacing another
   // launcher's service, including another FAIONYX process using this profile.
-  const dir = fs.mkdtempSync(path.join(linux || mac ? tcDir() : os.tmpdir(), linux ? 'linux-session-' : mac ? 'mac-session-' : 'faionyx-tc-'))
+  const dir = fs.mkdtempSync(
+    path.join(linux || mac ? tcDir() : os.tmpdir(), linux ? 'linux-session-' : mac ? 'mac-session-' : 'faionyx-tc-')
+  )
   portFile = path.join(dir, 'http')
   fs.rmSync(portFile, { force: true })
   disposedByUser = false
@@ -230,19 +253,36 @@ async function startProcess(): Promise<number> {
   // isolated daemon directly; do not install/stop the player's global HMCL service.
   if (mac) prepareMacIdentity(dir)
   const env = mac ? { ...process.env, HOME: dir } : linux ? { ...process.env, TMPDIR: dir } : process.env
-  proc = spawn(exe, mac ? ['--daemon'] : [process.platform === 'win32' ? '--hmcl2' : '--hmcl', portFile], { windowsHide: true, env, detached: process.platform !== 'win32' })
+  proc = spawn(exe, mac ? ['--daemon'] : [process.platform === 'win32' ? '--hmcl2' : '--hmcl', portFile], {
+    windowsHide: true,
+    env,
+    detached: process.platform !== 'win32',
+  })
   const child = proc
-  const session: UnixSession | null = linux || mac ? { directory: dir, child, mac, closed: new Promise(resolve => child.once('close', () => resolve())) } : null
+  const session: UnixSession | null =
+    linux || mac ? { directory: dir, child, mac, closed: new Promise((resolve) => child.once('close', () => resolve())) } : null
   if (session) {
     unixSession = session
-    child.once('close', () => { void cleanUnixSession(session).catch(error => emit('log', { level: 'warn', msg: (error as Error).message })) })
+    child.once('close', () => {
+      void cleanUnixSession(session).catch((error) => emit('log', { level: 'warn', msg: (error as Error).message }))
+    })
   }
-  child.on('error', e => { if (proc === child) { proc = null; setState({phase: 'idle', error: e.message}); emit('error', e.message) } })
+  child.on('error', (e) => {
+    if (proc === child) {
+      proc = null
+      setState({ phase: 'idle', error: e.message })
+      emit('error', e.message)
+    }
+  })
   proc.stdout?.on('data', (d: Buffer) => emit('log', { level: 'info', msg: d.toString().trim() }))
   proc.stderr?.on('data', (d: Buffer) => emit('log', { level: 'warn', msg: d.toString().trim() }))
   proc.on('exit', (code) => {
     if ((mac || linux) && child.pid) {
-      try { process.kill(-child.pid, 'SIGTERM') } catch { /* private daemon group already empty */ }
+      try {
+        process.kill(-child.pid, 'SIGTERM')
+      } catch {
+        /* private daemon group already empty */
+      }
     }
     emit('log', { level: 'info', msg: `陶瓦进程退出（${code ?? '信号'}）` })
     if (proc !== child) return
@@ -269,7 +309,9 @@ async function startProcess(): Promise<number> {
             emit('log', { level: 'info', msg: `陶瓦 HTTP 端口 ${httpPort}` })
             return httpPort
           }
-        } catch { /* listener not ready yet; retain the original startup deadline */ }
+        } catch {
+          /* listener not ready yet; retain the original startup deadline */
+        }
       }
       await sleep(PORT_POLL_MS)
       continue
@@ -282,7 +324,9 @@ async function startProcess(): Promise<number> {
         emit('log', { level: 'info', msg: `陶瓦 HTTP 端口 ${httpPort}` })
         return httpPort
       }
-    } catch { /* 文件尚未生成 */ }
+    } catch {
+      /* 文件尚未生成 */
+    }
     await sleep(PORT_POLL_MS)
   }
   throw new Error('陶瓦启动超时（120s）未写出端口文件')
@@ -293,11 +337,14 @@ function prepareMacIdentity(directory: string): void {
   fs.mkdirSync(persistent, { recursive: true, mode: 0o700 })
   if (!fs.lstatSync(persistent).isDirectory() || fs.lstatSync(persistent).isSymbolicLink()) throw new Error('陶瓦身份目录不是独立目录')
   const identity = path.join(persistent, 'machine-id')
-  try { fs.writeFileSync(identity, crypto.randomBytes(16), { flag: 'wx', mode: 0o600 }) } catch (error) {
+  try {
+    fs.writeFileSync(identity, crypto.randomBytes(16), { flag: 'wx', mode: 0o600 })
+  } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error
   }
   const stat = fs.lstatSync(identity)
-  if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== 16) throw new Error('陶瓦身份文件损坏，已保留原文件；请备份后修复 machine-id')
+  if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== 16)
+    throw new Error('陶瓦身份文件损坏，已保留原文件；请备份后修复 machine-id')
   const service = path.join(directory, 'terracotta')
   fs.mkdirSync(service, { mode: 0o700 })
   fs.writeFileSync(path.join(service, 'machine-id'), fs.readFileSync(identity), { flag: 'wx', mode: 0o600 })
@@ -305,7 +352,9 @@ function prepareMacIdentity(directory: string): void {
 
 function readMacPort(lock: string): number | null {
   let stat: fs.Stats
-  try { stat = fs.lstatSync(lock) } catch (error) {
+  try {
+    stat = fs.lstatSync(lock)
+  } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null
     throw error
   }
@@ -327,7 +376,10 @@ function cleanUnixSession(session: UnixSession): Promise<void> {
     for (;;) {
       let alive = false
       if (session.child.pid) {
-        try { process.kill(-session.child.pid, 0); alive = true } catch (error) {
+        try {
+          process.kill(-session.child.pid, 0)
+          alive = true
+        } catch (error) {
           if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error
         }
       }
@@ -353,9 +405,16 @@ function cleanUnixSession(session: UnixSession): Promise<void> {
 async function finishUnixSession(session: UnixSession): Promise<void> {
   let timer: ReturnType<typeof setTimeout> | undefined
   try {
-    await Promise.race([session.closed, new Promise<never>((_resolve, reject) => { timer = setTimeout(() => reject(new Error('陶瓦独立进程退出超时，已保留会话文件')), 5000) })])
+    await Promise.race([
+      session.closed,
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error('陶瓦独立进程退出超时，已保留会话文件')), 5000)
+      }),
+    ])
     await cleanUnixSession(session)
-  } finally { clearTimeout(timer) }
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 function sleep(ms: number): Promise<void> {
@@ -366,7 +425,9 @@ function tcGet(pathName: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const req = http.get(`http://127.0.0.1:${httpPort}${pathName}`, { timeout: HTTP_TIMEOUT_MS }, (res) => {
       let body = ''
-      res.on('data', (d) => { body += d })
+      res.on('data', (d) => {
+        body += d
+      })
       res.on('end', () => {
         if (res.statusCode === 200) resolve(body)
         else reject(new Error(`HTTP ${res.statusCode}: ${body.slice(0, 200)}`))
@@ -377,7 +438,12 @@ function tcGet(pathName: string): Promise<string> {
   })
 }
 
-interface TcStateJson { state?: string; room?: string; url?: string; difficulty?: string }
+interface TcStateJson {
+  state?: string
+  room?: string
+  url?: string
+  difficulty?: string
+}
 
 async function pollUntilReady(kind: 'host' | 'join', timeoutSec: number): Promise<TcStateJson> {
   const deadline = Date.now() + timeoutSec * 1000
@@ -406,7 +472,10 @@ async function pollUntilReady(kind: 'host' | 'join', timeoutSec: number): Promis
 }
 
 function stopPolling(): void {
-  if (stateTimer) { clearInterval(stateTimer); stateTimer = undefined }
+  if (stateTimer) {
+    clearInterval(stateTimer)
+    stateTimer = undefined
+  }
 }
 
 async function killTree(): Promise<void> {
@@ -415,7 +484,10 @@ async function killTree(): Promise<void> {
   proc = null
   httpPort = 0
   stopPolling()
-  if (!p || p.exitCode !== null) { if (session) await finishUnixSession(session); return }
+  if (!p || p.exitCode !== null) {
+    if (session) await finishUnixSession(session)
+    return
+  }
   if (process.platform === 'win32' && p.pid) {
     await new Promise<void>((resolve) => {
       execFileAsync('taskkill', ['/T', '/F', '/PID', String(p.pid)]).catch(() => {})
@@ -424,7 +496,11 @@ async function killTree(): Promise<void> {
   } else if (process.platform !== 'win32' && p.pid) {
     // The Mac daemon and its EasyTier children share the private process group
     // created above. Never target a global service or the game's process group.
-    try { process.kill(-p.pid, 'SIGTERM') } catch { /* already stopped */ }
+    try {
+      process.kill(-p.pid, 'SIGTERM')
+    } catch {
+      /* already stopped */
+    }
     if (session) await finishUnixSession(session)
   } else {
     p.kill('SIGKILL')
@@ -448,7 +524,8 @@ async function tcStart(payload: { mode: 'host' | 'join'; code?: string; port?: n
   try {
     starting = true
     const asset = ASSETS[assetKey()]
-    if (!asset || !(await verifySha256(binaryPath(), asset.sha256).catch(() => false))) throw new Error('请先点击「下载陶瓦工具」，下载并校验完成后再联机')
+    if (!asset || !(await verifySha256(binaryPath(), asset.sha256).catch(() => false)))
+      throw new Error('请先点击「下载陶瓦工具」，下载并校验完成后再联机')
     if (generation !== operation) return { ...state }
     setState({ phase: 'starting' })
     await startProcess()
@@ -463,7 +540,9 @@ async function tcStart(payload: { mode: 'host' | 'join'; code?: string; port?: n
       setState({ phase: 'ready', room: final.room, url: undefined })
       emit('ready', { mode: 'host', room: final.room, state: final.state })
     } else {
-      const code = String(payload.code ?? '').trim().toUpperCase()
+      const code = String(payload.code ?? '')
+        .trim()
+        .toUpperCase()
       // 陶瓦房间码：U/ 前缀 + 四段各 4 位（GitHub burningtnt/Terracotta 官方格式）
       if (!/^U\/[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/.test(code)) throw new Error('陶瓦房间码格式应为 U/XXXX-XXXX-XXXX-XXXX（U/ 开头共四段）')
       setState({ phase: 'joining', room: code, url: undefined, error: undefined })
@@ -490,35 +569,56 @@ async function tcStop(silent = false): Promise<TerracottaState> {
   if (stopping) return { ...state }
   stopping = true
   try {
-  operation++; starting = false; installController?.abort()
-  disposedByUser = true
-  try { if (httpPort > 0) await tcGet('/panic?peaceful=true') } catch { /* 进程可能已退出 */ }
-  await killTree()
-  state = { phase: 'idle' }
-  if (!silent) emit('stopped', null)
-  return { ...state }
-  } finally { stopping = false }
+    operation++
+    starting = false
+    installController?.abort()
+    disposedByUser = true
+    try {
+      if (httpPort > 0) await tcGet('/panic?peaceful=true')
+    } catch {
+      /* 进程可能已退出 */
+    }
+    await killTree()
+    state = { phase: 'idle' }
+    if (!silent) emit('stopped', null)
+    return { ...state }
+  } finally {
+    stopping = false
+  }
 }
 
 async function tcInstall(): Promise<void> {
   if (installController || starting || stopping || proc) throw new Error('陶瓦正在运行或下载，请稍后重试')
-  const controller = new AbortController(); installController = controller
-  setState({phase:'downloading', error:undefined, downloaded:0, total:0})
-  try { await ensureBinary(controller.signal); controller.signal.throwIfAborted(); setState({phase:'idle'}); emit('ready', null) }
-  catch (e) { setState({phase:'idle', error: controller.signal.aborted ? '下载已取消' : (e as Error).message}); throw new Error(state.error) }
-  finally { if (installController === controller) installController = null }
+  const controller = new AbortController()
+  installController = controller
+  setState({ phase: 'downloading', error: undefined, downloaded: 0, total: 0 })
+  try {
+    await ensureBinary(controller.signal)
+    controller.signal.throwIfAborted()
+    setState({ phase: 'idle' })
+    emit('ready', null)
+  } catch (e) {
+    setState({ phase: 'idle', error: controller.signal.aborted ? '下载已取消' : (e as Error).message })
+    throw new Error(state.error)
+  } finally {
+    if (installController === controller) installController = null
+  }
 }
 export function registerTerracottaIpc(ipcMain: IpcMain): void {
   ipcMain.handle('tc:install', () => tcInstall())
-  ipcMain.handle('tc:cancel-install', () => { installController?.abort() })
-  ipcMain.handle('tc:start', (_e, payload: { mode: 'host' | 'join'; code?: string; port?: number; playerName?: string }) => tcStart(payload))
+  ipcMain.handle('tc:cancel-install', () => {
+    installController?.abort()
+  })
+  ipcMain.handle('tc:start', (_e, payload: { mode: 'host' | 'join'; code?: string; port?: number; playerName?: string }) =>
+    tcStart(payload)
+  )
   ipcMain.handle('tc:stop', () => tcStop())
   ipcMain.handle('tc:status', async () => ({
     ...state,
-    binaryReady: !!ASSETS[assetKey()] && await verifySha256(binaryPath(), ASSETS[assetKey()].sha256).catch(() => false),
+    binaryReady: !!ASSETS[assetKey()] && (await verifySha256(binaryPath(), ASSETS[assetKey()].sha256).catch(() => false)),
     running: !!proc,
     toolVersion: TC_VERSION,
-    binaryPath: binaryPath()
+    binaryPath: binaryPath(),
   }))
 }
 

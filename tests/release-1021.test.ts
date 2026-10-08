@@ -46,7 +46,6 @@ test('friend connect: sub-page transition on method switch (指令2)', () => {
   const motion = read('src/renderer/src/ui-system.css')
   assert.match(motion, /\.subpage-enter-from.*opacity:0/)
   assert.match(motion, /prefers-reduced-motion/)
-
 })
 
 test('home runtime strip: hover feedback follows pointer between cells', () => {
@@ -69,7 +68,12 @@ test('1.0.21 changed SFCs compile', () => {
     const { descriptor, errors } = parse(source)
     assert.deepEqual(errors, [], file)
     const script = compileScript(descriptor, { id: file })
-    const result = compileTemplate({ source: descriptor.template!.content, filename: file, id: file, compilerOptions: { bindingMetadata: script.bindings } })
+    const result = compileTemplate({
+      source: descriptor.template!.content,
+      filename: file,
+      id: file,
+      compilerOptions: { bindingMetadata: script.bindings },
+    })
     assert.deepEqual(result.errors, [], file)
   }
 })

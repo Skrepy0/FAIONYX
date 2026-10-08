@@ -3,12 +3,7 @@ import test from 'node:test'
 import { EventEmitter } from 'node:events'
 import { once } from 'node:events'
 import { ChildProcess } from 'node:child_process'
-import {
-  selectElectronProcessPids,
-  sumWorkingSetByType,
-  formatMemoryLine,
-  MEM_TRIM_CHANNEL
-} from '../src/main/core/memTrim'
+import { selectElectronProcessPids, sumWorkingSetByType, formatMemoryLine, MEM_TRIM_CHANNEL } from '../src/main/core/memTrim'
 import { GameSession, formatExitGamesLine } from '../src/main/core/gameSession'
 import { windowsQuote, spawnGameProcess } from '../src/main/core/gracefulClose'
 
@@ -18,7 +13,7 @@ test('trim pid 筛选只来自 Electron 自身指标，排除自身且天然不�
   const metrics = [
     { type: 'Browser', pid: 100, memory: { workingSetSize: 120 * 1024 } },
     { type: 'Renderer', pid: 101, memory: { workingSetSize: 210 * 1024 } },
-    { type: 'GPU', pid: 102, memory: { workingSetSize: 90 * 1024 } }
+    { type: 'GPU', pid: 102, memory: { workingSetSize: 90 * 1024 } },
   ]
   // 游戏进程 PID 不可能出现在 app.getAppMetrics() 清单里——筛选只输出指标内、非自身的 PID
   assert.deepEqual(selectElectronProcessPids(metrics, 101), [100, 102])
@@ -30,7 +25,7 @@ test('内存指标按类型汇总并生成可读日志行', () => {
   const { byType, total } = sumWorkingSetByType([
     { type: 'Browser', pid: 1, memory: { workingSetSize: 120 * 1024 } },
     { type: 'Renderer', pid: 2, memory: { workingSetSize: 210 * 1024 } },
-    { type: 'Renderer', pid: 3, memory: { workingSetSize: 10 * 1024 } }
+    { type: 'Renderer', pid: 3, memory: { workingSetSize: 10 * 1024 } },
   ])
   assert.equal(total, 340 * 1024)
   assert.equal(byType.Browser, 120 * 1024)
@@ -55,9 +50,15 @@ test('GameSession.runningPids 只汇报真实运行中的 PID，供退出日志�
   const session = new GameSession()
   assert.deepEqual(session.runningPids(), [])
   const token = session.reserve('exit-line')
-  session.attach(token, Object.assign(new EventEmitter(), {
-    pid: 4242, exitCode: null, signalCode: null, kill: () => false
-  }) as unknown as ChildProcess)
+  session.attach(
+    token,
+    Object.assign(new EventEmitter(), {
+      pid: 4242,
+      exitCode: null,
+      signalCode: null,
+      kill: () => false,
+    }) as unknown as ChildProcess
+  )
   assert.deepEqual(session.runningPids(), [4242])
   session.release(token)
   assert.deepEqual(session.runningPids(), [])
@@ -76,16 +77,16 @@ test('windowsQuote 生成自包含命令行参数（不依赖父进程解析方�
   assert.equal(windowsQuote('a b\\'), '"a b\\\\"')
 })
 
-test('spawnGameProcess 创建的进程独立运行、stdout 管道回传、可被 kill', { timeout: 15000 }, async t => {
-  const proc = await spawnGameProcess(
-    process.execPath,
-    ['-e', 'console.log("detached-spawn-ok"); setTimeout(() => {}, 30000)'],
-    { cwd: process.cwd() }
-  )
+test('spawnGameProcess 创建的进程独立运行、stdout 管道回传、可被 kill', { timeout: 15000 }, async (t) => {
+  const proc = await spawnGameProcess(process.execPath, ['-e', 'console.log("detached-spawn-ok"); setTimeout(() => {}, 30000)'], {
+    cwd: process.cwd(),
+  })
   const closed = once(proc, 'close')
   const chunks: Buffer[] = []
   let spawnEventsAfterReturn = 0
-  const observeSpawn = () => { spawnEventsAfterReturn++ }
+  const observeSpawn = () => {
+    spawnEventsAfterReturn++
+  }
   proc.on('spawn', observeSpawn)
   proc.stdout?.on('data', (chunk: Buffer) => chunks.push(chunk))
   try {
@@ -97,7 +98,9 @@ test('spawnGameProcess 创建的进程独立运行、stdout 管道回传、可�
     }
     assert.ok(Buffer.concat(chunks).includes('detached-spawn-ok'), 'stdout 数据应经管道回流')
     assert.equal(spawnEventsAfterReturn, proc instanceof ChildProcess ? 0 : 1)
-    t.diagnostic(JSON.stringify({ pid: proc.pid, nativeNodeChild: proc instanceof ChildProcess, spawnEventsAfterReturn, stdoutReady: true }))
+    t.diagnostic(
+      JSON.stringify({ pid: proc.pid, nativeNodeChild: proc instanceof ChildProcess, spawnEventsAfterReturn, stdoutReady: true })
+    )
     // 强制结束路径：kill() → close 事件（与 GameSession.stop 的等待方式一致）
     assert.equal(proc.kill(), true)
     await closed

@@ -11,7 +11,9 @@ export async function createStartupSplash() {
   if (signal) {
     const pid = await awaitNativeStartup(signal)
     if (pid) return createNativeStartup(signal, pid)
-    try { writeFileSync(signal, 'fallback') } catch {}
+    try {
+      writeFileSync(signal, 'fallback')
+    } catch {}
   }
   return createElectronStartupSplash()
 }
@@ -21,23 +23,45 @@ function createElectronStartupSplash() {
   const bounds = screen.getPrimaryDisplay().bounds
   let main: BrowserWindow | null = null
   let splash: BrowserWindow | null = new BrowserWindow({
-    ...bounds, show: false, frame: false, transparent: true, backgroundColor: '#00000000',
-    hasShadow: false, thickFrame: false, resizable: false, movable: false, focusable: false,
-    skipTaskbar: true, alwaysOnTop: true, title: 'FAIONYX · 正在启动',
-    webPreferences: { preload: join(__dirname, '../preload/splash.js'), sandbox: true, contextIsolation: true, nodeIntegration: false, backgroundThrottling: false }
+    ...bounds,
+    show: false,
+    frame: false,
+    transparent: true,
+    backgroundColor: '#00000000',
+    hasShadow: false,
+    thickFrame: false,
+    resizable: false,
+    movable: false,
+    focusable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    title: 'FAIONYX · 正在启动',
+    webPreferences: {
+      preload: join(__dirname, '../preload/splash.js'),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: false,
+      backgroundThrottling: false,
+    },
   })
   splash.setIgnoreMouseEvents(true)
   splash.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
-  let revealed = false, disposed = false, fallback = false
+  let revealed = false,
+    disposed = false,
+    fallback = false
   // OS cursor coordinates keep the overlay non-activating and click-through.
   const pointerTimer = setInterval(() => {
     if (!splash || splash.isDestroyed() || revealed) return
-    const point = screen.getCursorScreenPoint(), rect = splash.getBounds()
+    const point = screen.getCursorScreenPoint(),
+      rect = splash.getBounds()
     splash.webContents.send('boot:pointer', { x: point.x - rect.x, y: point.y - rect.y })
   }, 32)
   pointerTimer.unref()
   const listeners: Array<[string, (event: Electron.IpcMainEvent, ...args: any[]) => void]> = []
-  const listen = (channel: string, fn: (event: Electron.IpcMainEvent, ...args: any[]) => void) => { listeners.push([channel, fn]); ipcMain.on(channel, fn) }
+  const listen = (channel: string, fn: (event: Electron.IpcMainEvent, ...args: any[]) => void) => {
+    listeners.push([channel, fn])
+    ipcMain.on(channel, fn)
+  }
   const dispose = () => {
     if (disposed) return
     disposed = true
@@ -46,7 +70,9 @@ function createElectronStartupSplash() {
     if (splash && !splash.isDestroyed()) splash.destroy()
     splash = null
   }
-  const publish = () => { if (splash && !splash.isDestroyed()) splash.webContents.send('boot:state', gate.state) }
+  const publish = () => {
+    if (splash && !splash.isDestroyed()) splash.webContents.send('boot:state', gate.state)
+  }
   const reveal = () => {
     if (revealed || !main || main.isDestroyed() || !gate.state.ready || !(gate.assembled || fallback)) return
     revealed = true
@@ -67,7 +93,7 @@ function createElectronStartupSplash() {
     splash = null
     reveal()
   }
-  listen('boot:splash-ready', event => {
+  listen('boot:splash-ready', (event) => {
     if (event.sender !== splash?.webContents) return
     splash.showInactive()
     splash.setAlwaysOnTop(true, 'floating')
@@ -77,34 +103,50 @@ function createElectronStartupSplash() {
   })
   listen('boot:stage', (event, stage: BootStage) => {
     if (event.sender !== main?.webContents || !BOOT_STAGES.includes(stage)) return
-    gate.completed.add(stage); publish()
+    gate.completed.add(stage)
+    publish()
     launcherLog(`Startup: ${stage} complete`)
   })
-  listen('boot:renderer-ready', event => {
+  listen('boot:renderer-ready', (event) => {
     if (event.sender !== main?.webContents) return
-    gate.rendererReady = true; publish(); reveal()
+    gate.rendererReady = true
+    publish()
+    reveal()
     launcherLog('Startup: renderer resources settled')
   })
-  listen('boot:assembled', event => {
+  listen('boot:assembled', (event) => {
     if (event.sender !== splash?.webContents || !gate.state.ready) return
-    gate.assembled = true; reveal()
+    gate.assembled = true
+    reveal()
   })
-  listen('boot:finished', event => { if (event.sender === splash?.webContents && revealed) dispose() })
-  listen('boot:splash-failed', event => { if (event.sender === splash?.webContents) animationFailure('renderer failed') })
+  listen('boot:finished', (event) => {
+    if (event.sender === splash?.webContents && revealed) dispose()
+  })
+  listen('boot:splash-failed', (event) => {
+    if (event.sender === splash?.webContents) animationFailure('renderer failed')
+  })
   splash.webContents.on('render-process-gone', () => animationFailure('renderer process exited'))
   const load = process.env.ELECTRON_RENDERER_URL
     ? splash.loadURL(new URL('splash.html', process.env.ELECTRON_RENDERER_URL).toString())
     : splash.loadFile(join(__dirname, '../renderer/splash.html'))
-  void load.catch(error => animationFailure(String(error)))
+  void load.catch((error) => animationFailure(String(error)))
   return {
     attach(window: BrowserWindow) {
       main = window
-      window.once('ready-to-show', () => { gate.painted = true; publish(); reveal() })
+      window.once('ready-to-show', () => {
+        gate.painted = true
+        publish()
+        reveal()
+      })
       window.once('closed', dispose)
       window.webContents.once('render-process-gone', (_event, details) => {
         if (revealed) return
         dispose()
-        void dialog.showMessageBox({ type: 'error', title: 'FAIONYX 初始化失败', message: `主界面进程退出：${details.reason}。请重新启动并查看启动器日志。` })
+        void dialog.showMessageBox({
+          type: 'error',
+          title: 'FAIONYX 初始化失败',
+          message: `主界面进程退出：${details.reason}。请重新启动并查看启动器日志。`,
+        })
         window.close()
       })
       window.webContents.once('did-fail-load', (_event, code, description, _url, isMainFrame) => {
@@ -113,6 +155,6 @@ function createElectronStartupSplash() {
         void dialog.showMessageBox({ type: 'error', title: 'FAIONYX 初始化失败', message: `无法加载主界面（${code}）：${description}` })
         window.close()
       })
-    }
+    },
   }
 }

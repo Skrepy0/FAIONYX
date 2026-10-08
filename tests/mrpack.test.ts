@@ -28,19 +28,19 @@ const validIndex = () => ({
       hashes: { sha1: 'a'.repeat(40), sha512: 'b'.repeat(128) },
       downloads: ['https://cdn.example.test/client.jar', 'https://backup.example.test/client.jar'],
       fileSize: 1234,
-      env: { client: 'required', server: 'required' }
+      env: { client: 'required', server: 'required' },
     },
     {
       path: 'mods/server-only.jar',
-      env: { client: 'unsupported', server: 'required' }
-    }
-  ]
+      env: { client: 'unsupported', server: 'required' },
+    },
+  ],
 })
 
 test('mrpack 校验格式并统计客户端文件、overrides 与 client-overrides', async () => {
   const { root, file } = await makePack(validIndex(), {
     'overrides/config/common.toml': 'common=true',
-    'client-overrides/config/client.toml': 'client=true'
+    'client-overrides/config/client.toml': 'client=true',
   })
   try {
     const info = await probeModpack(file)
@@ -74,16 +74,16 @@ test('mrpack 拒绝路径穿越、无可信 HTTPS 来源和无校验哈希', asy
   const cases = [
     {
       patch: { path: '../escape.jar' },
-      expected: /路径不安全/
+      expected: /路径不安全/,
     },
     {
       patch: { downloads: ['http://insecure.example.test/file.jar'] },
-      expected: /可信 HTTPS/
+      expected: /可信 HTTPS/,
     },
     {
       patch: { hashes: {} },
-      expected: /缺少 SHA1\/SHA512/
-    }
+      expected: /缺少 SHA1\/SHA512/,
+    },
   ]
   for (const current of cases) {
     const index = validIndex()

@@ -1,9 +1,6 @@
 {
   "scope": "Windows 1.1.16 VoxLink transport",
-  "changed": [
-    "src/main/core/voxlink/rudp.ts",
-    "tests/voxlink-transport116.test.ts"
-  ],
+  "changed": ["src/main/core/voxlink/rudp.ts", "tests/voxlink-transport116.test.ts"],
   "sourceSha256": "a2c44fa3be6baf5df31d26c5248329e8e0012d1c29fd6b68c09612c9bd328b00",
   "testSha256": "d18fc962b61ea61fddddaff094a3ed3f93953b96eb478d9d08a2c82d272791cf",
   "tests": {
@@ -40,19 +37,13 @@
       "stage": "First new UDP stress test",
       "passedPayloadAndHash": true,
       "failedAssertion": "FEC datagrams counted at test proxy >300",
-      "actual": [
-        296,
-        294
-      ],
+      "actual": [296, 294],
       "cause": "Test proxy default Windows 64 KiB receive queue dropped additional datagrams before the controlled loss injector; upgraded only fixture queues to 4 MiB to isolate scripted impairment, retained threshold; product now reserves 256 KiB bounded receive queue",
       "retested": true
     },
     {
       "stage": "Type tool discovery",
-      "failures": [
-        "nonexistent tsconfig.node.json",
-        "vue-tsc external tool resolution error"
-      ],
+      "failures": ["nonexistent tsconfig.node.json", "vue-tsc external tool resolution error"],
       "correctCommand": "npx tsc --noEmit",
       "passed": true
     }

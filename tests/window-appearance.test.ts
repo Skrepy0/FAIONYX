@@ -31,7 +31,7 @@ test('macOS 清空原生窗口底色以透出毛玻璃，保留系统红绿灯',
 const mkDisplay = (x: number, y: number, width: number, height: number): Display =>
   ({
     workArea: { x, y, width, height },
-    bounds: { x, y, width, height }
+    bounds: { x, y, width, height },
   }) as unknown as Display
 
 const displays = [mkDisplay(0, 0, 1920, 1040), mkDisplay(1920, 0, 2560, 1392), mkDisplay(-1200, 0, 1200, 1000)]
@@ -60,21 +60,21 @@ test('位置夹紧：跨屏边与超出工作区的窗口被拉回单屏完整�
   // 右边超出主屏 → 拉回
   assert.deepEqual(clampToWorkArea({ x: 1500, y: 100, width: 800, height: 600 }, displays[0].workArea), {
     x: 1120,
-    y: 100
+    y: 100,
   })
   // 左侧越界 → 拉回左侧屏工作区内（右缘对齐工作区右缘，完整可见）
   assert.deepEqual(clampToWorkArea({ x: -300, y: -100, width: 800, height: 600 }, displays[2].workArea), {
     x: -800,
-    y: 0
+    y: 0,
   })
   // 正常位置不动
   assert.deepEqual(clampToWorkArea({ x: 100, y: 50, width: 800, height: 600 }, displays[0].workArea), {
     x: 100,
-    y: 50
+    y: 50,
   })
   // 窗口比工作区还大 → 对齐工作区左上角
   assert.deepEqual(clampToWorkArea({ x: 500, y: 500, width: 4000, height: 2000 }, displays[0].workArea), {
     x: 0,
-    y: 0
+    y: 0,
   })
 })

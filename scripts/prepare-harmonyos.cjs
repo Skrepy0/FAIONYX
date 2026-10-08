@@ -15,9 +15,9 @@ const cache = path.join(root, 'out/toolcache/harmonyos')
 const output = path.join(root, 'out/harmonyos')
 const project = path.join(output, 'project')
 const marker = '.faionyx-generated-harmony-project'
-const digest = buffer => crypto.createHash('sha256').update(buffer).digest('hex')
-const json = async file => JSON.parse(await fs.readFile(file, 'utf8'))
-const json5 = async file => JSON5.parse(await fs.readFile(file, 'utf8'))
+const digest = (buffer) => crypto.createHash('sha256').update(buffer).digest('hex')
+const json = async (file) => JSON.parse(await fs.readFile(file, 'utf8'))
+const json5 = async (file) => JSON5.parse(await fs.readFile(file, 'utf8'))
 const saveJson = (file, object) => fs.writeFile(file, JSON.stringify(object, null, 2) + '\n')
 
 function inside(parent, file) {
@@ -31,7 +31,7 @@ async function files(directory) {
   for (const item of await fs.readdir(directory, { withFileTypes: true })) {
     const full = path.join(directory, item.name)
     if (item.isSymbolicLink()) throw new Error(`Unexpected symlink in package input: ${full}`)
-    if (item.isDirectory()) result.push(...await files(full))
+    if (item.isDirectory()) result.push(...(await files(full)))
     else if (item.isFile()) result.push(full)
   }
   return result.sort()
@@ -40,7 +40,7 @@ async function files(directory) {
 async function resetGenerated(directory, isProject = false) {
   inside(isProject ? output : cache, directory)
   const exists = await fs.stat(directory).catch(() => null)
-  if (exists && isProject && !await fs.stat(path.join(directory, marker)).catch(() => null)) {
+  if (exists && isProject && !(await fs.stat(path.join(directory, marker)).catch(() => null))) {
     throw new Error('Refusing to overwrite a project without the generated-project marker')
   }
   await fs.rm(directory, { recursive: true, force: true })
@@ -50,26 +50,32 @@ async function resetGenerated(directory, isProject = false) {
 
 async function verifyAsset(file, expected) {
   const buffer = await fs.readFile(file)
-  if (buffer.length !== expected.bytes || digest(buffer) !== expected.sha256) throw new Error(`Runtime asset failed size/SHA256 verification: ${path.basename(file)}`)
+  if (buffer.length !== expected.bytes || digest(buffer) !== expected.sha256)
+    throw new Error(`Runtime asset failed size/SHA256 verification: ${path.basename(file)}`)
   return buffer
 }
 
 async function acquire(lock) {
   await fs.mkdir(cache, { recursive: true })
   const archive = path.join(cache, 'v37.2.0-openharmony-arm64.zip')
-  if (!await fs.stat(archive).catch(() => null)) {
+  if (!(await fs.stat(archive).catch(() => null))) {
     const part = archive + '.part'
-    const result = spawnSync('curl' + (process.platform === 'win32' ? '.exe' : ''), ['--location', '--fail', '--retry', '2', '--max-time', '900', '--user-agent', 'Mozilla/5.0', '--output', part, lock.release.url], { stdio: 'inherit', windowsHide: true })
+    const result = spawnSync(
+      'curl' + (process.platform === 'win32' ? '.exe' : ''),
+      ['--location', '--fail', '--retry', '2', '--max-time', '900', '--user-agent', 'Mozilla/5.0', '--output', part, lock.release.url],
+      { stdio: 'inherit', windowsHide: true }
+    )
     if (result.status !== 0) throw new Error('Maintainer runtime download failed; original URLs and integrity requirements are unchanged')
     await verifyAsset(part, lock.release)
     await fs.rename(part, archive)
   }
   await verifyAsset(archive, lock.release)
   const zip = new AdmZip(archive)
-  const members = zip.getEntries().filter(entry => !entry.isDirectory)
+  const members = zip.getEntries().filter((entry) => !entry.isDirectory)
   if (members.length !== 1 || members[0].entryName !== lock.archive.member) throw new Error('Unexpected runtime ZIP layout')
   const packed = members[0].getData()
-  if (packed.length !== lock.archive.bytes || digest(packed) !== lock.archive.sha256) throw new Error('Nested runtime archive failed verification')
+  if (packed.length !== lock.archive.bytes || digest(packed) !== lock.archive.sha256)
+    throw new Error('Nested runtime archive failed verification')
   const tarball = path.join(cache, lock.archive.member)
   await fs.writeFile(tarball, packed)
   const extracted = path.join(cache, 'verified-runtime')
@@ -77,20 +83,25 @@ async function acquire(lock) {
   const prefix = lock.archive.templateRoot + '/'
   const kept = []
   await tar.x({
-    file: tarball, cwd: extracted, strict: true, preservePaths: false,
+    file: tarball,
+    cwd: extracted,
+    strict: true,
+    preservePaths: false,
     filter: (name, entry) => {
       if (!name.startsWith(prefix) || name.startsWith(prefix + 'docs/')) return false
       const relative = name.slice(prefix.length)
       if (!relative) return true
-      if (relative.split(/[\\/]/).includes('..') || path.isAbsolute(relative) || /[\x00-\x1f]/.test(relative)) throw new Error('Unsafe upstream archive path')
+      if (relative.split(/[\\/]/).includes('..') || path.isAbsolute(relative) || /[\x00-\x1f]/.test(relative))
+        throw new Error('Unsafe upstream archive path')
       if (entry.type === 'SymbolicLink' || entry.type === 'Link') throw new Error('Unexpected link in runtime template')
       if (/\.(?:p12|pfx|p7b|cer|pem|key)$/i.test(relative) || /(?:^|\/)local\.properties$/.test(relative)) return false
       if (relative === 'build-profile.json5') return false // Carries upstream personal signing materials: never stage it.
       kept.push(name)
       return true
-    }
+    },
   })
-  if (!kept.some(name => name.endsWith('web_engine/src/main/ets/components/WebWindow.ets'))) throw new Error('Native maintainer template missing')
+  if (!kept.some((name) => name.endsWith('web_engine/src/main/ets/components/WebWindow.ets')))
+    throw new Error('Native maintainer template missing')
   return path.join(extracted, lock.archive.templateRoot)
 }
 
@@ -98,7 +109,7 @@ async function copyProduction(appDir, pkg) {
   const hashes = []
   for (const directory of ['main', 'preload', 'renderer']) {
     const sourceDir = path.join(root, 'out', directory)
-    if (!await fs.stat(sourceDir).catch(() => null)) throw new Error('Production build is missing: run npm run build first')
+    if (!(await fs.stat(sourceDir).catch(() => null))) throw new Error('Production build is missing: run npm run build first')
     for (const source of await files(sourceDir)) {
       const relative = path.relative(root, source).replaceAll('\\', '/')
       // Windows/macOS-only helpers have no executable ABI on HarmonyOS.
@@ -119,13 +130,13 @@ async function copyProduction(appDir, pkg) {
   // Electron's application dependencies are copied from the already locked install.
   // ffi is Windows-only and must not ship a foreign .node ABI in a native HAP.
   const included = new Set()
-  const copyDependency = async name => {
+  const copyDependency = async (name) => {
     if (name === 'koffi' || included.has(name)) return
     const moduleRoot = path.join(root, 'node_modules', name)
     const metadata = await json(path.join(moduleRoot, 'package.json'))
     const destination = path.join(appDir, 'node_modules', name)
     const inputs = await files(moduleRoot)
-    if (inputs.some(file => /\.(?:node|exe|dll|dylib|so)$/i.test(file))) throw new Error(`Native dependency needs an OHOS build: ${name}`)
+    if (inputs.some((file) => /\.(?:node|exe|dll|dylib|so)$/i.test(file))) throw new Error(`Native dependency needs an OHOS build: ${name}`)
     included.add(name)
     await fs.mkdir(path.dirname(destination), { recursive: true })
     await fs.cp(moduleRoot, destination, { recursive: true })
@@ -133,11 +144,19 @@ async function copyProduction(appDir, pkg) {
   }
   for (const name of Object.keys(pkg.dependencies || {})) await copyDependency(name)
   await saveJson(path.join(appDir, 'package.json'), {
-    name: pkg.name, productName: pkg.productName, version: pkg.version, description: pkg.description,
-    main: 'entry.cjs', license: pkg.license,
-    dependencies: Object.fromEntries(Object.entries(pkg.dependencies || {}).filter(([name]) => name !== 'koffi'))
+    name: pkg.name,
+    productName: pkg.productName,
+    version: pkg.version,
+    description: pkg.description,
+    main: 'entry.cjs',
+    license: pkg.license,
+    dependencies: Object.fromEntries(Object.entries(pkg.dependencies || {}).filter(([name]) => name !== 'koffi')),
   })
-  return { hashes, dependencies: [...included].sort(), omittedNativeDependency: 'koffi (Windows-only ffi paths remain guarded in the shared product)' }
+  return {
+    hashes,
+    dependencies: [...included].sort(),
+    omittedNativeDependency: 'koffi (Windows-only ffi paths remain guarded in the shared product)',
+  }
 }
 
 async function prepare() {
@@ -166,12 +185,23 @@ async function prepare() {
   const enginePackage = await json5(path.join(project, 'web_engine/oh-package.json5'))
   enginePackage.dependencies = { inversify: '6.0.1', 'reflect-metadata': '0.1.13' }
   await saveJson(path.join(project, 'web_engine/oh-package.json5'), enginePackage)
-  for (const location of ['AppScope/resources/base/element/string.json', 'electron/src/main/resources/base/element/string.json', 'electron/src/main/resources/zh_CN/element/string.json', 'electron/src/main/resources/en_US/element/string.json']) {
+  for (const location of [
+    'AppScope/resources/base/element/string.json',
+    'electron/src/main/resources/base/element/string.json',
+    'electron/src/main/resources/zh_CN/element/string.json',
+    'electron/src/main/resources/en_US/element/string.json',
+  ]) {
     const data = await json(path.join(project, location))
-    for (const text of data.string) if (['app_name', 'EntryAbility_label', 'StatusBarEntryAbility_label'].includes(text.name)) text.value = 'FAIONYX'
+    for (const text of data.string)
+      if (['app_name', 'EntryAbility_label', 'StatusBarEntryAbility_label'].includes(text.name)) text.value = 'FAIONYX'
     await saveJson(path.join(project, location), data)
   }
-  for (const location of ['AppScope/resources/base/media/app_icon.png', 'AppScope/resources/base/media/startIcon.png', 'electron/src/main/resources/base/media/app_icon.png', 'electron/src/main/resources/base/media/startIcon.png']) {
+  for (const location of [
+    'AppScope/resources/base/media/app_icon.png',
+    'AppScope/resources/base/media/startIcon.png',
+    'electron/src/main/resources/base/media/app_icon.png',
+    'electron/src/main/resources/base/media/startIcon.png',
+  ]) {
     await fs.mkdir(path.dirname(path.join(project, location)), { recursive: true })
     await fs.copyFile(path.join(root, 'build/icon-512.png'), path.join(project, location))
   }
@@ -179,7 +209,13 @@ async function prepare() {
   for (const library of lock.libraries) {
     const full = path.join(project, 'electron/libs/arm64-v8a', library.name)
     const binary = await verifyAsset(full, library)
-    if (!binary.subarray(0, 4).equals(Buffer.from([0x7f, 0x45, 0x4c, 0x46])) || binary[4] !== 2 || binary[5] !== 1 || binary.readUInt16LE(18) !== 183) throw new Error('Wrong native library architecture')
+    if (
+      !binary.subarray(0, 4).equals(Buffer.from([0x7f, 0x45, 0x4c, 0x46])) ||
+      binary[4] !== 2 ||
+      binary[5] !== 1 ||
+      binary.readUInt16LE(18) !== 183
+    )
+      throw new Error('Wrong native library architecture')
     libs.push({ ...library, format: 'ELF64-LE', machine: 'AArch64' })
   }
   const appDir = path.join(project, 'web_engine/src/main/resources/resfile/resources/app')
@@ -189,22 +225,51 @@ async function prepare() {
   await fs.rm(appDir, { recursive: true, force: true })
   await fs.mkdir(appDir, { recursive: true })
   const production = await copyProduction(appDir, pkg)
-  await saveJson(path.join(output, 'frontend-parity.json'), { schemaVersion: 1, version: pkg.version, createdAt: new Date().toISOString(), production })
+  await saveJson(path.join(output, 'frontend-parity.json'), {
+    schemaVersion: 1,
+    version: pkg.version,
+    createdAt: new Date().toISOString(),
+    production,
+  })
   const evidence = {
-    schemaVersion: 1, createdAt: new Date().toISOString(), version: pkg.version,
-    status: 'native-engineering-prepared-not-compiled', project: 'out/harmonyos/project',
-    runtime: lock.release, libraries: libs, template: lock.template,
-    productionFileCount: production.hashes.length, productionFilesByteIdentical: true,
+    schemaVersion: 1,
+    createdAt: new Date().toISOString(),
+    version: pkg.version,
+    status: 'native-engineering-prepared-not-compiled',
+    project: 'out/harmonyos/project',
+    runtime: lock.release,
+    libraries: libs,
+    template: lock.template,
+    productionFileCount: production.hashes.length,
+    productionFilesByteIdentical: true,
     nativeWindowSurface: 'ArkTS WebWindow XComponent + libadapter.so (maintainer implementation)',
     nativeAdaptations,
-    upstreamSigningRemoved: true, userDataIncluded: false,
+    upstreamSigningRemoved: true,
+    userDataIncluded: false,
     gates: lock.releaseGates,
-    warning: 'Preparation and binary inspection do not establish device startup, animation parity or Minecraft support.'
+    warning: 'Preparation and binary inspection do not establish device startup, animation parity or Minecraft support.',
   }
   await saveJson(path.join(output, 'engineering-evidence.json'), evidence)
-  console.log(JSON.stringify({ status: evidence.status, version: pkg.version, project, productionFileCount: production.hashes.length, runtimeSha256: lock.release.sha256, gates: lock.releaseGates }, null, 2))
+  console.log(
+    JSON.stringify(
+      {
+        status: evidence.status,
+        version: pkg.version,
+        project,
+        productionFileCount: production.hashes.length,
+        runtimeSha256: lock.release.sha256,
+        gates: lock.releaseGates,
+      },
+      null,
+      2
+    )
+  )
   return evidence
 }
 
 module.exports = { prepare, root, integration, cache, output, project, digest, files, inside }
-if (require.main === module) prepare().catch(error => { console.error(error.message); process.exitCode = 1 })
+if (require.main === module)
+  prepare().catch((error) => {
+    console.error(error.message)
+    process.exitCode = 1
+  })

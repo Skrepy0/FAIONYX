@@ -10,7 +10,10 @@ import { launcherLog } from './core/launcherLog'
 export function createDwmFrameRestorer(window: BrowserWindow): (finishStartupOpacity?: boolean) => void {
   let helper: ChildProcessWithoutNullStreams | null = null
   let unavailable = false
-  const close = () => { helper?.stdin.end(); helper = null }
+  const close = () => {
+    helper?.stdin.end()
+    helper = null
+  }
   window.once('closed', close)
   app.once('before-quit', close)
   return (finishStartupOpacity = false) => {
@@ -24,14 +27,19 @@ export function createDwmFrameRestorer(window: BrowserWindow): (finishStartupOpa
       }
       helper.on('error', fail)
       helper.stdin.on('error', fail)
-      helper.stderr.on('data', data => launcherLog(`DWM helper: ${String(data).slice(0, 300)}`))
-      helper.stdout.on('data', data => {
+      helper.stderr.on('data', (data) => launcherLog(`DWM helper: ${String(data).slice(0, 300)}`))
+      helper.stdout.on('data', (data) => {
         for (const line of String(data).trim().split(/\r?\n/)) if (line !== '0') launcherLog(`DWM frame result: ${line}`)
       })
-      helper.once('exit', () => { helper = null; unavailable = true })
+      helper.once('exit', () => {
+        helper = null
+        unavailable = true
+      })
     }
     const handle = window.getNativeWindowHandle()
     const value = handle.length === 8 ? handle.readBigUInt64LE().toString() : String(handle.readUInt32LE())
-    helper.stdin.write(`${value} ${nativeTheme.shouldUseDarkColors ? 'dark' : 'light'} ${finishStartupOpacity ? 'finish-opacity' : 'repair'}\n`)
+    helper.stdin.write(
+      `${value} ${nativeTheme.shouldUseDarkColors ? 'dark' : 'light'} ${finishStartupOpacity ? 'finish-opacity' : 'repair'}\n`
+    )
   }
 }

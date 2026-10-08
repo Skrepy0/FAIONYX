@@ -97,7 +97,7 @@ export function checkTarget(newDir: string, needBytes: number): DirCheckResult {
           ok: false,
           error: `目标磁盘剩余空间不足：需要约 ${(need / GB).toFixed(1)} GB，可用 ${(free / GB).toFixed(1)} GB`,
           freeGB: free / GB,
-          needGB: need / GB
+          needGB: need / GB,
         }
       }
     } catch {
@@ -115,11 +115,7 @@ export function checkTarget(newDir: string, needBytes: number): DirCheckResult {
  * migrate=false：仅校验后直接切换配置（新目录从零开始）。
  * 任何一步失败都抛错且配置不变（天然回滚）。
  */
-export async function migrateGameDir(
-  newDir: string,
-  migrate: boolean,
-  emit: ProgressEmit
-): Promise<string> {
+export async function migrateGameDir(newDir: string, migrate: boolean, emit: ProgressEmit): Promise<string> {
   const src = currentGameDir()
   const resolved = path.resolve(newDir)
   const stats = migrate ? dirStats(src) : { files: 0, bytes: 0 }
@@ -156,7 +152,7 @@ export async function migrateGameDir(
             emit({
               stage: 'migrate',
               progress: (done / stats.files) * 0.98,
-              text: `迁移游戏文件 ${done}/${stats.files}`
+              text: `迁移游戏文件 ${done}/${stats.files}`,
             })
           }
         }

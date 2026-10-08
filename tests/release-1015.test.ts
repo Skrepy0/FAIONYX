@@ -14,21 +14,47 @@ const rel = (version: string) => ({ version, publishedAt: '', body: '', assetUrl
 
 let pendingFixtureCode: Promise<string>
 async function pendingFixture(root: string, platform: string, arch = 'x64', packaged = false, execPath = process.execPath) {
-  pendingFixtureCode ??= build({ entryPoints: ['src/main/core/applyUpdate.ts'], bundle: true, write: false,
-    platform: 'node', format: 'cjs', packages: 'external' }).then(r => r.outputFiles[0].text)
-  const require = createRequire(path.resolve('package.json')), mod = { exports: {} as any }
+  pendingFixtureCode ??= build({
+    entryPoints: ['src/main/core/applyUpdate.ts'],
+    bundle: true,
+    write: false,
+    platform: 'node',
+    format: 'cjs',
+    packages: 'external',
+  }).then((r) => r.outputFiles[0].text)
+  const require = createRequire(path.resolve('package.json')),
+    mod = { exports: {} as any }
   const env = { ...process.env, FAIONYX_USERDATA_DIR: root, FAIONYX_UPDATE_API_BASE: 'http://127.0.0.1:8310' }
-  delete env.PORTABLE_EXECUTABLE_FILE; delete env.FAIONYX_UPDATE_TARGET_EXE; delete env.APPIMAGE
+  delete env.PORTABLE_EXECUTABLE_FILE
+  delete env.FAIONYX_UPDATE_TARGET_EXE
+  delete env.APPIMAGE
   const controlledProcess = Object.create(process)
-  Object.defineProperties(controlledProcess, { platform: { value: platform }, arch: { value: arch }, env: { value: env }, execPath: { value: execPath } })
+  Object.defineProperties(controlledProcess, {
+    platform: { value: platform },
+    arch: { value: arch },
+    env: { value: env },
+    execPath: { value: execPath },
+  })
   new Function('require', 'module', 'exports', 'process', await pendingFixtureCode)(
-    (name: string) => name === 'electron' ? { app: { isPackaged: packaged, getPath: () => root, getVersion: () => '1.0.14' } } : require(name),
-    mod, mod.exports, controlledProcess)
+    (name: string) =>
+      name === 'electron' ? { app: { isPackaged: packaged, getPath: () => root, getVersion: () => '1.0.14' } } : require(name),
+    mod,
+    mod.exports,
+    controlledProcess
+  )
   return mod.exports
 }
 
 test('auto update decision: silent download by default, prompt when disabled, none when redundant', () => {
-  const base = { release: rel('1.0.15'), skipVersion: undefined, current: '1.0.14', autoUpdate: true as boolean, supported: true, downloading: false, pendingVersion: undefined as string | undefined }
+  const base = {
+    release: rel('1.0.15'),
+    skipVersion: undefined,
+    current: '1.0.14',
+    autoUpdate: true as boolean,
+    supported: true,
+    downloading: false,
+    pendingVersion: undefined as string | undefined,
+  }
   // 默认（autoUpdate）→ 静默自动下载
   assert.equal(decideUpdateAction({ ...base, autoUpdate: true }), 'auto-download')
   // 关闭自动 → 弹窗询问
@@ -75,28 +101,48 @@ test('Windows legacy pending update roundtrip: readable only while file exists, 
   }
 })
 
-test('Mac and Linux pending marker routing preserves Windows legacy records (filesystem fixtures)', { timeout: 10000 }, async t => {
-  for (const [platform, arch] of [['darwin', 'arm64'], ['darwin', 'x64'], ['linux', 'arm64'], ['linux', 'x64']] as const) {
-    await t.test(`${platform}/${arch}`, { timeout: 5000 }, async t => {
+test('Mac and Linux pending marker routing preserves Windows legacy records (filesystem fixtures)', { timeout: 10000 }, async (t) => {
+  for (const [platform, arch] of [
+    ['darwin', 'arm64'],
+    ['darwin', 'x64'],
+    ['linux', 'arm64'],
+    ['linux', 'x64'],
+  ] as const) {
+    await t.test(`${platform}/${arch}`, { timeout: 5000 }, async (t) => {
       const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-native-pend-'))
       t.after(() => fs.rmSync(root, { recursive: true, force: true }))
       const target = path.join(root, platform === 'darwin' ? 'FAIONYX.app' : 'FAIONYX-portable')
       const exe = platform === 'darwin' ? path.join(target, 'Contents/MacOS/FAIONYX') : path.join(target, 'faionyx')
-      fs.mkdirSync(path.dirname(exe), { recursive: true }); fs.writeFileSync(exe, 'fixture')
+      fs.mkdirSync(path.dirname(exe), { recursive: true })
+      fs.writeFileSync(exe, 'fixture')
       if (platform === 'darwin') fs.writeFileSync(path.join(target, 'Contents/Info.plist'), 'fixture')
       const api = await pendingFixture(root, platform, arch, true, exe)
-      const legacyFile = path.join(root, 'FAIONYX-9.9.9.exe'), legacyMarker = path.join(root, 'pending-update.json')
+      const legacyFile = path.join(root, 'FAIONYX-9.9.9.exe'),
+        legacyMarker = path.join(root, 'pending-update.json')
       fs.writeFileSync(legacyFile, 'fixture')
       const legacyRecord = JSON.stringify({ release: rel('9.9.9'), file: legacyFile })
       fs.writeFileSync(legacyMarker, legacyRecord)
       assert.equal(api.getPendingUpdate(), null, 'native routing must not accept a Windows EXE record')
       const nativeName = platform === 'darwin' ? 'mac' : 'linux'
-      const file = path.join(root, `${nativeName}-updates`, `FAIONYX-9.9.9-${nativeName}-${arch}.${platform === 'darwin' ? 'zip' : 'tar.gz'}`)
-      fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, 'fixture')
+      const file = path.join(
+        root,
+        `${nativeName}-updates`,
+        `FAIONYX-9.9.9-${nativeName}-${arch}.${platform === 'darwin' ? 'zip' : 'tar.gz'}`
+      )
+      fs.mkdirSync(path.dirname(file), { recursive: true })
+      fs.writeFileSync(file, 'fixture')
       const marker = path.join(root, `${nativeName}-update.json`)
-      const transaction = { schema: 1, id: randomUUID(), target, file,
-        sha256: createHash('sha256').update(fs.readFileSync(file)).digest('hex'), size: fs.statSync(file).size,
-        from: '1.0.14', mode: 'upgrade', release: { ...rel('9.9.9'), assetName: path.basename(file) } }
+      const transaction = {
+        schema: 1,
+        id: randomUUID(),
+        target,
+        file,
+        sha256: createHash('sha256').update(fs.readFileSync(file)).digest('hex'),
+        size: fs.statSync(file).size,
+        from: '1.0.14',
+        mode: 'upgrade',
+        release: { ...rel('9.9.9'), assetName: path.basename(file) },
+      }
       fs.writeFileSync(marker, JSON.stringify(transaction))
       assert.deepEqual(api.getPendingUpdate(), transaction, 'the platform-specific reader returns its own transaction')
       fs.writeFileSync(marker, JSON.stringify({ ...transaction, target: path.join(root, 'Other') }))
@@ -143,12 +189,21 @@ test('auto update surfaces: settings toggle, pending state IPC, ready event', ()
 })
 
 test('update-related SFCs compile', () => {
-  for (const file of ['src/renderer/src/views/SettingsView.vue', 'src/renderer/src/App.vue', 'src/renderer/src/components/UpdateModal.vue']) {
+  for (const file of [
+    'src/renderer/src/views/SettingsView.vue',
+    'src/renderer/src/App.vue',
+    'src/renderer/src/components/UpdateModal.vue',
+  ]) {
     const source = read(file)
     const { descriptor, errors } = parse(source)
     assert.deepEqual(errors, [], file)
     const script = compileScript(descriptor, { id: file })
-    const result = compileTemplate({ source: descriptor.template!.content, filename: file, id: file, compilerOptions: { bindingMetadata: script.bindings } })
+    const result = compileTemplate({
+      source: descriptor.template!.content,
+      filename: file,
+      id: file,
+      compilerOptions: { bindingMetadata: script.bindings },
+    })
     assert.deepEqual(result.errors, [], file)
   }
 })

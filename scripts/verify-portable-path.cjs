@@ -11,7 +11,11 @@ const executable = path.join(root, `FAIONYX test ${version}.exe`)
 fs.copyFileSync(path.resolve(`release/FAIONYX-${version}.exe`), executable)
 const marker = path.join(root, 'launch proof.json')
 const env = { ...process.env, TEMP: root, TMP: root, ELECTRON_RUN_AS_NODE: '1', FAIONYX_QA_MARKER: marker }
-const result = spawnSync(executable, ['-e', 'require("fs").writeFileSync(process.env.FAIONYX_QA_MARKER,JSON.stringify({exe:process.execPath,argv:process.argv}))'], { env, windowsHide: true, timeout: 90000, encoding: 'utf8' })
+const result = spawnSync(
+  executable,
+  ['-e', 'require("fs").writeFileSync(process.env.FAIONYX_QA_MARKER,JSON.stringify({exe:process.execPath,argv:process.argv}))'],
+  { env, windowsHide: true, timeout: 90000, encoding: 'utf8' }
+)
 assert.ifError(result.error)
 assert.equal(result.status, 0, result.stderr)
 assert.ok(fs.existsSync(marker), 'Inner Electron did not start')

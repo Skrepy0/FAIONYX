@@ -41,10 +41,7 @@
   "themes": [
     {
       "theme": "transparent",
-      "configuredWindowMinimum": [
-        960,
-        620
-      ],
+      "configuredWindowMinimum": [960, 620],
       "requestedContent": [
         {
           "width": 2,
@@ -106,10 +103,7 @@
     },
     {
       "theme": "black-orange",
-      "configuredWindowMinimum": [
-        960,
-        620
-      ],
+      "configuredWindowMinimum": [960, 620],
       "requestedContent": [
         {
           "width": 2,
@@ -171,10 +165,7 @@
     },
     {
       "theme": "blue-white",
-      "configuredWindowMinimum": [
-        960,
-        620
-      ],
+      "configuredWindowMinimum": [960, 620],
       "requestedContent": [
         {
           "width": 2,
@@ -236,10 +227,7 @@
     },
     {
       "theme": "custom",
-      "configuredWindowMinimum": [
-        960,
-        620
-      ],
+      "configuredWindowMinimum": [960, 620],
       "requestedContent": [
         {
           "width": 2,
@@ -549,19 +537,10 @@
     "gameAndSaveDirectoriesExcluded": true,
     "userFilesExcluded": true,
     "publicFixturesOnly": true,
-    "syntheticServers": [
-      "127.0.0.1:9",
-      "127.0.0.1:10"
-    ],
+    "syntheticServers": ["127.0.0.1:9", "127.0.0.1:10"],
     "syntheticAccount": "ui-fixture / 界面验证账户 / 00000000000000000000000000000001",
     "realCredentialsFoundInOriginalSummaries": false,
-    "credentialKeysScanned": [
-      "access_token",
-      "refresh_token",
-      "privateKey",
-      "client_secret",
-      "password"
-    ],
+    "credentialKeysScanned": ["access_token", "refresh_token", "privateKey", "client_secret", "password"],
     "applicationClientIdIsPublicConfigurationNotCredential": true,
     "originalPathsRetainedAsQaProvenance": true,
     "screenshots": "Page.captureScreenshot of application document only; no native desktop/window capture",

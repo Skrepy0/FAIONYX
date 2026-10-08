@@ -1,10 +1,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
-import type {
-  YggdrasilProvider,
-  YggdrasilProviderInput
-} from '../../shared/types'
+import type { YggdrasilProvider, YggdrasilProviderInput } from '../../shared/types'
 
 export interface ParsedProviderDescriptor {
   sourceLabel: string
@@ -79,7 +76,11 @@ export function providerId(apiRoot: string): string {
 export function normalizeSkinDomains(values: string[]): string[] {
   const result = new Set<string>()
   for (const value of values) {
-    let item = value.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/+$/, '')
+    let item = value
+      .trim()
+      .toLowerCase()
+      .replace(/^https?:\/\//, '')
+      .replace(/\/+$/, '')
     if (item.startsWith('*.')) item = `.${item.slice(2)}`
     if (!item || /[\s/?#@]/.test(item)) continue
     result.add(item)
@@ -114,13 +115,9 @@ function descriptorFromText(text: string, sourceLabel: string): ParsedProviderDe
     if (!data || typeof data !== 'object' || Array.isArray(data)) {
       throw new Error('提供商 JSON 顶层必须是对象')
     }
-    const apiRoot = findString(data, [
-      'apiRoot',
-      'yggdrasilApiRoot',
-      'yggdrasilServer',
-      'apiUrl',
-      'serverUrl'
-    ]) ?? (typeof data.url === 'string' ? data.url : undefined)
+    const apiRoot =
+      findString(data, ['apiRoot', 'yggdrasilApiRoot', 'yggdrasilServer', 'apiUrl', 'serverUrl']) ??
+      (typeof data.url === 'string' ? data.url : undefined)
     if (!apiRoot) throw new Error('提供商 JSON 中缺少 API Root')
     return {
       sourceLabel,
@@ -130,7 +127,7 @@ function descriptorFromText(text: string, sourceLabel: string): ParsedProviderDe
       accountServer: findString(data, ['accountServer']),
       sessionServer: findString(data, ['sessionServer']),
       servicesUrl: findString(data, ['services', 'servicesUrl', 'metadataUrl']),
-      skinDomains: normalizeSkinDomains(findStrings(data, ['skinDomains', 'textureDomains']))
+      skinDomains: normalizeSkinDomains(findStrings(data, ['skinDomains', 'textureDomains'])),
     }
   }
 
@@ -162,24 +159,18 @@ export function parseProviderInput(input: YggdrasilProviderInput): ParsedProvide
 export function resolveProviderEndpoints(
   descriptor: ParsedProviderDescriptor,
   resolvedApiRoot = descriptor.apiRoot
-): Pick<
-  YggdrasilProvider,
-  'apiRoot' | 'authServer' | 'accountServer' | 'sessionServer' | 'servicesUrl' | 'insecure'
-> {
+): Pick<YggdrasilProvider, 'apiRoot' | 'authServer' | 'accountServer' | 'sessionServer' | 'servicesUrl' | 'insecure'> {
   const apiRoot = normalizeYggdrasilUrl(resolvedApiRoot)
   const resolve = (value: string | undefined, fallback: string): string =>
     normalizeYggdrasilUrl(value ? new URL(value, apiRoot).toString() : new URL(fallback, apiRoot).toString())
-  const result: Pick<
-    YggdrasilProvider,
-    'apiRoot' | 'authServer' | 'accountServer' | 'sessionServer' | 'servicesUrl' | 'insecure'
-  > = {
+  const result: Pick<YggdrasilProvider, 'apiRoot' | 'authServer' | 'accountServer' | 'sessionServer' | 'servicesUrl' | 'insecure'> = {
     apiRoot,
     authServer: resolve(descriptor.authServer, 'authserver/'),
     accountServer: resolve(descriptor.accountServer, 'api/'),
     sessionServer: resolve(descriptor.sessionServer, 'sessionserver/'),
     insecure: [apiRoot, descriptor.authServer, descriptor.accountServer, descriptor.sessionServer]
       .filter(Boolean)
-      .some((url) => normalizeYggdrasilUrl(String(url)).startsWith('http:'))
+      .some((url) => normalizeYggdrasilUrl(String(url)).startsWith('http:')),
   }
   if (descriptor.servicesUrl) result.servicesUrl = resolve(descriptor.servicesUrl, '')
   return result
@@ -198,21 +189,15 @@ export function isAllowedTextureUrl(urlValue: string, provider: YggdrasilProvide
   }
   if (url.protocol !== 'https:' && !(provider.insecure && url.protocol === 'http:')) return false
   const host = url.hostname.toLowerCase()
-  const allowed = provider.skinDomains.length
-    ? provider.skinDomains
-    : [new URL(provider.apiRoot).hostname.toLowerCase()]
+  const allowed = provider.skinDomains.length ? provider.skinDomains : [new URL(provider.apiRoot).hostname.toLowerCase()]
   return allowed.some((rule) => {
     const normalized = rule.toLowerCase()
-    return normalized.startsWith('.')
-      ? host === normalized.slice(1) || host.endsWith(normalized)
-      : host === normalized
+    return normalized.startsWith('.') ? host === normalized.slice(1) || host.endsWith(normalized) : host === normalized
   })
 }
 
 /** Minecraft 参数模板要求 Map<string, string[]>，而 Yggdrasil 响应是 name/value 列表。 */
-export function serializeYggdrasilUserProperties(
-  properties: Array<{ name: string; value: string }> | undefined
-): string {
+export function serializeYggdrasilUserProperties(properties: Array<{ name: string; value: string }> | undefined): string {
   const result: Record<string, string[]> = {}
   for (const property of properties ?? []) {
     if (!property.name || typeof property.value !== 'string') continue
@@ -221,18 +206,11 @@ export function serializeYggdrasilUserProperties(
   return JSON.stringify(result)
 }
 
-export function buildAuthlibInjectorArguments(
-  jarPath: string,
-  apiRoot: string,
-  metadata: string
-): string[] {
+export function buildAuthlibInjectorArguments(jarPath: string, apiRoot: string, metadata: string): string[] {
   if (!jarPath.trim()) throw new Error('authlib-injector 路径为空')
   const root = normalizeYggdrasilUrl(apiRoot)
   parseMetadataShape(metadata)
-  return [
-    `-javaagent:${jarPath}=${root}`,
-    `-Dauthlibinjector.yggdrasil.prefetched=${Buffer.from(metadata, 'utf-8').toString('base64')}`
-  ]
+  return [`-javaagent:${jarPath}=${root}`, `-Dauthlibinjector.yggdrasil.prefetched=${Buffer.from(metadata, 'utf-8').toString('base64')}`]
 }
 
 function parseMetadataShape(metadata: string): void {

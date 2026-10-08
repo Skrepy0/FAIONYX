@@ -9,14 +9,7 @@ import { app, nativeImage } from 'electron'
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
-import type {
-  CapeInfo,
-  ProfileSkins,
-  SkinHistoryEntry,
-  SkinHistoryItem,
-  SkinInfo,
-  SkinVariant
-} from '../../shared/types'
+import type { CapeInfo, ProfileSkins, SkinHistoryEntry, SkinHistoryItem, SkinInfo, SkinVariant } from '../../shared/types'
 import { accountById, getValidAccount, selectedAccount } from './accounts'
 import { gameDir } from './paths'
 import { externalProfile } from './yggdrasil'
@@ -25,14 +18,19 @@ import { downloadTexture } from './skinTexture'
 import type { Account } from '../../shared/types'
 import { OfflineSkinStore, type OfflineSkinSnapshot } from './offlineSkinStore'
 const profileCache = new SkinProfileCache(() => path.join(app.getPath('userData'), 'skin-cache'))
-const offlineSkins = new OfflineSkinStore(() => path.join(app.getPath('userData'), 'offline-skins'), bytes => {
-  const image = nativeImage.createFromBuffer(bytes), size = image.getSize()
-  if (image.isEmpty() || size.width !== 64 || size.height !== 64) throw new Error('皮肤 PNG 无法解码，请选择有效的 64×64 图片')
-})
+const offlineSkins = new OfflineSkinStore(
+  () => path.join(app.getPath('userData'), 'offline-skins'),
+  (bytes) => {
+    const image = nativeImage.createFromBuffer(bytes),
+      size = image.getSize()
+    if (image.isEmpty() || size.width !== 64 || size.height !== 64) throw new Error('皮肤 PNG 无法解码，请选择有效的 64×64 图片')
+  }
+)
 
 /** Capture identity before any asynchronous work. A stale confirmation cannot affect another account. */
 function appearanceAccount(accountId?: string): Account {
-  const selected = selectedAccount(), account = accountId ? accountById(accountId) : selected
+  const selected = selectedAccount(),
+    account = accountId ? accountById(accountId) : selected
   if (!account) throw new Error('请先选择账号')
   if (accountId && selected?.id !== accountId) throw new Error('账号已变更，请重新确认应用账号')
   return { ...account }
@@ -115,13 +113,7 @@ function validateSkinPng(filePath: string): Buffer {
   if (!stat.isFile()) throw new Error('皮肤文件不存在')
   const buf = fs.readFileSync(filePath)
   // PNG 魔数 + IHDR 头长度校验
-  if (
-    buf.length < 24 ||
-    buf[0] !== 0x89 ||
-    buf[1] !== 0x50 ||
-    buf[2] !== 0x4e ||
-    buf[3] !== 0x47
-  ) {
+  if (buf.length < 24 || buf[0] !== 0x89 || buf[1] !== 0x50 || buf[2] !== 0x4e || buf[3] !== 0x47) {
     throw new Error('皮肤必须是 64×64 的 PNG 图片')
   }
   // IHDR：宽 = 偏移 16 大端 UInt32，高 = 偏移 20
@@ -133,7 +125,7 @@ function validateSkinPng(filePath: string): Buffer {
 
 /** Main-process PNG decoding keeps corrupt responses out of the appearance cache. */
 async function fetchTexture(url: string): Promise<{ dataUrl?: string; textureError?: string }> {
-  const result = await downloadTexture(url, fetch, bytes => {
+  const result = await downloadTexture(url, fetch, (bytes) => {
     if (nativeImage.createFromBuffer(bytes).isEmpty()) throw new Error('材质 PNG 无法解码')
   })
   if (result.textureError) {
@@ -148,11 +140,7 @@ function appendLauncherLog(line: string): void {
   try {
     const dir = path.join(gameDir(), 'faionyx-logs')
     fs.mkdirSync(dir, { recursive: true })
-    fs.appendFileSync(
-      path.join(dir, 'launcher.log'),
-      `[${new Date().toISOString()}] ${line}\n`,
-      'utf-8'
-    )
+    fs.appendFileSync(path.join(dir, 'launcher.log'), `[${new Date().toISOString()}] ${line}\n`, 'utf-8')
   } catch {
     /* 忽略 */
   }
@@ -174,7 +162,7 @@ async function fetchProfile(account: Account): Promise<ProfileSkins> {
     return {
       username: account.username,
       skins: skin ? [skin] : [],
-      capes: []
+      capes: [],
     }
   }
   if (account.type === 'yggdrasil') {
@@ -186,7 +174,7 @@ async function fetchProfile(account: Account): Promise<ProfileSkins> {
       }),
       ...profile.capes.map(async (cape) => {
         if (cape.url) Object.assign(cape, await fetchTexture(cape.url))
-      })
+      }),
     ])
     return profile
   }
@@ -194,7 +182,7 @@ async function fetchProfile(account: Account): Promise<ProfileSkins> {
   if (!token) throw new Error('登录状态已失效，请重新登录')
   const res = await fetch(`${API}/minecraft/profile`, {
     headers: { Authorization: `Bearer ${token}` },
-    signal: AbortSignal.timeout(30000)
+    signal: AbortSignal.timeout(30000),
   })
   if (!res.ok) throw await apiError(res, '获取皮肤档案失败')
   const data = (await res.json()) as {
@@ -207,7 +195,7 @@ async function fetchProfile(account: Account): Promise<ProfileSkins> {
     .map((s) => ({
       variant: s.variant?.toUpperCase() === 'SLIM' ? 'slim' : 'classic',
       url: s.url,
-      state: s.state
+      state: s.state,
     }))
   // ACTIVE 状态排最前（skins[0] = 当前皮肤）
   skins.sort((a, b) => Number(b.state === 'ACTIVE') - Number(a.state === 'ACTIVE'))
@@ -215,7 +203,7 @@ async function fetchProfile(account: Account): Promise<ProfileSkins> {
     id: c.id,
     alias: c.alias || '披风',
     active: c.state === 'ACTIVE',
-    url: c.url
+    url: c.url,
   }))
   // 主进程并发下载纹理转 dataURL 随档案返回；失败跳过该项的 dataUrl
   await Promise.all([
@@ -224,7 +212,7 @@ async function fetchProfile(account: Account): Promise<ProfileSkins> {
     }),
     ...capes.map(async (c) => {
       if (c.url) Object.assign(c, await fetchTexture(c.url))
-    })
+    }),
   ])
   return { username: data.name ?? '', skins, capes }
 }
@@ -233,8 +221,11 @@ async function fetchProfile(account: Account): Promise<ProfileSkins> {
 
 /** 头像与 3D 预览共享同一份账户级磁盘纹理缓存。 */
 export async function getAvatar(accountId?: string): Promise<string | null> {
-  try { return (await getProfile(false, accountId)).skins[0]?.dataUrl ?? null }
-  catch { return null }
+  try {
+    return (await getProfile(false, accountId)).skins[0]?.dataUrl ?? null
+  } catch {
+    return null
+  }
 }
 
 /** 上传皮肤（multipart/form-data），成功后写入本地历史并返回最新档案 */
@@ -255,7 +246,7 @@ export async function uploadSkin(filePath: string, variant: SkinVariant, account
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
     body: form,
-    signal: AbortSignal.timeout(60000)
+    signal: AbortSignal.timeout(60000),
   })
   if (!res.ok) throw await apiError(res, '皮肤上传失败')
   saveHistory(buf, variant, path.basename(String(filePath ?? '')) || undefined)
@@ -271,16 +262,16 @@ export async function changeCape(capeId: string | null): Promise<ProfileSkins> {
       ? await fetch(url, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
-          signal: AbortSignal.timeout(30000)
+          signal: AbortSignal.timeout(30000),
         })
       : await fetch(url, {
           method: 'PUT',
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({ capeId: String(capeId) }),
-          signal: AbortSignal.timeout(30000)
+          signal: AbortSignal.timeout(30000),
         })
   if (!res.ok) throw await apiError(res, '披风更换失败')
   return await getProfile(true)
@@ -295,10 +286,7 @@ function loadHistory(): SkinHistoryItem[] {
   try {
     const raw = JSON.parse(fs.readFileSync(historyFile(), 'utf-8')) as unknown
     historyCache = Array.isArray(raw)
-      ? raw.filter(
-          (i): i is SkinHistoryItem =>
-            !!i && typeof i.id === 'string' && typeof i.time === 'number'
-        )
+      ? raw.filter((i): i is SkinHistoryItem => !!i && typeof i.id === 'string' && typeof i.time === 'number')
       : []
   } catch {
     historyCache = []
@@ -323,8 +311,13 @@ function saveHistory(buf: Buffer, variant: SkinVariant, sourceName?: string): vo
   for (const item of list) {
     if (!item.hash) {
       try {
-        item.hash = crypto.createHash('sha1').update(fs.readFileSync(path.join(skinsDir(), `${path.basename(item.id)}.png`))).digest('hex')
-      } catch { /* 文件缺失则下次被跳过 */ }
+        item.hash = crypto
+          .createHash('sha1')
+          .update(fs.readFileSync(path.join(skinsDir(), `${path.basename(item.id)}.png`)))
+          .digest('hex')
+      } catch {
+        /* 文件缺失则下次被跳过 */
+      }
     }
   }
   const existing = list.find((i) => i.hash === hash)
@@ -380,13 +373,16 @@ export async function history(accountId?: string): Promise<SkinHistoryEntry[]> {
 /** 删除某条历史（文件 + 记录），返回最新历史列表 */
 export async function historyDelete(id: string, accountId?: string): Promise<SkinHistoryEntry[]> {
   const account = accountId ? appearanceAccount(accountId) : selectedAccount()
-  if (account?.type === 'offline') { await offlineSkins.delete(account.id, id); return offlineSkins.history(account.id) }
+  if (account?.type === 'offline') {
+    await offlineSkins.delete(account.id, id)
+    return offlineSkins.history(account.id)
+  }
   return withFileJob(skinsDir(), undefined, async () => {
     const list = loadHistory()
-    const idx = list.findIndex(item => item.id === id)
+    const idx = list.findIndex((item) => item.id === id)
     if (idx < 0) throw new Error('历史皮肤不存在，请刷新后重试')
     await recycleFile(skinsDir(), id + '.png')
-    const currentIndex = list.findIndex(item => item.id === id)
+    const currentIndex = list.findIndex((item) => item.id === id)
     if (currentIndex >= 0) list.splice(currentIndex, 1)
     persistHistory()
     return history()
@@ -396,9 +392,14 @@ export async function historyDelete(id: string, accountId?: string): Promise<Ski
 /** 重命名历史记录（仅改显示名，不动文件），返回最新历史列表 */
 export async function historyRename(id: string, name: string, accountId?: string): Promise<SkinHistoryEntry[]> {
   const account = accountId ? appearanceAccount(accountId) : selectedAccount()
-  if (account?.type === 'offline') { await offlineSkins.rename(account.id, id, name); return offlineSkins.history(account.id) }
+  if (account?.type === 'offline') {
+    await offlineSkins.rename(account.id, id, name)
+    return offlineSkins.history(account.id)
+  }
   const safe = path.basename(String(id ?? ''))
-  const trimmed = String(name ?? '').trim().slice(0, 80)
+  const trimmed = String(name ?? '')
+    .trim()
+    .slice(0, 80)
   const list = loadHistory()
   const item = list.find((i) => i.id === safe)
   if (item) {
@@ -412,7 +413,10 @@ export async function historyRename(id: string, name: string, accountId?: string
 /** 用历史记录快速换回：找到记录后走标准上传流程 */
 export async function uploadHistory(id: string, accountId?: string): Promise<ProfileSkins> {
   const account = appearanceAccount(accountId)
-  if (account.type === 'offline') { await offlineSkins.restore(account.id, id); return fetchProfile(account) }
+  if (account.type === 'offline') {
+    await offlineSkins.restore(account.id, id)
+    return fetchProfile(account)
+  }
   const safe = path.basename(String(id ?? ''))
   const item = loadHistory().find((i) => i.id === safe)
   if (!item) throw new Error('历史记录不存在')

@@ -60,7 +60,7 @@ function readMeta(dir: string, id: string): PluginMeta {
       name: String(j.name || id),
       version: String(j.version || ''),
       author: String(j.author || ''),
-      description: String(j.description || '')
+      description: String(j.description || ''),
     }
   } catch {
     return { id, name: id, version: '', author: '', description: '' }
@@ -72,7 +72,10 @@ export function listPlugins(): PluginInfo[] {
   const enabled = new Set(readEnabled())
   let dirs: string[] = []
   try {
-    dirs = fs.readdirSync(root, { withFileTypes: true }).filter((d) => d.isDirectory() && ID_RE.test(d.name)).map((d) => d.name)
+    dirs = fs
+      .readdirSync(root, { withFileTypes: true })
+      .filter((d) => d.isDirectory() && ID_RE.test(d.name))
+      .map((d) => d.name)
   } catch {
     return []
   }
@@ -82,7 +85,7 @@ export function listPlugins(): PluginInfo[] {
       return {
         ...readMeta(dir, id),
         enabled: enabled.has(id),
-        hasCode: fs.existsSync(path.join(dir, 'main.js'))
+        hasCode: fs.existsSync(path.join(dir, 'main.js')),
       }
     })
     .sort((a, b) => a.id.localeCompare(b.id))
@@ -103,7 +106,9 @@ export function installPlugin(sourcePath: string): string {
       try {
         const j = JSON.parse(fs.readFileSync(manifest, 'utf-8'))
         name = String(j.id || j.name || name)
-      } catch { /* 保持目录名 */ }
+      } catch {
+        /* 保持目录名 */
+      }
     }
     id = sanitizePluginId(name)
     if (!ID_RE.test(id)) throw new Error('插件 id 无效（仅限字母数字、-、_）')
@@ -169,7 +174,7 @@ export function registerPluginProtocol(): void {
       if (stat.size > 1024 * 1024) return new Response('plugin too large', { status: 413 })
       // 直接读文件返回：net.fetch(file://) 会命中缓存，插件热更新将拿到旧代码
       return new Response(fs.readFileSync(file), {
-        headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-store' }
+        headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-store' },
         // Response body accepts Buffer via BodyInit in Electron 33 (undici).
       } as ResponseInit)
     } catch {

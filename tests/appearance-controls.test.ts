@@ -7,7 +7,7 @@ import { backgroundImageEffect, carouselImages, MAX_CAROUSEL_IMAGES } from '../s
 test('image alpha and blur have independent mappings including zero blur and fully transparent', () => {
   for (const blur of [0, 12, 40]) {
     const a = backgroundImageEffect({ opacity: 1, blur })
-    const b = backgroundImageEffect({ opacity: .05, blur })
+    const b = backgroundImageEffect({ opacity: 0.05, blur })
     assert.equal(a.filter, b.filter)
     assert.notEqual(a.opacity, b.opacity)
   }
@@ -29,7 +29,15 @@ test('appearance editor and real carousel compile; import uses native multi-file
     const { descriptor, errors } = parse(fs.readFileSync('src/renderer/src/' + file, 'utf8'))
     assert.deepEqual(errors, [])
     const script = compileScript(descriptor, { id: file })
-    assert.deepEqual(compileTemplate({ source: descriptor.template!.content, filename: file, id: file, compilerOptions: { bindingMetadata: script.bindings } }).errors, [])
+    assert.deepEqual(
+      compileTemplate({
+        source: descriptor.template!.content,
+        filename: file,
+        id: file,
+        compilerOptions: { bindingMetadata: script.bindings },
+      }).errors,
+      []
+    )
   }
   assert.match(fs.readFileSync('src/main/ipc.ts', 'utf8'), /multiSelections/)
   assert.match(fs.readFileSync('src/main/nativeAppearance.ts', 'utf8'), /!appliedMaterial.has\(window\)/)

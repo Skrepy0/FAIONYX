@@ -5,15 +5,35 @@ if (process.platform === 'linux') execFileSync(process.execPath, ['scripts/build
 if (process.platform === 'darwin') {
   fs.mkdirSync(path.resolve('out/main'), { recursive: true })
   const arch = process.arch === 'arm64' ? 'arm64' : 'x86_64'
-  execFileSync('swiftc', ['-O', '-target', `${arch}-apple-macos13.0`, 'native/MacGameWindow.swift', '-o', 'out/main/MacGameWindow'], { stdio: 'inherit' })
+  execFileSync('swiftc', ['-O', '-target', `${arch}-apple-macos13.0`, 'native/MacGameWindow.swift', '-o', 'out/main/MacGameWindow'], {
+    stdio: 'inherit',
+  })
 }
 if (process.platform === 'win32') {
   for (const name of ['WindowMaterial', 'GameWindowFocus']) {
-  const output = path.resolve(`out/main/${name}.exe`)
-  fs.mkdirSync(path.dirname(output), { recursive: true })
-  const compiler = path.join(process.env.SystemRoot || 'C:/Windows', 'Microsoft.NET/Framework64/v4.0.30319/csc.exe')
-  execFileSync(compiler, ['/nologo', '/target:exe', '/platform:anycpu', '/optimize+', `/out:${output}`, path.resolve(`native/${name}.cs`)], { stdio: 'inherit', windowsHide: true })
+    const output = path.resolve(`out/main/${name}.exe`)
+    fs.mkdirSync(path.dirname(output), { recursive: true })
+    const compiler = path.join(process.env.SystemRoot || 'C:/Windows', 'Microsoft.NET/Framework64/v4.0.30319/csc.exe')
+    execFileSync(
+      compiler,
+      ['/nologo', '/target:exe', '/platform:anycpu', '/optimize+', `/out:${output}`, path.resolve(`native/${name}.cs`)],
+      { stdio: 'inherit', windowsHide: true }
+    )
   }
   const compiler = path.join(process.env.SystemRoot || 'C:/Windows', 'Microsoft.NET/Framework64/v4.0.30319/csc.exe')
-  execFileSync(compiler, ['/nologo', '/target:winexe', '/platform:anycpu', '/optimize+', '/r:System.Windows.Forms.dll', '/r:System.Drawing.dll', `/out:${path.resolve('out/main/StartupFeedback.exe')}`, `/resource:${path.resolve('src/renderer/src/assets/splash-face.png')},face.png`, path.resolve('native/StartupFeedback.cs')], { stdio: 'inherit', windowsHide: true })
+  execFileSync(
+    compiler,
+    [
+      '/nologo',
+      '/target:winexe',
+      '/platform:anycpu',
+      '/optimize+',
+      '/r:System.Windows.Forms.dll',
+      '/r:System.Drawing.dll',
+      `/out:${path.resolve('out/main/StartupFeedback.exe')}`,
+      `/resource:${path.resolve('src/renderer/src/assets/icon.png')},face.png`,
+      path.resolve('native/StartupFeedback.cs'),
+    ],
+    { stdio: 'inherit', windowsHide: true }
+  )
 }

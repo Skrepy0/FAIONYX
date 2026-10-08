@@ -9,13 +9,7 @@
 import type { IpcMain } from 'electron'
 import { frpManager } from './frpService'
 import { tunnelIdentity } from './frpManager'
-import {
-
-  loadFrpConfig,
-  type FrpEvent,
-  type FrpConfig,
-  type FrpState
-} from './frp'
+import { loadFrpConfig, type FrpEvent, type FrpConfig, type FrpState } from './frp'
 import { fetchFrpNodes, createFrpTunnel, getRunnableFrpTunnel, type FrpCreateTunnel } from './frpNodes'
 
 export interface FrpStartPayload {
@@ -31,7 +25,7 @@ export const FRP_IPC = {
   stop: 'frp:stop',
   status: 'frp:status',
   nodes: 'frp:nodes',
-  event: 'frp:event'
+  event: 'frp:event',
 } as const
 
 export function registerFrpIpc(ipcMain: IpcMain): void {
@@ -39,7 +33,9 @@ export function registerFrpIpc(ipcMain: IpcMain): void {
     if (!payload?.id || payload.confirmed !== true) throw new Error('请先确认删除该隧道')
     return frpManager.remove(String(payload.id))
   })
-  ipcMain.handle('frp:create-tunnel', (_e, payload: {accessKey: string; tunnel: FrpCreateTunnel}) => createFrpTunnel(String(payload?.accessKey ?? ''), payload?.tunnel))
+  ipcMain.handle('frp:create-tunnel', (_e, payload: { accessKey: string; tunnel: FrpCreateTunnel }) =>
+    createFrpTunnel(String(payload?.accessKey ?? ''), payload?.tunnel)
+  )
   ipcMain.handle(FRP_IPC.start, async (_event, payload: FrpStartPayload) => {
     if (!payload || typeof payload !== 'object') throw new Error('参数无效')
     if (payload.id) return frpManager.start(String(payload.id))
@@ -64,7 +60,6 @@ export function registerFrpIpc(ipcMain: IpcMain): void {
     if (result.tunnels) frpManager.register(key, result.tunnels)
     return result
   })
-
 }
 
 /**

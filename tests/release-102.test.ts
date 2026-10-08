@@ -98,13 +98,18 @@ test('new views (keys, bridge) and components compile with real scripts and temp
     'src/renderer/src/components/SelectMenu.vue',
     'src/renderer/src/views/SkinsView.vue',
     'src/renderer/src/views/GameView.vue',
-    'src/renderer/src/App.vue'
+    'src/renderer/src/App.vue',
   ]) {
     const source = read(file)
     const { descriptor, errors } = parse(source)
     assert.deepEqual(errors, [], file)
     const script = compileScript(descriptor, { id: file })
-    const result = compileTemplate({ source: descriptor.template!.content, filename: file, id: file, compilerOptions: { bindingMetadata: script.bindings } })
+    const result = compileTemplate({
+      source: descriptor.template!.content,
+      filename: file,
+      id: file,
+      compilerOptions: { bindingMetadata: script.bindings },
+    })
     assert.deepEqual(result.errors, [], file)
   }
 })

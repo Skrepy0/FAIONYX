@@ -12,26 +12,53 @@ async function main() {
   try {
     for (const kind of ['resourcepack', 'shader', 'datapack', 'mod'] as CommunityKind[]) {
       for (const source of ['modrinth', 'curseforge'] as const) {
-        const page = await runtime.communitySearchPage({ kind, source, keyword: '', mcVersion: '26.2', loader: 'fabric', offset: 0, limit: 3 })
+        const page = await runtime.communitySearchPage({
+          kind,
+          source,
+          keyword: '',
+          mcVersion: '26.2',
+          loader: 'fabric',
+          offset: 0,
+          limit: 3,
+        })
         assert(page.total >= page.items.length)
         assert(page.items.length, `${source}/${kind}: no live results`)
         const files = await runtime.communityFiles(source, page.items[0].projectId, { kind, mcVersion: '26.2', loader: 'fabric' })
         assert(files.length, `${source}/${kind}: first result has no compatible files`)
-        assert(files.every(f => f.gameVersions.includes('26.2')))
-        if (kind === 'mod') assert(files.every(f => f.loaders.includes('fabric')))
-        if (kind === 'datapack' && source === 'modrinth') assert(files.every(f => f.loaders.includes('datapack') && f.fileName.endsWith('.zip')))
+        assert(files.every((f) => f.gameVersions.includes('26.2')))
+        if (kind === 'mod') assert(files.every((f) => f.loaders.includes('fabric')))
+        if (kind === 'datapack' && source === 'modrinth')
+          assert(files.every((f) => f.loaders.includes('datapack') && f.fileName.endsWith('.zip')))
         const item = { source, kind, total: page.total, first: page.items[0].title, compatibleFiles: files.length, file: files[0].fileName }
-        evidence.push(item); console.log(JSON.stringify(item))
+        evidence.push(item)
+        console.log(JSON.stringify(item))
       }
     }
-    const fresh = await runtime.communitySearchPage({ source: 'curseforge', kind: 'resourcepack', keyword: 'Fresh Animations', mcVersion: '26.2', loader: 'fabric', offset: 0, limit: 20 })
-    const project = fresh.items.find(i => i.slug === 'fresh-animations')
+    const fresh = await runtime.communitySearchPage({
+      source: 'curseforge',
+      kind: 'resourcepack',
+      keyword: 'Fresh Animations',
+      mcVersion: '26.2',
+      loader: 'fabric',
+      offset: 0,
+      limit: 20,
+    })
+    const project = fresh.items.find((i) => i.slug === 'fresh-animations')
     assert(project, 'Fresh Animations should appear as a resource pack')
-    const files = await runtime.communityFiles('curseforge', project.projectId, { kind: 'resourcepack', mcVersion: '26.2', loader: 'fabric' })
+    const files = await runtime.communityFiles('curseforge', project.projectId, {
+      kind: 'resourcepack',
+      mcVersion: '26.2',
+      loader: 'fabric',
+    })
     assert(files.length, 'Reported Fresh Animations case must offer compatible files')
-    evidence.push({ reportedCase: project.title, files: files.map(f => f.fileName) })
+    evidence.push({ reportedCase: project.title, files: files.map((f) => f.fileName) })
     fs.writeFileSync(path.join(root, 'result.json'), JSON.stringify(evidence, null, 2))
     console.log('PASS live community filters: ' + root)
-  } finally { await runtime.closeHttpClient() }
+  } finally {
+    await runtime.closeHttpClient()
+  }
 }
-main().catch(e => { console.error(e); process.exitCode = 1 })
+main().catch((e) => {
+  console.error(e)
+  process.exitCode = 1
+})

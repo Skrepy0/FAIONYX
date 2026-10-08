@@ -19,11 +19,7 @@
       "bytes": 2033
     }
   ],
-  "loggingOnlyStubs": [
-    "Logger",
-    "LoggerFactory",
-    "LogUploadManager"
-  ],
+  "loggingOnlyStubs": ["Logger", "LoggerFactory", "LogUploadManager"],
   "transportSourceSha256": "93900758ce88aad953b44746c4fd8c24d490fc1587c0ae2862131de2096d54ab",
   "fixture": "real local Java peer, authenticated real UDP; 25% first-send DATA loss each direction, 15/22/29 ms one-way delay and reordering, Java reader paused 350 ms",
   "result": {
@@ -31,27 +27,15 @@
     "sha256": "66d9c4643fae10d99c44fa2e99e9b7ab5dd7dfdc5dd487e34d4a2525fab808a9",
     "elapsedMs": 13068
   },
-  "dropped": [
-    562,
-    562
-  ],
-  "parity": [
-    561,
-    561
-  ],
-  "retrans": [
-    1852,
-    3202
-  ],
+  "dropped": [562, 562],
+  "parity": [561, 561],
+  "retrans": [1852, 3202],
   "javaExit": {
     "code": 0,
     "signal": null
   },
   "javaStdout": "PORT 65025\r\nBYTES 3145728\r\n",
   "javaStderr": "",
-  "limitations": [
-    "Not Internet/NAT/service/game/voice verification",
-    "No claim of the supplied video exact root cause"
-  ],
+  "limitations": ["Not Internet/NAT/service/game/voice verification", "No claim of the supplied video exact root cause"],
   "complete": true
 }

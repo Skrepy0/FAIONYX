@@ -58,7 +58,7 @@ export const VANILLA_KEYBINDS: KeybindDef[] = [
   // 杂项
   { id: 'key_key.saveToolbarActivator', category: '杂项', label: '保存快捷栏（创造模式工具）', defaultBind: 'key.keyboard.unknown' },
   { id: 'key_key.loadToolbarActivator', category: '杂项', label: '加载快捷栏（创造模式工具）', defaultBind: 'key.keyboard.unknown' },
-  { id: 'key_key.spectatorOutlines', category: '杂项', label: '旁观者模式玩家轮廓', defaultBind: 'key.keyboard.unknown' }
+  { id: 'key_key.spectatorOutlines', category: '杂项', label: '旁观者模式玩家轮廓', defaultBind: 'key.keyboard.unknown' },
 ]
 
 export const KEYBIND_CATEGORIES = ['移动', '游戏', '物品栏', '视角', '界面', '多人游戏', '杂项'] as const
@@ -69,37 +69,65 @@ const CODE_TO_MC: Record<string, string> = (() => {
   for (const letter of 'abcdefghijklmnopqrstuvwxyz') map['Key' + letter.toUpperCase()] = 'key.keyboard.' + letter
   for (const digit of '0123456789') map['Digit' + digit] = 'key.keyboard.' + digit
   const named: Record<string, string> = {
-    Space: 'key.keyboard.space', Tab: 'key.keyboard.tab', Enter: 'key.keyboard.enter',
-    Escape: 'key.keyboard.escape', Backspace: 'key.keyboard.backspace', Delete: 'key.keyboard.delete',
-    Insert: 'key.keyboard.insert', Home: 'key.keyboard.home', End: 'key.keyboard.end',
-    PageUp: 'key.keyboard.page.up', PageDown: 'key.keyboard.page.down',
-    ArrowUp: 'key.keyboard.up', ArrowDown: 'key.keyboard.down', ArrowLeft: 'key.keyboard.left', ArrowRight: 'key.keyboard.right',
-    ShiftLeft: 'key.keyboard.left.shift', ShiftRight: 'key.keyboard.right.shift',
-    ControlLeft: 'key.keyboard.left.control', ControlRight: 'key.keyboard.right.control',
-    AltLeft: 'key.keyboard.left.alt', AltRight: 'key.keyboard.right.alt',
-    MetaLeft: 'key.keyboard.left.win', MetaRight: 'key.keyboard.right.win',
-    CapsLock: 'key.keyboard.caps.lock', NumLock: 'key.keyboard.num.lock',
-    Minus: 'key.keyboard.minus', Equal: 'key.keyboard.equal',
-    BracketLeft: 'key.keyboard.left.bracket', BracketRight: 'key.keyboard.right.bracket',
-    Backslash: 'key.keyboard.backslash', Semicolon: 'key.keyboard.semicolon',
-    Quote: 'key.keyboard.apostrophe', Comma: 'key.keyboard.comma', Period: 'key.keyboard.period',
-    Slash: 'key.keyboard.slash', Backquote: 'key.keyboard.grave.accent',
-    NumpadEnter: 'key.keyboard.keypad.enter'
+    Space: 'key.keyboard.space',
+    Tab: 'key.keyboard.tab',
+    Enter: 'key.keyboard.enter',
+    Escape: 'key.keyboard.escape',
+    Backspace: 'key.keyboard.backspace',
+    Delete: 'key.keyboard.delete',
+    Insert: 'key.keyboard.insert',
+    Home: 'key.keyboard.home',
+    End: 'key.keyboard.end',
+    PageUp: 'key.keyboard.page.up',
+    PageDown: 'key.keyboard.page.down',
+    ArrowUp: 'key.keyboard.up',
+    ArrowDown: 'key.keyboard.down',
+    ArrowLeft: 'key.keyboard.left',
+    ArrowRight: 'key.keyboard.right',
+    ShiftLeft: 'key.keyboard.left.shift',
+    ShiftRight: 'key.keyboard.right.shift',
+    ControlLeft: 'key.keyboard.left.control',
+    ControlRight: 'key.keyboard.right.control',
+    AltLeft: 'key.keyboard.left.alt',
+    AltRight: 'key.keyboard.right.alt',
+    MetaLeft: 'key.keyboard.left.win',
+    MetaRight: 'key.keyboard.right.win',
+    CapsLock: 'key.keyboard.caps.lock',
+    NumLock: 'key.keyboard.num.lock',
+    Minus: 'key.keyboard.minus',
+    Equal: 'key.keyboard.equal',
+    BracketLeft: 'key.keyboard.left.bracket',
+    BracketRight: 'key.keyboard.right.bracket',
+    Backslash: 'key.keyboard.backslash',
+    Semicolon: 'key.keyboard.semicolon',
+    Quote: 'key.keyboard.apostrophe',
+    Comma: 'key.keyboard.comma',
+    Period: 'key.keyboard.period',
+    Slash: 'key.keyboard.slash',
+    Backquote: 'key.keyboard.grave.accent',
+    NumpadEnter: 'key.keyboard.keypad.enter',
   }
   Object.assign(map, named)
   for (let i = 1; i <= 12; i++) map['F' + i] = 'key.keyboard.f' + i
   for (let i = 0; i <= 9; i++) map['Numpad' + i] = 'key.keyboard.keypad.' + i
   const numpadOps: Record<string, string> = {
-    NumpadMultiply: 'key.keyboard.keypad.multiply', NumpadAdd: 'key.keyboard.keypad.add',
-    NumpadSubtract: 'key.keyboard.keypad.subtract', NumpadDecimal: 'key.keyboard.keypad.decimal',
-    NumpadDivide: 'key.keyboard.keypad.divide', NumpadEqual: 'key.keyboard.keypad.equal'
+    NumpadMultiply: 'key.keyboard.keypad.multiply',
+    NumpadAdd: 'key.keyboard.keypad.add',
+    NumpadSubtract: 'key.keyboard.keypad.subtract',
+    NumpadDecimal: 'key.keyboard.keypad.decimal',
+    NumpadDivide: 'key.keyboard.keypad.divide',
+    NumpadEqual: 'key.keyboard.keypad.equal',
   }
   Object.assign(map, numpadOps)
   return map
 })()
 
 const MOUSE_TO_MC: Record<number, string> = {
-  0: 'key.mouse.left', 1: 'key.mouse.middle', 2: 'key.mouse.right', 3: 'key.mouse.4', 4: 'key.mouse.5'
+  0: 'key.mouse.left',
+  1: 'key.mouse.middle',
+  2: 'key.mouse.right',
+  3: 'key.mouse.4',
+  4: 'key.mouse.5',
 }
 
 export function codeToMcKey(code: string): string | null {
@@ -114,19 +142,52 @@ export function mcKeyLabel(bind: string): string {
   if (!bind || bind === 'key.keyboard.unknown') return '未指定'
   if (bind.startsWith('key.mouse.')) {
     const names: Record<string, string> = {
-      left: '鼠标左键', middle: '鼠标中键', right: '鼠标右键', 4: '鼠标侧键4', 5: '鼠标侧键5'
+      left: '鼠标左键',
+      middle: '鼠标中键',
+      right: '鼠标右键',
+      4: '鼠标侧键4',
+      5: '鼠标侧键5',
     }
     return names[bind.slice('key.mouse.'.length)] ?? bind
   }
   const key = bind.replace(/^key\.keyboard\./, '')
   const pretty: Record<string, string> = {
-    space: '空格', tab: 'Tab', enter: '回车', escape: 'Esc', backspace: '退格', delete: 'Del',
-    'left.shift': '左Shift', 'right.shift': '右Shift', 'left.control': '左Ctrl', 'right.control': '右Ctrl',
-    'left.alt': '左Alt', 'right.alt': '右Alt', 'left.win': '左Win', 'right.win': '右Win',
-    up: '↑', down: '↓', left: '←', right: '→', 'page.up': 'PageUp', 'page.down': 'PageDown',
-    'caps.lock': 'CapsLock', 'num.lock': 'NumLock', 'grave.accent': '`', apostrophe: "'",
-    slash: '/', backslash: '\\', minus: '-', equal: '=', comma: ',', period: '.',
-    'left.bracket': '[', 'right.bracket': ']', semicolon: ';', home: 'Home', end: 'End', insert: 'Ins'
+    space: '空格',
+    tab: 'Tab',
+    enter: '回车',
+    escape: 'Esc',
+    backspace: '退格',
+    delete: 'Del',
+    'left.shift': '左Shift',
+    'right.shift': '右Shift',
+    'left.control': '左Ctrl',
+    'right.control': '右Ctrl',
+    'left.alt': '左Alt',
+    'right.alt': '右Alt',
+    'left.win': '左Win',
+    'right.win': '右Win',
+    up: '↑',
+    down: '↓',
+    left: '←',
+    right: '→',
+    'page.up': 'PageUp',
+    'page.down': 'PageDown',
+    'caps.lock': 'CapsLock',
+    'num.lock': 'NumLock',
+    'grave.accent': '`',
+    apostrophe: "'",
+    slash: '/',
+    backslash: '\\',
+    minus: '-',
+    equal: '=',
+    comma: ',',
+    period: '.',
+    'left.bracket': '[',
+    'right.bracket': ']',
+    semicolon: ';',
+    home: 'Home',
+    end: 'End',
+    insert: 'Ins',
   }
   if (pretty[key]) return pretty[key]
   if (key.startsWith('keypad.')) return '小键盘 ' + key.slice(7)

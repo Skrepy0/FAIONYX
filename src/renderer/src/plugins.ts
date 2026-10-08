@@ -51,13 +51,17 @@ function installGlobalApi(): void {
     },
     getView: () => store.currentView,
     store,
-    version: __APP_VERSION__
+    version: __APP_VERSION__,
   }
   watch(
     () => store.currentView,
     (view) => {
       for (const cb of viewCallbacks) {
-        try { cb(view) } catch { /* 插件回调异常不影响启动器 */ }
+        try {
+          cb(view)
+        } catch {
+          /* 插件回调异常不影响启动器 */
+        }
       }
     }
   )
@@ -85,7 +89,7 @@ export async function loadEnabledPlugins(): Promise<void> {
         resolve()
       }
       el.onerror = () => {
-        console.warn(`[FAIONYX] 插件加载失败：${plugin.id}`);
+        console.warn(`[FAIONYX] 插件加载失败：${plugin.id}`)
         resolve()
       }
       document.head.appendChild(el)

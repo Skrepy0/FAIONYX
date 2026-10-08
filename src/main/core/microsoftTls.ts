@@ -6,14 +6,22 @@ import { checkServerIdentity } from 'node:tls'
 import { execFileSync } from 'node:child_process'
 
 const MICROSOFT_HOSTS = new Set([
-  'login.microsoftonline.com', 'user.auth.xboxlive.com',
-  'xsts.auth.xboxlive.com', 'api.minecraftservices.com'
+  'login.microsoftonline.com',
+  'user.auth.xboxlive.com',
+  'xsts.auth.xboxlive.com',
+  'api.minecraftservices.com',
 ])
 
 export function microsoftEndpoint(input: string): URL {
   const url = new URL(input)
-  if (url.protocol !== 'https:' || url.username || url.password || url.hash ||
-      (url.port && url.port !== '443') || !MICROSOFT_HOSTS.has(url.hostname))
+  if (
+    url.protocol !== 'https:' ||
+    url.username ||
+    url.password ||
+    url.hash ||
+    (url.port && url.port !== '443') ||
+    !MICROSOFT_HOSTS.has(url.hostname)
+  )
     throw new Error('正版登录只允许连接受信任的 Microsoft / Xbox / Minecraft HTTPS 地址')
   return url
 }
@@ -29,13 +37,22 @@ export function systemProxyAddress(): string | null {
   if (process.platform !== 'win32') return null
   try {
     const query = (name: string) =>
-      execFileSync('reg.exe', ['query', 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings', '/v', name], { encoding: 'utf-8', timeout: 5000, windowsHide: true })
+      execFileSync('reg.exe', ['query', 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings', '/v', name], {
+        encoding: 'utf-8',
+        timeout: 5000,
+        windowsHide: true,
+      })
     const enabled = /ProxyEnable\s+REG_DWORD\s+0x1\b/i.test(query('ProxyEnable'))
     if (!enabled) return null
     const server = /ProxyServer\s+REG_SZ\s+(\S+)/i.exec(query('ProxyServer'))?.[1]?.trim()
     if (!server) return null
     // 形如 127.0.0.1:7897 或 http=host:port;https=... 的分协议串
-    const first = server.includes('=') ? (server.split(';').find((s) => s.startsWith('http='))?.slice(5) ?? server.split(';')[0].split('=')[1]) : server
+    const first = server.includes('=')
+      ? (server
+          .split(';')
+          .find((s) => s.startsWith('http='))
+          ?.slice(5) ?? server.split(';')[0].split('=')[1])
+      : server
     return first ?? null
   } catch {
     return null
@@ -51,7 +68,11 @@ async function proxiedTlsSocket(proxyAddress: string, target: URL, timeoutMs: nu
   const port = Number(portText) || 7897
   const raw = await new Promise<net.Socket>((resolve, reject) => {
     const req = http.request({
-      host, port, method: 'CONNECT', path: `${target.hostname}:443`, timeout: timeoutMs
+      host,
+      port,
+      method: 'CONNECT',
+      path: `${target.hostname}:443`,
+      timeout: timeoutMs,
     })
     req.once('connect', (res, socket) => {
       if (res.statusCode === 200) resolve(socket)
@@ -70,7 +91,7 @@ async function proxiedTlsSocket(proxyAddress: string, target: URL, timeoutMs: nu
     checkServerIdentity,
     rejectUnauthorized: true,
     minVersion: 'TLSv1.2',
-    ALPNProtocols: ['http/1.1']
+    ALPNProtocols: ['http/1.1'],
   })
   await new Promise<void>((resolve, reject) => {
     tlsSocket.once('secureConnect', () => resolve())
@@ -83,41 +104,60 @@ async function proxiedTlsSocket(proxyAddress: string, target: URL, timeoutMs: nu
  * 单独使用 HTTPS Agent，避免外部全局 fetch dispatcher 或 TLS 环境变量绕过验证。
  * useProxy 开启时走系统代理 CONNECT 隧道，端到端 TLS 校验保持不变。
  */
-export function microsoftFetch(input: string, init: { method?: string; headers?: Record<string, string>; body?: string; signal?: AbortSignal; useProxy?: boolean } = {}): Promise<Response> {
+export function microsoftFetch(
+  input: string,
+  init: { method?: string; headers?: Record<string, string>; body?: string; signal?: AbortSignal; useProxy?: boolean } = {}
+): Promise<Response> {
   const url = microsoftEndpoint(input)
   const proxy = init.useProxy ? systemProxyAddress() : null
   return new Promise((resolve, reject) => {
     const start = (socket?: tls.TLSSocket) => {
-      const req = https.request(url, {
-        method: init.method ?? 'GET', headers: init.headers, signal: init.signal,
-        agent: false, rejectUnauthorized: true, checkServerIdentity, minVersion: 'TLSv1.2',
-        ...(socket ? { createConnection: () => socket } : {})
-      }, res => {
-        const status = res.statusCode ?? 500
-        if (status >= 300 && status < 400) {
-          res.destroy(); reject(new Error('正版认证端点返回了重定向，已阻止发送登录凭据')); return
+      const req = https.request(
+        url,
+        {
+          method: init.method ?? 'GET',
+          headers: init.headers,
+          signal: init.signal,
+          agent: false,
+          rejectUnauthorized: true,
+          checkServerIdentity,
+          minVersion: 'TLSv1.2',
+          ...(socket ? { createConnection: () => socket } : {}),
+        },
+        (res) => {
+          const status = res.statusCode ?? 500
+          if (status >= 300 && status < 400) {
+            res.destroy()
+            reject(new Error('正版认证端点返回了重定向，已阻止发送登录凭据'))
+            return
+          }
+          const chunks: Buffer[] = []
+          let size = 0
+          res.on('data', (chunk: Buffer) => {
+            size += chunk.length
+            if (size > 2 * 1024 * 1024) res.destroy(new Error('正版认证响应超过大小限制'))
+            else chunks.push(chunk)
+          })
+          res.once('error', reject)
+          res.once('end', () => {
+            try {
+              resolve(new Response([204, 205, 304].includes(status) ? null : Buffer.concat(chunks), { status }))
+            } catch (error) {
+              reject(error)
+            }
+          })
         }
-        const chunks: Buffer[] = []
-        let size = 0
-        res.on('data', (chunk: Buffer) => {
-          size += chunk.length
-          if (size > 2 * 1024 * 1024) res.destroy(new Error('正版认证响应超过大小限制'))
-          else chunks.push(chunk)
-        })
-        res.once('error', reject)
-        res.once('end', () => {
-          try { resolve(new Response([204, 205, 304].includes(status) ? null : Buffer.concat(chunks), { status })) }
-          catch (error) { reject(error) }
-        })
-      })
+      )
       req.setTimeout(30000, () => req.destroy(new Error('正版认证连接超时')))
-      req.once('error', error => reject(certificateError(error)))
+      req.once('error', (error) => reject(certificateError(error)))
       req.end(init.body)
     }
     if (!proxy) {
       start()
       return
     }
-    proxiedTlsSocket(proxy, url, 30000).then(start, (error) => reject(new Error(`系统代理连接失败：${error instanceof Error ? error.message : String(error)}`)))
+    proxiedTlsSocket(proxy, url, 30000).then(start, (error) =>
+      reject(new Error(`系统代理连接失败：${error instanceof Error ? error.message : String(error)}`))
+    )
   })
 }

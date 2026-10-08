@@ -12,7 +12,11 @@ test('hero naming follows selected instance while subtitle reads only real Minec
   const selected = ref<any>({ id: '背刺', mcVersion: '1.21.4', loader: 'fabric', loaderVersion: '0.16.10' })
   const evaluate = (name: string) => {
     const expression = home.match(new RegExp(`^const ${name} = (computed\\(.*\\))$`, 'm'))![1]
-    return new Function('computed', 'currentVersion', 'versionLabel', `return ${expression}`)(computed, selected, (v: { id: string }) => v.id)
+    return new Function('computed', 'currentVersion', 'versionLabel', `return ${expression}`)(
+      computed,
+      selected,
+      (v: { id: string }) => v.id
+    )
   }
   const name = evaluate('heroName')
   const version = evaluate('heroVersion')
@@ -62,10 +66,21 @@ test('creator card uses theme tokens, keyboard focus and correct external Bilibi
 })
 
 test('home and creator templates compile without Vue errors', () => {
-  for (const [file, source] of [['HomeView.vue', home], ['CreatorCard.vue', creator]]) {
+  for (const [file, source] of [
+    ['HomeView.vue', home],
+    ['CreatorCard.vue', creator],
+  ]) {
     const { descriptor, errors } = parse(source)
     assert.deepEqual(errors, [])
     const script = descriptor.scriptSetup ? compileScript(descriptor, { id: file }) : undefined
-    assert.deepEqual(compileTemplate({ source: descriptor.template!.content, filename: file, id: file, compilerOptions: { bindingMetadata: script?.bindings } }).errors, [])
+    assert.deepEqual(
+      compileTemplate({
+        source: descriptor.template!.content,
+        filename: file,
+        id: file,
+        compilerOptions: { bindingMetadata: script?.bindings },
+      }).errors,
+      []
+    )
   }
 })

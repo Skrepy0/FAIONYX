@@ -140,18 +140,18 @@ FAIONYX
 
 ## 现有文档索引
 
-| 文档 | 主题 |
-| --- | --- |
-| [`features/friend-direct-connect.md`](features/friend-direct-connect.md) | 好友直连流程、网络边界、邀请格式 |
-| [`auth/yggdrasil-provider-card.md`](auth/yggdrasil-provider-card.md) | Yggdrasil 导入格式与安全规则 |
-| [`connection-ui-0.6.17.md`](connection-ui-0.6.17.md) | 联机与服务器页面设计 |
-| [`diagnostics/launcher-auto-exit-and-modpack-crash.md`](diagnostics/launcher-auto-exit-and-modpack-crash.md) | 启动器与整合包问题诊断 |
-| [`releases/`](releases/) | 历史版本发布与验收记录 |
-| [`../FEATURE_AUDIT.md`](../FEATURE_AUDIT.md) | 功能审计记录 |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Commit 与 Pull Request 提交规范 |
-| [`CORRESPONDING_SOURCE.md`](CORRESPONDING_SOURCE.md) | 发布包对应源码与重建步骤 |
-| [`VOXLINK-UPSTREAM.md`](VOXLINK-UPSTREAM.md) | VoxLink 协议来源、同步范围与验证边界 |
-| [`../THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) | 第三方依赖许可证与对应源码 |
+| 文档                                                                                                         | 主题                                 |
+| ------------------------------------------------------------------------------------------------------------ | ------------------------------------ |
+| [`features/friend-direct-connect.md`](features/friend-direct-connect.md)                                     | 好友直连流程、网络边界、邀请格式     |
+| [`auth/yggdrasil-provider-card.md`](auth/yggdrasil-provider-card.md)                                         | Yggdrasil 导入格式与安全规则         |
+| [`connection-ui-0.6.17.md`](connection-ui-0.6.17.md)                                                         | 联机与服务器页面设计                 |
+| [`diagnostics/launcher-auto-exit-and-modpack-crash.md`](diagnostics/launcher-auto-exit-and-modpack-crash.md) | 启动器与整合包问题诊断               |
+| [`releases/`](releases/)                                                                                     | 历史版本发布与验收记录               |
+| [`../FEATURE_AUDIT.md`](../FEATURE_AUDIT.md)                                                                 | 功能审计记录                         |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                                                                         | Commit 与 Pull Request 提交规范      |
+| [`CORRESPONDING_SOURCE.md`](CORRESPONDING_SOURCE.md)                                                         | 发布包对应源码与重建步骤             |
+| [`VOXLINK-UPSTREAM.md`](VOXLINK-UPSTREAM.md)                                                                 | VoxLink 协议来源、同步范围与验证边界 |
+| [`../THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md)                                                     | 第三方依赖许可证与对应源码           |
 
 ## 维护规则
 

@@ -1,6 +1,9 @@
 import { abortableDelay } from './tasks'
 
-export interface DownloadLimits { downloadThreads: number; downloadSpeedKBps: number }
+export interface DownloadLimits {
+  downloadThreads: number
+  downloadSpeedKBps: number
+}
 export const DEFAULT_DOWNLOAD_LIMITS: DownloadLimits = { downloadThreads: 16, downloadSpeedKBps: 0 }
 export function validateDownloadLimits(value: DownloadLimits): void {
   if (!Number.isInteger(value.downloadThreads) || value.downloadThreads < 1 || value.downloadThreads > 64)
@@ -20,7 +23,9 @@ export class DownloadLimiter {
   get isThrottling(): boolean {
     return this.limits.downloadSpeedKBps > 0
   }
-  get maxConcurrent(): number { return this.limits.downloadThreads }
+  get maxConcurrent(): number {
+    return this.limits.downloadThreads
+  }
   configure(limits: DownloadLimits): void {
     validateDownloadLimits(limits)
     this.limits = { ...limits }
@@ -35,7 +40,7 @@ export class DownloadLimiter {
     signal?.throwIfAborted()
     return new Promise((resolve, reject) => {
       const cancel = () => {
-        this.queue = this.queue.filter(item => item !== start)
+        this.queue = this.queue.filter((item) => item !== start)
         reject(signal?.reason ?? new Error('已取消'))
       }
       const start = () => {
@@ -61,12 +66,12 @@ export class DownloadLimiter {
       const rate = this.limits.downloadSpeedKBps * 1024
       if (!rate) return
       const now = performance.now()
-      this.tokens = Math.min(rate * .15, this.tokens + (now - this.sampledAt) * rate / 1000)
+      this.tokens = Math.min(rate * 0.15, this.tokens + ((now - this.sampledAt) * rate) / 1000)
       this.sampledAt = now
       const take = Math.min(remaining, Math.floor(this.tokens))
       this.tokens -= take
       remaining -= take
-      if (remaining > 0) await abortableDelay(Math.min(100, Math.max(5, remaining / rate * 1000)), signal)
+      if (remaining > 0) await abortableDelay(Math.min(100, Math.max(5, (remaining / rate) * 1000)), signal)
     }
   }
 }

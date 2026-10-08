@@ -21,10 +21,7 @@
     "error": "Redirect was cancelled",
     "note": "Failed baseline cannot yield a valid full-install speedup ratio."
   },
-  "developmentRunsSeconds": [
-    68.607,
-    69.654
-  ],
+  "developmentRunsSeconds": [68.607, 69.654],
   "finalPortable": {
     "exeSHA256": "4ef5b04237891ad54ebb5ee44444f199ee1bb663c4a2ba53634d7c7aef7da9b6",
     "cold": {
@@ -104,15 +101,7 @@
     "typescript": true,
     "licenses": true,
     "build": true,
-    "nativeTransport": [
-      "redirect",
-      "Range",
-      "HEAD",
-      "streaming",
-      "cancellation",
-      "SHA1",
-      "current OS proxy"
-    ],
+    "nativeTransport": ["redirect", "Range", "HEAD", "streaming", "cancellation", "SHA1", "current OS proxy"],
     "comparisonLimit": "Video PCL workload cache/hardware/network not controlled; no claim of 2x PCL."
   }
 }

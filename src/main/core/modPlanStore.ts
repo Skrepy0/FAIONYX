@@ -11,9 +11,15 @@ export class ModPlanStore<T> {
   private entries = new Map<string, PlanEntry<T>>()
   private timer?: ReturnType<typeof setTimeout>
   private timerAt?: number
-  constructor(private ttl = 30 * 60_000, private clock: PlanClock = {
-    now: Date.now, setTimeout: (callback, delay) => setTimeout(callback, delay), clearTimeout
-  }, private limit = 8) {}
+  constructor(
+    private ttl = 30 * 60_000,
+    private clock: PlanClock = {
+      now: Date.now,
+      setTimeout: (callback, delay) => setTimeout(callback, delay),
+      clearTimeout,
+    },
+    private limit = 8
+  ) {}
 
   set(id: string, value: T): void {
     const expires = this.clock.now() + this.ttl
@@ -25,7 +31,10 @@ export class ModPlanStore<T> {
   get(id: string): T | undefined {
     const entry = this.entries.get(id)
     if (!entry) return undefined
-    if (entry.retired || entry.expires <= this.clock.now()) { this.delete(id); return undefined }
+    if (entry.retired || entry.expires <= this.clock.now()) {
+      this.delete(id)
+      return undefined
+    }
     return entry.value
   }
 
@@ -34,13 +43,17 @@ export class ModPlanStore<T> {
     const entry = this.entries.get(id)!
     entry.users++
     let released = false
-    return { value: entry.value, release: () => {
-      if (released) return
-      released = true; entry.users--
-      if (!entry.users && (entry.retired || entry.expires <= this.clock.now())) this.entries.delete(id)
-      this.trimUnused()
-      this.schedule()
-    } }
+    return {
+      value: entry.value,
+      release: () => {
+        if (released) return
+        released = true
+        entry.users--
+        if (!entry.users && (entry.retired || entry.expires <= this.clock.now())) this.entries.delete(id)
+        this.trimUnused()
+        this.schedule()
+      },
+    }
   }
 
   delete(id: string): void {
@@ -52,14 +65,17 @@ export class ModPlanStore<T> {
   }
 
   deleteMatching(matches: (value: T) => boolean): void {
-    for (const [id, entry] of this.entries) if (matches(entry.value)) {
-      entry.retired = true
-      if (!entry.users) this.entries.delete(id)
-    }
+    for (const [id, entry] of this.entries)
+      if (matches(entry.value)) {
+        entry.retired = true
+        if (!entry.users) this.entries.delete(id)
+      }
     this.schedule()
   }
 
-  get size(): number { return this.entries.size }
+  get size(): number {
+    return this.entries.size
+  }
 
   private trimUnused(): void {
     const unused = [...this.entries].filter(([, entry]) => !entry.users)
@@ -75,17 +91,23 @@ export class ModPlanStore<T> {
     for (const entry of this.entries.values()) if (!entry.retired) next = Math.min(next, entry.expires)
     if (this.timer !== undefined && next >= this.timerAt! && Number.isFinite(next)) return
     if (this.timer !== undefined) this.clock.clearTimeout(this.timer)
-    this.timer = undefined; this.timerAt = undefined
+    this.timer = undefined
+    this.timerAt = undefined
     if (!Number.isFinite(next)) return
     this.timerAt = next
-    this.timer = this.clock.setTimeout(() => {
-      this.timer = undefined; this.timerAt = undefined
-      for (const [id, entry] of this.entries) if (entry.expires <= this.clock.now()) {
-        entry.retired = true
-        if (!entry.users) this.entries.delete(id)
-      }
-      this.schedule()
-    }, Math.max(1, next - this.clock.now()))
+    this.timer = this.clock.setTimeout(
+      () => {
+        this.timer = undefined
+        this.timerAt = undefined
+        for (const [id, entry] of this.entries)
+          if (entry.expires <= this.clock.now()) {
+            entry.retired = true
+            if (!entry.users) this.entries.delete(id)
+          }
+        this.schedule()
+      },
+      Math.max(1, next - this.clock.now())
+    )
     this.timer.unref?.()
   }
 }

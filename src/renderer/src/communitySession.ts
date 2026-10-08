@@ -25,4 +25,6 @@ export function saveCommunitySession(value: CommunitySession): void {
 export function readCommunitySession(): CommunitySession | undefined {
   return last ? structuredClone(last) : undefined
 }
-export function clearCommunitySession(): void { last = undefined }
+export function clearCommunitySession(): void {
+  last = undefined
+}

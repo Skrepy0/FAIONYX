@@ -27,7 +27,6 @@ test('game view: per-version launch button before delete (新增2)', () => {
 // Replaced implementation: behavior is exercised by skin3d-parity, download-policy,
 // download-stall, import-download-1049 and modpack-speed-1050 runtime tests.
 
-
 test('launch: game process survives launcher exit via CreateProcessW detach + running state restore (修复5；1.0.16 起用物晖 gracefulClose 实现)', () => {
   const launch = read('src/main/core/launch.ts')
   assert.match(launch, /spawnGameProcess\(javaPath, args/)
@@ -75,7 +74,12 @@ test('modified SFCs compile', () => {
     const { descriptor, errors } = parse(source)
     assert.deepEqual(errors, [], file)
     const script = compileScript(descriptor, { id: file })
-    const result = compileTemplate({ source: descriptor.template!.content, filename: file, id: file, compilerOptions: { bindingMetadata: script.bindings } })
+    const result = compileTemplate({
+      source: descriptor.template!.content,
+      filename: file,
+      id: file,
+      compilerOptions: { bindingMetadata: script.bindings },
+    })
     assert.deepEqual(result.errors, [], file)
   }
 })

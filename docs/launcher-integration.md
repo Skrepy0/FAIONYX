@@ -46,49 +46,49 @@
 来源：[`RelatedLinksScreen.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/ui/RelatedLinksScreen.java)
 （名称 i18n 键：`assets/voxlink/lang/*.json` 的 `voxlink.links.*`，13 语言齐全）
 
-| key | 名称 | URL |
-|-----|------|-----|
-| site | 官网 | https://p2p.wuhui.icu/ |
-| mcmod | MC百科 | https://www.mcmod.cn/class/28295.html |
-| github | GitHub | https://github.com/AUGUHDAR/VoxLink |
-| gitee | Gitee | https://gitee.com/AUGUHDAR/VoxLink |
-| modrinth | Modrinth | https://modrinth.com/mod/voxlink |
-| curseforge | CurseForge | https://www.curseforge.com/minecraft/mc-mods/voxlink |
-| discord | Discord | https://discord.gg/XaAFxvzPDS |
-| qq | QQ群 | https://qm.qq.com/cgi-bin/qm/qr?k=OEkk9L8m8jdFMkbGDhKZs0u2U0azLAPo&jump_from=webapi&authKey=v0dYAQniGZypAJuoPZW/7FL0bfoc32h68oIHd9lqGwOvAduzcwsJNR7Mei9/YugW |
+| key        | 名称       | URL                                                                                                                                                          |
+| ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| site       | 官网       | https://p2p.wuhui.icu/                                                                                                                                       |
+| mcmod      | MC百科     | https://www.mcmod.cn/class/28295.html                                                                                                                        |
+| github     | GitHub     | https://github.com/AUGUHDAR/VoxLink                                                                                                                          |
+| gitee      | Gitee      | https://gitee.com/AUGUHDAR/VoxLink                                                                                                                           |
+| modrinth   | Modrinth   | https://modrinth.com/mod/voxlink                                                                                                                             |
+| curseforge | CurseForge | https://www.curseforge.com/minecraft/mc-mods/voxlink                                                                                                         |
+| discord    | Discord    | https://discord.gg/XaAFxvzPDS                                                                                                                                |
+| qq         | QQ群       | https://qm.qq.com/cgi-bin/qm/qr?k=OEkk9L8m8jdFMkbGDhKZs0u2U0azLAPo&jump_from=webapi&authKey=v0dYAQniGZypAJuoPZW/7FL0bfoc32h68oIHd9lqGwOvAduzcwsJNR7Mei9/YugW |
 
 ## 2. 1.1.5 → 1.1.7 客户端行为变更（已完成轮，保留备查）
 
-| # | 领域 | 行为 | 参考实现 |
-|---|------|------|----------|
-| 1 | 信令 | **WS 优先**：信令通道优先走 WebSocket（`/ws`，帧协议见该文件头注释），HTTP 轮询降级为兜底；断线自动回退与恢复 | `network/SignalingWsTransport.java`、`ws.go`（服务端 `/ws` 帧协议） |
-| 2 | 打洞 | **TCP 双向 SimOpen**：UDP 对称 NAT 场景叠加 TCP 同时打开打洞 | `network/TcpHolePuncher.java`、`network/PunchStrategySelector.java` |
-| 3 | 打洞 | **漂移分级**：对端端口漂移按 NAT 分级预测（`PunchProfile`），减少盲目全端口扫射 | `network/PunchProfile.java`、`network/PunchTuner.java` |
-| 4 | 打洞 | **心跳闭环**：桥建好后首包 watchdog 观察，链路死亡自动 `requestIceRestart`（ice_restart 能力信令）重新协商；掉线快传日志/退房补传/关服兜底 | `network/P2PBridge.java`（首包 watchdog）、`network/ReliableUdpTransport.java`（心跳判死）、`room/ConnectionManager.java`（`requestIceRestart`） |
-| 5 | 打洞 | PREDICTION_OFF 上限保护（50 次/会话），到达后仅停止直连打洞的端口预测尝试；TURN/玩家中继按钮早已可见，**是否使用由玩家主动决定，绝不自动切换中继**（与 §4.8 一致） | `room/ConnectionManager.java`（`PREDICTION_OFF_CAP` / `ZERO_RECV_FINAL_ROUND_LIMIT`） |
-| 6 | TURN v1 | **TCP 兜底承载**：UDP 全丢（BIND 失败码 5=UDP 黑洞）时自动降级走同端口 TCP 长连接，帧格式=2 字节大端长度+同构报文；本地回环 UDP shim 对上层零侵入；绝无手动选择 | `network/TurnTcpChannel.java`、`network/TurnRelayClient.java`（`bindWithRetry`/`engageTcpFallback`） |
-| 7 | TURN v1 | BIND 带外层重试（3 轮×5 发）+ ROLE_CONFLICT 容忍 + 保活 15s | `network/TurnRelayClient.java` |
-| 8 | 模组 | ModSync v2：详见 §3 | `modsync/` 整包 |
+| #   | 领域    | 行为                                                                                                                                                               | 参考实现                                                                                                                                         |
+| --- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | 信令    | **WS 优先**：信令通道优先走 WebSocket（`/ws`，帧协议见该文件头注释），HTTP 轮询降级为兜底；断线自动回退与恢复                                                      | `network/SignalingWsTransport.java`、`ws.go`（服务端 `/ws` 帧协议）                                                                              |
+| 2   | 打洞    | **TCP 双向 SimOpen**：UDP 对称 NAT 场景叠加 TCP 同时打开打洞                                                                                                       | `network/TcpHolePuncher.java`、`network/PunchStrategySelector.java`                                                                              |
+| 3   | 打洞    | **漂移分级**：对端端口漂移按 NAT 分级预测（`PunchProfile`），减少盲目全端口扫射                                                                                    | `network/PunchProfile.java`、`network/PunchTuner.java`                                                                                           |
+| 4   | 打洞    | **心跳闭环**：桥建好后首包 watchdog 观察，链路死亡自动 `requestIceRestart`（ice_restart 能力信令）重新协商；掉线快传日志/退房补传/关服兜底                         | `network/P2PBridge.java`（首包 watchdog）、`network/ReliableUdpTransport.java`（心跳判死）、`room/ConnectionManager.java`（`requestIceRestart`） |
+| 5   | 打洞    | PREDICTION_OFF 上限保护（50 次/会话），到达后仅停止直连打洞的端口预测尝试；TURN/玩家中继按钮早已可见，**是否使用由玩家主动决定，绝不自动切换中继**（与 §4.8 一致） | `room/ConnectionManager.java`（`PREDICTION_OFF_CAP` / `ZERO_RECV_FINAL_ROUND_LIMIT`）                                                            |
+| 6   | TURN v1 | **TCP 兜底承载**：UDP 全丢（BIND 失败码 5=UDP 黑洞）时自动降级走同端口 TCP 长连接，帧格式=2 字节大端长度+同构报文；本地回环 UDP shim 对上层零侵入；绝无手动选择    | `network/TurnTcpChannel.java`、`network/TurnRelayClient.java`（`bindWithRetry`/`engageTcpFallback`）                                             |
+| 7   | TURN v1 | BIND 带外层重试（3 轮×5 发）+ ROLE_CONFLICT 容忍 + 保活 15s                                                                                                        | `network/TurnRelayClient.java`                                                                                                                   |
+| 8   | 模组    | ModSync v2：详见 §3                                                                                                                                                | `modsync/` 整包                                                                                                                                  |
 
 ## 2B. 1.1.7 → 1.1.9 客户端行为变更（本次对比同步清单）
 
-| # | 领域 | 行为 | 参考实现 |
-|---|------|------|----------|
-| 1 | TURN | **标准 TURN（RFC 5766）全量接入**：详见 §4（本次最大改动） | `network/StdTurnClient.java`、`room/ConnectionManager.java` |
-| 2 | 工单 | **双向工单系统（全新）**：详见 §5 | `network/TicketClient.java`、`ui/TicketListScreen.java`、`ui/TicketDetailScreen.java` |
-| 3 | 信令 | **WS 半开判死 90s→35s**：服务端 30s 一次 ping，客户端 35s 看门狗 + 10s 检查粒度；新增**客户端主动心跳**：每 15s 发一个空 WebSocket ping 帧（原生 ping 帧非文本帧），发送失败立即触发重连；WS 超时/网络错误时 `markUnavailable()` 进入退避（10s/30s/60s 三档），避免后续请求继续对着半开连接逐个等超时 | `network/SignalingWsTransport.java` |
-| 4 | 加入 | **加入房间瞬态重试且有界**：最多 3 次尝试，退避 {1500, 3000}ms；可重试错误 = `NETWORK_ERROR`/`CDN_ERROR`/`RATE_LIMITED`（`TransientException`）；重试代数 `joinAttemptGeneration`——任何 `killAllConnectionAttempts()`（取消/离开）使代数 +1，旧重试链发现代数变了立即放弃；最终失败推 `join_failed` 日志、重试推 `join_retry` | `room/ConnectionManager.java`（`JOIN_TRANSIENT_MAX_ATTEMPTS=3`、`JOIN_RETRY_BACKOFF_MS`）、`room/RoomManager.java` |
-| 5 | 生命周期 | **幽灵房清理提速**：WS 断开即联动标失活，大厅展示窗口 600s→**60s**；房客 45s 无活动即剪枝（观察哨）；房主 WS 掉线删房阈值 45→**90s**（客户端心跳 5s 一发、连败 8 次 ≈40s 后自降级 30s 探活，最坏 70s 才报活，45s 会误杀；`MAX_HEARTBEAT_FAILS=8`） | `server-go/roommanager.go`、`room/RoomManager.java` |
-| 6 | 生命周期 | **leaveRoom 必须带真实原因**；handoff 宽限内忽略内部路径 leaveRoom，但"取消加入"/"返回上一界面"两个显式用户操作豁免（按钮必须立即生效）；`notifyAllPeersGone` 一律回 IDLE 继续等人，不再把房主自己的房间关掉；房主只收 `from="host"/"server"`（或 join_request 引入/在册房客）的信令，其余丢弃留痕（第二道防线，与服务端 `signal_auth.go` 矩阵配套） | `room/RoomManager.java`（`leaveRoom(reason)`、信令来源门控） |
-| 7 | ModSync | **门控可见化**：`FetchOutcome` 枚举（MANIFEST/UNSUPPORTED/EMPTY/NOT_READY/BYPASSED），直通原因全部落日志（`gate skip: <outcome>`）；UNSUPPORTED → 面板提示行"房主不支持模组同步"、NOT_READY → 警告行"清单拉取失败"（播报时机在连接启动后面板重置之后，避开被吞）；EMPTY 仍静默。重试数值未变（5 次×2s） | `modsync/ModSyncGuestService.java` |
-| 8 | 打洞 | **活动模板机制**：socket 数量等实时参数不再恒取 HARDSYM 静态值，改读当前生效模板 `punchProfile()`（`activePunchProfile != null ? activePunchProfile : DEFAULT`）；`recommendProfile` 收敛为**唯一 2 参签名** `recommendProfile(NatClass local, NatClass remote)`（tier 死参已删，启动器若实现过 3 参签名必须删除第三参）；模板切换有 20s 节流，被节流丢弃时留痕 | `room/ConnectionManager.java`（`punchProfile()`）、`network/NatClass.java` |
-| 9 | 打洞 | **可观测性**：`PunchProfile.describeInstance()` 列出全部与 DEFAULT 不同的字段；20s 节流丢弃留痕 | `network/PunchProfile.java` |
-| 10 | NAT | **NAT 文案补全（纯显示层，零判定影响）**：`NatLabels` 把 StunProbe 细粒度 key + 遗留 `open/moderate/strict` 归一到语言键，未收录值回退 `nat.unknown`；连接界面/大厅卡片不再显示"未知" | `network/NatLabels.java` |
-| 11 | NAT | **对端自报 NAT vs 观测 NAT 不一致留痕**：自报串归一后与观测值比对，不一致按组合每局留痕一次；**模板选择仍只认观测值，零判定变更** | `room/ConnectionManager.java`（`classifyRemoteNatLogged`） |
-| 12 | RUDP | **重绑帧长门修正**：`maybeRebindRemote` 只看源地址不碰帧体，必须放在 `frameMinLen`（DATA 13B/FEC 14B）长度门**之外**——否则 11~12B DATA、11~13B FEC_XOR 不更新对端地址，CGNAT 中途重映射端口要白等一轮超时；同处新增 `TURN_MAX_SEND_CHUNK=1374` 分块上限与明文降级时重置心跳判死锚点 | `network/ReliableUdpTransport.java` |
-| 13 | RUDP | **TURN 路径载荷上限 1374**：`TURN_MAX_SEND_CHUNK=1374`（节点 MTU 1400 − FEC 开销），对自研 v1 与标准 TURN 同样生效（codec 在 RUDP 之下）；直连路径仍为 `MAX_PAYLOAD=1400` | `network/ReliableUdpTransport.java` |
-| 14 | 标识 | **加载器标识如实上报**：create/join 请求体 `loader` 字段不再硬编码 `"fabric"`，上报启动器自身加载器名；同一 body 还有 `clientProtocolVersion: 7` 与能力数组 | `network/SignalingClient.java`、`VoxLinkConstants.LOADER` |
-| 15 | UI | **关键失败提示必须持久可见**：建房失败提示从动作栏（约 3 秒消失）改入聊天框/等价持久位置——启动器若用瞬时 toast 承载关键错误，改为持久可见的日志/通知区，否则用户来不及读 | `ui/CreateRoomScreen.java` |
+| #   | 领域     | 行为                                                                                                                                                                                                                                                                                                                                                            | 参考实现                                                                                                           |
+| --- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| 1   | TURN     | **标准 TURN（RFC 5766）全量接入**：详见 §4（本次最大改动）                                                                                                                                                                                                                                                                                                      | `network/StdTurnClient.java`、`room/ConnectionManager.java`                                                        |
+| 2   | 工单     | **双向工单系统（全新）**：详见 §5                                                                                                                                                                                                                                                                                                                               | `network/TicketClient.java`、`ui/TicketListScreen.java`、`ui/TicketDetailScreen.java`                              |
+| 3   | 信令     | **WS 半开判死 90s→35s**：服务端 30s 一次 ping，客户端 35s 看门狗 + 10s 检查粒度；新增**客户端主动心跳**：每 15s 发一个空 WebSocket ping 帧（原生 ping 帧非文本帧），发送失败立即触发重连；WS 超时/网络错误时 `markUnavailable()` 进入退避（10s/30s/60s 三档），避免后续请求继续对着半开连接逐个等超时                                                           | `network/SignalingWsTransport.java`                                                                                |
+| 4   | 加入     | **加入房间瞬态重试且有界**：最多 3 次尝试，退避 {1500, 3000}ms；可重试错误 = `NETWORK_ERROR`/`CDN_ERROR`/`RATE_LIMITED`（`TransientException`）；重试代数 `joinAttemptGeneration`——任何 `killAllConnectionAttempts()`（取消/离开）使代数 +1，旧重试链发现代数变了立即放弃；最终失败推 `join_failed` 日志、重试推 `join_retry`                                   | `room/ConnectionManager.java`（`JOIN_TRANSIENT_MAX_ATTEMPTS=3`、`JOIN_RETRY_BACKOFF_MS`）、`room/RoomManager.java` |
+| 5   | 生命周期 | **幽灵房清理提速**：WS 断开即联动标失活，大厅展示窗口 600s→**60s**；房客 45s 无活动即剪枝（观察哨）；房主 WS 掉线删房阈值 45→**90s**（客户端心跳 5s 一发、连败 8 次 ≈40s 后自降级 30s 探活，最坏 70s 才报活，45s 会误杀；`MAX_HEARTBEAT_FAILS=8`）                                                                                                              | `server-go/roommanager.go`、`room/RoomManager.java`                                                                |
+| 6   | 生命周期 | **leaveRoom 必须带真实原因**；handoff 宽限内忽略内部路径 leaveRoom，但"取消加入"/"返回上一界面"两个显式用户操作豁免（按钮必须立即生效）；`notifyAllPeersGone` 一律回 IDLE 继续等人，不再把房主自己的房间关掉；房主只收 `from="host"/"server"`（或 join_request 引入/在册房客）的信令，其余丢弃留痕（第二道防线，与服务端 `signal_auth.go` 矩阵配套）            | `room/RoomManager.java`（`leaveRoom(reason)`、信令来源门控）                                                       |
+| 7   | ModSync  | **门控可见化**：`FetchOutcome` 枚举（MANIFEST/UNSUPPORTED/EMPTY/NOT_READY/BYPASSED），直通原因全部落日志（`gate skip: <outcome>`）；UNSUPPORTED → 面板提示行"房主不支持模组同步"、NOT_READY → 警告行"清单拉取失败"（播报时机在连接启动后面板重置之后，避开被吞）；EMPTY 仍静默。重试数值未变（5 次×2s）                                                         | `modsync/ModSyncGuestService.java`                                                                                 |
+| 8   | 打洞     | **活动模板机制**：socket 数量等实时参数不再恒取 HARDSYM 静态值，改读当前生效模板 `punchProfile()`（`activePunchProfile != null ? activePunchProfile : DEFAULT`）；`recommendProfile` 收敛为**唯一 2 参签名** `recommendProfile(NatClass local, NatClass remote)`（tier 死参已删，启动器若实现过 3 参签名必须删除第三参）；模板切换有 20s 节流，被节流丢弃时留痕 | `room/ConnectionManager.java`（`punchProfile()`）、`network/NatClass.java`                                         |
+| 9   | 打洞     | **可观测性**：`PunchProfile.describeInstance()` 列出全部与 DEFAULT 不同的字段；20s 节流丢弃留痕                                                                                                                                                                                                                                                                 | `network/PunchProfile.java`                                                                                        |
+| 10  | NAT      | **NAT 文案补全（纯显示层，零判定影响）**：`NatLabels` 把 StunProbe 细粒度 key + 遗留 `open/moderate/strict` 归一到语言键，未收录值回退 `nat.unknown`；连接界面/大厅卡片不再显示"未知"                                                                                                                                                                           | `network/NatLabels.java`                                                                                           |
+| 11  | NAT      | **对端自报 NAT vs 观测 NAT 不一致留痕**：自报串归一后与观测值比对，不一致按组合每局留痕一次；**模板选择仍只认观测值，零判定变更**                                                                                                                                                                                                                               | `room/ConnectionManager.java`（`classifyRemoteNatLogged`）                                                         |
+| 12  | RUDP     | **重绑帧长门修正**：`maybeRebindRemote` 只看源地址不碰帧体，必须放在 `frameMinLen`（DATA 13B/FEC 14B）长度门**之外**——否则 11~12B DATA、11~13B FEC_XOR 不更新对端地址，CGNAT 中途重映射端口要白等一轮超时；同处新增 `TURN_MAX_SEND_CHUNK=1374` 分块上限与明文降级时重置心跳判死锚点                                                                             | `network/ReliableUdpTransport.java`                                                                                |
+| 13  | RUDP     | **TURN 路径载荷上限 1374**：`TURN_MAX_SEND_CHUNK=1374`（节点 MTU 1400 − FEC 开销），对自研 v1 与标准 TURN 同样生效（codec 在 RUDP 之下）；直连路径仍为 `MAX_PAYLOAD=1400`                                                                                                                                                                                       | `network/ReliableUdpTransport.java`                                                                                |
+| 14  | 标识     | **加载器标识如实上报**：create/join 请求体 `loader` 字段不再硬编码 `"fabric"`，上报启动器自身加载器名；同一 body 还有 `clientProtocolVersion: 7` 与能力数组                                                                                                                                                                                                     | `network/SignalingClient.java`、`VoxLinkConstants.LOADER`                                                          |
+| 15  | UI       | **关键失败提示必须持久可见**：建房失败提示从动作栏（约 3 秒消失）改入聊天框/等价持久位置——启动器若用瞬时 toast 承载关键错误，改为持久可见的日志/通知区，否则用户来不及读                                                                                                                                                                                        | `ui/CreateRoomScreen.java`                                                                                         |
 
 ## 3. 模组同步 ModSync v2
 
@@ -118,13 +118,13 @@
 
 ### 3.2 端点契约
 
-| 路由 | 方法 | 鉴权 | 说明 |
-|------|------|------|------|
-| `/room/create` | POST | - | 启动器当房主时 body 须含 `clientCapabilities:["modSyncV1"]` |
-| `/room/mods/publish` | POST | hostToken | 旧兼容推送；等价写 `required` 档缓存 |
+| 路由                 | 方法 | 鉴权          | 说明                                                                        |
+| -------------------- | ---- | ------------- | --------------------------------------------------------------------------- |
+| `/room/create`       | POST | -             | 启动器当房主时 body 须含 `clientCapabilities:["modSyncV1"]`                 |
+| `/room/mods/publish` | POST | hostToken     | 旧兼容推送；等价写 `required` 档缓存                                        |
 | `/room/mods/request` | POST | -（按房间号） | body `{code, scope:"required"\|"all"}`；命中缓存立即返回，未命中长轮询 ≤12s |
-| `/room/mods/answer` | POST | hostToken | body `{code, token, requestId, scope, manifest}`；应答+写缓存（双用） |
-| `/room/mods` | POST | -（按房间号） | 旧拉取，等价 `scope=required` 缓存 |
+| `/room/mods/answer`  | POST | hostToken     | body `{code, token, requestId, scope, manifest}`；应答+写缓存（双用）       |
+| `/room/mods`         | POST | -（按房间号） | 旧拉取，等价 `scope=required` 缓存                                          |
 
 `/room/mods/request` 响应 `data`：
 
@@ -207,7 +207,7 @@ UNSUPPORTED/NOT_READY 各对应一条面板提示（键 `voxlink.logui.modsync_u
 ### 4.1 能力声明与协商
 
 - 能力全集（`ProtocolNegotiator.CAPABILITIES`）：`["relay","ice_restart","continuous_retry",
-  "punchAuthV1","overlayAuthV1","modSyncV1","stdTurnV1"]`；启动器建房 `/room/create` 的
+"punchAuthV1","overlayAuthV1","modSyncV1","stdTurnV1"]`；启动器建房 `/room/create` 的
   `clientCapabilities` 必须含 `"stdTurnV1"`（会透传为房间 `hostCapabilities`）。
 - **选择条件（两栈互斥二选一，会话内不存在降级）**：
   `node.stdTurnPort > 0 && hostSupportsStdTurn(room)` → 走标准 TURN；否则整条走自研 v1
@@ -220,13 +220,13 @@ UNSUPPORTED/NOT_READY 各对应一条面板提示（键 `voxlink.logui.modsync_u
 
 ### 4.2 凭证拉取 `/relay/stdturn/cred`
 
-| 项 | 值 |
-|----|----|
-| 方法/路径 | POST `/relay/stdturn/cred`（信令路由键 `relay_stdturn_cred`；可走 `/rpc.php?action=` 旧式或 `/?route=` 新式） |
-| 超时 | 5000ms |
-| 请求体 | `{roomCode, clientId, token, nodeId}` |
-| 响应 data | `{host, port, username, password, expire(unix 秒), realm:"voxlink"}` |
-| 错误码 | `RELAY_DISABLED` / `MISSING_FIELDS` / `RATE_LIMITED` / `INVALID_TOKEN`(403) / `NODE_OFFLINE`(404) / `STDTURN_UNAVAILABLE`(404，节点 stdTurnPort≤0) / `INTERNAL_ERROR` |
+| 项        | 值                                                                                                                                                                    |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 方法/路径 | POST `/relay/stdturn/cred`（信令路由键 `relay_stdturn_cred`；可走 `/rpc.php?action=` 旧式或 `/?route=` 新式）                                                         |
+| 超时      | 5000ms                                                                                                                                                                |
+| 请求体    | `{roomCode, clientId, token, nodeId}`                                                                                                                                 |
+| 响应 data | `{host, port, username, password, expire(unix 秒), realm:"voxlink"}`                                                                                                  |
+| 错误码    | `RELAY_DISABLED` / `MISSING_FIELDS` / `RATE_LIMITED` / `INVALID_TOKEN`(403) / `NODE_OFFLINE`(404) / `STDTURN_UNAVAILABLE`(404，节点 stdTurnPort≤0) / `INTERNAL_ERROR` |
 
 - 任一 host/port/username/password 缺失 → cred 判 null。
 - **房主没有 clientId**：房主侧 clientId 允许为空串，服务端派生 `clientID = "host-" + roomCode`、
@@ -244,14 +244,14 @@ UNSUPPORTED/NOT_READY 各对应一条面板提示（键 `voxlink.logui.modsync_u
 
 **常量（逐值核对）**：
 
-| 常量 | 值 |
-|------|----|
-| MAGIC_COOKIE | 0x2112A442 |
-| FINGERPRINT XOR | 0x5354554E |
-| REQUESTED-TRANSPORT | 17（UDP） |
-| CHANNEL_BASE（会话唯一通道号，双向同号） | 0x4000 |
-| DEFAULT_LIFETIME_SEC | 600 |
-| 事务重传 TX_MAX_ROUNDS / TX_RTO_MS | 4 轮 / 500ms 起步每轮 ×3（500/1500/3500/7500ms，总 ~12s） |
+| 常量                                     | 值                                                        |
+| ---------------------------------------- | --------------------------------------------------------- |
+| MAGIC_COOKIE                             | 0x2112A442                                                |
+| FINGERPRINT XOR                          | 0x5354554E                                                |
+| REQUESTED-TRANSPORT                      | 17（UDP）                                                 |
+| CHANNEL_BASE（会话唯一通道号，双向同号） | 0x4000                                                    |
+| DEFAULT_LIFETIME_SEC                     | 600                                                       |
+| 事务重传 TX_MAX_ROUNDS / TX_RTO_MS       | 4 轮 / 500ms 起步每轮 ×3（500/1500/3500/7500ms，总 ~12s） |
 
 消息类型：Allocate 0x0003/0x0103/0x0113、Refresh 0x0004/0x0104/0x0114、
 CreatePermission 0x0008/0x0108/0x0118、ChannelBind 0x0009/0x0109/0x0119。
@@ -266,8 +266,8 @@ REQUESTED-TRANSPORT/XOR-MAPPED-ADDRESS/SOFTWARE/FINGERPRINT（值见源码 §头
    `min(timeoutMs, 3000)`，实参 timeoutMs=8000）。探包类型不是 401、或缺 REALM/NONCE →
    直接判死返回 null，**不要盲目重试**。
 2. **第二轮（带凭证）**：Allocate + USERNAME + REALM + NONCE + SOFTWARE，MESSAGE-INTEGRITY
-   + FINGERPRINT 签名 → 期望 0x0103。从 XOR-RELAYED-ADDRESS 解出本端 relay 地址；
-   LIFETIME 属性写回会话（缺省 600）。
+   - FINGERPRINT 签名 → 期望 0x0103。从 XOR-RELAYED-ADDRESS 解出本端 relay 地址；
+     LIFETIME 属性写回会话（缺省 600）。
 3. 长项凭证 key = `MD5(username:realm:password)`（RFC 5389 §15.4）；MESSAGE-INTEGRITY =
    HMAC-SHA1(key)；FINGERPRINT = CRC32 ^ 0x5354554E；先 MI 后 FP、长度字段分两步计算。
 4. ERROR-CODE 解析：`class(v[2]&0x07)*100 + (v[3]&0xFF)`。
@@ -305,14 +305,14 @@ REQUESTED-TRANSPORT/XOR-MAPPED-ADDRESS/SOFTWARE/FINGERPRINT（值见源码 §头
 **没有新增 type 名**；`turn_alloc`/`turn_ready` 各增加一个 `stdTurn:true` 变体，host 按
 `data.stdTurn==true` 分流；缺省/旧客户端不带该字段自动落 v1 路径。相关 type 全集与角色门：
 
-| type | 方向 | data 字段 |
-|------|------|-----------|
-| turn_alloc | guest→host（仅房客可发） | std 变体：`stdTurn:true, nodeId, nodeHost, stdTurnPort, relayHost, relayPort, clientId, punchAuth`；v1 变体：`sessionId, host, port, ticket, expire, clientId, punchAuth` |
-| turn_ready | host→guest（仅房主可发） | std 变体：`stdTurn:true, relayHost, relayPort, clientId`（host 的 relay 地址）；v1 变体：`clientId` |
-| turn_nack | host→guest | `clientId, reason`；reason 枚举：`direct_won` / `bad_alloc` / `std_cred_failed` / `std_alloc_failed` / `std_bind_failed`（v1 路径另有 `bind_failed`） |
-| turn_stby | guest→host | 玩家中继热备通知 |
-| turn_bg_punch | guest→host | `{ip,port}` 后台直连打洞 |
-| turn_release | 双方 | 释放 |
+| type          | 方向                     | data 字段                                                                                                                                                                 |
+| ------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| turn_alloc    | guest→host（仅房客可发） | std 变体：`stdTurn:true, nodeId, nodeHost, stdTurnPort, relayHost, relayPort, clientId, punchAuth`；v1 变体：`sessionId, host, port, ticket, expire, clientId, punchAuth` |
+| turn_ready    | host→guest（仅房主可发） | std 变体：`stdTurn:true, relayHost, relayPort, clientId`（host 的 relay 地址）；v1 变体：`clientId`                                                                       |
+| turn_nack     | host→guest               | `clientId, reason`；reason 枚举：`direct_won` / `bad_alloc` / `std_cred_failed` / `std_alloc_failed` / `std_bind_failed`（v1 路径另有 `bind_failed`）                     |
+| turn_stby     | guest→host               | 玩家中继热备通知                                                                                                                                                          |
+| turn_bg_punch | guest→host               | `{ip,port}` 后台直连打洞                                                                                                                                                  |
+| turn_release  | 双方                     | 释放                                                                                                                                                                      |
 
 - `punchAuth` = selfSupports("punchAuthV1")。host 侧按其真假分别走 PunchAuth 派生密钥或旧 peer 表。
 - relay 地址（relayHost/relayPort）= 本端 Allocate 得到的 XOR-RELAYED-ADDRESS。
@@ -335,25 +335,25 @@ channelBind 全在后台执行器（离信令分发线程）→ 建 RUDP transpo
 
 **时序预算验收表（禁改数值）**：
 
-| 项 | 值 |
-|----|----|
-| cred 端点超时 | 5000ms（服务端限频 6 次/分/ip+clientId） |
-| Allocate 探包 | ≤3 发，每发预算 min(timeoutMs, 3000) |
-| 带凭证 Allocate / CreatePermission / ChannelBind 事务 | 各 8000ms |
-| 事务重传 | 4 轮 ×RTO(500ms，每轮×3) |
-| guest 整条流总超时 | 35s |
-| turn_ready 兜底（guest） | 20s |
-| turn_ready 补发（host） | 4s |
-| 保活周期 | 240s（Refresh 600s + ChannelBind 重发） |
-| v1 保活对照 | 15s KEEPALIVE |
-| TURN 意外死亡熔断 | 60s 静默 |
-| 节点列表缓存 | 60s；UDP 应用层探测每节点 6 发/单发 800ms/总预算 4s/3 发取最小 RTT/并行；**探测全超时不判死**，照样 allocate |
+| 项                                                    | 值                                                                                                           |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| cred 端点超时                                         | 5000ms（服务端限频 6 次/分/ip+clientId）                                                                     |
+| Allocate 探包                                         | ≤3 发，每发预算 min(timeoutMs, 3000)                                                                         |
+| 带凭证 Allocate / CreatePermission / ChannelBind 事务 | 各 8000ms                                                                                                    |
+| 事务重传                                              | 4 轮 ×RTO(500ms，每轮×3)                                                                                     |
+| guest 整条流总超时                                    | 35s                                                                                                          |
+| turn_ready 兜底（guest）                              | 20s                                                                                                          |
+| turn_ready 补发（host）                               | 4s                                                                                                           |
+| 保活周期                                              | 240s（Refresh 600s + ChannelBind 重发）                                                                      |
+| v1 保活对照                                           | 15s KEEPALIVE                                                                                                |
+| TURN 意外死亡熔断                                     | 60s 静默                                                                                                     |
+| 节点列表缓存                                          | 60s；UDP 应用层探测每节点 6 发/单发 800ms/总预算 4s/3 发取最小 RTT/并行；**探测全超时不判死**，照样 allocate |
 
 ### 4.8 红线（与既有产品决策一致，一字不许动）
 
 - **中继绝不自动切换**：TURN（无论 v1 还是 std）只由玩家点击"使用中继"触发（打洞 20s 后
   按钮可见）；打洞终局也只让按钮可见。守卫：`turnInProgress || turnSession != null ||
-  manualRelayInProgress` 直接返回；直连已赢则跳过。
+manualRelayInProgress` 直接返回；直连已赢则跳过。
 - **TURN 建立后的后台升级监视器**：5 分钟窗口、30s 一 tick。奇数 tick 做**玩家中继热备**
   探测（打通只存热备不建桥不切换）；每 tick 做 30s 低频直连协同打洞（turn_bg_punch + 5s
   puncher）。直连通了 → 挂 secondary 路径双收 → **连续 20s 稳定收包才 promote 平滑切换**
@@ -379,15 +379,15 @@ channelBind 全在后台执行器（离信令分发线程）→ 建 RUDP transpo
 
 ### 5.2 端点契约
 
-| 端点 | 方法 | 请求 | 响应 data | 错误码 |
-|------|------|------|-----------|--------|
-| `/ticket/submit` | POST multipart | `description`、`client="mod"`、`clientInfo`(JSON 串)、`attachments`(字段名固定) | `{id, ticketSecret, attachments, rateWindow:600}` | `TICKET_EMPTY` / `TICKET_TOO_LARGE`(413) / `RATE_LIMITED` |
-| `/ticket/reply` | POST multipart | `id`、`secret`、`text`、`attachments` | `{ok:true, messages, deduplicated?}` | `TICKET_FORBIDDEN`(403) / `TICKET_DELETED` / `TICKET_FULL` / `RATE_LIMITED` |
-| `/ticket/retract` | POST JSON | `{id, msg:<msgId>, secret}` | `{ok:true}` | `TICKET_EMPTY` / `TICKET_NOT_FOUND` / `TICKET_MSG_NOT_FOUND` / `TICKET_FORBIDDEN`(403) |
-| `/ticket/detail` | GET | query `&id=<id>&secret=<sec>` | `{id, time(秒), deleted, description, attachments[{name,size}], messages[{id,from,time,text,attachments[]}]}` | - |
-| `/ticket/viewed` | POST JSON | `{id, secret}` | fire-and-forget（本地未读即时清零） | - |
-| `/ticket/delete` | POST JSON | `{id, secret}` | fire-and-forget（软删） | - |
-| `/ticket/poll` | POST JSON | `{ids:[…全部本地单号]}` | `{tickets:[{id,hasUnread,deleted,replyCount,lastTime}], removed:[已消失单号]}` | - |
+| 端点              | 方法           | 请求                                                                            | 响应 data                                                                                                     | 错误码                                                                                 |
+| ----------------- | -------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `/ticket/submit`  | POST multipart | `description`、`client="mod"`、`clientInfo`(JSON 串)、`attachments`(字段名固定) | `{id, ticketSecret, attachments, rateWindow:600}`                                                             | `TICKET_EMPTY` / `TICKET_TOO_LARGE`(413) / `RATE_LIMITED`                              |
+| `/ticket/reply`   | POST multipart | `id`、`secret`、`text`、`attachments`                                           | `{ok:true, messages, deduplicated?}`                                                                          | `TICKET_FORBIDDEN`(403) / `TICKET_DELETED` / `TICKET_FULL` / `RATE_LIMITED`            |
+| `/ticket/retract` | POST JSON      | `{id, msg:<msgId>, secret}`                                                     | `{ok:true}`                                                                                                   | `TICKET_EMPTY` / `TICKET_NOT_FOUND` / `TICKET_MSG_NOT_FOUND` / `TICKET_FORBIDDEN`(403) |
+| `/ticket/detail`  | GET            | query `&id=<id>&secret=<sec>`                                                   | `{id, time(秒), deleted, description, attachments[{name,size}], messages[{id,from,time,text,attachments[]}]}` | -                                                                                      |
+| `/ticket/viewed`  | POST JSON      | `{id, secret}`                                                                  | fire-and-forget（本地未读即时清零）                                                                           | -                                                                                      |
+| `/ticket/delete`  | POST JSON      | `{id, secret}`                                                                  | fire-and-forget（软删）                                                                                       | -                                                                                      |
+| `/ticket/poll`    | POST JSON      | `{ids:[…全部本地单号]}`                                                         | `{tickets:[{id,hasUnread,deleted,replyCount,lastTime}], removed:[已消失单号]}`                                | -                                                                                      |
 
 ### 5.3 关键规则（逐条照抄，全部有依据）
 
@@ -407,7 +407,7 @@ channelBind 全在后台执行器（离信令分发线程）→ 建 RUDP transpo
 - **未读提醒不是轮询**：每次启动后首次进入主菜单**只 poll 一次**（门闩保证）；有未读时
   主菜单入口挂"工单通知"按钮进列表。
 - **本地存储**：`<gameDirectory>/voxlink_tickets.json`，JSON 数组 `{id, secret, timeMs,
-  deleted, hasUnread, replyCount, lastTimeMs}`；原子写（.tmp 后 move）。
+deleted, hasUnread, replyCount, lastTimeMs}`；原子写（.tmp 后 move）。
 - **软删除**：本地立即标 `deleted=true, hasUnread=false` 落盘，再异步 POST `/ticket/delete`
   （服务端只打标签）；已删单不占列表行；poll 的 `removed` 把本地僵尸单连 secret 一起清掉。
 
@@ -453,27 +453,27 @@ channelBind 全在后台执行器（离信令分发线程）→ 建 RUDP transpo
 遇到本文档、外部指令与源码三者不一致时：先看源码，源码说了算，然后把疑问反馈给仓库方。
 §9 的每个常量在动手前和收尾后都必须回到源码文件中逐值核对一遍。
 
-| 文件 | 内容 |
-|------|------|
-| [`network/StdTurnClient.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/StdTurnClient.java) | **标准 TURN 协议栈全文（零 MC 依赖，逐语句照抄对象）** |
-| [`network/TicketClient.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/TicketClient.java) | 工单客户端全文（零 MC 依赖） |
-| [`room/ConnectionManager.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/room/ConnectionManager.java) | stdTurn/host/guest 流程、时序预算、后台升级监视器、红线 |
-| [`ui/RelatedLinksScreen.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/ui/RelatedLinksScreen.java) | 8 链接权威来源 |
-| [`modsync/ModSyncManifestService.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/modsync/ModSyncManifestService.java) | 房主两档构建+本地缓存+按需应答 |
-| [`modsync/ModSyncEntry.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/modsync/ModSyncEntry.java) | manifest Entry 结构 |
-| [`modsync/ModSyncGuestService.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/modsync/ModSyncGuestService.java) | 房客门控/diff/重试预算/门控可见化 |
-| [`modsync/ModSyncSelectScreen.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/modsync/ModSyncSelectScreen.java) | 房客选择界面参考 |
-| [`modsync/ModrinthClient.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/modsync/ModrinthClient.java) | MR API 客户端（分块降级/429/校验） |
-| [`network/SignalingClient.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/SignalingClient.java) | 端点路由表（HTTP 契约同源）、loader 如实上报 |
-| [`network/SignalingWsTransport.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/SignalingWsTransport.java) | WS 优先信令传输（35s 判死+15s 主动 ping+退避） |
-| [`network/TurnTcpChannel.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/TurnTcpChannel.java) | TURN **v1** TCP 兜底 shim（std TURN 不用） |
-| [`network/TurnRelayClient.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/TurnRelayClient.java) | TURN v1 客户端（BIND/保活/TCP 降级）、NodeInfo.stdTurnPort |
-| [`network/ReliableUdpTransport.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/ReliableUdpTransport.java) | RUDP（1374 分块、重绑帧长门、心跳判死） |
-| [`network/NatLabels.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/NatLabels.java) | NAT 显示名归一（纯显示层） |
-| [`network/TcpHolePuncher.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/TcpHolePuncher.java) | TCP 双向 SimOpen 打洞 |
-| [`network/PunchProfile.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/PunchProfile.java) | NAT 分级/漂移预测/五套模板/describeInstance |
-| [`ui/TicketListScreen.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/ui/TicketListScreen.java) | 工单列表界面参考 |
-| [`ui/TicketDetailScreen.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/ui/TicketDetailScreen.java) | 工单详情/追问/撤回界面参考 |
+| 文件                                                                                                                               | 内容                                                       |
+| ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| [`network/StdTurnClient.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/StdTurnClient.java)                   | **标准 TURN 协议栈全文（零 MC 依赖，逐语句照抄对象）**     |
+| [`network/TicketClient.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/TicketClient.java)                     | 工单客户端全文（零 MC 依赖）                               |
+| [`room/ConnectionManager.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/room/ConnectionManager.java)                 | stdTurn/host/guest 流程、时序预算、后台升级监视器、红线    |
+| [`ui/RelatedLinksScreen.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/ui/RelatedLinksScreen.java)                   | 8 链接权威来源                                             |
+| [`modsync/ModSyncManifestService.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/modsync/ModSyncManifestService.java) | 房主两档构建+本地缓存+按需应答                             |
+| [`modsync/ModSyncEntry.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/modsync/ModSyncEntry.java)                     | manifest Entry 结构                                        |
+| [`modsync/ModSyncGuestService.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/modsync/ModSyncGuestService.java)       | 房客门控/diff/重试预算/门控可见化                          |
+| [`modsync/ModSyncSelectScreen.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/modsync/ModSyncSelectScreen.java)       | 房客选择界面参考                                           |
+| [`modsync/ModrinthClient.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/modsync/ModrinthClient.java)                 | MR API 客户端（分块降级/429/校验）                         |
+| [`network/SignalingClient.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/SignalingClient.java)               | 端点路由表（HTTP 契约同源）、loader 如实上报               |
+| [`network/SignalingWsTransport.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/SignalingWsTransport.java)     | WS 优先信令传输（35s 判死+15s 主动 ping+退避）             |
+| [`network/TurnTcpChannel.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/TurnTcpChannel.java)                 | TURN **v1** TCP 兜底 shim（std TURN 不用）                 |
+| [`network/TurnRelayClient.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/TurnRelayClient.java)               | TURN v1 客户端（BIND/保活/TCP 降级）、NodeInfo.stdTurnPort |
+| [`network/ReliableUdpTransport.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/ReliableUdpTransport.java)     | RUDP（1374 分块、重绑帧长门、心跳判死）                    |
+| [`network/NatLabels.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/NatLabels.java)                           | NAT 显示名归一（纯显示层）                                 |
+| [`network/TcpHolePuncher.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/TcpHolePuncher.java)                 | TCP 双向 SimOpen 打洞                                      |
+| [`network/PunchProfile.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/PunchProfile.java)                     | NAT 分级/漂移预测/五套模板/describeInstance                |
+| [`ui/TicketListScreen.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/ui/TicketListScreen.java)                       | 工单列表界面参考                                           |
+| [`ui/TicketDetailScreen.java`](../fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/ui/TicketDetailScreen.java)                   | 工单详情/追问/撤回界面参考                                 |
 
 ## 9. 打洞引擎常量验收表（逐值核对，禁止改动数值）
 
@@ -485,37 +485,37 @@ channelBind 全在后台执行器（离信令分发线程）→ 建 RUDP transpo
 **1.1.9 三处机制修正（与 §2B#8 一致，实现时同步）**：
 
 - 实时参数（socket 数等）读**活动模板** `punchProfile()`（`activePunchProfile != null ?
-  activePunchProfile : DEFAULT`），不再恒取 HARDSYM 静态值；
+activePunchProfile : DEFAULT`），不再恒取 HARDSYM 静态值；
 - `recommendProfile` 唯一签名 = `recommendProfile(NatClass local, NatClass remote)`
   （tier 死参已删；若有 3 参旧实现必须删除）；
 - 模板切换 20s 节流，丢弃时留痕。
 
 ### 9.1 PunchTuner（自适应调参，9 常量）
 
-| 常量 | 值 | 语义 |
-|------|----|------|
-| MAX_PORT_RANGE | 500 | 端口扫描范围上限 |
-| MAX_TIMEOUT_MS | 30000 | 单轮超时上限 |
-| MIN_SEND_INTERVAL_MS | 50 | 发包间隔下限 |
-| LATE_CYCLE_TIMEOUT_MS | 5000 | 后期轮次超时 |
-| ACK_RETRIES_ON_TIMEOUT | 3 | 超时后 ACK 重试次数 |
-| PREDICTION_DELTA_THRESHOLD | 100 | 端口漂移"大漂移"阈值 |
-| PORT_RANGE_MULTIPLIER | 2 | 每轮范围放大倍数 |
-| TIMEOUT_INCREMENT_MS | 4000 | 每轮超时增量 |
-| SEND_INTERVAL_DIVISOR | 2 | 每轮间隔缩减除数 |
+| 常量                       | 值    | 语义                 |
+| -------------------------- | ----- | -------------------- |
+| MAX_PORT_RANGE             | 500   | 端口扫描范围上限     |
+| MAX_TIMEOUT_MS             | 30000 | 单轮超时上限         |
+| MIN_SEND_INTERVAL_MS       | 50    | 发包间隔下限         |
+| LATE_CYCLE_TIMEOUT_MS      | 5000  | 后期轮次超时         |
+| ACK_RETRIES_ON_TIMEOUT     | 3     | 超时后 ACK 重试次数  |
+| PREDICTION_DELTA_THRESHOLD | 100   | 端口漂移"大漂移"阈值 |
+| PORT_RANGE_MULTIPLIER      | 2     | 每轮范围放大倍数     |
+| TIMEOUT_INCREMENT_MS       | 4000  | 每轮超时增量         |
+| SEND_INTERVAL_DIVISOR      | 2     | 每轮间隔缩减除数     |
 
 ### 9.2 PunchProfile 五套发包模板（每套 11 参数，按序）
 
 SendParams 字段序：intervalMs, socketTimeoutMs, extraWaitMs, extraWaitLongMs,
 jitterBaseMs, jitterRangeMs, minRounds, minPass, sleepShortMs, sleepLongMs, sweepWindowSize
 
-| 模板 | 11 参数值 |
-|------|-----------|
-| SEND_DEFAULT | 200, 500, 1000, 2000, 600, 200, 3, 3, 1, 10, 800 |
-| SEND_DEFAULT_FAST | 200, 500, 1000, 2000, 600, 200, 1, 2, 1, 5, 800 |
-| SEND_SPRINT | 100, 300, 600, 1200, 400, 150, 1, 1, 1, 3, 400 |
-| SEND_WIDE | 150, 500, **500**, 2000, 500, 200, 1, 2, 1, 5, 800 |
-| SEND_WEAK | 250, 800, 1500, 3000, 500, 250, 3, 3, 2, 8, 600 |
+| 模板              | 11 参数值                                          |
+| ----------------- | -------------------------------------------------- |
+| SEND_DEFAULT      | 200, 500, 1000, 2000, 600, 200, 3, 3, 1, 10, 800   |
+| SEND_DEFAULT_FAST | 200, 500, 1000, 2000, 600, 200, 1, 2, 1, 5, 800    |
+| SEND_SPRINT       | 100, 300, 600, 1200, 400, 150, 1, 1, 1, 3, 400     |
+| SEND_WIDE         | 150, 500, **500**, 2000, 500, 200, 1, 2, 1, 5, 800 |
+| SEND_WEAK         | 250, 800, 1500, 3000, 500, 250, 3, 3, 2, 8, 600    |
 
 场景选择、双 socket 组、防火墙探测周期等模板切换逻辑以 `PunchProfile.java` 为准。
 

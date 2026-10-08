@@ -15,8 +15,7 @@ interface ProgressEntry {
   complete: boolean
 }
 
-const validSize = (value: unknown): value is number =>
-  typeof value === 'number' && Number.isFinite(value) && value >= 0
+const validSize = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0
 
 /**
  * 以每个文件“已持久化字节”聚合并发下载进度。每个 entry 只允许增长；乱序完成、
@@ -37,17 +36,16 @@ export class DownloadProgressTracker {
     const wasDeterminate = this.isDeterminate()
     const doneBefore = this.sealed ? this.bytesDone() : 0
     if (this.sealed && wasDeterminate) this.snapshot()
-    const index = this.entries.push({
-      expected: validSize(expected) ? expected : null,
-      transferred: 0,
-      complete: false
-    }) - 1
+    const index =
+      this.entries.push({
+        expected: validSize(expected) ? expected : null,
+        transferred: 0,
+        complete: false,
+      }) - 1
     if (this.sealed && wasDeterminate) {
       this.anchorFraction = this.lastFraction
       this.anchorDone = doneBefore
-      this.anchorRemaining = this.totalExpected() == null
-        ? null
-        : Math.max(0, (this.totalExpected() ?? 0) - doneBefore)
+      this.anchorRemaining = this.totalExpected() == null ? null : Math.max(0, (this.totalExpected() ?? 0) - doneBefore)
       this.hasDeterminateEpoch = true
     }
     return index
@@ -100,7 +98,7 @@ export class DownloadProgressTracker {
         bytesDone,
         bytesTotal: null,
         fraction: complete ? 1 : null,
-        indeterminate: !complete
+        indeterminate: !complete,
       }
     }
 
@@ -112,9 +110,7 @@ export class DownloadProgressTracker {
       fraction = this.anchorFraction
     } else {
       const completedSinceAnchor = Math.max(0, bytesDone - this.anchorDone)
-      fraction =
-        this.anchorFraction +
-        (1 - this.anchorFraction) * Math.min(1, completedSinceAnchor / this.anchorRemaining)
+      fraction = this.anchorFraction + (1 - this.anchorFraction) * Math.min(1, completedSinceAnchor / this.anchorRemaining)
     }
     this.lastFraction = Math.max(this.lastFraction, Math.min(1, Math.max(0, fraction)))
     return {
@@ -123,7 +119,7 @@ export class DownloadProgressTracker {
       bytesDone,
       bytesTotal,
       fraction: this.lastFraction,
-      indeterminate: false
+      indeterminate: false,
     }
   }
 
@@ -178,17 +174,24 @@ export class SmoothedSpeedEstimator {
   sample(bytes: number, remaining: number | null, now = performance.now(), paused = false): SpeedSnapshot {
     const end = this.points.at(-1)
     if (paused || !Number.isFinite(bytes) || !Number.isFinite(now) || (end && (bytes < end.bytes || now < end.at))) {
-      this.points = []; this.last = { speedBps: 0, etaSeconds: null }; return this.last
+      this.points = []
+      this.last = { speedBps: 0, etaSeconds: null }
+      return this.last
     }
-    if (!end) { this.points.push({ at: now, bytes }); this.lastProgress = now; return this.last }
+    if (!end) {
+      this.points.push({ at: now, bytes })
+      this.lastProgress = now
+      return this.last
+    }
     if (bytes > end.bytes) this.lastProgress = now
     // Call frequency is independent of rate; keep the last published value between ticks.
     if (now - end.at < 250) return this.last
     this.points.push({ at: now, bytes })
     while (this.points.length > 2 && this.points[1].at <= now - 6000) this.points.shift()
-    const start = this.points[0], duration = now - start.at
+    const start = this.points[0],
+      duration = now - start.at
     const stalled = now - this.lastProgress >= 4000
-    const rate = duration >= 1000 && !stalled ? (bytes - start.bytes) * 1000 / duration : 0
+    const rate = duration >= 1000 && !stalled ? ((bytes - start.bytes) * 1000) / duration : 0
     const eta = remaining != null && remaining > 0 && rate > 0 && duration >= 3000 ? Math.ceil(remaining / rate) : null
     this.last = { speedBps: Math.max(0, Math.round(rate)), etaSeconds: eta }
     return this.last

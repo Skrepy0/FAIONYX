@@ -12,16 +12,16 @@
 
 ## 已执行验证与分类
 
-| 类型 | 验证内容 | 能证明的范围 |
-| --- | --- | --- |
-| 最终全量测试 | [1232 项：1231 通过、0 失败、1 Linux 专属跳过](evidence/build/test116-final.log)；类型与许可通过 | 产品逻辑、既有回归及本轮边界；不是全部真实账号/游戏服务 |
-| 四主题真实成品界面 | 黑橙、白蓝、透明、自定义；原生前台 HWND/PID、实际坐标与真实 Ctrl 键；最小窗口及125%缩放 | 新控件、层级、路由恢复、失败恢复、默认关闭与设置保持；白蓝用干净紧凑ZIP，透明用干净展开ZIP |
-| 进度界面 | 原产品 Forge 管线夹具事件回放至同一最终 EXE，准备/Java/生成/生成完成/任务完成及独立故障注入 | 原下载中心的真实组件和文案；Java及安装器子进程为合成，不是联网游戏安装 |
-| 社区事务夹具 | [21项测试](evidence/tests/community116-tests.log)；本地HTTP文件、必要前置、哈希、取消与提交检查 | 原事务代码的实际落盘与拒绝缺依赖；GUI合成响应不算真实服务下载 |
-| 真实服务元数据 | [Modrinth](evidence/services/community116-real-modrinth-04517b8b-18cf-42ca-b2ad-d9248e10ca69.json)、[CurseForge](evidence/services/community116-real-curseforge-da684f9c-8223-44ee-be6d-ecca5d9d0ce3.json)：“玉”“物品管理器”，MC1.20.1/Fabric，官方HTTP200 | 当前生产查询得到 Jade/JEI 等项目；不证明联网安装、前置实际下载或启动游戏 |
-| VoxLink 真实本地协议对端 | [36项传输测试](evidence/tests/voxlink116-tests-final.log)与[官方 Java 3MiB 收据](evidence/voxlink/current-3mib.json) | 双向UDP丢包、重排、重复ACK、读端暂停、鉴权、FEC/重传和完整SHA；不是互联网NAT、游戏与语音 |
-| Windows 自有进程 | 四主题逐份原始CIM PID/父PID/创建时间与成品 appMetrics；自然退出后所有已见身份为零 | 只核对独立测试实例，不按 electron.exe 名称控制，不结束其他游戏 |
-| 干净包 | [Windows包验证](evidence/build/windows-package-1.1.16.json)、许可、解压及启动 | EXE/两种ZIP实际内容与运行；交接许可命令不能替代功能证据 |
+| 类型                     | 验证内容                                                                                                                                                                                                                                                   | 能证明的范围                                                                               |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| 最终全量测试             | [1232 项：1231 通过、0 失败、1 Linux 专属跳过](evidence/build/test116-final.log)；类型与许可通过                                                                                                                                                           | 产品逻辑、既有回归及本轮边界；不是全部真实账号/游戏服务                                    |
+| 四主题真实成品界面       | 黑橙、白蓝、透明、自定义；原生前台 HWND/PID、实际坐标与真实 Ctrl 键；最小窗口及125%缩放                                                                                                                                                                    | 新控件、层级、路由恢复、失败恢复、默认关闭与设置保持；白蓝用干净紧凑ZIP，透明用干净展开ZIP |
+| 进度界面                 | 原产品 Forge 管线夹具事件回放至同一最终 EXE，准备/Java/生成/生成完成/任务完成及独立故障注入                                                                                                                                                                | 原下载中心的真实组件和文案；Java及安装器子进程为合成，不是联网游戏安装                     |
+| 社区事务夹具             | [21项测试](evidence/tests/community116-tests.log)；本地HTTP文件、必要前置、哈希、取消与提交检查                                                                                                                                                            | 原事务代码的实际落盘与拒绝缺依赖；GUI合成响应不算真实服务下载                              |
+| 真实服务元数据           | [Modrinth](evidence/services/community116-real-modrinth-04517b8b-18cf-42ca-b2ad-d9248e10ca69.json)、[CurseForge](evidence/services/community116-real-curseforge-da684f9c-8223-44ee-be6d-ecca5d9d0ce3.json)：“玉”“物品管理器”，MC1.20.1/Fabric，官方HTTP200 | 当前生产查询得到 Jade/JEI 等项目；不证明联网安装、前置实际下载或启动游戏                   |
+| VoxLink 真实本地协议对端 | [36项传输测试](evidence/tests/voxlink116-tests-final.log)与[官方 Java 3MiB 收据](evidence/voxlink/current-3mib.json)                                                                                                                                       | 双向UDP丢包、重排、重复ACK、读端暂停、鉴权、FEC/重传和完整SHA；不是互联网NAT、游戏与语音   |
+| Windows 自有进程         | 四主题逐份原始CIM PID/父PID/创建时间与成品 appMetrics；自然退出后所有已见身份为零                                                                                                                                                                          | 只核对独立测试实例，不按 electron.exe 名称控制，不结束其他游戏                             |
+| 干净包                   | [Windows包验证](evidence/build/windows-package-1.1.16.json)、许可、解压及启动                                                                                                                                                                              | EXE/两种ZIP实际内容与运行；交接许可命令不能替代功能证据                                    |
 
 VoxLink 当前3MiB往返12.341秒，双向各562次首发DATA故障、各561冗余包，哈希一致。相同受控1MiB条件，基线14.038秒、当前4.490秒，仅是协议故障环境对照，不外推实际网络速度。[官方传输源码](https://github.com/AUGUHDAR/VoxLink/blob/c475faa98cca16d4a2eeef4422c862c36091e1fc/fabric/1.20_1.20.1/src/main/java/icu/wuhui/voxlink/network/ReliableUdpTransport.java)原实现参与测试；周边日志接口为桩，不替换传输代码。
 

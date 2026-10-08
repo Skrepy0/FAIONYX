@@ -12,7 +12,7 @@ const multiplayerSources = [
   ...connectionComponents,
   'src/renderer/src/components/connection/ConnectionPanel.vue',
   'src/renderer/src/components/connection/ConnectionStatus.vue',
-  'src/renderer/src/components/connection/connection.css'
+  'src/renderer/src/components/connection/connection.css',
 ]
 
 test('联机文案纠错：多页全部文件不得出现「一点即连/一键联机/输码即连/备选/在多人游戏中查看」', () => {
@@ -24,7 +24,16 @@ test('联机文案纠错：多页全部文件不得出现「一点即连/一键�
   }
   const view = read('src/renderer/src/views/FriendConnectView.vue')
   // 方式选择页卡片：准确介绍 + 适用场景标签
-  for (const text of ['注册樱花穿透（natfrp.com）并创建隧道', '公网隧道', '可由玩家主动选择 TURN 中继', '6 位房间码 · 免公网 IP', '连接成功后，按页面指引在游戏内输入地址', '独立开源联机项目', 'burningtnt/Terracotta', '独立开源 · 开箱即用']) {
+  for (const text of [
+    '注册樱花穿透（natfrp.com）并创建隧道',
+    '公网隧道',
+    '可由玩家主动选择 TURN 中继',
+    '6 位房间码 · 免公网 IP',
+    '连接成功后，按页面指引在游戏内输入地址',
+    '独立开源联机项目',
+    'burningtnt/Terracotta',
+    '独立开源 · 开箱即用',
+  ]) {
     assert.ok(view.includes(text), `方式选择页缺少：${text}`)
   }
   // 横向卡片各配一句适用场景（含还原的玩家直连）
@@ -39,10 +48,10 @@ test('联机多页结构：landing=方式选择，每种方式独立页并保留
   const view = read('src/renderer/src/views/FriendConnectView.vue')
   // 页面路由：choose 为 landing，四种方式各自独立页
   for (const key of ["'choose'", "'frp'", "'voxlink'", "'terracotta'"]) assert.ok(view.includes(key), `缺少页面态 ${key}`)
-  assert.ok(view.includes("v-if=\"page === 'choose'\""), 'landing 应为方式选择页')
-  assert.ok(view.includes("v-if=\"page === 'frp'\""), 'FRP 应是独立页面')
-  assert.ok(view.includes("v-else-if=\"page === 'voxlink'\""), 'VoxLink 应是独立页面')
-  assert.ok(view.includes("v-else-if=\"page === 'terracotta'\""), '陶瓦应是独立页面')
+  assert.ok(view.includes('v-if="page === \'choose\'"'), 'landing 应为方式选择页')
+  assert.ok(view.includes('v-if="page === \'frp\'"'), 'FRP 应是独立页面')
+  assert.ok(view.includes('v-else-if="page === \'voxlink\'"'), 'VoxLink 应是独立页面')
+  assert.ok(view.includes('v-else-if="page === \'terracotta\'"'), '陶瓦应是独立页面')
   assert.ok(view.includes('← 更换方式'), '独立页必须保留「← 更换方式」返回')
   // 玩家直连卡片已移除（冗余，1.0.25）
   assert.ok(!view.includes("'direct'"), '不得残留玩家直连页面态')
@@ -55,7 +64,7 @@ test('FRP 页重排：独立隧道卡片、启停与恢复提示、参考折叠�
     assert.ok(panel.includes(text), `FrpPanel 缺少：${text}`)
   }
   // 节点参考与运行日志默认折叠（details 不带 open 属性）
-  assert.match(panel, /<details\b[^>]*class="reference-details"[^>]*>/ )
+  assert.match(panel, /<details\b[^>]*class="reference-details"[^>]*>/)
   assert.match(panel, /<details\b[^>]*class="frp-card-logs"[^>]*>/)
   assert.ok(!/<details[^>]*class="(?:reference-details|frp-card-logs)"[^>]*\sopen(?:\s|>)/.test(panel), '参考及日志默认折叠')
   // 节点列表：宽松行（自适应高度 + 内边距），行间距 ≥ --space-2，不再固定小行高
@@ -79,13 +88,39 @@ test('FRP 页重排：独立隧道卡片、启停与恢复提示、参考折叠�
 
 test('FRP 节点数据层：接口/字段注释、IPC 通道、筛选逻辑与免费判定', async () => {
   const nodes = read('src/main/core/frpNodes.ts')
-  for (const text of ['https://api.natfrp.com/v4', '/nodes', '/node/stats', '/tunnels', 'Authorization: Bearer', 'vip', 'flag', '缓存 10 分钟']) {
+  for (const text of [
+    'https://api.natfrp.com/v4',
+    '/nodes',
+    '/node/stats',
+    '/tunnels',
+    'Authorization: Bearer',
+    'vip',
+    'flag',
+    '缓存 10 分钟',
+  ]) {
     assert.ok(nodes.includes(text), `frpNodes.ts 缺少数据来源/字段说明：${text}`)
   }
   // 免费节点筛选逻辑（vip === 0 视为免费）
-  const node = (id: number, vip: number, load = 10): FrpNodeInfo => ({ id, name: `n${id}`, host: 'h', description: '', vip, free: vip === 0, online: true, load, udp: false, mainland: false, canCreate: true, noProtect: false, beta: false })
+  const node = (id: number, vip: number, load = 10): FrpNodeInfo => ({
+    id,
+    name: `n${id}`,
+    host: 'h',
+    description: '',
+    vip,
+    free: vip === 0,
+    online: true,
+    load,
+    udp: false,
+    mainland: false,
+    canCreate: true,
+    noProtect: false,
+    beta: false,
+  })
   const list = [node(1, 2), node(2, 0), node(3, 0, 5), node(4, 7)]
-  assert.deepEqual(filterFrpNodes(list, true).map((n) => n.id), [2, 3])
+  assert.deepEqual(
+    filterFrpNodes(list, true).map((n) => n.id),
+    [2, 3]
+  )
   assert.equal(filterFrpNodes(list, false).length, 4)
   // 无密钥时抛真实错误（不触网）
   await assert.rejects(fetchFrpNodes(''), /访问密钥/)
@@ -126,7 +161,21 @@ test('VoxLink 集成补全：后备 IPC、阶段事件、已连接判定、消�
 
   // Engine events and connectivity are exercised by voxlink-replacement.test.ts.
   const panel = read('src/renderer/src/components/connection/VoxLinkPanel.vue')
-  for (const text of ['尝试直连', '使用玩家中继', '正在连接好友', '多人游戏', '直接连接', '复制地址', 'sanitizeLog', "'stage'", "'conn:state'", '阶段', '复制日志', '20_000', '不含 I、L、O、0、1']) {
+  for (const text of [
+    '尝试直连',
+    '使用玩家中继',
+    '正在连接好友',
+    '多人游戏',
+    '直接连接',
+    '复制地址',
+    'sanitizeLog',
+    "'stage'",
+    "'conn:state'",
+    '阶段',
+    '复制日志',
+    '20_000',
+    '不含 I、L、O、0、1',
+  ]) {
     assert.ok(panel.includes(text), `VoxLinkPanel 缺少：${text}`)
   }
   assert.ok(!panel.includes('已连接到房主'), '不得保留过早的「已连接到房主」')
@@ -142,17 +191,29 @@ test('VoxLink 集成补全：后备 IPC、阶段事件、已连接判定、消�
   assert.ok(template.includes('aria-label="连接进度"'))
   assert.ok(template.includes('class="address-hero"'))
   assert.ok(template.includes('logGroups'))
-
 })
 
 test('重排后的联机组件可编译且遵守配色铁律（无十六进制/rgb 字面量）', () => {
-  const files = [...multiplayerSources.filter((f) => f.endsWith('.vue')), 'src/renderer/src/components/connection/ServerListItem.vue', 'src/renderer/src/components/connection/ServerDetails.vue']
+  const files = [
+    ...multiplayerSources.filter((f) => f.endsWith('.vue')),
+    'src/renderer/src/components/connection/ServerListItem.vue',
+    'src/renderer/src/components/connection/ServerDetails.vue',
+  ]
   for (const file of files) {
     const source = read(file)
     const { descriptor, errors } = parse(source)
     assert.deepEqual(errors, [], file)
     const script = compileScript(descriptor, { id: file })
-    assert.deepEqual(compileTemplate({ source: descriptor.template!.content, filename: file, id: file, compilerOptions: { bindingMetadata: script.bindings } }).errors, [], file)
+    assert.deepEqual(
+      compileTemplate({
+        source: descriptor.template!.content,
+        filename: file,
+        id: file,
+        compilerOptions: { bindingMetadata: script.bindings },
+      }).errors,
+      [],
+      file
+    )
     for (const style of descriptor.styles) assert.ok(!/#[0-9a-f]{3,8}\b|rgba?\(/i.test(style.content), file)
   }
   const css = read('src/renderer/src/components/connection/connection.css')

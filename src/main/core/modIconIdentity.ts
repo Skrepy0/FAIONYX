@@ -8,18 +8,28 @@ export function curseFingerprint(input: Buffer): number {
     if (byte !== 9 && byte !== 10 && byte !== 13 && byte !== 32) length++
   }
   const m = 0x5bd1e995
-  let h = (1 ^ length) >>> 0, word = 0, shift = 0
+  let h = (1 ^ length) >>> 0,
+    word = 0,
+    shift = 0
   for (let i = 0; i < input.length; i++) {
     const byte = input[i]
     if (byte === 9 || byte === 10 || byte === 13 || byte === 32) continue
     word |= byte << shift
     if (shift === 24) {
-      word = Math.imul(word, m); word ^= word >>> 24; word = Math.imul(word, m)
+      word = Math.imul(word, m)
+      word ^= word >>> 24
+      word = Math.imul(word, m)
       h = Math.imul(h, m) ^ word
-      word = 0; shift = 0
+      word = 0
+      shift = 0
     } else shift += 8
   }
-  if (shift) { h ^= word; h = Math.imul(h, m) }
-  h ^= h >>> 13; h = Math.imul(h, m); h ^= h >>> 15
+  if (shift) {
+    h ^= word
+    h = Math.imul(h, m)
+  }
+  h ^= h >>> 13
+  h = Math.imul(h, m)
+  h ^= h >>> 15
   return h >>> 0
 }

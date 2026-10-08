@@ -16,22 +16,37 @@ export async function versionInstallHarness(root: string, metadataFetch: typeof 
         export { installModpack, extractOverrides } from './src/main/core/modpacks';
         export { supplyModpackFiles } from './src/main/core/modpackManualFiles';
         export { closeHttpClient } from './src/main/core/httpClient';`,
-      resolveDir: process.cwd(), loader: 'ts'
+      resolveDir: process.cwd(),
+      loader: 'ts',
     },
-    bundle: true, write: false, format: 'cjs', platform: 'node', packages: 'external', logLevel: 'silent'
-  }).then(result => result.outputFiles[0].text)
+    bundle: true,
+    write: false,
+    format: 'cjs',
+    platform: 'node',
+    packages: 'external',
+    logLevel: 'silent',
+  }).then((result) => result.outputFiles[0].text)
   const require = createRequire(path.resolve('package.json'))
   const exported = { exports: {} as any }
   fs.mkdirSync(path.join(root, 'userData'), { recursive: true })
-  const electron = { app: {
-    getPath: (name: string) => path.join(root, name),
-    getVersion: () => 'test', getName: () => 'FAIONYX-test', isPackaged: false
-  } }
+  const electron = {
+    app: {
+      getPath: (name: string) => path.join(root, name),
+      getVersion: () => 'test',
+      getName: () => 'FAIONYX-test',
+      isPackaged: false,
+    },
+  }
   new Function('require', 'module', 'exports', 'fetch', await bundle)(
-    (name: string) => name === 'electron' ? electron : name === 'undici'
-      ? { ...require(name), fetch: (url: string, init: unknown) => require(name).fetch(downloadUrl(String(url)), init) }
-      : require(name),
-    exported, exported.exports, metadataFetch
+    (name: string) =>
+      name === 'electron'
+        ? electron
+        : name === 'undici'
+          ? { ...require(name), fetch: (url: string, init: unknown) => require(name).fetch(downloadUrl(String(url)), init) }
+          : require(name),
+    exported,
+    exported.exports,
+    metadataFetch
   )
   return exported.exports as {
     installVanilla: typeof import('../../src/main/core/versions').installVanilla

@@ -18,5 +18,6 @@ test('portable feedback precedes extraction, cache is gated by completion and la
   assert(script.includes('1.0.33-proof'))
 })
 test('new release notes and corrected previous release include local hours and minutes', () => {
-  for (const version of ['1.0.33', '1.0.32']) assert.match(updateNotes.find(n => n.version === version)!.date, /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)
+  for (const version of ['1.0.33', '1.0.32'])
+    assert.match(updateNotes.find((n) => n.version === version)!.date, /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)
 })

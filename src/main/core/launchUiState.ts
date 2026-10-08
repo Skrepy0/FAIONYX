@@ -8,4 +8,6 @@ export function rememberLaunchState(state: LaunchState): void {
   if (state.status === 'running' || state.status === 'launching') active.set(key, { ...state })
   else active.delete(key)
 }
-export function activeLaunchStates(): LaunchState[] { return [...active.values()].map(state => ({ ...state })) }
+export function activeLaunchStates(): LaunchState[] {
+  return [...active.values()].map((state) => ({ ...state }))
+}

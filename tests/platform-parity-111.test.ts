@@ -40,27 +40,42 @@ test('JVM selection constrains Linux/Windows CPUs and retains verified Mac legac
 })
 
 test('Linux ARM64 maps only trusted same-version LWJGL and does not modify shared instance metadata', () => {
-  const library = { name: 'org.lwjgl:lwjgl-glfw:3.3.1:natives-linux', downloads: { artifact: { path: 'original.jar', url: 'https://libraries.minecraft.net/original.jar', sha1: 'a'.repeat(40) } } }
+  const library = {
+    name: 'org.lwjgl:lwjgl-glfw:3.3.1:natives-linux',
+    downloads: { artifact: { path: 'original.jar', url: 'https://libraries.minecraft.net/original.jar', sha1: 'a'.repeat(40) } },
+  }
   const native = nativeLibraryForHost(library, 'linux', 'arm64')
   assert.equal(native.name, 'org.lwjgl:lwjgl-glfw:3.3.1:natives-linux-arm64')
-  assert.equal(native.downloads!.artifact!.url, 'https://repo.maven.apache.org/maven2/org/lwjgl/lwjgl-glfw/3.3.1/lwjgl-glfw-3.3.1-natives-linux-arm64.jar')
+  assert.equal(
+    native.downloads!.artifact!.url,
+    'https://repo.maven.apache.org/maven2/org/lwjgl/lwjgl-glfw/3.3.1/lwjgl-glfw-3.3.1-natives-linux-arm64.jar'
+  )
   assert.equal(native.nativeChecksumUrl, native.downloads!.artifact!.url + '.sha1')
   assert.equal(library.downloads.artifact.path, 'original.jar')
   assert.equal(nativeLibraryForHost(library, 'linux', 'x64'), library)
   assert.equal(nativeLibraryForHost(library, 'openharmony', 'arm64'), library)
-  assert.throws(() => nativeLibraryForHost({ name: 'org.lwjgl.lwjgl:lwjgl:2.9.4', natives: { linux: 'natives-linux' } }, 'linux', 'arm64'), /未提供已验证/)
+  assert.throws(
+    () => nativeLibraryForHost({ name: 'org.lwjgl.lwjgl:lwjgl:2.9.4', natives: { linux: 'natives-linux' } }, 'linux', 'arm64'),
+    /未提供已验证/
+  )
   assert.throws(() => nativeLibraryForHost({ name: 'custom:unknown:1.0:natives-linux' }, 'linux', 'arm64'), /未提供已验证/)
 })
 
 test('Generated native classifiers cannot skip official hashes or use a forged metadata host', async () => {
-  await assert.rejects(() => resolveNativeIntegrity({ url: 'https://example.com/a.jar', nativeChecksumUrl: 'https://example.com/a.jar.sha1' }), /来源无效/)
+  await assert.rejects(
+    () => resolveNativeIntegrity({ url: 'https://example.com/a.jar', nativeChecksumUrl: 'https://example.com/a.jar.sha1' }),
+    /来源无效/
+  )
   const official = 'https://repo.maven.apache.org/maven2/org/lwjgl/lwjgl/3.3.1/lwjgl-3.3.1-natives-linux-arm64.jar'
   await assert.rejects(() => resolveNativeIntegrity({ url: official + '?other', nativeChecksumUrl: official + '.sha1' }), /来源无效/)
 })
 
 test('Native game validation reads the actual ELF class and machine', () => {
   const elf = Buffer.alloc(64)
-  elf.write('\x7fELF', 'ascii'); elf[4] = 2; elf[5] = 1; elf.writeUInt16LE(183, 18)
+  elf.write('\x7fELF', 'ascii')
+  elf[4] = 2
+  elf[5] = 1
+  elf.writeUInt16LE(183, 18)
   assert.doesNotThrow(() => assertNativeElf(elf, 'arm64', 'renamed.so'))
   assert.throws(() => assertNativeElf(elf, 'x64', 'renamed.so'), /架构不匹配/)
   elf.writeUInt16LE(62, 18)

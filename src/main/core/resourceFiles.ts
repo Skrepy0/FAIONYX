@@ -8,9 +8,12 @@ export function importResourceFiles(files: string[], target: InstalledVersion, k
   if (!files.length) throw new Error('请拖入资源文件')
   const dir = path.join(target.gameDirectory, kind)
   const names = new Set<string>()
-  const copies = files.map(file => {
-    const name = path.basename(file), stat = fs.statSync(file), dest = path.join(dir, name)
-    if (stat.isDirectory() ? kind === 'mods' : !(kind === 'mods' ? /\.jar(?:\.disabled)?$/i : /\.zip$/i).test(name)) throw new Error(`此页面不支持 ${name}`)
+  const copies = files.map((file) => {
+    const name = path.basename(file),
+      stat = fs.statSync(file),
+      dest = path.join(dir, name)
+    if (stat.isDirectory() ? kind === 'mods' : !(kind === 'mods' ? /\.jar(?:\.disabled)?$/i : /\.zip$/i).test(name))
+      throw new Error(`此页面不支持 ${name}`)
     if (!stat.isDirectory() && !stat.isFile()) throw new Error('不支持此文件类型')
     if (names.has(name.toLowerCase()) || fs.existsSync(dest)) throw new Error(`同名文件已存在，未覆盖：${name}`)
     names.add(name.toLowerCase())

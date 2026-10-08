@@ -26,10 +26,10 @@ Windows 黑橙独立补验：release/validation-1.1.9/Delivery/Palette-State-Obs
 
 ## 三个 Windows 成品 SHA256
 
-| 成品 | 字节数 | SHA256 |
-| --- | ---: | --- |
-| FAIONYX-1.1.9.exe | 97282718 | 11a8f16142a0f40519adb2203a91ee7bf74b2ab35ef456729e5034a8fc0aafef |
-| FAIONYX-1.1.9-windows-x64.zip | 97314287 | d71d0173ed7d3cabb92b70b77f08f773385c25d4f613d984a07c6a3a1d91149c |
+| 成品                                   |    字节数 | SHA256                                                           |
+| -------------------------------------- | --------: | ---------------------------------------------------------------- |
+| FAIONYX-1.1.9.exe                      |  97282718 | 11a8f16142a0f40519adb2203a91ee7bf74b2ab35ef456729e5034a8fc0aafef |
+| FAIONYX-1.1.9-windows-x64.zip          |  97314287 | d71d0173ed7d3cabb92b70b77f08f773385c25d4f613d984a07c6a3a1d91149c |
 | FAIONYX-1.1.9-windows-x64-unpacked.zip | 143047398 | c33f492fc66054991cf8d8f904df2ffc477904e8e4e828d44e3c5901dea11c30 |
 
 ## 历史失败与未覆盖

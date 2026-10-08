@@ -9,7 +9,7 @@ test('cross-folder rename preserves other roots and ambiguous legacy server refe
     { id: 'b', name: 'B', address: 'localhost', versionId: 'same', folder: 'E:\\Games' },
     { id: 'shared', name: 'shared', address: 'localhost', sourceGameDirectory: 'D:/Games', candidateVersionIds: ['same', 'other'] },
     { id: 'prefix', name: 'prefix', address: 'localhost', sourceGameDirectory: 'D:/Games-other', candidateVersionIds: ['same'] },
-    { id: 'legacy', name: 'legacy', address: 'localhost', versionId: 'same' }
+    { id: 'legacy', name: 'legacy', address: 'localhost', versionId: 'same' },
   ]
   const result = renamedServerBindings(rows, 'same', 'renamed', 'd:/games/', true)
   assert.equal(result[0].versionId, 'renamed')

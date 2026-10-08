@@ -69,7 +69,7 @@ export function parseServerAddress(input: string): ParsedServerAddress {
     port,
     explicitPort: explicit,
     address: explicit && port !== 25565 ? `${shownHost}:${port}` : shownHost,
-    normalizedAddress: `${shownHost}:${port}`
+    normalizedAddress: `${shownHost}:${port}`,
   }
 }
 

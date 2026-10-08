@@ -26,10 +26,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/207/323/256/256/636965628804677340.png",
             "downloads": 274896439,
             "updatedAt": "2026-10-02T23:54:08.643Z",
-            "categories": [
-              "Map and Information",
-              "Utility & QoL"
-            ],
+            "categories": ["Map and Information", "Utility & QoL"],
             "originalTitle": "Jade 🔍"
           },
           {
@@ -42,13 +39,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/1089/159/256/256/638632113299109573.png",
             "downloads": 19346876,
             "updatedAt": "2026-08-27T12:29:30.093Z",
-            "categories": [
-              "Armor, Tools, and Weapons",
-              "Mobs",
-              "Dimensions",
-              "Ores and Resources",
-              "Biomes"
-            ],
+            "categories": ["Armor, Tools, and Weapons", "Mobs", "Dimensions", "Ores and Resources", "Biomes"],
             "originalTitle": "Jaden's Nether Expansion"
           },
           {
@@ -61,12 +52,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/511/545/256/256/637830420779583100.png",
             "downloads": 6675662,
             "updatedAt": "2026-06-21T01:45:58.4Z",
-            "categories": [
-              "API and Library",
-              "Energy, Fluid, and Item Transport",
-              "Utility & QoL",
-              "KubeJS"
-            ],
+            "categories": ["API and Library", "Energy, Fluid, and Item Transport", "Utility & QoL", "KubeJS"],
             "originalTitle": "KubeJS Additions"
           },
           {
@@ -79,11 +65,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/586/254/256/256/637954131015787648.png",
             "downloads": 5600694,
             "updatedAt": "2026-08-31T13:44:50.517Z",
-            "categories": [
-              "Map and Information",
-              "Utility & QoL",
-              "Addons"
-            ],
+            "categories": ["Map and Information", "Utility & QoL", "Addons"],
             "originalTitle": "Jade Addons (Fabric)"
           },
           {
@@ -96,12 +78,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/1168/113/256/256/638738830571587698.png",
             "downloads": 1748153,
             "updatedAt": "2026-06-11T18:17:32.887Z",
-            "categories": [
-              "Food",
-              "Addons",
-              "Cosmetic",
-              "Farming"
-            ],
+            "categories": ["Food", "Addons", "Cosmetic", "Farming"],
             "originalTitle": "Jaden's Nether Expansion Delight"
           },
           {
@@ -114,9 +91,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/1188/458/256/256/638763017594708404.png",
             "downloads": 288965,
             "updatedAt": "2026-04-18T23:52:51.62Z",
-            "categories": [
-              "Addons"
-            ],
+            "categories": ["Addons"],
             "originalTitle": "Jade VS"
           },
           {
@@ -129,11 +104,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/1921/431/256/256/639197186148354237.png",
             "downloads": 26668,
             "updatedAt": "2026-10-02T09:11:03.957Z",
-            "categories": [
-              "Utility & QoL",
-              "Map and Information",
-              "Food"
-            ],
+            "categories": ["Utility & QoL", "Map and Information", "Food"],
             "originalTitle": "AppleStats :timmer+ AppleSkin+ Jade +GUI Clock+Coordinates+Horse Stat"
           },
           {
@@ -146,11 +117,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/1582/969/256/256/639024730614643799.jpeg",
             "downloads": 117572,
             "updatedAt": "2026-02-25T02:15:14.313Z",
-            "categories": [
-              "Addons",
-              "Utility & QoL",
-              "Mobs"
-            ],
+            "categories": ["Addons", "Utility & QoL", "Mobs"],
             "originalTitle": "Jade Additional Entities"
           },
           {
@@ -163,12 +130,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/2043/656/256/256/639248520575668033.png",
             "downloads": 8203,
             "updatedAt": "2026-10-05T18:36:26.47Z",
-            "categories": [
-              "Utility & QoL",
-              "Bug Fixes",
-              "Mobs",
-              "Cosmetic"
-            ],
+            "categories": ["Utility & QoL", "Bug Fixes", "Mobs", "Cosmetic"],
             "originalTitle": "Jade Grass Fix"
           },
           {
@@ -181,19 +143,14 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/1966/32/256/256/639215490199150669.png",
             "downloads": 7261,
             "updatedAt": "2026-10-03T19:54:16.243Z",
-            "categories": [
-              "World Gen",
-              "Ores and Resources"
-            ],
+            "categories": ["World Gen", "Ores and Resources"],
             "originalTitle": "Seamless Ores"
           }
         ],
         "total": 17,
         "offset": 0,
         "limit": 10,
-        "warnings": [
-          "中文别名检索：玉 → jade"
-        ]
+        "warnings": ["中文别名检索：玉 → jade"]
       }
     },
     {
@@ -219,10 +176,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/29/69/256/256/635838945588716414.jpeg",
             "downloads": 631925164,
             "updatedAt": "2026-10-05T09:43:07.263Z",
-            "categories": [
-              "Map and Information",
-              "API and Library"
-            ],
+            "categories": ["Map and Information", "API and Library"],
             "originalTitle": "Just Enough Items (JEI)"
           },
           {
@@ -235,13 +189,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/32/419/256/256/635880199659979425.png",
             "downloads": 243020050,
             "updatedAt": "2026-09-28T20:24:18.42Z",
-            "categories": [
-              "Map and Information",
-              "Addons",
-              "Ores and Resources",
-              "Biomes",
-              "Mobs"
-            ],
+            "categories": ["Map and Information", "Addons", "Ores and Resources", "Biomes", "Mobs"],
             "originalTitle": "Just Enough Resources (JER)"
           },
           {
@@ -254,11 +202,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/311/84/256/256/637401177607519178.png",
             "downloads": 110352249,
             "updatedAt": "2026-09-17T21:20:50.923Z",
-            "categories": [
-              "Addons",
-              "Map and Information",
-              "Utility & QoL"
-            ],
+            "categories": ["Addons", "Map and Information", "Utility & QoL"],
             "originalTitle": "Just Enough Professions (JEP)"
           },
           {
@@ -271,12 +215,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/862/389/256/256/638270817972208061.png",
             "downloads": 54164114,
             "updatedAt": "2026-10-05T09:09:29.537Z",
-            "categories": [
-              "Utility & QoL",
-              "Map and Information",
-              "Addons",
-              "Mobs"
-            ],
+            "categories": ["Utility & QoL", "Map and Information", "Addons", "Mobs"],
             "originalTitle": "Just Enough Breeding (JEBr)"
           },
           {
@@ -289,10 +228,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/545/351/256/256/637878590194850929.png",
             "downloads": 48958448,
             "updatedAt": "2026-05-13T06:38:20.833Z",
-            "categories": [
-              "Map and Information",
-              "API and Library"
-            ],
+            "categories": ["Map and Information", "API and Library"],
             "originalTitle": "EMI"
           },
           {
@@ -305,11 +241,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/281/235/256/256/637284767664087511.png",
             "downloads": 55770245,
             "updatedAt": "2026-09-25T11:37:19.45Z",
-            "categories": [
-              "Map and Information",
-              "Utility & QoL",
-              "Addons"
-            ],
+            "categories": ["Map and Information", "Utility & QoL", "Addons"],
             "originalTitle": "More Overlays Updated"
           },
           {
@@ -322,9 +254,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/1008/38/256/256/638530580859670653.png",
             "downloads": 43512407,
             "updatedAt": "2025-06-25T22:00:53.77Z",
-            "categories": [
-              "Utility & QoL"
-            ],
+            "categories": ["Utility & QoL"],
             "originalTitle": "Item Obliterator (Modpack Utils Series)"
           },
           {
@@ -337,11 +267,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/1145/593/256/256/638711642517202621.png",
             "downloads": 23213042,
             "updatedAt": "2026-01-03T08:46:04.95Z",
-            "categories": [
-              "Utility & QoL",
-              "Performance",
-              "Cosmetic"
-            ],
+            "categories": ["Utility & QoL", "Performance", "Cosmetic"],
             "originalTitle": "Distraction Free Recipes (EMI / REI / JEI)"
           },
           {
@@ -354,11 +280,7 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/1183/928/256/256/638757664474110500.png",
             "downloads": 14922267,
             "updatedAt": "2026-09-28T19:33:17.717Z",
-            "categories": [
-              "Addons",
-              "Map and Information",
-              "API and Library"
-            ],
+            "categories": ["Addons", "Map and Information", "API and Library"],
             "originalTitle": "Advanced Loot Info (ALI)"
           },
           {
@@ -371,19 +293,14 @@
             "iconUrl": "https://media.forgecdn.net/avatars/thumbnails/438/886/256/256/637685255314420532.png",
             "downloads": 33508553,
             "updatedAt": "2026-10-06T11:54:39.277Z",
-            "categories": [
-              "Map and Information",
-              "Addons"
-            ],
+            "categories": ["Map and Information", "Addons"],
             "originalTitle": "Just Enough Effect Descriptions (JEED)"
           }
         ],
         "total": 132,
         "offset": 0,
         "limit": 10,
-        "warnings": [
-          "中文别名检索：jei、rei、emi"
-        ]
+        "warnings": ["中文别名检索：jei、rei、emi"]
       }
     }
   ],

@@ -6,11 +6,5 @@ const icon =
 </script>
 
 <template>
-  <FileManager
-    title="模组"
-    rel="mods"
-    open-label="打开模组文件夹"
-    empty-text="暂无模组，将 .jar 文件放入 mods 文件夹"
-    :icon="icon"
-  />
+  <FileManager title="模组" rel="mods" open-label="打开模组文件夹" empty-text="暂无模组，将 .jar 文件放入 mods 文件夹" :icon="icon" />
 </template>

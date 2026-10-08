@@ -46,6 +46,6 @@ export function windowAppearance(
     backgroundMaterial: platform === 'win32' ? 'acrylic' : undefined,
     roundedCorners: true,
     hasShadow: true,
-    thickFrame: true
+    thickFrame: true,
   }
 }

@@ -5,19 +5,31 @@ const normalize = (value: string): string => value.replace(/\\/g, '/').replace(/
 
 /** Locations loaded by Minecraft or common pack loaders; never count loader caches/backups. */
 export const PACK_RESOURCE_DIRS = [
-  'mods', 'resourcepacks', 'shaderpacks', 'datapacks',
-  'config/paxi/datapacks', 'config/paxi/resourcepacks',
-  'config/openloader/data', 'config/openloader/resources',
-  'openloader/data', 'openloader/resources',
-  'global_packs/both', 'global_packs/datapacks', 'global_packs/resourcepacks',
-  'global_packs/required_data', 'global_packs/optional_data',
-  'global_packs/required_resources', 'global_packs/optional_resources'
+  'mods',
+  'resourcepacks',
+  'shaderpacks',
+  'datapacks',
+  'config/paxi/datapacks',
+  'config/paxi/resourcepacks',
+  'config/openloader/data',
+  'config/openloader/resources',
+  'openloader/data',
+  'openloader/resources',
+  'global_packs/both',
+  'global_packs/datapacks',
+  'global_packs/resourcepacks',
+  'global_packs/required_data',
+  'global_packs/optional_data',
+  'global_packs/required_resources',
+  'global_packs/optional_resources',
 ] as const
 
 export function isPackResource(rel: string): boolean {
   const slash = rel.lastIndexOf('/')
-  return PACK_RESOURCE_DIRS.some(dir => dir === rel.slice(0, slash).toLowerCase()) &&
+  return (
+    PACK_RESOURCE_DIRS.some((dir) => dir === rel.slice(0, slash).toLowerCase()) &&
     /^[^/]+\.(?:jar|zip)(?:\.disabled)?$/i.test(rel.slice(slash + 1))
+  )
 }
 
 /** Preserve the author's real destination/name, including ZIP packs and disabled mods. */
@@ -53,9 +65,14 @@ export class BundledModpackFiles {
       signal?.throwIfAborted()
       let hash = this.hashes.get(entry)
       if (!hash) {
-        hash = entry.digest ? await entry.digest('sha1', signal) : crypto.createHash('sha1').update(await entry.getData()).digest('hex')
+        hash = entry.digest
+          ? await entry.digest('sha1', signal)
+          : crypto
+              .createHash('sha1')
+              .update(await entry.getData())
+              .digest('hex')
         this.hashes.set(entry, hash)
-        await new Promise<void>(resolve => setImmediate(resolve))
+        await new Promise<void>((resolve) => setImmediate(resolve))
         signal?.throwIfAborted()
       }
       if (hash === file.sha1.toLowerCase()) return rel

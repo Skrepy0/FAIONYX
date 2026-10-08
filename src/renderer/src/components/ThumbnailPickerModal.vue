@@ -1,11 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import {
-  errText,
-  resetVersionThumbnail,
-  setVersionThumbnailFit,
-  uploadVersionThumbnail
-} from '../api'
+import { errText, resetVersionThumbnail, setVersionThumbnailFit, uploadVersionThumbnail } from '../api'
 import { refreshInstalled, toast } from '../store'
 import { managedImageUrl } from '../managedAssets'
 import type { ImageFit } from '@shared/types'
@@ -26,7 +21,7 @@ const previewFailed = ref(false)
 const fitOptions: Array<{ value: ImageFit; label: string }> = [
   { value: 'fill', label: '填充' },
   { value: 'fit', label: '适应' },
-  { value: 'crop', label: '裁切' }
+  { value: 'crop', label: '裁切' },
 ]
 
 watch(
@@ -120,9 +115,7 @@ async function resetImage() {
           <button class="btn btn-gold" :disabled="busy" @click="importImage">
             {{ busy ? '处理中…' : '导入图片…' }}
           </button>
-          <button class="btn btn-ghost" :disabled="busy || !imagePath" @click="resetImage">
-            恢复全局默认
-          </button>
+          <button class="btn btn-ghost" :disabled="busy || !imagePath" @click="resetImage">恢复全局默认</button>
         </div>
 
         <div class="thumbnail-fit">

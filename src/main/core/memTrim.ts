@@ -71,7 +71,9 @@ interface Kernel32TrimApi {
 
 let kernel32Promise: Promise<Kernel32TrimApi | null> | null = null
 
-function asKoffi(mod: unknown): { load(name: string): { func(name: string, ret: string, args: unknown[]): (...args: unknown[]) => unknown } } & Record<string, unknown> {
+function asKoffi(
+  mod: unknown
+): { load(name: string): { func(name: string, ret: string, args: unknown[]): (...args: unknown[]) => unknown } } & Record<string, unknown> {
   const withDefault = mod as { default?: unknown }
   return (withDefault.default ?? mod) as never
 }
@@ -97,7 +99,9 @@ function loadKernel32Trim(): Promise<Kernel32TrimApi | null> {
         emptyWorkingSet: (handle) => emptyWorkingSet(handle) === true,
         openProcess: (pid) => Number(openProcess(PROCESS_SET_QUOTA | PROCESS_QUERY_INFORMATION, false, pid)),
         currentProcess: () => Number(currentProcess()),
-        close: (handle) => { if (handle) closeHandle(handle) }
+        close: (handle) => {
+          if (handle) closeHandle(handle)
+        },
       }
     } catch {
       return null // koffi 不可用：trimOnce 会走 PowerShell 兜底
@@ -111,19 +115,23 @@ export function trimSelfPowerShellScript(selfPid: number): string {
   if (!Number.isSafeInteger(selfPid) || selfPid <= 0) throw new Error('无效的启动器进程')
   // GetCurrentProcess inside PowerShell targets PowerShell itself. Open only the
   // supplied launcher PID and always close the handle, even on native failure.
-  return "$s='[DllImport(\"psapi.dll\")] public static extern bool EmptyWorkingSet(IntPtr h);" +
+  return (
+    '$s=\'[DllImport("psapi.dll")] public static extern bool EmptyWorkingSet(IntPtr h);' +
     '[DllImport("kernel32.dll")] public static extern IntPtr OpenProcess(uint access, bool inherit, uint pid);' +
     '[DllImport("kernel32.dll")] public static extern bool CloseHandle(IntPtr h);\';' +
-    "Add-Type -MemberDefinition $s -Name FaionyxTrim -Namespace Win32 | Out-Null;" +
+    'Add-Type -MemberDefinition $s -Name FaionyxTrim -Namespace Win32 | Out-Null;' +
     `$h=[Win32.FaionyxTrim]::OpenProcess(1280,$false,${selfPid});` +
     'if($h -eq [IntPtr]::Zero){exit 1};try{if(-not [Win32.FaionyxTrim]::EmptyWorkingSet($h)){exit 1}}finally{[Win32.FaionyxTrim]::CloseHandle($h)|Out-Null}'
+  )
 }
 
 async function trimSelfViaPowerShell(selfPid: number): Promise<boolean> {
   const { execFile } = await import('node:child_process')
   const script = trimSelfPowerShellScript(selfPid)
   return new Promise((resolve) => {
-    execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { windowsHide: true, timeout: 10_000 }, (error) => resolve(!error))
+    execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { windowsHide: true, timeout: 10_000 }, (error) =>
+      resolve(!error)
+    )
   })
 }
 
@@ -217,7 +225,7 @@ export async function startMemoryTrim(
     stop() {
       clearInterval(metricsTimer)
       controller.noteVisible()
-    }
+    },
   }
   return controller
 }

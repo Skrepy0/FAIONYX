@@ -17,7 +17,14 @@ async function main() {
     const id = await installVersion(versionId, loader ? { loader } : {}, emit)
     console.log(`\n✅ 安装成功: ${id}（${((Date.now() - t0) / 1000).toFixed(0)}s）`)
     const found = listInstalled().filter((v) => v.mcVersion === versionId || v.id === id)
-    console.log('版本列表中该 MC 版本的条目:', JSON.stringify(found.map((v) => ({ id: v.id, loader: v.loader, lv: v.loaderVersion, failed: v.failed, incomplete: v.incomplete })), null, 1))
+    console.log(
+      '版本列表中该 MC 版本的条目:',
+      JSON.stringify(
+        found.map((v) => ({ id: v.id, loader: v.loader, lv: v.loaderVersion, failed: v.failed, incomplete: v.incomplete })),
+        null,
+        1
+      )
+    )
     process.exit(0)
   } catch (e) {
     console.error(`\n❌ 安装失败:`, e instanceof Error ? e.message : e)

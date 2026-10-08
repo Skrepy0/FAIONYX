@@ -12,29 +12,75 @@ let code: Promise<string>
 async function runtime(t: any, env: Record<string, string> = {}, platform = process.platform, arch = process.arch) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-defaults-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
-  code ??= build({ stdin: { contents: `export * from './src/main/core/defaultResourcePacks';export {getPendingUpdate} from './src/main/core/applyUpdate';export {checkLatest,currentVersion} from './src/main/core/selfUpdate';export {trustedUpdateRelease} from './src/main/core/updateTrust';export {setDefaultKey,syncKeysToGameDir} from './src/main/core/keybindings';`, resolveDir: process.cwd() }, platform: 'node', format: 'cjs', bundle: true, write: false, packages: 'external' }).then(r => r.outputFiles[0].text)
-  const require = createRequire(path.resolve('package.json')), mod = { exports: {} as any }, requested: string[] = []
+  code ??= build({
+    stdin: {
+      contents: `export * from './src/main/core/defaultResourcePacks';export {getPendingUpdate} from './src/main/core/applyUpdate';export {checkLatest,currentVersion} from './src/main/core/selfUpdate';export {trustedUpdateRelease} from './src/main/core/updateTrust';export {setDefaultKey,syncKeysToGameDir} from './src/main/core/keybindings';`,
+      resolveDir: process.cwd(),
+    },
+    platform: 'node',
+    format: 'cjs',
+    bundle: true,
+    write: false,
+    packages: 'external',
+  }).then((r) => r.outputFiles[0].text)
+  const require = createRequire(path.resolve('package.json')),
+    mod = { exports: {} as any },
+    requested: string[] = []
   const fixtureEnv = { ...process.env, ...env }
-  delete fixtureEnv.PORTABLE_EXECUTABLE_FILE; delete fixtureEnv.FAIONYX_UPDATE_TARGET_EXE; delete fixtureEnv.APPIMAGE
+  delete fixtureEnv.PORTABLE_EXECUTABLE_FILE
+  delete fixtureEnv.FAIONYX_UPDATE_TARGET_EXE
+  delete fixtureEnv.APPIMAGE
   const fakeProcess = { ...process, platform, arch, env: fixtureEnv }
-  new Function('require','module','exports','process',await code)(
-    (name: string) => name === 'electron' ? { app: { isPackaged: true, getPath: () => root, getVersion: () => '1.0.41', getName: () => 'test' } }
-      : name === 'undici' ? { ...require(name), fetch: async (url: string) => { requested.push(String(url)); return Response.json({ tag_name: 'v1.0.30', assets: [{ name: 'FAIONYX-1.0.30.exe', size: 123, browser_download_url: 'https://github.com/Skrepy0/FAIONYX/releases/download/v1.0.30/FAIONYX-1.0.30.exe' }] }) } }
-      : require(name), mod, mod.exports, fakeProcess)
+  new Function('require', 'module', 'exports', 'process', await code)(
+    (name: string) =>
+      name === 'electron'
+        ? { app: { isPackaged: true, getPath: () => root, getVersion: () => '1.0.41', getName: () => 'test' } }
+        : name === 'undici'
+          ? {
+              ...require(name),
+              fetch: async (url: string) => {
+                requested.push(String(url))
+                return Response.json({
+                  tag_name: 'v1.0.30',
+                  assets: [
+                    {
+                      name: 'FAIONYX-1.0.30.exe',
+                      size: 123,
+                      browser_download_url: 'https://github.com/Skrepy0/FAIONYX/releases/download/v1.0.30/FAIONYX-1.0.30.exe',
+                    },
+                  ],
+                })
+              },
+            }
+          : require(name),
+    mod,
+    mod.exports,
+    fakeProcess
+  )
   return { root, api: mod.exports, requested, fixtureEnv }
 }
 function pack(file: string, marker: string) {
-  const zip = new AdmZip(); zip.addFile('pack.mcmeta', Buffer.from(JSON.stringify({ pack: { pack_format: 75, description: marker } }))); zip.addFile('assets/minecraft/test.txt', Buffer.from(marker)); zip.writeZip(file)
+  const zip = new AdmZip()
+  zip.addFile('pack.mcmeta', Buffer.from(JSON.stringify({ pack: { pack_format: 75, description: marker } })))
+  zip.addFile('assets/minecraft/test.txt', Buffer.from(marker))
+  zip.writeZip(file)
 }
 
-test('explicit default pack reapplication follows switches and preserves priority and unmanaged selections', async t => {
+test('explicit default pack reapplication follows switches and preserves priority and unmanaged selections', async (t) => {
   const { root, api } = await runtime(t)
-  const a = path.join(root, 'A.zip'), b = path.join(root, 'B.zip'); pack(a, 'A'); pack(b, 'B')
+  const a = path.join(root, 'A.zip'),
+    b = path.join(root, 'B.zip')
+  pack(a, 'A')
+  pack(b, 'B')
   const [first, second] = api.importDefaultResourcePacks([a, b])
   assert.equal(first.enabled, true)
   for (const mc of ['1.12.2', '26.2']) {
-    const game = path.join(root, mc); fs.mkdirSync(game)
-    fs.writeFileSync(path.join(game, 'options.txt'), 'resourcePacks:["vanilla","file/Personal.zip"]\nincompatibleResourcePacks:[]\nlang:zh_cn\n')
+    const game = path.join(root, mc)
+    fs.mkdirSync(game)
+    fs.writeFileSync(
+      path.join(game, 'options.txt'),
+      'resourcePacks:["vanilla","file/Personal.zip"]\nincompatibleResourcePacks:[]\nlang:zh_cn\n'
+    )
     api.setDefaultResourcePackEnabled(first.id, true)
     api.setDefaultResourcePackEnabled(second.id, true)
     api.applyDefaultResourcePacks(game, mc)
@@ -43,12 +89,15 @@ test('explicit default pack reapplication follows switches and preserves priorit
     assert.equal(api.importDefaultResourcePacks([a])[0].enabled, false, 'duplicate import must preserve disabled state')
     assert.equal(api.applyDefaultResourcePacks(game, mc), 1)
     let options = fs.readFileSync(path.join(game, 'options.txt'), 'utf8')
-    assert(!options.includes(first.id)); assert(options.includes(second.id)); assert(options.includes('Personal.zip'))
+    assert(!options.includes(first.id))
+    assert(options.includes(second.id))
+    assert(options.includes('Personal.zip'))
     assert.equal(fs.readdirSync(path.join(game, 'resourcepacks')).length, 2)
     api.setDefaultResourcePackEnabled(second.id, false)
     assert.equal(api.applyDefaultResourcePacks(game, mc), 0)
     options = fs.readFileSync(path.join(game, 'options.txt'), 'utf8')
-    assert(!options.includes(second.id)); assert(options.includes('lang:zh_cn'))
+    assert(!options.includes(second.id))
+    assert(options.includes('lang:zh_cn'))
     api.setDefaultResourcePackEnabled(first.id, true)
     api.setDefaultResourcePackEnabled(second.id, true)
     api.applyDefaultResourcePacks(game, mc)
@@ -56,77 +105,126 @@ test('explicit default pack reapplication follows switches and preserves priorit
     assert(options.indexOf(first.id) < options.indexOf(second.id))
   }
   api.setDefaultResourcePackEnabled(first.id, false)
-  const fresh = path.join(root, 'fresh'); fs.mkdirSync(fresh)
+  const fresh = path.join(root, 'fresh')
+  fs.mkdirSync(fresh)
   api.syncDefaultResourcePacks(fresh, '26.2')
   assert.equal(fs.readdirSync(path.join(fresh, 'resourcepacks')).length, 1)
-  assert(fs.existsSync(a)); assert(fs.existsSync(b))
+  assert(fs.existsSync(a))
+  assert(fs.existsSync(b))
   assert.throws(() => api.setDefaultResourcePackEnabled(first.id, 'false'), /无效/)
   assert.throws(() => api.setDefaultResourcePackEnabled('missing', false), /不存在/)
 })
 
-test('legacy default pack manifests remain enabled until explicitly disabled', async t => {
+test('legacy default pack manifests remain enabled until explicitly disabled', async (t) => {
   const { root, api } = await runtime(t)
-  const file = path.join(root, 'legacy.zip'); pack(file, 'legacy')
-  const [p] = api.importDefaultResourcePacks([file]); delete p.enabled
+  const file = path.join(root, 'legacy.zip')
+  pack(file, 'legacy')
+  const [p] = api.importDefaultResourcePacks([file])
+  delete p.enabled
   fs.writeFileSync(path.join(root, 'default-resourcepacks', 'packs.json'), JSON.stringify([p]))
   assert.equal(api.getDefaultResourcePacks()[0].enabled, true)
   api.setDefaultResourcePackEnabled(p.id, false)
   assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'default-resourcepacks', 'packs.json'), 'utf8'))[0].enabled, false)
 })
 
-test('default packs import multiple ZIPs, deduplicate, preserve sources and apply to isolated/legacy instances', async t => {
+test('default packs import multiple ZIPs, deduplicate, preserve sources and apply to isolated/legacy instances', async (t) => {
   const { root, api } = await runtime(t)
-  const a = path.join(root, 'A.zip'), b = path.join(root, 'B.zip'); pack(a, 'A'); pack(b, 'B')
-  let packs = api.importDefaultResourcePacks([a, b, a]); assert.equal(packs.length, 2)
+  const a = path.join(root, 'A.zip'),
+    b = path.join(root, 'B.zip')
+  pack(a, 'A')
+  pack(b, 'B')
+  let packs = api.importDefaultResourcePacks([a, b, a])
+  assert.equal(packs.length, 2)
   const firstId = packs[0].id
-  packs = api.moveDefaultResourcePack(firstId, 1); assert.equal(packs[1].id, firstId)
-  for (const [name, mc] of [['isolated-fabric', '26.2'], ['isolated-forge', '1.20.1'], ['legacy', '1.12.2']]) {
-    const game = path.join(root, name); fs.mkdirSync(game)
-    fs.writeFileSync(path.join(game, 'options.txt'), 'lang:zh_cn\nkey_key.forward:key.keyboard.q\nresourcePacks:["vanilla","file/Personal.zip"]\ncustom:keep\n')
+  packs = api.moveDefaultResourcePack(firstId, 1)
+  assert.equal(packs[1].id, firstId)
+  for (const [name, mc] of [
+    ['isolated-fabric', '26.2'],
+    ['isolated-forge', '1.20.1'],
+    ['legacy', '1.12.2'],
+  ]) {
+    const game = path.join(root, name)
+    fs.mkdirSync(game)
+    fs.writeFileSync(
+      path.join(game, 'options.txt'),
+      'lang:zh_cn\nkey_key.forward:key.keyboard.q\nresourcePacks:["vanilla","file/Personal.zip"]\ncustom:keep\n'
+    )
     assert.equal(api.applyDefaultResourcePacks(game, mc), 2)
     const options = fs.readFileSync(path.join(game, 'options.txt'), 'utf8')
-    assert(options.includes('custom:keep')); assert(options.includes('key_key.forward:key.keyboard.q')); assert(options.includes('file/Personal.zip'))
-    const enabled = JSON.parse(options.split('\n').find(l => l.startsWith('resourcePacks:'))!.slice(14))
-    assert.equal(enabled.length, 4); assert(enabled.at(-1).includes(firstId))
+    assert(options.includes('custom:keep'))
+    assert(options.includes('key_key.forward:key.keyboard.q'))
+    assert(options.includes('file/Personal.zip'))
+    const enabled = JSON.parse(
+      options
+        .split('\n')
+        .find((l) => l.startsWith('resourcePacks:'))!
+        .slice(14)
+    )
+    assert.equal(enabled.length, 4)
+    assert(enabled.at(-1).includes(firstId))
     assert.equal(enabled.at(-1).startsWith('file/'), mc !== '1.12.2')
     assert.equal(fs.readdirSync(path.join(game, 'resourcepacks')).length, 2)
     api.syncDefaultResourcePacks(game, mc)
     assert.equal(fs.readFileSync(path.join(game, 'options.txt'), 'utf8'), options, 'repeat launch must not duplicate packs')
   }
   api.removeDefaultResourcePack(firstId)
-  const game = path.join(root, 'isolated-fabric'); api.syncDefaultResourcePacks(game, '26.2')
-  assert(fs.readFileSync(path.join(game, 'options.txt'), 'utf8').includes(firstId), 'removing a global default preserves the instance choice')
+  const game = path.join(root, 'isolated-fabric')
+  api.syncDefaultResourcePacks(game, '26.2')
+  assert(
+    fs.readFileSync(path.join(game, 'options.txt'), 'utf8').includes(firstId),
+    'removing a global default preserves the instance choice'
+  )
   api.applyDefaultResourcePacks(game, '26.2')
   assert(!fs.readFileSync(path.join(game, 'options.txt'), 'utf8').includes(firstId))
   assert.equal(fs.readdirSync(path.join(game, 'resourcepacks')).length, 2, 'remove never deletes existing instance files')
   assert(fs.existsSync(a) && fs.existsSync(b))
 })
 
-test('invalid pack batch and malformed options preserve existing configuration', async t => {
+test('invalid pack batch and malformed options preserve existing configuration', async (t) => {
   const { root, api } = await runtime(t)
-  const good = path.join(root, 'good.zip'), bad = path.join(root, 'bad.zip'); pack(good, 'good'); new AdmZip().writeZip(bad)
+  const good = path.join(root, 'good.zip'),
+    bad = path.join(root, 'bad.zip')
+  pack(good, 'good')
+  new AdmZip().writeZip(bad)
   assert.throws(() => api.importDefaultResourcePacks([good, bad]), /pack.mcmeta/)
   assert.equal(api.getDefaultResourcePacks().length, 0)
   api.importDefaultResourcePacks([good])
-  const game = path.join(root, 'game'); fs.mkdirSync(game); const options = path.join(game, 'options.txt')
+  const game = path.join(root, 'game')
+  fs.mkdirSync(game)
+  const options = path.join(game, 'options.txt')
   fs.writeFileSync(options, 'resourcePacks:damaged\nlang:en_us\n')
   assert.throws(() => api.syncDefaultResourcePacks(game, '26.2'), /格式无效/)
   assert.equal(fs.readFileSync(options, 'utf8'), 'resourcePacks:damaged\nlang:en_us\n')
 })
 
-test('explicitly reapplying compatible defaults clears old false incompatibility overrides', async t => {
+test('explicitly reapplying compatible defaults clears old false incompatibility overrides', async (t) => {
   const { root, api } = await runtime(t)
-  const client = path.join(root, 'client.jar'), game = path.join(root, 'game'), resource = path.join(root, 'Fullbright.zip')
-  const jar = new AdmZip(); jar.addFile('version.json', Buffer.from(JSON.stringify({ pack_version: { resource_major: 88, resource_minor: 0 } }))); jar.writeZip(client)
-  const zip = new AdmZip(); zip.addFile('pack.mcmeta', Buffer.from(JSON.stringify({ pack: { pack_format: 15, min_format: [15, 0], max_format: [1000, 0], supported_formats: [15, 1000] } }))); zip.writeZip(resource)
-  const [p] = api.importDefaultResourcePacks([resource]), id = `file/FAIONYX-default-${p.id}-${p.name}`
+  const client = path.join(root, 'client.jar'),
+    game = path.join(root, 'game'),
+    resource = path.join(root, 'Fullbright.zip')
+  const jar = new AdmZip()
+  jar.addFile('version.json', Buffer.from(JSON.stringify({ pack_version: { resource_major: 88, resource_minor: 0 } })))
+  jar.writeZip(client)
+  const zip = new AdmZip()
+  zip.addFile(
+    'pack.mcmeta',
+    Buffer.from(JSON.stringify({ pack: { pack_format: 15, min_format: [15, 0], max_format: [1000, 0], supported_formats: [15, 1000] } }))
+  )
+  zip.writeZip(resource)
+  const [p] = api.importDefaultResourcePacks([resource]),
+    id = `file/FAIONYX-default-${p.id}-${p.name}`
   fs.mkdirSync(game)
-  fs.writeFileSync(path.join(game, 'options.txt'), `resourcePacks:["vanilla","file/Personal.zip","${id}"]\nincompatibleResourcePacks:["file/Personal.zip","${id}"]\nlang:zh_cn\n`)
+  fs.writeFileSync(
+    path.join(game, 'options.txt'),
+    `resourcePacks:["vanilla","file/Personal.zip","${id}"]\nincompatibleResourcePacks:["file/Personal.zip","${id}"]\nlang:zh_cn\n`
+  )
   api.applyDefaultResourcePacks(game, '26.2', client)
   const lines = fs.readFileSync(path.join(game, 'options.txt'), 'utf8').split('\n')
-  const selected = JSON.parse(lines.find(x => x.startsWith('resourcePacks:'))!.slice(14))
-  const overrides = JSON.parse(lines.find(x => x.startsWith('incompatibleResourcePacks:'))!.slice(26))
-  assert(selected.includes(id)); assert(!overrides.includes(id)); assert(overrides.includes('file/Personal.zip'))
+  const selected = JSON.parse(lines.find((x) => x.startsWith('resourcePacks:'))!.slice(14))
+  const overrides = JSON.parse(lines.find((x) => x.startsWith('incompatibleResourcePacks:'))!.slice(26))
+  assert(selected.includes(id))
+  assert(!overrides.includes(id))
+  assert(overrides.includes('file/Personal.zip'))
   const before = fs.readFileSync(path.join(game, 'options.txt'), 'utf8')
   api.syncDefaultResourcePacks(game, '26.2', client)
   assert.equal(fs.readFileSync(path.join(game, 'options.txt'), 'utf8'), before)
@@ -137,36 +235,67 @@ test('explicitly reapplying compatible defaults clears old false incompatibility
   assert(api.resourcePackIncompatible({ pack_format: 15, supported_formats: [15, 1000] }, [12, 0]))
 })
 
-test('unassigned key persists and syncs as unknown while other settings survive', async t => {
+test('unassigned key persists and syncs as unknown while other settings survive', async (t) => {
   const { root, api } = await runtime(t)
   assert.equal(api.setDefaultKey('key_key.forward', 'key.keyboard.unknown')['key_key.forward'], 'key.keyboard.unknown')
-  const game = path.join(root, 'game'); fs.mkdirSync(game); fs.writeFileSync(path.join(game, 'options.txt'), 'resourcePacks:["vanilla"]\n')
+  const game = path.join(root, 'game')
+  fs.mkdirSync(game)
+  fs.writeFileSync(path.join(game, 'options.txt'), 'resourcePacks:["vanilla"]\n')
   api.syncKeysToGameDir(game)
   const text = fs.readFileSync(path.join(game, 'options.txt'), 'utf8')
-  assert(text.includes('key_key.forward:key.keyboard.unknown')); assert(text.includes('resourcePacks:["vanilla"]'))
+  assert(text.includes('key_key.forward:key.keyboard.unknown'))
+  assert(text.includes('resourcePacks:["vanilla"]'))
 })
 
-test('Windows packaged updates ignore test overrides and reject local v99 pending/cache pollution', async t => {
+test('Windows packaged updates ignore test overrides and reject local v99 pending/cache pollution', async (t) => {
   const isolatedKeys = ['PORTABLE_EXECUTABLE_FILE', 'FAIONYX_UPDATE_TARGET_EXE', 'APPIMAGE'] as const
-  const hostEnvironment = isolatedKeys.map(key => process.env[key])
+  const hostEnvironment = isolatedKeys.map((key) => process.env[key])
   const unrelated = path.join(os.tmpdir(), 'faionyx-unrelated-host')
-  const { root, api, requested, fixtureEnv } = await runtime(t, {
-    FAIONYX_USERDATA_DIR: 'unused-test-dir', FAIONYX_UPDATE_API_BASE: 'http://127.0.0.1:8310', FAIONYX_VERSION_OVERRIDE: '99.0.0',
-    PORTABLE_EXECUTABLE_FILE: path.join(unrelated, 'FAIONYX.exe'),
-    FAIONYX_UPDATE_TARGET_EXE: path.join(unrelated, 'another.exe'), APPIMAGE: path.join(unrelated, 'FAIONYX.AppImage')
-  }, 'win32', 'x64')
+  const { root, api, requested, fixtureEnv } = await runtime(
+    t,
+    {
+      FAIONYX_USERDATA_DIR: 'unused-test-dir',
+      FAIONYX_UPDATE_API_BASE: 'http://127.0.0.1:8310',
+      FAIONYX_VERSION_OVERRIDE: '99.0.0',
+      PORTABLE_EXECUTABLE_FILE: path.join(unrelated, 'FAIONYX.exe'),
+      FAIONYX_UPDATE_TARGET_EXE: path.join(unrelated, 'another.exe'),
+      APPIMAGE: path.join(unrelated, 'FAIONYX.AppImage'),
+    },
+    'win32',
+    'x64'
+  )
   for (const key of isolatedKeys) assert.equal(fixtureEnv[key], undefined, `${key} must not route the fixture to a host installation`)
-  assert.deepEqual(isolatedKeys.map(key => process.env[key]), hostEnvironment, 'the real host environment remains unchanged')
+  assert.deepEqual(
+    isolatedKeys.map((key) => process.env[key]),
+    hostEnvironment,
+    'the real host environment remains unchanged'
+  )
   assert.equal(api.currentVersion(), '1.0.41')
-  const file = path.join(root, 'FAIONYX-99.0.0.exe'); fs.writeFileSync(file, 'fixture')
-  const release = { version: '99.0.0', assetName: path.basename(file), assetUrl: 'http://127.0.0.1:8310/download/FAIONYX-99.0.0.exe', assetSize: 7 }
+  const file = path.join(root, 'FAIONYX-99.0.0.exe')
+  fs.writeFileSync(file, 'fixture')
+  const release = {
+    version: '99.0.0',
+    assetName: path.basename(file),
+    assetUrl: 'http://127.0.0.1:8310/download/FAIONYX-99.0.0.exe',
+    assetSize: 7,
+  }
   fs.writeFileSync(path.join(root, 'pending-update.json'), JSON.stringify({ release, file }))
-  assert.equal(api.getPendingUpdate(), null); assert(fs.existsSync(file)); assert(fs.readdirSync(root).some(f => f.startsWith('pending-update.json.rejected-')))
+  assert.equal(api.getPendingUpdate(), null)
+  assert(fs.existsSync(file))
+  assert(fs.readdirSync(root).some((f) => f.startsWith('pending-update.json.rejected-')))
   fs.writeFileSync(path.join(root, 'update-check-cache.json'), JSON.stringify({ checkedAt: Date.now(), latest: release }))
   const checked = await api.checkLatest(false)
-  assert.equal(checked.hasUpdate, false); assert.equal(checked.release.version, '1.0.30'); assert(requested.every(u => u.startsWith('https://api.github.com/')))
-  const official = { ...release, version: '1.0.42', assetName: 'FAIONYX-1.0.42.exe', assetUrl: 'https://github.com/Skrepy0/FAIONYX/releases/download/v1.0.42/FAIONYX-1.0.42.exe' }
-  const officialFile = path.join(root, official.assetName); fs.writeFileSync(officialFile, 'fixture')
+  assert.equal(checked.hasUpdate, false)
+  assert.equal(checked.release.version, '1.0.30')
+  assert(requested.every((u) => u.startsWith('https://api.github.com/')))
+  const official = {
+    ...release,
+    version: '1.0.42',
+    assetName: 'FAIONYX-1.0.42.exe',
+    assetUrl: 'https://github.com/Skrepy0/FAIONYX/releases/download/v1.0.42/FAIONYX-1.0.42.exe',
+  }
+  const officialFile = path.join(root, official.assetName)
+  fs.writeFileSync(officialFile, 'fixture')
   fs.writeFileSync(path.join(root, 'pending-update.json'), JSON.stringify({ release: official, file: officialFile }))
   assert.equal(api.getPendingUpdate().release.version, '1.0.42')
   assert.equal(api.trustedUpdateRelease({ ...official, assetUrl: official.assetUrl.replace('/v1.0.42/', '/v1.0.30/') }), false)
@@ -176,9 +305,13 @@ test('launch states remain independent across versions and folders; background e
   const s: LaunchTracking = { launchState: null, launchStates: {}, launchingVersionId: '', launchingFolder: '' }
   trackLaunchState(s, { versionId: 'same', folder: 'A', status: 'launching', text: '' })
   trackLaunchState(s, { versionId: 'same', folder: 'A', status: 'running', text: '' })
-  assert(!instanceLaunchBusy(s.launchStates, 'same', 'A')); assert(!instanceLaunchBusy(s.launchStates, 'other', 'A')); assert(!instanceLaunchBusy(s.launchStates, 'same', 'B'))
+  assert(!instanceLaunchBusy(s.launchStates, 'same', 'A'))
+  assert(!instanceLaunchBusy(s.launchStates, 'other', 'A'))
+  assert(!instanceLaunchBusy(s.launchStates, 'same', 'B'))
   trackLaunchState(s, { versionId: 'same', folder: 'B', status: 'launching', text: '' })
   trackLaunchState(s, { versionId: 'same', folder: 'A', status: 'exited', text: '' })
-  assert.equal(s.launchState?.status, 'launching'); assert.equal(s.launchingFolder, 'B')
-  assert(!instanceLaunchBusy(s.launchStates, 'same', 'A')); assert(instanceLaunchBusy(s.launchStates, 'same', 'B'))
+  assert.equal(s.launchState?.status, 'launching')
+  assert.equal(s.launchingFolder, 'B')
+  assert(!instanceLaunchBusy(s.launchStates, 'same', 'A'))
+  assert(instanceLaunchBusy(s.launchStates, 'same', 'B'))
 })

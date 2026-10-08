@@ -7,8 +7,11 @@ function isQaMain(currentModule, requireMain, runtime = process) {
   if (runtime.versions?.electron && runtime.type === 'browser') {
     if (runtime.env?.ELECTRON_RUN_AS_NODE) return false
     if (typeof runtime.argv?.[1] !== 'string' || typeof currentModule?.filename !== 'string') return false
-    try { return fs.realpathSync(runtime.argv[1]) === fs.realpathSync(currentModule.filename) }
-    catch { return false }
+    try {
+      return fs.realpathSync(runtime.argv[1]) === fs.realpathSync(currentModule.filename)
+    } catch {
+      return false
+    }
   }
   return currentModule === requireMain
 }

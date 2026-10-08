@@ -19,7 +19,9 @@ export function getDefaultKeys(): Record<string, string> {
   try {
     const j = JSON.parse(fs.readFileSync(storeFile(), 'utf-8'))
     if (j && typeof j === 'object' && !Array.isArray(j)) stored = j
-  } catch { /* 无存储或损坏：全部回退默认 */ }
+  } catch {
+    /* 无存储或损坏：全部回退默认 */
+  }
   const out: Record<string, string> = {}
   for (const def of VANILLA_KEYBINDS) {
     const value = stored[def.id]

@@ -4,7 +4,7 @@ const fs = require('node:fs/promises')
 const path = require('node:path')
 const crypto = require('node:crypto')
 const base = 'web_engine/src/main/ets/'
-const sha256 = data => crypto.createHash('sha256').update(data).digest('hex')
+const sha256 = (data) => crypto.createHash('sha256').update(data).digest('hex')
 
 // These are files from the exact SHA-pinned 37.2.0 archive, not a moving SDK
 // template. Refuse a new template until its native API differences are reviewed.
@@ -18,7 +18,7 @@ const sourceHashes = {
   'adapter/AppLifecycleAdapter.ets': 'e39f87238f9175c15897a8edb3ebd174bed9f35f26e9698a5da970567db633eb',
   'adapter/DialogAdapter.ets': 'a343e6b2723cab7b0d6a3165dffe5f87f50ff21c34452040537d8705532e2175',
   'ability/WebAbility.ets': '90c0dc0781a3083659c42e2fb3c3a64d8cf2d8bf0c3db23db757c4edd241979a',
-  'ability/WebEmbeddedAbility.ets': 'eee595c58ca73e3656b4ce5e096ac146a8f5384303b69879977e204bb83feda7'
+  'ability/WebEmbeddedAbility.ets': 'eee595c58ca73e3656b4ce5e096ac146a8f5384303b69879977e204bb83feda7',
 }
 
 function replaceOnce(text, from, to) {
@@ -26,22 +26,33 @@ function replaceOnce(text, from, to) {
   return text.replace(from, to)
 }
 function replaceRange(text, from, until, replacement) {
-  const begin = text.indexOf(from), end = text.indexOf(until, begin + from.length)
-  if (begin < 0 || end < 0 || text.indexOf(from, begin + from.length) >= 0) throw new Error('Native template adaptation range is missing or ambiguous')
+  const begin = text.indexOf(from),
+    end = text.indexOf(until, begin + from.length)
+  if (begin < 0 || end < 0 || text.indexOf(from, begin + from.length) >= 0)
+    throw new Error('Native template adaptation range is missing or ambiguous')
   return text.slice(0, begin) + replacement + text.slice(end)
 }
 
 function adapt(relative, bytes) {
-  if (!sourceHashes[relative] || sha256(bytes) !== sourceHashes[relative]) throw new Error(`Unreviewed Harmony native template: ${relative}`)
+  if (!sourceHashes[relative] || sha256(bytes) !== sourceHashes[relative])
+    throw new Error(`Unreviewed Harmony native template: ${relative}`)
   return Buffer.from(transform(relative, bytes.toString('utf8').replaceAll('\r\n', '\n')))
 }
 
 function transform(relative, text) {
   if (relative === 'application/WebAbilityStage.ets') {
-    text = replaceOnce(text, '  private nativeThemeAdapter: NativeThemeAdapter | undefined;', `  private nativeThemeAdapter: NativeThemeAdapter | undefined;
+    text = replaceOnce(
+      text,
+      '  private nativeThemeAdapter: NativeThemeAdapter | undefined;',
+      `  private nativeThemeAdapter: NativeThemeAdapter | undefined;
   private pendingTermination: boolean = false;
-  private bindingsReady: boolean = false;`)
-    text = replaceRange(text, '  onPrepareTermination():', '  onConfigurationUpdate(', `  onPrepareTermination(): AbilityConstant.PrepareTermination {
+  private bindingsReady: boolean = false;`
+    )
+    text = replaceRange(
+      text,
+      '  onPrepareTermination():',
+      '  onConfigurationUpdate(',
+      `  onPrepareTermination(): AbilityConstant.PrepareTermination {
     if (GlobalThisHelper.isTerminationApproved()) {
       return AbilityConstant.PrepareTermination.TERMINATE_IMMEDIATELY;
     }
@@ -63,16 +74,29 @@ function transform(relative, text) {
     }
   }
 
-`)
-    text = replaceOnce(text, '        this.nativeThemeAdapter = Inject.get(NativeThemeAdapter);', `        this.nativeThemeAdapter = Inject.get(NativeThemeAdapter);
+`
+    )
+    text = replaceOnce(
+      text,
+      '        this.nativeThemeAdapter = Inject.get(NativeThemeAdapter);',
+      `        this.nativeThemeAdapter = Inject.get(NativeThemeAdapter);
         this.bindingsReady = true;
         GlobalThisHelper.setCloseDispatcher(() => this.dispatchPendingTermination());
-        this.dispatchPendingTermination();`)
+        this.dispatchPendingTermination();`
+    )
   } else if (relative === 'adapter/PermissionManagerAdapter.ets') {
-    text = replaceOnce(text, '  private isInitialized: boolean = false;', `  private isInitialized: boolean = false;
+    text = replaceOnce(
+      text,
+      '  private isInitialized: boolean = false;',
+      `  private isInitialized: boolean = false;
   private initializing: Promise<void> | undefined;
-  private permissionWrites: Promise<void> = Promise.resolve();`)
-    text = replaceRange(text, '  @LogMethod\n  public async initPermissions()', '  @LogMethod\n  public activateFileAccessPersist(', `  @LogMethod
+  private permissionWrites: Promise<void> = Promise.resolve();`
+    )
+    text = replaceRange(
+      text,
+      '  @LogMethod\n  public async initPermissions()',
+      '  @LogMethod\n  public activateFileAccessPersist(',
+      `  @LogMethod
   public async initPermissions(): Promise<void> {
     if (this.isInitialized) return;
     if (this.initializing) return this.initializing;
@@ -153,8 +177,13 @@ function transform(relative, text) {
     return values;
   }
 
-`)
-    text = replaceRange(text, '  @LogMethod\n  public fileAccessPersist(', '  @LogMethod\n  openPermissionConfirm(', `  @LogMethod
+`
+    )
+    text = replaceRange(
+      text,
+      '  @LogMethod\n  public fileAccessPersist(',
+      '  @LogMethod\n  openPermissionConfirm(',
+      `  @LogMethod
   public async fileAccessPersist(uris: string[]): Promise<void> {
     if (uris.length === 0) throw new Error('No selected URI to persist');
     const policies = new Array<fileShare.PolicyInfo>();
@@ -168,9 +197,14 @@ function transform(relative, text) {
     await fileShare.persistPermission(policies);
   }
 
-`)
+`
+    )
   } else if (relative === 'adapter/FilePickerAdapter.ets') {
-    text = replaceRange(text, '  @LogMethod\n  showDirDocumentViewPicker(', '  @LogMethod\n  showSaveAsDocumentViewPicker(', `  @LogMethod
+    text = replaceRange(
+      text,
+      '  @LogMethod\n  showDirDocumentViewPicker(',
+      '  @LogMethod\n  showSaveAsDocumentViewPicker(',
+      `  @LogMethod
   showDirDocumentViewPicker(file_access_persist: boolean, callback: (path: string) => void) {
     const options = new picker.DocumentSelectOptions();
     options.selectMode = picker.DocumentSelectMode.FOLDER;
@@ -191,18 +225,31 @@ function transform(relative, text) {
     });
   }
 
-`)
+`
+    )
   } else if (relative === 'jsbindings/PermissionManagerAdapterBind.ets') {
-    text = replaceOnce(text, '  implPermissionManagerAdapter().fileAccessPersist(uris);', `  // This legacy native binding has a void return; never leak a rejected Promise.
+    text = replaceOnce(
+      text,
+      '  implPermissionManagerAdapter().fileAccessPersist(uris);',
+      `  // This legacy native binding has a void return; never leak a rejected Promise.
   implPermissionManagerAdapter().fileAccessPersist(uris).catch((error: Error) => {
     console.error('FAIONYX directory permission request failed: ' + JSON.stringify(error));
-  });`)
+  });`
+    )
   } else if (relative === 'adapter/DialogAdapter.ets') {
-    text = replaceOnce(text, "import { BaseAdapter } from '../common/BaseAdapter';", `import { BaseAdapter } from '../common/BaseAdapter';
+    text = replaceOnce(
+      text,
+      "import { BaseAdapter } from '../common/BaseAdapter';",
+      `import { BaseAdapter } from '../common/BaseAdapter';
 import Inject from '../common/InjectModule';
 import { PermissionManagerAdapter } from './PermissionManagerAdapter';
-import fileUri from '@ohos.file.fileuri';`)
-    text = replaceRange(text, '    documentPicker.select(DocumentSelectOptions).then(', '  @LogMethod\n  showSaveDialog(', `    documentPicker.select(DocumentSelectOptions).then(async (selected: string[]) => {
+import fileUri from '@ohos.file.fileuri';`
+    )
+    text = replaceRange(
+      text,
+      '    documentPicker.select(DocumentSelectOptions).then(',
+      '  @LogMethod\n  showSaveDialog(',
+      `    documentPicker.select(DocumentSelectOptions).then(async (selected: string[]) => {
       if (selected.length > 0 && dialogSettings.properties_open_directory) {
         const directories = dialogSettings.properties_open_mixed
           ? selected.filter((uri: string) => fs.statSync(new fileUri.FileUri(uri).path).isDirectory())
@@ -221,14 +268,22 @@ import fileUri from '@ohos.file.fileuri';`)
     });
   }
 
-`)
+`
+    )
   } else if (relative === 'ability/WebAbility.ets' || relative === 'ability/WebEmbeddedAbility.ets') {
-    text = replaceOnce(text, '    Inject.get(PermissionManagerAdapter).initPermissions();', `    Inject.get(PermissionManagerAdapter).initPermissions().catch((error: Error) => {
+    text = replaceOnce(
+      text,
+      '    Inject.get(PermissionManagerAdapter).initPermissions();',
+      `    Inject.get(PermissionManagerAdapter).initPermissions().catch((error: Error) => {
       // WebWindow reports the failure and offers an explicit retry/reauthorize.
       LogUtil.error(TAG, 'Directory permission restore failed: ' + JSON.stringify(error));
-    });`)
+    });`
+    )
   } else if (relative === 'utils/GlobalThisHelper.ets') {
-    text = replaceOnce(text, 'export class GlobalThisHelper {', `export class GlobalThisHelper {
+    text = replaceOnce(
+      text,
+      'export class GlobalThisHelper {',
+      `export class GlobalThisHelper {
   private static terminationApproved: boolean = false;
   private static browserReady: boolean = false;
   private static closeDispatcher: (() => void) | undefined;
@@ -251,31 +306,59 @@ import fileUri from '@ohos.file.fileuri';`)
   public static confirmTermination(): void {
     GlobalThisHelper.terminationApproved = true;
   }
-`)
-    text = replaceOnce(text, '  public static appInit(provider: DependencyProvider): void {', `  public static appInit(provider: DependencyProvider): void {
+`
+    )
+    text = replaceOnce(
+      text,
+      '  public static appInit(provider: DependencyProvider): void {',
+      `  public static appInit(provider: DependencyProvider): void {
     GlobalThisHelper.terminationApproved = false;
     GlobalThisHelper.browserReady = false;
-    GlobalThisHelper.closeDispatcher = undefined;`)
+    GlobalThisHelper.closeDispatcher = undefined;`
+    )
   } else if (relative === 'adapter/AppLifecycleAdapter.ets') {
-    text = replaceOnce(text, "import { BaseAdapter } from '../common/BaseAdapter';", "import { BaseAdapter } from '../common/BaseAdapter';\nimport { GlobalThisHelper } from '../utils/GlobalThisHelper';")
-    text = replaceOnce(text, `  onWebDestroy() {
-    this.webStatus = WebStatus.kDestroy;`, `  onWebDestroy() {
+    text = replaceOnce(
+      text,
+      "import { BaseAdapter } from '../common/BaseAdapter';",
+      "import { BaseAdapter } from '../common/BaseAdapter';\nimport { GlobalThisHelper } from '../utils/GlobalThisHelper';"
+    )
+    text = replaceOnce(
+      text,
+      `  onWebDestroy() {
+    this.webStatus = WebStatus.kDestroy;`,
+      `  onWebDestroy() {
     // Only Electron's completed quit approves native termination. A close
     // request, an editor cancel or a failed incremental save never sets this.
     GlobalThisHelper.confirmTermination();
-    this.webStatus = WebStatus.kDestroy;`)
-    text = replaceOnce(text, `  onWebCreate() {
-    this.webStatus = WebStatus.kStart;`, `  onWebCreate() {
+    this.webStatus = WebStatus.kDestroy;`
+    )
+    text = replaceOnce(
+      text,
+      `  onWebCreate() {
+    this.webStatus = WebStatus.kStart;`,
+      `  onWebCreate() {
     this.webStatus = WebStatus.kStart;
     // Browser::Get is established by the actual native startup, not bindings.
-    GlobalThisHelper.markBrowserReady();`)
+    GlobalThisHelper.markBrowserReady();`
+    )
   } else if (relative === 'components/WebWindow.ets') {
-    text = replaceOnce(text, "import Inject from '../common/InjectModule';", "import Inject from '../common/InjectModule';\nimport { PermissionManagerAdapter } from '../adapter/PermissionManagerAdapter';")
-    text = replaceOnce(text, `        this.config.nativeContext.runBrowser(vec_args);
+    text = replaceOnce(
+      text,
+      "import Inject from '../common/InjectModule';",
+      "import Inject from '../common/InjectModule';\nimport { PermissionManagerAdapter } from '../adapter/PermissionManagerAdapter';"
+    )
+    text = replaceOnce(
+      text,
+      `        this.config.nativeContext.runBrowser(vec_args);
         if (this.config.uri)
-          this.config.nativeContext.ExecuteCommand(CommandType.kNewWindow, { url: this.config.uri, is_sync: true });`, `        // Restore recorded grants before Electron opens configured game folders.
-        this.startBrowserWithDirectoryPermissions(vec_args);`)
-    text = replaceOnce(text, '  private setDefaultBounds() {', `  private startBrowserWithDirectoryPermissions(args: string[]): void {
+          this.config.nativeContext.ExecuteCommand(CommandType.kNewWindow, { url: this.config.uri, is_sync: true });`,
+      `        // Restore recorded grants before Electron opens configured game folders.
+        this.startBrowserWithDirectoryPermissions(vec_args);`
+    )
+    text = replaceOnce(
+      text,
+      '  private setDefaultBounds() {',
+      `  private startBrowserWithDirectoryPermissions(args: string[]): void {
     const launch = () => {
       this.config.nativeContext.runBrowser(args);
       if (this.config.uri)
@@ -293,7 +376,8 @@ import fileUri from '@ohos.file.fileuri';`)
     });
   }
 
-  private setDefaultBounds() {`)
+  private setDefaultBounds() {`
+    )
   }
   return text
 }

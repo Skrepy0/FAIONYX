@@ -15,20 +15,8 @@ import { samePath } from './folderPaths'
 import fs from 'node:fs'
 import { randomUUID } from 'node:crypto'
 import path from 'node:path'
-import type {
-  GameResolution,
-  ImageFit,
-  InstalledVersion,
-  InstallOptions,
-  ProgressEvent,
-  RemoteVersion
-} from '../../shared/types'
-import {
-  downloadAll,
-  downloadFile,
-  type DownloadTask,
-  type MirrorPref
-} from './download'
+import type { GameResolution, ImageFit, InstalledVersion, InstallOptions, ProgressEvent, RemoteVersion } from '../../shared/types'
+import { downloadAll, downloadFile, type DownloadTask, type MirrorPref } from './download'
 import { getSettings } from './settings'
 import { throwIfCancelled } from './tasks'
 import { createWeightedProgressEmit, VERSION_INSTALL_STAGE_RANGES } from './progress'
@@ -56,7 +44,7 @@ import {
   versionJsonPath,
   versionsDir,
   virtualLegacyDir,
-  withGameFolder
+  withGameFolder,
 } from './paths'
 import { ensureInstanceThumbnail, removeInstanceThumbnail } from './appearanceAssets'
 
@@ -169,7 +157,12 @@ export function rulesAllow(rules?: VersionRule[]): boolean {
 
 export function ruleArchitectureMatches(rule: string, arch: string): boolean {
   const aliases: Record<string, string[]> = { ia32: ['x86', 'ia32', 'i386'], x64: ['x86_64', 'amd64', 'x64'], arm64: ['aarch64', 'arm64'] }
-  try { const matcher = new RegExp(`^(?:${rule})$`); return (aliases[arch] ?? [arch]).some(value => matcher.test(value)) } catch { return false }
+  try {
+    const matcher = new RegExp(`^(?:${rule})$`)
+    return (aliases[arch] ?? [arch]).some((value) => matcher.test(value))
+  } catch {
+    return false
+  }
 }
 
 // ---------------- 版本清单 ----------------
@@ -186,20 +179,16 @@ export async function fetchVersionManifest(_mirror: MirrorPref, refresh = false,
 
 /** 同步读取本地版本 json（容错 BOM 头）；versions/ 没有时回退到 .faionyx/base 依赖原版区 */
 export function readVersionJson(id: string): VersionJson {
-  if(typeof id!=='string'||!id||id==='.'||id==='..'||/[\\/:\x00]/.test(id))throw new Error('无效的版本 ID')
+  if (typeof id !== 'string' || !id || id === '.' || id === '..' || /[\\/:\x00]/.test(id)) throw new Error('无效的版本 ID')
   let p = versionJsonPath(id)
   if (!fs.existsSync(p) && fs.existsSync(baseVersionJsonPath(id))) p = baseVersionJsonPath(id)
-  if(fs.lstatSync(p).isSymbolicLink()||fs.lstatSync(path.dirname(p)).isSymbolicLink())throw new Error('版本文件不能使用符号链接')
+  if (fs.lstatSync(p).isSymbolicLink() || fs.lstatSync(path.dirname(p)).isSymbolicLink()) throw new Error('版本文件不能使用符号链接')
   const raw = fs.readFileSync(p, 'utf-8')
   return JSON.parse(raw.replace(/^﻿/, '')) as VersionJson
 }
 
 /** 确保版本 json 存在并解析返回（不存在则按清单下载到 dest，默认 versions 区；signal 用于任务取消） */
-export async function getVersionJson(
-  versionId: string,
-  dest?: string,
-  signal?: AbortSignal
-): Promise<VersionJson> {
+export async function getVersionJson(versionId: string, dest?: string, signal?: AbortSignal): Promise<VersionJson> {
   const jsonPath = dest ?? versionJsonPath(versionId)
   if (!fs.existsSync(jsonPath)) {
     const mirror = getSettings().mirror
@@ -234,7 +223,12 @@ function collectLibraries(vj: VersionJson): LibEntry[] {
   const out: LibEntry[] = []
   const seen = new Set<string>()
   const coordinates = new Set<string>()
-  const push = (art: (Pick<LibraryArtifact, 'path'> & Partial<LibraryArtifact>) | undefined, isNative: boolean, coordinate?: string, nativeChecksumUrl?: string): void => {
+  const push = (
+    art: (Pick<LibraryArtifact, 'path'> & Partial<LibraryArtifact>) | undefined,
+    isNative: boolean,
+    coordinate?: string,
+    nativeChecksumUrl?: string
+  ): void => {
     if (!art?.path) return
     const dest = libraryPath(art.path)
     // Retain installer-generated entries even when missing, so launch validation
@@ -281,10 +275,7 @@ function collectLibraries(vj: VersionJson): LibEntry[] {
         push({ path: rel, url: base ? base + rel : undefined }, false, mavenIdentity(lib.name))
       }
     }
-    const nativesKey = lib.natives?.[OS_NAME]?.replace(
-      '${arch}',
-      process.arch === 'ia32' ? '32' : '64'
-    )
+    const nativesKey = lib.natives?.[OS_NAME]?.replace('${arch}', process.arch === 'ia32' ? '32' : '64')
     if (nativesKey) push(lib.downloads?.classifiers?.[nativesKey], true, mavenIdentity(lib.name, nativesKey), lib.nativeChecksumUrl)
   }
   return out
@@ -297,9 +288,15 @@ export function libraryTasks(vj: VersionJson): DownloadTask[] {
     .filter((e) => e.url)
     .map((e) => {
       const relative = path.relative(librariesDir(), e.path)
-      return { url: e.url as string, dest: e.path, sha1: e.sha1, size: e.size, nativeChecksumUrl: e.nativeChecksumUrl,
-        reuseFiles: !relative.startsWith('..') && !path.isAbsolute(relative)
-          ? folders.map(folder => path.join(folder, 'libraries', relative)) : [] }
+      return {
+        url: e.url as string,
+        dest: e.path,
+        sha1: e.sha1,
+        size: e.size,
+        nativeChecksumUrl: e.nativeChecksumUrl,
+        reuseFiles:
+          !relative.startsWith('..') && !path.isAbsolute(relative) ? folders.map((folder) => path.join(folder, 'libraries', relative)) : [],
+      }
     })
 }
 
@@ -308,7 +305,7 @@ export function resolvedLibraries(vj: VersionJson): { artifacts: string[]; nativ
   const entries = collectLibraries(vj)
   return {
     artifacts: entries.filter((e) => !e.isNative).map((e) => e.path),
-    natives: entries.filter((e) => e.isNative).map((e) => e.path)
+    natives: entries.filter((e) => e.isNative).map((e) => e.path),
   }
 }
 
@@ -323,9 +320,7 @@ function fmtMB(bytes: number): string {
  * dest='versions'：作为独立版本安装进 versions/（用户主动安装，支持 instanceName 自定义实例名）
  * dest='base'：作为加载器实例的内部依赖装进 .faionyx/base/（不进版本列表，json/jar 仅供链解析）
  */
-export async function installVanilla(
-  ...args: Parameters<typeof installVanillaUnlocked>
-): Promise<string> {
+export async function installVanilla(...args: Parameters<typeof installVanillaUnlocked>): Promise<string> {
   const [id, , dest = 'versions', name, signal] = args
   const dir = dest === 'base' ? baseVersionDir(id) : versionDir(name?.trim() || id)
   return withFileJob(dir, signal, () => installVanillaUnlocked(...args))
@@ -362,145 +357,161 @@ async function installVanillaUnlocked(
       fs.writeFileSync(jsonPath, JSON.stringify(vj, null, 2), 'utf-8')
     }
 
-    const parallel = new ParallelProgress([
-      { id: 'libraries', label: '依赖库', weight: 0.34 },
-      { id: 'client', label: '游戏本体', weight: 0.17 },
-      { id: 'assets', label: '资源文件', weight: 0.27 }
-    ], emit, '同步下载游戏本体、依赖库与资源', [0.04, 0.82])
-    await runParallelTasks([
-      async signal => {
-        await runParallelTasks([
-          async (signal) => {
-            const emit: ProgressEmit = event => parallel.update('libraries', event)
-            // 1. 依赖库（含 natives classifiers）
-            const libTasks = libraryTasks(vj)
+    const parallel = new ParallelProgress(
+      [
+        { id: 'libraries', label: '依赖库', weight: 0.34 },
+        { id: 'client', label: '游戏本体', weight: 0.17 },
+        { id: 'assets', label: '资源文件', weight: 0.27 },
+      ],
+      emit,
+      '同步下载游戏本体、依赖库与资源',
+      [0.04, 0.82]
+    )
+    await runParallelTasks(
+      [
+        async (signal) => {
+          await runParallelTasks(
+            [
+              async (signal) => {
+                const emit: ProgressEmit = (event) => parallel.update('libraries', event)
+                // 1. 依赖库（含 natives classifiers）
+                const libTasks = libraryTasks(vj)
+                await downloadAll(
+                  libTasks,
+                  (d, t, speed, detail) =>
+                    emit({
+                      stage: 'libraries',
+                      progress: detail.fraction ?? 0,
+                      text: `下载依赖库 ${d}/${t}`,
+                      speed,
+                      etaSeconds: detail.etaSeconds ?? undefined,
+                      bytesDone: detail.bytesDone,
+                      bytesTotal: detail.bytesTotal ?? undefined,
+                      indeterminate: detail.indeterminate,
+                      source: sourceText,
+                    }),
+                  downloadLimiter.maxConcurrent,
+                  mirror,
+                  signal
+                )
+
+                parallel.done('libraries')
+              },
+              async (signal) => {
+                const emit: ProgressEmit = (event) => parallel.update('client', event)
+                // 2. 客户端 jar
+                const client = vj.downloads?.client
+                if (client?.url) {
+                  // PCL2 本地复用优化：客户端 jar 优先从其他游戏文件夹的 versions 与 .faionyx/base
+                  // 里按 大小+sha1 查找相同文件直接复制（多文件夹/加载器依赖原版间不再重复下载）
+                  const versionDirs = allVersionsDirs()
+                  const reuseDirs = versionDirs
+                    .map((v) => v.dir)
+                    .concat(versionDirs.map((v) => path.join(v.folder, '.faionyx', 'base')))
+                    .filter((dir) => path.resolve(dir) !== path.resolve(path.dirname(jarPath)))
+                  await downloadAll(
+                    [{ url: client.url, dest: jarPath, sha1: client.sha1, size: client.size, reuseDirs }],
+                    (_done, _total, speed, detail) =>
+                      emit({
+                        stage: 'client',
+                        progress: detail.fraction ?? 0,
+                        bytesDone: detail.bytesDone,
+                        bytesTotal: detail.bytesTotal ?? undefined,
+                        indeterminate: detail.indeterminate,
+                        speed,
+                        etaSeconds: detail.etaSeconds ?? undefined,
+                        text: '下载游戏本体 ' + fmtMB(detail.bytesDone),
+                        source: sourceText,
+                      }),
+                    getSettings().downloadThreads,
+                    mirror,
+                    signal
+                  )
+                }
+
+                parallel.done('client')
+              },
+            ],
+            signal
+          )
+          // Installer processors only need client/libraries; assets keep downloading.
+          await runtimeReady?.(signal)
+        },
+        async (signal) => {
+          const emit: ProgressEmit = (event) => parallel.update('assets', event)
+          emit({ stage: 'assets', progress: 0, text: '获取资源索引' })
+          // 3. 资源索引与资源文件
+          if (vj.assetIndex?.url) {
+            const idxPath = assetIndexPath(vj.assetIndex.id)
+            await downloadFile(vj.assetIndex.url, idxPath, undefined, vj.assetIndex.sha1, mirror, signal, [], {
+              size: vj.assetIndex.size,
+              reuseFiles: allFolders().map((folder) => path.join(folder, 'assets', 'indexes', `${vj.assetIndex!.id}.json`)),
+            })
+
+            const idx = JSON.parse(fs.readFileSync(idxPath, 'utf-8')) as {
+              virtual?: boolean
+              map_to_resources?: boolean
+              objects?: Record<string, { hash: string; size?: number }>
+            }
+            const objects = idx.objects ?? {}
+
+            // 按 hash 去重生成下载任务
+            const seen = new Set<string>()
+            const tasks: DownloadTask[] = []
+            const resourceFolders = allFolders()
+            for (const o of Object.values(objects)) {
+              if (!o?.hash || seen.has(o.hash)) continue
+              seen.add(o.hash)
+              tasks.push({
+                url: `https://resources.download.minecraft.net/${o.hash.slice(0, 2)}/${o.hash}`,
+                dest: assetObjectPath(o.hash),
+                sha1: o.hash,
+                size: o.size,
+                reuseFiles: resourceFolders.map((folder) => path.join(folder, 'assets', 'objects', o.hash.slice(0, 2), o.hash)),
+              })
+            }
             await downloadAll(
-              libTasks,
+              tasks,
               (d, t, speed, detail) =>
                 emit({
-                  stage: 'libraries',
+                  stage: 'assets',
                   progress: detail.fraction ?? 0,
-                  text: `下载依赖库 ${d}/${t}`,
+                  text: `下载资源文件 ${d}/${t}`,
                   speed,
                   etaSeconds: detail.etaSeconds ?? undefined,
                   bytesDone: detail.bytesDone,
                   bytesTotal: detail.bytesTotal ?? undefined,
                   indeterminate: detail.indeterminate,
-                  source: sourceText
+                  source: sourceText,
                 }),
               downloadLimiter.maxConcurrent,
               mirror,
               signal
             )
 
-            parallel.done('libraries')
-          },
-          async (signal) => {
-            const emit: ProgressEmit = event => parallel.update('client', event)
-            // 2. 客户端 jar
-            const client = vj.downloads?.client
-            if (client?.url) {
-              // PCL2 本地复用优化：客户端 jar 优先从其他游戏文件夹的 versions 与 .faionyx/base
-              // 里按 大小+sha1 查找相同文件直接复制（多文件夹/加载器依赖原版间不再重复下载）
-              const versionDirs = allVersionsDirs()
-              const reuseDirs = versionDirs
-                .map((v) => v.dir)
-                .concat(versionDirs.map((v) => path.join(v.folder, '.faionyx', 'base')))
-                .filter((dir) => path.resolve(dir) !== path.resolve(path.dirname(jarPath)))
-              await downloadAll(
-                [{ url: client.url, dest: jarPath, sha1: client.sha1, size: client.size, reuseDirs }],
-                (_done, _total, speed, detail) => emit({stage:'client', progress:detail.fraction ?? 0,
-                  bytesDone:detail.bytesDone, bytesTotal:detail.bytesTotal ?? undefined, indeterminate:detail.indeterminate,
-                  speed, etaSeconds:detail.etaSeconds ?? undefined, text:'下载游戏本体 '+fmtMB(detail.bytesDone), source:sourceText}),
-                getSettings().downloadThreads, mirror, signal
-              )
-          }
-
-            parallel.done('client')
-          }
-            ], signal)
-        // Installer processors only need client/libraries; assets keep downloading.
-        await runtimeReady?.(signal)
-      },
-      async (signal) => {
-        const emit: ProgressEmit = event => parallel.update('assets', event)
-        emit({ stage: 'assets', progress: 0, text: '获取资源索引' })
-        // 3. 资源索引与资源文件
-        if (vj.assetIndex?.url) {
-          const idxPath = assetIndexPath(vj.assetIndex.id)
-          await downloadFile(
-            vj.assetIndex.url,
-            idxPath,
-            undefined,
-            vj.assetIndex.sha1,
-            mirror,
-            signal,
-            [],
-            { size: vj.assetIndex.size, reuseFiles: allFolders().map(folder => path.join(folder, 'assets', 'indexes', `${vj.assetIndex!.id}.json`)) }
-          )
-
-          const idx = JSON.parse(fs.readFileSync(idxPath, 'utf-8')) as {
-            virtual?: boolean
-            map_to_resources?: boolean
-            objects?: Record<string, { hash: string; size?: number }>
-          }
-          const objects = idx.objects ?? {}
-
-          // 按 hash 去重生成下载任务
-          const seen = new Set<string>()
-          const tasks: DownloadTask[] = []
-          const resourceFolders = allFolders()
-          for (const o of Object.values(objects)) {
-            if (!o?.hash || seen.has(o.hash)) continue
-            seen.add(o.hash)
-            tasks.push({
-              url: `https://resources.download.minecraft.net/${o.hash.slice(0, 2)}/${o.hash}`,
-              dest: assetObjectPath(o.hash),
-              sha1: o.hash,
-              size: o.size,
-              reuseFiles: resourceFolders.map(folder => path.join(folder, 'assets', 'objects', o.hash.slice(0, 2), o.hash))
-            })
-          }
-          await downloadAll(
-            tasks,
-            (d, t, speed, detail) =>
-              emit({
-                stage: 'assets',
-                progress: detail.fraction ?? 0,
-                text: `下载资源文件 ${d}/${t}`,
-                speed,
-                etaSeconds: detail.etaSeconds ?? undefined,
-                bytesDone: detail.bytesDone,
-                bytesTotal: detail.bytesTotal ?? undefined,
-                indeterminate: detail.indeterminate,
-                source: sourceText
-              }),
-            downloadLimiter.maxConcurrent,
-            mirror,
-            signal
-          )
-
-          // legacy 版本需要把资源复制到 assets/virtual/legacy 下
-          if (idx.virtual === true || idx.map_to_resources === true) {
-            emit({ stage: 'assets', progress: 1, text: '复制 legacy 资源' })
-            let copied = 0
-            for (const [name, o] of Object.entries(objects)) {
-              throwIfCancelled(signal)
-              if (!o?.hash) continue
-              const from = assetObjectPath(o.hash)
-              const to = path.join(virtualLegacyDir(), ...name.split('/'))
-              if (fs.existsSync(from) && !fs.existsSync(to)) {
-                fs.mkdirSync(path.dirname(to), { recursive: true })
-                fs.copyFileSync(from, to)
+            // legacy 版本需要把资源复制到 assets/virtual/legacy 下
+            if (idx.virtual === true || idx.map_to_resources === true) {
+              emit({ stage: 'assets', progress: 1, text: '复制 legacy 资源' })
+              let copied = 0
+              for (const [name, o] of Object.entries(objects)) {
+                throwIfCancelled(signal)
+                if (!o?.hash) continue
+                const from = assetObjectPath(o.hash)
+                const to = path.join(virtualLegacyDir(), ...name.split('/'))
+                if (fs.existsSync(from) && !fs.existsSync(to)) {
+                  fs.mkdirSync(path.dirname(to), { recursive: true })
+                  fs.copyFileSync(from, to)
+                }
+                if (++copied % 64 === 0) await new Promise<void>((resolve) => setImmediate(resolve))
               }
-              if (++copied % 64 === 0) await new Promise<void>((resolve) => setImmediate(resolve))
             }
           }
-      }
 
-        parallel.done('assets')
-      }
-    ], signal)
+          parallel.done('assets')
+        },
+      ],
+      signal
+    )
 
     emit(
       finalEvent
@@ -533,7 +544,7 @@ export async function installVersion(
 }
 
 export function launchLibraryFiles(vj: VersionJson) {
-  return collectLibraries(vj).map(e => ({ dest: e.path, url: e.url, sha1: e.sha1, size: e.size, nativeChecksumUrl: e.nativeChecksumUrl }))
+  return collectLibraries(vj).map((e) => ({ dest: e.path, url: e.url, sha1: e.sha1, size: e.size, nativeChecksumUrl: e.nativeChecksumUrl }))
 }
 
 async function installVersionInFolder(
@@ -544,9 +555,9 @@ async function installVersionInFolder(
   isolated: boolean,
   onFavoriteResult?: (result: import('../../shared/modFavorites').FavoriteInstallResult) => void
 ): Promise<string> {
-  const { installRecordingMods } = await import("./recordingMods")
+  const { installRecordingMods } = await import('./recordingMods')
   const { prepareInstallMods, favoriteInstallResult } = await import('./modFavorites')
-  const recordingFiles = await prepareInstallMods(versionId, opts,signal)
+  const recordingFiles = await prepareInstallMods(versionId, opts, signal)
   const finishFavorites = async (installedId: string) => {
     if (!opts.favoriteInstallIntent && !opts.favoriteMods?.length) return
     const modsDirectory = path.join(instanceDirectoryState(installedId, readVersionJson(installedId)).path, 'mods')
@@ -568,14 +579,7 @@ async function installVersionInFolder(
       loaderVersion = list[0]
       if (!loaderVersion) throw new Error(`${opts.loader} 没有适配 ${versionId} 的版本`)
     }
-    const installedId = await installLoader(
-      opts.loader,
-      versionId,
-      loaderVersion,
-      prepareReport,
-      opts.instanceName,
-      signal
-    )
+    const installedId = await installLoader(opts.loader, versionId, loaderVersion, prepareReport, opts.instanceName, signal)
     // 必须先确定最终游戏目录，再安装附加模组；失败时直接报错，不能写入共享目录兜底。
     if (isolated) setNewInstanceIsolation(installedId, true)
     // Fabric：可选同时安装 Fabric API 到 mods 文件夹
@@ -587,10 +591,18 @@ async function installVersionInFolder(
     }
     if (recordingFiles.length) {
       const mods = path.join(instanceDirectoryState(installedId, readVersionJson(installedId)).path, 'mods')
-      try { await installRecordingMods(mods, recordingFiles, signal, fraction => report({ stage: 'download', progress: fraction, text: '下载并校验所选模组与必要前置' })); await finishFavorites(installedId) }
-      catch(e) { if(signal?.aborted)throw e;const {recordSupplementalFailure}=await import('./supplementalMods');recordSupplementalFailure({folder:gameDir(),id:installedId},versionId,opts,e);throw new Error(`${installedId} 基础实例已保留；附加模组安装失败，请选择重试或保留基础实例：${e instanceof Error ? e.message : e}`) }
-    }
-    else await finishFavorites(installedId)
+      try {
+        await installRecordingMods(mods, recordingFiles, signal, (fraction) =>
+          report({ stage: 'download', progress: fraction, text: '下载并校验所选模组与必要前置' })
+        )
+        await finishFavorites(installedId)
+      } catch (e) {
+        if (signal?.aborted) throw e
+        const { recordSupplementalFailure } = await import('./supplementalMods')
+        recordSupplementalFailure({ folder: gameDir(), id: installedId }, versionId, opts, e)
+        throw new Error(`${installedId} 基础实例已保留；附加模组安装失败，请选择重试或保留基础实例：${e instanceof Error ? e.message : e}`)
+      }
+    } else await finishFavorites(installedId)
     report({ stage: 'done', progress: 1, text: `${installedId} 安装完成` })
     return installedId
   }
@@ -646,8 +658,8 @@ export function resolveVersionChain(id: string): { merged: VersionJson; baseId: 
     libraries: chain.flatMap((c) => c.libraries ?? []),
     arguments: {
       game: parentFirst.flatMap((c) => c.arguments?.game ?? []),
-      jvm: parentFirst.flatMap((c) => c.arguments?.jvm ?? [])
-    }
+      jvm: parentFirst.flatMap((c) => c.arguments?.jvm ?? []),
+    },
   }
   return { merged, baseId }
 }
@@ -669,7 +681,7 @@ export function flattenInstance(id: string): boolean {
   for (const [k, v] of Object.entries(own)) {
     if (k.startsWith('_')) (merged as unknown as Record<string, unknown>)[k] = v
   }
-  merged._mcVersion = own._mcVersion ?? (readVersionJson(baseId)._mcVersion ?? baseId)
+  merged._mcVersion = own._mcVersion ?? readVersionJson(baseId)._mcVersion ?? baseId
   merged._flattenedAt = new Date().toISOString()
   delete merged.inheritsFrom
 
@@ -689,9 +701,7 @@ export function flattenInstance(id: string): boolean {
  * 存量迁移：扫描全部游戏文件夹，把带 inheritsFrom 的实例逐个拍平为自包含实例。
  * 返回拍平数量；单个失败不阻断其余（launcherLog 记录）。
  */
-export async function migrateFlattenedInstances(
-  log: (msg: string) => void = () => undefined
-): Promise<number> {
+export async function migrateFlattenedInstances(log: (msg: string) => void = () => undefined): Promise<number> {
   let count = 0
   for (const { dir } of allVersionsDirs()) {
     if (!fs.existsSync(dir)) continue
@@ -726,7 +736,7 @@ export async function installClientJarOnly(id: string, emit: ProgressEmit, signa
       emit({
         stage: 'client',
         progress: t ? d / t : 0,
-        text: `下载游戏本体 ${(d / 1024 / 1024).toFixed(1)}MB${t ? '/' + (t / 1024 / 1024).toFixed(1) + 'MB' : ''}`
+        text: `下载游戏本体 ${(d / 1024 / 1024).toFixed(1)}MB${t ? '/' + (t / 1024 / 1024).toFixed(1) + 'MB' : ''}`,
       }),
     client.sha1,
     mirror,
@@ -771,7 +781,10 @@ function versionJsonInFolder(folder: string, id: string): string {
 }
 
 /** 扫描指定 Minecraft 根目录；损坏条目不会静默消失，而以 incomplete + errors 返回。 */
-export function scanInstalledFolder(folder: string, onlyId?: string): {
+export function scanInstalledFolder(
+  folder: string,
+  onlyId?: string
+): {
   versions: InstalledVersion[]
   errors: string[]
 } {
@@ -786,7 +799,7 @@ export function scanInstalledFolder(folder: string, onlyId?: string): {
   } catch (error) {
     return {
       versions: out,
-      errors: [`无法读取 versions：${error instanceof Error ? error.message : String(error)}`]
+      errors: [`无法读取 versions：${error instanceof Error ? error.message : String(error)}`],
     }
   }
   // 只有活动根目录写入运行时寻址表；全局诊断扫描不能污染当前实例映射。
@@ -808,18 +821,33 @@ export function scanInstalledFolder(folder: string, onlyId?: string): {
           const local = versionJsonInFolder(root, id)
           const localBase = path.join(root, '.faionyx', 'base', id, `${id}.json`)
           return parseVersionFile(fs.existsSync(local) ? local : fs.existsSync(localBase) ? localBase : baseVersionJsonPath(id))
-        } catch { return undefined }
+        } catch {
+          return undefined
+        }
       }
-      const resolved = resolveInstanceMetadata(j, localParent, chain => {
+      const resolved = resolveInstanceMetadata(j, localParent, (chain) => {
         // Only unresolved metadata reads the client manifest/cache; listing never contacts a service.
         const id = chain.length === 1 ? name : chain.at(-2)!.inheritsFrom!
-        const jar = chain.length === 1 ? path.join(dir, name, `${name}.jar`)
-          : fs.existsSync(versionJsonInFolder(root, id)) ? path.join(dir, id, `${id}.jar`)
-          : fs.existsSync(path.join(root, '.faionyx', 'base', id, `${id}.json`)) ? path.join(root, '.faionyx', 'base', id, `${id}.jar`)
-          : baseVersionJarPath(id)
-        return readClientVersionEvidence(jar) ?? cachedClientVersionEvidence(chain, [dir, path.join(root, '.faionyx', 'base'), path.dirname(baseVersionDir('_'))])
+        const jar =
+          chain.length === 1
+            ? path.join(dir, name, `${name}.jar`)
+            : fs.existsSync(versionJsonInFolder(root, id))
+              ? path.join(dir, id, `${id}.jar`)
+              : fs.existsSync(path.join(root, '.faionyx', 'base', id, `${id}.json`))
+                ? path.join(root, '.faionyx', 'base', id, `${id}.jar`)
+                : baseVersionJarPath(id)
+        return (
+          readClientVersionEvidence(jar) ??
+          cachedClientVersionEvidence(chain, [dir, path.join(root, '.faionyx', 'base'), path.dirname(baseVersionDir('_'))])
+        )
       })
-      const item: InstalledVersion = { id: name, mcVersion: resolved.mcVersion, loader: resolved.loader, loaderVersion: resolved.loaderVersion, folder: root }
+      const item: InstalledVersion = {
+        id: name,
+        mcVersion: resolved.mcVersion,
+        loader: resolved.loader,
+        loaderVersion: resolved.loaderVersion,
+        folder: root,
+      }
       if (j._modpackName) item.modpackName = j._modpackName
       if (j._modpackVersion) item.modpackVersion = j._modpackVersion
       if (j._javaPath) item.javaPath = j._javaPath
@@ -941,20 +969,24 @@ export function renameVersion(id: string, newName: string): void {
 }
 export async function removeVersion(id: string, requestedFolder?: string): Promise<void> {
   const folder = requestedFolder || folderOfVersion(id)
-  if (!getSettings().folders.some(f => samePath(f.path, folder))) throw new Error('游戏文件夹尚未登记')
+  if (!getSettings().folders.some((f) => samePath(f.path, folder))) throw new Error('游戏文件夹尚未登记')
   await withGameFolder(folder, async () => {
     const { assertInstanceIdle } = await import('./instanceCenter')
     const { getRunningVersionIds } = await import('./launch')
     // Also cover a preparing JVM and shared/custom game directories.
     if (getRunningVersionIds().has(id)) throw new Error('该版本的游戏仍在运行或正在退出，请等待结束后重试')
     let json: VersionJson | undefined
-    try { json = readVersionJson(id) } catch { /* Incomplete installations can also be removed. */ }
+    try {
+      json = readVersionJson(id)
+    } catch {
+      /* Incomplete installations can also be removed. */
+    }
     await recycleVersion(folder, id, {
-      assertIdle: async target => {
+      assertIdle: async (target) => {
         await assertInstanceIdle(target)
         if (json) await assertInstanceIdle(instanceDirectoryState(id, json, folder).path)
       },
-      trash: target => shell.trashItem(target)
+      trash: (target) => shell.trashItem(target),
     })
   })
 }
@@ -1055,7 +1087,11 @@ export function setVersionResolution(id: string, resolution: GameResolution | nu
     fs.writeFileSync(temporary, JSON.stringify(version, null, 2), { encoding: 'utf-8', flag: 'wx' })
     fs.renameSync(temporary, jp)
   } finally {
-    try { fs.unlinkSync(temporary) } catch { /* Missing temporary file or failed cleanup never replaces the original. */ }
+    try {
+      fs.unlinkSync(temporary)
+    } catch {
+      /* Missing temporary file or failed cleanup never replaces the original. */
+    }
   }
 }
 

@@ -9,17 +9,35 @@ import type { ModUpdateEntry } from '../src/shared/types'
 const read = (file: string) => fs.readFileSync(file, 'utf8')
 
 const entry = (sha1: string): ModUpdateEntry => ({
-  fileName: `${sha1}.jar`, name: 'TestMod', modId: 'testmod', currentVersion: '1.0',
-  sha1, source: null, alreadyLatest: false, update: null
+  fileName: `${sha1}.jar`,
+  name: 'TestMod',
+  modId: 'testmod',
+  currentVersion: '1.0',
+  sha1,
+  source: null,
+  alreadyLatest: false,
+  update: null,
 })
 
 test('mod update mapping: same sha1 = latest, different file = update available, no hit = unknown source', () => {
-  const a = entry('aaa'), b = entry('bbb'), c = entry('ccc')
+  const a = entry('aaa'),
+    b = entry('bbb'),
+    c = entry('ccc')
   const byHash = {
     // 本地已是最新：返回版本的文件 hash 与本地一致
-    aaa: { id: 'v1', project_id: 'p1', version_number: '1.0', files: [{ primary: true, filename: 'mod-1.0.jar', url: 'https://cdn.example/a.jar', hashes: { sha1: 'aaa' } }] },
+    aaa: {
+      id: 'v1',
+      project_id: 'p1',
+      version_number: '1.0',
+      files: [{ primary: true, filename: 'mod-1.0.jar', url: 'https://cdn.example/a.jar', hashes: { sha1: 'aaa' } }],
+    },
     // 有更新：文件 hash 不同
-    bbb: { id: 'v2', project_id: 'p2', version_number: '2.0', files: [{ primary: true, filename: 'mod-2.0.jar', url: 'https://cdn.example/b.jar', hashes: { sha1: 'ddd' }, size: 1234 }] }
+    bbb: {
+      id: 'v2',
+      project_id: 'p2',
+      version_number: '2.0',
+      files: [{ primary: true, filename: 'mod-2.0.jar', url: 'https://cdn.example/b.jar', hashes: { sha1: 'ddd' }, size: 1234 }],
+    },
     // ccc 无响应：未匹配来源
   }
   const mapped = mapUpdateEntries([a, b, c], byHash)
@@ -107,16 +125,26 @@ test('mod update panel is inline in the mods file manager with select-all and pe
   assert.match(fm, /toggleUpdateSelect/)
   assert.match(fm, /upd-panel/)
   // 不跳转页面：面板为内联 card，不使用路由
-  assert(!fm.includes("store.currentView ="))
+  assert(!fm.includes('store.currentView ='))
 })
 
 test('modified Vue components compile with real scripts and templates', () => {
-  for (const file of ['src/renderer/src/App.vue', 'src/renderer/src/components/FileManager.vue', 'src/renderer/src/views/SettingsView.vue', 'src/renderer/src/views/HomeView.vue']) {
+  for (const file of [
+    'src/renderer/src/App.vue',
+    'src/renderer/src/components/FileManager.vue',
+    'src/renderer/src/views/SettingsView.vue',
+    'src/renderer/src/views/HomeView.vue',
+  ]) {
     const source = read(file)
     const { descriptor, errors } = parse(source)
     assert.deepEqual(errors, [], file)
     const script = compileScript(descriptor, { id: file })
-    const result = compileTemplate({ source: descriptor.template!.content, filename: file, id: file, compilerOptions: { bindingMetadata: script.bindings } })
+    const result = compileTemplate({
+      source: descriptor.template!.content,
+      filename: file,
+      id: file,
+      compilerOptions: { bindingMetadata: script.bindings },
+    })
     assert.deepEqual(result.errors, [], file)
   }
 })

@@ -10,8 +10,11 @@ export function normalizeVoxlinkRoomName(value: string): string {
 }
 
 export function isVoxlinkContentBlocked(error: unknown): boolean {
-  return (error as { code?: string })?.code === 'CONTENT_BLOCKED' ||
+  return (
+    (error as { code?: string })?.code === 'CONTENT_BLOCKED' ||
     /\bCONTENT_BLOCKED\b/.test(error instanceof Error ? error.message : String(error))
+  )
 }
 
-export const VOXLINK_ROOM_BLOCKED_MESSAGE = '房间信息未通过 VoxLink 服务端审核，请修改房间名后重试。若普通名称仍被拒绝，请联系 VoxLink 服务方核查。'
+export const VOXLINK_ROOM_BLOCKED_MESSAGE =
+  '房间信息未通过 VoxLink 服务端审核，请修改房间名后重试。若普通名称仍被拒绝，请联系 VoxLink 服务方核查。'

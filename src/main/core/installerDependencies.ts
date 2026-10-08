@@ -7,7 +7,8 @@ import type { ProgressEvent } from '../../shared/types'
 
 /** Read declared remote artifacts only. Empty URLs belong to embedded/generated files. */
 export function installerDependencyTasks(jar: string, target: string): DownloadTask[] {
-  const zip = new AdmZip(jar), tasks = new Map<string, DownloadTask>()
+  const zip = new AdmZip(jar),
+    tasks = new Map<string, DownloadTask>()
   const root = path.resolve(target, 'libraries')
   for (const name of ['install_profile.json', 'version.json']) {
     const entry = zip.getEntry(name)
@@ -17,8 +18,16 @@ export function installerDependencyTasks(jar: string, target: string): DownloadT
     for (const lib of profile.libraries ?? []) {
       const artifact = lib.downloads?.artifact
       if (!artifact?.url || !artifact.path) continue
-      const dest = path.resolve(root, artifact.path), relative = path.relative(root, dest)
-      if (!relative || relative.startsWith('..') || path.isAbsolute(relative) || artifact.path.includes('\\') || artifact.path.includes(':')) throw new Error('安装器依赖路径越界')
+      const dest = path.resolve(root, artifact.path),
+        relative = path.relative(root, dest)
+      if (
+        !relative ||
+        relative.startsWith('..') ||
+        path.isAbsolute(relative) ||
+        artifact.path.includes('\\') ||
+        artifact.path.includes(':')
+      )
+        throw new Error('安装器依赖路径越界')
       const url = new URL(artifact.url)
       if (!['https:', 'http:'].includes(url.protocol)) throw new Error('安装器依赖地址无效')
       // Every existing ancestor is checked: never write through a user-created junction.
@@ -35,10 +44,30 @@ export function installerDependencyTasks(jar: string, target: string): DownloadT
   return [...tasks.values()]
 }
 
-export async function prepareInstallerDependencies(jar: string, target: string, mirror: MirrorPref, emit: (event: ProgressEvent) => void, signal?: AbortSignal): Promise<void> {
+export async function prepareInstallerDependencies(
+  jar: string,
+  target: string,
+  mirror: MirrorPref,
+  emit: (event: ProgressEvent) => void,
+  signal?: AbortSignal
+): Promise<void> {
   const tasks = installerDependencyTasks(jar, target)
   if (!tasks.length) return
-  await downloadAll(tasks, (done, total, speed, detail) => emit({ stage: 'loader-dependencies', progress: detail.fraction ?? 0,
-    text: `下载加载器依赖 ${done}/${total}`, speed, bytesDone: detail.bytesDone, bytesTotal: detail.bytesTotal ?? undefined,
-    etaSeconds: detail.etaSeconds ?? undefined, indeterminate: detail.indeterminate }), downloadLimiter.maxConcurrent, mirror, signal)
+  await downloadAll(
+    tasks,
+    (done, total, speed, detail) =>
+      emit({
+        stage: 'loader-dependencies',
+        progress: detail.fraction ?? 0,
+        text: `下载加载器依赖 ${done}/${total}`,
+        speed,
+        bytesDone: detail.bytesDone,
+        bytesTotal: detail.bytesTotal ?? undefined,
+        etaSeconds: detail.etaSeconds ?? undefined,
+        indeterminate: detail.indeterminate,
+      }),
+    downloadLimiter.maxConcurrent,
+    mirror,
+    signal
+  )
 }

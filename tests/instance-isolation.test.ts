@@ -3,11 +3,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
-import {
-  commitIsolationFiles,
-  hasIsolationContent,
-  planIsolationFiles
-} from '../src/main/core/isolationFiles'
+import { commitIsolationFiles, hasIsolationContent, planIsolationFiles } from '../src/main/core/isolationFiles'
 
 async function fixture(): Promise<{ root: string; source: string; destination: string }> {
   const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-isolation-test-'))
@@ -30,7 +26,10 @@ test('隔离迁移计划仅统计白名单数据并标出不覆盖的目标冲�
 
     assert.equal(hasIsolationContent(destination), true)
     const plan = planIsolationFiles('test-instance', source, destination)
-    assert.deepEqual(plan.items.map((item) => item.name), ['saves', 'mods', 'options.txt'])
+    assert.deepEqual(
+      plan.items.map((item) => item.name),
+      ['saves', 'mods', 'options.txt']
+    )
     assert.deepEqual(plan.conflicts, ['mods'])
     assert.equal(plan.totalFiles, 3)
     assert.equal(plan.totalBytes, Buffer.byteLength('levelsharedlang:zh_cn'))

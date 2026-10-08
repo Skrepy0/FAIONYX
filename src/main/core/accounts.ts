@@ -39,12 +39,7 @@ interface AccountsFile {
   selectedId: string | null
 }
 
-type SecretKey =
-  | 'accessToken'
-  | 'refreshToken'
-  | 'clientToken'
-  | 'loginIdentifier'
-  | 'userProperties'
+type SecretKey = 'accessToken' | 'refreshToken' | 'clientToken' | 'loginIdentifier' | 'userProperties'
 
 interface StoredAccount extends Omit<Account, SecretKey> {
   secure?: Partial<Record<SecretKey, string>>
@@ -61,19 +56,15 @@ interface StoredAccountsFile {
   selectedId?: string | null
 }
 
-const SECRET_KEYS: SecretKey[] = [
-  'accessToken',
-  'refreshToken',
-  'clientToken',
-  'loginIdentifier',
-  'userProperties'
-]
+const SECRET_KEYS: SecretKey[] = ['accessToken', 'refreshToken', 'clientToken', 'loginIdentifier', 'userProperties']
 
 let cached: AccountsFile | null = null
 // Preserve already encrypted credentials while a keyring is temporarily locked.
 // Session-only logins never overwrite these with a basic_text ciphertext.
 const storedSecrets = new Map<string, StoredAccount['secure']>()
-export function accountStorageStatus() { return credentialStorageStatus(safeStorage) }
+export function accountStorageStatus() {
+  return credentialStorageStatus(safeStorage)
+}
 
 function storeFile(): string {
   return path.join(app.getPath('userData'), 'accounts.json')
@@ -128,7 +119,8 @@ function serializeAccount(account: Account): StoredAccount {
   for (const key of SECRET_KEYS) {
     const value = account[key]
     delete (stored as unknown as Record<string, unknown>)[key]
-    if (value !== undefined && value !== '' && !(process.platform === 'linux' && !protectedCredentialStorage(safeStorage))) secure[key] = encryptSecret(value)
+    if (value !== undefined && value !== '' && !(process.platform === 'linux' && !protectedCredentialStorage(safeStorage)))
+      secure[key] = encryptSecret(value)
   }
   if (process.platform === 'linux' && !protectedCredentialStorage(safeStorage)) Object.assign(secure, storedSecrets.get(account.id))
   if (Object.keys(secure).length) stored.secure = secure
@@ -150,7 +142,7 @@ function load(): AccountsFile {
       : []
     cached = {
       accounts,
-      selectedId: raw.selectedId ?? null
+      selectedId: raw.selectedId ?? null,
     }
   } catch {
     cached = { accounts: [], selectedId: null }
@@ -170,7 +162,7 @@ function persist(): void {
   fs.mkdirSync(path.dirname(storeFile()), { recursive: true })
   const stored: StoredAccountsFile = {
     accounts: data.accounts.map(serializeAccount),
-    selectedId: data.selectedId
+    selectedId: data.selectedId,
   }
   fs.writeFileSync(storeFile(), JSON.stringify(stored, null, 2), { encoding: 'utf-8', mode: 0o600 })
   if (process.platform === 'linux') fs.chmodSync(storeFile(), 0o600)
@@ -197,10 +189,7 @@ function upsert(account: Account, select = true): Account {
   const nextAccounts = [...data.accounts]
   const idx = data.accounts.findIndex(
     (existing) =>
-      existing.id === account.id ||
-      (account.type !== 'yggdrasil' &&
-        existing.type !== 'yggdrasil' &&
-        existing.uuid === account.uuid)
+      existing.id === account.id || (account.type !== 'yggdrasil' && existing.type !== 'yggdrasil' && existing.uuid === account.uuid)
   )
   if (idx >= 0) nextAccounts[idx] = { ...nextAccounts[idx], ...account }
   else nextAccounts.push(account)
@@ -272,9 +261,7 @@ export async function removeAccount(id: string): Promise<Account[]> {
 }
 
 export function hasProviderAccounts(providerId: string): boolean {
-  return load().accounts.some(
-    (account) => account.type === 'yggdrasil' && account.providerId === providerId
-  )
+  return load().accounts.some((account) => account.type === 'yggdrasil' && account.providerId === providerId)
 }
 
 export function saveYggdrasilAccount(account: Account): Account {
@@ -300,7 +287,7 @@ export function addOffline(username: string): Account {
     type: 'offline',
     username: name,
     uuid,
-    accessToken: crypto.randomBytes(16).toString('hex')
+    accessToken: crypto.randomBytes(16).toString('hex'),
   }
   return upsert(account)
 }
@@ -343,7 +330,7 @@ async function postForm(url: string, body: Record<string, string>): Promise<Reco
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams(body).toString(),
     signal: AbortSignal.timeout(30000),
-    useProxy: useProxy()
+    useProxy: useProxy(),
   })
   return (await res.json().catch(() => ({}))) as Record<string, unknown>
 }
@@ -354,7 +341,7 @@ async function postJson(url: string, body: unknown): Promise<Record<string, unkn
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(30000),
-    useProxy: useProxy()
+    useProxy: useProxy(),
   })
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>
   if (!res.ok) {
@@ -368,7 +355,7 @@ async function getJson(url: string, bearer: string): Promise<Record<string, unkn
   const res = await microsoftFetch(url, {
     headers: { Authorization: `Bearer ${bearer}` },
     signal: AbortSignal.timeout(30000),
-    useProxy: useProxy()
+    useProxy: useProxy(),
   })
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>
   if (!res.ok) throw new Error(`请求失败 HTTP ${res.status}: ${url}`)
@@ -384,31 +371,30 @@ function uuidWithHyphens(id: string): string {
  * 拿到微软 oauth token 后的完整链路：
  * XBL → XSTS → MC 登录 → 拥有权检查 → 档案
  */
-async function completeMsLogin(
-  msAccessToken: string,
-  refreshToken: string,
-  expiresIn: number,
-  select = true
-): Promise<Account> {
+async function completeMsLogin(msAccessToken: string, refreshToken: string, expiresIn: number, select = true): Promise<Account> {
   // 1. XBL 认证
-  const xbl = await step('Xbox Live 认证', () => postJson('https://user.auth.xboxlive.com/user/authenticate', {
-    Properties: {
-      AuthMethod: 'RPS',
-      SiteName: 'user.auth.xboxlive.com',
-      RpsTicket: `d=${msAccessToken}`
-    },
-    RelyingParty: 'http://auth.xboxlive.com',
-    TokenType: 'JWT'
-  }))
+  const xbl = await step('Xbox Live 认证', () =>
+    postJson('https://user.auth.xboxlive.com/user/authenticate', {
+      Properties: {
+        AuthMethod: 'RPS',
+        SiteName: 'user.auth.xboxlive.com',
+        RpsTicket: `d=${msAccessToken}`,
+      },
+      RelyingParty: 'http://auth.xboxlive.com',
+      TokenType: 'JWT',
+    })
+  )
   const xblToken = xbl.Token as string
   if (!xblToken) throw new Error('Xbox Live 认证失败：响应缺少 Token')
 
   // 2. XSTS 授权
-  const xsts = await step('XSTS 授权', () => postJson('https://xsts.auth.xboxlive.com/xsts/authorize', {
-    Properties: { SandboxId: 'RETAIL', UserTokens: [xblToken] },
-    RelyingParty: 'rp://api.minecraftservices.com/',
-    TokenType: 'JWT'
-  }))
+  const xsts = await step('XSTS 授权', () =>
+    postJson('https://xsts.auth.xboxlive.com/xsts/authorize', {
+      Properties: { SandboxId: 'RETAIL', UserTokens: [xblToken] },
+      RelyingParty: 'rp://api.minecraftservices.com/',
+      TokenType: 'JWT',
+    })
+  )
   const xstsToken = xsts.Token as string
   const xui = (xsts.DisplayClaims as { xui?: { uhs?: string }[] } | undefined)?.xui
   const uhs = xui?.[0]?.uhs
@@ -417,18 +403,17 @@ async function completeMsLogin(
   }
 
   // 3. MC 登录
-  const mc = await step('Minecraft 登录', () => postJson('https://api.minecraftservices.com/authentication/login_with_xbox', {
-    identityToken: `XBL3.0 x=${uhs};${xstsToken}`
-  }))
+  const mc = await step('Minecraft 登录', () =>
+    postJson('https://api.minecraftservices.com/authentication/login_with_xbox', {
+      identityToken: `XBL3.0 x=${uhs};${xstsToken}`,
+    })
+  )
   const mcToken = mc.access_token as string
   const mcExpires = (mc.expires_in as number | undefined) ?? expiresIn
   if (!mcToken) throw new Error('Minecraft 登录失败：响应缺少 access_token')
 
   // 4. 拥有权检查
-  const entitlements = await step('Minecraft 拥有权检查', () => getJson(
-    'https://api.minecraftservices.com/entitlements/mcstore',
-    mcToken
-  ))
+  const entitlements = await step('Minecraft 拥有权检查', () => getJson('https://api.minecraftservices.com/entitlements/mcstore', mcToken))
   const items = (entitlements.items as { name?: string }[] | undefined) ?? []
   if (!items.some((i) => i.name === 'product_minecraft')) {
     throw new Error('Minecraft 拥有权检查：该账号未拥有 Minecraft')
@@ -448,18 +433,13 @@ async function completeMsLogin(
     uuid,
     accessToken: mcToken,
     refreshToken,
-    expiresAt: Math.floor(Date.now() / 1000) + mcExpires
+    expiresAt: Math.floor(Date.now() / 1000) + mcExpires,
   }
   return upsert(account, select)
 }
 
 /** 后台轮询 token 端点直到成功/过期/取消 */
-async function pollDeviceCode(
-  deviceCode: string,
-  intervalSec: number,
-  expiresInSec: number,
-  signal: AbortSignal
-): Promise<Account> {
+async function pollDeviceCode(deviceCode: string, intervalSec: number, expiresInSec: number, signal: AbortSignal): Promise<Account> {
   const clientId = getSettings().msClientId
   let interval = Math.max(1, intervalSec) * 1000
   const deadline = Date.now() + expiresInSec * 1000
@@ -468,7 +448,7 @@ async function pollDeviceCode(
     const t = await postForm(`${msAuthBase(clientId)}/token`, {
       client_id: clientId,
       grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
-      device_code: deviceCode
+      device_code: deviceCode,
     })
     if (typeof t.access_token === 'string') {
       return await completeMsLogin(
@@ -492,14 +472,12 @@ async function pollDeviceCode(
  * 开始 device code 登录：返回展示信息给前端，后台轮询，
  * 完成后调用 onDone(account)；失败时 onDone(null, 具体原因)；用户取消时 onDone(null)。
  */
-export async function beginMsDeviceCode(
-  onDone: (account: Account | null, error?: string) => void
-): Promise<MsDeviceCodeInfo> {
+export async function beginMsDeviceCode(onDone: (account: Account | null, error?: string) => void): Promise<MsDeviceCodeInfo> {
   cancelMsLogin() // 取消上一次未完成的轮询
   const clientId = getSettings().msClientId
   const dc = await postForm(`${msAuthBase(clientId)}/devicecode`, {
     client_id: clientId,
-    scope: MS_SCOPE
+    scope: MS_SCOPE,
   })
   const deviceCode = dc.device_code as string | undefined
   if (!deviceCode) {
@@ -510,12 +488,7 @@ export async function beginMsDeviceCode(
 
   pollAbort = new AbortController()
   const signal = pollAbort.signal
-  void pollDeviceCode(
-    deviceCode,
-    (dc.interval as number | undefined) ?? 5,
-    (dc.expires_in as number | undefined) ?? 900,
-    signal
-  )
+  void pollDeviceCode(deviceCode, (dc.interval as number | undefined) ?? 5, (dc.expires_in as number | undefined) ?? 900, signal)
     .then((account) => onDone(account))
     .catch((e) => {
       const message = e instanceof Error ? e.message : String(e)
@@ -527,7 +500,7 @@ export async function beginMsDeviceCode(
   return {
     userCode: (dc.user_code as string | undefined) ?? '',
     verificationUri: (dc.verification_uri as string | undefined) ?? '',
-    message: (dc.message as string | undefined) ?? ''
+    message: (dc.message as string | undefined) ?? '',
   }
 }
 
@@ -544,7 +517,7 @@ export async function refreshMicrosoft(account: Account): Promise<Account> {
     client_id: getSettings().msClientId,
     grant_type: 'refresh_token',
     refresh_token: account.refreshToken,
-    scope: MS_SCOPE
+    scope: MS_SCOPE,
   })
   if (typeof t.access_token !== 'string') {
     throw new Error((t.error_description as string | undefined) ?? '微软令牌刷新失败，请重新登录')

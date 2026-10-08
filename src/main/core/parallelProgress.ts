@@ -1,7 +1,11 @@
 import type { ParallelStage, ProgressEvent } from '../../shared/types'
 
-interface Lane { id: string; label: string; weight: number }
-const fraction = (n: number): number => Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 0
+interface Lane {
+  id: string
+  label: string
+  weight: number
+}
+const fraction = (n: number): number => (Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 0)
 
 /** Independent lanes contribute to one weighted total; unfinished installation has no reliable ETA. */
 export class ParallelProgress {
@@ -10,8 +14,10 @@ export class ParallelProgress {
   private waitingText = new Map<string, string>()
   private publishedAt = 0
   constructor(
-    private lanes: readonly Lane[], private emit: (event: ProgressEvent) => void,
-    private text: string, private range: readonly [number, number]
+    private lanes: readonly Lane[],
+    private emit: (event: ProgressEvent) => void,
+    private text: string,
+    private range: readonly [number, number]
   ) {}
 
   update(id: string, event: ProgressEvent): void {
@@ -20,14 +26,30 @@ export class ParallelProgress {
     this.events.set(id, event)
     // Installer stdout can produce thousands of lines per second; retain the latest lane
     // state without flooding IPC, the renderer and the on-disk task log for every line.
-    const childrenChanged = (previous?.parallelStages?.length ?? 0) !== (event.parallelStages?.length ?? 0) ||
-      event.parallelStages?.some((child, index) => { const before = previous?.parallelStages?.[index]; return before?.id !== child.id || before?.stage !== child.stage || before?.state !== child.state || before?.indeterminate !== child.indeterminate })
+    const childrenChanged =
+      (previous?.parallelStages?.length ?? 0) !== (event.parallelStages?.length ?? 0) ||
+      event.parallelStages?.some((child, index) => {
+        const before = previous?.parallelStages?.[index]
+        return (
+          before?.id !== child.id ||
+          before?.stage !== child.stage ||
+          before?.state !== child.state ||
+          before?.indeterminate !== child.indeterminate
+        )
+      })
     if (!previous || previous.stage !== event.stage || childrenChanged || performance.now() - this.publishedAt >= 100) this.publish()
   }
 
-  done(id: string): void { this.waitingText.delete(id); this.completed.add(id); this.publish() }
+  done(id: string): void {
+    this.waitingText.delete(id)
+    this.completed.add(id)
+    this.publish()
+  }
 
-  waiting(id: string, text: string): void { this.waitingText.set(id, text); this.publish() }
+  waiting(id: string, text: string): void {
+    this.waitingText.set(id, text)
+    this.publish()
+  }
 
   private publish(): void {
     this.publishedAt = performance.now()
@@ -41,14 +63,21 @@ export class ParallelProgress {
       weighted += lane.weight * progress
       if (!done && event?.speed && Number.isFinite(event.speed)) speed += Math.max(0, event.speed)
       if (!done && event?.parallelStages?.length) {
-        stages.push(...event.parallelStages.map(child => ({ ...child, id: `${lane.id}/${child.id}` })))
+        stages.push(...event.parallelStages.map((child) => ({ ...child, id: `${lane.id}/${child.id}` })))
       } else {
-        stages.push({ id: lane.id, stage: event?.stage, label: lane.label, text: done ? event?.text ?? '已就绪' : this.waitingText.get(lane.id) ?? event?.text ?? '等待准备', progress,
-          state: done ? 'done' : event ? 'running' : 'waiting', speed: done ? undefined : event?.speed,
-          indeterminate: !done && event?.indeterminate })
+        stages.push({
+          id: lane.id,
+          stage: event?.stage,
+          label: lane.label,
+          text: done ? (event?.text ?? '已就绪') : (this.waitingText.get(lane.id) ?? event?.text ?? '等待准备'),
+          progress,
+          state: done ? 'done' : event ? 'running' : 'waiting',
+          speed: done ? undefined : event?.speed,
+          indeterminate: !done && event?.indeterminate,
+        })
       }
     }
-    const progress = this.range[0] + (this.range[1] - this.range[0]) * weighted / this.lanes.reduce((n, lane) => n + lane.weight, 0)
+    const progress = this.range[0] + ((this.range[1] - this.range[0]) * weighted) / this.lanes.reduce((n, lane) => n + lane.weight, 0)
     this.emit({ stage: 'parallel', progress, overall: progress, text: this.text, speed: speed || undefined, parallelStages: stages })
   }
 }

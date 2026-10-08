@@ -11,7 +11,7 @@ export interface VersionCatalog {
 const TTL = 5 * 60_000
 export const VERSION_SOURCES = [
   'https://piston-meta.mojang.com/mc/game/version_manifest_v2.json',
-  'https://bmclapi2.bangbang93.com/mc/game/version_manifest.json'
+  'https://bmclapi2.bangbang93.com/mc/game/version_manifest.json',
 ]
 
 const systemFetch: typeof fetch = async (input, init) => {
@@ -25,11 +25,21 @@ const systemFetch: typeof fetch = async (input, init) => {
 export function parseVersionCatalog(data: unknown): RemoteVersion[] {
   const entries = (data as { versions?: unknown[] })?.versions
   if (!Array.isArray(entries)) throw new Error('版本清单格式无效')
-  const versions = entries.flatMap(value => {
+  const versions = entries.flatMap((value) => {
     const v = value as RemoteVersion
-    if (!v || typeof v.id !== 'string' || !v.id || !['release','snapshot','old_beta','old_alpha'].includes(v.type)
-      || !Number.isFinite(Date.parse(v.releaseTime))) return []
-    try { if (!['https:', 'http:'].includes(new URL(v.url).protocol)) return [] } catch { return [] }
+    if (
+      !v ||
+      typeof v.id !== 'string' ||
+      !v.id ||
+      !['release', 'snapshot', 'old_beta', 'old_alpha'].includes(v.type) ||
+      !Number.isFinite(Date.parse(v.releaseTime))
+    )
+      return []
+    try {
+      if (!['https:', 'http:'].includes(new URL(v.url).protocol)) return []
+    } catch {
+      return []
+    }
     return [{ id: v.id, type: v.type, url: v.url, releaseTime: v.releaseTime }]
   })
   if (!versions.length) throw new Error('版本清单为空或损坏')
@@ -40,30 +50,46 @@ export function parseVersionCatalog(data: unknown): RemoteVersion[] {
 export function mergeVersionCatalogs(catalogs: RemoteVersion[][]): RemoteVersion[] {
   const versions = new Map<string, RemoteVersion>()
   for (const list of catalogs) for (const version of list) if (!versions.has(version.id)) versions.set(version.id, version)
-  return [...versions.values()].sort((a,b) => Date.parse(b.releaseTime) - Date.parse(a.releaseTime) || b.id.localeCompare(a.id))
+  return [...versions.values()].sort((a, b) => Date.parse(b.releaseTime) - Date.parse(a.releaseTime) || b.id.localeCompare(a.id))
 }
 
-export async function fetchVersionCatalog(cacheFile: string, refresh = false, signal?: AbortSignal,
-  fetcher: typeof fetch = systemFetch, now = Date.now()): Promise<VersionCatalog> {
+export async function fetchVersionCatalog(
+  cacheFile: string,
+  refresh = false,
+  signal?: AbortSignal,
+  fetcher: typeof fetch = systemFetch,
+  now = Date.now()
+): Promise<VersionCatalog> {
   signal?.throwIfAborted()
   let cached: VersionCatalog | undefined
   let schema: number | undefined
   try {
     const raw = JSON.parse(await fs.promises.readFile(cacheFile, 'utf8'))
-    cached = { versions: mergeVersionCatalogs([parseVersionCatalog(raw)]), checkedAt: Number(raw.checkedAt ?? raw.fetchedAt) || 0, stale: raw.stale === true }
+    cached = {
+      versions: mergeVersionCatalogs([parseVersionCatalog(raw)]),
+      checkedAt: Number(raw.checkedAt ?? raw.fetchedAt) || 0,
+      stale: raw.stale === true,
+    }
     schema = raw.schema
-  } catch { /* Re-fetch missing or invalid cache. */ }
+  } catch {
+    /* Re-fetch missing or invalid cache. */
+  }
   signal?.throwIfAborted()
   if (!refresh && schema === 2 && cached && now >= cached.checkedAt && now - cached.checkedAt < TTL) return cached
-  const results = await Promise.allSettled(VERSION_SOURCES.map(async url => {
-    const timeout = AbortSignal.timeout(8000)
-    const requestSignal = signal ? AbortSignal.any([signal, timeout]) : timeout
-    const response = await fetcher(url, { signal: requestSignal, headers: { 'Cache-Control': 'no-cache' } })
-    if (!response.ok) { await response.body?.cancel(); throw new Error(`清单 HTTP ${response.status}`) }
-    return parseVersionCatalog(await response.json())
-  }))
+  const results = await Promise.allSettled(
+    VERSION_SOURCES.map(async (url) => {
+      const timeout = AbortSignal.timeout(8000)
+      const requestSignal = signal ? AbortSignal.any([signal, timeout]) : timeout
+      const response = await fetcher(url, { signal: requestSignal, headers: { 'Cache-Control': 'no-cache' } })
+      if (!response.ok) {
+        await response.body?.cancel()
+        throw new Error(`清单 HTTP ${response.status}`)
+      }
+      return parseVersionCatalog(await response.json())
+    })
+  )
   signal?.throwIfAborted()
-  const valid = results.flatMap(result => result.status === 'fulfilled' ? [result.value] : [])
+  const valid = results.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []))
   if (!valid.length) {
     if (cached) return { ...cached, stale: true }
     throw new Error('无法获取版本清单，请检查网络后重试')
@@ -77,6 +103,8 @@ export async function fetchVersionCatalog(cacheFile: string, refresh = false, si
     await fs.promises.writeFile(temporary, JSON.stringify({ schema: 2, ...catalog }))
     signal?.throwIfAborted()
     await fs.promises.rename(temporary, cacheFile)
-  } finally { await fs.promises.rm(temporary, { force: true }) }
+  } finally {
+    await fs.promises.rm(temporary, { force: true })
+  }
   return catalog
 }

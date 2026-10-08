@@ -162,7 +162,7 @@ export type LoaderName = 'forge' | 'fabric' | 'quilt' | 'neoforge'
 export interface InstallOptions {
   favoriteMods?: import('./modFavorites').FavoriteSelection[]
   favoriteInstallIntent?: import('./modFavorites').FavoriteInstallIntent
-  recordingMod?: { kind: import("./recordings").RecordingKind; fileId: string }
+  recordingMod?: { kind: import('./recordings').RecordingKind; fileId: string }
   loader?: LoaderName
   loaderVersion?: string
   /** Fabric 专用：同时安装的 Fabric API 版本号（不传 = 不装） */
@@ -195,13 +195,7 @@ export interface JavaInfo {
 }
 
 // ---------------- 设置 ----------------
-export type ThemeName =
-  | 'blue-white'
-  | 'black-orange'
-  | 'white-pink'
-  | 'black-pink'
-  | 'custom'
-  | 'transparent'
+export type ThemeName = 'blue-white' | 'black-orange' | 'white-pink' | 'black-pink' | 'custom' | 'transparent'
 
 export type BuiltinThemeName = Exclude<ThemeName, 'custom'>
 
@@ -245,20 +239,17 @@ export const DEFAULT_CUSTOM_THEME: CustomTheme = {
     border: '#e1e6f0',
     sidebarBg: '#f5f7fb',
     sidebarText: '#1b2437',
-    bannerText: '#ffffff'
+    bannerText: '#ffffff',
   },
   layout: {
     sidebarWidth: 208,
     bannerHeight: 430,
-    radius: 14
-  }
+    radius: 14,
+  },
 }
 
 /** 正式主题色板。所有主题共用同一套布局和玻璃材质，只改变配色与背景策略。 */
-export const THEME_PRESETS: Record<
-  BuiltinThemeName,
-  { label: string; colors: CustomTheme['colors']; description: string }
-> = {
+export const THEME_PRESETS: Record<BuiltinThemeName, { label: string; colors: CustomTheme['colors']; description: string }> = {
   'blue-white': {
     label: '白蓝',
     description: '清爽明亮的蓝白玻璃界面',
@@ -271,8 +262,8 @@ export const THEME_PRESETS: Record<
       border: '#d8dfec',
       sidebarBg: '#f5f7fb',
       sidebarText: '#536078',
-      bannerText: '#ffffff'
-    }
+      bannerText: '#ffffff',
+    },
   },
   'black-orange': {
     label: '橙黑',
@@ -286,8 +277,8 @@ export const THEME_PRESETS: Record<
       border: '#35353f',
       sidebarBg: '#111116',
       sidebarText: '#aaa69f',
-      bannerText: '#ffffff'
-    }
+      bannerText: '#ffffff',
+    },
   },
   'white-pink': {
     label: '粉白',
@@ -301,8 +292,8 @@ export const THEME_PRESETS: Record<
       border: '#fbcfe8',
       sidebarBg: '#fce7f3',
       sidebarText: '#4a1d35',
-      bannerText: '#ffffff'
-    }
+      bannerText: '#ffffff',
+    },
   },
   'black-pink': {
     label: '粉黑',
@@ -316,8 +307,8 @@ export const THEME_PRESETS: Record<
       border: '#3d2740',
       sidebarBg: '#1c1220',
       sidebarText: '#a68ba3',
-      bannerText: '#ffffff'
-    }
+      bannerText: '#ffffff',
+    },
   },
   // Keep the persisted key so existing default-theme users migrate without losing customization.
   transparent: {
@@ -332,9 +323,9 @@ export const THEME_PRESETS: Record<
       border: '#414141',
       sidebarBg: '#171717',
       sidebarText: '#c7c7c7',
-      bannerText: '#ffffff'
-    }
-  }
+      bannerText: '#ffffff',
+    },
+  },
 }
 
 /** 兼容 0.6.x 与早期预设 key，未知值安全回退到图一默认主题。 */
@@ -344,7 +335,7 @@ export function normalizeThemeName(value: unknown): ThemeName {
     dark: 'black-orange',
     'pink-white': 'white-pink',
     'pink-black': 'black-pink',
-    personalized: 'custom'
+    personalized: 'custom',
   }
   const raw = typeof value === 'string' ? value : ''
   if (raw in aliases) return aliases[raw]
@@ -361,7 +352,10 @@ export function normalizeThemeName(value: unknown): ThemeName {
   return 'transparent'
 }
 
-export interface VersionCategory { id: string; name: string }
+export interface VersionCategory {
+  id: string
+  name: string
+}
 export type VersionCategoryAction =
   | { type: 'create'; name: string }
   | { type: 'rename'; id: string; name: string }
@@ -523,14 +517,14 @@ export const DEFAULT_HOME_LAYOUT: HomeLayout = {
   main: [
     { key: 'banner', visible: true },
     { key: 'logDrawer', visible: true },
-    { key: 'recentGames', visible: true }
+    { key: 'recentGames', visible: true },
   ],
   side: [
     { key: 'accountCard', visible: true },
     { key: 'sysInfo', visible: true },
     { key: 'quickActions', visible: true },
-    { key: 'authorCard', visible: true }
-  ]
+    { key: 'authorCard', visible: true },
+  ],
 }
 
 export const HOME_MODULE_LABELS: Record<string, string> = {
@@ -540,7 +534,7 @@ export const HOME_MODULE_LABELS: Record<string, string> = {
   accountCard: '账户信息',
   sysInfo: '系统信息',
   quickActions: '快速操作',
-  authorCard: '作者卡片'
+  authorCard: '作者卡片',
 }
 
 // ---------------- 背景 ----------------
@@ -596,12 +590,12 @@ export const DEFAULT_BACKGROUND: BackgroundSettings = {
   image: '',
   opacity: 0.5,
   blur: 0,
-  fit: 'crop'
+  fit: 'crop',
 }
 
 export const DEFAULT_LAUNCH_THUMBNAIL: LaunchThumbnailSettings = {
   image: '',
-  fit: 'crop'
+  fit: 'crop',
 }
 
 // ---------------- 皮肤/披风 ----------------
@@ -665,7 +659,10 @@ export interface ManualModpackFile {
   size: number
   sha1: string
 }
-export interface ManualModpackRequest { token: string; files: ManualModpackFile[] }
+export interface ManualModpackRequest {
+  token: string
+  files: ManualModpackFile[]
+}
 export interface ProgressEvent {
   /** Optional renderer-generated correlation ID; separates simultaneous MOD dialogs. */
   operationId?: string
@@ -945,7 +942,7 @@ export const IPC = {
   updateGetConfigStatus: 'update:getConfigStatus', // () => { configVersion: number; current: number; mismatch: 'newer' | null }
   updateResetSettings: 'update:resetSettings', // () => void  配置不兼容时重置设置（先备份原文件）
   updateGetPending: 'update:getPending', // () => { release: ReleaseInfo; file: string } | null  已就绪待安装
-  updateApplyPending: 'update:applyPending' // () => void  立即安装已就绪的更新并重启
+  updateApplyPending: 'update:applyPending', // () => void  立即安装已就绪的更新并重启
 } as const
 
 export interface FsEntry {
@@ -966,7 +963,7 @@ export const IPC_EVENT = {
   gameDirDone: 'event:gameDirDone', // (r: { ok: boolean; error?: string; gameDir?: string })  目录迁移结束（配置已切换/失败已回滚）
   updatePrompt: 'event:updatePrompt', // (r: ReleaseInfo)  启动自动检查发现新版本 → 弹窗
   updateSlowHint: 'event:updateSlowHint', // (r: { taskId: string })  更新下载连续 30s 低于 100KB/s → 进度界面内嵌提示一次
-  updateReady: 'event:updateReady' // (r: { version: string })  更新已下载校验就绪，关闭启动器时自动安装
+  updateReady: 'event:updateReady', // (r: { version: string })  更新已下载校验就绪，关闭启动器时自动安装
 } as const
 
 /**
@@ -1008,7 +1005,8 @@ export interface CommunityResult {
 }
 
 /** An identity can open download/metadata without inventing absent search metrics. */
-export type CommunityProjectReference = Pick<CommunityResult, 'source' | 'projectId' | 'title'> & Partial<Pick<CommunityResult, 'slug' | 'originalTitle'>>
+export type CommunityProjectReference = Pick<CommunityResult, 'source' | 'projectId' | 'title'> &
+  Partial<Pick<CommunityResult, 'slug' | 'originalTitle'>>
 export interface CommunityModProject extends CommunityProjectReference {
   kind: 'mod'
   iconUrl?: string
@@ -1022,7 +1020,12 @@ export interface CommunityModProject extends CommunityProjectReference {
   webpage?: string
 }
 
-export interface DefaultResourcePack { id: string; name: string; size: number; enabled: boolean }
+export interface DefaultResourcePack {
+  id: string
+  name: string
+  size: number
+  enabled: boolean
+}
 
 export interface CommunitySearchPage {
   items: CommunityResult[]
@@ -1054,7 +1057,10 @@ export interface CommunityDependency {
   required: boolean
 }
 
-export interface ModRequirement { id: string; range: string }
+export interface ModRequirement {
+  id: string
+  range: string
+}
 
 export interface ModInstallPlan {
   id: string

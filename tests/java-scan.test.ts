@@ -7,11 +7,14 @@ import {
   normalizeJavaArchitecture,
   parseJavaProbeOutput,
   parseRegistryJavaHomes,
-  shouldPruneJavaDirectory
+  shouldPruneJavaDirectory,
 } from '../src/main/core/javaScanUtils'
 
 test('Java forwarding path resolves to actual java.home runtime across versions and operating systems', () => {
-  assert.equal(javaHomeExecutable('    java.home = C:\\Program Files\\Java\\jdk-25.0.2\n', 'win32'), 'C:\\Program Files\\Java\\jdk-25.0.2\\bin\\java.exe')
+  assert.equal(
+    javaHomeExecutable('    java.home = C:\\Program Files\\Java\\jdk-25.0.2\n', 'win32'),
+    'C:\\Program Files\\Java\\jdk-25.0.2\\bin\\java.exe'
+  )
   assert.equal(javaHomeExecutable('java.home = D:\\运行环境\\jre8', 'win32'), 'D:\\运行环境\\jre8\\bin\\java.exe')
   assert.equal(javaHomeExecutable('java.home = /opt/jdk-21', 'linux'), '/opt/jdk-21/bin/java')
   assert.equal(javaHomeExecutable('java.home = relative', 'win32'), null)
@@ -33,8 +36,9 @@ test('resolveJavaExecutable double-decodes GBK java.home for JRE in CJK game dir
   assert(fs.existsSync(resolved))
   // 真实中文路径复现（用户报告）：中文目录 junction 下的 JDK 17 必须解析成功
   // 路径基于本机 LOCALAPPDATA 拼接，不硬编码用户名；可用 FAIONYX_TEST_CJK_JAVA 覆盖
-  const cjk = process.env.FAIONYX_TEST_CJK_JAVA
-    ?? (process.env.LOCALAPPDATA ? process.env.LOCALAPPDATA + '\\Temp\\opencode\\中文路径\\jdk17\\bin\\java.exe' : '')
+  const cjk =
+    process.env.FAIONYX_TEST_CJK_JAVA ??
+    (process.env.LOCALAPPDATA ? process.env.LOCALAPPDATA + '\\Temp\\opencode\\中文路径\\jdk17\\bin\\java.exe' : '')
   if (fs.existsSync(cjk)) {
     const cjkResolved = await java.resolveJavaExecutable(cjk)
     assert(/\\bin\\java\.exe$/i.test(cjkResolved), cjkResolved)
@@ -43,25 +47,25 @@ test('resolveJavaExecutable double-decodes GBK java.home for JRE in CJK game dir
 })
 
 test('Java 探测输出解析版本、架构和发行版', () => {
-  const modern = parseJavaProbeOutput(`
+  const modern = parseJavaProbeOutput(
+    `
 Property settings:
     java.vendor = Eclipse Adoptium
     java.version = 21.0.5
     os.arch = amd64
 openjdk version "21.0.5" 2024-10-15 LTS
-`, 'win32')
+`,
+    'win32'
+  )
   assert.deepEqual(modern, {
     major: 21,
     version: '21.0.5',
     is64Bit: true,
     architecture: 'x64',
-    vendor: 'Eclipse Adoptium'
+    vendor: 'Eclipse Adoptium',
   })
 
-  const legacy = parseJavaProbeOutput(
-    'java version "1.8.0_431"\nJava HotSpot(TM) Client VM (build 25.431-b10, mixed mode)',
-    'win32'
-  )
+  const legacy = parseJavaProbeOutput('java version "1.8.0_431"\nJava HotSpot(TM) Client VM (build 25.431-b10, mixed mode)', 'win32')
   assert.equal(legacy?.major, 8)
   assert.equal(legacy?.architecture, 'x86')
   assert.equal(legacy?.is64Bit, false)
@@ -85,12 +89,9 @@ HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\JDK\\21
 `
   assert.deepEqual(parseRegistryJavaHomes(output, { ProgramFiles: 'C:\\Program Files' }), [
     'D:\\Java\\jdk-17',
-    'C:\\Program Files\\Microsoft\\jdk-21'
+    'C:\\Program Files\\Microsoft\\jdk-21',
   ])
-  assert.equal(
-    expandWindowsEnvironment('%JAVA_ROOT%\\bin', { JAVA_ROOT: 'E:\\Runtimes\\Java' }),
-    'E:\\Runtimes\\Java\\bin'
-  )
+  assert.equal(expandWindowsEnvironment('%JAVA_ROOT%\\bin', { JAVA_ROOT: 'E:\\Runtimes\\Java' }), 'E:\\Runtimes\\Java\\bin')
 })
 
 test('全盘扫描目录剪枝不会进入系统、依赖和游戏内容目录', () => {
@@ -104,7 +105,7 @@ test('全盘扫描目录剪枝不会进入系统、依赖和游戏内容目录',
     'assets',
     'versions',
     'mods',
-    'saves'
+    'saves',
   ]) {
     assert.equal(shouldPruneJavaDirectory(name), true, name)
   }

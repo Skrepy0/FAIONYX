@@ -11,7 +11,7 @@ import {
   launcherLogWarn,
   flushLauncherLog,
   flushLauncherLogSync,
-  logScope
+  logScope,
 } from './core/launcherLog'
 import { getSettings, migrateLegacyAppearanceAssets } from './core/settings'
 import { windowAppearance } from './windowAppearance'
@@ -46,7 +46,7 @@ app.commandLine.appendSwitch(
     // 年轻生代半空间 16MB→8MB：压低静默期年轻代常驻，代价是 Minor GC 稍频繁
     '--max-semi-space-size=8',
     // 暴露 window.gc()：idleTrim 瘦身时主动回收
-    '--expose-gc'
+    '--expose-gc',
   ].join(' ')
 )
 // 单窗口应用：限制渲染进程数量为 1，防止额外渲染进程常驻
@@ -76,23 +76,24 @@ protocol.registerSchemesAsPrivileged([
   {
     scheme: 'faionyx-asset',
     // 仅供 <img>/CSS 读取，不开放 renderer fetch，缩小本地资源协议的攻击面。
-    privileges: { standard: true, secure: true, stream: true }
+    privileges: { standard: true, secure: true, stream: true },
   },
   {
     scheme: 'faionyx-plugin',
     // 插件脚本协议：仅服务已启用插件的 main.js（见 core/plugins.ts registerPluginProtocol）。
-    privileges: { standard: true, secure: true, stream: true }
-  }
+    privileges: { standard: true, secure: true, stream: true },
+  },
 ])
 
 let win: BrowserWindow | null = null
-let skinEditorDirty=false
-let skinEditorPrefsPending=false
-const skinEditorPrefsOwners=new Set<string>()
-let skinEditorBusy=false
-const skinEditorBusyOwners=new Set<string>()
-let deferredPaletteClose=false, deferredPaletteQuit=false
-let mascotPending=false
+let skinEditorDirty = false
+let skinEditorPrefsPending = false
+const skinEditorPrefsOwners = new Set<string>()
+let skinEditorBusy = false
+const skinEditorBusyOwners = new Set<string>()
+let deferredPaletteClose = false,
+  deferredPaletteQuit = false
+let mascotPending = false
 /** 内存压榨控制器：whenReady 时初始化；createWindow 的窗口事件经此转发（静默瘦身） */
 let memTrim: MemoryTrimController | null = null
 
@@ -101,9 +102,10 @@ function createWindow(startup?: Awaited<ReturnType<typeof createStartupSplash>>)
   applyNativeAppearance(null, getSettings())
   const windowState = loadWindowState()
   const autoFit = getSettings().uiWindowAutoFit === true
-  let initialWindow: BrowserWindowConstructorOptions = { ...windowAppearance(), ...(windowState
-    ? { width: windowState.width, height: windowState.height, x: windowState.x, y: windowState.y }
-    : {}) }
+  let initialWindow: BrowserWindowConstructorOptions = {
+    ...windowAppearance(),
+    ...(windowState ? { width: windowState.width, height: windowState.height, x: windowState.x, y: windowState.y } : {}),
+  }
   if (autoFit) initialWindow = adaptiveWindowOptions(initialWindow)
   win = new BrowserWindow({
     ...initialWindow,
@@ -117,39 +119,66 @@ function createWindow(startup?: Awaited<ReturnType<typeof createStartupSplash>>)
       nodeIntegration: false,
       // 闪屏期间主窗口虽隐藏，仍须正常准备纹理与连续两帧；后台节流会把这些帧拖至秒级。
       // showStartupWindow 在展示首页时恢复节流，之后最小化/隐藏仍保持原有低功耗策略。
-      backgroundThrottling: !startup
-    }
+      backgroundThrottling: !startup,
+    },
   })
-  if (startup) { prepareStartupFrames(win); startup.attach(win) }
-  else   win.on('ready-to-show', () => win?.show())
-  win.webContents.once('did-finish-load', () => { void frpManager.restore().catch(error => launcherLogWarn('frp', '恢复隧道失败', error)) })
+  if (startup) {
+    prepareStartupFrames(win)
+    startup.attach(win)
+  } else win.on('ready-to-show', () => win?.show())
+  win.webContents.once('did-finish-load', () => {
+    void frpManager.restore().catch((error) => launcherLogWarn('frp', '恢复隧道失败', error))
+  })
   applyNativeAppearance(win, getSettings())
-  if (process.platform === 'win32' && windowState) restoreWindowBounds(win, autoFit
-    ? { ...windowState, width: initialWindow.width!, height: initialWindow.height!, x: initialWindow.x, y: initialWindow.y }
-    : windowState)
+  if (process.platform === 'win32' && windowState)
+    restoreWindowBounds(
+      win,
+      autoFit
+        ? { ...windowState, width: initialWindow.width!, height: initialWindow.height!, x: initialWindow.x, y: initialWindow.y }
+        : windowState
+    )
   if (windowState?.maximized) applyMaximized(win)
   attachUiWindowSizing(win, autoFit)
   trackWindowState(win)
-  win.once('show', () => { void acknowledgeUpdateStartup().catch(error => launcherLogWarn('update', '更新确认失败', error)) })
-  const mainWindow = win
-  skinEditorDirty=false
-  skinEditorPrefsPending=false
-  skinEditorPrefsOwners.clear()
-  skinEditorBusy=false; skinEditorBusyOwners.clear()
-  deferredPaletteClose=false; deferredPaletteQuit=false
-  mascotPending=false
-  mainWindow.on('close',event=>{
-    if (mainWindow.webContents.isDestroyed()) return
-    if (skinEditorDirty || skinEditorPrefsPending || skinEditorBusy) { event.preventDefault(); deferredPaletteClose=skinEditorPrefsPending&&!skinEditorDirty&&!skinEditorBusy; mainWindow.webContents.send('window:skinEditorClose'); return }
-    if (mascotPending) { event.preventDefault(); mainWindow.webContents.send('window:mascotClose') }
+  win.once('show', () => {
+    void acknowledgeUpdateStartup().catch((error) => launcherLogWarn('update', '更新确认失败', error))
   })
-  mainWindow.once('closed', () => { if (win === mainWindow) win = null })
+  const mainWindow = win
+  skinEditorDirty = false
+  skinEditorPrefsPending = false
+  skinEditorPrefsOwners.clear()
+  skinEditorBusy = false
+  skinEditorBusyOwners.clear()
+  deferredPaletteClose = false
+  deferredPaletteQuit = false
+  mascotPending = false
+  mainWindow.on('close', (event) => {
+    if (mainWindow.webContents.isDestroyed()) return
+    if (skinEditorDirty || skinEditorPrefsPending || skinEditorBusy) {
+      event.preventDefault()
+      deferredPaletteClose = skinEditorPrefsPending && !skinEditorDirty && !skinEditorBusy
+      mainWindow.webContents.send('window:skinEditorClose')
+      return
+    }
+    if (mascotPending) {
+      event.preventDefault()
+      mainWindow.webContents.send('window:mascotClose')
+    }
+  })
+  mainWindow.once('closed', () => {
+    if (win === mainWindow) win = null
+  })
   mainWindow.webContents.on('render-process-gone', () => {
-    if(win!==mainWindow)return
+    if (win !== mainWindow) return
     // A crashed renderer cannot acknowledge an editor close request.
-    skinEditorDirty=false; skinEditorPrefsPending=false; skinEditorPrefsOwners.clear()
-    skinEditorBusy=false; skinEditorBusyOwners.clear()
-    mascotPending=false; deferredPaletteClose=false; deferredPaletteQuit=false
+    skinEditorDirty = false
+    skinEditorPrefsPending = false
+    skinEditorPrefsOwners.clear()
+    skinEditorBusy = false
+    skinEditorBusyOwners.clear()
+    mascotPending = false
+    deferredPaletteClose = false
+    deferredPaletteQuit = false
   })
   // 静默瘦身钩子：最小化/隐藏触发工作集整理 + 渲染层瘦身广播；恢复不做处理（自然回涨）
   mainWindow.on('minimize', () => memTrim?.noteHidden())
@@ -169,7 +198,7 @@ function createWindow(startup?: Awaited<ReturnType<typeof createStartupSplash>>)
   })
   if (process.platform === 'win32') {
     // Native draggable regions do not dispatch DOM clicks. Observe, never consume.
-    mainWindow.hookWindowMessage(0x00A1, (wParam) => {
+    mainWindow.hookWindowMessage(0x00a1, (wParam) => {
       if (wParam.readUInt32LE(0) === 2 && !mainWindow.webContents.isDestroyed()) {
         mainWindow.webContents.send('window:caption-pointerdown')
       }
@@ -180,7 +209,8 @@ function createWindow(startup?: Awaited<ReturnType<typeof createStartupSplash>>)
   })
   // 渲染进程崩溃/无响应取证（25h2 GPU 崩溃常见前兆），现有 splash 处理只覆盖初始化期
   win.webContents.on('render-process-gone', (_event, details) => {
-    if (!['clean-exit', 'killed'].includes(details.reason)) rememberExit(() => exitHistory().fault('launcher', `启动器界面异常退出：${details.reason}（代码 ${details.exitCode}）。`))
+    if (!['clean-exit', 'killed'].includes(details.reason))
+      rememberExit(() => exitHistory().fault('launcher', `启动器界面异常退出：${details.reason}（代码 ${details.exitCode}）。`))
     launcherLogWarn('window', `渲染进程退出：reason=${details.reason} exitCode=${details.exitCode}`)
   })
   win.webContents.on('unresponsive', () => {
@@ -205,7 +235,10 @@ app.whenReady().then(async () => {
   const startup = await createStartupSplash()
   launcherLogInfo('main', '启动闪屏已创建')
   // 内存压榨控制器：指标日志 + 静默期工作集整理（trim 进程清单来自 getAppMetrics，绝不触碰游戏进程）
-  memTrim = await startMemoryTrim(() => win, (message) => launcherLogInfo('memory', message))
+  memTrim = await startMemoryTrim(
+    () => win,
+    (message) => launcherLogInfo('memory', message)
+  )
   launcherLogInfo('memory', '内存压榨控制器已启动（指标日志 5 分钟/条；静默 10 分钟后低频整理）')
   const { registerIpc } = await import('./ipc')
   try {
@@ -229,7 +262,7 @@ app.whenReady().then(async () => {
   })
   const { registerPluginProtocol } = await import('./core/plugins')
   registerPluginProtocol()
-  registerIpc(() => win && !win.isDestroyed() ? win : null)
+  registerIpc(() => (win && !win.isDestroyed() ? win : null))
   launcherLogInfo('main', 'IPC 通道与插件协议注册完成')
 
   // 存量实例自包含迁移（老式 inheritsFrom 继承 → 合并进实例，幂等）：基础版本改名/删除不再波及已装实例
@@ -243,29 +276,46 @@ app.whenReady().then(async () => {
   ipcMain.on('window:minimize', () => win?.minimize())
   ipcMain.on('window:maximize', () => win && toggleMaximize(win))
   ipcMain.on('window:close', () => win?.close())
-  ipcMain.handle('window:visibility', event => event.sender === win?.webContents && win.isVisible() && !win.isMinimized())
-  ipcMain.on('window:skinEditorQuit',event=>{if(event.sender===win?.webContents&&!skinEditorDirty&&!skinEditorPrefsPending&&!skinEditorBusy)app.quit()})
-  ipcMain.on('window:skinEditorDirty',(event,value)=>{if(event.sender===win?.webContents)skinEditorDirty=value===true})
-  ipcMain.on('window:skinEditorBusy',(event,value)=>{
-    if(event.sender!==win?.webContents)return
-    if(!value||typeof value.ownerId!=='string'||!/^[a-zA-Z0-9-]{1,64}$/.test(value.ownerId)||typeof value.pending!=='boolean')return
-    if(value.pending)skinEditorBusyOwners.add(value.ownerId);else skinEditorBusyOwners.delete(value.ownerId)
-    skinEditorBusy=skinEditorBusyOwners.size>0
+  ipcMain.handle('window:visibility', (event) => event.sender === win?.webContents && win.isVisible() && !win.isMinimized())
+  ipcMain.on('window:skinEditorQuit', (event) => {
+    if (event.sender === win?.webContents && !skinEditorDirty && !skinEditorPrefsPending && !skinEditorBusy) app.quit()
   })
-  ipcMain.on('window:skinEditorPrefsPending',(event,value)=>{
-    if(event.sender!==win?.webContents)return
-    if(!value||typeof value.ownerId!=='string'||!/^[a-zA-Z0-9-]{1,64}$/.test(value.ownerId)||typeof value.pending!=='boolean')return
-    if(value.pending)skinEditorPrefsOwners.add(value.ownerId);else skinEditorPrefsOwners.delete(value.ownerId)
-    skinEditorPrefsPending=skinEditorPrefsOwners.size>0
-    if(!skinEditorPrefsPending){
-      const close=deferredPaletteClose, quit=deferredPaletteQuit
-      deferredPaletteClose=false; deferredPaletteQuit=false
+  ipcMain.on('window:skinEditorDirty', (event, value) => {
+    if (event.sender === win?.webContents) skinEditorDirty = value === true
+  })
+  ipcMain.on('window:skinEditorBusy', (event, value) => {
+    if (event.sender !== win?.webContents) return
+    if (!value || typeof value.ownerId !== 'string' || !/^[a-zA-Z0-9-]{1,64}$/.test(value.ownerId) || typeof value.pending !== 'boolean')
+      return
+    if (value.pending) skinEditorBusyOwners.add(value.ownerId)
+    else skinEditorBusyOwners.delete(value.ownerId)
+    skinEditorBusy = skinEditorBusyOwners.size > 0
+  })
+  ipcMain.on('window:skinEditorPrefsPending', (event, value) => {
+    if (event.sender !== win?.webContents) return
+    if (!value || typeof value.ownerId !== 'string' || !/^[a-zA-Z0-9-]{1,64}$/.test(value.ownerId) || typeof value.pending !== 'boolean')
+      return
+    if (value.pending) skinEditorPrefsOwners.add(value.ownerId)
+    else skinEditorPrefsOwners.delete(value.ownerId)
+    skinEditorPrefsPending = skinEditorPrefsOwners.size > 0
+    if (!skinEditorPrefsPending) {
+      const close = deferredPaletteClose,
+        quit = deferredPaletteQuit
+      deferredPaletteClose = false
+      deferredPaletteQuit = false
       // An editor removed by navigation has no close subscriber; finish its pending exit here.
-      if(!skinEditorDirty&&!skinEditorBusy){if(quit)app.quit();else if(close)win?.close()}
+      if (!skinEditorDirty && !skinEditorBusy) {
+        if (quit) app.quit()
+        else if (close) win?.close()
+      }
     }
   })
-  ipcMain.on('window:mascotPending',(event,value)=>{if(event.sender===win?.webContents)mascotPending=value===true})
-  ipcMain.on('window:mascotQuit',event=>{if(event.sender===win?.webContents&&!mascotPending&&!skinEditorDirty&&!skinEditorPrefsPending&&!skinEditorBusy)app.quit()})
+  ipcMain.on('window:mascotPending', (event, value) => {
+    if (event.sender === win?.webContents) mascotPending = value === true
+  })
+  ipcMain.on('window:mascotQuit', (event) => {
+    if (event.sender === win?.webContents && !mascotPending && !skinEditorDirty && !skinEditorPrefsPending && !skinEditorBusy) app.quit()
+  })
 
   createWindow(startup)
   launcherLogInfo('main', '主窗口创建完成')
@@ -294,7 +344,7 @@ app.whenReady().then(async () => {
           autoUpdate: s.autoUpdate !== false,
           supported: applyMod.updateSupported(),
           downloading: applyMod.isUpdateDownloading(),
-          pendingVersion: pending?.release.version ?? blockedUpdateVersion()
+          pendingVersion: pending?.release.version ?? blockedUpdateVersion(),
         })
         if (action === 'auto-download') {
           launcherLogInfo('main', `自动安装模式：静默下载更新 v${result.release.version}`)
@@ -323,14 +373,23 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
 
-app.on('before-quit', event => {
-  if((skinEditorDirty||skinEditorPrefsPending||skinEditorBusy)&&win&&!win.webContents.isDestroyed()){event.preventDefault();deferredPaletteQuit=skinEditorPrefsPending&&!skinEditorDirty&&!skinEditorBusy;win.webContents.send('window:skinEditorClose',{quit:true});return}
-  if(mascotPending&&win&&!win.webContents.isDestroyed()){event.preventDefault();win.webContents.send('window:mascotClose',{quit:true});return}
+app.on('before-quit', (event) => {
+  if ((skinEditorDirty || skinEditorPrefsPending || skinEditorBusy) && win && !win.webContents.isDestroyed()) {
+    event.preventDefault()
+    deferredPaletteQuit = skinEditorPrefsPending && !skinEditorDirty && !skinEditorBusy
+    win.webContents.send('window:skinEditorClose', { quit: true })
+    return
+  }
+  if (mascotPending && win && !win.webContents.isDestroyed()) {
+    event.preventDefault()
+    win.webContents.send('window:mascotClose', { quit: true })
+    return
+  }
   // 仅清理联机相关子进程/监听器；不影响 Minecraft 生命周期。
   void stopDirectHost()
   void stopVoxlinkOnQuit()
   void stopTerracottaOnQuit()
-  void frpManager.shutdown().catch(error => launcherLogWarn('frp', '关闭隧道失败', error))
+  void frpManager.shutdown().catch((error) => launcherLogWarn('frp', '关闭隧道失败', error))
   launcherLogInfo('main', '所有窗口已关闭，开始清理联机相关资源')
 })
 
@@ -346,11 +405,11 @@ process.on('unhandledRejection', (reason) => {
 })
 // 子进程（GPU/渲染/网络等）异常退出记录：25h2 上 GPU 进程崩溃是常见闪退前兆
 app.on('child-process-gone', (_event, details) => {
-  if (!['clean-exit', 'killed'].includes(details.reason)) rememberExit(() => exitHistory().fault('launcher', `启动器子进程异常退出：${details.type} / ${details.reason}（代码 ${details.exitCode}）。`))
-  launcherLogWarn(
-    'crash',
-    `子进程异常退出：type=${details.type} reason=${details.reason} exitCode=${details.exitCode}`
-  )
+  if (!['clean-exit', 'killed'].includes(details.reason))
+    rememberExit(() =>
+      exitHistory().fault('launcher', `启动器子进程异常退出：${details.type} / ${details.reason}（代码 ${details.exitCode}）。`)
+    )
+  launcherLogWarn('crash', `子进程异常退出：type=${details.type} reason=${details.reason} exitCode=${details.exitCode}`)
 })
 app.on('before-quit', () => {
   // 任务B：任何正常退出路径都不终止游戏——游戏进程以脱离方式创建（gracefulClose.spawnGameProcess），

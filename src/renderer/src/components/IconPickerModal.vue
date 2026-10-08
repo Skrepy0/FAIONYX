@@ -119,7 +119,10 @@ async function onUpload() {
   border-radius: var(--radius-sm);
   background: var(--card-2);
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, transform 0.12s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.12s ease;
 }
 .mob-cell:hover {
   border-color: var(--accent);

@@ -38,7 +38,10 @@ const deleteList = computed(() => {
 })
 
 async function scanSingle() {
-  if (!props.versionId) { toast('请先安装或选择一个游戏版本', 'info'); return }
+  if (!props.versionId) {
+    toast('请先安装或选择一个游戏版本', 'info')
+    return
+  }
   loading.value = true
   groups.value = []
   try {
@@ -69,7 +72,10 @@ async function onConfirmDelete() {
         /* 单文件失败继续 */
       }
     }
-    toast(`已移入回收站 ${ok} 个重复 MOD 文件` + (failed.length ? `；${failed.length} 个失败：${failed.join('；')}` : ''), failed.length ? 'error' : 'success')
+    toast(
+      `已移入回收站 ${ok} 个重复 MOD 文件` + (failed.length ? `；${failed.length} 个失败：${failed.join('；')}` : ''),
+      failed.length ? 'error' : 'success'
+    )
     emit('deleted')
     if (failed.length) await scanSingle()
     else emit('close')
@@ -115,7 +121,10 @@ onMounted(() => {
   <Teleport to="body">
     <div v-if="open" class="modal-mask" @pointerdown.self="emit('close')">
       <div class="modal dup-modal">
-        <div class="dup-header"><h3 class="modal-title">清理重复 MOD</h3><button type="button" class="btn btn-ghost" aria-label="关闭清理重复模组" title="关闭" @click="emit('close')">✕</button></div>
+        <div class="dup-header">
+          <h3 class="modal-title">清理重复 MOD</h3>
+          <button type="button" class="btn btn-ghost" aria-label="关闭清理重复模组" title="关闭" @click="emit('close')">✕</button>
+        </div>
 
         <div class="dup-tabs">
           <button class="game-tab" :class="{ active: tab === 'single' }" @click="tab = 'single'">本版本清理</button>
@@ -127,25 +136,17 @@ onMounted(() => {
           <div v-if="loading" class="dup-loading"><span class="spin"></span><span class="muted">正在解析 MOD 文件…</span></div>
           <div v-else-if="!groups.length" class="dup-empty muted">该版本没有重复的 MOD ✓</div>
           <template v-else>
-            <p class="muted dup-hint">发现 {{ groups.length }} 组重复 MOD（同一 mod id 多文件共存）。每组选择一个保留版本，其余将移入系统回收站：</p>
+            <p class="muted dup-hint">
+              发现 {{ groups.length }} 组重复 MOD（同一 mod id 多文件共存）。每组选择一个保留版本，其余将移入系统回收站：
+            </p>
             <div class="dup-list">
               <div v-for="g in groups" :key="g.modId" class="dup-group">
                 <div class="dup-group-head">
                   <span class="dup-group-name">{{ g.name }}</span>
                   <span class="muted">{{ g.modId }}</span>
                 </div>
-                <label
-                  v-for="f in g.files"
-                  :key="f.fileName"
-                  class="dup-file"
-                  :class="{ keep: keepMap[g.modId] === f.fileName }"
-                >
-                  <input
-                    v-model="keepMap[g.modId]"
-                    type="radio"
-                    :value="f.fileName"
-                    :name="'keep-' + g.modId"
-                  />
+                <label v-for="f in g.files" :key="f.fileName" class="dup-file" :class="{ keep: keepMap[g.modId] === f.fileName }">
+                  <input v-model="keepMap[g.modId]" type="radio" :value="f.fileName" :name="'keep-' + g.modId" />
                   <span class="dup-file-name">{{ f.fileName }}</span>
                   <span class="muted">v{{ f.version || '?' }}</span>
                   <span v-if="f.latest" class="tag">最新</span>
@@ -167,7 +168,7 @@ onMounted(() => {
           <p class="modal-label">勾选要对比的版本（≥2 个）</p>
           <div class="cross-versions">
             <label
-              v-for="v in store.installed.filter(v => !v.folder || v.folder.toLowerCase() === props.folder.toLowerCase())"
+              v-for="v in store.installed.filter((v) => !v.folder || v.folder.toLowerCase() === props.folder.toLowerCase())"
               :key="v.id"
               class="ver-chip"
               :class="{ active: crossSel.includes(v.id) }"
@@ -199,8 +200,16 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.dup-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
-.dup-header .modal-title { margin: 0; }
+.dup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.dup-header .modal-title {
+  margin: 0;
+}
 .dup-modal {
   width: 560px;
   max-height: 84vh;
@@ -236,7 +245,9 @@ onMounted(() => {
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 .game-tab.active {
   background: var(--accent-grad);
@@ -338,7 +349,9 @@ onMounted(() => {
   font-size: var(--text-xs);
   cursor: pointer;
   white-space: nowrap;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 .ver-chip.active {
   border-color: var(--accent);

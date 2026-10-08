@@ -7,8 +7,11 @@ const tails = new Map<string, Promise<void>>()
  * may serialize distinct names on a sensitive volume, but cannot merge files. */
 export function fileJobKey(dest: string): string {
   const resolved = path.resolve(dest)
-  return process.platform === 'darwin' ? resolved.normalize('NFC').toUpperCase()
-    : process.platform === 'win32' ? resolved.toLowerCase() : resolved
+  return process.platform === 'darwin'
+    ? resolved.normalize('NFC').toUpperCase()
+    : process.platform === 'win32'
+      ? resolved.toLowerCase()
+      : resolved
 }
 
 /** Serialize only the same destination. Cancelling a waiter must never release an active writer. */
@@ -17,7 +20,9 @@ export async function withFileJob<T>(dest: string, signal: AbortSignal | undefin
   const key = fileJobKey(dest)
   const previous = tails.get(key) ?? Promise.resolve()
   let release!: () => void
-  const held = new Promise<void>(resolve => { release = resolve })
+  const held = new Promise<void>((resolve) => {
+    release = resolve
+  })
   const tail = previous.then(() => held)
   tails.set(key, tail)
   let cancel = () => {}
@@ -33,6 +38,8 @@ export async function withFileJob<T>(dest: string, signal: AbortSignal | undefin
   } finally {
     signal?.removeEventListener('abort', cancel)
     void previous.then(release)
-    void tail.then(() => { if (tails.get(key) === tail) tails.delete(key) })
+    void tail.then(() => {
+      if (tails.get(key) === tail) tails.delete(key)
+    })
   }
 }

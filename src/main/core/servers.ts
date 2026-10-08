@@ -5,13 +5,7 @@ import path from 'node:path'
 import net from 'node:net'
 import dns from 'node:dns/promises'
 import crypto from 'node:crypto'
-import type {
-  InstalledVersion,
-  ServerEntry,
-  ServerLaunchPreparation,
-  ServerPingResult,
-  ServerSyncResult
-} from '../../shared/types'
+import type { InstalledVersion, ServerEntry, ServerLaunchPreparation, ServerPingResult, ServerSyncResult } from '../../shared/types'
 import { parseNbt, buildServersDat } from './nbt'
 import { logScope } from './launcherLog'
 
@@ -21,11 +15,7 @@ import { getSettings } from './settings'
 import { setActiveGameFolder } from './gameFolders'
 import { canonicalPath, pathIdentity } from './folderPaths'
 import { editedServers, renamedServerBindings } from './serverEditing'
-import {
-  parseServerAddress,
-  serverAssociationKey,
-  supportsQuickPlayMultiplayer
-} from './serverUtils'
+import { parseServerAddress, serverAssociationKey, supportsQuickPlayMultiplayer } from './serverUtils'
 
 function storeFile(): string {
   return path.join(app.getPath('userData'), 'servers.json')
@@ -47,7 +37,7 @@ export function listServers(): ServerEntry[] {
           address: parsed.address,
           normalizedAddress: parsed.normalizedAddress,
           host: parsed.host,
-          port: parsed.port
+          port: parsed.port,
         }
         if (old.favorite === true) entry.favorite = true
         if (old.versionId) entry.versionId = String(old.versionId)
@@ -90,9 +80,7 @@ export function addServer(name: string, address: string): ServerEntry[] {
   if (
     list.some(
       (server) =>
-        !server.versionId &&
-        (server.normalizedAddress ?? parseServerAddress(server.address).normalizedAddress) ===
-          parsed.normalizedAddress
+        !server.versionId && (server.normalizedAddress ?? parseServerAddress(server.address).normalizedAddress) === parsed.normalizedAddress
     )
   ) {
     throw new Error('该服务器已在未绑定列表中')
@@ -104,7 +92,7 @@ export function addServer(name: string, address: string): ServerEntry[] {
     normalizedAddress: parsed.normalizedAddress,
     host: parsed.host,
     port: parsed.port,
-    source: 'launcher'
+    source: 'launcher',
   })
   persist(list)
   return list
@@ -112,7 +100,7 @@ export function addServer(name: string, address: string): ServerEntry[] {
 
 export function favoriteServer(id: string, favorite: boolean): ServerEntry[] {
   const list = listServers()
-  const entry = list.find(s => s.id === id)
+  const entry = list.find((s) => s.id === id)
   if (!entry) throw new Error('服务器不存在')
   entry.favorite = favorite
   persist(list)
@@ -134,12 +122,9 @@ export function editServer(id: string, name: string, address: string): ServerEnt
 
 // ---------------- 实例绑定与启动 ----------------
 
-function findInstalledTarget(
-  versionId: string,
-  folder?: string,
-  targets?: InstalledVersion[]
-): InstalledVersion {
-  if (folder && !getSettings().folders.some(f => pathIdentity(f.path) === pathIdentity(folder))) throw new Error('关联的游戏文件夹已解除绑定，请重新选择实例')
+function findInstalledTarget(versionId: string, folder?: string, targets?: InstalledVersion[]): InstalledVersion {
+  if (folder && !getSettings().folders.some((f) => pathIdentity(f.path) === pathIdentity(folder)))
+    throw new Error('关联的游戏文件夹已解除绑定，请重新选择实例')
   const available = targets ?? (folder ? scanInstalledFolder(folder, versionId).versions : listAllInstalled())
   let matches = available.filter((target) => target.id === versionId)
   if (folder) {
@@ -225,11 +210,7 @@ export function writeServerToGameDat(id: string): void {
   }
 }
 
-export function prepareServerLaunch(
-  id: string,
-  versionId?: string,
-  folder?: string
-): ServerLaunchPreparation {
+export function prepareServerLaunch(id: string, versionId?: string, folder?: string): ServerLaunchPreparation {
   const list = listServers()
   const entry = list.find((server) => server.id === id)
   if (!entry) throw new Error('服务器记录不存在')
@@ -259,13 +240,13 @@ export function prepareServerLaunch(
     minecraftVersion: target.mcVersion,
     loader: target.loader,
     loaderVersion: target.loaderVersion,
-    directJoin: supportsQuickPlayMultiplayer(target.mcVersion)
+    directJoin: supportsQuickPlayMultiplayer(target.mcVersion),
   }
 }
 
 /** 实例重命名后同步 servers.json 中的绑定 versionId */
 export function renameBinding(oldId: string, newId: string, folder?: string): void {
-  const ambiguous = !!folder && listAllInstalled().some(v => v.id === oldId && pathIdentity(v.folder) !== pathIdentity(folder))
+  const ambiguous = !!folder && listAllInstalled().some((v) => v.id === oldId && pathIdentity(v.folder) !== pathIdentity(folder))
   persist(renamedServerBindings(listServers(), oldId, newId, folder, ambiguous))
 }
 
@@ -289,7 +270,7 @@ function readServersDat(dir: string): { list: DatServer[]; error?: string } {
           const o = e as { name?: unknown; ip?: unknown }
           return { name: String(o.name ?? ''), ip: String(o.ip ?? '') }
         })
-        .filter((s) => s.ip)
+        .filter((s) => s.ip),
     }
   } catch (error) {
     return { list: [], error: error instanceof Error ? error.message : String(error) }
@@ -334,20 +315,14 @@ export function syncFromServersDat(versionId?: string, folder?: string): ServerS
       try {
         parsed = parseServerAddress(datServer.ip)
       } catch (error) {
-        errors.push(
-          `${datServer.name || datServer.ip}：${error instanceof Error ? error.message : String(error)}`
-        )
+        errors.push(`${datServer.name || datServer.ip}：${error instanceof Error ? error.message : String(error)}`)
         continue
       }
 
       const exactTarget = group.targets.length === 1 ? group.targets[0] : undefined
       let matches: ServerEntry[] = []
       if (exactTarget) {
-        const key = serverAssociationKey(
-          parsed.normalizedAddress,
-          exactTarget.id,
-          pathIdentity(exactTarget.folder)
-        )
+        const key = serverAssociationKey(parsed.normalizedAddress, exactTarget.id, pathIdentity(exactTarget.folder))
         matches = list.filter(
           (entry) =>
             serverAssociationKey(
@@ -361,28 +336,21 @@ export function syncFromServersDat(versionId?: string, folder?: string): ServerS
           // 兼容旧格式（只有 versionId、没有 folder）以及先前共享目录的待确认记录。
           matches = list.filter((entry) => {
             const sameEndpoint =
-              (entry.normalizedAddress ?? parseServerAddress(entry.address).normalizedAddress) ===
-              parsed.normalizedAddress
+              (entry.normalizedAddress ?? parseServerAddress(entry.address).normalizedAddress) === parsed.normalizedAddress
             if (!sameEndpoint) return false
             if (entry.versionId === exactTarget.id && !entry.folder) return true
             if (entry.versionId) return false
-            return (
-              !entry.sourceGameDirectory ||
-              pathIdentity(entry.sourceGameDirectory) === directoryIdentity
-            )
+            return !entry.sourceGameDirectory || pathIdentity(entry.sourceGameDirectory) === directoryIdentity
           })
           // 不把多个手工收藏同时折叠到一个实例；歧义时保留原记录并创建精确关联。
           if (matches.length > 1) matches = []
         }
       } else {
         // 同一共享根目录对应多个非隔离实例：已有精确关联优先，否则保留一个待确认记录。
-        const candidateKeys = new Set(
-          group.targets.map((target) => `${pathIdentity(target.folder)}\u0000${target.id}`)
-        )
+        const candidateKeys = new Set(group.targets.map((target) => `${pathIdentity(target.folder)}\u0000${target.id}`))
         matches = list.filter(
           (entry) =>
-            (entry.normalizedAddress ?? parseServerAddress(entry.address).normalizedAddress) ===
-              parsed.normalizedAddress &&
+            (entry.normalizedAddress ?? parseServerAddress(entry.address).normalizedAddress) === parsed.normalizedAddress &&
             !!entry.versionId &&
             !!entry.folder &&
             candidateKeys.has(`${pathIdentity(entry.folder)}\u0000${entry.versionId}`)
@@ -391,8 +359,7 @@ export function syncFromServersDat(versionId?: string, folder?: string): ServerS
           matches = list.filter(
             (entry) =>
               !entry.versionId &&
-              (entry.normalizedAddress ?? parseServerAddress(entry.address).normalizedAddress) ===
-                parsed.normalizedAddress &&
+              (entry.normalizedAddress ?? parseServerAddress(entry.address).normalizedAddress) === parsed.normalizedAddress &&
               !!entry.sourceGameDirectory &&
               pathIdentity(entry.sourceGameDirectory) === directoryIdentity
           )
@@ -408,7 +375,7 @@ export function syncFromServersDat(versionId?: string, folder?: string): ServerS
           host: parsed.host,
           port: parsed.port,
           lastSeenAt: seenAt,
-          source: 'minecraft'
+          source: 'minecraft',
         }
         if (exactTarget) applyTarget(entry, exactTarget)
         else {
@@ -495,7 +462,7 @@ export function pingServer(address: string): Promise<ServerPingResult> {
       players: '-',
       motd: '无法连接（服务器离线或地址错误）',
       version: '-',
-      latencyMs: 0
+      latencyMs: 0,
     }
     let parsed
     try {
@@ -511,9 +478,7 @@ export function pingServer(address: string): Promise<ServerPingResult> {
       if (!parsed.explicitPort && net.isIP(parsed.host) === 0) {
         try {
           const records = await dns.resolveSrv(`_minecraft._tcp.${parsed.host}`)
-          const selected = [...records].sort(
-            (a, b) => a.priority - b.priority || b.weight - a.weight
-          )[0]
+          const selected = [...records].sort((a, b) => a.priority - b.priority || b.weight - a.weight)[0]
           if (selected) {
             connectHost = selected.name.replace(/\.$/, '')
             connectPort = selected.port
@@ -550,7 +515,7 @@ export function pingServer(address: string): Promise<ServerPingResult> {
           writeVarInt(addrBuf.length),
           addrBuf,
           Buffer.from([parsed.port >> 8, parsed.port & 0xff]),
-          writeVarInt(1)
+          writeVarInt(1),
         ])
         sock.write(pack(0x00, payload))
         sock.write(pack(0x00, Buffer.alloc(0)))
@@ -589,7 +554,7 @@ export function pingServer(address: string): Promise<ServerPingResult> {
             players: `${s.players?.online ?? 0}/${s.players?.max ?? 0}`,
             motd: motdText(s.description) || '这个服务器没有介绍',
             version: s.version?.name ?? '未知',
-            latencyMs: rttMs
+            latencyMs: rttMs,
           })
         } catch {
           finish(offline)

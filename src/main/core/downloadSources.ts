@@ -33,22 +33,25 @@ export class DownloadSourcePool {
   order(urls: string[], size = 64 * 1024): string[] {
     if (urls.length < 2) return [...urls]
     const candidates = urls.map((url, index) => ({ url, index, sample: this.sample(url) }))
-    const trial = candidates.find(c => c.sample.trials < 2 && !c.sample.failures)
-    const cost = (s: SourceSample) => s.samples
-      ? s.headersMs + size / Math.max(1, s.bytesPerMs) + s.failures * 15_000
-      : 2500 + s.failures * 15_000
+    const trial = candidates.find((c) => c.sample.trials < 2 && !c.sample.failures)
+    const cost = (s: SourceSample) =>
+      s.samples ? s.headersMs + size / Math.max(1, s.bytesPerMs) + s.failures * 15_000 : 2500 + s.failures * 15_000
     candidates.sort((a, b) => Number(b === trial) - Number(a === trial) || cost(a.sample) - cost(b.sample) || a.index - b.index)
     candidates[0].sample.trials++
-    return candidates.map(c => c.url)
+    return candidates.map((c) => c.url)
   }
 
   observe(url: string, headersMs: number, bodyMs: number, bytes: number): void {
     if (!bytes) return
-    const s = this.sample(url), weight = s.samples ? 0.25 : 1
+    const s = this.sample(url),
+      weight = s.samples ? 0.25 : 1
     s.headersMs += (headersMs - s.headersMs) * weight
     s.bytesPerMs += (bytes / Math.max(1, bodyMs) - s.bytesPerMs) * weight
-    s.samples++; s.failures = Math.max(0, s.failures - 1)
+    s.samples++
+    s.failures = Math.max(0, s.failures - 1)
   }
 
-  fail(url: string): void { this.sample(url).failures = Math.min(4, this.sample(url).failures + 1) }
+  fail(url: string): void {
+    this.sample(url).failures = Math.min(4, this.sample(url).failures + 1)
+  }
 }

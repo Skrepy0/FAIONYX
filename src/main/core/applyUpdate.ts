@@ -2,7 +2,15 @@ import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
 import { randomUUID } from 'node:crypto'
-import { atomicUpdateJson, buildUpdaterScript, readUpdateTransaction, updateMarker, validateUpdatePayload, type UpdateTransaction, type UpdaterScriptSpec } from './updateTransaction'
+import {
+  atomicUpdateJson,
+  buildUpdaterScript,
+  readUpdateTransaction,
+  updateMarker,
+  validateUpdatePayload,
+  type UpdateTransaction,
+  type UpdaterScriptSpec,
+} from './updateTransaction'
 export { buildUpdaterScript } from './updateTransaction'
 import { app } from 'electron'
 import type { LocalUpdateCheck, ProgressEvent, ReleaseInfo, Settings, UpdateStateInfo } from '../../shared/types'
@@ -13,8 +21,31 @@ import { finishTask, registerTask } from './tasks'
 import { currentVersion, fetchSha256Sums, sha256File } from './selfUpdate'
 import { logScope } from './launcherLog'
 import { isolatedUpdateTest, trustedUpdateRelease, updateAssetName } from './updateTrust'
-import { macAppTarget, macUpdateSupported, macUpdateDir, readMacUpdate, clearMacUpdate, stageMacUpdate, blockedMacVersion, applyMacUpdateOnStartup, acknowledgeMacUpdate, stageMacBackup } from './macUpdate'
-import { linuxAppTarget, linuxUpdateSupported, linuxUpdateDir, readLinuxUpdate, clearLinuxUpdate, stageLinuxUpdate, blockedLinuxVersion, applyLinuxUpdateOnStartup, acknowledgeLinuxUpdate, stageLinuxBackup, validateLinuxPendingUpdate } from './linuxUpdate'
+import {
+  macAppTarget,
+  macUpdateSupported,
+  macUpdateDir,
+  readMacUpdate,
+  clearMacUpdate,
+  stageMacUpdate,
+  blockedMacVersion,
+  applyMacUpdateOnStartup,
+  acknowledgeMacUpdate,
+  stageMacBackup,
+} from './macUpdate'
+import {
+  linuxAppTarget,
+  linuxUpdateSupported,
+  linuxUpdateDir,
+  readLinuxUpdate,
+  clearLinuxUpdate,
+  stageLinuxUpdate,
+  blockedLinuxVersion,
+  applyLinuxUpdateOnStartup,
+  acknowledgeLinuxUpdate,
+  stageLinuxBackup,
+  validateLinuxPendingUpdate,
+} from './linuxUpdate'
 
 const updateLog = logScope('self-update')
 
@@ -25,7 +56,9 @@ const SLOW_HINT_AFTER_MS = 30_000
 // ---------------- 事件桥（ipc.ts 注册时注入，避免反向依赖） ----------------
 type Emitter = (channel: string, payload: unknown) => void
 let emit: Emitter = () => {}
-export function setUpdateEmitter(fn: Emitter): void { emit = fn }
+export function setUpdateEmitter(fn: Emitter): void {
+  emit = fn
+}
 
 // ---------------- 路径 ----------------
 
@@ -71,7 +104,9 @@ export function getUpdateState(): UpdateStateInfo | null {
   try {
     const j = JSON.parse(fs.readFileSync(stateFile(), 'utf-8'))
     if (j && typeof j === 'object' && j.backupPath && fs.existsSync(j.backupPath)) return j as UpdateStateInfo
-  } catch { /* 无记录 */ }
+  } catch {
+    /* 无记录 */
+  }
   return null
 }
 
@@ -82,13 +117,20 @@ export function consumeUpdateFailedFlag(): boolean {
       fs.rmSync(failedFlagFile(), { force: true })
       return true
     }
-  } catch { /* 忽略 */ }
+  } catch {
+    /* 忽略 */
+  }
   return false
 }
 
 // Download completion only stages an update. Closing the launcher never installs it.
-export interface PendingUpdate { release: ReleaseInfo; file: string }
-function pendingFile(): string { return path.join(userDataDir(), 'pending-update.json') }
+export interface PendingUpdate {
+  release: ReleaseInfo
+  file: string
+}
+function pendingFile(): string {
+  return path.join(userDataDir(), 'pending-update.json')
+}
 export function getPendingUpdate(): PendingUpdate | null {
   if (process.platform === 'darwin') return readMacUpdate()
   if (process.platform === 'linux') return readLinuxUpdate()
@@ -99,14 +141,28 @@ export function getPendingUpdate(): PendingUpdate | null {
   }
   try {
     const j = JSON.parse(fs.readFileSync(pendingFile(), 'utf8'))
-    if (trustedUpdateRelease(j?.release) && typeof j.file === 'string' && path.basename(j.file) === j.release.assetName && fs.existsSync(j.file)) return j
+    if (
+      trustedUpdateRelease(j?.release) &&
+      typeof j.file === 'string' &&
+      path.basename(j.file) === j.release.assetName &&
+      fs.existsSync(j.file)
+    )
+      return j
     fs.renameSync(pendingFile(), pendingFile() + `.rejected-${Date.now()}`)
-  } catch { /* no legacy update */ }
+  } catch {
+    /* no legacy update */
+  }
   return null
 }
 export function clearPendingUpdate(): void {
-  if (process.platform === 'darwin') { clearMacUpdate(); return }
-  if (process.platform === 'linux') { clearLinuxUpdate(); return }
+  if (process.platform === 'darwin') {
+    clearMacUpdate()
+    return
+  }
+  if (process.platform === 'linux') {
+    clearLinuxUpdate()
+    return
+  }
   const exe = currentPortableExe()
   if (exe && readUpdateTransaction(updateMarker(exe), exe)) fs.rmSync(updateMarker(exe), { force: true })
   fs.rmSync(pendingFile(), { force: true })
@@ -117,7 +173,17 @@ async function writePendingUpdate(release: ReleaseInfo, file: string, sha256: st
   const exe = currentPortableExe()!
   const marker = updateMarker(exe)
   if (fs.existsSync(marker) && !readUpdateTransaction(marker, exe)) throw new Error('此目录有其他启动器的更新记录，请使用独立目录')
-  const t: UpdateTransaction = { schema: 1, id: randomUUID(), target: path.resolve(exe), file: path.resolve(file), sha256, size: fs.statSync(file).size, from: currentVersion(), release, mode }
+  const t: UpdateTransaction = {
+    schema: 1,
+    id: randomUUID(),
+    target: path.resolve(exe),
+    file: path.resolve(file),
+    sha256,
+    size: fs.statSync(file).size,
+    from: currentVersion(),
+    release,
+    mode,
+  }
   await validateUpdatePayload(t)
   atomicUpdateJson(marker, t)
   fs.rmSync(pendingFile(), { force: true })
@@ -140,20 +206,41 @@ export async function applyUpdateOnStartup(): Promise<boolean> {
   if (process.platform === 'linux') return applyLinuxUpdateOnStartup()
   const exe = currentPortableExe()
   if (!exe) return false
-  const marker = updateMarker(exe), claim = marker + '.applying'
+  const marker = updateMarker(exe),
+    claim = marker + '.applying'
   if (fs.existsSync(claim)) {
     const previous = readUpdateTransaction(claim, exe)
     if (previous?.release.version === currentVersion()) {
       try {
-        if (await sha256File(exe) === previous.sha256) { verifiedStartupTransaction = previous; return false }
-      } catch { /* still allow opening the current launcher */ }
+        if ((await sha256File(exe)) === previous.sha256) {
+          verifiedStartupTransaction = previous
+          return false
+        }
+      } catch {
+        /* still allow opening the current launcher */
+      }
     }
     let alive = true
-    if (previous?.helperPid) { try { process.kill(previous.helperPid, 0) } catch { alive = false } }
-    else { try { alive = Date.now() - fs.statSync(claim).mtimeMs < 180_000 } catch { /* leave unowned records alone */ } }
+    if (previous?.helperPid) {
+      try {
+        process.kill(previous.helperPid, 0)
+      } catch {
+        alive = false
+      }
+    } else {
+      try {
+        alive = Date.now() - fs.statSync(claim).mtimeMs < 180_000
+      } catch {
+        /* leave unowned records alone */
+      }
+    }
     if (alive) return false
     // Interrupted helpers are quarantined, not restarted. A new explicit download may proceed.
-    try { fs.renameSync(claim, claim + '.failed') } catch { return false }
+    try {
+      fs.renameSync(claim, claim + '.failed')
+    } catch {
+      return false
+    }
   }
   let t = readUpdateTransaction(marker, exe)
   try {
@@ -161,22 +248,41 @@ export async function applyUpdateOnStartup(): Promise<boolean> {
     if (!t) {
       const legacy = getPendingUpdate()
       if (!legacy) return false
-      if (compareSemver(legacy.release.version, currentVersion()) <= 0) { clearPendingUpdate(); return false }
+      if (compareSemver(legacy.release.version, currentVersion()) <= 0) {
+        clearPendingUpdate()
+        return false
+      }
       const hash = (await fetchSha256Sums(legacy.release.assetUrl))?.get(legacy.release.assetName)
       if (!hash) throw new Error('旧更新记录缺少可信校验值，请重新下载')
       const dest = path.join(updateDirOf(exe), randomUUID(), legacy.release.assetName)
-      fs.mkdirSync(path.dirname(dest), { recursive: true }); fs.copyFileSync(legacy.file, dest)
+      fs.mkdirSync(path.dirname(dest), { recursive: true })
+      fs.copyFileSync(legacy.file, dest)
       await writePendingUpdate(legacy.release, dest, hash, 'upgrade')
       t = readUpdateTransaction(marker, exe)!
     }
-    if (t.mode === 'upgrade' && compareSemver(t.release.version, currentVersion()) <= 0) { clearPendingUpdate(); return false }
+    if (t.mode === 'upgrade' && compareSemver(t.release.version, currentVersion()) <= 0) {
+      clearPendingUpdate()
+      return false
+    }
     await validateUpdatePayload(t)
     const oldSha256 = await sha256File(exe)
     // Atomic claim means repeated launches cannot submit the same job twice.
     fs.renameSync(marker, claim)
-    const helperPid = await spawnUpdater({ oldExe: exe, newExe: t.file, backupDir: backupDirOf(exe), mainPid: process.pid,
-      wrapperPid: process.ppid, stateDir: userDataDir(), transaction: t, oldSha256 })
-    try { atomicUpdateJson(claim, { ...t, helperPid }) } catch (error) { updateLog.warn('更新助手已启动，无法补记进程编号', error) }
+    const helperPid = await spawnUpdater({
+      oldExe: exe,
+      newExe: t.file,
+      backupDir: backupDirOf(exe),
+      mainPid: process.pid,
+      wrapperPid: process.ppid,
+      stateDir: userDataDir(),
+      transaction: t,
+      oldSha256,
+    })
+    try {
+      atomicUpdateJson(claim, { ...t, helperPid })
+    } catch (error) {
+      updateLog.warn('更新助手已启动，无法补记进程编号', error)
+    }
     app.exit(0)
     return true
   } catch (error) {
@@ -184,12 +290,15 @@ export async function applyUpdateOnStartup(): Promise<boolean> {
     try {
       if (t) {
         atomicUpdateJson(claim + '.failed', t)
-        fs.rmSync(marker, { force: true }); fs.rmSync(claim, { force: true })
+        fs.rmSync(marker, { force: true })
+        fs.rmSync(claim, { force: true })
       }
       if (fs.existsSync(pendingFile())) fs.renameSync(pendingFile(), pendingFile() + `.rejected-${Date.now()}`)
       fs.mkdirSync(userDataDir(), { recursive: true })
       fs.writeFileSync(failedFlagFile(), String(error))
-    } catch (recordError) { updateLog.warn('无法保存更新失败记录；继续打开启动器', recordError) }
+    } catch (recordError) {
+      updateLog.warn('无法保存更新失败记录；继续打开启动器', recordError)
+    }
     return false
   }
 }
@@ -228,8 +337,12 @@ export function startAutoUpdate(release: ReleaseInfo, settings: Pick<Settings, '
         updateLog.info(`更新 v${release.version} 已就绪（静默下载完成），将在下次启动时应用`)
         emit(IPC_EVENT.updateReady, { version: release.version })
       })
-      .catch(() => { /* 失败/取消：静默，下次启动再试 */ })
-      .finally(() => { autoDownloadingVersion = null })
+      .catch(() => {
+        /* 失败/取消：静默，下次启动再试 */
+      })
+      .finally(() => {
+        autoDownloadingVersion = null
+      })
   } catch {
     autoDownloadingVersion = null
   }
@@ -268,7 +381,11 @@ let activeDownload: { version: string; handle: UpdateDownloadHandle } | null = n
  * 后台下载更新包：注册下载中心任务（分阶段进度/可取消/断点续传/多源换源），
  * 完成后强制 SHA256 校验。低速 30s 通过 emit 发一次内测群提示。
  */
-export function startUpdateDownload(release: ReleaseInfo, settings: Pick<Settings, 'updateSource' | 'updateMirrorUrl'>, mode: 'upgrade' | 'rollback'): UpdateDownloadHandle {
+export function startUpdateDownload(
+  release: ReleaseInfo,
+  settings: Pick<Settings, 'updateSource' | 'updateMirrorUrl'>,
+  mode: 'upgrade' | 'rollback'
+): UpdateDownloadHandle {
   if (process.platform === 'darwin' && !macUpdateSupported()) throw new Error('请将 FAIONYX.app 拖入可写的应用程序目录后再更新')
   if (!trustedUpdateRelease(release)) throw new Error('更新来源无效，请重新检查官方版本')
   if (activeDownload) {
@@ -297,7 +414,8 @@ export function startUpdateDownload(release: ReleaseInfo, settings: Pick<Setting
       await downloadAll(
         [{ url, urls: alternates, dest, sha256: expected, size: release.assetSize || undefined }],
         (_done, _total, bps, detail) => {
-          const received = detail.bytesDone, total = detail.bytesTotal ?? 0
+          const received = detail.bytesDone,
+            total = detail.bytesTotal ?? 0
           const now = Date.now()
           // Network-only, per-task rate from the common transfer service.
           emit(IPC_EVENT.progress, {
@@ -309,7 +427,7 @@ export function startUpdateDownload(release: ReleaseInfo, settings: Pick<Setting
             bytesDone: received,
             bytesTotal: total > 0 ? total : undefined,
             indeterminate: total <= 0,
-            taskId: task.id
+            taskId: task.id,
           } satisfies ProgressEvent)
           if (bps > 0 && bps < SLOW_SPEED_BPS) {
             if (slowSince == null) slowSince = now
@@ -321,7 +439,9 @@ export function startUpdateDownload(release: ReleaseInfo, settings: Pick<Setting
             slowSince = null
           }
         },
-        8, 'official', task.controller.signal
+        8,
+        'official',
+        task.controller.signal
       )
       // 完整性校验：SHA256 不一致即失败（删除文件防误用）
       const actual = await sha256File(dest)
@@ -355,14 +475,23 @@ async function spawnUpdater(spec: UpdaterScriptSpec): Promise<number> {
   spec.launchArguments = process.argv.slice(1).map(windowsQuote).join(' ')
   const scriptFile = path.join(os.tmpdir(), `faionyx-updater-${spec.transaction.id}.ps1`)
   fs.writeFileSync(scriptFile, '\uFEFF' + buildUpdaterScript(spec), 'utf8')
-  const pid = await spawnDetachedProcess('powershell.exe', ['-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', scriptFile], { cwd: os.tmpdir() })
+  const pid = await spawnDetachedProcess(
+    'powershell.exe',
+    ['-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', scriptFile],
+    { cwd: os.tmpdir() }
+  )
   if (!pid) throw new Error('无法启动更新助手，当前启动器已保留')
   return pid
 }
 
 export async function applyDownloadedUpdate(release: ReleaseInfo): Promise<void> {
   const exe = currentPortableExe()
-  const t = process.platform === 'darwin' ? readMacUpdate() : process.platform === 'linux' ? readLinuxUpdate() : exe && readUpdateTransaction(updateMarker(exe), exe)
+  const t =
+    process.platform === 'darwin'
+      ? readMacUpdate()
+      : process.platform === 'linux'
+        ? readLinuxUpdate()
+        : exe && readUpdateTransaction(updateMarker(exe), exe)
   if (!t || t.release.version !== release.version) throw new Error('更新尚未准备完成，请先下载')
   if (process.platform === 'linux') await validateLinuxPendingUpdate(t)
   else await validateUpdatePayload(t)
@@ -370,13 +499,27 @@ export async function applyDownloadedUpdate(release: ReleaseInfo): Promise<void>
 
 /** Manual rollback is staged for next startup too, and never consumes the only backup. */
 export async function restoreBackupAndRestart(): Promise<void> {
-  const state = getUpdateState(), exe = currentPortableExe()
+  const state = getUpdateState(),
+    exe = currentPortableExe()
   if (!state || !exe) throw new Error('没有可用的备份')
   if (process.platform === 'darwin') return stageMacBackup(state.backupPath, state.backupVersion)
   if (process.platform === 'linux') return stageLinuxBackup(state.backupPath, state.backupVersion)
   const dest = path.join(updateDirOf(exe), randomUUID(), `FAIONYX-${state.backupVersion}.exe`)
-  fs.mkdirSync(path.dirname(dest), { recursive: true }); fs.copyFileSync(state.backupPath, dest)
-  await writePendingUpdate({ version: state.backupVersion, publishedAt: '', body: '', assetUrl: '', assetSize: fs.statSync(dest).size, assetName: path.basename(dest) }, dest, await sha256File(dest), 'rollback')
+  fs.mkdirSync(path.dirname(dest), { recursive: true })
+  fs.copyFileSync(state.backupPath, dest)
+  await writePendingUpdate(
+    {
+      version: state.backupVersion,
+      publishedAt: '',
+      body: '',
+      assetUrl: '',
+      assetSize: fs.statSync(dest).size,
+      assetName: path.basename(dest),
+    },
+    dest,
+    await sha256File(dest),
+    'rollback'
+  )
 }
 
 /** 校验本地安装包：版本号（文件名解析）与 SHA256（联网比对 Release，离线则 unknown 由用户自担确认） */
@@ -386,8 +529,10 @@ export async function checkLocalUpdateFile(filePath: string): Promise<LocalUpdat
   const st = fs.statSync(filePath)
   const m = EXE_VERSION_RE.exec(fileName)
   const version = m?.[1] ?? ''
-  if (process.platform === 'darwin' && (!version || fileName !== updateAssetName(version))) throw new Error('请选择当前 Mac 架构的 FAIONYX-版本-mac-' + process.arch + '.zip')
-  if (process.platform === 'linux' && (!version || fileName !== updateAssetName(version))) throw new Error('请选择当前 Linux 架构及安装方式的 FAIONYX 更新包')
+  if (process.platform === 'darwin' && (!version || fileName !== updateAssetName(version)))
+    throw new Error('请选择当前 Mac 架构的 FAIONYX-版本-mac-' + process.arch + '.zip')
+  if (process.platform === 'linux' && (!version || fileName !== updateAssetName(version)))
+    throw new Error('请选择当前 Linux 架构及安装方式的 FAIONYX 更新包')
   const current = currentVersion()
   const versionOk = !!version && compareSemver(version, current) >= 0
   let sha: LocalUpdateCheck['sha256'] = 'unknown'
@@ -400,7 +545,9 @@ export async function checkLocalUpdateFile(filePath: string): Promise<LocalUpdat
       sha = actual === expected ? 'match' : 'mismatch'
       if (sha === 'mismatch') detail = `期望 ${expected.slice(0, 12)}… 实际 ${actual.slice(0, 12)}…`
     }
-  } catch { /* 离线 → unknown */ }
+  } catch {
+    /* 离线 → unknown */
+  }
   return { filePath, fileName, fileSize: st.size, version, versionOk, sha256: sha, detail }
 }
 
@@ -411,6 +558,12 @@ export async function applyLocalUpdateFile(check: LocalUpdateCheck): Promise<voi
   const verified = await checkLocalUpdateFile(check.filePath)
   if (!verified.version || verified.sha256 === 'mismatch') throw new Error('本地更新包校验未通过')
   const dest = path.join(updateDirOf(exe), randomUUID(), verified.fileName)
-  fs.mkdirSync(path.dirname(dest), { recursive: true }); fs.copyFileSync(verified.filePath, dest)
-  await writePendingUpdate({ version: verified.version, publishedAt: '', body: '', assetUrl: '', assetSize: verified.fileSize, assetName: verified.fileName }, dest, await sha256File(dest), 'local')
+  fs.mkdirSync(path.dirname(dest), { recursive: true })
+  fs.copyFileSync(verified.filePath, dest)
+  await writePendingUpdate(
+    { version: verified.version, publishedAt: '', body: '', assetUrl: '', assetSize: verified.fileSize, assetName: verified.fileName },
+    dest,
+    await sha256File(dest),
+    'local'
+  )
 }

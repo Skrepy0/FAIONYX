@@ -17,7 +17,6 @@ FAIONYX 是卡慕SaMa 的 Minecraft 启动器：Electron 33+ + Vue 3（script se
 
 发布：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.59 ，Release ID `386947754`，标签源码 `6d880d14459a13fd388c100184e04dab75a625dc`，main 独立历史 cherry-pick `9e84406`。390 项测试、类型检查、生产构建与交互通过，Windows EXE/ZIP 启动与 29 个 portable 文件逐项 SHA256 通过。Mac ARM64/Intel 原生 APP 与 DMG 验证 https://github.com/Skrepy0/FAIONYX/actions/runs/34588000755 全部通过，未 Apple 公证。六个包和统一 SHA256SUMS.txt 共七个 Release 附件均已核对远端 digest 和大小，归档 `release/final-1.0.59`。相关证据见 `out/test-1059.log`、`out/release-1.0.59-proof.json`、`out/release-1.0.59-payload.json`、`out/network-ui-qAOC5x`。wuhui 未操作，未结束用户游戏进程。
 
-
 **1.0.58：实例管理中心与本地诊断**。实现和验证说明见 [INSTANCE-CENTER-1.0.58.md](INSTANCE-CENTER-1.0.58.md)。源码包含复制/备份/恢复事务、模组改动保护、独立会话日志、运行环境检查及修复；生产界面验证脚本为 `scripts/verify-instance-center-ui.cjs`。Mac 构建工作流现从同一次原生构建直接输出 APP ZIP 和已挂载启动验证的 DMG，避免再次依赖已发布附件。
 
 发布：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.58 ，Release ID `386931488`。标签与构建源码为 master `fe3253a213cb5277d3ef5123cb8f9d14c10e1a2b`，main cherry-pick `751a8ab`；两分支独立历史保留，wuhui 未操作。Windows EXE/ZIP、Mac ARM64 与 Intel APP ZIP/DMG 共六个包，统一 `SHA256SUMS.txt`，七个远端附件均核对 GitHub SHA256 digest 和大小。成品归档 `release/final-1.0.58`，含发布验证 JSON。
@@ -30,7 +29,6 @@ FAIONYX 是卡慕SaMa 的 Minecraft 启动器：Electron 33+ + Vue 3（script se
 36081e0da4695ff304113e1e77fdfc9eb0086ddff4a0d5b2a7fa3f555616578e  FAIONYX-1.0.57-mac-arm64.dmg
 2afd01c6da2d5d5bb7cb8b05fe28eb419668ab8be951b21704a249442fc611e6  FAIONYX-1.0.57-mac-x64.dmg
 ```
-
 
 **1.0.57 已发布**：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.57 ，Release ID 386823722。新增 mac-arm64 / mac-x64 ZIP（内含 FAIONYX.app），使用原生 GitHub macos-15 / macos-15-intel runner 构建和 ad-hoc 签名；未使用 Apple 开发者证书签名或公证，首次运行可能需要系统确认，Mac 更新手动下载对应架构 ZIP。Windows 成品同版本更新。
 
@@ -47,7 +45,6 @@ f8dec7c7f2be9306ff92e8aebc1d774aa05fb461537b7fb47f68d3d869f2c632  FAIONYX-1.0.57
 efc5320db5aefcdbd2be306dc978c4e0ef1958a5b400661ed25a82c9e599d11f  FAIONYX-1.0.57-mac-x64.zip
 ```
 
-
 **1.0.56 已发布**：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.56 ，Release ID 386781827。master `058e4c4`，main cherry-pick `165af63`。社区资源的来源/加载器/排序/实例选择统一 SelectMenu，浮层采用 card-solid 材质；组件显式透传布局属性，键盘从当前选项开始；重复清理窗口所有状态显示关闭入口；移除模组可更新分类及顶部全局搜索，模组标题操作栏响应式换行。
 
 TypeScript、生产构建、生产 renderer IPC 夹具交互验证通过（选择与 Esc、空重复项关闭、移除控件、浅色/橙黑主题菜单）。截图 `out/network-ui-gRTfKs`、`out/network-ui-qBkPMh`，日志 `out/ui-1056.log`、`out/ui-1056-dark.log`。EXE/ZIP 启动入口及 ASAR 一致性验证通过；成品 `release/final-1.0.56`，证据 `out/package-1056-final.log`、`out/release-1.0.56-proof.json`、`out/publish-1056.log`。附件 SHA256、远端标签和 latest 核对通过。
@@ -57,14 +54,12 @@ TypeScript、生产构建、生产 renderer IPC 夹具交互验证通过（选�
 82bc2f560264349d48d124df05e6bba19126b506f7a6c29f84004ca81408e35f  FAIONYX-1.0.56-windows-x64.zip
 ```
 
-
 **1.0.55 已发布**：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.55 ，Release ID 386776165。皮肤页说明简化为“支持 64×64 的 PNG 皮肤文件”。master 提交 `b36954b`，main cherry-pick `6f14d9e`。TypeScript、生产构建及 EXE/ZIP 启动入口验证通过，附件 SHA256 与远端核对通过。成品 `release/final-1.0.55`；证据 `out/build-1055.log`、`out/package-1055.log`、`out/release-1.0.55-proof.json`、`out/publish-1055.log`。
 
 ```text
 16e8a7e1bea7321b96dcf49bec691e4063d1208dbfda77f6b01cd5e49dd65e57  FAIONYX-1.0.55.exe
 b83c38ded255b02c132785cee93748992d3592ac87945278e39f35d913cd09ed  FAIONYX-1.0.55-windows-x64.zip
 ```
-
 
 **1.0.54 已发布**：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.54 ，Release ID 386632313。master 功能提交 `5b29177`，main 独立历史 cherry-pick `5e71b92`。tag 指向 master 功能提交；三个附件大小与 SHA256 核对后公开，latest 已核验。
 
@@ -83,7 +78,6 @@ e932191290fb074a3ae417e9bd536dd51433f4de10df22daf6cf360d3491733e  FAIONYX-1.0.54
 
 ---
 
-
 **1.0.53 已发布**：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.53 ，Release ID 386600614。master 功能提交 `0bef8f9`、长度修复 `74021af`；main 对应 `a986140`、`53a263f`。标签指向最终修复提交74021af，三个附件大小与SHA256核对后公开发布。
 
 **模组操作**：列表启用/禁用改为主题开关，checked表示启用；异步失败维持真实文件状态。更新检测行以本地外置文件名为主、内部名称为辅，并按完整更新列表分批获取社区图标，支持超过当前页的更新项。
@@ -101,8 +95,6 @@ e932191290fb074a3ae417e9bd536dd51433f4de10df22daf6cf360d3491733e  FAIONYX-1.0.54
 59d1bfb991d52cee349f5376658d588ce41f5ebb44a340b27e56c1c094d94a71  FAIONYX-1.0.53-windows-x64.zip
 ```
 
-
-
 **1.0.52 发布**：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.52 ，Release ID386583373。三项附件大小与SHA256 digest核对后发布，latest已确认。
 
 **1.0.52 外观工作台与实例同步**：master `864cb77` / main `8f6cfb0`，tag v1.0.52 指向 master 功能提交。全局当前实例使用 activeFolder + resourceVersionId；首页、资源文件管理、社区实例选择、服务器启动/绑定与模组导入选择同步。仅在当前文件夹缺失该版本时回退可用实例。资源包/光影 ZIP 复用社区 SHA1/CF 指纹匹配和缓存，未匹配时读取 pack.png；目录包或无社区记录的文件不能保证社区图标。
@@ -118,7 +110,6 @@ e932191290fb074a3ae417e9bd536dd51433f4de10df22daf6cf360d3491733e  FAIONYX-1.0.54
 5ee122ddb4fe8999594378fa713cda49f7e24dfc751c84d62a5e7cb4b919704b  FAIONYX-1.0.52-windows-x64.zip
 ```
 
-
 **1.0.51 交付**：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.51 ，Release ID386560537，latest已核对。EXE/ZIP/SHA256SUMS.txt远端大小与digest逐项通过后发布。release目录成品、ZIP ASAR、便携解压ASAR均等于最终构建。中文空格路径便携冷/缓存启动通过（首帧351/242ms，隔离ElectronRunAsNode验证，不是完整用户首页启动），out/startup-1.0.51.log。
 
 ```text
@@ -133,8 +124,6 @@ e932191290fb074a3ae417e9bd536dd51433f4de10df22daf6cf360d3491733e  FAIONYX-1.0.54
 **缓存**：userData/cache/mod-icons-v1，路径+文件名+大小+mtime+ctime派生键，文件变化重新识别；社区图片缓存7天、本地回退短缓存60秒。社区图片仅取允许的HTTPS图片CDN，PNG/JPEG/WebP/GIF，最大512KiB并转换为data URL。四路图片读取、后台扫描请求串行，避免多页同时解析大JAR。缓存目前无自动容量回收。
 
 **验证**：358/358全量测试，tsc和生产构建通过。新增测试涵盖哈希匹配、CF哈希冲突排除、离线、禁用JAR与指定页扫描；实际Fabric API 0.160.0+26.2在Modrinth匹配截图相同图标，首次2362ms，缓存3ms。额外强制跳过MR，实际CF匹配指纹325389910且SHA1一致，返回media.forgecdn.net社区图标。out/live-icons-cgGdtt/result.json、out/live-icons-lFGjPJ/result.json。生产renderer用真实已取图标验证图片解码、100项分页、当前folder IPC以及资源包页面不查询，out/network-ui-zXs5KF。ASAR内worker额外验证指定已禁用JAR哈希和CF指纹，out/packaged-worker-1051.log。
-
-
 
 **1.0.50 交付**：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.50 ，Release ID 386553343。release/FAIONYX-1.0.50.exe（67634926字节）、release/FAIONYX-1.0.50-windows-x64.zip（103225860字节）、SHA256SUMS.txt 已上传并按GitHub资产digest/大小逐项核对后公开为latest。最终ASAR等于生产构建，ZIP及便携解出ASAR相同。中文空格路径冷/缓存启动通过，冷首帧337ms、缓存首帧233ms；此验证使用隔离ElectronRunAsNode，不是完整用户配置首页启动。out/startup-1.0.50.log、out/publish-1.0.50.log。
 
@@ -154,7 +143,6 @@ a2eaffe0f173a67ac885b4d00580ac69463618087123c499b917e236b5e4aa79  FAIONYX-1.0.50
 **验证与性能证据**：356/356测试、tsc、生产构建通过；生产renderer隔离IPC验证一级默认配置、资源展开/折叠与页面访问，截图 out/network-ui-TVcpsV。原附件仍识别59项下载，4097个override逐一比较通过（网络与运行库模拟），out/nested-pack-tbcPxJ/report.json。新增真实本地HTTP测试覆盖取消续传、哈希去重、失败后缓存复用、实例改动不污染缓存、损坏缓存重下。旧进度测试四个相同内容文件原断言4次请求，调整为1次请求且保留四个最终文件校验。
 
 **真实大文件比较**：同机独立空目录，Flashback-0.39.5-for-MC1.21.11.jar，211524256字节；旧版20,009ms仅接收24051310字节后按预算取消，新版5798ms完整下载，SHA1/SHA512通过。out/flashback-benchmark-result.json / out/benchmark-flashback-1050.log。单次顺序测试，未测试所有网络或与PCL同场比较，不承诺固定倍数；MCIM与官方当前均重定向cdn-alt.modrinth.com，主要改善来自独立分段连接。
-
 
 **1.0.49 已发布**：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.49 ，Release ID 386542085。功能提交 master `f8c2fb1` / main `4f489a3`；标签指向 master 功能提交。EXE、ZIP、SHA256SUMS.txt 已核对远端大小与 SHA256 后发布，latest=v1.0.49。
 
@@ -177,8 +165,6 @@ a2eaffe0f173a67ac885b4d00580ac69463618087123c499b917e236b5e4aa79  FAIONYX-1.0.50
 3584103b44020f245f51fe510f56b63870a30c06299cff83551f513256a285b2  FAIONYX-1.0.49-windows-x64.zip
 ```
 
-
-
 **1.0.48 已发布**：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.48 ，Release ID386524949。功能提交 master `b1a687a` / main `83a241c`；标签指向 master 功能提交。EXE、ZIP、SHA256SUMS.txt 已上传并核对远端摘要，latest=v1.0.48。
 
 **启动优化**：Windows 初始隐藏主窗口的合成帧实测约 1fps，单独设置 backgroundThrottling=false 未解决。新增 startupRendering.ts，在启动阶段请求并丢弃 1×1 capturePage 帧，每次完成后16ms再发下一次，绝不重叠、不保存图像、不显示未就绪界面。仅当前窗口 boot:renderer-ready 可停止；停止时恢复后台节流；关闭、失败、10秒预算到期均清理监听/计时器，不伪造就绪。原有资源门禁、60fps粒子、620ms汇聚、2000ms头像停留、260ms主界面淡入均保留。未修改实例迁移或游戏启动路径。
@@ -193,7 +179,6 @@ d439503d6d7ccfdc9e4125babdd69ce56ccca07afa8e424b8c5bededacf93c4c  FAIONYX-1.0.48
 ```
 
 **1.0.47 已发布**：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.47 。master `5bd2e51` / main `5f8720f`；创作者卡片使用用户提供的完整文案，整卡打开既有 B 站空间，悬停浮现 BAI_ZHU、AeZz、物晖。生产UI悬停及链接、便携启动、附件摘要已验证。
-
 
 **1.0.46 已发布**：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.46 ，Release ID386487076。功能提交 master `62fba23` / main `fd98c2d`；标签 v1.0.46 指向 master 功能提交。EXE 67,631,370 字节、ZIP 103,222,824 字节；三个远端附件大小与 SHA256、源码标签验证后公开。
 
@@ -214,7 +199,6 @@ fc874c4ca3a98c724aad9ec612c1f3b94a4472c57b35f82d8f6098fa81dedb7b  FAIONYX-1.0.46
 
 **复验入口**：scripts/verify-resource-network-ui.cjs（先生产构建，使用Electron运行）；scripts/verify-packaged-mod-worker.cjs（先打包，使用Electron运行）；scripts/verify-terracotta.cjs（Node，先将官方 https://github.com/burningtnt/Terracotta/releases/download/v0.4.2/terracotta-0.4.2-windows-x86_64-pkg.tar.gz 存至 out/terracotta-official-0.4.2.tar.gz，脚本校验官方摘要并仅启动隔离本地服务，不建房）。
 
-
 **1.0.45 已发布**：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.45 ，Release ID386379123。功能提交 master `b6f5b41` / main `190e5a1`，标签 v1.0.45 指向 master 功能提交。三个附件大小、SHA256与源码标签核对后公开。校验值：
 
 ```text
@@ -226,7 +210,6 @@ fc874c4ca3a98c724aad9ec612c1f3b94a4472c57b35f82d8f6098fa81dedb7b  FAIONYX-1.0.46
 
 **1.0.45 验证**：341/341测试、TypeScript、生产构建通过；两个旧测试要求重复 toast，已随新交互改为检查弹窗反馈且无重复通知。实际生产 Electron UI 使用隔离 IPC 和高对比条纹背景，验证浅色小窗口、粉色、深色、透明主题的实色表面与遮罩、顶层挂载、长列表和长说明的滚动/固定按钮、更新→下载→完成状态、本地安装确认、Tab循环/Esc。证据 out/design-ui-84nXIQ；测试中的1.0.46仅隔离假数据，不访问下载地址、不写真实用户配置。包内版本与ZIP构建一致；便携中文空格路径、冷启动及缓存启动验证通过，详见 out/portable-path-1.0.45.log 与 out/startup-1.0.45.log。
 
-
 **1.0.44 已发布**：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.44 ，Release ID386367083。功能提交 master `4dad402` / main `3f3bac1`，标签 v1.0.44 指向 master 功能提交。EXE 67,616,046 字节、ZIP 103,187,304 字节；三个远端附件大小和 SHA256、源码标签核对后公开，latest 为 v1.0.44，误发 v1.0.41 仍未公开。EXE SHA256 `bfc6004bb723aafd567195390702939ff5eaf45e711c35695430293ae2cef31f`；ZIP SHA256 `4c78c5f551d8a4af27e0d6a79143d4db2073dbac029d9c58dfcd07e5fd41fff9`。
 
 **1.0.44 游戏选项与默认配置 UI**：默认配置分为游戏选项、按键配置、默认材质包。新增 defaultGameOptions 核心/IPC 和共享 gameOptions 定义；以 26.2 Esc → 选项两列入口排列，覆盖疾跑/潜行切换、自动跳跃、FOV、亮度、声音、鼠标、聊天、视频及辅助功能。数字支持滑块和直接输入；总同步默认关闭，只覆盖用户明确修改的项，每项可恢复跟随游戏。启动时从实例元数据及 client JAR version.json 确认实际版本，对 FOV/百分比/聊天尺寸等编码后写入实际 effectiveGameDir/options.txt，回读校验；未知版本停止同步，旧版不支持项跳过并记录。高对比度同时选择内置 high_contrast 包，保留其他资源包。详细验证范围见 docs/VOXLINK-UPSTREAM.md；未宣称逐个启动全部历史客户端。
@@ -234,7 +217,6 @@ fc874c4ca3a98c724aad9ec612c1f3b94a4472c57b35f82d8f6098fa81dedb7b  FAIONYX-1.0.46
 **1.0.44 皮肤与 VoxLink**：SkinsView 重命名用当前编辑 ID 防止 Enter 卸载输入框引发 blur 二次提交空名，Esc 也不会再保存。VoxLink 参考 AUGUHDAR/VoxLink 1.1.4 提交 40d03c6，同步适用的 STUN 可达节点优先、映射端口变化、重复 punch_info 短时去重和 update_room 429 冷却；修复 TS 打洞 ACK 热循环及计时器/取消收尾。公开上游是 MOD 仓库，没有原 app-desktop；MOD 专属 TURN 密钥重派和自动日志上传未移植，不能描述为完整独立桌面端升级。如用户提供独立桌面端更新链接需继续核对。
 
 **1.0.44 验证**：341/341 测试、TypeScript、生产构建通过。新增皮肤实际 SFC setup 重命名事件回归、本地 UDP/STUN/HTTP 联机验证、多版本选项编码与文件保留/幂等/不支持处理验证。实际 Electron UI 证据 out/default-config-ui-3WCJWK、out/design-ui-6g9mKQ（含真实生产渲染、隔离 IPC 核心配置持久化、小窗口与离开返回）。EXE 中文空格路径启动通过；冷启动粒子首帧419ms、缓存240ms，缓存复用通过；ZIP app.asar 与构建相同，包内主程序与构建逐字节一致。测试均使用隔离目录和本地网络，没有修改真实账号、实例选项或停止用户游戏。
-
 
 **1.0.43 已发布**：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.43 ，Release ID386336943。EXE中文空格路径启动通过，ZIP内app.asar与构建一致；便携粒子首帧冷启动412ms、缓存启动250ms，缓存复用通过。三个远端附件大小、SHA256和源码标签核对后公开，latest为v1.0.43。EXE SHA256 `7e22cf1afff7fb3865c0b40e378d32573d9b6780e956e6a1bc709134e51bfa95`；ZIP SHA256 `4bce1e6ae559277351011eaf4b0213ac94fd82addfbdb278c3679a02a0d18f7c`。
 
@@ -313,6 +295,7 @@ fc874c4ca3a98c724aad9ec612c1f3b94a4472c57b35f82d8f6098fa81dedb7b  FAIONYX-1.0.46
 **1.0.28 本地修改**：三种联机方式共用的标题栏给介绍文字分配可收缩宽度，房间标识及“更换方式”按钮固定靠右；在 1120/960/760/450 像素宽度用 Electron 实际渲染验证三页右边缘一致、无横向溢出。VoxLink 两端共用默认名称“我的世界联机”，去掉首尾空格并校验空名称/32 字符上限。CONTENT_BLOCKED 显示可操作的字段提示并聚焦名称，保留用户输入，不自动更名重试；来源 client_tag 保持不变。服务端审核规则未知，尚未向线上服务器建房验证新默认名是否获准。302/302 测试及 1.0.28 构建通过。
 
 **1.0.26 批次 4 项全部完成**：
+
 1. ✅ 皮肤页空白回归：根因=1.0.25 加滑动块监听时用 `onUnmounted` 但 import 漏了它 → setup ReferenceError → 整页空白。已补导入+加「用到的组合式 API 必须全部导入」回归测试。
 2. ✅ 双屏最大化溢出：根因=frame:false+thickFrame 真实最大化时 Windows 把不可见缩放边框（~7px/边）扩出工作区到相邻屏。已改「工作区假最大化」（windowState.ts: toggleMaximize/applyMaximized/normalizeRealMaximize，setBounds(workArea)，系统吸附自动收编）。**注意：未在真实双屏环境实测**，如用户反馈仍溢出需现场验证。
 3. ✅ 模组禁用/启用：FileManager 模组页每行 .jar 增「禁用/启用」按钮 ↔ 主进程 fs:toggleDisable（改名 .jar.disabled，MC 原生不加载）；实例运行中主进程阻止（隔离查自身/共享目录查所有共享实例）。dev 实例实证禁用+还原往返成功。
@@ -346,6 +329,7 @@ node scripts/release-github.cjs
 **Git 流程（卡慕新规）**：直接提交 master；main 用 sync-main 分支 cherry-pick 后 `push origin sync-main:main`。**永不合并/推送 wuhui 分支**。GitHub TLS 间歇被重置：直连失败时加 `-c http.proxy=http://127.0.0.1:7897`（Clash）或 `-c http.sslBackend=schannel` 重试。
 
 **PowerShell 陷阱（本会话血泪）**：
+
 - `Set-Content`/`Get-Content` 默认 GBK——读写含中文文件必用 `[System.IO.File]::ReadAllText/WriteAllText` 或 Read/Edit 工具
 - PS 里 `$1`/`${}`/反引号会被吞——复杂替换一律写成临时 .cjs 脚本文件再 `node` 跑
 - npm/npx 被策略阻止→用 `node node_modules/xxx/bin/...` 直跑
@@ -354,13 +338,13 @@ node scripts/release-github.cjs
 
 ## 3. 验证工具链（全部入库可用）
 
-| 工具 | 用途 |
-|---|---|
-| `scripts/cdp-eval.mjs "<js>"` | 运行中实例 CDP 求值（先用 `node_modules\electron\dist\electron.exe --remote-debugging-port=9222 .` 起实例） |
-| `scripts/cdp-eval2.mjs <port> <exprfile>` | 带端口的 CDP 求值（表达式写文件避免引号地狱） |
-| `scripts/cdp-shot.mjs out.png` | CDP 整页截图（不受遮挡窗口影响；WebGL 画布 canvas.toDataURL 不可用时用它） |
-| `scripts/desktop-regression.cjs` | QA 隔离环境（需已装 vanilla 26.2） |
-| `scripts/mock-update-server.cjs` | 自更新 mock（v99.0.0；`MOCK_ASSET_FILE=<真实exe>` 可做全链路实证） |
+| 工具                                      | 用途                                                                                                        |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `scripts/cdp-eval.mjs "<js>"`             | 运行中实例 CDP 求值（先用 `node_modules\electron\dist\electron.exe --remote-debugging-port=9222 .` 起实例） |
+| `scripts/cdp-eval2.mjs <port> <exprfile>` | 带端口的 CDP 求值（表达式写文件避免引号地狱）                                                               |
+| `scripts/cdp-shot.mjs out.png`            | CDP 整页截图（不受遮挡窗口影响；WebGL 画布 canvas.toDataURL 不可用时用它）                                  |
+| `scripts/desktop-regression.cjs`          | QA 隔离环境（需已装 vanilla 26.2）                                                                          |
+| `scripts/mock-update-server.cjs`          | 自更新 mock（v99.0.0；`MOCK_ASSET_FILE=<真实exe>` 可做全链路实证）                                          |
 
 **E2E 实证过的全链路**（方法可复用）：沙盒目录放便携 exe + env `FAIONYX_UPDATE_API_BASE=mock` → 启动 → CDP 检查/下载 → `window:close` 优雅关闭 → 看 `%APPDATA%\faionyx\updater-last.log` 与沙盒目录文件变迁。
 
@@ -369,23 +353,28 @@ node scripts/release-github.cjs
 ## 4. 架构地图（最近大改后的现状）
 
 ### 自更新（1.0.14 起，1.0.23 修复「只下载不安装」）
+
 - `main/core/selfUpdate.ts`：GitHub Releases 检查（ETag+6h 缓存+限流静默+失败重试 1 次）
 - `main/core/applyUpdate.ts`：下载（下载中心任务）→ SHA256 强制校验 → `pending-update.json` → before-quit 自动安装 → `spawnDetachedProcess`（**零句柄脱离 CreateProcessW**，gracefulClose.ts）旁路 PowerShell 脚本完成 备份→替换→重启→20s 存活观察→失败回滚；日志在 userData/updater-last.log
 - 小白自动化：默认自动下载+关闭时自动安装；设置页有「自动安装更新」开关+回退+本地文件安装
 - `shared/branding.ts`：QQ_GROUP_NUMBER 内测群号（弹窗常驻备用下载提示）
 
 ### 下载引擎（1.0.23 起单连接）
+
 - `main/core/download.ts`：单连接 + .part 断点续传 + 慢速掐断换源 + 磁盘预检 + HTTP/2 共享连接（httpClient.ts）。**分块引擎已整体移除**（BUG-3 根因：Range 分块全卡死，实测 8 分块 20 秒零进度）
 
 ### 3D 皮肤预览（物晖重写 + 多轮修正）
+
 - `components/SkinViewer3D.vue`：HMCL 部件/UV 骨骼；行走摆动=MC 原版公式（cos(limbSwing×0.6662)×1.4×amount，±45° 四肢同幅对角反相）；行走弹跳全移除（「走就走」）；披风 10×16×1 标准+180° 翻转挂背；-y 底面 UV 按 skinview3d 约定；俯仰=相机环绕（非模型翻倒）；按需渲染；slim 像素级检测（x=54 列全透明）
 - 首页与皮肤页共用；披风由档案 active 披风决定（无开关）
 
 ### 联机（物晖多页化，1.0.25 移除玩家直连入口）
+
 - `views/FriendConnectView.vue` + `components/connection/`：FRP（樱花）/VoxLink（房间码打洞）/陶瓦（Terracotta）三卡独立页+右滑渐入过渡
 - 主进程直连能力保留（VoxLink 内部依赖），directConnect.ts/directProtocol.ts 别动
 
 ### 其他关键件
+
 - `main/core/launch.ts`：启动链（CreateProcessW 脱离式游戏进程+运行状态持久化恢复+options.txt 键位同步 1.13+ 跳过旧版+CWD=实例游戏目录 1.0.24 实证）
 - `main/core/java.ts`：全盘扫描+持久缓存+隐藏列表（**重扫自动解除磁盘上仍存在的隐藏项**，1.0.20）
 - `shared/types.ts`：IPC 频道注册表+全部共享类型（Settings 含 memoryAuto/autoUpdate/updateSource/curseforgeApiKey/qqGroupNumber/configVersion/skipUpdateVersion）
@@ -429,13 +418,11 @@ node scripts/release-github.cjs
 
 **Git 操作血泪教训（本次实操翻车记录）**：复合命令里 `git checkout master --quiet; git branch -D sync-main` 若 checkout 静默失败，后续 commit 会落到 sync-main 上；每步后务必 `git branch --show-current` 确认。**含中文文件绝不可用 PowerShell `Get-Content`/`Set-Content` 读写**（GBK 毁灭性乱码），一律用 Read/Edit 工具。
 
-
 **1.0.32**：同版本允许重复运行，仅准备启动期间禁用按钮。每次启动分配 launchId，旧会话退出不会覆盖同版本新会话。默认配置/模组/资源包/光影包页面优先接管全局 capture 拖入，只执行一次页面导入，不触发整合包识别。资源管理按活动文件夹筛选版本，列表/打开/删除/禁用均显式传入文件夹；导入由主进程重新扫描并匹配 folder+id，再使用扫描得到的 gameDirectory 写入 mods/resourcepacks/shaderpacks。同名目标不覆盖，原文件保留。
 
 **1.0.32 验证**：315/315 测试、TypeScript 和生产构建通过。新增目录隔离、共享目录、同名冲突和同版本并发状态测试；scripts/verify-resource-drop-ui.cjs 在隔离 Electron 中挂载真实 KeysView/FileManager 以及 App capture 处理器，验证默认配置只导入一次、三类资源分流、同名版本选中 B 文件夹、共享/隔离列表对应、整合包处理零触发。证据 out/resource-drop-ui-PDREEZ/result.json。未运行或停止用户游戏。
 
 **1.0.32 已交付**：源码 master cc1666d / main b131bd9，标签 v1.0.32 指向 cc1666d。Release：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.32 。便携 EXE 中文空格路径启动通过；ZIP 与最终 app.asar 一致，主进程构建文件与包内一致。发布前已核对远端三附件大小、SHA256 和标签，发布后经认证 API 确认 latest 为 v1.0.32，误发 v1.0.41 仍为草稿。匿名 API 二次核验返回 403，认证核验正常。EXE SHA256：4d67d20c5eb5f721807a5621bea9a990127e14df7ddff706cdc5a9e81b419bc0；ZIP SHA256：af14410d29f190b891ae36be9ee1ab12fe532b6227ef1a988303aebd3a1ad85b。
-
 
 **1.0.33 启动优化**：旧便携 NSIS 每次启动前解压、退出删除运行环境，导致无反馈数秒。现在 .onInit 先提取并启动小型 WinForms 粒子窗口（同一头像切片、透明且点击穿透、不抢焦点），Electron 粒子窗口显示后通过临时信号文件接替；父 wrapper 退出或超时也会关闭反馈窗口。运行环境存到 EXE 旁 FAIONYX-runtime/<version-buildhash>，哈希包含 main/preload/renderer 全部构建内容与锁文件；解压完成标记及核心文件存在时复用，命名互斥锁串行首次解压，不在退出时删除缓存，避免并发使用冲突。不同构建互不混用。
 
@@ -445,13 +432,11 @@ node scripts/release-github.cjs
 
 **1.0.33 已发布**：master eea1e5f / main 7ea70a7，标签 v1.0.33 指向 eea1e5f。Release：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.33 。发布前核对三附件大小及 SHA256、标签与源码一致；发布后认证 API 确认 latest 为 v1.0.33。EXE SHA256：f0937373f9787ec92843264d2a6146f7a1e54c251ad69a5371ca94ac1cc71acd；ZIP SHA256：56413645f49dca0d0edc3e78993e023458a83120d51b5f42e0657e8c197961ef。
 
-
 **1.0.34 默认材质包启用修复**：旧 mergeResourcePackOptions 把全部默认包同时加入 resourcePacks 与 incompatibleResourcePacks。Minecraft 26.2 的 Options.loadSelectedResourcePacks 对实际兼容、但带兼容性覆盖的包，移除覆盖标记后直接 continue，导致本次未调用选中；游戏日志中 Fullbright 出现同样信息。现在读取实际客户端 JAR/version.json 的 resource pack major/minor，与 pack.mcmeta 的 min/max_format（65+）、supported_formats（18+）或旧 pack_format 比较，仅真正不兼容的默认包加入覆盖列表，清除旧版默认包错误标记，所有默认包保留启用/优先级列表。玩家其他包和覆盖保留，未知客户端格式不猜测覆盖。
 
 **1.0.34 验证**：318/318 测试、TypeScript 和生产构建通过；新增 Fullbright 元数据回归、旧标记清除、重复启动幂等、格式区间/次版本边界、旧格式兼容测试。另在隔离 Java 进程直接调用本地原版26.2 Options.loadSelectedResourcePacks，mock PackRepository：旧标记不选中，清除标记后选中，PASS；未启动/停止用户游戏，也未改用户 options.txt。证据 out/pack-proof-1.0.34.log、out/PackSelectionProof.java。新格式官方说明：https://www.minecraft.net/en-us/article/minecraft-java-edition-1-21-9 。
 
 **1.0.34 已发布**：master 022eebc / main afcff9d，标签 v1.0.34 指向 022eebc。Release：https://github.com/Skrepy0/FAIONYX/releases/tag/v1.0.34 。便携 EXE 中文空格路径启动、ZIP 内容核验通过；远端三附件大小、SHA256、源码标签核对通过，认证 API 确认 latest 为 v1.0.34。EXE SHA256：42e835ee282ab062fd4d484cd04198866b77e47b7de662c919e49082e942dafb；ZIP SHA256：b5673cc3434b0001781918bad45e855225b015a5447acfbf164d6bf4e0e1a156。
-
 
 **1.0.35 启动体验统一**：旧便携前段色键透明 WinForms 粒子与 Electron 后段随机粒子独立绘制，切换时重播、位置和运动跳变。现在保留同一个 native StartupFeedback 窗口，完整覆盖解压、真实初始化进度、620ms 汇聚、2000ms 头像停留和 320ms 淡出。采用 UpdateLayeredWindow + 逐像素 premultiplied alpha、高清 DPI、与原动画一致的缓动/旋转/浮动、轻阴影与统一半透明提示卡；主窗口 260ms 平滑淡入。nativeStartup.ts 等实际主界面 ready-to-show 和 renderer-ready 后才通知原粒子汇聚，仅原窗口发出 assembled 后显示主界面。原生不可用时回退 Electron 动画；辅助窗口意外退出也不阻塞主界面显示。减少动态效果用户跳过汇聚/停留。
 

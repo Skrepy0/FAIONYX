@@ -9,7 +9,6 @@ const read = (file: string) => fs.readFileSync(file, 'utf8')
 // Replaced implementation: behavior is exercised by skin3d-parity, download-policy,
 // download-stall, import-download-1049 and modpack-speed-1050 runtime tests.
 
-
 test('folder scan: existence checked before statSync with friendly error (问题3)', () => {
   const fp = read('src/main/core/folderPaths.ts')
   const guardIdx = fp.indexOf("throw new Error('文件夹不存在，请检查路径是否正确')")
@@ -73,7 +72,12 @@ test('changed SFCs compile', () => {
     const { descriptor, errors } = parse(source)
     assert.deepEqual(errors, [], file)
     const script = compileScript(descriptor, { id: file })
-    const result = compileTemplate({ source: descriptor.template!.content, filename: file, id: file, compilerOptions: { bindingMetadata: script.bindings } })
+    const result = compileTemplate({
+      source: descriptor.template!.content,
+      filename: file,
+      id: file,
+      compilerOptions: { bindingMetadata: script.bindings },
+    })
     assert.deepEqual(result.errors, [], file)
   }
 })

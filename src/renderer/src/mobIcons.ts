@@ -87,5 +87,5 @@ export const MOB_ICONS: MobIcon[] = [
   { id: 'zombie_villager', name: '僵尸村民' },
   { id: 'skeleton_horse', name: '骷髅马' },
   { id: 'zombie_horse', name: '僵尸马' },
-  { id: 'strider', name: '炽足兽' }
+  { id: 'strider', name: '炽足兽' },
 ]

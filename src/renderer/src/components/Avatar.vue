@@ -13,13 +13,17 @@ import { store } from '../store'
 import { skinRevision } from '../skinRevision'
 
 const props = withDefaults(defineProps<{ size?: number; account?: Account | null }>(), { size: 48 })
-const account = computed(() => props.account === undefined ? store.selectedAccount : props.account)
+const account = computed(() => (props.account === undefined ? store.selectedAccount : props.account))
 
 const head = ref('')
 let generation = 0
-onUnmounted(() => { generation++ })
+onUnmounted(() => {
+  generation++
+})
 
-function load() { return trackBootTask(loadImpl, 800) }
+function load() {
+  return trackBootTask(loadImpl, 800)
+}
 async function loadImpl() {
   const request = ++generation
   head.value = ''

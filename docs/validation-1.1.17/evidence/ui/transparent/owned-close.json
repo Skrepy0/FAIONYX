@@ -26,9 +26,7 @@
   },
   "before": {
     "at": 263428379.4598,
-    "ownedPids": [
-      54096
-    ],
+    "ownedPids": [54096],
     "available": false,
     "reason": "native ps inventory only on Darwin"
   },
@@ -36,9 +34,7 @@
   "originalSignalListenersPreserved": true,
   "after": {
     "at": 263507334.3703,
-    "ownedPids": [
-      54096
-    ],
+    "ownedPids": [54096],
     "available": false,
     "reason": "native ps inventory only on Darwin"
   },

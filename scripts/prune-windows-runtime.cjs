@@ -1,7 +1,9 @@
-const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto')
+const fs = require('node:fs'),
+  path = require('node:path'),
+  crypto = require('node:crypto')
 const OPTIONAL_DXC = {
   'dxcompiler.dll': 'b2b5c67bc4a9c92a0ea87000415e7970488d1ca25767518d4cc27b88f18fb6ac',
-  'dxil.dll': '77e039c905030a641e53658a008b74e90635a5ea9b6b79eabd0f2003bdfca59a'
+  'dxil.dll': '77e039c905030a641e53658a008b74e90635a5ea9b6b79eabd0f2003bdfca59a',
 }
 
 function pruneWindowsRuntime(context) {
@@ -22,7 +24,7 @@ function pruneWindowsRuntime(context) {
   })
   // Check every candidate first. Only these two ordinary files in this build are removed.
   for (const file of files) fs.unlinkSync(file.file)
-  console.log('Pruned optional Windows DXC components:', files.map(f => `${f.name} (${f.bytes} bytes)`).join(', '))
+  console.log('Pruned optional Windows DXC components:', files.map((f) => `${f.name} (${f.bytes} bytes)`).join(', '))
   return files
 }
 module.exports = { pruneWindowsRuntime, OPTIONAL_DXC }

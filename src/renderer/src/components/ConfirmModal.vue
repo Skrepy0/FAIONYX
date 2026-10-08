@@ -39,5 +39,12 @@ const emit = defineEmits<{
   line-height: 1.7;
   word-break: break-all;
 }
-.confirm-error { color:var(--danger);font-size:var(--text-sm);line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;margin:12px 0; }
+.confirm-error {
+  color: var(--danger);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 12px 0;
+}
 </style>

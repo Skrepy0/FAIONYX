@@ -7,11 +7,7 @@ import path from 'node:path'
 import test from 'node:test'
 import { downloadAll, downloadFile, type DownloadBatchProgress } from '../src/main/core/download'
 import { DownloadProgressTracker, SmoothedSpeedEstimator } from '../src/main/core/downloadProgress'
-import {
-  createWeightedProgressEmit,
-  ProgressEventGuard,
-  VERSION_INSTALL_STAGE_RANGES
-} from '../src/main/core/progress'
+import { createWeightedProgressEmit, ProgressEventGuard, VERSION_INSTALL_STAGE_RANGES } from '../src/main/core/progress'
 import { finishTask, pauseTask, registerTask, resumeTask } from '../src/main/core/tasks'
 
 const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
@@ -34,7 +30,7 @@ test('字节聚合在并发乱序完成和重试回报较小值时保持单调',
     tracker.update(a, 60).fraction,
     tracker.update(b, 20).fraction, // 模拟重试从较小 received 重新报告
     tracker.complete(a, 100).fraction,
-    tracker.complete(b, 200).fraction
+    tracker.complete(b, 200).fraction,
   ].filter((value): value is number => value != null)
   assertMonotonic(values)
   assert.equal(values.at(-1), 1)
@@ -78,7 +74,7 @@ test('平滑速度与 ETA 在降速、恢复和暂停时始终有限且限幅', 
   assert.ok((slow.etaSeconds ?? 0) <= (fast.etaSeconds ?? 0) * 1.35 + 5)
   assert.deepEqual(estimator.sample(4_100, 5_900, 4_000, true), {
     speedBps: 0,
-    etaSeconds: null
+    etaSeconds: null,
   })
 })
 
@@ -121,7 +117,7 @@ test('网络中断后使用 Range 续传并保持单文件进度单调', async (
     resumedAt = match ? Number(match[1]) : 0
     res.writeHead(206, {
       'content-length': String(payload.length - resumedAt),
-      'content-range': `bytes ${resumedAt}-${payload.length - 1}/${payload.length}`
+      'content-range': `bytes ${resumedAt}-${payload.length - 1}/${payload.length}`,
     })
     res.end(payload.subarray(resumedAt))
   })
@@ -132,16 +128,9 @@ test('网络中断后使用 Range 续传并保持单文件进度单调', async (
   const dest = path.join(root, 'client.jar')
   const values: number[] = []
   try {
-    await downloadFile(
-      `http://127.0.0.1:${address.port}/client.jar`,
-      dest,
-      (done) => values.push(done),
-      sha1,
-      'official',
-      undefined,
-      [],
-      { size: payload.length }
-    )
+    await downloadFile(`http://127.0.0.1:${address.port}/client.jar`, dest, (done) => values.push(done), sha1, 'official', undefined, [], {
+      size: payload.length,
+    })
     assert.equal(requests, 2)
     assert.ok(resumedAt > 0 && resumedAt < payload.length)
     assertMonotonic(values)
@@ -161,16 +150,19 @@ test('多文件并行下载的真实字节进度单调，暂停时停止写盘�
     const payload = payloads[index]
     res.writeHead(200, { 'content-length': String(payload.length) })
     let offset = 0
-    const timer = setInterval(() => {
-      if (res.destroyed || res.writableEnded) return clearInterval(timer)
-      const end = Math.min(payload.length, offset + 16 * 1024)
-      res.write(payload.subarray(offset, end))
-      offset = end
-      if (offset >= payload.length) {
-        clearInterval(timer)
-        res.end()
-      }
-    }, index === 0 ? 8 : 13)
+    const timer = setInterval(
+      () => {
+        if (res.destroyed || res.writableEnded) return clearInterval(timer)
+        const end = Math.min(payload.length, offset + 16 * 1024)
+        res.write(payload.subarray(offset, end))
+        offset = end
+        if (offset >= payload.length) {
+          clearInterval(timer)
+          res.end()
+        }
+      },
+      index === 0 ? 8 : 13
+    )
     res.on('close', () => clearInterval(timer))
   })
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
@@ -183,7 +175,7 @@ test('多文件并行下载的真实字节进度单调，暂停时停止写盘�
   const outcome = downloadAll(
     [
       { url: `${base}/a`, dest: path.join(root, 'a.bin'), size: payloads[0].length },
-      { url: `${base}/b`, dest: path.join(root, 'b.bin'), size: payloads[1].length }
+      { url: `${base}/b`, dest: path.join(root, 'b.bin'), size: payloads[1].length },
     ],
     (_done, _total, _speed, detail) => snapshots.push({ ...detail }),
     2,
@@ -202,9 +194,7 @@ test('多文件并行下载的真实字节进度单调，暂停时停止写盘�
     assert.equal(resumeTask(task.id), true)
     await outcome
 
-    const fractions = snapshots
-      .map((snapshot) => snapshot.fraction)
-      .filter((value): value is number => value != null)
+    const fractions = snapshots.map((snapshot) => snapshot.fraction).filter((value): value is number => value != null)
     assertMonotonic(fractions)
     assert.equal(fractions.at(-1), 1)
     assert.ok(snapshots.some((snapshot) => snapshot.paused && snapshot.speedBps === 0))

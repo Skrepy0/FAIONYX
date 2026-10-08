@@ -9,14 +9,16 @@ export async function startMockServer(port = 0) {
   const assets = new Map()
   for (const ver of ['99.0.0', '1.0.0', '0.9.9']) {
     const name = `FAIONYX-${ver}.exe`
-    const seed = crypto.createHash('sha256').update('faionyx-mock-' + ver).digest()
+    const seed = crypto
+      .createHash('sha256')
+      .update('faionyx-mock-' + ver)
+      .digest()
     const file = Buffer.alloc(128 * 1024)
     for (let i = 0; i < file.length; i += seed.length) seed.copy(file, i)
     assets.set(name, file)
   }
-  const sumsText = [...assets.entries()]
-    .map(([name, buf]) => `${crypto.createHash('sha256').update(buf).digest('hex')}  ${name}`)
-    .join('\n') + '\n'
+  const sumsText =
+    [...assets.entries()].map(([name, buf]) => `${crypto.createHash('sha256').update(buf).digest('hex')}  ${name}`).join('\n') + '\n'
 
   const server = http.createServer((req, res) => {
     const url = req.url || ''
@@ -28,9 +30,13 @@ export async function startMockServer(port = 0) {
       draft: false,
       prerelease: false,
       assets: [
-        { name: `FAIONYX-${ver}.exe`, browser_download_url: `http://127.0.0.1:${server.address().port}/download/FAIONYX-${ver}.exe`, size: assets.get(`FAIONYX-${ver}.exe`).length },
-        { name: 'SHA256SUMS.txt', browser_download_url: `http://127.0.0.1:${server.address().port}/SHA256SUMS.txt`, size: sumsText.length }
-      ]
+        {
+          name: `FAIONYX-${ver}.exe`,
+          browser_download_url: `http://127.0.0.1:${server.address().port}/download/FAIONYX-${ver}.exe`,
+          size: assets.get(`FAIONYX-${ver}.exe`).length,
+        },
+        { name: 'SHA256SUMS.txt', browser_download_url: `http://127.0.0.1:${server.address().port}/SHA256SUMS.txt`, size: sumsText.length },
+      ],
     })
     const releases = ['99.0.0', '1.0.0', '0.9.9'].map(mk)
     if (url.endsWith('/releases/latest')) {
@@ -61,6 +67,6 @@ export async function startMockServer(port = 0) {
   await new Promise((resolve) => server.listen(port, '127.0.0.1', resolve))
   return {
     port: server.address().port,
-    close: () => new Promise((resolve, reject) => server.close((e) => (e ? reject(e) : resolve())))
+    close: () => new Promise((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
   }
 }

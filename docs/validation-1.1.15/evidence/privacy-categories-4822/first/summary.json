@@ -40,10 +40,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -123,10 +120,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -210,10 +204,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -429,10 +420,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -494,10 +482,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -577,10 +562,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -660,10 +642,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -743,10 +722,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -826,10 +802,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -913,10 +886,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -1132,10 +1102,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -11845,17 +11812,9 @@
             ],
             "rows": 2,
             "detailName": "服务器IP为地址已隐藏欢迎加入",
-            "rowNames": [
-              "服务器IP为地址已隐藏欢迎加入",
-              "IP地址已隐藏欢迎加入"
-            ],
-            "descriptions": [
-              "IP地址已隐藏欢迎加入"
-            ],
-            "statuses": [
-              "在线1 ms",
-              "在线1 ms"
-            ]
+            "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+            "descriptions": ["IP地址已隐藏欢迎加入"],
+            "statuses": ["在线1 ms", "在线1 ms"]
           }
         }
       ],
@@ -11947,10 +11906,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -12053,10 +12009,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -12163,10 +12116,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -12405,10 +12355,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -12483,10 +12430,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -12589,10 +12533,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -12695,10 +12636,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -12801,10 +12739,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -12911,10 +12846,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -13153,10 +13085,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -13231,10 +13160,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -13337,10 +13263,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -13443,10 +13366,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -13549,10 +13469,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -13659,10 +13576,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -13901,10 +13815,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -13979,10 +13890,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -14072,10 +13980,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -14165,10 +14070,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -14258,10 +14160,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -14355,10 +14254,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -14584,10 +14480,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -14662,10 +14555,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -14745,10 +14635,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -14832,10 +14719,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -15051,10 +14935,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -15116,10 +14997,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -15199,10 +15077,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -15286,10 +15161,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -15505,10 +15377,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -15590,10 +15459,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -15673,10 +15539,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -15760,10 +15623,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -15979,10 +15839,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -16044,10 +15901,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -16127,10 +15981,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -16214,10 +16065,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -16433,10 +16281,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -16498,10 +16343,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -16581,10 +16423,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -16668,10 +16507,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -16887,10 +16723,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -16952,10 +16785,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -17035,10 +16865,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -17122,10 +16949,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -17341,10 +17165,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -17406,10 +17227,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -17489,10 +17307,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -17576,10 +17391,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -17795,10 +17607,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -17876,10 +17685,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -17959,10 +17765,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -18046,10 +17849,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -18265,10 +18065,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -18346,10 +18143,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -18429,10 +18223,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -18512,10 +18303,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -18595,10 +18383,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -18682,10 +18467,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -18901,10 +18683,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -24894,17 +24673,9 @@
             ],
             "rows": 2,
             "detailName": "服务器IP为地址已隐藏欢迎加入",
-            "rowNames": [
-              "服务器IP为地址已隐藏欢迎加入",
-              "IP地址已隐藏欢迎加入"
-            ],
-            "descriptions": [
-              "IP地址已隐藏欢迎加入"
-            ],
-            "statuses": [
-              "在线1 ms",
-              "在线1 ms"
-            ]
+            "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+            "descriptions": ["IP地址已隐藏欢迎加入"],
+            "statuses": ["在线1 ms", "在线1 ms"]
           }
         }
       ],
@@ -24937,10 +24708,7 @@
               "width": 1360,
               "height": 860
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1,
             "focused": true,
             "visible": true,
@@ -25004,10 +24772,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -25087,10 +24852,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -25174,10 +24936,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -25393,10 +25152,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -25458,10 +25214,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -25541,10 +25294,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -25624,10 +25374,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -25707,10 +25454,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -25794,10 +25538,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -26013,10 +25754,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -26091,10 +25829,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -26174,10 +25909,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -26261,10 +25993,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -26480,10 +26209,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -26644,10 +26370,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -26727,10 +26450,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -26814,10 +26534,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -27033,10 +26750,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -27098,10 +26812,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -27181,10 +26892,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -27264,10 +26972,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -27347,10 +27052,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -27434,10 +27136,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -27653,10 +27352,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -27718,10 +27414,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -27801,10 +27494,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -27888,10 +27578,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -28107,10 +27794,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -28255,10 +27939,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -28338,10 +28019,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -28421,10 +28099,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -28504,10 +28179,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -28591,10 +28263,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -28810,10 +28479,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -28886,10 +28552,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -28969,10 +28632,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -29052,10 +28712,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -29135,10 +28792,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -29222,10 +28876,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -29441,10 +29092,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -29535,9 +29183,7 @@
               }
             },
             "disabledFeatures": [],
-            "favoriteVersions": [
-              "联机验证实例"
-            ],
+            "favoriteVersions": ["联机验证实例"],
             "versionCategories": [
               {
                 "id": "25fadf96-78be-427f-a1fb-7659cf9ca22d",
@@ -29660,10 +29306,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -29743,10 +29386,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -29830,10 +29470,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -30049,10 +29686,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -30114,10 +29748,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -30197,10 +29828,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -30284,10 +29912,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -30503,10 +30128,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -30579,10 +30201,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -30662,10 +30281,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -30745,10 +30361,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -30828,10 +30441,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -30915,10 +30525,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -31134,10 +30741,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -31228,9 +30832,7 @@
               }
             },
             "disabledFeatures": [],
-            "favoriteVersions": [
-              "联机验证实例"
-            ],
+            "favoriteVersions": ["联机验证实例"],
             "versionCategories": [
               {
                 "id": "25fadf96-78be-427f-a1fb-7659cf9ca22d",
@@ -31353,10 +30955,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -31436,10 +31035,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -31523,10 +31119,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -31742,10 +31335,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -31818,10 +31408,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -31901,10 +31488,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -31984,10 +31568,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -32067,10 +31648,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -32154,10 +31732,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -32373,10 +31948,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -32467,9 +32039,7 @@
               }
             },
             "disabledFeatures": [],
-            "favoriteVersions": [
-              "联机验证实例"
-            ],
+            "favoriteVersions": ["联机验证实例"],
             "versionCategories": [
               {
                 "id": "25fadf96-78be-427f-a1fb-7659cf9ca22d",
@@ -32596,10 +32166,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -32679,10 +32246,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -32766,10 +32330,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -32985,10 +32546,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -33141,10 +32699,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -33224,10 +32779,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -33311,10 +32863,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -33530,10 +33079,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -33655,10 +33201,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -33738,10 +33281,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -33821,10 +33361,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -33908,10 +33445,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -34127,10 +33661,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -34192,10 +33723,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -34275,10 +33803,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -34358,10 +33883,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -34441,10 +33963,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -34528,10 +34047,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -34747,10 +34263,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -34870,9 +34383,7 @@
               }
             },
             "disabledFeatures": [],
-            "favoriteVersions": [
-              "联机验证实例"
-            ],
+            "favoriteVersions": ["联机验证实例"],
             "versionCategories": [
               {
                 "id": "25fadf96-78be-427f-a1fb-7659cf9ca22d",
@@ -35001,10 +34512,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -35084,10 +34592,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -35171,10 +34676,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -35390,10 +34892,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -35466,10 +34965,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -35549,10 +35045,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -35632,10 +35125,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -35715,10 +35205,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -35802,10 +35289,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -36021,10 +35505,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -36146,10 +35627,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -36229,10 +35707,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -36312,10 +35787,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -36399,10 +35871,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -36618,10 +36087,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -36683,10 +36149,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -36766,10 +36229,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -36849,10 +36309,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -36936,10 +36393,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -37155,10 +36609,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -37278,9 +36729,7 @@
               }
             },
             "disabledFeatures": [],
-            "favoriteVersions": [
-              "联机验证实例"
-            ],
+            "favoriteVersions": ["联机验证实例"],
             "versionCategories": [
               {
                 "id": "25fadf96-78be-427f-a1fb-7659cf9ca22d",
@@ -37410,10 +36859,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -37493,10 +36939,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -37580,10 +37023,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -37799,10 +37239,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -37875,10 +37312,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -37958,10 +37392,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -38045,10 +37476,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -38264,10 +37692,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -38420,10 +37845,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -38503,10 +37925,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -38590,10 +38009,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -38809,10 +38225,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -38874,10 +38287,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -38957,10 +38367,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -39044,10 +38451,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -39263,10 +38667,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -39419,10 +38820,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -39502,10 +38900,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -39585,10 +38980,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -39672,10 +39064,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -39891,10 +39280,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -39956,10 +39342,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -40039,10 +39422,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -40126,10 +39506,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -40345,10 +39722,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -40410,10 +39784,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -40493,10 +39864,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -40580,10 +39948,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -40799,10 +40164,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -40864,10 +40226,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -40947,10 +40306,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -41034,10 +40390,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -41253,10 +40606,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -41347,9 +40697,7 @@
               }
             },
             "disabledFeatures": [],
-            "favoriteVersions": [
-              "联机验证实例"
-            ],
+            "favoriteVersions": ["联机验证实例"],
             "versionCategories": [
               {
                 "id": "1762de2a-59e8-4dbf-bb92-117a36b87e75",
@@ -41474,10 +40822,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -41557,10 +40902,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -41644,10 +40986,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -41863,10 +41202,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -42015,10 +41351,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -42098,10 +41431,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -42185,10 +41515,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -42404,10 +41731,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -42469,10 +41793,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -42552,10 +41873,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -42639,10 +41957,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -42858,10 +42173,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -42923,10 +42235,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -43006,10 +42315,7 @@
                 "width": 1360,
                 "height": 860
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1,
               "focused": true,
               "visible": true,
@@ -43093,10 +42399,7 @@
             "width": 1360,
             "height": 860
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1,
           "focused": true,
           "visible": true,
@@ -43312,10 +42615,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -43372,10 +42672,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -43442,10 +42739,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -43517,10 +42811,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -43600,10 +42891,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -43683,10 +42971,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -43769,10 +43054,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -43860,10 +43142,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -44079,10 +43358,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -49992,17 +49268,9 @@
             ],
             "rows": 2,
             "detailName": "服务器IP为地址已隐藏欢迎加入",
-            "rowNames": [
-              "服务器IP为地址已隐藏欢迎加入",
-              "IP地址已隐藏欢迎加入"
-            ],
-            "descriptions": [
-              "IP地址已隐藏欢迎加入"
-            ],
-            "statuses": [
-              "在线1 ms",
-              "在线1 ms"
-            ]
+            "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+            "descriptions": ["IP地址已隐藏欢迎加入"],
+            "statuses": ["在线1 ms", "在线1 ms"]
           }
         }
       ],
@@ -50083,10 +49351,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -50166,10 +49431,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -50249,10 +49511,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -50335,10 +49594,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -50426,10 +49682,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -50645,10 +49898,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -50710,10 +49960,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -50793,10 +50040,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -50880,10 +50124,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -51099,10 +50340,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -51164,10 +50402,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -51247,10 +50482,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -51330,10 +50562,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -51416,10 +50645,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -51507,10 +50733,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -51726,10 +50949,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -51807,10 +51027,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -51890,10 +51107,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -51973,10 +51187,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -52064,10 +51275,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -52283,10 +51491,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -52477,10 +51682,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -52560,10 +51762,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -52647,10 +51846,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -52866,10 +52062,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -53018,10 +52211,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -53101,10 +52291,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -53188,10 +52375,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -53407,10 +52591,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -53509,10 +52690,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -53579,10 +52757,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -53654,10 +52829,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -53737,10 +52909,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -53820,10 +52989,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -53906,10 +53072,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -53997,10 +53160,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -54216,10 +53376,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -60129,17 +59286,9 @@
             ],
             "rows": 2,
             "detailName": "服务器IP为地址已隐藏欢迎加入",
-            "rowNames": [
-              "服务器IP为地址已隐藏欢迎加入",
-              "IP地址已隐藏欢迎加入"
-            ],
-            "descriptions": [
-              "IP地址已隐藏欢迎加入"
-            ],
-            "statuses": [
-              "在线1 ms",
-              "在线1 ms"
-            ]
+            "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+            "descriptions": ["IP地址已隐藏欢迎加入"],
+            "statuses": ["在线1 ms", "在线1 ms"]
           }
         }
       ],
@@ -60220,10 +59369,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -60303,10 +59449,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -60386,10 +59529,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -60472,10 +59612,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -60563,10 +59700,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -60782,10 +59916,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -60847,10 +59978,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -60930,10 +60058,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -61017,10 +60142,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -61236,10 +60358,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -61301,10 +60420,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -61384,10 +60500,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -61467,10 +60580,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -61553,10 +60663,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -61644,10 +60751,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -61863,10 +60967,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -61944,10 +61045,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -62027,10 +61125,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -62110,10 +61205,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -62201,10 +61293,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -62420,10 +61509,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -62614,10 +61700,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -62697,10 +61780,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -62784,10 +61864,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -63003,10 +62080,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -63155,10 +62229,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -63238,10 +62309,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -63325,10 +62393,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -63544,10 +62609,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -63646,10 +62708,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -63716,10 +62775,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -63791,10 +62847,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -63874,10 +62927,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -63957,10 +63007,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -64043,10 +63090,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -64134,10 +63178,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -64353,10 +63394,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -70266,17 +69304,9 @@
             ],
             "rows": 2,
             "detailName": "服务器IP为地址已隐藏欢迎加入",
-            "rowNames": [
-              "服务器IP为地址已隐藏欢迎加入",
-              "IP地址已隐藏欢迎加入"
-            ],
-            "descriptions": [
-              "IP地址已隐藏欢迎加入"
-            ],
-            "statuses": [
-              "在线1 ms",
-              "在线1 ms"
-            ]
+            "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+            "descriptions": ["IP地址已隐藏欢迎加入"],
+            "statuses": ["在线1 ms", "在线1 ms"]
           }
         }
       ],
@@ -70357,10 +69387,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -70440,10 +69467,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -70523,10 +69547,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -70609,10 +69630,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -70700,10 +69718,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -70919,10 +69934,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -70984,10 +69996,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -71067,10 +70076,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -71154,10 +70160,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -71373,10 +70376,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -71438,10 +70438,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -71521,10 +70518,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -71604,10 +70598,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -71690,10 +70681,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -71781,10 +70769,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -72000,10 +70985,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -72081,10 +71063,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -72164,10 +71143,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -72247,10 +71223,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -72338,10 +71311,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -72557,10 +71527,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -72751,10 +71718,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -72834,10 +71798,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -72921,10 +71882,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -73140,10 +72098,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -73292,10 +72247,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -73375,10 +72327,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -73462,10 +72411,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -73681,10 +72627,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -73783,10 +72726,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -73853,10 +72793,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -73928,10 +72865,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -74011,10 +72945,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -74094,10 +73025,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -74180,10 +73108,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -74271,10 +73196,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -74490,10 +73412,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -80403,17 +79322,9 @@
             ],
             "rows": 2,
             "detailName": "服务器IP为地址已隐藏欢迎加入",
-            "rowNames": [
-              "服务器IP为地址已隐藏欢迎加入",
-              "IP地址已隐藏欢迎加入"
-            ],
-            "descriptions": [
-              "IP地址已隐藏欢迎加入"
-            ],
-            "statuses": [
-              "在线1 ms",
-              "在线1 ms"
-            ]
+            "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+            "descriptions": ["IP地址已隐藏欢迎加入"],
+            "statuses": ["在线1 ms", "在线1 ms"]
           }
         }
       ],
@@ -80494,10 +79405,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -80577,10 +79485,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -80660,10 +79565,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -80746,10 +79648,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -80837,10 +79736,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -81056,10 +79952,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -81121,10 +80014,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -81204,10 +80094,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -81291,10 +80178,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -81510,10 +80394,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -81575,10 +80456,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -81658,10 +80536,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -81741,10 +80616,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -81827,10 +80699,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -81918,10 +80787,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -82137,10 +81003,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -82218,10 +81081,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -82301,10 +81161,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -82384,10 +81241,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -82475,10 +81329,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -82694,10 +81545,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -82877,10 +81725,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -82960,10 +81805,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -83047,10 +81889,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -83266,10 +82105,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -83418,10 +82254,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -83501,10 +82334,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -83588,10 +82418,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -83807,10 +82634,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -83903,10 +82727,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -83986,10 +82807,7 @@
                 "width": 961,
                 "height": 622
               },
-              "minimumSize": [
-                960,
-                620
-              ],
+              "minimumSize": [960, 620],
               "zoom": 1.25,
               "focused": true,
               "visible": true,
@@ -84069,10 +82887,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -84155,10 +82970,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -84246,10 +83058,7 @@
             "width": 961,
             "height": 622
           },
-          "minimumSize": [
-            960,
-            620
-          ],
+          "minimumSize": [960, 620],
           "zoom": 1.25,
           "focused": true,
           "visible": true,
@@ -84465,10 +83274,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -90378,17 +89184,9 @@
             ],
             "rows": 2,
             "detailName": "服务器IP为地址已隐藏欢迎加入",
-            "rowNames": [
-              "服务器IP为地址已隐藏欢迎加入",
-              "IP地址已隐藏欢迎加入"
-            ],
-            "descriptions": [
-              "IP地址已隐藏欢迎加入"
-            ],
-            "statuses": [
-              "在线1 ms",
-              "在线1 ms"
-            ]
+            "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+            "descriptions": ["IP地址已隐藏欢迎加入"],
+            "statuses": ["在线1 ms", "在线1 ms"]
           }
         }
       ],
@@ -101055,17 +99853,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -106927,17 +105717,9 @@
         ],
         "rows": 2,
         "detailName": "IP地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "服务器IP为地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["服务器IP为地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -112799,17 +111581,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -118671,17 +117445,9 @@
         ],
         "rows": 2,
         "detailName": "IP地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "服务器IP为地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["服务器IP为地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -124543,17 +123309,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -130410,10 +129168,7 @@
             "value": "additions text"
           }
         ],
-        "revealed": [
-          "127.0.0.1:9",
-          "127.0.0.1:9"
-        ],
+        "revealed": ["127.0.0.1:9", "127.0.0.1:9"],
         "toggleLabels": [
           {
             "label": "隐藏服务器地址",
@@ -130434,17 +129189,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为127.0.0.1欢迎加入",
-        "rowNames": [
-          "服务器IP为127.0.0.1欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP127.0.0.1:9欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为127.0.0.1欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP127.0.0.1:9欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -136402,17 +135149,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -142365,10 +141104,7 @@
             "value": "关闭通知"
           }
         ],
-        "revealed": [
-          "127.0.0.1:9",
-          "127.0.0.1:9"
-        ],
+        "revealed": ["127.0.0.1:9", "127.0.0.1:9"],
         "toggleLabels": [
           {
             "label": "隐藏服务器地址",
@@ -142389,17 +141125,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为127.0.0.1欢迎加入",
-        "rowNames": [
-          "服务器IP为127.0.0.1欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP127.0.0.1:9欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为127.0.0.1欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP127.0.0.1:9欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -148357,17 +147085,9 @@
         ],
         "rows": 2,
         "detailName": "IP地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "服务器IP为地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["服务器IP为地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -154320,10 +153040,7 @@
             "value": "关闭通知"
           }
         ],
-        "revealed": [
-          "127.0.0.1:10",
-          "127.0.0.1:10"
-        ],
+        "revealed": ["127.0.0.1:10", "127.0.0.1:10"],
         "toggleLabels": [
           {
             "label": "显示服务器地址",
@@ -154344,17 +153061,9 @@
         ],
         "rows": 2,
         "detailName": "IP127.0.0.1:10欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP127.0.0.1:10欢迎加入"
-        ],
-        "descriptions": [
-          "服务器IP为127.0.0.1欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP127.0.0.1:10欢迎加入"],
+        "descriptions": ["服务器IP为127.0.0.1欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -164913,17 +163622,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -170876,10 +169577,7 @@
             "value": "关闭通知"
           }
         ],
-        "revealed": [
-          "127.0.0.1:9",
-          "127.0.0.1:9"
-        ],
+        "revealed": ["127.0.0.1:9", "127.0.0.1:9"],
         "toggleLabels": [
           {
             "label": "隐藏服务器地址",
@@ -170900,17 +169598,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为127.0.0.1欢迎加入",
-        "rowNames": [
-          "服务器IP为127.0.0.1欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP127.0.0.1:9欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为127.0.0.1欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP127.0.0.1:9欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -176868,17 +175558,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -182836,17 +181518,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -188804,17 +187478,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -194676,17 +193342,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -200543,10 +199201,7 @@
             "value": "additions text"
           }
         ],
-        "revealed": [
-          "127.0.0.1:9",
-          "127.0.0.1:9"
-        ],
+        "revealed": ["127.0.0.1:9", "127.0.0.1:9"],
         "toggleLabels": [
           {
             "label": "隐藏服务器地址",
@@ -200567,17 +199222,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为127.0.0.1欢迎加入",
-        "rowNames": [
-          "服务器IP为127.0.0.1欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP127.0.0.1:9欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为127.0.0.1欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP127.0.0.1:9欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -206439,17 +205086,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -212311,17 +210950,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -218178,10 +216809,7 @@
             "value": "additions text"
           }
         ],
-        "revealed": [
-          "127.0.0.1:9",
-          "127.0.0.1:9"
-        ],
+        "revealed": ["127.0.0.1:9", "127.0.0.1:9"],
         "toggleLabels": [
           {
             "label": "隐藏服务器地址",
@@ -218202,17 +216830,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为127.0.0.1欢迎加入",
-        "rowNames": [
-          "服务器IP为127.0.0.1欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP127.0.0.1:9欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为127.0.0.1欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP127.0.0.1:9欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -224074,17 +222694,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -229946,17 +228558,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -235813,10 +234417,7 @@
             "value": "additions text"
           }
         ],
-        "revealed": [
-          "127.0.0.1:9",
-          "127.0.0.1:9"
-        ],
+        "revealed": ["127.0.0.1:9", "127.0.0.1:9"],
         "toggleLabels": [
           {
             "label": "隐藏服务器地址",
@@ -235837,17 +234438,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为127.0.0.1欢迎加入",
-        "rowNames": [
-          "服务器IP为127.0.0.1欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP127.0.0.1:9欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为127.0.0.1欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP127.0.0.1:9欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -241709,17 +240302,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -247581,17 +246166,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -253448,10 +252025,7 @@
             "value": "additions text"
           }
         ],
-        "revealed": [
-          "127.0.0.1:9",
-          "127.0.0.1:9"
-        ],
+        "revealed": ["127.0.0.1:9", "127.0.0.1:9"],
         "toggleLabels": [
           {
             "label": "隐藏服务器地址",
@@ -253472,17 +252046,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为127.0.0.1欢迎加入",
-        "rowNames": [
-          "服务器IP为127.0.0.1欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP127.0.0.1:9欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为127.0.0.1欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP127.0.0.1:9欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -259344,17 +257910,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     },
     {
@@ -265216,17 +263774,9 @@
         ],
         "rows": 2,
         "detailName": "服务器IP为地址已隐藏欢迎加入",
-        "rowNames": [
-          "服务器IP为地址已隐藏欢迎加入",
-          "IP地址已隐藏欢迎加入"
-        ],
-        "descriptions": [
-          "IP地址已隐藏欢迎加入"
-        ],
-        "statuses": [
-          "在线1 ms",
-          "在线1 ms"
-        ]
+        "rowNames": ["服务器IP为地址已隐藏欢迎加入", "IP地址已隐藏欢迎加入"],
+        "descriptions": ["IP地址已隐藏欢迎加入"],
+        "statuses": ["在线1 ms", "在线1 ms"]
       }
     }
   ],
@@ -266674,10 +265224,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -266729,10 +265276,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -266783,10 +265327,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -266838,10 +265379,7 @@
           "width": 1360,
           "height": 860
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1,
         "focused": true,
         "visible": true,
@@ -266892,10 +265430,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -266947,10 +265482,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267001,10 +265533,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267056,10 +265585,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267110,10 +265636,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267165,10 +265688,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267219,10 +265739,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267274,10 +265791,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267328,10 +265842,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267383,10 +265894,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267437,10 +265945,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267492,10 +265997,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267546,10 +266048,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267601,10 +266100,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267655,10 +266151,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267710,10 +266203,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267764,10 +266254,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267819,10 +266306,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267873,10 +266357,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267928,10 +266409,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -267982,10 +266460,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -268037,10 +266512,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -268091,10 +266563,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -268146,10 +266615,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -268213,10 +266679,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -268271,10 +266734,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -268329,10 +266789,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -268432,10 +266889,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -268490,10 +266944,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -268548,10 +266999,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -268651,10 +267099,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -268709,10 +267154,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -268767,10 +267209,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -268870,10 +267309,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -268928,10 +267364,7 @@
               "width": 961,
               "height": 622
             },
-            "minimumSize": [
-              960,
-              620
-            ],
+            "minimumSize": [960, 620],
             "zoom": 1.25,
             "focused": true,
             "visible": true,
@@ -268986,10 +267419,7 @@
           "width": 961,
           "height": 622
         },
-        "minimumSize": [
-          960,
-          620
-        ],
+        "minimumSize": [960, 620],
         "zoom": 1.25,
         "focused": true,
         "visible": true,
@@ -269112,10 +267542,7 @@
       "width": 1361,
       "height": 862
     },
-    "minimumSize": [
-      960,
-      620
-    ],
+    "minimumSize": [960, 620],
     "zoom": 1,
     "focused": true,
     "visible": true,
@@ -269652,9 +268079,7 @@
       }
     },
     "disabledFeatures": [],
-    "favoriteVersions": [
-      "联机验证实例"
-    ],
+    "favoriteVersions": ["联机验证实例"],
     "versionCategories": [],
     "versionCategoryAssignments": {},
     "homeLayout": {
@@ -269703,15 +268128,7 @@
       "image": "",
       "fit": "crop",
       "images": [],
-      "order": [
-        "builtin:piston",
-        "builtin:brewer",
-        "builtin:cannon",
-        "builtin:cactus",
-        "builtin:farmer",
-        "builtin:camp",
-        "builtin:sunset"
-      ],
+      "order": ["builtin:piston", "builtin:brewer", "builtin:cannon", "builtin:cactus", "builtin:farmer", "builtin:camp", "builtin:sunset"],
       "disabled": [],
       "randomPlayback": false,
       "intervalSeconds": 6.5,
@@ -269755,10 +268172,7 @@
         "width": 1361,
         "height": 862
       },
-      "minimumSize": [
-        960,
-        620
-      ],
+      "minimumSize": [960, 620],
       "zoom": 1,
       "focused": true,
       "visible": true,
@@ -269842,10 +268256,7 @@
         "width": 1360,
         "height": 860
       },
-      "minimumSize": [
-        960,
-        620
-      ],
+      "minimumSize": [960, 620],
       "zoom": 1,
       "focused": true,
       "visible": true,
@@ -280232,9 +278643,7 @@
       }
     },
     "disabledFeatures": [],
-    "favoriteVersions": [
-      "联机验证实例"
-    ],
+    "favoriteVersions": ["联机验证实例"],
     "versionCategories": [
       {
         "id": "1762de2a-59e8-4dbf-bb92-117a36b87e75",
@@ -280290,15 +278699,7 @@
       "image": "",
       "fit": "crop",
       "images": [],
-      "order": [
-        "builtin:piston",
-        "builtin:brewer",
-        "builtin:cannon",
-        "builtin:cactus",
-        "builtin:farmer",
-        "builtin:camp",
-        "builtin:sunset"
-      ],
+      "order": ["builtin:piston", "builtin:brewer", "builtin:cannon", "builtin:cactus", "builtin:farmer", "builtin:camp", "builtin:sunset"],
       "disabled": [],
       "randomPlayback": false,
       "intervalSeconds": 6.5,

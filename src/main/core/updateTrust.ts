@@ -13,10 +13,18 @@ export function trustedUpdateRelease(release: ReleaseInfo | undefined): boolean 
   if (!release || !/^\d+\.\d+\.\d+$/.test(release.version)) return false
   if (isolatedUpdateTest()) return true
   const name = updateAssetName(release.version)
-  return release.assetName === name && release.assetSize > 0 &&
+  return (
+    release.assetName === name &&
+    release.assetSize > 0 &&
     release.assetUrl === `https://github.com/${GITHUB_REPO}/releases/download/v${release.version}/${name}`
+  )
 }
 
-export function updateAssetName(version: string, platform: string = process.platform, arch: string = process.arch, installation: InstallationKind = installationKind()): string {
+export function updateAssetName(
+  version: string,
+  platform: string = process.platform,
+  arch: string = process.arch,
+  installation: InstallationKind = installationKind()
+): string {
   return updateArtifactName(version, platform, arch, installation)
 }

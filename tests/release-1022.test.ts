@@ -38,6 +38,11 @@ test('SettingsView compiles after slider baseline freeze', () => {
   const { descriptor, errors } = parse(source)
   assert.deepEqual(errors, [])
   const script = compileScript(descriptor, { id: 'SettingsView.vue' })
-  const result = compileTemplate({ source: descriptor.template!.content, filename: 'SettingsView.vue', id: 'SettingsView.vue', compilerOptions: { bindingMetadata: script.bindings } })
+  const result = compileTemplate({
+    source: descriptor.template!.content,
+    filename: 'SettingsView.vue',
+    id: 'SettingsView.vue',
+    compilerOptions: { bindingMetadata: script.bindings },
+  })
   assert.deepEqual(result.errors, [])
 })

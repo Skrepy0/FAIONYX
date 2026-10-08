@@ -58,7 +58,7 @@ for (let row = 0; row < GRID; row++) {
       delay: Math.random() * T_STAGGER,
       wobble: Math.random() < 0.5 ? 'a' : 'b',
       wobbleDelay: -Math.random() * 500,
-      wobbleDuration: 420 + Math.random() * 180
+      wobbleDuration: 420 + Math.random() * 180,
     })
   }
 }
@@ -73,7 +73,7 @@ function tileStyle(t: Tile) {
     left: t.col * TILE + 'px',
     top: t.row * TILE + 'px',
     backgroundImage: `url(${splashFace})`,
-    backgroundPosition: `${-t.col * TILE}px ${-t.row * TILE}px`
+    backgroundPosition: `${-t.col * TILE}px ${-t.row * TILE}px`,
   }
   if (phase.value === 'scatter') {
     return {
@@ -81,13 +81,13 @@ function tileStyle(t: Tile) {
       transform: `translate(${t.dx}px, ${t.dy}px) rotate(${t.rot}deg)`,
       animationName: `splash-wobble-${t.wobble}`,
       animationDuration: `${t.wobbleDuration}ms`,
-      animationDelay: `${t.wobbleDelay}ms`
+      animationDelay: `${t.wobbleDelay}ms`,
     }
   }
   return {
     ...base,
     transform: 'translate(0px, 0px) rotate(0deg)',
-    transitionDelay: `${t.delay}ms`
+    transitionDelay: `${t.delay}ms`,
   }
 }
 
@@ -215,7 +215,9 @@ onUnmounted(() => timers.forEach(clearTimeout))
   gap: var(--space-2);
   opacity: 0;
   transform: translateY(10px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
 }
 .brand.show {
   opacity: 1;

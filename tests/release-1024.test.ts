@@ -6,11 +6,11 @@ import { parse, compileScript, compileTemplate } from '@vue/compiler-sfc'
 const read = (file: string) => fs.readFileSync(file, 'utf8')
 
 test('visual editor controls remain inside a bounded scrollable panel', () => {
- const ep=read('src/renderer/src/components/EditPanel.vue')
- assert.match(ep,/grid-template-columns:230px minmax\(0,1fr\) 310px/)
- assert.match(ep,/overflow:auto/)
- assert.match(ep,/class="designer-toolbar"/)
- assert.match(ep,/复制完整主题码/)
+  const ep = read('src/renderer/src/components/EditPanel.vue')
+  assert.match(ep, /grid-template-columns:230px minmax\(0,1fr\) 310px/)
+  assert.match(ep, /overflow:auto/)
+  assert.match(ep, /class="designer-toolbar"/)
+  assert.match(ep, /复制完整主题码/)
 })
 
 test('fix-2: game process CWD wired through CreateProcessW lpCurrentDirectory (启动 CWD)', () => {
@@ -78,7 +78,12 @@ test('1.0.24 changed SFCs compile', () => {
     const { descriptor, errors } = parse(source)
     assert.deepEqual(errors, [], file)
     const script = compileScript(descriptor, { id: file })
-    const result = compileTemplate({ source: descriptor.template!.content, filename: file, id: file, compilerOptions: { bindingMetadata: script.bindings } })
+    const result = compileTemplate({
+      source: descriptor.template!.content,
+      filename: file,
+      id: file,
+      compilerOptions: { bindingMetadata: script.bindings },
+    })
     assert.deepEqual(result.errors, [], file)
   }
 })

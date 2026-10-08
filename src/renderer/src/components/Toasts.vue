@@ -6,7 +6,8 @@ import { store, dismissToast } from '../store'
   <TransitionGroup name="toast" tag="div" class="toasts" aria-live="polite" aria-relevant="additions text">
     <div v-for="t in store.toasts.slice(-3)" :key="t.id" class="toast" :class="`toast-${t.type}`">
       <span class="toast-dot"></span>
-      <span class="toast-text">{{ t.text }}</span><button class="icon-btn toast-close" aria-label="关闭通知" @click="dismissToast(t.id)">×</button>
+      <span class="toast-text">{{ t.text }}</span
+      ><button class="icon-btn toast-close" aria-label="关闭通知" @click="dismissToast(t.id)">×</button>
     </div>
   </TransitionGroup>
 </template>
@@ -39,8 +40,14 @@ import { store, dismissToast } from '../store'
   user-select: text;
 }
 
-.toast-close { pointer-events:auto; width:28px; height:28px; }
-.toast-text { overflow-wrap:anywhere; }
+.toast-close {
+  pointer-events: auto;
+  width: 28px;
+  height: 28px;
+}
+.toast-text {
+  overflow-wrap: anywhere;
+}
 .toast-dot {
   width: 8px;
   height: 8px;
@@ -72,7 +79,9 @@ import { store, dismissToast } from '../store'
 
 .toast-enter-active,
 .toast-leave-active {
-  transition: opacity 0.22s ease, transform 0.22s ease;
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
 }
 .toast-enter-from {
   opacity: 0;

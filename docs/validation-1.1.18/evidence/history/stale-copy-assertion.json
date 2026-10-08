@@ -220,24 +220,15 @@
         "width": 1362,
         "height": 863
       },
-      "content": [
-        1361,
-        862
-      ],
+      "content": [1361, 862],
       "contentBounds": {
         "x": 855,
         "y": 409,
         "width": 1361,
         "height": 862
       },
-      "minimum": [
-        960,
-        620
-      ],
-      "maximum": [
-        0,
-        0
-      ],
+      "minimum": [960, 620],
+      "maximum": [0, 0],
       "zoom": 1,
       "maximized": false,
       "display": {

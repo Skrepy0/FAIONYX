@@ -17,7 +17,7 @@ const AGENT_BASE_OPTIONS = {
   keepAliveTimeout: 10_000,
   keepAliveMaxTimeout: 60_000,
   connections: 32,
-  headersTimeout: 30_000
+  headersTimeout: 30_000,
 }
 
 const sharedAgent = new Agent({ ...AGENT_BASE_OPTIONS, bodyTimeout: 30_000 })
@@ -40,7 +40,16 @@ function agentWithBodyTimeout(bodyTimeoutMs: number): Agent {
  *  bodyTimeoutMs 为可选增量参数：不传时行为与旧版完全一致。 */
 export function httpFetch(
   url: string,
-  init: { signal?: AbortSignal; headers?: Record<string, string>; redirect?: 'follow' | 'manual' | 'error'; method?: string; body?: string; bodyTimeoutMs?: number; separateConnection?: boolean; systemProxy?: boolean } = {}
+  init: {
+    signal?: AbortSignal
+    headers?: Record<string, string>
+    redirect?: 'follow' | 'manual' | 'error'
+    method?: string
+    body?: string
+    bodyTimeoutMs?: number
+    separateConnection?: boolean
+    systemProxy?: boolean
+  } = {}
 ): Promise<Response> {
   // Runtime downloads must use the same OS proxy/PAC and certificate store as
   // the desktop app. Node fetch/undici do not inherit macOS system proxy settings.

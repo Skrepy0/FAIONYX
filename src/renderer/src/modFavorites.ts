@@ -22,19 +22,25 @@ export async function loadFavorites(propagateError = false): Promise<void> {
   const read = (async () => {
     await writeQueue
     const writes = writeGeneration
-    const list = await window.faionyx.invoke('mods:favorites') as ModFavorite[]
+    const list = (await window.faionyx.invoke('mods:favorites')) as ModFavorite[]
     if (generation === readGeneration && writes === writeGeneration) favorites.value = list
     return { list, writes }
   })()
   activeRead = read
-  try { await read } catch (e) { if (propagateError) throw e; toast(errText(e), 'error') }
-  finally { if (activeRead === read) activeRead = undefined }
+  try {
+    await read
+  } catch (e) {
+    if (propagateError) throw e
+    toast(errText(e), 'error')
+  } finally {
+    if (activeRead === read) activeRead = undefined
+  }
 }
 
 /** Every page writes through one queue; different projects cannot overwrite each other's snapshots. */
 async function mutateFavorite(key: string | string[], request: () => Promise<ModFavorite[]>): Promise<boolean> {
   const keys = [...new Set(Array.isArray(key) ? key : [key])]
-  if (!keys.length || keys.some(value => favoriteBusy.value.has(value))) return false
+  if (!keys.length || keys.some((value) => favoriteBusy.value.has(value))) return false
   clearFavoriteErrors(keys)
   favoriteBusy.value = new Set([...favoriteBusy.value, ...keys])
   const initialRead = activeRead
@@ -47,23 +53,46 @@ async function mutateFavorite(key: string | string[], request: () => Promise<Mod
     return true
   })
   writeQueue = job.catch(() => {})
-  try { return await job } catch (e) {
-    const message = errText(e), errors = new Map(favoriteErrors.value)
+  try {
+    return await job
+  } catch (e) {
+    const message = errText(e),
+      errors = new Map(favoriteErrors.value)
     for (const key of keys) errors.set(key, message)
     favoriteErrors.value = errors
-    toast(message, 'error'); return false
+    toast(message, 'error')
+    return false
+  } finally {
+    const next = new Set(favoriteBusy.value)
+    for (const value of keys) next.delete(value)
+    favoriteBusy.value = next
   }
-  finally { const next = new Set(favoriteBusy.value); for (const value of keys) next.delete(value); favoriteBusy.value = next }
 }
 
 export function toggleProject(source: string, projectId: string, name: string, iconUrl?: string): Promise<boolean> {
   const key = source + ':' + projectId
-  return mutateFavorite(key, () => window.faionyx.invoke('mods:favorite', { source, projectId, name, iconUrl }, !favorites.value.some(f => f.key === key)) as Promise<ModFavorite[]>)
+  return mutateFavorite(
+    key,
+    () =>
+      window.faionyx.invoke('mods:favorite', { source, projectId, name, iconUrl }, !favorites.value.some((f) => f.key === key)) as Promise<
+        ModFavorite[]
+      >
+  )
 }
 
-export function setLocalFavorite(key: string, version: string, folder: string, name: string, enabled: boolean, link?: {source: string; projectId: string}): Promise<boolean> {
+export function setLocalFavorite(
+  key: string,
+  version: string,
+  folder: string,
+  name: string,
+  enabled: boolean,
+  link?: { source: string; projectId: string }
+): Promise<boolean> {
   const safeLink = link ? { source: link.source, projectId: link.projectId } : undefined
-  return mutateFavorite(key, () => window.faionyx.invoke('mods:favoriteLocal', version, folder, name, enabled, safeLink) as Promise<ModFavorite[]>)
+  return mutateFavorite(
+    key,
+    () => window.faionyx.invoke('mods:favoriteLocal', version, folder, name, enabled, safeLink) as Promise<ModFavorite[]>
+  )
 }
 
 export function removeFavorites(keys: string[]): Promise<boolean> {
@@ -75,5 +104,8 @@ export function removeFavorites(keys: string[]): Promise<boolean> {
 }
 
 export function linkFavorite(key: string, source: string, projectId: string): Promise<boolean> {
-  return mutateFavorite([key, source + ':' + projectId], () => window.faionyx.invoke('mods:favoriteLink', key, source, projectId) as Promise<ModFavorite[]>)
+  return mutateFavorite(
+    [key, source + ':' + projectId],
+    () => window.faionyx.invoke('mods:favoriteLink', key, source, projectId) as Promise<ModFavorite[]>
+  )
 }

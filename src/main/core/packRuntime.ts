@@ -20,11 +20,25 @@ export function copyRuntimeProfile(root: string, sourceId: string, targetId: str
   if (fs.existsSync(jar)) fs.copyFileSync(jar, path.join(target, `${targetId}.jar`))
 }
 
-export function packRuntimeProfile(runtime: VersionJson, id: string, meta: {
-  mcVersion: string; loader?: LoaderName | null; loaderVersion?: string | null; name: string; packVersion: string
-}): VersionJson {
+export function packRuntimeProfile(
+  runtime: VersionJson,
+  id: string,
+  meta: {
+    mcVersion: string
+    loader?: LoaderName | null
+    loaderVersion?: string | null
+    name: string
+    packVersion: string
+  }
+): VersionJson {
   if (runtime.inheritsFrom === id) throw new Error('整合包运行配置不能继承自身')
-  return { ...runtime, id, _mcVersion: meta.mcVersion, _gameDir: true,
+  return {
+    ...runtime,
+    id,
+    _mcVersion: meta.mcVersion,
+    _gameDir: true,
     ...(meta.loader ? { _loader: meta.loader, _loaderVersion: meta.loaderVersion ?? undefined } : {}),
-    _modpackName: meta.name, _modpackVersion: meta.packVersion }
+    _modpackName: meta.name,
+    _modpackVersion: meta.packVersion,
+  }
 }

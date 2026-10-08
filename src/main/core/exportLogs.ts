@@ -15,16 +15,8 @@ import { exitHistory } from './exitHistory'
 import { instanceDirectoryState } from './instances'
 import { selectedAccount } from './accounts'
 import { launcherLogPath } from './launcherLog'
-import {
-  redactDiagnosticPath,
-  redactDiagnosticText,
-  safeDiagnosticFilePart
-} from './diagnostics'
-import {
-  writeDiagnosticArchive,
-  type DiagnosticManifestEntry,
-  type DiagnosticSource
-} from './diagnosticArchive'
+import { redactDiagnosticPath, redactDiagnosticText, safeDiagnosticFilePart } from './diagnostics'
+import { writeDiagnosticArchive, type DiagnosticManifestEntry, type DiagnosticSource } from './diagnosticArchive'
 
 const execFileAsync = promisify(execFile)
 
@@ -77,13 +69,11 @@ async function newestCrashReport(dir: string): Promise<string | null> {
   }
 }
 
-async function javaSummary(
-  javaPath: string
-): Promise<{ path: string; version: string; architecture: string }> {
+async function javaSummary(javaPath: string): Promise<{ path: string; version: string; architecture: string }> {
   const unknown = {
     path: redactDiagnosticPath(javaPath),
     version: '（未知）',
-    architecture: '（未知）'
+    architecture: '（未知）',
   }
   if (!javaPath) return unknown
   try {
@@ -91,21 +81,16 @@ async function javaSummary(
       encoding: 'utf-8',
       timeout: 8_000,
       windowsHide: true,
-      maxBuffer: 256 * 1024
+      maxBuffer: 256 * 1024,
     })
     const output = `${result.stderr ?? ''}\n${result.stdout ?? ''}`
-    const version =
-      /version\s+"([^"]+)"/i.exec(output)?.[1] ?? output.split(/\r?\n/)[0]?.trim() ?? '（未知）'
-    const architecture = /64-Bit|x86_64|aarch64/i.test(output)
-      ? '64-bit'
-      : /32-Bit|i[3-6]86|x86/i.test(output)
-        ? '32-bit'
-        : '（未知）'
+    const version = /version\s+"([^"]+)"/i.exec(output)?.[1] ?? output.split(/\r?\n/)[0]?.trim() ?? '（未知）'
+    const architecture = /64-Bit|x86_64|aarch64/i.test(output) ? '64-bit' : /32-Bit|i[3-6]86|x86/i.test(output) ? '32-bit' : '（未知）'
     return { path: redactDiagnosticPath(javaPath), version, architecture }
   } catch (error) {
     return {
       ...unknown,
-      version: `验证失败：${redactDiagnosticText(error instanceof Error ? error.message : String(error))}`
+      version: `验证失败：${redactDiagnosticText(error instanceof Error ? error.message : String(error))}`,
     }
   }
 }
@@ -133,15 +118,12 @@ function summaryText(manifest: DiagnosticManifest): string {
     `进程错误: ${m.process.spawnError ?? '（无记录）'}`,
     `启动参数摘要: ${m.process.command ?? '（尚未生成）'}`,
     '',
-    '每个日志的来源、缺失与截断情况见 manifest.json。'
+    '每个日志的来源、缺失与截断情况见 manifest.json。',
   ].join('\n')
 }
 
 /** 弹原生保存对话框并异步生成 ZIP；取消保存返回 null。 */
-export async function exportLaunchLogs(
-  win: BrowserWindow | null,
-  versionId: string
-): Promise<string | null> {
+export async function exportLaunchLogs(win: BrowserWindow | null, versionId: string): Promise<string | null> {
   // 扫描会同时建立“版本 -> 游戏文件夹”映射，避免活动目录切换后收错实例日志。
   let installed: ReturnType<typeof listAllInstalled> = []
   try {
@@ -156,7 +138,7 @@ export async function exportLaunchLogs(
   let directoryState = item
     ? {
         path: item.gameDirectory || folder,
-        isolated: item.isolated === true
+        isolated: item.isolated === true,
       }
     : { path: folder, isolated: false }
   try {
@@ -164,17 +146,14 @@ export async function exportLaunchLogs(
   } catch {
     // 版本 JSON 缺失时使用已扫描出的目录信息。
   }
-  const effectiveGameDir =
-    last?.versionId === vid && last.effectiveGameDir
-      ? last.effectiveGameDir
-      : directoryState.path
+  const effectiveGameDir = last?.versionId === vid && last.effectiveGameDir ? last.effectiveGameDir : directoryState.path
   const isolated = directoryState.isolated
   const now = new Date()
   const defName = `FAIONYX-Diagnostic-${safeDiagnosticFilePart(item?.mcVersion || vid)}-${fmtStamp(now)}.zip`
   const opts = {
     title: '导出错误日志',
     defaultPath: defName,
-    filters: [{ name: 'ZIP 压缩包', extensions: ['zip'] }]
+    filters: [{ name: 'ZIP 压缩包', extensions: ['zip'] }],
   }
   const result = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
   if (result.canceled || !result.filePath) return null
@@ -184,9 +163,20 @@ export async function exportLaunchLogs(
     account?.accessToken ?? '',
     account?.refreshToken ?? '',
     account?.clientToken ?? '',
-    account?.loginIdentifier ?? ''
+    account?.loginIdentifier ?? '',
   ].filter(Boolean)
-  const currentLaunch = last?.versionId === vid && last.effectiveGameDir && samePath(last.effectiveGameDir,effectiveGameDir) ? last : exitHistory().list().find(e=>e.kind==='game'&&e.context?.versionId===vid&&e.context?.effectiveGameDir&&samePath(String(e.context.effectiveGameDir),effectiveGameDir))?.context as unknown as typeof last
+  const currentLaunch =
+    last?.versionId === vid && last.effectiveGameDir && samePath(last.effectiveGameDir, effectiveGameDir)
+      ? last
+      : (exitHistory()
+          .list()
+          .find(
+            (e) =>
+              e.kind === 'game' &&
+              e.context?.versionId === vid &&
+              e.context?.effectiveGameDir &&
+              samePath(String(e.context.effectiveGameDir), effectiveGameDir)
+          )?.context as unknown as typeof last)
   const manifest: DiagnosticManifest = {
     schemaVersion: 1,
     exportedAt: now.toISOString(),
@@ -198,27 +188,23 @@ export async function exportLaunchLogs(
       loader: item?.loader ?? null,
       loaderVersion: item?.loaderVersion ?? null,
       directory: redactDiagnosticPath(effectiveGameDir),
-      isolated
+      isolated,
     },
     process: {
       pid: currentLaunch?.pid ?? null,
       startedAt: currentLaunch?.startedAt ?? null,
       endedAt: currentLaunch?.endedAt ?? null,
       exitCode: currentLaunch?.exitCode ?? null,
-      spawnError: currentLaunch?.spawnError
-        ? redactDiagnosticText(currentLaunch.spawnError, secrets)
-        : null,
-      command: currentLaunch?.commandSummary
-        ? redactDiagnosticText(currentLaunch.commandSummary, secrets)
-        : null
+      spawnError: currentLaunch?.spawnError ? redactDiagnosticText(currentLaunch.spawnError, secrets) : null,
+      command: currentLaunch?.commandSummary ? redactDiagnosticText(currentLaunch.commandSummary, secrets) : null,
     },
     java: await javaSummary(currentLaunch?.javaPath ?? item?.javaPath ?? getSettings().javaPath),
     operatingSystem: {
       platform: `${os.type()} ${os.version()}`,
       release: os.release(),
-      architecture: os.arch()
+      architecture: os.arch(),
     },
-    files: []
+    files: [],
   }
 
   const crash = await newestCrashReport(effectiveGameDir)
@@ -227,38 +213,38 @@ export async function exportLaunchLogs(
     {
       archivePath: crash ? `crash-reports/${path.basename(crash)}` : 'crash-reports/latest.txt',
       source: crash || path.join(effectiveGameDir, 'crash-reports'),
-      missingPlaceholder: !crash
+      missingPlaceholder: !crash,
     },
     {
       archivePath: 'minecraft/latest.log',
       source: path.join(effectiveGameDir, 'logs', 'latest.log'),
-      missingPlaceholder: true
+      missingPlaceholder: true,
     },
     {
       archivePath: 'minecraft/debug.log',
       source: path.join(effectiveGameDir, 'logs', 'debug.log'),
-      missingPlaceholder: true
+      missingPlaceholder: true,
     },
     {
       archivePath: 'launcher/launcher-current.log',
       source: launcherLogPath(),
-      missingPlaceholder: true
+      missingPlaceholder: true,
     },
     {
       archivePath: 'launcher/launch-combined.log',
       source: path.join(launchLogDir, 'latest.log'),
-      missingPlaceholder: true
+      missingPlaceholder: true,
     },
     {
       archivePath: 'process/stdout.log',
       source: path.join(launchLogDir, 'stdout.log'),
-      missingPlaceholder: true
+      missingPlaceholder: true,
     },
     {
       archivePath: 'process/stderr.log',
       source: path.join(launchLogDir, 'stderr.log'),
-      missingPlaceholder: true
-    }
+      missingPlaceholder: true,
+    },
   ]
   // 历史会话归档一并带上（最多 3 份）；缺失时 manifest 只记 missing，不影响导出
   const logsDir = path.dirname(launcherLogPath())
@@ -277,13 +263,7 @@ export async function exportLaunchLogs(
     sources.push({ archivePath: `launcher/${name}`, source: path.join(logsDir, name) })
   }
   try {
-    await writeDiagnosticArchive(
-      result.filePath,
-      manifest,
-      sources,
-      summaryText(manifest),
-      secrets
-    )
+    await writeDiagnosticArchive(result.filePath, manifest, sources, summaryText(manifest), secrets)
     return result.filePath
   } catch (error) {
     throw new Error(`写入诊断包失败：${error instanceof Error ? error.message : String(error)}`)

@@ -39,17 +39,12 @@
     "history": "Old Go port replaced; no retroactive license assertion",
     "previousRevision": "924845e897d8fb36dca2474ade30e675278559d0",
     "contract": "docs/launcher-integration.md",
-    "sharedFiles": [
-      "src/shared/voxlinkNat.ts"
-    ]
+    "sharedFiles": ["src/shared/voxlinkNat.ts"]
   },
   "projectionRegistry": {
     "source": "PrismarineJS minecraft-data 3.117.0 + Mojang 26.2/26.3 server data reports",
     "license": "MIT package declaration / factual registry data",
-    "files": [
-      "src/main/core/projectionRegistries.json",
-      "src/main/core/projectionOfficialSchemas.json"
-    ],
+    "files": ["src/main/core/projectionRegistries.json", "src/main/core/projectionOfficialSchemas.json"],
     "generator": "scripts/extract-projection-registries.cjs"
   },
   "ws": {

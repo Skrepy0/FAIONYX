@@ -31,10 +31,6 @@
   "fullFeatureAndAnimationParityPassed": false,
   "runtimeThirdPartyNoticesComplete": false,
   "publishable": false,
-  "logsGeneratedBy": [
-    "scripts/prepare-harmonyos.cjs",
-    "scripts/verify-harmonyos.cjs",
-    "scripts/build-harmonyos.cjs"
-  ],
+  "logsGeneratedBy": ["scripts/prepare-harmonyos.cjs", "scripts/verify-harmonyos.cjs", "scripts/build-harmonyos.cjs"],
   "warning": "This dated source record is a historical observation. Re-run preparation, inspection and official SDK build for each changed production build."
 }

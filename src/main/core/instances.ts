@@ -20,11 +20,7 @@ export interface InstanceDirectoryState {
  * 启动、资源管理、服务器和 UI 共用的唯一目录判定。
  * 显式 false 优先，避免用户关闭隔离后被遗留文件自动重新开启。
  */
-export function instanceDirectoryState(
-  id: string,
-  json: VersionJson,
-  folderOverride?: string
-): InstanceDirectoryState {
+export function instanceDirectoryState(id: string, json: VersionJson, folderOverride?: string): InstanceDirectoryState {
   const sharedPath = canonicalPath(folderOverride || folderOfVersion(id))
   const instancePath = canonicalPath(path.join(sharedPath, 'versions', id))
   if (json._gameDir === true) {
@@ -36,14 +32,12 @@ export function instanceDirectoryState(
 
   const configured = json._gameDirectory ?? json.gameDirectory
   if (typeof configured === 'string' && configured.trim()) {
-    const configuredPath = canonicalPath(
-      path.isAbsolute(configured) ? configured : path.join(instancePath, configured)
-    )
+    const configuredPath = canonicalPath(path.isAbsolute(configured) ? configured : path.join(instancePath, configured))
     return {
       path: configuredPath,
       sharedPath,
       isolated: !samePath(configuredPath, sharedPath),
-      reason: 'configured-path'
+      reason: 'configured-path',
     }
   }
   if (json._modpackName) {
@@ -93,11 +87,7 @@ export function setNewInstanceIsolation(id: string, isolated: boolean): void {
  * 用户开启隔离：先完整复制到临时区，再逐项提交；目标同名项永不覆盖。
  * 任一步失败会删除本次新增项并恢复 JSON。关闭时保留独立目录数据并写显式 false。
  */
-export async function applyIsolation(
-  id: string,
-  isolated: boolean,
-  copyShared = true
-): Promise<IsolationMigrationPlan> {
+export async function applyIsolation(id: string, isolated: boolean, copyShared = true): Promise<IsolationMigrationPlan> {
   instanceLog.info(`实例 ${id} 请求${isolated ? '开启' : '关闭'}版本隔离（copyShared=${copyShared}）`)
   const plan = isolationMigrationPlan(id)
   if (!isolated || !copyShared) {
@@ -108,7 +98,9 @@ export async function applyIsolation(
 
   try {
     await commitIsolationFiles(plan, () => writeIsolationFlag(id, true))
-    instanceLog.info(`实例 ${id} 版本隔离开启完成：复制 ${plan.totalFiles} 个文件（${plan.items.length} 个顶层项），冲突跳过 ${plan.conflicts.length} 项`)
+    instanceLog.info(
+      `实例 ${id} 版本隔离开启完成：复制 ${plan.totalFiles} 个文件（${plan.items.length} 个顶层项），冲突跳过 ${plan.conflicts.length} 项`
+    )
     return plan
   } catch (error) {
     instanceLog.error(`实例 ${id} 隔离迁移失败，已回滚`, error)

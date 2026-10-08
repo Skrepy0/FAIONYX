@@ -144,7 +144,7 @@ export const RECIPE: SymParams = Object.freeze({
   maxPps: 3000, // PunchProfile.java: RECIPE.maxPps
 })
 export const DEFAULT: PunchProfile = Object.freeze({
-  name: "DEFAULT", // PunchProfile.java: DEFAULT.name
+  name: 'DEFAULT', // PunchProfile.java: DEFAULT.name
   punchTimeoutMs: 12000, // PunchProfile.java: DEFAULT.punchTimeoutMs
   firewallDetectCycles: 30, // PunchProfile.java: DEFAULT.firewallDetectCycles
   portPredictionMaxRange: 100, // PunchProfile.java: DEFAULT.portPredictionMaxRange
@@ -183,7 +183,7 @@ export const DEFAULT: PunchProfile = Object.freeze({
   sym: RECIPE, // PunchProfile.java: constructor assigns RECIPE
 })
 export const AGGRESSIVE: PunchProfile = Object.freeze({
-  name: "AGGRESSIVE", // PunchProfile.java: AGGRESSIVE.name
+  name: 'AGGRESSIVE', // PunchProfile.java: AGGRESSIVE.name
   punchTimeoutMs: 20000, // PunchProfile.java: AGGRESSIVE.punchTimeoutMs
   firewallDetectCycles: 50, // PunchProfile.java: AGGRESSIVE.firewallDetectCycles
   portPredictionMaxRange: 100, // PunchProfile.java: AGGRESSIVE.portPredictionMaxRange
@@ -222,7 +222,7 @@ export const AGGRESSIVE: PunchProfile = Object.freeze({
   sym: RECIPE, // PunchProfile.java: constructor assigns RECIPE
 })
 export const HARDSYM: PunchProfile = Object.freeze({
-  name: "HARDSYM", // PunchProfile.java: HARDSYM.name
+  name: 'HARDSYM', // PunchProfile.java: HARDSYM.name
   punchTimeoutMs: 30000, // PunchProfile.java: HARDSYM.punchTimeoutMs
   firewallDetectCycles: 60, // PunchProfile.java: HARDSYM.firewallDetectCycles
   portPredictionMaxRange: 500, // PunchProfile.java: HARDSYM.portPredictionMaxRange
@@ -261,7 +261,7 @@ export const HARDSYM: PunchProfile = Object.freeze({
   sym: RECIPE, // PunchProfile.java: constructor assigns RECIPE
 })
 export const EASY_SYM_DUAL: PunchProfile = Object.freeze({
-  name: "EASY_SYM_DUAL", // PunchProfile.java: EASY_SYM_DUAL.name
+  name: 'EASY_SYM_DUAL', // PunchProfile.java: EASY_SYM_DUAL.name
   punchTimeoutMs: 12000, // PunchProfile.java: EASY_SYM_DUAL.punchTimeoutMs
   firewallDetectCycles: 30, // PunchProfile.java: EASY_SYM_DUAL.firewallDetectCycles
   portPredictionMaxRange: 50, // PunchProfile.java: EASY_SYM_DUAL.portPredictionMaxRange
@@ -300,7 +300,7 @@ export const EASY_SYM_DUAL: PunchProfile = Object.freeze({
   sym: RECIPE, // PunchProfile.java: constructor assigns RECIPE
 })
 export const V100: PunchProfile = Object.freeze({
-  name: "V100", // PunchProfile.java: V100.name
+  name: 'V100', // PunchProfile.java: V100.name
   punchTimeoutMs: 8000, // PunchProfile.java: V100.punchTimeoutMs
   firewallDetectCycles: 38, // PunchProfile.java: V100.firewallDetectCycles
   portPredictionMaxRange: 100, // PunchProfile.java: V100.portPredictionMaxRange
@@ -339,7 +339,7 @@ export const V100: PunchProfile = Object.freeze({
   sym: RECIPE, // PunchProfile.java: constructor assigns RECIPE
 })
 export const FAST_LANE: PunchProfile = Object.freeze({
-  name: "FAST_LANE", // PunchProfile.java: FAST_LANE.name
+  name: 'FAST_LANE', // PunchProfile.java: FAST_LANE.name
   punchTimeoutMs: 6000, // PunchProfile.java: FAST_LANE.punchTimeoutMs
   firewallDetectCycles: 15, // PunchProfile.java: FAST_LANE.firewallDetectCycles
   portPredictionMaxRange: 20, // PunchProfile.java: FAST_LANE.portPredictionMaxRange
@@ -378,7 +378,7 @@ export const FAST_LANE: PunchProfile = Object.freeze({
   sym: RECIPE, // PunchProfile.java: constructor assigns RECIPE
 })
 export const RELIABLE_CONE: PunchProfile = Object.freeze({
-  name: "RELIABLE_CONE", // PunchProfile.java: RELIABLE_CONE.name
+  name: 'RELIABLE_CONE', // PunchProfile.java: RELIABLE_CONE.name
   punchTimeoutMs: 15000, // PunchProfile.java: RELIABLE_CONE.punchTimeoutMs
   firewallDetectCycles: 40, // PunchProfile.java: RELIABLE_CONE.firewallDetectCycles
   portPredictionMaxRange: 40, // PunchProfile.java: RELIABLE_CONE.portPredictionMaxRange
@@ -417,7 +417,7 @@ export const RELIABLE_CONE: PunchProfile = Object.freeze({
   sym: RECIPE, // PunchProfile.java: constructor assigns RECIPE
 })
 export const WIDE_SWEEP: PunchProfile = Object.freeze({
-  name: "WIDE_SWEEP", // PunchProfile.java: WIDE_SWEEP.name
+  name: 'WIDE_SWEEP', // PunchProfile.java: WIDE_SWEEP.name
   punchTimeoutMs: 35000, // PunchProfile.java: WIDE_SWEEP.punchTimeoutMs
   firewallDetectCycles: 70, // PunchProfile.java: WIDE_SWEEP.firewallDetectCycles
   portPredictionMaxRange: 800, // PunchProfile.java: WIDE_SWEEP.portPredictionMaxRange

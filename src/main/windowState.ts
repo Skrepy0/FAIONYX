@@ -44,10 +44,7 @@ export function dominantDisplay(displays: Display[], b: NormalBounds): Display |
 }
 
 /** 把窗口位置夹进指定显示器工作区，保证完整可见（窗口比工作区还大时对齐左上角） */
-export function clampToWorkArea(
-  b: NormalBounds,
-  wa: { x: number; y: number; width: number; height: number }
-): { x: number; y: number } {
+export function clampToWorkArea(b: NormalBounds, wa: { x: number; y: number; width: number; height: number }): { x: number; y: number } {
   const x = b.width >= wa.width ? wa.x : Math.min(Math.max(b.x, wa.x), wa.x + wa.width - b.width)
   const y = b.height >= wa.height ? wa.y : Math.min(Math.max(b.y, wa.y), wa.y + wa.height - b.height)
   return { x, y }
@@ -96,7 +93,7 @@ export function trackWindowState(win: BrowserWindow): void {
         : {
             width: win.getBounds().width,
             height: win.getBounds().height,
-            maximized: isEffectivelyMaximized(win)
+            maximized: isEffectivelyMaximized(win),
           }
       writeFileSync(stateFile(), JSON.stringify(payload))
     } catch {
@@ -115,7 +112,10 @@ export function trackWindowState(win: BrowserWindow): void {
   win.on('maximize', debounce)
   win.on('unmaximize', debounce)
   win.on('close', save)
-  win.once('closed', () => { if (timer) clearTimeout(timer); timer = null })
+  win.once('closed', () => {
+    if (timer) clearTimeout(timer)
+    timer = null
+  })
 }
 
 /** Restore once before showing/maximizing. Fractional DPI can round Electron's
@@ -123,23 +123,33 @@ export function trackWindowState(win: BrowserWindow): void {
  * than accumulating it across launches. Never run this from resize events. */
 export function restoreWindowBounds(win: BrowserWindow, saved: WindowState): void {
   if (win.isDestroyed() || win.isMaximized()) return
-  const current = win.getBounds(), [minWidth, minHeight] = win.getMinimumSize()
+  const current = win.getBounds(),
+    [minWidth, minHeight] = win.getMinimumSize()
   const target = {
-    x: saved.x ?? current.x, y: saved.y ?? current.y,
-    width: Math.max(minWidth, saved.width), height: Math.max(minHeight, saved.height)
+    x: saved.x ?? current.x,
+    y: saved.y ?? current.y,
+    width: Math.max(minWidth, saved.width),
+    height: Math.max(minHeight, saved.height),
   }
   let request = { ...target }
   for (let attempt = 0; attempt < 3; attempt++) {
     win.setBounds(request)
     const actual = win.getBounds()
-    const delta = { x: actual.x - target.x, y: actual.y - target.y,
-      width: actual.width - target.width, height: actual.height - target.height }
-    if (Object.values(delta).every(value => value === 0)) break
+    const delta = {
+      x: actual.x - target.x,
+      y: actual.y - target.y,
+      width: actual.width - target.width,
+      height: actual.height - target.height,
+    }
+    if (Object.values(delta).every((value) => value === 0)) break
     // Respect OS relocation/constraints; only correct small frame/DPI rounding.
-    if (Object.values(delta).some(value => Math.abs(value) > 8)) break
-    request = { x: request.x - delta.x, y: request.y - delta.y,
+    if (Object.values(delta).some((value) => Math.abs(value) > 8)) break
+    request = {
+      x: request.x - delta.x,
+      y: request.y - delta.y,
       width: Math.max(minWidth, request.width - delta.width),
-      height: Math.max(minHeight, request.height - delta.height) }
+      height: Math.max(minHeight, request.height - delta.height),
+    }
   }
 }
 

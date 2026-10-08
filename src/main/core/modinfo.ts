@@ -21,9 +21,20 @@ export function rangeLowerBound(range: string): string {
 }
 
 export function parseModFile(filePath: string): ModInfo {
-  try { return parseModArchive(new AdmZip(filePath), filePath, path.basename(filePath)) }
-  catch {
-    return { filePath, fileName: path.basename(filePath), id: '', name: '', version: '', loader: null, mcRange: '', dependencies: [], error: '文件损坏或不是有效的 jar 文件' }
+  try {
+    return parseModArchive(new AdmZip(filePath), filePath, path.basename(filePath))
+  } catch {
+    return {
+      filePath,
+      fileName: path.basename(filePath),
+      id: '',
+      name: '',
+      version: '',
+      loader: null,
+      mcRange: '',
+      dependencies: [],
+      error: '文件损坏或不是有效的 jar 文件',
+    }
   }
 }
 
@@ -115,7 +126,5 @@ export async function findCrossDuplicates(versionIds: string[]): Promise<ModCros
       }
     }
   }
-  return [...map.values()]
-    .filter((g) => g.presentIn.length >= 2)
-    .sort((a, b) => b.presentIn.length - a.presentIn.length)
+  return [...map.values()].filter((g) => g.presentIn.length >= 2).sort((a, b) => b.presentIn.length - a.presentIn.length)
 }

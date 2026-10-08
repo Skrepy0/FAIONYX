@@ -7,6 +7,13 @@ import farmer from './assets/launch/farmer.webp'
 import camp from './assets/launch/camp.webp'
 import sunset from './assets/launch/sunset.webp'
 
-const sources = { 'piston.webp': piston, 'brewer.webp': brewer, 'cannon.webp': cannon,
-  'cactus.webp': cactus, 'farmer.webp': farmer, 'camp.webp': camp, 'sunset.webp': sunset }
-export const builtInLaunchImages = BUILTIN_LAUNCH_IMAGES.map(image => ({ ...image, src: sources[image.file] }))
+const sources = {
+  'piston.webp': piston,
+  'brewer.webp': brewer,
+  'cannon.webp': cannon,
+  'cactus.webp': cactus,
+  'farmer.webp': farmer,
+  'camp.webp': camp,
+  'sunset.webp': sunset,
+}
+export const builtInLaunchImages = BUILTIN_LAUNCH_IMAGES.map((image) => ({ ...image, src: sources[image.file] }))

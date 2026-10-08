@@ -2,7 +2,12 @@ import type { GameResolution } from '../../shared/types'
 import type { GameProcessHandle } from './gracefulClose'
 import { resolutionValidationError } from './gameWindow'
 
-export interface GameWindowSample { pid: number; width: number; height: number; windowed: boolean }
+export interface GameWindowSample {
+  pid: number
+  width: number
+  height: number
+  windowed: boolean
+}
 type WindowReader = (pid: number) => Promise<GameWindowSample | undefined>
 let nativeReader: Promise<WindowReader> | undefined
 
@@ -47,12 +52,22 @@ export async function readOwnedGameWindow(pid: number): Promise<GameWindowSample
 }
 
 export function validWindowSize(sample: GameWindowSample | undefined, pid: number): sample is GameWindowSample {
-  return !!sample && sample.pid === pid && sample.windowed && !resolutionValidationError({ width: sample.width, height: sample.height, mode: 'windowed', fullscreen: false })
+  return (
+    !!sample &&
+    sample.pid === pid &&
+    sample.windowed &&
+    !resolutionValidationError({ width: sample.width, height: sample.height, mode: 'windowed', fullscreen: false })
+  )
 }
 
 /** Explicit preference changes, including adding/removing an instance override, win. */
-export function rememberedWindowResolution(initial: GameResolution, initialInstance: GameResolution | undefined,
-  currentGlobal: GameResolution, currentInstance: GameResolution | undefined, size: Pick<GameResolution, 'width' | 'height'>): GameResolution | undefined {
+export function rememberedWindowResolution(
+  initial: GameResolution,
+  initialInstance: GameResolution | undefined,
+  currentGlobal: GameResolution,
+  currentInstance: GameResolution | undefined,
+  size: Pick<GameResolution, 'width' | 'height'>
+): GameResolution | undefined {
   if (!!initialInstance !== !!currentInstance) return undefined
   const current = currentInstance ?? currentGlobal
   if (JSON.stringify(current) !== JSON.stringify(initial)) return undefined
@@ -60,34 +75,58 @@ export function rememberedWindowResolution(initial: GameResolution, initialInsta
 }
 
 /** Only the accepted owned process is sampled, and only clean exit commits once. */
-export function watchGameWindowSize(child: GameProcessHandle, options: {
-  enabled: () => boolean
-  commit: (size: Pick<GameResolution, 'width' | 'height'>) => void
-  onError: (error: unknown) => void
-  read?: WindowReader
-  intervalMs?: number
-}): { finish: (cleanExit: boolean) => boolean } {
+export function watchGameWindowSize(
+  child: GameProcessHandle,
+  options: {
+    enabled: () => boolean
+    commit: (size: Pick<GameResolution, 'width' | 'height'>) => void
+    onError: (error: unknown) => void
+    read?: WindowReader
+    intervalMs?: number
+  }
+): { finish: (cleanExit: boolean) => boolean } {
   const pid = child.pid
   if (!pid || !Number.isSafeInteger(pid) || !options.enabled()) return { finish: () => false }
-  let active = true, reported = false, latest: GameWindowSample | undefined, timer: ReturnType<typeof setTimeout> | undefined
-  const report = (error: unknown) => { if (!reported) { reported = true; options.onError(error) } }
+  let active = true,
+    reported = false,
+    latest: GameWindowSample | undefined,
+    timer: ReturnType<typeof setTimeout> | undefined
+  const report = (error: unknown) => {
+    if (!reported) {
+      reported = true
+      options.onError(error)
+    }
+  }
   const sample = () => {
     if (!active || child.exitCode !== null || child.signalCode !== null) return
     void (async () => {
       try {
         const value = await (options.read ?? readOwnedGameWindow)(pid)
         if (active && options.enabled() && validWindowSize(value, pid)) latest = value
-      } catch (error) { if (active) report(error) }
-      finally { if (active) { timer = setTimeout(sample, options.intervalMs ?? 500); timer.unref?.() } }
+      } catch (error) {
+        if (active) report(error)
+      } finally {
+        if (active) {
+          timer = setTimeout(sample, options.intervalMs ?? 500)
+          timer.unref?.()
+        }
+      }
     })()
   }
   sample()
-  return { finish: cleanExit => {
-    if (!active) return false
-    active = false
-    if (timer) clearTimeout(timer)
-    if (!cleanExit || !latest || !options.enabled()) return false
-    try { options.commit({ width: latest.width, height: latest.height }); return true }
-    catch (error) { report(error); return false }
-  } }
+  return {
+    finish: (cleanExit) => {
+      if (!active) return false
+      active = false
+      if (timer) clearTimeout(timer)
+      if (!cleanExit || !latest || !options.enabled()) return false
+      try {
+        options.commit({ width: latest.width, height: latest.height })
+        return true
+      } catch (error) {
+        report(error)
+        return false
+      }
+    },
+  }
 }

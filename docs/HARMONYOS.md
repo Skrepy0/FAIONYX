@@ -6,18 +6,18 @@
 
 2026-10-04 已实际取得维护方 Electron 37.2.0 ARM64 运行时及其完整 ArkTS/HAP 工程，并完成产品接入与文件检查。工程可在 `out/harmonyos/project` 打开；不是仅展示页面的 ArkTS 占位工程。此状态**不等于可发布的鸿蒙版**。
 
-| 门槛 | 实际证据 | 状态 |
-| --- | --- | --- |
-| 维护方运行时取得 | 完整 ZIP 364,103,698 字节，SHA256 固定；内层 TAR 也校验 | 已完成 |
-| 原生工程接入 | `electron` entry、`web_engine` HAR、ArkTS XComponent 与原生 adapter | 已完成工程准备 |
-| 同一产品输出 | main、preload、renderer 逐文件与当前生产输出比对 SHA256 | 文件检查已完成 |
-| ABI 与数据隔离 | 四库均为 ARM64 ELF；不复制用户数据、上游签名、其他系统二进制 | 文件检查已完成 |
-| SDK/Hvigor 编译 | 本机未安装官方 SDK；官方工具列表接口未登录返回 HTTP 401 | 未完成；未生成 HAP |
-| 签名、JIT 授权与安装 | 没有产品签名配置、授权 profile 或真实鸿蒙电脑 | 未覆盖 |
-| 原生界面、毛玻璃与动效 | Electron 37 与当前桌面 Electron 44 存在版本差异 | 未覆盖；不能由文件相同推断 |
-| 本地 Minecraft JVM 与 native libraries | 尚无逐版本通过的 OHOS JVM/JNI/图形/音频组合 | 未覆盖，产品阻止错误平台回退 |
-| FRP、安装器、更新与游戏进程生命周期 | 需要 OHOS 可执行文件、权限及实际服务/设备验证 | 未覆盖 |
-| 维护方运行时完整第三方许可 | 当前二进制归档未附完整 notices；文档和源码许可证不能代替全部二进制许可 | 未完成，阻止公开 HAP 发布 |
+| 门槛                                   | 实际证据                                                               | 状态                         |
+| -------------------------------------- | ---------------------------------------------------------------------- | ---------------------------- |
+| 维护方运行时取得                       | 完整 ZIP 364,103,698 字节，SHA256 固定；内层 TAR 也校验                | 已完成                       |
+| 原生工程接入                           | `electron` entry、`web_engine` HAR、ArkTS XComponent 与原生 adapter    | 已完成工程准备               |
+| 同一产品输出                           | main、preload、renderer 逐文件与当前生产输出比对 SHA256                | 文件检查已完成               |
+| ABI 与数据隔离                         | 四库均为 ARM64 ELF；不复制用户数据、上游签名、其他系统二进制           | 文件检查已完成               |
+| SDK/Hvigor 编译                        | 本机未安装官方 SDK；官方工具列表接口未登录返回 HTTP 401                | 未完成；未生成 HAP           |
+| 签名、JIT 授权与安装                   | 没有产品签名配置、授权 profile 或真实鸿蒙电脑                          | 未覆盖                       |
+| 原生界面、毛玻璃与动效                 | Electron 37 与当前桌面 Electron 44 存在版本差异                        | 未覆盖；不能由文件相同推断   |
+| 本地 Minecraft JVM 与 native libraries | 尚无逐版本通过的 OHOS JVM/JNI/图形/音频组合                            | 未覆盖，产品阻止错误平台回退 |
+| FRP、安装器、更新与游戏进程生命周期    | 需要 OHOS 可执行文件、权限及实际服务/设备验证                          | 未覆盖                       |
+| 维护方运行时完整第三方许可             | 当前二进制归档未附完整 notices；文档和源码许可证不能代替全部二进制许可 | 未完成，阻止公开 HAP 发布    |
 
 `out/harmonyos/inspection-evidence.json` 是工程检查结果；`build-evidence.json` 是编译门槛结果；`compile-attempt.log` 保留未能开始编译的原始原因。它们均明确包含 `gamePassed`、`realDevicePassed` 或对应字段为 false，不能作为完整验收通过报告。
 

@@ -19,13 +19,20 @@ import type {
   ModpackInstallRequest,
   ManualModpackFile,
   ManualModpackRequest,
-  ProgressEvent
+  ProgressEvent,
 } from '../../shared/types'
 import type { DownloadTask } from './download'
 import { prepareModpackFiles } from './modpackDownloads'
 import { runParallelTasks } from './parallelTasks'
 import { ParallelProgress } from './parallelProgress'
-import { resolveCurseForgeMetadata, resolveCurseForgeFileUrl, constructCurseForgeCdnUrl, probeCurseForgeCdnUrl, curseForgeInstallDir, exactModrinthDownload } from './curseforgeDownload'
+import {
+  resolveCurseForgeMetadata,
+  resolveCurseForgeFileUrl,
+  constructCurseForgeCdnUrl,
+  probeCurseForgeCdnUrl,
+  curseForgeInstallDir,
+  exactModrinthDownload,
+} from './curseforgeDownload'
 import { BundledModpackFiles } from './modpackBundledFiles'
 import { LocalModpackFiles } from './modpackLocalFiles'
 import { prepareCurseMavenFile } from './modpackAlternateDownload'
@@ -121,8 +128,12 @@ function safeJoin(base: string, rel: string): string | null {
   if (
     !parts.length ||
     parts.includes('..') ||
-    parts.some((part) => part === '.' || ILLEGAL_WINDOWS_SEGMENT.test(part) || /[:*?"<>|]/.test(part) || (process.platform === 'win32' && /[. ]$/.test(part)))
-  ) return null
+    parts.some(
+      (part) =>
+        part === '.' || ILLEGAL_WINDOWS_SEGMENT.test(part) || /[:*?"<>|]/.test(part) || (process.platform === 'win32' && /[. ]$/.test(part))
+    )
+  )
+    return null
   const root = path.resolve(base)
   const target = path.resolve(root, ...parts)
   const prefix = root.endsWith(path.sep) ? root : root + path.sep
@@ -160,13 +171,22 @@ const normEntry = (name: string): string => name.replace(/\\/g, '/').replace(/^\
 /** 压缩包文件名（去扩展名），作为实例命名来源之一 */
 const packFileName = (filePath: string): string => path.basename(filePath).replace(/\.[^.]+$/, '')
 
-async function openPackZip(filePath: string, signal?: AbortSignal, nested = false, smallNested?: Buffer): Promise<PackZip & { dispose(): Promise<void> }> {
+async function openPackZip(
+  filePath: string,
+  signal?: AbortSignal,
+  nested = false,
+  smallNested?: Buffer
+): Promise<PackZip & { dispose(): Promise<void> }> {
   if (!filePath || !fs.existsSync(filePath)) throw new Error('整合包文件不存在，请重新选择')
-  let zip: (PackZip & { close?(): void | Promise<void> }) | undefined, temporary = ''
+  let zip: (PackZip & { close?(): void | Promise<void> }) | undefined,
+    temporary = ''
   try {
     // Keep the proven fast small-archive path within a fixed 8 MiB ceiling.
     // Large archives/nested entries use disk streams, never whole-file buffers.
-    zip = smallNested || fs.statSync(filePath).size <= 8 * 1024 * 1024 ? new AdmZip(smallNested ?? filePath) : await StreamPackZip.open(filePath, PACK_MAX_ENTRIES, signal)
+    zip =
+      smallNested || fs.statSync(filePath).size <= 8 * 1024 * 1024
+        ? new AdmZip(smallNested ?? filePath)
+        : await StreamPackZip.open(filePath, PACK_MAX_ENTRIES, signal)
     const entries = zip.getEntries()
     if (entries.length > PACK_MAX_ENTRIES) throw new Error('整合包文件数量超过安全上限')
     let unpacked = 0
@@ -180,19 +200,17 @@ async function openPackZip(filePath: string, signal?: AbortSignal, nested = fals
       if (((entry.attr >>> 16) & 0o170000) === 0o120000) {
         throw new Error(`整合包包含不允许的符号链接：${entry.entryName}`)
       }
-      if (
-        entry.header.size > 64 * 1024 * 1024 &&
-        entry.header.size / Math.max(1, entry.header.compressedSize) > PACK_MAX_RATIO
-      ) throw new Error(`整合包条目压缩比异常：${entry.entryName}`)
+      if (entry.header.size > 64 * 1024 * 1024 && entry.header.size / Math.max(1, entry.header.compressedSize) > PACK_MAX_RATIO)
+        throw new Error(`整合包条目压缩比异常：${entry.entryName}`)
     }
     if (unpacked > PACK_MAX_UNCOMPRESSED) throw new Error('整合包解压后超过 32 GB 安全上限')
     if (unpacked > 64 * 1024 * 1024 && unpacked / Math.max(1, packed) > PACK_MAX_RATIO) {
       throw new Error('整合包整体压缩比异常，疑似解压炸弹')
     }
     // PCL 分发包在外层放启动器，真正的清单位于独立 mrpack 中；仅读取清单包，不执行/导入外层 EXE。
-    const names = new Set(entries.map(entry => normEntry(entry.entryName)))
-    if (!nested && !names.has('modrinth.index.json') && !names.has('manifest.json') && !await detectFullpackEntry(zip)) {
-      const packs = entries.filter(entry => !entry.isDirectory && /\.mrpack$/i.test(entry.entryName))
+    const names = new Set(entries.map((entry) => normEntry(entry.entryName)))
+    if (!nested && !names.has('modrinth.index.json') && !names.has('manifest.json') && !(await detectFullpackEntry(zip))) {
+      const packs = entries.filter((entry) => !entry.isDirectory && /\.mrpack$/i.test(entry.entryName))
       if (packs.length > 1) throw new Error('整合包包含多个 mrpack，请解压后选择要导入的那个 mrpack')
       if (packs.length === 1) {
         if (packs[0].header.size > 512 * 1024 * 1024) throw new Error('整合包内层 mrpack 超过 512 MB，请解压后直接导入')
@@ -205,10 +223,14 @@ async function openPackZip(filePath: string, signal?: AbortSignal, nested = fals
         const innerFile = path.join(temporary, 'inner.mrpack')
         await writePackEntry(packs[0], innerFile, signal)
         await zip.close?.()
-        const inner = await openPackZip(innerFile, signal, true), innerDispose = inner.dispose
+        const inner = await openPackZip(innerFile, signal, true),
+          innerDispose = inner.dispose
         const ownedTemporary = temporary
         temporary = ''
-        inner.dispose = async () => { await innerDispose(); await fs.promises.rm(ownedTemporary, { recursive: true, force: true }) }
+        inner.dispose = async () => {
+          await innerDispose()
+          await fs.promises.rm(ownedTemporary, { recursive: true, force: true })
+        }
         return inner
       }
     }
@@ -278,9 +300,7 @@ async function detectFullpackEntry(zip: PackZip): Promise<FullpackDetected | nul
   return pool.find((c) => /fabric|forge|quilt|neoforge/i.test(c.vid)) ?? pool[0]
 }
 
-type Detected =
-  | { format: 'mrpack' | 'curseforge' }
-  | { format: 'fullpack'; full: FullpackDetected }
+type Detected = { format: 'mrpack' | 'curseforge' } | { format: 'fullpack'; full: FullpackDetected }
 
 /** 三格式探测：mrpack → curseforge → fullpack，均不命中抛错 */
 async function detectPack(zip: PackZip): Promise<Detected> {
@@ -289,9 +309,7 @@ async function detectPack(zip: PackZip): Promise<Detected> {
   if (names.has('manifest.json')) return { format: 'curseforge' }
   const full = await detectFullpackEntry(zip)
   if (full) return { format: 'fullpack', full }
-  throw new Error(
-    '无法识别的整合包格式（支持 Modrinth .mrpack、CurseForge .zip 与含 versions 目录的完整客户端包）'
-  )
+  throw new Error('无法识别的整合包格式（支持 Modrinth .mrpack、CurseForge .zip 与含 versions 目录的完整客户端包）')
 }
 
 // ---------------- Modrinth .mrpack ----------------
@@ -301,13 +319,13 @@ const MR_LOADERS: Array<[string, LoaderName]> = [
   ['fabric-loader', 'fabric'],
   ['quilt-loader', 'quilt'],
   ['neoforge', 'neoforge'],
-  ['forge', 'forge']
+  ['forge', 'forge'],
 ]
 
 async function parseMrpack(zip: PackZip): Promise<Parsed> {
   let idx: MrpackIndex | null = null
   try {
-    idx = await readEntryJson(zip, 'modrinth.index.json') as MrpackIndex | null
+    idx = (await readEntryJson(zip, 'modrinth.index.json')) as MrpackIndex | null
   } catch {
     throw new Error('modrinth.index.json 已损坏，整合包无法解析')
   }
@@ -366,7 +384,7 @@ async function parseMrpack(zip: PackZip): Promise<Parsed> {
       urls: urls.slice(1),
       sha1,
       sha512,
-      size: f.fileSize ?? 0
+      size: f.fileSize ?? 0,
     })
   }
 
@@ -379,9 +397,9 @@ async function parseMrpack(zip: PackZip): Promise<Parsed> {
       loader,
       loaderVersion,
       overridesPrefix: 'overrides',
-      clientOverridesPrefix: 'client-overrides'
+      clientOverridesPrefix: 'client-overrides',
     },
-    files
+    files,
   }
 }
 
@@ -392,7 +410,7 @@ const CF_LOADER_IDS = new Set(['fabric', 'forge', 'quilt', 'neoforge'])
 async function parseCurseForge(zip: PackZip): Promise<Parsed> {
   let mf: CfManifest | null = null
   try {
-    mf = await readEntryJson(zip, 'manifest.json') as CfManifest | null
+    mf = (await readEntryJson(zip, 'manifest.json')) as CfManifest | null
   } catch {
     throw new Error('manifest.json 已损坏，整合包无法解析')
   }
@@ -422,11 +440,11 @@ async function parseCurseForge(zip: PackZip): Promise<Parsed> {
       mcVersion,
       loader,
       loaderVersion,
-      overridesPrefix: mf?.overrides ?? 'overrides'
+      overridesPrefix: mf?.overrides ?? 'overrides',
     },
     files: (mf?.files ?? [])
       .filter((f) => !!f?.projectID && !!f?.fileID)
-      .map((f) => ({ projectID: f.projectID as number, fileID: f.fileID as number }))
+      .map((f) => ({ projectID: f.projectID as number, fileID: f.fileID as number })),
   }
 }
 
@@ -445,7 +463,7 @@ const FULL_LOADER_GUESS: Array<[LoaderName, RegExp]> = [
   ['neoforge', /neoforge[-_]([0-9][\w.]*)/],
   ['fabric', /fabric-loader[-_]([0-9][\w.]*)/],
   ['quilt', /quilt-loader[-_]([0-9][\w.]*)/],
-  ['forge', /forge[-_]([0-9][\w.]*)/]
+  ['forge', /forge[-_]([0-9][\w.]*)/],
 ]
 
 /** 解析全量包版本 json：mcVersion 取 inheritsFrom（无则 id）；loader 由 _loader 或 id 关键词推断 */
@@ -463,8 +481,7 @@ async function parseFullpack(zip: PackZip, det: FullpackDetected): Promise<Fullp
     throw new Error('包内版本描述文件已损坏，整合包无法解析')
   }
   const id = typeof json?.id === 'string' && json.id ? json.id : det.vid
-  const mcVersion =
-    typeof json?.inheritsFrom === 'string' && json.inheritsFrom ? json.inheritsFrom : id
+  const mcVersion = typeof json?.inheritsFrom === 'string' && json.inheritsFrom ? json.inheritsFrom : id
 
   let loader: LoaderName | undefined
   let loaderVersion: string | undefined
@@ -536,17 +553,14 @@ const GAME_ROOT_HINTS = new Set([
   'options.txt',
   'optionsof.txt',
   'servers.dat',
-  'servers.dat_old'
+  'servers.dat_old',
 ])
 
 /**
  * 计算全量包普通条目相对游戏根的路径与来源优先级。
  * score 2 = 来自 .minecraft/ 下（多处前缀冲突时优先）；1 = 游戏根前缀 / zip 根；null = 与游戏无关跳过
  */
-function fullpackGameRel(
-  name: string,
-  det: FullpackDetected
-): { rel: string; score: number } | null {
+function fullpackGameRel(name: string, det: FullpackDetected): { rel: string; score: number } | null {
   if (det.prefix && name.startsWith(det.prefix)) {
     const rel = name.slice(det.prefix.length)
     if (!rel) return null
@@ -640,71 +654,78 @@ async function installFullpack(
   let done = 0
   const createdFiles: string[] = []
   const extract = async (): Promise<string> => {
-   try {
-    for (const op of ops) {
-      throwIfCancelled(signal)
-      done++
-      if (!(op.skipIfExists && fs.existsSync(op.dest))) {
-        fs.mkdirSync(path.dirname(op.dest), { recursive: true })
-        // Track creation as soon as our exclusive handle opens, so cancelled or
-        // corrupt streams also roll back partial files outside the new instance.
-        await writePackEntry(op.entry, op.dest, signal, { exclusive: true, onCreated: () => createdFiles.push(op.dest) })
-      }
-      if (done % 8 === 0 || done === total) {
-        emit({
-          stage: 'modpack',
-          progress: 0.05 + (total ? (done / total) * 0.9 : 0.9),
-          text: `解压游戏文件 ${done}/${total}`
-        })
-        // 让主进程有机会处理“取消”IPC，避免大量同步 ZIP 条目饿死事件循环。
-        await new Promise<void>((resolve) => setImmediate(resolve))
-      }
-    }
-
-    // 版本注册校验：版本 json 必须就位（zip 内必有，除非被意外跳过）
-    if (!fs.existsSync(versionJsonPath(meta.vid))) {
-      throw new Error('游戏版本注册失败：包内缺少有效的版本描述文件')
-    }
-
-    throwIfCancelled(signal)
-    emit({ stage: 'modpack', progress: 0.97, text: '创建游戏实例…' })
-    const instanceJson = {
-      id,
-      inheritsFrom: meta.vid,
-      ...(meta.loader ? { _loader: meta.loader, _loaderVersion: meta.loaderVersion } : {}),
-      _gameDir: true,
-      _modpackName: name,
-      _modpackVersion: meta.vid
-    }
-    fs.writeFileSync(versionJsonPath(id), JSON.stringify(instanceJson, null, 2), 'utf-8')
-    registerVersionFolder(id, gameDir())
-    // 自包含化：把包内/继承的运行时内容合并进实例（基础版本改名/删除不再影响本实例）
     try {
-      flattenInstance(id)
-    } catch {
-      /* flatten 失败保留旧式继承，不影响启动 */
-    }
+      for (const op of ops) {
+        throwIfCancelled(signal)
+        done++
+        if (!(op.skipIfExists && fs.existsSync(op.dest))) {
+          fs.mkdirSync(path.dirname(op.dest), { recursive: true })
+          // Track creation as soon as our exclusive handle opens, so cancelled or
+          // corrupt streams also roll back partial files outside the new instance.
+          await writePackEntry(op.entry, op.dest, signal, { exclusive: true, onCreated: () => createdFiles.push(op.dest) })
+        }
+        if (done % 8 === 0 || done === total) {
+          emit({
+            stage: 'modpack',
+            progress: 0.05 + (total ? (done / total) * 0.9 : 0.9),
+            text: `解压游戏文件 ${done}/${total}`,
+          })
+          // 让主进程有机会处理“取消”IPC，避免大量同步 ZIP 条目饿死事件循环。
+          await new Promise<void>((resolve) => setImmediate(resolve))
+        }
+      }
 
-    emit({ stage: 'done', progress: 1, text: `${name} 安装完成` })
-    return id
-  } catch (e) {
-    // 只回滚本次新建文件；skipIfExists 的用户既有版本文件绝不删除。
-    for (const file of createdFiles.reverse()) fs.rmSync(file, { force: true })
-    fs.rmSync(instDir, { recursive: true, force: true })
-    throw e
-   }
+      // 版本注册校验：版本 json 必须就位（zip 内必有，除非被意外跳过）
+      if (!fs.existsSync(versionJsonPath(meta.vid))) {
+        throw new Error('游戏版本注册失败：包内缺少有效的版本描述文件')
+      }
+
+      throwIfCancelled(signal)
+      emit({ stage: 'modpack', progress: 0.97, text: '创建游戏实例…' })
+      const instanceJson = {
+        id,
+        inheritsFrom: meta.vid,
+        ...(meta.loader ? { _loader: meta.loader, _loaderVersion: meta.loaderVersion } : {}),
+        _gameDir: true,
+        _modpackName: name,
+        _modpackVersion: meta.vid,
+      }
+      fs.writeFileSync(versionJsonPath(id), JSON.stringify(instanceJson, null, 2), 'utf-8')
+      registerVersionFolder(id, gameDir())
+      // 自包含化：把包内/继承的运行时内容合并进实例（基础版本改名/删除不再影响本实例）
+      try {
+        flattenInstance(id)
+      } catch {
+        /* flatten 失败保留旧式继承，不影响启动 */
+      }
+
+      emit({ stage: 'done', progress: 1, text: `${name} 安装完成` })
+      return id
+    } catch (e) {
+      // 只回滚本次新建文件；skipIfExists 的用户既有版本文件绝不删除。
+      for (const file of createdFiles.reverse()) fs.rmSync(file, { force: true })
+      fs.rmSync(instDir, { recursive: true, force: true })
+      throw e
+    }
   }
   // Shared shipped versions must remain locked until commit or rollback. This
   // also coordinates with vanilla installs; a second pack cannot observe a
   // half-written JSON/JAR or adopt files which the first task later removes.
-  const destinations = [...new Map([...shippedVids].map(vid => {
-    const directory = path.resolve(versionDir(vid))
-    return [fileJobKey(directory), directory] as const
-  })).entries()].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([, directory]) => directory)
-  const register = (index: number): Promise<string> => index === destinations.length
-    ? extract()
-    : withFileJob(destinations[index], signal, () => register(index + 1))
-  try { return await register(0) } catch (error) {
+  const destinations = [
+    ...new Map(
+      [...shippedVids].map((vid) => {
+        const directory = path.resolve(versionDir(vid))
+        return [fileJobKey(directory), directory] as const
+      })
+    ).entries(),
+  ]
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([, directory]) => directory)
+  const register = (index: number): Promise<string> =>
+    index === destinations.length ? extract() : withFileJob(destinations[index], signal, () => register(index + 1))
+  try {
+    return await register(0)
+  } catch (error) {
     // A cancelled lock waiter has created only its private instance directory.
     fs.rmSync(instDir, { recursive: true, force: true })
     throw error
@@ -740,7 +761,10 @@ async function mapPool<T, R>(
       out[i] = await fn(items[i], i, signal)
     }
   }
-  await runParallelTasks(Array.from({ length: Math.min(limit, items.length) }, () => worker), signal)
+  await runParallelTasks(
+    Array.from({ length: Math.min(limit, items.length) }, () => worker),
+    signal
+  )
   return out
 }
 
@@ -755,46 +779,58 @@ export async function extractOverrides(
   if (!prefix) return []
   const pre = normEntry(prefix).replace(/\/+$/, '') + '/'
   const extracted: string[] = []
-  const files = zip.getEntries().filter(entry => !entry.isDirectory && normEntry(entry.entryName).startsWith(pre)).map(entry => {
-    throwIfCancelled(signal)
-    const name = normEntry(entry.entryName)
-    const rel = name.slice(pre.length)
-    const dest = safeJoin(destDir, rel)
-    if (!dest) throw new Error(`overrides 包含不安全路径：${rel}`)
-    if (((entry.attr >>> 16) & 0o170000) === 0o120000) {
-      throw new Error(`overrides 不允许符号链接：${rel}`)
-    }
-    if (entry.header.size > 512 * 1024 * 1024) throw new Error(`overrides 单文件超过 512 MB：${rel}`)
-    return { entry, dest, rel: rel.replace(/\\/g, '/') }
-  })
+  const files = zip
+    .getEntries()
+    .filter((entry) => !entry.isDirectory && normEntry(entry.entryName).startsWith(pre))
+    .map((entry) => {
+      throwIfCancelled(signal)
+      const name = normEntry(entry.entryName)
+      const rel = name.slice(pre.length)
+      const dest = safeJoin(destDir, rel)
+      if (!dest) throw new Error(`overrides 包含不安全路径：${rel}`)
+      if (((entry.attr >>> 16) & 0o170000) === 0o120000) {
+        throw new Error(`overrides 不允许符号链接：${rel}`)
+      }
+      if (entry.header.size > 512 * 1024 * 1024) throw new Error(`overrides 单文件超过 512 MB：${rel}`)
+      return { entry, dest, rel: rel.replace(/\\/g, '/') }
+    })
   const directories = new Map<string, Promise<unknown>>()
   let lastReported = 0
   for (let cursor = 0; cursor < files.length;) {
     // Bound both memory and writes. Large entries run alone; aliases never write
     // concurrently. Preserve ZIP order and drain all writers before rollback.
-    const batch: typeof files = [], destinations = new Set<string>()
+    const batch: typeof files = [],
+      destinations = new Set<string>()
     let bytes = 0
     while (cursor < files.length && batch.length < 4) {
       // macOS commonly uses case-insensitive volumes. Serialize aliases on
       // every host, preserving ZIP order even on case-sensitive filesystems.
-      const item = files[cursor], key = item.dest.normalize('NFC').toUpperCase()
+      const item = files[cursor],
+        key = item.dest.normalize('NFC').toUpperCase()
       if (batch.length && (bytes + item.entry.header.size > 16 * 1024 * 1024 || destinations.has(key))) break
-      batch.push(item); destinations.add(key); bytes += item.entry.header.size; cursor++
+      batch.push(item)
+      destinations.add(key)
+      bytes += item.entry.header.size
+      cursor++
     }
-    await runParallelTasks(batch.map(item => async signal => {
-      await waitIfTaskPaused(signal); throwIfCancelled(signal)
-      const dir = path.dirname(item.dest)
-      if (!directories.has(dir)) directories.set(dir, fs.promises.mkdir(dir, { recursive: true }))
-      await directories.get(dir)
-      if (item.entry.writeTo) await item.entry.writeTo(item.dest, signal)
-      else {
-        // Small archives retain the original synchronous decode/write path.
-        const data = item.entry.getData() as Buffer
+    await runParallelTasks(
+      batch.map((item) => async (signal) => {
+        await waitIfTaskPaused(signal)
         throwIfCancelled(signal)
-        await fs.promises.writeFile(item.dest, data, { signal })
-      }
-    }), signal)
-    extracted.push(...batch.map(item => item.rel))
+        const dir = path.dirname(item.dest)
+        if (!directories.has(dir)) directories.set(dir, fs.promises.mkdir(dir, { recursive: true }))
+        await directories.get(dir)
+        if (item.entry.writeTo) await item.entry.writeTo(item.dest, signal)
+        else {
+          // Small archives retain the original synchronous decode/write path.
+          const data = item.entry.getData() as Buffer
+          throwIfCancelled(signal)
+          await fs.promises.writeFile(item.dest, data, { signal })
+        }
+      }),
+      signal
+    )
+    extracted.push(...batch.map((item) => item.rel))
     if (extracted.length === files.length || performance.now() - lastReported >= 100) {
       lastReported = performance.now()
       progress?.(extracted.length, files.length, batch.at(-1)!.rel)
@@ -811,18 +847,16 @@ const normalizedInstanceName = (value: string): string =>
 function existingPackInstances(meta: PackMeta, fileName: string): ModpackInfo['existingInstances'] {
   const names = new Set([normalizedInstanceName(meta.name), normalizedInstanceName(fileName)])
   try {
-    return listAllInstalled()
-      .map((item) => ({
-        id: item.id,
-        folder: item.folder,
-        sameNormalizedName:
-          names.has(normalizedInstanceName(item.id)) ||
-          (!!item.modpackName && names.has(normalizedInstanceName(item.modpackName))),
-        samePackVersion:
-          !!item.modpackName &&
-          normalizedInstanceName(item.modpackName) === normalizedInstanceName(meta.name) &&
-          item.modpackVersion === meta.packVersion
-      }))
+    return listAllInstalled().map((item) => ({
+      id: item.id,
+      folder: item.folder,
+      sameNormalizedName:
+        names.has(normalizedInstanceName(item.id)) || (!!item.modpackName && names.has(normalizedInstanceName(item.modpackName))),
+      samePackVersion:
+        !!item.modpackName &&
+        normalizedInstanceName(item.modpackName) === normalizedInstanceName(meta.name) &&
+        item.modpackVersion === meta.packVersion,
+    }))
   } catch {
     return []
   }
@@ -837,27 +871,14 @@ interface PackTransactionManifest {
 }
 
 const PACK_MANIFEST = '.faionyx-modpack.json'
-const PRESERVE_ROOTS = new Set([
-  'saves',
-  'mods',
-  'config',
-  'resourcepacks',
-  'shaderpacks',
-  'screenshots',
-  'options.txt',
-  'servers.dat'
-])
+const PRESERVE_ROOTS = new Set(['saves', 'mods', 'config', 'resourcepacks', 'shaderpacks', 'screenshots', 'options.txt', 'servers.dat'])
 
 function readManagedFiles(instanceDir: string): Set<string> {
   try {
     const value = JSON.parse(fs.readFileSync(path.join(instanceDir, PACK_MANIFEST), 'utf-8')) as {
       managedFiles?: unknown
     }
-    return new Set(
-      Array.isArray(value.managedFiles)
-        ? value.managedFiles.filter((item): item is string => typeof item === 'string')
-        : []
-    )
+    return new Set(Array.isArray(value.managedFiles) ? value.managedFiles.filter((item): item is string => typeof item === 'string') : [])
   } catch {
     return new Set()
   }
@@ -870,16 +891,14 @@ export async function restoreModpackUserFiles(
   oldManaged: ReadonlySet<string>,
   signal?: AbortSignal
 ): Promise<void> {
-  const queue: Array<{ source: string; destination: string; rel: string }> = [
-    { source: backup, destination, rel: '' }
-  ]
+  const queue: Array<{ source: string; destination: string; rel: string }> = [{ source: backup, destination, rel: '' }]
   while (queue.length) {
     throwIfCancelled(signal)
     const current = queue.pop()!
     for (const entry of await fs.promises.readdir(current.source, { withFileTypes: true })) {
       const rel = current.rel ? `${current.rel}/${entry.name}` : entry.name
       const top = rel.split('/')[0]
-      if (rel === PACK_MANIFEST || /^\.installing$/i.test(rel) || /\.json$|\.jar$/i.test(rel) && !current.rel) continue
+      if (rel === PACK_MANIFEST || /^\.installing$/i.test(rel) || (/\.json$|\.jar$/i.test(rel) && !current.rel)) continue
       if (action === 'overwrite' && !PRESERVE_ROOTS.has(top)) continue
       if (oldManaged.has(rel)) continue
       const source = path.join(current.source, entry.name)
@@ -911,17 +930,23 @@ function requestedGameFolder(input?: string): string {
 export async function probeModpack(filePath: string): Promise<ModpackInfo> {
   packLog.debug(`解析整合包元信息：${path.basename(filePath)}`)
   const zip = await openPackZip(filePath)
-  try { return await modpackInfo(zip, filePath) } finally { await zip.dispose() }
+  try {
+    return await modpackInfo(zip, filePath)
+  } finally {
+    await zip.dispose()
+  }
 }
 
 /** A recognized pack must never fall through to its bundled worlds, even when malformed. */
 export async function probeRecognizedModpack(filePath: string): Promise<ModpackInfo | null> {
   const zip = await openPackZip(filePath)
   try {
-  const names = new Set(zip.getEntries().map(entry => normEntry(entry.entryName)))
-  if (!names.has('modrinth.index.json') && !names.has('manifest.json') && !await detectFullpackEntry(zip)) return null
-  return await modpackInfo(zip, filePath)
-  } finally { await zip.dispose() }
+    const names = new Set(zip.getEntries().map((entry) => normEntry(entry.entryName)))
+    if (!names.has('modrinth.index.json') && !names.has('manifest.json') && !(await detectFullpackEntry(zip))) return null
+    return await modpackInfo(zip, filePath)
+  } finally {
+    await zip.dispose()
+  }
 }
 
 async function modpackInfo(zip: PackZip, filePath: string): Promise<ModpackInfo> {
@@ -942,7 +967,7 @@ async function modpackInfo(zip: PackZip, filePath: string): Promise<ModpackInfo>
       downloadBytes: entries.reduce((sum, entry) => sum + entry.header.size, 0),
       hasOverrides: false,
       hasClientOverrides: false,
-      existingInstances: []
+      existingInstances: [],
     }
   }
   const parsed = await (detected.format === 'mrpack' ? parseMrpack(zip) : parseCurseForge(zip))
@@ -957,18 +982,20 @@ async function modpackInfo(zip: PackZip, filePath: string): Promise<ModpackInfo>
     loader: meta.loader,
     loaderVersion: meta.loaderVersion,
     fileCount: files.length,
-    downloadBytes:
-      parsed.kind === 'mrpack' ? parsed.files.reduce((sum, file) => sum + file.size, 0) : 0,
-    hasOverrides: !!meta.overridesPrefix && zip.getEntries().some((entry) => normEntry(entry.entryName).startsWith(`${meta.overridesPrefix}/`)),
+    downloadBytes: parsed.kind === 'mrpack' ? parsed.files.reduce((sum, file) => sum + file.size, 0) : 0,
+    hasOverrides:
+      !!meta.overridesPrefix && zip.getEntries().some((entry) => normEntry(entry.entryName).startsWith(`${meta.overridesPrefix}/`)),
     hasClientOverrides:
       !!meta.clientOverridesPrefix &&
       zip.getEntries().some((entry) => normEntry(entry.entryName).startsWith(`${meta.clientOverridesPrefix}/`)),
     hasPresetKeys: zip.getEntries().some((entry) => {
       const name = normEntry(entry.entryName)
-      return name === `${meta.overridesPrefix}/options.txt` ||
+      return (
+        name === `${meta.overridesPrefix}/options.txt` ||
         (!!meta.clientOverridesPrefix && name === `${meta.clientOverridesPrefix}/options.txt`)
+      )
     }),
-    existingInstances: existingPackInstances(meta, fileName)
+    existingInstances: existingPackInstances(meta, fileName),
   }
 }
 
@@ -977,11 +1004,7 @@ async function modpackInfo(zip: PackZip, filePath: string): Promise<ModpackInfo>
  * 实例版本 json 带 _gameDir: true（启动时游戏目录隔离到 versions/<id>）。
  * opts.nameSource：'file'（默认）以压缩包文件名命名实例；'inner' 以包内名称命名
  */
-export async function installModpack(
-  filePath: string,
-  emit: ProgressEmit,
-  opts?: ModpackInstallOpts
-): Promise<string> {
+export async function installModpack(filePath: string, emit: ProgressEmit, opts?: ModpackInstallOpts): Promise<string> {
   const started = Date.now()
   packLog.info(`开始安装整合包 ${path.basename(filePath)} → 文件夹 ${opts?.targetFolder || '当前活动文件夹'}`)
   try {
@@ -1003,273 +1026,312 @@ export async function installModpack(
 
 async function installModpackInFolder(filePath: string, emit: ProgressEmit, opts?: ModpackInstallOpts): Promise<string> {
   let manualFiles: ManualModpackRequest | null = null
-  const report: ProgressEmit = (event) =>
-    emit({ ...event, manualFiles, overall: event.overall ?? event.progress })
+  const report: ProgressEmit = (event) => emit({ ...event, manualFiles, overall: event.overall ?? event.progress })
   const targetFolder = requestedGameFolder(opts?.targetFolder)
   // 1) 校验存在性与 zip 可读、探测格式
   const zip = await openPackZip(filePath, opts?.signal)
   try {
-  const nameSource = opts?.nameSource === 'inner' ? 'inner' : 'file'
-  const fileName = packFileName(filePath)
-  const detected = await detectPack(zip)
+    const nameSource = opts?.nameSource === 'inner' ? 'inner' : 'file'
+    const fileName = packFileName(filePath)
+    const detected = await detectPack(zip)
 
-  // 全量包：解压即玩，无需下载
-  if (detected.format === 'fullpack') {
-    return await installFullpack(zip, detected.full, fileName, nameSource, report, opts?.signal)
-  }
+    // 全量包：解压即玩，无需下载
+    if (detected.format === 'fullpack') {
+      return await installFullpack(zip, detected.full, fileName, nameSource, report, opts?.signal)
+    }
 
-  // 2) 解析清单
-  report({ stage: 'modpack', progress: 0, text: '解析整合包信息…' })
-  const parsed = await (detected.format === 'mrpack' ? parseMrpack(zip) : parseCurseForge(zip))
-  throwIfCancelled(opts?.signal)
-  const { meta } = parsed
-  const loaderText = meta.loader ? ` + ${meta.loader} ${meta.loaderVersion ?? ''}` : ''
-  report({
-    stage: 'modpack',
-    progress: 0.02,
-    text: `${meta.name}（MC ${meta.mcVersion}${loaderText}）`
-  })
+    // 2) 解析清单
+    report({ stage: 'modpack', progress: 0, text: '解析整合包信息…' })
+    const parsed = await (detected.format === 'mrpack' ? parseMrpack(zip) : parseCurseForge(zip))
+    throwIfCancelled(opts?.signal)
+    const { meta } = parsed
+    const loaderText = meta.loader ? ` + ${meta.loader} ${meta.loaderVersion ?? ''}` : ''
+    report({
+      stage: 'modpack',
+      progress: 0.02,
+      text: `${meta.name}（MC ${meta.mcVersion}${loaderText}）`,
+    })
 
-  // 3) 实例命名与冲突动作。更新/覆盖必须携带确认页的显式确认。
-  const requestedName = sanitizeId(
-    opts?.instanceName?.trim() || (nameSource === 'inner' ? meta.name : fileName)
-  )
-  const action = opts?.conflictAction ?? 'new'
-  let id: string
-  let backupDir = ''
-  let oldManaged = new Set<string>()
-  if (action === 'update' || action === 'overwrite') {
-    if (!opts?.confirmReplace) throw new Error(`${action === 'update' ? '更新' : '覆盖'}现有实例前必须在确认页明确确认`)
-    id = sanitizeId(opts.existingId ?? '')
-    if (!opts.existingId || id !== opts.existingId.trim()) throw new Error('需要选择有效的现有实例')
-    const existing = listAllInstalled().find((item) => item.id === id && samePath(item.folder, targetFolder))
-    if (!existing) throw new Error(`目标文件夹中找不到待${action === 'update' ? '更新' : '覆盖'}实例：${id}`)
+    // 3) 实例命名与冲突动作。更新/覆盖必须携带确认页的显式确认。
+    const requestedName = sanitizeId(opts?.instanceName?.trim() || (nameSource === 'inner' ? meta.name : fileName))
+    const action = opts?.conflictAction ?? 'new'
+    let id: string
+    let backupDir = ''
+    let oldManaged = new Set<string>()
+    if (action === 'update' || action === 'overwrite') {
+      if (!opts?.confirmReplace) throw new Error(`${action === 'update' ? '更新' : '覆盖'}现有实例前必须在确认页明确确认`)
+      id = sanitizeId(opts.existingId ?? '')
+      if (!opts.existingId || id !== opts.existingId.trim()) throw new Error('需要选择有效的现有实例')
+      const existing = listAllInstalled().find((item) => item.id === id && samePath(item.folder, targetFolder))
+      if (!existing) throw new Error(`目标文件夹中找不到待${action === 'update' ? '更新' : '覆盖'}实例：${id}`)
+      registerVersionFolder(id, targetFolder)
+      const currentDir = versionDir(id)
+      await backupInstance({ folder: targetFolder, id }, '整合包覆盖前', true, undefined, opts?.signal)
+      oldManaged = readManagedFiles(currentDir)
+      backupDir = path.join(path.dirname(currentDir), `.${path.basename(currentDir)}.faionyx-backup-${crypto.randomUUID()}`)
+      fs.renameSync(currentDir, backupDir)
+    } else if (action === 'rename') {
+      id = requestedName
+      if (fs.existsSync(path.join(targetFolder, 'versions', id))) throw new Error(`实例名称已存在：${id}`)
+    } else {
+      id = uniqueInstanceId(requestedName)
+    }
     registerVersionFolder(id, targetFolder)
-    const currentDir = versionDir(id)
-    await backupInstance({folder:targetFolder,id},'整合包覆盖前',true,undefined,opts?.signal)
-    oldManaged = readManagedFiles(currentDir)
-    backupDir = path.join(path.dirname(currentDir), `.${path.basename(currentDir)}.faionyx-backup-${crypto.randomUUID()}`)
-    fs.renameSync(currentDir, backupDir)
-  } else if (action === 'rename') {
-    id = requestedName
-    if (fs.existsSync(path.join(targetFolder, 'versions', id))) throw new Error(`实例名称已存在：${id}`)
-  } else {
-    id = uniqueInstanceId(requestedName)
-  }
-  registerVersionFolder(id, targetFolder)
-  const instDir = versionDir(id)
-  let prepared: Awaited<ReturnType<typeof prepareModpackFiles>> | undefined
+    const instDir = versionDir(id)
+    let prepared: Awaited<ReturnType<typeof prepareModpackFiles>> | undefined
 
-  try {
-    // Download immutable pack files while preparing the runtime; commit only after both succeed.
-    const parallel = new ParallelProgress([
-      { id: 'runtime', label: '游戏环境与加载器', weight: 0.44 },
-      { id: 'pack', label: '整合包文件', weight: 0.47 }
-    ], report, '同步准备游戏环境与整合包文件', [0.04, 0.95])
-    let pending: PendingFile[] = []
-    const manual: ManualModpackFile[] = []
-    const [installedId] = await runParallelTasks([
-      async (signal) => {
-        const installedId = await installVersion(
-          meta.mcVersion,
-          { instanceName: id, ...(meta.loader ? { loader: meta.loader, loaderVersion: meta.loaderVersion } : {}) },
-          event => parallel.update('runtime', event), signal
-        )
-        parallel.done('runtime')
-        return installedId
-      },
-      async (signal) => {
-        parallel.update('pack', { stage: 'modpack', progress: 0, text: '准备整合包文件清单' })
-        if (parsed.kind === 'mrpack') {
-          pending = parsed.files
-        } else {
-          // Match immutable identity before requesting a URL. Preserve bundled paths;
-          // otherwise copy verified local files or download the exact manifest version.
-          const cfFiles = parsed.files
-          const bundled = new BundledModpackFiles(zip, meta.overridesPrefix)
-          const localFiles = new LocalModpackFiles([...allFolders(), targetFolder])
-          const sources = await cfSources()
-          let resolved = 0, reused = 0, reusedLocal = 0, alternate = 0
-          const infos = await mapPool(
-            cfFiles,
-            8,
-            async (f, _index, signal) => {
-              const info = await resolveCurseForgeMetadata(f.projectID, f.fileID, sources, signal)
-              const local = await bundled.find(info, signal)
-              let existing: string | null = null
-              if (local) reused++
-              else if (!info.isAvailable || !info.url) {
-                existing = await localFiles.find(info, signal)
-                if (existing) reusedLocal++
-                else {
-                  info.url = info.isAvailable ? await resolveCurseForgeFileUrl(f.projectID, f.fileID, sources, signal) : null
-                  if (!info.url && info.isAvailable) {
-                    const cdn = constructCurseForgeCdnUrl(f.fileID, info.fileName)
-                    if (await probeCurseForgeCdnUrl(cdn, signal)) info.url = cdn
-                  }
-                  info.url ??= await exactModrinthDownload(info, signal)
-                  if (!info.url) {
-                    existing = await prepareCurseMavenFile(f.projectID, f.fileID, info, getSettings().mirror, signal)
-                    if (existing) alternate++
-                    else manual.push({ ...f, fileName: info.fileName, size: info.size, sha1: info.sha1 })
-                  }
-                }
-              }
-              resolved++
-              parallel.update('pack', {
-                stage: 'modpack',
-                progress: cfFiles.length ? (resolved / cfFiles.length) * 0.04 : 0,
-                text: `校验整合包文件 ${resolved}/${cfFiles.length} · 包内 ${reused} 个 · 本地 ${reusedLocal} 个 · 自动补全 ${alternate} 个`
-              })
-              return local ? null : {
-                rel: `${await curseForgeInstallDir(f.projectID, info.fileName, sources, signal)}/${info.fileName}`,
-                url: info.url ?? '', size: info.size, sha1: info.sha1,
-                reuseFiles: existing ? [existing] : undefined
-              }
-            },
-            signal
-          )
-          pending = infos.filter((info): info is NonNullable<typeof info> => info !== null)
-          packLog.info(`CurseForge 清单 ${cfFiles.length} 个文件：复用包内 ${reused} 个、本地 ${reusedLocal} 个，备用源补全 ${alternate} 个，自动下载 ${pending.length - manual.length - reusedLocal - alternate} 个，待补充 ${manual.length} 个`)
-        }
-
-        const tasks: DownloadTask[] = []
-        for (const f of pending) {
-          const dest = safeJoin(instDir, f.rel)
-          if (!dest) throw new Error(`整合包文件路径不安全：${f.rel}`)
-          tasks.push({
-            label: f.rel,
-            url: f.url,
-            urls: f.urls,
-            reuseFiles: f.reuseFiles,
-            dest,
-            sha1: f.sha1,
-            sha512: f.sha512,
-            size: f.size || undefined
-          })
-        }
-
-        try {
-          const automatic = tasks.filter(task => !!task.url || !!task.reuseFiles?.length)
-          const localTasks = tasks.filter(task => !task.url && !task.reuseFiles?.length)
-          const downloadProgress: Parameters<typeof prepareModpackFiles>[1] = (d, t, speed, detail) => {
-            const doneBytes = detail.bytesDone
-            const ratio = detail.fraction ?? 0
-            parallel.update('pack', {
-              stage: 'modpack',
-              progress: 0.04 + ratio * 0.96,
-              text:
-                detail.bytesTotal != null
-                  ? `下载整合包文件 ${d}/${t}（${fmtMB(doneBytes)}/${fmtMB(detail.bytesTotal)}）${detail.activeFiles?.length && detail.activeFiles.length <= 2 ? ' · ' + detail.activeFiles.join('、') : ''}`
-                  : `下载整合包文件 ${d}/${t}`,
-              speed,
-              etaSeconds: detail.etaSeconds ?? undefined,
-              bytesDone: detail.bytesDone,
-              bytesTotal: detail.bytesTotal ?? undefined,
-              indeterminate: detail.indeterminate
-            })
-          }
-          const pieces: Array<Awaited<ReturnType<typeof prepareModpackFiles>>> = []
-          try {
-            await runParallelTasks([
-              async signal => {
-                pieces.push(await prepareModpackFiles(automatic, downloadProgress, getSettings().mirror, signal))
-              },
-              async signal => {
-                if (!manual.length) return
-                await waitForModpackFiles(manual, request => {
-                  manualFiles = request
-                  report({ stage: 'modpack', progress: 0.04, text: request ? `等待补充 ${request.files.length} 个文件；其他下载继续进行` : '补充文件已全部校验' })
-                }, signal)
-                pieces.push(await prepareModpackFiles(localTasks, () => {}, getSettings().mirror, signal))
-              }
-            ], signal)
-          } catch (error) { await Promise.all(pieces.map(piece => piece.dispose())); throw error }
-          prepared = {
-            install: async signal => { for (const piece of pieces) await piece.install(signal) },
-            dispose: async () => { await Promise.all(pieces.map(piece => piece.dispose())) }
-          }
-        } catch (e) {
-          throw new Error(`整合包文件下载失败：${errText(e)}`)
-        }
-        parallel.done('pack')
-      }
-    ], opts?.signal)
-    throwIfCancelled(opts?.signal)
-    // 5) 创建实例版本
-    fs.mkdirSync(instDir, { recursive: true })
-    if (installedId !== id) throw new Error('整合包运行配置未安装到目标实例')
-    const instanceJson = packRuntimeProfile(readVersionJson(installedId), id, meta)
-    fs.writeFileSync(versionJsonPath(id), JSON.stringify(instanceJson, null, 2), 'utf-8')
-    registerVersionFolder(id, gameDir())
-    // 自包含化：实例不再依赖基础运行时实例
     try {
-      flattenInstance(id)
-    } catch {
-      /* flatten 失败保留旧式继承，不影响启动 */
-    }
+      // Download immutable pack files while preparing the runtime; commit only after both succeed.
+      const parallel = new ParallelProgress(
+        [
+          { id: 'runtime', label: '游戏环境与加载器', weight: 0.44 },
+          { id: 'pack', label: '整合包文件', weight: 0.47 },
+        ],
+        report,
+        '同步准备游戏环境与整合包文件',
+        [0.04, 0.95]
+      )
+      let pending: PendingFile[] = []
+      const manual: ManualModpackFile[] = []
+      const [installedId] = await runParallelTasks(
+        [
+          async (signal) => {
+            const installedId = await installVersion(
+              meta.mcVersion,
+              { instanceName: id, ...(meta.loader ? { loader: meta.loader, loaderVersion: meta.loaderVersion } : {}) },
+              (event) => parallel.update('runtime', event),
+              signal
+            )
+            parallel.done('runtime')
+            return installedId
+          },
+          async (signal) => {
+            parallel.update('pack', { stage: 'modpack', progress: 0, text: '准备整合包文件清单' })
+            if (parsed.kind === 'mrpack') {
+              pending = parsed.files
+            } else {
+              // Match immutable identity before requesting a URL. Preserve bundled paths;
+              // otherwise copy verified local files or download the exact manifest version.
+              const cfFiles = parsed.files
+              const bundled = new BundledModpackFiles(zip, meta.overridesPrefix)
+              const localFiles = new LocalModpackFiles([...allFolders(), targetFolder])
+              const sources = await cfSources()
+              let resolved = 0,
+                reused = 0,
+                reusedLocal = 0,
+                alternate = 0
+              const infos = await mapPool(
+                cfFiles,
+                8,
+                async (f, _index, signal) => {
+                  const info = await resolveCurseForgeMetadata(f.projectID, f.fileID, sources, signal)
+                  const local = await bundled.find(info, signal)
+                  let existing: string | null = null
+                  if (local) reused++
+                  else if (!info.isAvailable || !info.url) {
+                    existing = await localFiles.find(info, signal)
+                    if (existing) reusedLocal++
+                    else {
+                      info.url = info.isAvailable ? await resolveCurseForgeFileUrl(f.projectID, f.fileID, sources, signal) : null
+                      if (!info.url && info.isAvailable) {
+                        const cdn = constructCurseForgeCdnUrl(f.fileID, info.fileName)
+                        if (await probeCurseForgeCdnUrl(cdn, signal)) info.url = cdn
+                      }
+                      info.url ??= await exactModrinthDownload(info, signal)
+                      if (!info.url) {
+                        existing = await prepareCurseMavenFile(f.projectID, f.fileID, info, getSettings().mirror, signal)
+                        if (existing) alternate++
+                        else manual.push({ ...f, fileName: info.fileName, size: info.size, sha1: info.sha1 })
+                      }
+                    }
+                  }
+                  resolved++
+                  parallel.update('pack', {
+                    stage: 'modpack',
+                    progress: cfFiles.length ? (resolved / cfFiles.length) * 0.04 : 0,
+                    text: `校验整合包文件 ${resolved}/${cfFiles.length} · 包内 ${reused} 个 · 本地 ${reusedLocal} 个 · 自动补全 ${alternate} 个`,
+                  })
+                  return local
+                    ? null
+                    : {
+                        rel: `${await curseForgeInstallDir(f.projectID, info.fileName, sources, signal)}/${info.fileName}`,
+                        url: info.url ?? '',
+                        size: info.size,
+                        sha1: info.sha1,
+                        reuseFiles: existing ? [existing] : undefined,
+                      }
+                },
+                signal
+              )
+              pending = infos.filter((info): info is NonNullable<typeof info> => info !== null)
+              packLog.info(
+                `CurseForge 清单 ${cfFiles.length} 个文件：复用包内 ${reused} 个、本地 ${reusedLocal} 个，备用源补全 ${alternate} 个，自动下载 ${pending.length - manual.length - reusedLocal - alternate} 个，待补充 ${manual.length} 个`
+              )
+            }
 
-    report({ stage: 'modpack', progress: 0.95, text: '写入已校验的整合包文件…' })
-    await prepared!.install(opts?.signal)
+            const tasks: DownloadTask[] = []
+            for (const f of pending) {
+              const dest = safeJoin(instDir, f.rel)
+              if (!dest) throw new Error(`整合包文件路径不安全：${f.rel}`)
+              tasks.push({
+                label: f.rel,
+                url: f.url,
+                urls: f.urls,
+                reuseFiles: f.reuseFiles,
+                dest,
+                sha1: f.sha1,
+                sha512: f.sha512,
+                size: f.size || undefined,
+              })
+            }
 
-    // 7) 解压 overrides 覆盖到实例目录
-    report({ stage: 'modpack', progress: 0.96, text: '解压覆盖文件…' })
-    throwIfCancelled(opts?.signal)
-    const extractionProgress = (start: number, span: number) => (done: number, total: number, name: string) =>
-      report({ stage: 'modpack', progress: start + span * done / Math.max(1, total), text: `正在写入整合包配置 ${done}/${total} · ${name}` })
-    const overrideFiles = await extractOverrides(zip, meta.overridesPrefix, instDir, opts?.signal, extractionProgress(0.96, 0.02))
-    const clientOverrideFiles = await extractOverrides(
-      zip,
-      meta.clientOverridesPrefix ?? null,
-      instDir,
-      opts?.signal,
-      extractionProgress(0.98, 0.005)
-    )
-
-    // 默认按键替换：用户选择时用启动器默认键位覆盖整合包 options.txt 的 key_* 项
-    if (opts?.keySyncOverride) {
+            try {
+              const automatic = tasks.filter((task) => !!task.url || !!task.reuseFiles?.length)
+              const localTasks = tasks.filter((task) => !task.url && !task.reuseFiles?.length)
+              const downloadProgress: Parameters<typeof prepareModpackFiles>[1] = (d, t, speed, detail) => {
+                const doneBytes = detail.bytesDone
+                const ratio = detail.fraction ?? 0
+                parallel.update('pack', {
+                  stage: 'modpack',
+                  progress: 0.04 + ratio * 0.96,
+                  text:
+                    detail.bytesTotal != null
+                      ? `下载整合包文件 ${d}/${t}（${fmtMB(doneBytes)}/${fmtMB(detail.bytesTotal)}）${detail.activeFiles?.length && detail.activeFiles.length <= 2 ? ' · ' + detail.activeFiles.join('、') : ''}`
+                      : `下载整合包文件 ${d}/${t}`,
+                  speed,
+                  etaSeconds: detail.etaSeconds ?? undefined,
+                  bytesDone: detail.bytesDone,
+                  bytesTotal: detail.bytesTotal ?? undefined,
+                  indeterminate: detail.indeterminate,
+                })
+              }
+              const pieces: Array<Awaited<ReturnType<typeof prepareModpackFiles>>> = []
+              try {
+                await runParallelTasks(
+                  [
+                    async (signal) => {
+                      pieces.push(await prepareModpackFiles(automatic, downloadProgress, getSettings().mirror, signal))
+                    },
+                    async (signal) => {
+                      if (!manual.length) return
+                      await waitForModpackFiles(
+                        manual,
+                        (request) => {
+                          manualFiles = request
+                          report({
+                            stage: 'modpack',
+                            progress: 0.04,
+                            text: request ? `等待补充 ${request.files.length} 个文件；其他下载继续进行` : '补充文件已全部校验',
+                          })
+                        },
+                        signal
+                      )
+                      pieces.push(await prepareModpackFiles(localTasks, () => {}, getSettings().mirror, signal))
+                    },
+                  ],
+                  signal
+                )
+              } catch (error) {
+                await Promise.all(pieces.map((piece) => piece.dispose()))
+                throw error
+              }
+              prepared = {
+                install: async (signal) => {
+                  for (const piece of pieces) await piece.install(signal)
+                },
+                dispose: async () => {
+                  await Promise.all(pieces.map((piece) => piece.dispose()))
+                },
+              }
+            } catch (e) {
+              throw new Error(`整合包文件下载失败：${errText(e)}`)
+            }
+            parallel.done('pack')
+          },
+        ],
+        opts?.signal
+      )
+      throwIfCancelled(opts?.signal)
+      // 5) 创建实例版本
+      fs.mkdirSync(instDir, { recursive: true })
+      if (installedId !== id) throw new Error('整合包运行配置未安装到目标实例')
+      const instanceJson = packRuntimeProfile(readVersionJson(installedId), id, meta)
+      fs.writeFileSync(versionJsonPath(id), JSON.stringify(instanceJson, null, 2), 'utf-8')
+      registerVersionFolder(id, gameDir())
+      // 自包含化：实例不再依赖基础运行时实例
       try {
-        const { mergeKeysIntoOptions, getDefaultKeys } = await import('./keybindings')
-        const optionsFile = path.join(instDir, 'options.txt')
-        const before = fs.existsSync(optionsFile) ? fs.readFileSync(optionsFile, 'utf-8') : ''
-        fs.writeFileSync(optionsFile, mergeKeysIntoOptions(before, getDefaultKeys()), 'utf-8')
-      } catch (error) {
-        console.warn('[FAIONYX] 整合包键位替换失败（不影响安装）:', error)
+        flattenInstance(id)
+      } catch {
+        /* flatten 失败保留旧式继承，不影响启动 */
       }
-    }
 
-    if (backupDir) {
-      report({ stage: 'modpack', progress: 0.985, text: '恢复存档、配置和用户文件…' })
-      await restoreModpackUserFiles(backupDir, instDir, action as 'update' | 'overwrite', oldManaged, opts?.signal)
-    }
-    const manifest: PackTransactionManifest = {
-      schemaVersion: 1,
-      name: meta.name,
-      version: meta.packVersion,
-      managedFiles: [...new Set([...pending.map((file) => file.rel), ...overrideFiles, ...clientOverrideFiles])].sort(),
-      installedAt: new Date().toISOString()
-    }
-    fs.writeFileSync(path.join(instDir, PACK_MANIFEST), JSON.stringify(manifest, null, 2), 'utf-8')
-    if (backupDir) {
-      fs.rmSync(backupDir, { recursive: true, force: true })
-      backupDir = ''
-    }
+      report({ stage: 'modpack', progress: 0.95, text: '写入已校验的整合包文件…' })
+      await prepared!.install(opts?.signal)
 
-    // 8) 完成
-    report({ stage: 'done', progress: 1, text: `${meta.name} 安装完成` })
-    return id
-  } catch (e) {
-    // 新装整目录清理；更新/覆盖则恢复开始前原子改名的完整实例备份。
-    fs.rmSync(instDir, { recursive: true, force: true })
-    if (backupDir && fs.existsSync(backupDir)) fs.renameSync(backupDir, instDir)
-    throw e
-  } finally {
-    await prepared?.dispose()
-  }
+      // 7) 解压 overrides 覆盖到实例目录
+      report({ stage: 'modpack', progress: 0.96, text: '解压覆盖文件…' })
+      throwIfCancelled(opts?.signal)
+      const extractionProgress = (start: number, span: number) => (done: number, total: number, name: string) =>
+        report({
+          stage: 'modpack',
+          progress: start + (span * done) / Math.max(1, total),
+          text: `正在写入整合包配置 ${done}/${total} · ${name}`,
+        })
+      const overrideFiles = await extractOverrides(zip, meta.overridesPrefix, instDir, opts?.signal, extractionProgress(0.96, 0.02))
+      const clientOverrideFiles = await extractOverrides(
+        zip,
+        meta.clientOverridesPrefix ?? null,
+        instDir,
+        opts?.signal,
+        extractionProgress(0.98, 0.005)
+      )
+
+      // 默认按键替换：用户选择时用启动器默认键位覆盖整合包 options.txt 的 key_* 项
+      if (opts?.keySyncOverride) {
+        try {
+          const { mergeKeysIntoOptions, getDefaultKeys } = await import('./keybindings')
+          const optionsFile = path.join(instDir, 'options.txt')
+          const before = fs.existsSync(optionsFile) ? fs.readFileSync(optionsFile, 'utf-8') : ''
+          fs.writeFileSync(optionsFile, mergeKeysIntoOptions(before, getDefaultKeys()), 'utf-8')
+        } catch (error) {
+          console.warn('[FAIONYX] 整合包键位替换失败（不影响安装）:', error)
+        }
+      }
+
+      if (backupDir) {
+        report({ stage: 'modpack', progress: 0.985, text: '恢复存档、配置和用户文件…' })
+        await restoreModpackUserFiles(backupDir, instDir, action as 'update' | 'overwrite', oldManaged, opts?.signal)
+      }
+      const manifest: PackTransactionManifest = {
+        schemaVersion: 1,
+        name: meta.name,
+        version: meta.packVersion,
+        managedFiles: [...new Set([...pending.map((file) => file.rel), ...overrideFiles, ...clientOverrideFiles])].sort(),
+        installedAt: new Date().toISOString(),
+      }
+      fs.writeFileSync(path.join(instDir, PACK_MANIFEST), JSON.stringify(manifest, null, 2), 'utf-8')
+      if (backupDir) {
+        fs.rmSync(backupDir, { recursive: true, force: true })
+        backupDir = ''
+      }
+
+      // 8) 完成
+      report({ stage: 'done', progress: 1, text: `${meta.name} 安装完成` })
+      return id
+    } catch (e) {
+      // 新装整目录清理；更新/覆盖则恢复开始前原子改名的完整实例备份。
+      fs.rmSync(instDir, { recursive: true, force: true })
+      if (backupDir && fs.existsSync(backupDir)) fs.renameSync(backupDir, instDir)
+      throw e
+    } finally {
+      await prepared?.dispose()
+    }
   } catch (error) {
     // Parser errors are made friendly locally; cancellation of a streamed
     // manifest still reports cancellation, rather than a damaged package.
     throwIfCancelled(opts?.signal)
     throw error
-  } finally { await zip.dispose() }
+  } finally {
+    await zip.dispose()
+  }
 }

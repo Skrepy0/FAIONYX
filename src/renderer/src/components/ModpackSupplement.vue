@@ -3,16 +3,28 @@ import { ref } from 'vue'
 import type { ManualModpackRequest } from '@shared/types'
 import { supplyModpackFiles, openModpackFile, errText } from '../api'
 const props = defineProps<{ request: ManualModpackRequest; paused?: boolean }>()
-const busy = ref(false), message = ref('')
+const busy = ref(false),
+  message = ref('')
 async function supply() {
-  busy.value = true; message.value = ''
+  busy.value = true
+  message.value = ''
   try {
     const result = await supplyModpackFiles(props.request.token)
-    message.value = result.rejected.length ? `已补充 ${result.accepted} 个；以下文件与所需版本不匹配：${result.rejected.join('、')}` : `已补充 ${result.accepted} 个，剩余 ${result.remaining} 个`
-  } catch (error) { message.value = errText(error) } finally { busy.value = false }
+    message.value = result.rejected.length
+      ? `已补充 ${result.accepted} 个；以下文件与所需版本不匹配：${result.rejected.join('、')}`
+      : `已补充 ${result.accepted} 个，剩余 ${result.remaining} 个`
+  } catch (error) {
+    message.value = errText(error)
+  } finally {
+    busy.value = false
+  }
 }
 async function open(fileID: number) {
-  try { await openModpackFile(props.request.token, fileID) } catch (error) { message.value = errText(error) }
+  try {
+    await openModpackFile(props.request.token, fileID)
+  } catch (error) {
+    message.value = errText(error)
+  }
 }
 </script>
 <template>
@@ -31,5 +43,45 @@ async function open(fileID: number) {
   </section>
 </template>
 <style scoped>
-.pack-supplement{padding:14px;margin-top:12px;border:1px solid var(--border-strong);border-radius:12px;background:var(--card);font-size:13px}.pack-supplement p{margin:8px 0;line-height:1.5;color:var(--text-dim);overflow-wrap:anywhere}.pack-supplement small{display:block;margin-top:8px;color:var(--text-dim)}.supplement-list{max-height:210px;overflow:auto;overscroll-behavior:contain;margin:10px 0}.supplement-row{display:flex;align-items:center;gap:10px;min-height:46px;padding:5px 0;border-bottom:1px solid var(--border)}.supplement-row span{min-width:0;flex:1;overflow-wrap:anywhere}.supplement-row button{flex-shrink:0}
+.pack-supplement {
+  padding: 14px;
+  margin-top: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--card);
+  font-size: 13px;
+}
+.pack-supplement p {
+  margin: 8px 0;
+  line-height: 1.5;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+.pack-supplement small {
+  display: block;
+  margin-top: 8px;
+  color: var(--text-dim);
+}
+.supplement-list {
+  max-height: 210px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  margin: 10px 0;
+}
+.supplement-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+.supplement-row span {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.supplement-row button {
+  flex-shrink: 0;
+}
 </style>

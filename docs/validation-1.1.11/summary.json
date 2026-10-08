@@ -34,33 +34,13 @@
     "licenses": true,
     "windowsPackageIntegrity": true,
     "windowsFourThemeGui": "Latest final3 actual local GUI PASS for transparent/orange/blue-white/custom, with service fixtures; not full Windows/native-other-platform qualification",
-    "windowsRequiredModules": [
-      "single-logo",
-      "skin-editor",
-      "palette",
-      "gallery",
-      "gallery118",
-      "import119",
-      "selection119"
-    ],
+    "windowsRequiredModules": ["single-logo", "skin-editor", "palette", "gallery", "gallery118", "import119", "selection119"],
     "actualAudioListening": "not-performed",
     "posixAndUpdateFixtureCorrection": {
       "productSourceChanged": false,
       "independentlyReviewed": true,
-      "spawnAssertionsPreserved": [
-        "stdout",
-        "owned child kill/close",
-        "SIGTERM",
-        "killed",
-        "natural exit code7",
-        "memory metrics"
-      ],
-      "updateRoutingConfigurations": [
-        "darwin/arm64",
-        "darwin/x64",
-        "linux/arm64",
-        "linux/x64"
-      ],
+      "spawnAssertionsPreserved": ["stdout", "owned child kill/close", "SIGTERM", "killed", "natural exit code7", "memory metrics"],
+      "updateRoutingConfigurations": ["darwin/arm64", "darwin/x64", "linux/arm64", "linux/x64"],
       "targetedUpdaterTests": {
         "passed": 18,
         "failed": 0,
@@ -71,13 +51,7 @@
     "frpFixtureCorrection": {
       "productSourceChanged": false,
       "independentlyReviewed": true,
-      "configurations": [
-        "win32/x64",
-        "darwin/arm64",
-        "darwin/x64",
-        "linux/arm64",
-        "linux/x64"
-      ],
+      "configurations": ["win32/x64", "darwin/arm64", "darwin/x64", "linux/arm64", "linux/x64"],
       "classification": "isolated real-controller tests; not native OS acceptance",
       "realHostProcessKill": false,
       "nativeFullRerunRequired": true
@@ -105,10 +79,7 @@
       "independentReview": "out/independent-native-round4-1.1.11.json",
       "reviewSHA256": "59502215ca785a1e93827f02eabf84202589330d8777223792ef52c0e982769d",
       "independentTests": {
-        "cancelRepeated": [
-          4,
-          4
-        ],
+        "cancelRepeated": [4, 4],
         "observer": 39,
         "packageNames": 2
       },
@@ -240,29 +211,7 @@
       "sha256": "7d93ec3e64e04c0fcd44f55b60e818c2efd4ccff4cfbeee30bf60cdb65955fbf",
       "exeSHA256": "dd584c92935c71ebdcd5ca379d0f1f851c9a07b604a9dcdfd6f2a1986e8142c7",
       "theme": "black-orange",
-      "windows": [
-        [
-          960,
-          620,
-          1
-        ],
-        [
-          1280,
-          900,
-          1.25
-        ],
-        [
-          1440,
-          960,
-          1.5
-        ],
-        [
-          980,
-          720,
-          1.5
-        ],
-        "maximized"
-      ],
+      "windows": [[960, 620, 1], [1280, 900, 1.25], [1440, 960, 1.5], [980, 720, 1.5], "maximized"],
       "issues": [],
       "fullWindowsQualification": false
     },
@@ -939,12 +888,7 @@
             "gameWindow": true,
             "worldStarted": true,
             "savedWorld": true,
-            "regionFiles": [
-              "r.-1.-1.mca",
-              "r.-1.0.mca",
-              "r.0.-1.mca",
-              "r.0.0.mca"
-            ],
+            "regionFiles": ["r.-1.-1.mca", "r.-1.0.mca", "r.0.-1.mca", "r.0.0.mca"],
             "nativeFocus": true,
             "gracefulClose": true,
             "closeAndDockReopen": true,
@@ -976,12 +920,7 @@
             "gameWindow": true,
             "worldStarted": true,
             "savedWorld": true,
-            "regionFiles": [
-              "r.-1.-1.mca",
-              "r.-1.0.mca",
-              "r.0.-1.mca",
-              "r.0.0.mca"
-            ],
+            "regionFiles": ["r.-1.-1.mca", "r.-1.0.mca", "r.0.-1.mca", "r.0.0.mca"],
             "nativeFocus": true,
             "gracefulClose": true,
             "closeAndDockReopen": true,
@@ -1033,11 +972,7 @@
         },
         "compatibilitySmoke": {
           "passed": false,
-          "hosts": [
-            "Ubuntu24.04 x64",
-            "Ubuntu24.04 ARM64",
-            "Ubuntu26.04 x64"
-          ],
+          "hosts": ["Ubuntu24.04 x64", "Ubuntu24.04 ARM64", "Ubuntu26.04 x64"],
           "launcherStarted": false,
           "guiModulesExecuted": 0,
           "primaryFailure": {
@@ -1055,13 +990,7 @@
           "originalArtifactsRetained": true
         },
         "embeddedIdentity": {
-          "candidateHas": [
-            "product",
-            "platform",
-            "arch",
-            "version",
-            "installationKind"
-          ],
+          "candidateHas": ["product", "platform", "arch", "version", "installationKind"],
           "sourceCommit": "external original CI/API binding only; not embedded in fifth metadata",
           "runtimeVersion": "ELF archive shape and pinned Electron source verified; actual executable version observation not performed by this candidate",
           "approvedCorrection": "Packaging-only embedded Git source/runtime observation gate pending next native run"
@@ -1519,10 +1448,7 @@
         "independentlyRecorded": true,
         "oldArchiveClosureComplete": false,
         "nextHandoff": "Rebuild and independently verify root docs and complete source/build-input prefixes; no future closure success inferred",
-        "missingBuildIconPaths": [
-          "build/icon.png",
-          "build/icon-512.png"
-        ],
+        "missingBuildIconPaths": ["build/icon.png", "build/icon-512.png"],
         "originalReceipt": "out/handoff111-history-source-closure-defect.json"
       }
     }

@@ -17,7 +17,16 @@ import { logScope } from './launcherLog'
 import { JavaProbeCache } from './javaProbeCache'
 import { mapLaunchFiles } from './launchPreparation'
 import { JavaPreparation } from './javaPreparation'
-import { buildJavaRequirement, javaMinecraftVersion, releaseJavaMajor, selectJavaByMajor, javaCompatibilityError, prepareCompatibleJava, type JavaRequirement, type JavaConstraint } from './javaCompatibility'
+import {
+  buildJavaRequirement,
+  javaMinecraftVersion,
+  releaseJavaMajor,
+  selectJavaByMajor,
+  javaCompatibilityError,
+  prepareCompatibleJava,
+  type JavaRequirement,
+  type JavaConstraint,
+} from './javaCompatibility'
 import { createOfficialJavaReader } from './javaMetadata'
 import { resolveInstanceMetadata } from './instanceMetadata'
 import { scanModDirectory } from './modScan'
@@ -36,7 +45,7 @@ import {
   parseJavaProbeOutput,
   javaHomeExecutable,
   parseRegistryJavaHomes,
-  shouldPruneJavaDirectory
+  shouldPruneJavaDirectory,
 } from './javaScanUtils'
 
 export type ProgressEmit = (e: ProgressEvent) => void
@@ -97,18 +106,12 @@ function executablePaths(value?: string): string[] {
   if (!clean) return []
   const base = path.basename(clean).toLowerCase()
   if (base === JAVA_EXE.toLowerCase() || (!IS_WIN && base === 'java')) return [clean]
-  const result = [
-    base === 'bin' ? path.join(clean, JAVA_EXE) : path.join(clean, 'bin', JAVA_EXE)
-  ]
+  const result = [base === 'bin' ? path.join(clean, JAVA_EXE) : path.join(clean, 'bin', JAVA_EXE)]
   if (IS_MAC) result.push(path.join(clean, 'Contents', 'Home', 'bin', JAVA_EXE))
   return result
 }
 
-function addCandidate(
-  candidates: Map<string, JavaCandidate>,
-  value: string | undefined,
-  sourceDetail: string
-): void {
+function addCandidate(candidates: Map<string, JavaCandidate>, value: string | undefined, sourceDetail: string): void {
   for (const executable of executablePaths(value)) {
     const key = pathKey(executable)
     if (!candidates.has(key)) candidates.set(key, { executable, sourceDetail })
@@ -124,7 +127,7 @@ function probeJava(exe: string): JavaInfo | null {
       encoding: 'utf-8',
       timeout: 10000,
       windowsHide: true,
-      maxBuffer: 2 * 1024 * 1024
+      maxBuffer: 2 * 1024 * 1024,
     })
     if (r.error) return null
     const out = `${r.stderr ?? ''}\n${r.stdout ?? ''}`
@@ -135,12 +138,7 @@ function probeJava(exe: string): JavaInfo | null {
   }
 }
 
-function runTextProcess(
-  command: string,
-  args: string[],
-  signal?: AbortSignal,
-  timeout = 15000
-): Promise<string> {
+function runTextProcess(command: string, args: string[], signal?: AbortSignal, timeout = 15000): Promise<string> {
   throwIfScanCancelled(signal)
   return new Promise((resolve, reject) => {
     let settled = false
@@ -176,12 +174,7 @@ export async function probeJavaAsync(exe: string, signal?: AbortSignal): Promise
   const cached = probeCache.get(exe)
   if (cached) return cached
   try {
-    const output = await runTextProcess(
-      exe,
-      [...JAVA_PROBE_VM_ARGS, '-XshowSettings:properties', '-version'],
-      signal,
-      10000
-    )
+    const output = await runTextProcess(exe, [...JAVA_PROBE_VM_ARGS, '-XshowSettings:properties', '-version'], signal, 10000)
     const parsed = parseJavaProbeOutput(output)
     return parsed ? probeCache.put(exe, { path: exe, ...parsed }) : null
   } catch (error) {
@@ -199,10 +192,7 @@ export async function resolveJavaExecutable(exe: string, signal?: AbortSignal): 
   // Java 17 及以下按平台默认编码输出属性（中文 Windows = GBK），Java 18+ 为 UTF-8；
   // 自动下载的 JRE 落在含中文的游戏目录时，UTF-8 直读会得到乱码路径。
   // 双编码尝试：UTF-8 优先，含替换字符或路径不存在时回退 GBK。
-  const decoders: Array<(b: Buffer) => string> = [
-    (b) => b.toString('utf-8'),
-    (b) => new TextDecoder('gbk').decode(b)
-  ]
+  const decoders: Array<(b: Buffer) => string> = [(b) => b.toString('utf-8'), (b) => new TextDecoder('gbk').decode(b)]
   for (const decode of decoders) {
     const runtime = javaHomeExecutable(decode(output))
     const resolved = runtime && realExecutable(runtime)
@@ -214,12 +204,20 @@ export async function resolveJavaExecutable(exe: string, signal?: AbortSignal): 
 /** execFile 以 Buffer 收输出（编码由调用方按 JVM 平台编码判定）。 */
 function runBufferProcess(command: string, args: string[], timeout = 15000, signal?: AbortSignal): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    execFile(command, args, { encoding: 'buffer', timeout, windowsHide: true, maxBuffer: 4 * 1024 * 1024, signal }, (error, stdout, stderr) => {
-      if (signal?.aborted) { reject(signal.reason); return }
-      const output = Buffer.concat([stderr ?? Buffer.alloc(0), stdout ?? Buffer.alloc(0)])
-      if (error && !output.length) reject(error)
-      else resolve(output)
-    })
+    execFile(
+      command,
+      args,
+      { encoding: 'buffer', timeout, windowsHide: true, maxBuffer: 4 * 1024 * 1024, signal },
+      (error, stdout, stderr) => {
+        if (signal?.aborted) {
+          reject(signal.reason)
+          return
+        }
+        const output = Buffer.concat([stderr ?? Buffer.alloc(0), stdout ?? Buffer.alloc(0)])
+        if (error && !output.length) reject(error)
+        else resolve(output)
+      }
+    )
   })
 }
 
@@ -239,25 +237,18 @@ function quickCandidates(runWhere = true): JavaCandidate[] {
   for (const item of (process.env.Path ?? process.env.PATH ?? '').split(path.delimiter)) {
     if (item.trim()) addCandidate(candidates, item.trim(), 'PATH')
   }
-  if (runWhere) try {
-    const cmd = IS_WIN ? 'where java' : 'which java'
-    const out = execSync(cmd, { encoding: 'utf-8', timeout: 10000, windowsHide: true })
-    for (const line of out.split(/\r?\n/)) addCandidate(candidates, line.trim(), 'PATH')
-  } catch {
-    /* 找不到时返回非零，忽略 */
-  }
+  if (runWhere)
+    try {
+      const cmd = IS_WIN ? 'where java' : 'which java'
+      const out = execSync(cmd, { encoding: 'utf-8', timeout: 10000, windowsHide: true })
+      for (const line of out.split(/\r?\n/)) addCandidate(candidates, line.trim(), 'PATH')
+    } catch {
+      /* 找不到时返回非零，忽略 */
+    }
 
   // 4. 当前系统盘的常见安装目录；全盘枚举由异步扫描负责。
   if (IS_WIN) {
-    const dirNames = [
-      'Java',
-      'Eclipse Adoptium',
-      'Microsoft',
-      'Zulu',
-      'Amazon Corretto',
-      'BellSoft\\Liberica',
-      'JavaSoft\\JRE'
-    ]
+    const dirNames = ['Java', 'Eclipse Adoptium', 'Microsoft', 'Zulu', 'Amazon Corretto', 'BellSoft\\Liberica', 'JavaSoft\\JRE']
     const systemDrive = process.env.SystemDrive || 'C:'
     for (const dn of dirNames) {
       const base = path.join(`${systemDrive}\\`, 'Program Files', dn)
@@ -290,7 +281,7 @@ function quickCandidates(runWhere = true): JavaCandidate[] {
     const bases = [
       '/Library/Java/JavaVirtualMachines',
       path.join(os.homedir(), 'Library/Java/JavaVirtualMachines'),
-      '/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home'
+      '/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home',
     ]
     for (const base of bases) {
       try {
@@ -379,9 +370,7 @@ function cachedCompleteList(maxAge: number): JavaInfo[] | null {
 }
 
 function sortJava(list: JavaInfo[]): JavaInfo[] {
-  return [...list].sort(
-    (a, b) => b.major - a.major || Number(b.is64Bit) - Number(a.is64Bit) || a.path.localeCompare(b.path)
-  )
+  return [...list].sort((a, b) => b.major - a.major || Number(b.is64Bit) - Number(a.is64Bit) || a.path.localeCompare(b.path))
 }
 
 /**
@@ -408,7 +397,7 @@ export function scanJava(refresh = false): JavaInfo[] {
         ...info,
         path: path.resolve(candidate.executable),
         source: 'auto',
-        sourceDetail: candidate.sourceDetail
+        sourceDetail: candidate.sourceDetail,
       })
     }
   }
@@ -429,18 +418,23 @@ export async function scanJavaForLaunch(emit?: ProgressEmit, signal?: AbortSigna
   try {
     const output = await runTextProcess(IS_WIN ? 'where.exe' : 'which', ['java'], signal, 10000)
     for (const executable of output.split(/\r?\n/).filter(Boolean)) candidates.push({ executable: executable.trim(), sourceDetail: 'PATH' })
-  } catch { signal?.throwIfAborted() /* PATH discovery may legitimately find no Java. */ }
+  } catch {
+    signal?.throwIfAborted() /* PATH discovery may legitimately find no Java. */
+  }
   const seen = new Set<string>()
-  const unique = candidates.filter(candidate => {
+  const unique = candidates.filter((candidate) => {
     const real = realExecutable(candidate.executable)
     if (!real || seen.has(pathKey(real))) return false
-    seen.add(pathKey(real)); return true
+    seen.add(pathKey(real))
+    return true
   })
-  const found = await mapLaunchFiles(unique, async candidate => {
+  const found = await mapLaunchFiles(unique, async (candidate) => {
     emit?.({ stage: 'java-scan', progress: 0, indeterminate: true, text: `正在验证 Java：${candidate.executable}` })
     signal?.throwIfAborted()
     const info = await probeJavaAsync(realExecutable(candidate.executable) ?? candidate.executable, signal)
-    return info ? { ...info, path: path.resolve(candidate.executable), source: 'auto' as const, sourceDetail: candidate.sourceDetail } : null
+    return info
+      ? { ...info, path: path.resolve(candidate.executable), source: 'auto' as const, sourceDetail: candidate.sourceDetail }
+      : null
   })
   const list = sortJava(found.filter((info): info is NonNullable<typeof info> => info !== null))
   signal?.throwIfAborted()
@@ -453,26 +447,35 @@ let summaryPending: Promise<JavaInfo[]> | undefined
 export function listJavaSummary(): Promise<JavaInfo[]> {
   if (summaryPending) return summaryPending
   summaryPending = (async () => {
-    const started = Date.now(), settings = getSettings()
+    const started = Date.now(),
+      settings = getSettings()
     const candidates = quickCandidates(false)
-    for (const info of readPersistentCache()?.list ?? []) candidates.push({ executable: info.path, sourceDetail: info.sourceDetail ?? '已缓存' })
+    for (const info of readPersistentCache()?.list ?? [])
+      candidates.push({ executable: info.path, sourceDetail: info.sourceDetail ?? '已缓存' })
     const unique = new Map<string, JavaCandidate>()
-    for (const c of candidates) { const real = realExecutable(c.executable); if (real && !unique.has(pathKey(real))) unique.set(pathKey(real), { ...c, executable: real }) }
-    const pending = [...unique.values()], found: JavaInfo[] = []
+    for (const c of candidates) {
+      const real = realExecutable(c.executable)
+      if (real && !unique.has(pathKey(real))) unique.set(pathKey(real), { ...c, executable: real })
+    }
+    const pending = [...unique.values()],
+      found: JavaInfo[] = []
     let cursor = 0
     const worker = async () => {
       while (cursor < pending.length) {
-        const c = pending[cursor++], info = await probeJavaAsync(c.executable)
+        const c = pending[cursor++],
+          info = await probeJavaAsync(c.executable)
         if (info) found.push({ ...info, source: c.sourceDetail === '手动添加' ? 'manual' : 'auto', sourceDetail: c.sourceDetail })
       }
     }
     await Promise.all(Array.from({ length: Math.min(4, pending.length) }, worker))
     const hidden = new Set((settings.javaHidden ?? []).map(pathKey))
-    const list = sortJava(found.filter(j => !hidden.has(pathKey(j.path))))
+    const list = sortJava(found.filter((j) => !hidden.has(pathKey(j.path))))
     console.info(`[FAIONYX] Java summary: ${list.length} runtimes, ${Date.now() - started} ms (persistent probe cache enabled)`)
     javaLog.info(`Java 概览扫描完成：${list.length} 个运行时（耗时 ${Date.now() - started}ms）`)
     return list
-  })().finally(() => { summaryPending = undefined })
+  })().finally(() => {
+    summaryPending = undefined
+  })
   return summaryPending
 }
 
@@ -485,7 +488,7 @@ async function fixedWindowsDrives(signal?: AbortSignal): Promise<string[]> {
         '-NoProfile',
         '-NonInteractive',
         '-Command',
-        "Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' | Select-Object -ExpandProperty DeviceID"
+        "Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' | Select-Object -ExpandProperty DeviceID",
       ],
       signal,
       20000
@@ -511,7 +514,7 @@ const REGISTRY_JAVA_KEYS = [
   'HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\JDK',
   'HKLM\\SOFTWARE\\Azul Systems',
   'HKLM\\SOFTWARE\\BellSoft',
-  'HKLM\\SOFTWARE\\Amazon Corretto'
+  'HKLM\\SOFTWARE\\Amazon Corretto',
 ]
 
 async function registryJavaHomes(signal?: AbortSignal): Promise<string[]> {
@@ -564,9 +567,10 @@ async function windowsScanRoots(drives: string[], signal?: AbortSignal): Promise
     'Minecraft Launcher',
     'PrismLauncher',
     'Modrinth App',
-    'CurseForge'
+    'CurseForge',
   ]
-  const rootHints = /^(?:java|jdk|jre)(?:[-_. ].*)?$|^(?:apps?|tools?|software|programs?|development|dev|minecraft|games?|launchers?|runtimes?)$/i
+  const rootHints =
+    /^(?:java|jdk|jre)(?:[-_. ].*)?$|^(?:apps?|tools?|software|programs?|development|dev|minecraft|games?|launchers?|runtimes?)$/i
 
   for (const drive of drives) {
     throwIfScanCancelled(signal)
@@ -577,7 +581,7 @@ async function windowsScanRoots(drives: string[], signal?: AbortSignal): Promise
       label: `${drive} 固定磁盘浅层扫描`,
       shallowDepth: 2,
       maxDepth: 10,
-      maxDirectories: 8000
+      maxDirectories: 8000,
     })
     for (const programDir of ['Program Files', 'Program Files (x86)']) {
       for (const vendor of vendorDirs) {
@@ -585,16 +589,30 @@ async function windowsScanRoots(drives: string[], signal?: AbortSignal): Promise
           directory: path.join(`${drive}\\`, programDir, vendor),
           label: `${drive} 常见安装目录`,
           maxDepth: 7,
-          maxDirectories: 12000
+          maxDirectories: 12000,
         })
       }
     }
-    for (const name of ['Java', 'JDK', 'JRE', 'Apps', 'Tools', 'Software', 'Programs', 'Development', 'Dev', 'Minecraft', 'Games', 'Launchers', 'Runtimes']) {
+    for (const name of [
+      'Java',
+      'JDK',
+      'JRE',
+      'Apps',
+      'Tools',
+      'Software',
+      'Programs',
+      'Development',
+      'Dev',
+      'Minecraft',
+      'Games',
+      'Launchers',
+      'Runtimes',
+    ]) {
       addScanRoot(roots, {
         directory: path.join(`${drive}\\`, name),
         label: `${drive} 本地磁盘`,
         maxDepth: 6,
-        maxDirectories: 12000
+        maxDirectories: 12000,
       })
     }
     try {
@@ -605,7 +623,7 @@ async function windowsScanRoots(drives: string[], signal?: AbortSignal): Promise
           directory: path.join(`${drive}\\`, item.name),
           label: `${drive} 本地磁盘`,
           maxDepth: 6,
-          maxDirectories: 12000
+          maxDirectories: 12000,
         })
       }
     } catch {
@@ -617,8 +635,7 @@ async function windowsScanRoots(drives: string[], signal?: AbortSignal): Promise
   const appData = app.getPath('appData')
   // Electron 没有 localAppData 这一 getPath 名称；Windows 使用系统环境值，
   // 缺失时从 Roaming 的同级 Local 目录推导。
-  const localAppData =
-    process.env.LOCALAPPDATA || path.join(path.dirname(appData), 'Local')
+  const localAppData = process.env.LOCALAPPDATA || path.join(path.dirname(appData), 'Local')
   const userRoots: Array<[string, string, number]> = [
     [path.join(appData, '.minecraft', 'runtime'), 'Minecraft 官方 Runtime', 8],
     [path.join(appData, 'PrismLauncher'), 'Prism Launcher Runtime', 7],
@@ -629,7 +646,7 @@ async function windowsScanRoots(drives: string[], signal?: AbortSignal): Promise
     [path.join(userHome, '.gradle', 'jdks'), 'Gradle JDK', 5],
     [path.join(userHome, '.lunarclient'), 'Lunar Client Runtime', 7],
     [path.join(userHome, '.badlion'), 'Badlion Runtime', 7],
-    [runtimesDir(), 'FAIONYX Runtime', 7]
+    [runtimesDir(), 'FAIONYX Runtime', 7],
   ]
   for (const [directory, label, maxDepth] of userRoots) {
     addScanRoot(roots, { directory, label, maxDepth, maxDirectories: 16000 })
@@ -643,7 +660,7 @@ async function windowsScanRoots(drives: string[], signal?: AbortSignal): Promise
         directory: path.join(packages, item.name),
         label: 'Microsoft Store Minecraft Runtime',
         maxDepth: 9,
-        maxDirectories: 16000
+        maxDirectories: 16000,
       })
     }
   } catch {
@@ -660,7 +677,7 @@ async function platformScanRoots(drives: string[], signal?: AbortSignal): Promis
         '/Library/Java/JavaVirtualMachines',
         path.join(os.homedir(), 'Library/Java/JavaVirtualMachines'),
         path.join(os.homedir(), '.jdks'),
-        runtimesDir()
+        runtimesDir(),
       ]
     : ['/usr/lib/jvm', '/opt', path.join(os.homedir(), '.jdks'), path.join(os.homedir(), '.gradle/jdks'), runtimesDir()]
   for (const directory of candidates) {
@@ -668,20 +685,14 @@ async function platformScanRoots(drives: string[], signal?: AbortSignal): Promis
       directory,
       label: '本地 Runtime 目录',
       maxDepth: 7,
-      maxDirectories: 16000
+      maxDirectories: 16000,
     })
   }
   return [...roots.values()]
 }
 
-async function discoverInRoot(
-  root: ScanRoot,
-  candidates: Map<string, JavaCandidate>,
-  signal?: AbortSignal
-): Promise<number> {
-  const queue: Array<{ directory: string; depth: number; promoted: boolean }> = [
-    { directory: root.directory, depth: 0, promoted: false }
-  ]
+async function discoverInRoot(root: ScanRoot, candidates: Map<string, JavaCandidate>, signal?: AbortSignal): Promise<number> {
+  const queue: Array<{ directory: string; depth: number; promoted: boolean }> = [{ directory: root.directory, depth: 0, promoted: false }]
   const deepHint = /^(?:java|jdk|jre|jbr|runtime)(?:[-_. ].*)?$/i
   let cursor = 0
   let visited = 0
@@ -703,11 +714,7 @@ async function discoverInRoot(
         addCandidate(candidates, full, root.label)
         continue
       }
-      if (
-        !entry.isDirectory() ||
-        entry.isSymbolicLink() ||
-        shouldPruneJavaDirectory(entry.name)
-      ) {
+      if (!entry.isDirectory() || entry.isSymbolicLink() || shouldPruneJavaDirectory(entry.name)) {
         continue
       }
       const promoted = current.promoted || deepHint.test(entry.name)
@@ -726,7 +733,7 @@ function scanProgress(emit: ProgressEmit | undefined, progress: number, text: st
     progress,
     overall: progress,
     text,
-    indeterminate: false
+    indeterminate: false,
   })
 }
 
@@ -753,21 +760,14 @@ export async function scanJavaInstallations(options: JavaScanOptions = {}): Prom
   for (const candidate of quickCandidates()) {
     addCandidate(candidates, candidate.executable, candidate.sourceDetail)
   }
-  const [registeredHomes, drives] = await Promise.all([
-    registryJavaHomes(signal),
-    fixedWindowsDrives(signal)
-  ])
+  const [registeredHomes, drives] = await Promise.all([registryJavaHomes(signal), fixedWindowsDrives(signal)])
   for (const home of registeredHomes) addCandidate(candidates, home, 'Windows 注册表')
 
   throwIfScanCancelled(signal)
   const roots = await platformScanRoots(drives, signal)
   for (let i = 0; i < roots.length; i++) {
     const root = roots[i]
-    scanProgress(
-      emit,
-      0.08 + (i / Math.max(roots.length, 1)) * 0.52,
-      `正在扫描 ${root.label}：${root.directory}`
-    )
+    scanProgress(emit, 0.08 + (i / Math.max(roots.length, 1)) * 0.52, `正在扫描 ${root.label}：${root.directory}`)
     await discoverInRoot(root, candidates, signal)
   }
 
@@ -781,7 +781,7 @@ export async function scanJavaInstallations(options: JavaScanOptions = {}): Prom
       unique.set(key, {
         ...candidate,
         executable: real,
-        displayPath: path.resolve(candidate.executable)
+        displayPath: path.resolve(candidate.executable),
       })
     }
   }
@@ -803,7 +803,7 @@ export async function scanJavaInstallations(options: JavaScanOptions = {}): Prom
           ...info,
           path: candidate.displayPath ?? candidate.executable,
           source: 'auto',
-          sourceDetail: candidate.sourceDetail
+          sourceDetail: candidate.sourceDetail,
         })
       }
       completed++
@@ -833,7 +833,9 @@ export async function scanJavaInstallations(options: JavaScanOptions = {}): Prom
       }
     }
   }
-  javaLog.info(`本机 Java 扫描完成：共 ${list.length} 个可用（验证 ${pending.length} 个候选，耗时 ${((Date.now() - started) / 1000).toFixed(1)}s）`)
+  javaLog.info(
+    `本机 Java 扫描完成：共 ${list.length} 个可用（验证 ${pending.length} 个候选，耗时 ${((Date.now() - started) / 1000).toFixed(1)}s）`
+  )
   scanProgress(emit, 1, `扫描完成，共找到 ${list.length} 个可用 Java`)
   return mergeCustom(list)
 }
@@ -841,7 +843,7 @@ export async function scanJavaInstallations(options: JavaScanOptions = {}): Prom
 /** 合并手动添加的 Java，并过滤隐藏项 */
 function mergeCustom(list: JavaInfo[]): JavaInfo[] {
   const s = getSettings()
-  const hidden = new Set((s.javaHidden ?? []).flatMap(p => [pathKey(p), pathKey(realExecutable(p) ?? p)]))
+  const hidden = new Set((s.javaHidden ?? []).flatMap((p) => [pathKey(p), pathKey(realExecutable(p) ?? p)]))
   const auto = list.filter((j) => !hidden.has(pathKey(j.path)) && !hidden.has(pathKey(realExecutable(j.path) ?? j.path)))
   const manual: JavaInfo[] = []
   for (const p of s.javaCustom ?? []) {
@@ -883,31 +885,53 @@ export function requiredMajor(versionJson: VersionJson, verifiedMcVersion?: stri
   return buildJavaRequirement(versionJson, verifiedMcVersion).recommendedMajor
 }
 
-const officialJava = createOfficialJavaReader(() => path.join(app.getPath('userData'), 'java-version-metadata'), async (url, signal) => {
-  const response = await httpFetch(url, { systemProxy: true, signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(12000)]) : AbortSignal.timeout(12000) })
-  if (!response.ok) { await response.body?.cancel(); throw new Error(`官方 Java 元数据 HTTP ${response.status}`) }
-  return response.text()
-})
+const officialJava = createOfficialJavaReader(
+  () => path.join(app.getPath('userData'), 'java-version-metadata'),
+  async (url, signal) => {
+    const response = await httpFetch(url, {
+      systemProxy: true,
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(12000)]) : AbortSignal.timeout(12000),
+    })
+    if (!response.ok) {
+      await response.body?.cancel()
+      throw new Error(`官方 Java 元数据 HTTP ${response.status}`)
+    }
+    return response.text()
+  }
+)
 const javaMetadataPreparations = new JavaPreparation<VersionJson, ProgressEvent>()
-export interface JavaPreparationOptions { signal?: AbortSignal; requirement?: JavaRequirement; modsDirectory?: string }
+export interface JavaPreparationOptions {
+  signal?: AbortSignal
+  requirement?: JavaRequirement
+  modsDirectory?: string
+}
 
-export async function resolveJavaRequirement(version: VersionJson, verifiedMcVersion?: string,
-  options: JavaPreparationOptions = {}): Promise<JavaRequirement> {
+export async function resolveJavaRequirement(
+  version: VersionJson,
+  verifiedMcVersion?: string,
+  options: JavaPreparationOptions = {}
+): Promise<JavaRequirement> {
   const { signal, modsDirectory } = options
   signal?.throwIfAborted()
   const mc = javaMinecraftVersion(version, verifiedMcVersion)
   let official: VersionJson | undefined
   if (mc && !releaseJavaMajor(mc)) {
-    official = await javaMetadataPreparations.run(mc, () => {}, (_emit, sharedSignal) => officialJava(mc, sharedSignal), signal)
+    official = await javaMetadataPreparations.run(
+      mc,
+      () => {},
+      (_emit, sharedSignal) => officialJava(mc, sharedSignal),
+      signal
+    )
   }
   const constraints: JavaConstraint[] = []
   const loader = resolveInstanceMetadata(version, () => undefined).loader
   if (loader && modsDirectory) {
     const mods = await scanModDirectory(modsDirectory, false, undefined, 'catalog', signal)
     signal?.throwIfAborted()
-    for (const mod of mods) for (const requirement of mod.javaRequirements ?? []) {
-      if (requirement.loader === loader || loader === 'quilt' && requirement.loader === 'fabric') constraints.push(requirement)
-    }
+    for (const mod of mods)
+      for (const requirement of mod.javaRequirements ?? []) {
+        if (requirement.loader === loader || (loader === 'quilt' && requirement.loader === 'fabric')) constraints.push(requirement)
+      }
   }
   return buildJavaRequirement(version, verifiedMcVersion, official, constraints)
 }
@@ -920,29 +944,53 @@ export async function resolveJavaRequirement(version: VersionJson, verifiedMcVer
  * 返回 java 可执行文件绝对路径。
  */
 const javaPreparations = new JavaPreparation<string, ProgressEvent>()
-export function ensureJava(versionJson: VersionJson, emit: ProgressEmit, verifiedMcVersion?: string, options: JavaPreparationOptions = {}): Promise<string> {
- return (async () => {
-  requireDesktopGamePlatform(process.platform)
-  const requirement = options.requirement ?? await resolveJavaRequirement(versionJson, verifiedMcVersion, options)
-  // NeoForge repair and game launch may need the same JRE concurrently. Never
-  // let two downloads/extractions replace the same runtime under one another.
-  const compatibilityKey = JSON.stringify([requirement.recommendedMajor, requirement.minimumMajor, requirement.maximumMajor, requirement.constraints.map(c => [c.range, c.exclude])])
-  const key = `${pathKey(path.resolve(runtimesDir()))}:${compatibilityKey}:${gameJavaArchitecture(versionJson) ?? process.arch}`
-  return javaPreparations.run(key, emit, (progress, signal) => ensureJavaInternal(versionJson, progress, requirement, signal), options.signal)
- })()
+export function ensureJava(
+  versionJson: VersionJson,
+  emit: ProgressEmit,
+  verifiedMcVersion?: string,
+  options: JavaPreparationOptions = {}
+): Promise<string> {
+  return (async () => {
+    requireDesktopGamePlatform(process.platform)
+    const requirement = options.requirement ?? (await resolveJavaRequirement(versionJson, verifiedMcVersion, options))
+    // NeoForge repair and game launch may need the same JRE concurrently. Never
+    // let two downloads/extractions replace the same runtime under one another.
+    const compatibilityKey = JSON.stringify([
+      requirement.recommendedMajor,
+      requirement.minimumMajor,
+      requirement.maximumMajor,
+      requirement.constraints.map((c) => [c.range, c.exclude]),
+    ])
+    const key = `${pathKey(path.resolve(runtimesDir()))}:${compatibilityKey}:${gameJavaArchitecture(versionJson) ?? process.arch}`
+    return javaPreparations.run(
+      key,
+      emit,
+      (progress, signal) => ensureJavaInternal(versionJson, progress, requirement, signal),
+      options.signal
+    )
+  })()
 }
 
-export async function selectHealthyJava(available: JavaInfo[], need: number, architecture?: string, signal?: AbortSignal, requirement?: JavaRequirement): Promise<JavaInfo | null> {
-  let remaining = requirement ? available.filter(j => !javaCompatibilityError(j, requirement, architecture, true)) : [...available]
+export async function selectHealthyJava(
+  available: JavaInfo[],
+  need: number,
+  architecture?: string,
+  signal?: AbortSignal,
+  requirement?: JavaRequirement
+): Promise<JavaInfo | null> {
+  let remaining = requirement ? available.filter((j) => !javaCompatibilityError(j, requirement, architecture, true)) : [...available]
   while (remaining.length) {
     const candidate = selectJavaByMajor(remaining, need, architecture)
     if (!candidate) return null
-    remaining = remaining.filter(item => item !== candidate)
+    remaining = remaining.filter((item) => item !== candidate)
     try {
       const checked = await validateCandidateJava(candidate, signal)
       if (requirement && javaCompatibilityError(checked, requirement, architecture, true)) continue
       return checked
-    } catch (error) { signal?.throwIfAborted(); javaLog.warn('跳过不完整的 Java：' + candidate.path + '；' + String(error)) }
+    } catch (error) {
+      signal?.throwIfAborted()
+      javaLog.warn('跳过不完整的 Java：' + candidate.path + '；' + String(error))
+    }
   }
   return null
 }
@@ -950,29 +998,47 @@ export async function selectHealthyJava(available: JavaInfo[], need: number, arc
 export async function validateCandidateJava(candidate: JavaInfo, signal?: AbortSignal): Promise<JavaInfo> {
   const exe = await resolveJavaExecutable(candidate.path, signal)
   const actual = await probeJavaAsync(exe, signal)
-  if (!actual || actual.major !== candidate.major || !actual.is64Bit || actual.architecture !== candidate.architecture) throw new Error('Java 缓存与当前实际运行时不一致')
+  if (!actual || actual.major !== candidate.major || !actual.is64Bit || actual.architecture !== candidate.architecture)
+    throw new Error('Java 缓存与当前实际运行时不一致')
   await validateJavaRuntime(exe, actual.major)
   signal?.throwIfAborted()
   return { ...actual, path: exe }
 }
 
-async function ensureJavaInternal(versionJson: VersionJson, emit: ProgressEmit, requirement: JavaRequirement, signal: AbortSignal): Promise<string> {
+async function ensureJavaInternal(
+  versionJson: VersionJson,
+  emit: ProgressEmit,
+  requirement: JavaRequirement,
+  signal: AbortSignal
+): Promise<string> {
   const need = requirement.recommendedMajor
   const started = Date.now()
   const architecture = gameJavaArchitecture(versionJson)
   try {
-    const selected = await prepareCompatibleJava(requirement, await scanJavaForLaunch(emit, signal),
-      async candidate => {
-        try { return await validateCandidateJava(candidate, signal) }
-        catch (error) { javaLog.warn('跳过不完整的 Java：' + candidate.path + '；' + String(error)); throw error }
-      }, async major => {
+    const selected = await prepareCompatibleJava(
+      requirement,
+      await scanJavaForLaunch(emit, signal),
+      async (candidate) => {
+        try {
+          return await validateCandidateJava(candidate, signal)
+        } catch (error) {
+          javaLog.warn('跳过不完整的 Java：' + candidate.path + '；' + String(error))
+          throw error
+        }
+      },
+      async (major) => {
         javaLog.info(`本机没有适配的 Java ${major}（64位），开始自动下载推荐运行时`)
         const exe = await downloadAndExtractJava(major, emit, architecture, signal)
         const info = await probeJavaAsync(exe, signal)
         if (!info) throw new Error('自动安装的 Java 无法运行')
         return info
-      }, architecture, signal)
-    javaLog.info(`选用 Java ${selected.major}（${selected.version}，${selected.architecture}）：${selected.path}（耗时 ${((Date.now() - started) / 1000).toFixed(1)}s）`)
+      },
+      architecture,
+      signal
+    )
+    javaLog.info(
+      `选用 Java ${selected.major}（${selected.version}，${selected.architecture}）：${selected.path}（耗时 ${((Date.now() - started) / 1000).toFixed(1)}s）`
+    )
     return selected.path
   } catch (error) {
     if (!isCancelError(error)) javaLog.error(`自动准备 Java ${need} 失败`, error)
@@ -980,54 +1046,116 @@ async function ensureJavaInternal(versionJson: VersionJson, emit: ProgressEmit, 
   }
 }
 
-async function downloadAndExtractJava(need: number, emit: ProgressEmit, architecture?: 'arm64' | 'x64', signal?: AbortSignal): Promise<string> {
+async function downloadAndExtractJava(
+  need: number,
+  emit: ProgressEmit,
+  architecture?: 'arm64' | 'x64',
+  signal?: AbortSignal
+): Promise<string> {
   const arch = (architecture ?? process.arch) === 'arm64' ? 'aarch64' : 'x64'
-  const report = (text: string): void => { javaLog.info(text); emit({ stage: 'java', progress: 0, text }) }
+  const report = (text: string): void => {
+    javaLog.info(text)
+    emit({ stage: 'java', progress: 0, text })
+  }
   const read = async (url: string): Promise<unknown> => {
-    const response = await httpFetch(url, { systemProxy: true, signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(12000)]) : AbortSignal.timeout(12000) })
-    if (!response.ok) { await response.body?.cancel(); throw new Error(`${new URL(url).hostname} HTTP ${response.status}`) }
+    const response = await httpFetch(url, {
+      systemProxy: true,
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(12000)]) : AbortSignal.timeout(12000),
+    })
+    if (!response.ok) {
+      await response.body?.cancel()
+      throw new Error(`${new URL(url).hostname} HTTP ${response.status}`)
+    }
     return response.json()
   }
-  return provisionJava({ major: need, os: IS_WIN ? 'windows' : IS_MAC ? 'mac' : 'linux', arch }, read, async pkg => {
-    const root = path.resolve(runtimesDir())
-    fs.mkdirSync(root, { recursive: true })
-    const staging = fs.mkdtempSync(path.join(root, '.java-'))
-    const archive = path.join(staging, IS_WIN ? 'runtime.zip' : 'runtime.tar.gz')
-    const extracted = path.join(staging, 'unpacked')
-    try {
-      const size = await javaPackageSize(pkg, url => httpFetch(url, { method: 'HEAD', systemProxy: true, signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(10000)]) : AbortSignal.timeout(10000) }))
-      signal?.throwIfAborted()
-      await downloadFile(pkg.url, archive, (done, total) => emit({ stage: 'java', progress: total ? done / total * .85 : 0, bytesDone: done, text: `下载 Java ${need} · ${pkg.provider} ${(done / 1048576).toFixed(1)}${total ? '/' + (total / 1048576).toFixed(1) : ''} MB` }), undefined, 'official', signal, [], { sha256: pkg.sha256, size, systemProxy: true, maxAttempts: 2 })
-      emit({ stage: 'java', progress: .9, text: `校验通过，正在解压 Java ${need} · ${pkg.provider}` })
-      fs.mkdirSync(extracted)
-      if (IS_WIN) new AdmZip(archive).extractAllTo(extracted, true)
-      else await new Promise<void>((resolve, reject) => execFile('/usr/bin/tar', ['-xzf', archive, '-C', extracted], { timeout: 120000 }, error => error ? reject(error) : resolve()))
-      const entries = fs.readdirSync(extracted)
-      const source = entries.length === 1 && fs.statSync(path.join(extracted, entries[0])).isDirectory() ? path.join(extracted, entries[0]) : extracted
-      const candidates = IS_MAC ? [path.join(source, 'Contents/Home/bin/java'), path.join(source, 'bin/java')] : [path.join(source, 'bin', JAVA_EXE)]
-      const exe = candidates.find(file => fs.existsSync(file))
-      if (!exe || !fs.realpathSync(exe).startsWith(fs.realpathSync(extracted) + path.sep)) throw new Error('Java 解压失败：未找到有效的 bin/java')
-      if (!IS_WIN) fs.chmodSync(exe, 0o755)
-      emit({ stage: 'java', progress: .95, text: `正在验证 Java ${need} · ${pkg.provider}（${arch}）` })
-      const verified = await probeJavaAsync(exe, signal)
-      if (!verified || verified.major !== need || verified.architecture !== (arch === 'aarch64' ? 'arm64' : 'x64')) throw new Error(`Java ${need} 无法运行或架构不匹配${IS_MAC && process.arch === 'arm64' && arch === 'x64' ? '；旧版游戏需要 Intel Java，请确认系统已安装 Rosetta' : ''}`)
-      await validateJavaRuntime(exe, verified.major)
-      signal?.throwIfAborted()
-      // Publish a fresh directory only after verification. Never remove or replace
-      // a runtime that an already-running game may still be using.
-      const target = path.join(root, `jre-${need}-${arch}-${path.basename(staging).slice(6)}`)
-      const relativeExe = path.relative(source, exe)
-      fs.renameSync(source, target)
-      const installedPath = path.join(target, relativeExe)
-      const info = probeCache.put(installedPath, { ...verified, path: installedPath, source: 'auto', sourceDetail: `FAIONYX Runtime · ${pkg.provider}` })
-      const persisted = readPersistentCache()
-      scanCache = { time: Date.now(), list: sortJava([...(scanCache?.list ?? persisted?.list ?? []), info]), complete: scanCache?.complete ?? !!persisted }
-      if (persisted) writePersistentCache(sortJava([...persisted.list, info]))
-      emit({ stage: 'java', progress: 1, text: `Java ${need} 就绪 · ${pkg.provider}（${arch}）` })
-      return installedPath
-    } finally {
-      // staging is a unique mkdtemp child of the managed runtime root.
-      await fs.promises.rm(staging, { recursive: true, force: true })
-    }
-  }, report, signal)
+  return provisionJava(
+    { major: need, os: IS_WIN ? 'windows' : IS_MAC ? 'mac' : 'linux', arch },
+    read,
+    async (pkg) => {
+      const root = path.resolve(runtimesDir())
+      fs.mkdirSync(root, { recursive: true })
+      const staging = fs.mkdtempSync(path.join(root, '.java-'))
+      const archive = path.join(staging, IS_WIN ? 'runtime.zip' : 'runtime.tar.gz')
+      const extracted = path.join(staging, 'unpacked')
+      try {
+        const size = await javaPackageSize(pkg, (url) =>
+          httpFetch(url, {
+            method: 'HEAD',
+            systemProxy: true,
+            signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(10000)]) : AbortSignal.timeout(10000),
+          })
+        )
+        signal?.throwIfAborted()
+        await downloadFile(
+          pkg.url,
+          archive,
+          (done, total) =>
+            emit({
+              stage: 'java',
+              progress: total ? (done / total) * 0.85 : 0,
+              bytesDone: done,
+              text: `下载 Java ${need} · ${pkg.provider} ${(done / 1048576).toFixed(1)}${total ? '/' + (total / 1048576).toFixed(1) : ''} MB`,
+            }),
+          undefined,
+          'official',
+          signal,
+          [],
+          { sha256: pkg.sha256, size, systemProxy: true, maxAttempts: 2 }
+        )
+        emit({ stage: 'java', progress: 0.9, text: `校验通过，正在解压 Java ${need} · ${pkg.provider}` })
+        fs.mkdirSync(extracted)
+        if (IS_WIN) new AdmZip(archive).extractAllTo(extracted, true)
+        else
+          await new Promise<void>((resolve, reject) =>
+            execFile('/usr/bin/tar', ['-xzf', archive, '-C', extracted], { timeout: 120000 }, (error) =>
+              error ? reject(error) : resolve()
+            )
+          )
+        const entries = fs.readdirSync(extracted)
+        const source =
+          entries.length === 1 && fs.statSync(path.join(extracted, entries[0])).isDirectory() ? path.join(extracted, entries[0]) : extracted
+        const candidates = IS_MAC
+          ? [path.join(source, 'Contents/Home/bin/java'), path.join(source, 'bin/java')]
+          : [path.join(source, 'bin', JAVA_EXE)]
+        const exe = candidates.find((file) => fs.existsSync(file))
+        if (!exe || !fs.realpathSync(exe).startsWith(fs.realpathSync(extracted) + path.sep))
+          throw new Error('Java 解压失败：未找到有效的 bin/java')
+        if (!IS_WIN) fs.chmodSync(exe, 0o755)
+        emit({ stage: 'java', progress: 0.95, text: `正在验证 Java ${need} · ${pkg.provider}（${arch}）` })
+        const verified = await probeJavaAsync(exe, signal)
+        if (!verified || verified.major !== need || verified.architecture !== (arch === 'aarch64' ? 'arm64' : 'x64'))
+          throw new Error(
+            `Java ${need} 无法运行或架构不匹配${IS_MAC && process.arch === 'arm64' && arch === 'x64' ? '；旧版游戏需要 Intel Java，请确认系统已安装 Rosetta' : ''}`
+          )
+        await validateJavaRuntime(exe, verified.major)
+        signal?.throwIfAborted()
+        // Publish a fresh directory only after verification. Never remove or replace
+        // a runtime that an already-running game may still be using.
+        const target = path.join(root, `jre-${need}-${arch}-${path.basename(staging).slice(6)}`)
+        const relativeExe = path.relative(source, exe)
+        fs.renameSync(source, target)
+        const installedPath = path.join(target, relativeExe)
+        const info = probeCache.put(installedPath, {
+          ...verified,
+          path: installedPath,
+          source: 'auto',
+          sourceDetail: `FAIONYX Runtime · ${pkg.provider}`,
+        })
+        const persisted = readPersistentCache()
+        scanCache = {
+          time: Date.now(),
+          list: sortJava([...(scanCache?.list ?? persisted?.list ?? []), info]),
+          complete: scanCache?.complete ?? !!persisted,
+        }
+        if (persisted) writePersistentCache(sortJava([...persisted.list, info]))
+        emit({ stage: 'java', progress: 1, text: `Java ${need} 就绪 · ${pkg.provider}（${arch}）` })
+        return installedPath
+      } finally {
+        // staging is a unique mkdtemp child of the managed runtime root.
+        await fs.promises.rm(staging, { recursive: true, force: true })
+      }
+    },
+    report,
+    signal
+  )
 }

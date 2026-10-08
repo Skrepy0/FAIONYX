@@ -4,8 +4,12 @@
 
 /* -------- 图一深色绿玻璃的首帧回退值（设置加载后由主题色板覆盖） -------- */
 /* Keep the native traffic lights clear of branding and editable page content. */
-html[data-platform="darwin"] .sidebar { padding-top: 38px; }
-html[data-platform="darwin"] .shell { border-radius: 0; }
+html[data-platform='darwin'] .sidebar {
+  padding-top: 38px;
+}
+html[data-platform='darwin'] .shell {
+  border-radius: 0;
+}
 
 :root {
   --bg: #10191b;
@@ -135,9 +139,14 @@ input[type='checkbox']:not(:where(.switch input, .connection-toggle input)) {
   background-repeat: no-repeat;
   background-size: 76%;
   cursor: pointer;
-  transition: background-color var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast);
+  transition:
+    background-color var(--motion-fast),
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast);
 }
-input[type='checkbox']:not(:where(.switch input, .connection-toggle input)):hover:not(:disabled) { border-color: var(--accent); }
+input[type='checkbox']:not(:where(.switch input, .connection-toggle input)):hover:not(:disabled) {
+  border-color: var(--accent);
+}
 input[type='checkbox']:not(:where(.switch input, .connection-toggle input)):checked {
   border-color: var(--accent);
   background-color: var(--accent);
@@ -148,15 +157,52 @@ input[type='checkbox']:not(:where(.switch input, .connection-toggle input)):inde
   background-color: var(--accent);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12h12' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
 }
-input[type='checkbox']:not(:where(.switch input, .connection-toggle input)):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-input[type='checkbox']:not(:where(.switch input, .connection-toggle input)):disabled { opacity: .45; cursor: not-allowed; }
-.check-option { display: flex; gap: 14px; align-items: flex-start; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--card-2); cursor: pointer; }
-.check-option:has(input:checked) { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); background: color-mix(in srgb, var(--accent-soft) 40%, var(--card-2)); }
-.check-option input { --check-size: 26px; margin-top: 2px; }
-.check-option strong { display: block; font-size: var(--text-md); font-weight: 600; }
-.check-option small { display: block; margin-top: 4px; color: var(--text-dim); font-size: var(--text-xs); line-height: 1.6; }
-.check-option:has(input:disabled) { cursor: default; }
-@media (prefers-reduced-motion: reduce) { input[type='checkbox'] { transition: none; } }
+input[type='checkbox']:not(:where(.switch input, .connection-toggle input)):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+input[type='checkbox']:not(:where(.switch input, .connection-toggle input)):disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.check-option {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card-2);
+  cursor: pointer;
+}
+.check-option:has(input:checked) {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  background: color-mix(in srgb, var(--accent-soft) 40%, var(--card-2));
+}
+.check-option input {
+  --check-size: 26px;
+  margin-top: 2px;
+}
+.check-option strong {
+  display: block;
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+.check-option small {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-dim);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+}
+.check-option:has(input:disabled) {
+  cursor: default;
+}
+@media (prefers-reduced-motion: reduce) {
+  input[type='checkbox'] {
+    transition: none;
+  }
+}
 
 html,
 body,
@@ -215,8 +261,14 @@ body {
   line-height: 1.2;
   cursor: pointer;
   /* Keep hover stationary; reserve movement for a short press response. */
-  transition: background 0.18s ease, border-color 0.18s ease, filter 0.18s ease,
-    transform 0.14s ease, opacity 0.18s ease, color 0.18s ease, box-shadow 0.2s ease;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    filter 0.18s ease,
+    transform 0.14s ease,
+    opacity 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.2s ease;
   white-space: nowrap;
 }
 /* 焦点环（可访问性）：键盘聚焦时可见描边 */
@@ -257,7 +309,9 @@ body {
 }
 .btn-gold:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px var(--accent-soft), 0 4px 16px var(--accent-soft);
+  box-shadow:
+    0 0 0 3px var(--accent-soft),
+    0 4px 16px var(--accent-soft);
 }
 
 /* Secondary actions use a neutral surface and border. */
@@ -318,8 +372,12 @@ body {
   background: transparent;
   color: var(--text-dim);
   cursor: pointer;
-  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease,
-    transform 0.14s ease, box-shadow 0.2s ease;
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.14s ease,
+    box-shadow 0.2s ease;
   flex-shrink: 0;
 }
 .icon-btn:hover:not(:disabled) {
@@ -357,7 +415,10 @@ body {
   font-size: var(--text-md);
   font-family: inherit;
   outline: none;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
 }
 .input::placeholder {
   color: var(--text-dim);
@@ -422,7 +483,9 @@ input[type='number'] {
   border-radius: 999px;
   background: var(--card-2);
   border: 1px solid var(--border);
-  transition: background var(--motion-normal) ease, border-color var(--motion-normal) ease;
+  transition:
+    background var(--motion-normal) ease,
+    border-color var(--motion-normal) ease;
 }
 .switch-ui::before {
   content: '';
@@ -434,7 +497,9 @@ input[type='number'] {
   height: 14px;
   border-radius: 50%;
   background: var(--text-dim);
-  transition: transform var(--motion-normal) var(--ease-out), background var(--motion-normal) ease;
+  transition:
+    transform var(--motion-normal) var(--ease-out),
+    background var(--motion-normal) ease;
 }
 .switch input:checked + .switch-ui {
   background: var(--accent);
@@ -497,7 +562,9 @@ input[type='number'] {
   border-radius: var(--radius);
   padding: var(--card-pad);
   box-shadow: var(--shadow);
-  transition: border-color 0.18s ease, background 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
 }
 
 .tag {
@@ -582,10 +649,24 @@ input[type='number'] {
 }
 
 /* User content layers stay within the page, below navigation and system dialogs. */
-.content { isolation: isolate; z-index: 0; }
-.sidebar, .topbar { isolation: isolate; position: relative; z-index: 2; }
-#design-preview-host > .shell { width: 100% !important; height: 100% !important; min-height: 0 !important; }
-#design-preview-host > .app-bg { position: absolute !important; }
+.content {
+  isolation: isolate;
+  z-index: 0;
+}
+.sidebar,
+.topbar {
+  isolation: isolate;
+  position: relative;
+  z-index: 2;
+}
+#design-preview-host > .shell {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+}
+#design-preview-host > .app-bg {
+  position: absolute !important;
+}
 .modal {
   width: min(460px, calc(100vw - 48px));
   max-height: calc(100vh - 96px);
@@ -653,7 +734,9 @@ input[type='number'] {
   font-family: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background 0.14s ease, color 0.14s ease;
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -689,21 +772,37 @@ input[type='number'] {
 }
 
 /* Page changes: a brief exit, then a small entrance, without spring overshoot. */
-.fade-enter-active { transition: opacity 180ms ease, transform 180ms var(--ease-out); }
-.fade-leave-active { transition: opacity 80ms ease; }
-.fade-enter-from { opacity: 0; transform: translateY(6px); }
-.fade-leave-to { opacity: 0; }
+.fade-enter-active {
+  transition:
+    opacity 180ms ease,
+    transform 180ms var(--ease-out);
+}
+.fade-leave-active {
+  transition: opacity 80ms ease;
+}
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.fade-leave-to {
+  opacity: 0;
+}
 
 /* All custom controls retain a visible keyboard focus, including icon-only actions. */
 :where(button, a, [role='button'], input, select, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
-.slider:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.slider:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
 
 /* Keep progress state visible while honoring the system's motion preference. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
@@ -788,7 +887,9 @@ input[type='number'] {
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.12s ease;
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease;
 }
 .edit-tip-done:hover {
   background: color-mix(in srgb, var(--on-accent) 32%, transparent);
@@ -800,7 +901,9 @@ input[type='number'] {
 /* 提示条进出动画 */
 .edit-tip-enter-active,
 .edit-tip-leave-active {
-  transition: opacity 0.22s ease, transform 0.22s ease;
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
 }
 .edit-tip-enter-from,
 .edit-tip-leave-to {
@@ -811,7 +914,9 @@ input[type='number'] {
 /* 右侧编辑面板滑入动画 */
 .ep-slide-enter-active,
 .ep-slide-leave-active {
-  transition: transform 0.25s ease, opacity 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease;
 }
 .ep-slide-enter-from,
 .ep-slide-leave-to {
@@ -821,7 +926,7 @@ input[type='number'] {
 
 /* 所有可用按钮统一提供静止高亮，保持布局与个性化动效。 */
 @media (hover: hover) {
-  button:not(:disabled):not([aria-disabled="true"]):hover {
+  button:not(:disabled):not([aria-disabled='true']):hover {
     filter: brightness(1.08);
   }
   .btn-ghost:hover:not(:disabled) {
@@ -830,4 +935,7 @@ input[type='number'] {
     box-shadow: 0 3px 12px var(--accent-soft);
   }
 }
-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

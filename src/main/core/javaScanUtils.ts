@@ -5,10 +5,7 @@ import type { JavaInfo } from '../../shared/types'
 export const JAVA_PROBE_VM_ARGS = ['-Xms8m', '-Xmx32m'] as const
 
 /** 将注册表中的 %VAR% 展开；未知变量保持原样，避免误改合法路径。 */
-export function expandWindowsEnvironment(
-  value: string,
-  env: NodeJS.ProcessEnv = process.env
-): string {
+export function expandWindowsEnvironment(value: string, env: NodeJS.ProcessEnv = process.env): string {
   return value.replace(/%([^%]+)%/g, (whole, name: string) => {
     const key = Object.keys(env).find((item) => item.toLowerCase() === name.toLowerCase())
     return key && env[key] ? env[key]! : whole
@@ -16,22 +13,15 @@ export function expandWindowsEnvironment(
 }
 
 /** 解析 reg query 输出中可能指向 Java Home/可执行文件的值。 */
-export function parseRegistryJavaHomes(
-  output: string,
-  env: NodeJS.ProcessEnv = process.env
-): string[] {
+export function parseRegistryJavaHomes(output: string, env: NodeJS.ProcessEnv = process.env): string[] {
   const result: string[] = []
   for (const line of output.split(/\r?\n/)) {
-    const match = /^\s*(JavaHome|JAVA_HOME|Path|Home|InstallationPath)\s+REG_(?:SZ|EXPAND_SZ)\s+(.+?)\s*$/i.exec(
-      line
-    )
+    const match = /^\s*(JavaHome|JAVA_HOME|Path|Home|InstallationPath)\s+REG_(?:SZ|EXPAND_SZ)\s+(.+?)\s*$/i.exec(line)
     if (!match) continue
     const value = expandWindowsEnvironment(match[2].trim().replace(/^"|"$/g, ''), env)
     if (/^[a-z]:\\/i.test(value)) result.push(path.win32.normalize(value))
   }
-  return [...new Set(result.map((item) => item.toLowerCase()))].map(
-    (lower) => result.find((item) => item.toLowerCase() === lower)!
-  )
+  return [...new Set(result.map((item) => item.toLowerCase()))].map((lower) => result.find((item) => item.toLowerCase() === lower)!)
 }
 
 export function normalizeJavaArchitecture(value: string): string {
@@ -61,17 +51,13 @@ export function parseJavaProbeOutput(
   output: string,
   platform: NodeJS.Platform = process.platform
 ): Omit<JavaInfo, 'path' | 'source' | 'sourceDetail'> | null {
-  const version =
-    property(output, 'java.version') ??
-    /(?:openjdk|java) version\s+"([^"]+)"/i.exec(output)?.[1]
+  const version = property(output, 'java.version') ?? /(?:openjdk|java) version\s+"([^"]+)"/i.exec(output)?.[1]
   if (!version) return null
 
   const versionMatch = /^(?:1\.)?(\d+)/.exec(version)
   if (!versionMatch) return null
   const parsed = Number.parseInt(versionMatch[1], 10)
-  const major = version.startsWith('1.')
-    ? Number.parseInt(version.split('.')[1] ?? '0', 10)
-    : parsed
+  const major = version.startsWith('1.') ? Number.parseInt(version.split('.')[1] ?? '0', 10) : parsed
   if (!Number.isFinite(major) || major <= 0) return null
 
   const rawArch = property(output, 'os.arch')

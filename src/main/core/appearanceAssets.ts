@@ -2,11 +2,7 @@ import { app, nativeImage } from 'electron'
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
-import {
-  ALLOWED_IMAGE_EXTENSIONS,
-  isPathInside,
-  type ManagedImagePurpose
-} from './imageAssetPolicy'
+import { ALLOWED_IMAGE_EXTENSIONS, isPathInside, type ManagedImagePurpose } from './imageAssetPolicy'
 import { encodeManagedImage, inspectImageFile, validateManagedImageSnapshot, type EncodedManagedImage } from './imageAssetProcessor'
 import { sniffImageFormat } from './imageAssetPolicy'
 
@@ -18,22 +14,14 @@ export interface ManagedImage {
 }
 
 export function globalAppearanceDir(purpose: 'background' | 'launch-thumbnail'): string {
-  return path.join(
-    app.getPath('userData'),
-    'appearance',
-    purpose === 'background' ? 'backgrounds' : 'launch-thumbnails'
-  )
+  return path.join(app.getPath('userData'), 'appearance', purpose === 'background' ? 'backgrounds' : 'launch-thumbnails')
 }
 
 export function instanceThumbnailDir(folder: string): string {
   return path.join(path.resolve(folder), '.faionyx', 'thumbnails')
 }
 
-async function importImage(
-  sourcePath: string,
-  purpose: ManagedImagePurpose,
-  destinationDirectory: string
-): Promise<ManagedImage> {
+async function importImage(sourcePath: string, purpose: ManagedImagePurpose, destinationDirectory: string): Promise<ManagedImage> {
   const encoded = await encodeManagedImage(sourcePath, purpose)
   return writeManagedImage(encoded, destinationDirectory)
 }
@@ -58,14 +46,11 @@ async function writeManagedImage(encoded: EncodedManagedImage, destinationDirect
     path: destination,
     width: encoded.width,
     height: encoded.height,
-    bytes: encoded.data.length
+    bytes: encoded.data.length,
   }
 }
 
-export async function importGlobalImage(
-  sourcePath: string,
-  purpose: 'background' | 'launch-thumbnail'
-): Promise<ManagedImage> {
+export async function importGlobalImage(sourcePath: string, purpose: 'background' | 'launch-thumbnail'): Promise<ManagedImage> {
   return importImage(sourcePath, purpose, globalAppearanceDir(purpose))
 }
 
@@ -75,10 +60,7 @@ export async function importGlobalImageSnapshot(data: Buffer, purpose: 'backgrou
   return writeManagedImage(encoded, globalAppearanceDir(purpose))
 }
 
-export async function importInstanceThumbnail(
-  sourcePath: string,
-  folder: string
-): Promise<ManagedImage> {
+export async function importInstanceThumbnail(sourcePath: string, folder: string): Promise<ManagedImage> {
   return importImage(sourcePath, 'instance-thumbnail', instanceThumbnailDir(folder))
 }
 
@@ -112,11 +94,7 @@ function validateManagedPath(candidate: string, directory: string): string {
 /**
  * 校验当前全局资源；allowLegacyExternal 只供启动迁移保留旧版外部路径。
  */
-export function ensureGlobalImage(
-  candidate: string,
-  purpose: 'background' | 'launch-thumbnail',
-  allowLegacyExternal = false
-): string {
+export function ensureGlobalImage(candidate: string, purpose: 'background' | 'launch-thumbnail', allowLegacyExternal = false): string {
   if (!candidate) return ''
   const directory = globalAppearanceDir(purpose)
   try {
@@ -157,10 +135,7 @@ function removeManagedImage(candidate: string, directory: string): void {
   }
 }
 
-export function removeGlobalImage(
-  candidate: string,
-  purpose: 'background' | 'launch-thumbnail'
-): void {
+export function removeGlobalImage(candidate: string, purpose: 'background' | 'launch-thumbnail'): void {
   removeManagedImage(candidate, globalAppearanceDir(purpose))
 }
 
@@ -171,11 +146,7 @@ export function removeInstanceThumbnail(candidate: string, folder: string): void
 /** 自定义协议的最终访问边界：仅允许全局外观目录及已登记游戏文件夹的缩略图。 */
 export function authorizeManagedImage(candidate: string, gameFolders: string[]): string {
   if (!candidate) return ''
-  const directories = [
-    globalAppearanceDir('background'),
-    globalAppearanceDir('launch-thumbnail'),
-    ...gameFolders.map(instanceThumbnailDir)
-  ]
+  const directories = [globalAppearanceDir('background'), globalAppearanceDir('launch-thumbnail'), ...gameFolders.map(instanceThumbnailDir)]
   for (const directory of directories) {
     if (!isPathInside(candidate, directory)) continue
     try {

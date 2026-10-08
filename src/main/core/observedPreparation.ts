@@ -7,14 +7,32 @@ export class ObservedPreparation<T, E> {
     if (!record) {
       record = { promise: Promise.resolve(undefined as T), listeners: new Set() }
       const owned = record
-      owned.promise = Promise.resolve().then(() => work(event => {
-        owned.last = event
-        for (const listener of owned.listeners) { try { listener(event) } catch { /* A disconnected UI must not stop another caller. */ } }
-      })).finally(() => { if (this.pending.get(key) === owned) this.pending.delete(key) })
+      owned.promise = Promise.resolve()
+        .then(() =>
+          work((event) => {
+            owned.last = event
+            for (const listener of owned.listeners) {
+              try {
+                listener(event)
+              } catch {
+                /* A disconnected UI must not stop another caller. */
+              }
+            }
+          })
+        )
+        .finally(() => {
+          if (this.pending.get(key) === owned) this.pending.delete(key)
+        })
       this.pending.set(key, owned)
     }
     record.listeners.add(observe)
-    if (record.last !== undefined) { try { observe(record.last) } catch { /* Replayed observer only. */ } }
+    if (record.last !== undefined) {
+      try {
+        observe(record.last)
+      } catch {
+        /* Replayed observer only. */
+      }
+    }
     const owned = record
     return owned.promise.finally(() => owned.listeners.delete(observe))
   }

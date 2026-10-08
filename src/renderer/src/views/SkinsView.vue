@@ -10,7 +10,7 @@ import {
   renameSkinHistory,
   resetOfflineSkin,
   uploadSkin,
-  uploadSkinFromHistory
+  uploadSkinFromHistory,
 } from '../api'
 import { store, toast } from '../store'
 import { renderCape, renderSkinFront } from '../skin-render'
@@ -26,10 +26,10 @@ import type { CapeInfo, ProfileSkins, SkinHistoryEntry, SkinVariant } from '@sha
 const isMs = computed(() => store.selectedAccount?.type === 'microsoft')
 const isExternal = computed(() => store.selectedAccount?.type === 'yggdrasil')
 const isOffline = computed(() => store.selectedAccount?.type === 'offline')
-const defaultSkin = computed(() => isOffline.value ? createFallbackSkin().toDataURL('image/png') : '')
+const defaultSkin = computed(() => (isOffline.value ? createFallbackSkin().toDataURL('image/png') : ''))
 const canApplySkin = computed(() => isMs.value || isOffline.value)
 const canViewProfile = computed(() => canApplySkin.value || isExternal.value)
-const historyAccountId = () => isOffline.value ? store.selectedAccount?.id : undefined
+const historyAccountId = () => (isOffline.value ? store.selectedAccount?.id : undefined)
 
 /** 历史皮肤重命名输入框自动聚焦 */
 const vFocus = { mounted: (el: HTMLElement) => el.focus() }
@@ -39,20 +39,26 @@ const profile = ref<ProfileSkins | null>(null)
 const loadingProfile = ref(false)
 
 const currentSkin = computed(() => profile.value?.skins[0] ?? null)
-const currentVariant = computed<SkinVariant>(() =>
-  currentSkin.value?.variant === 'slim' ? 'slim' : 'classic'
-)
+const currentVariant = computed<SkinVariant>(() => (currentSkin.value?.variant === 'slim' ? 'slim' : 'classic'))
 const capes = computed(() => profile.value?.capes ?? [])
 /** 使用中的披风直接传给 3D 人偶渲染 */
 const activeCape = computed(() => capes.value.find((c) => c.active)?.dataUrl ?? '')
 const capeViewerError = ref('')
-watch(activeCape, () => { capeViewerError.value = '' })
+watch(activeCape, () => {
+  capeViewerError.value = ''
+})
 
-let profileRequest = 0, historyRequest = 0
-const profileError = ref(''), historyError = ref('')
-onUnmounted(() => { profileRequest++; historyRequest++ })
+let profileRequest = 0,
+  historyRequest = 0
+const profileError = ref(''),
+  historyError = ref('')
+onUnmounted(() => {
+  profileRequest++
+  historyRequest++
+})
 async function loadProfile(refresh = false) {
-  const request = ++profileRequest; profileError.value = ''
+  const request = ++profileRequest
+  profileError.value = ''
   loadingProfile.value = true
   try {
     const next = await getSkinProfile(refresh, store.selectedAccount?.id)
@@ -70,8 +76,10 @@ const viewerRef = ref<InstanceType<typeof SkinViewer3D> | null>(null)
 /** 预览姿势只改变本地模型，不上传或更换账号皮肤。 */
 const previewAnim = ref<SkinPreviewAnimation>('walk')
 const previewModes: { key: SkinPreviewAnimation; name: string; title: string }[] = [
-  { key: 'walk', name: '行走', title: '行走姿势' }, { key: 'idle', name: '待机', title: '待机姿势' },
-  { key: 'crouch', name: '蹲下', title: '蹲下姿势' }, { key: 'fly', name: '飞行', title: '鞘翅飞行姿势' }
+  { key: 'walk', name: '行走', title: '行走姿势' },
+  { key: 'idle', name: '待机', title: '待机姿势' },
+  { key: 'crouch', name: '蹲下', title: '蹲下姿势' },
+  { key: 'fly', name: '飞行', title: '鞘翅飞行姿势' },
 ]
 
 /** 行走/待机分段控件滑动块（与导航水滴/游戏 Tab 同款弹簧动效） */
@@ -88,20 +96,27 @@ function updateAnimSegBlob() {
 }
 watch(previewAnim, () => nextTick(updateAnimSegBlob))
 let animSegObserver: ResizeObserver | null = null
-watch(animSeg, element => {
-  animSegObserver?.disconnect()
-  animSegBlob.on = false
-  if (!element) return
-  if (!animSegObserver) animSegObserver = new ResizeObserver(updateAnimSegBlob)
-  animSegObserver.observe(element)
-  void nextTick(updateAnimSegBlob)
-}, { flush: 'post' })
-watch(() => store.settings?.theme, () => nextTick(updateAnimSegBlob))
+watch(
+  animSeg,
+  (element) => {
+    animSegObserver?.disconnect()
+    animSegBlob.on = false
+    if (!element) return
+    if (!animSegObserver) animSegObserver = new ResizeObserver(updateAnimSegBlob)
+    animSegObserver.observe(element)
+    void nextTick(updateAnimSegBlob)
+  },
+  { flush: 'post' }
+)
+watch(
+  () => store.settings?.theme,
+  () => nextTick(updateAnimSegBlob)
+)
 onUnmounted(() => animSegObserver?.disconnect())
 const animSegBlobStyle = computed(() => ({
   left: animSegBlob.left + 'px',
   width: animSegBlob.width + 'px',
-  opacity: animSegBlob.on ? 1 : 0
+  opacity: animSegBlob.on ? 1 : 0,
 }))
 
 // ---------------- 披风 ----------------
@@ -109,23 +124,35 @@ const capeRenders = ref<Record<string, string>>({})
 const capeErrors = ref<Record<string, string>>({})
 const capeBusy = ref<string | null>(null)
 let capeRenderRequest = 0
-onUnmounted(() => { capeRenderRequest++ })
+onUnmounted(() => {
+  capeRenderRequest++
+})
 
 async function renderCapes() {
-  const request = ++capeRenderRequest, profileToken = profileRequest
-  const map: Record<string, string> = {}, errors: Record<string, string> = {}
+  const request = ++capeRenderRequest,
+    profileToken = profileRequest
+  const map: Record<string, string> = {},
+    errors: Record<string, string> = {}
   for (const c of [...capes.value]) {
     if (c.dataUrl) {
       const rendered = await renderCape(c.dataUrl, 100, 160)
-      if (rendered) { map[c.id] = rendered; if (c.textureError) errors[c.id] = c.textureError }
-      else errors[c.id] = '披风材质无法加载或尺寸不受支持，请刷新重试'
+      if (rendered) {
+        map[c.id] = rendered
+        if (c.textureError) errors[c.id] = c.textureError
+      } else errors[c.id] = '披风材质无法加载或尺寸不受支持，请刷新重试'
     } else errors[c.id] = c.textureError || '披风材质尚未下载，请刷新重试'
   }
   if (request === capeRenderRequest && profileToken === profileRequest) {
-    capeRenders.value = map; capeErrors.value = errors
+    capeRenders.value = map
+    capeErrors.value = errors
   }
 }
-watch(() => profile.value?.capes, () => { void renderCapes() })
+watch(
+  () => profile.value?.capes,
+  () => {
+    void renderCapes()
+  }
+)
 
 /** 点击披风：使用中 → 卸下；其他 → 激活 */
 async function onCapeClick(c: CapeInfo) {
@@ -166,10 +193,7 @@ const historySearch = ref('')
 const filteredHistory = computed(() => {
   const kw = historySearch.value.trim().toLowerCase()
   if (!kw) return historyList.value
-  return historyList.value.filter(
-    (item) =>
-      (item.name || '').toLowerCase().includes(kw) || item.id.toLowerCase().includes(kw)
-  )
+  return historyList.value.filter((item) => (item.name || '').toLowerCase().includes(kw) || item.id.toLowerCase().includes(kw))
 })
 
 /** 历史皮肤重命名（点击文件名进入编辑，回车/失焦保存，Esc 取消） */
@@ -191,7 +215,9 @@ async function commitHistoryRename(item: SkinHistoryEntry) {
   const old = item.name || ''
   cancelHistoryRename()
   if (name === old) return
-  const request = historyRequest, accountId = store.selectedAccount?.id, scopeId = historyAccountId()
+  const request = historyRequest,
+    accountId = store.selectedAccount?.id,
+    scopeId = historyAccountId()
   try {
     const next = await renameSkinHistory(item.id, name, scopeId)
     if (request !== historyRequest || accountId !== store.selectedAccount?.id) return
@@ -208,7 +234,8 @@ function historyDisplayName(item: SkinHistoryEntry): string {
 }
 
 async function loadHistory() {
-  const request = ++historyRequest; historyError.value = ''
+  const request = ++historyRequest
+  historyError.value = ''
   loadingHistory.value = true
   try {
     const next = await getSkinHistory(historyAccountId())
@@ -229,9 +256,11 @@ async function loadHistory() {
 /** 换回历史皮肤：主进程走标准上传流程并返回最新档案 */
 async function onRestore(item: SkinHistoryEntry) {
   if (!canApplySkin.value || historyBusy.value) return
-  const request = profileRequest, accountId = store.selectedAccount?.id
+  const request = profileRequest,
+    accountId = store.selectedAccount?.id
   const local = isOffline.value
-  const accountName = store.selectedAccount?.username || '此前账号', selectedPreview = previewHistoryId.value
+  const accountName = store.selectedAccount?.username || '此前账号',
+    selectedPreview = previewHistoryId.value
   historyBusy.value = item.id
   try {
     const next = local ? await uploadSkinFromHistory(item.id, accountId) : await uploadSkinFromHistory(item.id)
@@ -240,7 +269,9 @@ async function onRestore(item: SkinHistoryEntry) {
       return
     }
     // Invalidate an older profile read still in flight for this same account.
-    profileRequest++; loadingProfile.value = false; profileError.value = ''
+    profileRequest++
+    loadingProfile.value = false
+    profileError.value = ''
     profile.value = next
     if (previewHistoryId.value === selectedPreview) previewHistoryId.value = ''
     toast(local ? '已应用历史皮肤，下次启动游戏生效' : '已换回历史皮肤', 'success')
@@ -255,7 +286,10 @@ async function onRestore(item: SkinHistoryEntry) {
 
 async function onDeleteHistory(item: SkinHistoryEntry) {
   if (historyBusy.value) return
-  const request = historyRequest, accountId = store.selectedAccount?.id, scopeId = historyAccountId(), local = isOffline.value
+  const request = historyRequest,
+    accountId = store.selectedAccount?.id,
+    scopeId = historyAccountId(),
+    local = isOffline.value
   historyBusy.value = item.id
   try {
     const next = await deleteSkinHistory(item.id, scopeId)
@@ -303,7 +337,8 @@ async function pickFile(f: File | undefined | null) {
     return
   }
   pending.value = { path: p, name: f.name }
-  const selectedFile = pending.value, accountId = store.selectedAccount?.id
+  const selectedFile = pending.value,
+    accountId = store.selectedAccount?.id
   try {
     const dataUrl = await fileToDataUrl(f)
     if (pending.value === selectedFile && accountId === store.selectedAccount?.id) pendingDataUrl.value = dataUrl
@@ -325,17 +360,23 @@ function clearPending() {
 
 async function doUpload() {
   if (!canApplySkin.value || !pending.value || uploading.value) return
-  const request = profileRequest, accountId = store.selectedAccount?.id
-  const accountName = store.selectedAccount?.username || '此前账号', selectedFile = pending.value
+  const request = profileRequest,
+    accountId = store.selectedAccount?.id
+  const accountName = store.selectedAccount?.username || '此前账号',
+    selectedFile = pending.value
   const local = isOffline.value
   uploading.value = true
   try {
-    const next = local ? await applyOfflineSkin(selectedFile.path, variant.value, accountId!) : await uploadSkin(selectedFile.path, variant.value)
+    const next = local
+      ? await applyOfflineSkin(selectedFile.path, variant.value, accountId!)
+      : await uploadSkin(selectedFile.path, variant.value)
     if (request !== profileRequest || accountId !== store.selectedAccount?.id) {
       toast(`「${accountName}」的皮肤${local ? '已应用' : '上传成功'}；当前预览保持不变`, 'success')
       return
     }
-    profileRequest++; loadingProfile.value = false; profileError.value = ''
+    profileRequest++
+    loadingProfile.value = false
+    profileError.value = ''
     profile.value = next
     toast(local ? '已应用到离线账号，下次启动游戏生效' : '皮肤上传成功', 'success')
     if (pending.value === selectedFile) clearPending()
@@ -400,11 +441,17 @@ async function onResetOffline() {
   try {
     const next = await resetOfflineSkin(account.id)
     if (request !== profileRequest || account.id !== store.selectedAccount?.id) return
-    profileRequest++; loadingProfile.value = false; profileError.value = ''
-    profile.value = next; previewHistoryId.value = ''
+    profileRequest++
+    loadingProfile.value = false
+    profileError.value = ''
+    profile.value = next
+    previewHistoryId.value = ''
     toast('已恢复游戏默认皮肤，下次启动游戏生效', 'success')
-  } catch (error) { toast('恢复默认皮肤失败：' + errText(error), 'error') }
-  finally { uploading.value = false }
+  } catch (error) {
+    toast('恢复默认皮肤失败：' + errText(error), 'error')
+  } finally {
+    uploading.value = false
+  }
 }
 
 onMounted(() => {
@@ -415,12 +462,20 @@ onMounted(() => {
 watch(
   () => store.selectedAccount?.id,
   () => {
-    profileRequest++; historyRequest++; loadingProfile.value = false; loadingHistory.value = false; profileError.value = ''; historyError.value = ''
+    profileRequest++
+    historyRequest++
+    loadingProfile.value = false
+    loadingHistory.value = false
+    profileError.value = ''
+    historyError.value = ''
     profile.value = null
     historyList.value = []
     historyRenders.value = {}
     previewHistoryId.value = ''
-    capeRenders.value = {}; capeErrors.value = {}; capeViewerError.value = ''; capeBusy.value = null
+    capeRenders.value = {}
+    capeErrors.value = {}
+    capeViewerError.value = ''
+    capeBusy.value = null
     cancelHistoryRename()
     clearPending()
     loadAll()
@@ -429,29 +484,58 @@ watch(
 </script>
 
 <template>
-  <div data-ui="SkinsView:79bfa9f178a8" class="page skins-page" :class="{'local-preview':!canViewProfile}">
-    <SkinEditor v-if="editorOpen" :current="currentSkin?.dataUrl" :variant="currentVariant" @close="editorOpen=false" @uploaded="loadAll" />
+  <div data-ui="SkinsView:79bfa9f178a8" class="page skins-page" :class="{ 'local-preview': !canViewProfile }">
+    <SkinEditor
+      v-if="editorOpen"
+      :current="currentSkin?.dataUrl"
+      :variant="currentVariant"
+      @close="editorOpen = false"
+      @uploaded="loadAll"
+    />
     <div data-ui="SkinsView:483ce0fd91a6" class="page-head">
-      <div class="skin-page-heading"><h1 data-ui="SkinsView:b30aa0d910d4" class="page-title">皮肤与披风</h1>
-      <p data-ui="SkinsView:dc0d51be1910" class="page-sub">
-        {{ isExternal ? `查看 ${store.selectedAccount?.providerName ?? '外置皮肤站'} 的角色材质` : isMs ? '管理微软正版账号的皮肤与披风' : isOffline ? '本地 PNG 皮肤 · 在本机游戏中显示' : '预览本地皮肤；选择账号后可应用' }}
-      </p></div>
-      <button class="btn btn-gold skin-editor-entry" @click="editorOpen=true">绘制皮肤</button>
+      <div class="skin-page-heading">
+        <h1 data-ui="SkinsView:b30aa0d910d4" class="page-title">皮肤与披风</h1>
+        <p data-ui="SkinsView:dc0d51be1910" class="page-sub">
+          {{
+            isExternal
+              ? `查看 ${store.selectedAccount?.providerName ?? '外置皮肤站'} 的角色材质`
+              : isMs
+                ? '管理微软正版账号的皮肤与披风'
+                : isOffline
+                  ? '本地 PNG 皮肤 · 在本机游戏中显示'
+                  : '预览本地皮肤；选择账号后可应用'
+          }}
+        </p>
+      </div>
+      <button class="btn btn-gold skin-editor-entry" @click="editorOpen = true">绘制皮肤</button>
     </div>
 
     <!-- 非微软账号：整页引导 -->
     <div data-ui="SkinsView:bd24ad0997f2" v-if="!canViewProfile && !historyList.length" class="card empty need-ms">
-      <svg class="need-ms-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <svg
+        class="need-ms-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
         <path d="m9 4-6 3 2 5 3-1v9h8v-9l3 1 2-5-6-3a3 3 0 0 1-6 0Z" />
       </svg>
-      <p data-ui="SkinsView:b00f59b6449e" class="need-ms-text">账号皮肤与披风需要微软正版账号或外置 Yggdrasil 账号；本地历史皮肤可直接预览</p>
-      <p v-if="historyError" role="alert" class="muted">读取本地历史失败：{{ historyError }}<button class="btn btn-ghost" @click="loadHistory">重试</button></p>
+      <p data-ui="SkinsView:b00f59b6449e" class="need-ms-text">
+        账号皮肤与披风需要微软正版账号或外置 Yggdrasil 账号；本地历史皮肤可直接预览
+      </p>
+      <p v-if="historyError" role="alert" class="muted">
+        读取本地历史失败：{{ historyError }}<button class="btn btn-ghost" @click="loadHistory">重试</button>
+      </p>
       <button data-ui="SkinsView:81397b7fad2a" class="btn btn-gold" @click="store.currentView = 'accounts'">去登录</button>
     </div>
 
     <template v-if="canViewProfile || historyList.length">
       <!-- ============ 第一行：3D 预览 + 当前皮肤（40% / 60%，窄窗自动换行） ============ -->
-      <div data-ui="SkinsView:09d4cbffd159"
+      <div
+        data-ui="SkinsView:09d4cbffd159"
         class="row-main"
         :class="{ 'drag-over': dragOver }"
         @dragenter.stop.prevent="onCardDragEnter"
@@ -466,7 +550,9 @@ watch(
             <div data-ui="SkinsView:bb4ca04a6667" v-if="previewReady" class="pane-tools preview-pose-tools">
               <div data-ui="SkinsView:66970b2bfb5f" class="seg preview-pose-selector" ref="animSeg" role="group" aria-label="预览姿势">
                 <span data-ui="SkinsView:aaed9003b2f3" class="seg-blob" :style="animSegBlobStyle" aria-hidden="true"></span>
-                <button v-for="mode in previewModes" :key="mode.key"
+                <button
+                  v-for="mode in previewModes"
+                  :key="mode.key"
                   class="seg-btn"
                   :data-seg="mode.key"
                   :class="{ active: previewAnim === mode.key }"
@@ -478,7 +564,14 @@ watch(
                 </button>
               </div>
               <button data-ui="SkinsView:1350e68d93c0" class="icon-btn" title="回正视角" @click="viewerRef?.resetView()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
                   <circle cx="12" cy="12" r="7.5" />
                   <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" />
                 </svg>
@@ -486,8 +579,10 @@ watch(
             </div>
           </header>
           <div v-if="previewHistory" class="preview-selection" role="status">
-            <span><strong>{{ historyDisplayName(previewHistory) }}</strong> · 仅预览，未更换账号皮肤</span>
-            <button class="btn btn-ghost btn-sm" @click="previewHistoryId=''">{{ currentSkin ? '返回当前皮肤' : '结束预览' }}</button>
+            <span
+              ><strong>{{ historyDisplayName(previewHistory) }}</strong> · 仅预览，未更换账号皮肤</span
+            >
+            <button class="btn btn-ghost btn-sm" @click="previewHistoryId = ''">{{ currentSkin ? '返回当前皮肤' : '结束预览' }}</button>
           </div>
           <div data-ui="SkinsView:69891078db9e" class="preview-3d">
             <template v-if="previewReady">
@@ -505,7 +600,14 @@ watch(
             <div data-ui="SkinsView:e868aac3a5b8" v-else class="preview-3d-empty">
               <span data-ui="SkinsView:931587e4968d" v-if="loadingProfile" class="spin"></span>
               <div data-ui="SkinsView:2612f1d28a75" v-else class="preview-placeholder">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
                   <circle cx="12" cy="8" r="4" />
                   <path d="M4 21v-1a8 8 0 0 1 16 0v1" />
                 </svg>
@@ -517,113 +619,129 @@ watch(
 
         <!-- 右：当前皮肤信息与上传 -->
         <div v-if="canViewProfile" class="skin-operation-panel">
-        <section data-ui="SkinsView:8be659224d2f" class="card pane pane-info">
-          <div data-ui="SkinsView:36f73e18abbe" v-if="profileError" class="status-strip error" role="alert">读取皮肤失败：{{ profileError }}<button data-ui="SkinsView:73348961dd1a" class="btn btn-ghost" @click="loadProfile(true)">重试</button></div>
-          <header class="pane-head">
-            <h3 class="pane-title">当前皮肤</h3>
-            <span data-ui="SkinsView:636efe9c920f" class="tag" :class="currentVariant === 'slim' ? 'tag-cyan' : 'tag-gold'">
-              {{ currentVariant === 'slim' ? '纤细 Slim' : '经典 Classic' }}
-            </span>
-          </header>
-
-          <div data-ui="SkinsView:30eab3450632" class="skin-name-row">
-            <span data-ui="SkinsView:ed498f5909bf" class="skin-username">{{ profile?.username || store.selectedAccount?.username }}</span>
-          </div>
-
-          <!-- 待上传文件 -->
-          <div data-ui="SkinsView:9ae4ea0309a4" v-if="canApplySkin && pending" class="pending-box">
-            <div data-ui="SkinsView:15c4e36a7b28" class="pending-viewer">
-              <SkinViewer3D v-if="pendingDataUrl" :src="pendingDataUrl" :variant="variant" />
+          <section data-ui="SkinsView:8be659224d2f" class="card pane pane-info">
+            <div data-ui="SkinsView:36f73e18abbe" v-if="profileError" class="status-strip error" role="alert">
+              读取皮肤失败：{{ profileError
+              }}<button data-ui="SkinsView:73348961dd1a" class="btn btn-ghost" @click="loadProfile(true)">重试</button>
             </div>
-            <div data-ui="SkinsView:b106466a5379" class="pending-meta">
-              <span data-ui="SkinsView:8de65fd7bef0" class="pending-name" :title="pending.name">{{ pending.name }}</span>
-              <div data-ui="SkinsView:5351ef1f918a" class="seg">
-                <button data-ui="SkinsView:a9baa001dcb8"
-                  class="seg-btn"
-                  :class="{ active: variant === 'classic' }"
-                  @click="variant = 'classic'"
-                >
-                  经典 Classic
-                </button>
-                <button data-ui="SkinsView:25ab876996cc"
-                  class="seg-btn"
-                  :class="{ active: variant === 'slim' }"
-                  @click="variant = 'slim'"
-                >
-                  纤细 Slim
-                </button>
-              </div>
-            </div>
-            <button data-ui="SkinsView:dbcfe6eb10f9" class="icon-btn" title="移除待上传文件" @click="clearPending">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <path d="M6 6l12 12M18 6 6 18" />
-              </svg>
-            </button>
-          </div>
-
-          <div data-ui="SkinsView:2ce0dc456e94" v-if="canApplySkin" class="skin-actions">
-            <button data-ui="SkinsView:45688b94a733" class="btn btn-ghost" @click="fileInput?.click()">选择皮肤文件…</button>
-            <button data-ui="SkinsView:18b48238d441" class="btn btn-gold" :disabled="!pending || uploading" @click="doUpload">
-              {{ uploading ? (isOffline ? '应用中…' : '上传中…') : isOffline ? '应用到离线账号' : '上传' }}
-            </button>
-            <button v-if="isOffline" class="btn btn-ghost" :disabled="uploading || !currentSkin" @click="onResetOffline">恢复游戏默认皮肤</button>
-          </div>
-          <p data-ui="SkinsView:aa2915a1b866" v-if="canApplySkin" class="muted skin-hint">支持 64×64 的 PNG 皮肤文件</p>
-          <div data-ui="SkinsView:252d1a5f5b2f" v-else class="external-skin-note">
-            <span data-ui="SkinsView:d35771891dd7" class="tag tag-cyan">{{ store.selectedAccount?.providerName }}</span>
-            <p data-ui="SkinsView:d7b70906b3c5" class="muted skin-hint">外置账号的皮肤与披风由所属皮肤站管理；FAIONYX 会读取并在启动时加载当前材质。</p>
-          </div>
-          <p v-if="isOffline" class="muted skin-hint offline-skin-hint">离线账号皮肤仅在本机游戏显示，修改从下次启动生效；其他玩家看到的皮肤由服务器决定。首次启动会从作者官方来源下载并校验 authlib-injector 皮肤加载组件，之后可在断网时使用缓存。</p>
-          <p v-if="isOffline && !currentSkin" class="muted skin-hint">尚未应用本地皮肤。此处显示 FAIONYX 默认预览，游戏使用自身默认皮肤。</p>
-
-          <input data-ui="SkinsView:e63f2137c12b"
-            ref="fileInput"
-            type="file"
-            accept=".png,image/png"
-            class="hidden-input"
-            @change="onInputChange"
-          />
-        </section>
-
-        <div data-ui="SkinsView:de1900d63ab5" v-if="dragOver" class="drag-hint">松开以选择皮肤文件</div>
-        <section data-ui="SkinsView:b5f0f1bd543a" v-if="!isOffline" class="card pane pane-capes">
-          <header class="pane-head">
-            <h3 class="pane-title">披风（{{ capes.length }}）</h3>
-            <button class="btn btn-ghost" :disabled="loadingProfile || capeBusy !== null" @click="loadProfile(true)">刷新材质</button>
-          </header>
-          <div data-ui="SkinsView:0f570e391601" v-if="loadingProfile" class="empty pane-empty"><span class="spin"></span></div>
-          <div data-ui="SkinsView:23e5aa429fa5" v-else-if="!capes.length" class="empty pane-empty">
-            <span>该账号暂无披风</span>
-          </div>
-          <div data-ui="SkinsView:b74774f82cbb" v-else class="cape-grid">
-            <button data-ui="SkinsView:cef45a945c20"
-              v-for="c in capes"
-              :key="c.id"
-              class="cape-item"
-              :class="{ active: c.active }"
-              :disabled="capeBusy !== null || isExternal"
-              :title="isExternal ? '请在所属皮肤站管理披风' : c.active ? '点击卸下披风' : '点击使用该披风'"
-              @click="onCapeClick(c)"
-            >
-              <div data-ui="SkinsView:ef385c3e5a89" class="cape-preview">
-                <img data-ui="SkinsView:f3c3ca0681c7" v-if="capeRenders[c.id]" :src="capeRenders[c.id]" class="cape-img" :alt="c.alias" />
-                <span data-ui="SkinsView:066f80062d81" v-else class="cape-alias">{{ c.alias }}</span>
-              </div>
-              <span data-ui="SkinsView:ecfe9b1c09a5" class="cape-name">{{ c.alias }}</span>
-              <span data-ui="SkinsView:d40a5d07ca29" class="cape-state">
-                <span data-ui="SkinsView:1816d05e22d8" v-if="capeBusy === c.id" class="spin"></span>
-                <span data-ui="SkinsView:b5509fdec2ff" v-else-if="c.active" class="tag tag-gold">使用中</span>
-                <span v-if="capeErrors[c.id]" class="muted" role="status">{{ capeErrors[c.id] }}</span>
+            <header class="pane-head">
+              <h3 class="pane-title">当前皮肤</h3>
+              <span data-ui="SkinsView:636efe9c920f" class="tag" :class="currentVariant === 'slim' ? 'tag-cyan' : 'tag-gold'">
+                {{ currentVariant === 'slim' ? '纤细 Slim' : '经典 Classic' }}
               </span>
-            </button>
-          </div>
-        </section>
+            </header>
 
+            <div data-ui="SkinsView:30eab3450632" class="skin-name-row">
+              <span data-ui="SkinsView:ed498f5909bf" class="skin-username">{{ profile?.username || store.selectedAccount?.username }}</span>
+            </div>
+
+            <!-- 待上传文件 -->
+            <div data-ui="SkinsView:9ae4ea0309a4" v-if="canApplySkin && pending" class="pending-box">
+              <div data-ui="SkinsView:15c4e36a7b28" class="pending-viewer">
+                <SkinViewer3D v-if="pendingDataUrl" :src="pendingDataUrl" :variant="variant" />
+              </div>
+              <div data-ui="SkinsView:b106466a5379" class="pending-meta">
+                <span data-ui="SkinsView:8de65fd7bef0" class="pending-name" :title="pending.name">{{ pending.name }}</span>
+                <div data-ui="SkinsView:5351ef1f918a" class="seg">
+                  <button
+                    data-ui="SkinsView:a9baa001dcb8"
+                    class="seg-btn"
+                    :class="{ active: variant === 'classic' }"
+                    @click="variant = 'classic'"
+                  >
+                    经典 Classic
+                  </button>
+                  <button
+                    data-ui="SkinsView:25ab876996cc"
+                    class="seg-btn"
+                    :class="{ active: variant === 'slim' }"
+                    @click="variant = 'slim'"
+                  >
+                    纤细 Slim
+                  </button>
+                </div>
+              </div>
+              <button data-ui="SkinsView:dbcfe6eb10f9" class="icon-btn" title="移除待上传文件" @click="clearPending">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M6 6l12 12M18 6 6 18" />
+                </svg>
+              </button>
+            </div>
+
+            <div data-ui="SkinsView:2ce0dc456e94" v-if="canApplySkin" class="skin-actions">
+              <button data-ui="SkinsView:45688b94a733" class="btn btn-ghost" @click="fileInput?.click()">选择皮肤文件…</button>
+              <button data-ui="SkinsView:18b48238d441" class="btn btn-gold" :disabled="!pending || uploading" @click="doUpload">
+                {{ uploading ? (isOffline ? '应用中…' : '上传中…') : isOffline ? '应用到离线账号' : '上传' }}
+              </button>
+              <button v-if="isOffline" class="btn btn-ghost" :disabled="uploading || !currentSkin" @click="onResetOffline">
+                恢复游戏默认皮肤
+              </button>
+            </div>
+            <p data-ui="SkinsView:aa2915a1b866" v-if="canApplySkin" class="muted skin-hint">支持 64×64 的 PNG 皮肤文件</p>
+            <div data-ui="SkinsView:252d1a5f5b2f" v-else class="external-skin-note">
+              <span data-ui="SkinsView:d35771891dd7" class="tag tag-cyan">{{ store.selectedAccount?.providerName }}</span>
+              <p data-ui="SkinsView:d7b70906b3c5" class="muted skin-hint">
+                外置账号的皮肤与披风由所属皮肤站管理；FAIONYX 会读取并在启动时加载当前材质。
+              </p>
+            </div>
+            <p v-if="isOffline" class="muted skin-hint offline-skin-hint">
+              离线账号皮肤仅在本机游戏显示，修改从下次启动生效；其他玩家看到的皮肤由服务器决定。首次启动会从作者官方来源下载并校验
+              authlib-injector 皮肤加载组件，之后可在断网时使用缓存。
+            </p>
+            <p v-if="isOffline && !currentSkin" class="muted skin-hint">
+              尚未应用本地皮肤。此处显示 FAIONYX 默认预览，游戏使用自身默认皮肤。
+            </p>
+
+            <input
+              data-ui="SkinsView:e63f2137c12b"
+              ref="fileInput"
+              type="file"
+              accept=".png,image/png"
+              class="hidden-input"
+              @change="onInputChange"
+            />
+          </section>
+
+          <div data-ui="SkinsView:de1900d63ab5" v-if="dragOver" class="drag-hint">松开以选择皮肤文件</div>
+          <section data-ui="SkinsView:b5f0f1bd543a" v-if="!isOffline" class="card pane pane-capes">
+            <header class="pane-head">
+              <h3 class="pane-title">披风（{{ capes.length }}）</h3>
+              <button class="btn btn-ghost" :disabled="loadingProfile || capeBusy !== null" @click="loadProfile(true)">刷新材质</button>
+            </header>
+            <div data-ui="SkinsView:0f570e391601" v-if="loadingProfile" class="empty pane-empty"><span class="spin"></span></div>
+            <div data-ui="SkinsView:23e5aa429fa5" v-else-if="!capes.length" class="empty pane-empty">
+              <span>该账号暂无披风</span>
+            </div>
+            <div data-ui="SkinsView:b74774f82cbb" v-else class="cape-grid">
+              <button
+                data-ui="SkinsView:cef45a945c20"
+                v-for="c in capes"
+                :key="c.id"
+                class="cape-item"
+                :class="{ active: c.active }"
+                :disabled="capeBusy !== null || isExternal"
+                :title="isExternal ? '请在所属皮肤站管理披风' : c.active ? '点击卸下披风' : '点击使用该披风'"
+                @click="onCapeClick(c)"
+              >
+                <div data-ui="SkinsView:ef385c3e5a89" class="cape-preview">
+                  <img data-ui="SkinsView:f3c3ca0681c7" v-if="capeRenders[c.id]" :src="capeRenders[c.id]" class="cape-img" :alt="c.alias" />
+                  <span data-ui="SkinsView:066f80062d81" v-else class="cape-alias">{{ c.alias }}</span>
+                </div>
+                <span data-ui="SkinsView:ecfe9b1c09a5" class="cape-name">{{ c.alias }}</span>
+                <span data-ui="SkinsView:d40a5d07ca29" class="cape-state">
+                  <span data-ui="SkinsView:1816d05e22d8" v-if="capeBusy === c.id" class="spin"></span>
+                  <span data-ui="SkinsView:b5509fdec2ff" v-else-if="c.active" class="tag tag-gold">使用中</span>
+                  <span v-if="capeErrors[c.id]" class="muted" role="status">{{ capeErrors[c.id] }}</span>
+                </span>
+              </button>
+            </div>
+          </section>
         </div>
         <section data-ui="SkinsView:7bae5dc497d8" class="card pane pane-history">
           <header class="pane-head">
             <h3 class="pane-title">历史皮肤（{{ historyList.length }}）</h3>
-            <input data-ui="SkinsView:eae2262398f8"
+            <input
+              data-ui="SkinsView:eae2262398f8"
               v-if="historyList.length"
               v-model="historySearch"
               class="input history-search"
@@ -631,8 +749,13 @@ watch(
               title="按文件名即时筛选历史皮肤"
             />
           </header>
-          <div data-ui="SkinsView:07a35fa3d13e" v-if="historyError" class="status-strip error">读取历史失败：{{ historyError }}<button data-ui="SkinsView:795ecc15b13b" class="btn btn-ghost" @click="loadHistory">重试</button></div>
-          <div data-ui="SkinsView:7cb3faa3d3a0" v-else-if="loadingHistory && !historyList.length" class="empty pane-empty"><span class="spin"></span></div>
+          <div data-ui="SkinsView:07a35fa3d13e" v-if="historyError" class="status-strip error">
+            读取历史失败：{{ historyError
+            }}<button data-ui="SkinsView:795ecc15b13b" class="btn btn-ghost" @click="loadHistory">重试</button>
+          </div>
+          <div data-ui="SkinsView:7cb3faa3d3a0" v-else-if="loadingHistory && !historyList.length" class="empty pane-empty">
+            <span class="spin"></span>
+          </div>
           <div data-ui="SkinsView:30798d037a0e" v-else-if="!historyList.length" class="empty pane-empty">
             <span>暂无历史皮肤，上传皮肤后会自动保存到这里，方便随时换回</span>
           </div>
@@ -641,31 +764,37 @@ watch(
           </div>
           <div data-ui="SkinsView:c57cc36b5fe3" v-else class="history-grid">
             <div data-ui="SkinsView:2848a3535fdf" v-for="item in filteredHistory" :key="item.id" class="history-item">
-              <button type="button" data-ui="SkinsView:915113e01369" class="history-preview" :class="{selected:previewHistoryId===item.id}" :aria-label="`预览 ${historyDisplayName(item)}`" :aria-pressed="previewHistoryId===item.id" @click="previewSavedSkin(item)">
-                <img data-ui="SkinsView:93154017e1c0"
-                  :src="historyRenders[item.id] || item.dataUrl"
-                  class="history-img"
-                  alt="历史皮肤"
-                />
-                <span class="history-preview-hint">{{ previewHistoryId===item.id ? '预览中' : '点击预览' }}</span>
+              <button
+                type="button"
+                data-ui="SkinsView:915113e01369"
+                class="history-preview"
+                :class="{ selected: previewHistoryId === item.id }"
+                :aria-label="`预览 ${historyDisplayName(item)}`"
+                :aria-pressed="previewHistoryId === item.id"
+                @click="previewSavedSkin(item)"
+              >
+                <img data-ui="SkinsView:93154017e1c0" :src="historyRenders[item.id] || item.dataUrl" class="history-img" alt="历史皮肤" />
+                <span class="history-preview-hint">{{ previewHistoryId === item.id ? '预览中' : '点击预览' }}</span>
               </button>
-                <div data-ui="SkinsView:e8374fa9d9a7" class="history-actions">
-                  <button data-ui="SkinsView:96c3c4ae26c7"
-                    class="btn btn-gold btn-sm"
-                    :disabled="!canApplySkin || historyBusy !== null"
-                    :title="isOffline ? '应用到此离线账号，下次启动游戏生效' : isMs ? '上传并换回此皮肤' : '请先选择可应用皮肤的账号'"
-                    @click="onRestore(item)"
-                  >
-                    {{ historyBusy === item.id ? '处理中…' : '换回' }}
-                  </button>
-                  <button data-ui="SkinsView:18710f6d05c6"
-                    class="btn btn-danger btn-sm"
-                    :disabled="historyBusy !== null"
-                    @click="onDeleteHistory(item)"
-                  >
-                    删除
-                  </button>
-                </div>
+              <div data-ui="SkinsView:e8374fa9d9a7" class="history-actions">
+                <button
+                  data-ui="SkinsView:96c3c4ae26c7"
+                  class="btn btn-gold btn-sm"
+                  :disabled="!canApplySkin || historyBusy !== null"
+                  :title="isOffline ? '应用到此离线账号，下次启动游戏生效' : isMs ? '上传并换回此皮肤' : '请先选择可应用皮肤的账号'"
+                  @click="onRestore(item)"
+                >
+                  {{ historyBusy === item.id ? '处理中…' : '换回' }}
+                </button>
+                <button
+                  data-ui="SkinsView:18710f6d05c6"
+                  class="btn btn-danger btn-sm"
+                  :disabled="historyBusy !== null"
+                  @click="onDeleteHistory(item)"
+                >
+                  删除
+                </button>
+              </div>
               <div data-ui="SkinsView:30559af409bc" class="history-meta">
                 <span data-ui="SkinsView:6db94431a918" class="tag" :class="item.variant === 'slim' ? 'tag-cyan' : 'tag-gold'">
                   {{ item.variant === 'slim' ? '纤细' : '经典' }}
@@ -673,7 +802,8 @@ watch(
                 <span data-ui="SkinsView:cf1055002679" class="muted history-time">{{ fmtTime(item.time) }}</span>
               </div>
               <div data-ui="SkinsView:664da1b81a10" class="history-name-row">
-                <input data-ui="SkinsView:13bf75e97efb"
+                <input
+                  data-ui="SkinsView:13bf75e97efb"
                   v-if="historyRenaming === item.id"
                   v-model="historyRenameText"
                   class="input history-name-input"
@@ -683,12 +813,14 @@ watch(
                   @blur="commitHistoryRename(item)"
                   v-focus
                 />
-                <span data-ui="SkinsView:4691c713a4de"
+                <span
+                  data-ui="SkinsView:4691c713a4de"
                   v-else
                   class="history-name"
                   :title="`${historyDisplayName(item)}（点击重命名）`"
                   @click="startHistoryRename(item)"
-                >{{ historyDisplayName(item) }}</span>
+                  >{{ historyDisplayName(item) }}</span
+                >
               </div>
             </div>
           </div>
@@ -699,10 +831,25 @@ watch(
 </template>
 
 <style scoped>
-.row-sub { align-items:flex-start !important; }
-.no-history .pane-history .pane-empty { min-height:0; padding:20px 0; }
-.pane-preview,.pane-info,.pane-capes,.pane-history { min-width:min(100%,280px) !important; }
-@media(max-width:1050px) { .pane-preview,.pane-capes { max-width:100% !important; } }
+.row-sub {
+  align-items: flex-start !important;
+}
+.no-history .pane-history .pane-empty {
+  min-height: 0;
+  padding: 20px 0;
+}
+.pane-preview,
+.pane-info,
+.pane-capes,
+.pane-history {
+  min-width: min(100%, 280px) !important;
+}
+@media (max-width: 1050px) {
+  .pane-preview,
+  .pane-capes {
+    max-width: 100% !important;
+  }
+}
 
 /* ================= 页面骨架：区块排「行」，行内横向分栏，窄窗换行 ================= */
 .skins-page {
@@ -831,11 +978,35 @@ watch(
   color: var(--text-dim);
   text-align: center;
 }
-.preview-pose-tools { flex-wrap:wrap;justify-content:flex-end; }
-.preview-pose-selector .seg-btn { padding:0 10px; }
-.preview-selection { display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap;padding:8px 10px;margin-bottom:10px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--card-2);font-size:var(--text-xs);color:var(--text-dim); }
-.preview-selection span { min-width:0;overflow-wrap:anywhere; }
-.preview-selection strong { color:var(--text);font-weight:600; }
+.preview-pose-tools {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.preview-pose-selector .seg-btn {
+  padding: 0 10px;
+}
+.preview-selection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card-2);
+  font-size: var(--text-xs);
+  color: var(--text-dim);
+}
+.preview-selection span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.preview-selection strong {
+  color: var(--text);
+  font-weight: 600;
+}
 .preview-placeholder {
   display: flex;
   flex-direction: column;
@@ -930,7 +1101,10 @@ watch(
   bottom: 3px;
   border-radius: var(--radius-sm);
   background: var(--accent-grad);
-  transition: left 0.3s cubic-bezier(0.3, 1.2, 0.4, 1), width 0.3s cubic-bezier(0.3, 1.2, 0.4, 1), opacity 0.15s ease;
+  transition:
+    left 0.3s cubic-bezier(0.3, 1.2, 0.4, 1),
+    width 0.3s cubic-bezier(0.3, 1.2, 0.4, 1),
+    opacity 0.15s ease;
   pointer-events: none;
   z-index: 0;
 }
@@ -1011,7 +1185,10 @@ watch(
   color: var(--text);
   font-family: inherit;
   cursor: pointer;
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.12s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    transform 0.12s ease;
 }
 .cape-item:hover:not(:disabled) {
   border-color: var(--accent-deep);
@@ -1094,13 +1271,43 @@ watch(
   border-radius: var(--radius-md);
   background: var(--card-2);
   overflow: hidden;
-  width:100%;padding:0;color:var(--text);cursor:pointer;font:inherit;
+  width: 100%;
+  padding: 0;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
 }
-.history-preview.selected { border-color:var(--accent);background:var(--accent-soft); }
-.history-preview:focus-visible { outline:2px solid var(--accent);outline-offset:2px; }
-.history-preview-hint { position:absolute;bottom:5px;left:6px;right:6px;border-radius:var(--radius-sm);padding:3px 4px;background:var(--card-solid,var(--card));font-size:11px;color:var(--text-dim);pointer-events:none; }
-.history-actions { display:flex;flex-wrap:wrap;gap:6px; }
-.history-actions .btn { flex:1;padding:5px 8px;font-size:11px;min-height:28px; }
+.history-preview.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.history-preview:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.history-preview-hint {
+  position: absolute;
+  bottom: 5px;
+  left: 6px;
+  right: 6px;
+  border-radius: var(--radius-sm);
+  padding: 3px 4px;
+  background: var(--card-solid, var(--card));
+  font-size: 11px;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+.history-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.history-actions .btn {
+  flex: 1;
+  padding: 5px 8px;
+  font-size: 11px;
+  min-height: 28px;
+}
 .history-img {
   height: 144px;
   image-rendering: pixelated;
@@ -1148,7 +1355,9 @@ watch(
   cursor: text;
   border-radius: var(--radius-sm);
   padding: 1px 3px;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
 }
 .history-name:hover {
   background: var(--hover);
@@ -1186,38 +1395,155 @@ watch(
   align-items: center;
   justify-content: center;
 }
-
 </style>
 <style scoped>
 /* Content-sized right column, with history across both columns. */
-.skins-page { display:grid; grid-template-columns:minmax(260px,2fr) minmax(300px,3fr); align-items:start; gap:16px; }
-.skins-page > :is(.page-head,.status-strip,.need-ms) { grid-column:1/-1; }
-.skins-page > .page-head { flex-direction:row; align-items:center; justify-content:space-between; gap:12px; }
-.skin-page-heading { min-width:0; }.skin-page-heading .page-sub { margin:4px 0 0; }
-.skin-editor-entry { flex:none; width:auto; padding:8px 14px; min-height:36px; }
-.skins-page .row-main,.skins-page .row-sub { display:contents; }
-.skins-page .pane-preview { grid-column:1; grid-row:2; width:100%; max-width:100%; min-height:0; }
-.skins-page.local-preview .pane-preview { grid-column:1/-1; }
-.skins-page .pane-preview .viewer3d { min-height:320px; }
-.skin-operation-panel { grid-column:2; grid-row:2; min-width:0; background:var(--surface-content); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; display:flex; flex-direction:column; }
-.skins-page .skin-operation-panel :is(.pane-info,.pane-capes) { flex:0 0 auto; border:0; border-radius:0; background:transparent; margin:0; min-height:0; padding:20px; width:100%; max-width:100%; box-shadow:none; }
-.skin-operation-panel .pane-capes { border-top:1px solid var(--border)!important; }
-.skin-operation-panel .pane-empty { min-height:60px; padding:16px; }
-.skins-page .pane-history { grid-column:1/-1; grid-row:3; }
-.skins-page .pane-history:has(.pane-empty) { display:flex; align-items:center; gap:16px; padding:16px 20px; }
-.skins-page .pane-history:has(.pane-empty) .pane-head { margin:0; flex:none; }
-.skins-page .pane-history:has(.pane-empty) .pane-empty { padding:8px; min-height:0; }
-.cape-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-.cape-item { display:grid; grid-template-columns:58px minmax(0,1fr); grid-template-rows:auto auto; align-items:center; gap:8px 12px; min-height:100px; padding:12px; text-align:left; }
-.cape-preview { grid-column:1; grid-row:1/4; width:58px; height:78px; padding:0; }
-.cape-img { max-width:100%; max-height:100%; object-fit:contain; }
-.cape-name,.cape-state { grid-column:2; margin:0; white-space:normal; overflow-wrap:break-word; }
-.cape-name { font-size:13px; }
-.row-main.drag-over .pane { outline:2px solid var(--accent); }
-@media(max-width:1050px) {
- .skins-page { grid-template-columns:minmax(0,1fr); }
- .skins-page :is(.pane-preview,.skin-operation-panel,.pane-history) { grid-column:1; grid-row:auto; }
- .skins-page .pane-history:has(.pane-empty) { flex-wrap:wrap; }
+.skins-page {
+  display: grid;
+  grid-template-columns: minmax(260px, 2fr) minmax(300px, 3fr);
+  align-items: start;
+  gap: 16px;
 }
-@media(max-width:650px) { .cape-grid { grid-template-columns:minmax(0,1fr); } }
+.skins-page > :is(.page-head, .status-strip, .need-ms) {
+  grid-column: 1/-1;
+}
+.skins-page > .page-head {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.skin-page-heading {
+  min-width: 0;
+}
+.skin-page-heading .page-sub {
+  margin: 4px 0 0;
+}
+.skin-editor-entry {
+  flex: none;
+  width: auto;
+  padding: 8px 14px;
+  min-height: 36px;
+}
+.skins-page .row-main,
+.skins-page .row-sub {
+  display: contents;
+}
+.skins-page .pane-preview {
+  grid-column: 1;
+  grid-row: 2;
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+}
+.skins-page.local-preview .pane-preview {
+  grid-column: 1/-1;
+}
+.skins-page .pane-preview .viewer3d {
+  min-height: 320px;
+}
+.skin-operation-panel {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  background: var(--surface-content);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.skins-page .skin-operation-panel :is(.pane-info, .pane-capes) {
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  margin: 0;
+  min-height: 0;
+  padding: 20px;
+  width: 100%;
+  max-width: 100%;
+  box-shadow: none;
+}
+.skin-operation-panel .pane-capes {
+  border-top: 1px solid var(--border) !important;
+}
+.skin-operation-panel .pane-empty {
+  min-height: 60px;
+  padding: 16px;
+}
+.skins-page .pane-history {
+  grid-column: 1/-1;
+  grid-row: 3;
+}
+.skins-page .pane-history:has(.pane-empty) {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+}
+.skins-page .pane-history:has(.pane-empty) .pane-head {
+  margin: 0;
+  flex: none;
+}
+.skins-page .pane-history:has(.pane-empty) .pane-empty {
+  padding: 8px;
+  min-height: 0;
+}
+.cape-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.cape-item {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 8px 12px;
+  min-height: 100px;
+  padding: 12px;
+  text-align: left;
+}
+.cape-preview {
+  grid-column: 1;
+  grid-row: 1/4;
+  width: 58px;
+  height: 78px;
+  padding: 0;
+}
+.cape-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.cape-name,
+.cape-state {
+  grid-column: 2;
+  margin: 0;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+.cape-name {
+  font-size: 13px;
+}
+.row-main.drag-over .pane {
+  outline: 2px solid var(--accent);
+}
+@media (max-width: 1050px) {
+  .skins-page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .skins-page :is(.pane-preview, .skin-operation-panel, .pane-history) {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .skins-page .pane-history:has(.pane-empty) {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 650px) {
+  .cape-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 </style>

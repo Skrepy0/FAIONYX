@@ -5688,9 +5688,7 @@
               "editMode": "draw",
               "editDisabled": false,
               "revision": 4,
-              "hiddenParts": [
-                "head"
-              ],
+              "hiddenParts": ["head"],
               "paused": true
             },
             "palette": {
@@ -5873,9 +5871,7 @@
               "editMode": "draw",
               "editDisabled": false,
               "revision": 4,
-              "hiddenParts": [
-                "head"
-              ],
+              "hiddenParts": ["head"],
               "paused": true
             },
             "palette": {
@@ -6298,9 +6294,7 @@
               "editMode": "draw",
               "editDisabled": false,
               "revision": 5,
-              "hiddenParts": [
-                "head"
-              ],
+              "hiddenParts": ["head"],
               "paused": true
             },
             "palette": {
@@ -6483,9 +6477,7 @@
               "editMode": "draw",
               "editDisabled": false,
               "revision": 5,
-              "hiddenParts": [
-                "head"
-              ],
+              "hiddenParts": ["head"],
               "paused": true
             },
             "palette": {
@@ -6908,9 +6900,7 @@
               "editMode": "draw",
               "editDisabled": false,
               "revision": 5,
-              "hiddenParts": [
-                "head"
-              ],
+              "hiddenParts": ["head"],
               "paused": true
             },
             "palette": {
@@ -7093,9 +7083,7 @@
               "editMode": "draw",
               "editDisabled": false,
               "revision": 5,
-              "hiddenParts": [
-                "head"
-              ],
+              "hiddenParts": ["head"],
               "paused": true
             },
             "palette": {
@@ -7518,9 +7506,7 @@
               "editMode": "draw",
               "editDisabled": false,
               "revision": 4,
-              "hiddenParts": [
-                "head"
-              ],
+              "hiddenParts": ["head"],
               "paused": true
             },
             "palette": {
@@ -7703,9 +7689,7 @@
               "editMode": "draw",
               "editDisabled": false,
               "revision": 4,
-              "hiddenParts": [
-                "head"
-              ],
+              "hiddenParts": ["head"],
               "paused": true
             },
             "palette": {
@@ -8128,9 +8112,7 @@
               "editMode": "draw",
               "editDisabled": false,
               "revision": 5,
-              "hiddenParts": [
-                "head"
-              ],
+              "hiddenParts": ["head"],
               "paused": true
             },
             "palette": {
@@ -8313,9 +8295,7 @@
               "editMode": "draw",
               "editDisabled": false,
               "revision": 5,
-              "hiddenParts": [
-                "head"
-              ],
+              "hiddenParts": ["head"],
               "paused": true
             },
             "palette": {
@@ -8966,27 +8946,15 @@
         {
           "x": 10,
           "y": 12,
-          "before": [
-            216,
-            140,
-            88,
-            255
-          ],
-          "after": [
-            17,
-            119,
-            238,
-            255
-          ]
+          "before": [216, 140, 88, 255],
+          "after": [17, 119, 238, 255]
         }
       ],
       "dirtyAssertionPassed": true,
       "events": [
         {
           "kind": "stroke",
-          "args": [
-            true
-          ],
+          "args": [true],
           "at": 27970.30000001192,
           "pointer": {
             "type": "pointerdown",
@@ -9073,12 +9041,7 @@
             },
             "selectedTool": "绘制"
           },
-          "texelBefore": [
-            216,
-            140,
-            88,
-            255
-          ],
+          "texelBefore": [216, 140, 88, 255],
           "after": {
             "header": "64 × 64 像素 · 已保存",
             "viewer": {
@@ -9097,12 +9060,7 @@
             },
             "selectedTool": "绘制"
           },
-          "texelAfter": [
-            17,
-            119,
-            238,
-            255
-          ],
+          "texelAfter": [17, 119, 238, 255],
           "changedBytes": 3
         },
         {
@@ -9157,9 +9115,7 @@
         },
         {
           "kind": "stroke",
-          "args": [
-            false
-          ],
+          "args": [false],
           "at": 27978.40000000596,
           "pointer": {
             "type": "pointerup",
@@ -9638,59 +9594,27 @@
         {
           "x": 11,
           "y": 12,
-          "before": [
-            17,
-            119,
-            238,
-            255
-          ],
-          "after": [
-            238,
-            119,
-            51,
-            255
-          ]
+          "before": [17, 119, 238, 255],
+          "after": [238, 119, 51, 255]
         },
         {
           "x": 12,
           "y": 13,
-          "before": [
-            17,
-            119,
-            238,
-            255
-          ],
-          "after": [
-            238,
-            119,
-            51,
-            255
-          ]
+          "before": [17, 119, 238, 255],
+          "after": [238, 119, 51, 255]
         },
         {
           "x": 13,
           "y": 13,
-          "before": [
-            17,
-            119,
-            238,
-            255
-          ],
-          "after": [
-            238,
-            119,
-            51,
-            255
-          ]
+          "before": [17, 119, 238, 255],
+          "after": [238, 119, 51, 255]
         }
       ],
       "dirtyAssertionPassed": true,
       "events": [
         {
           "kind": "stroke",
-          "args": [
-            true
-          ],
+          "args": [true],
           "at": 50227.69999998808,
           "pointer": {
             "type": "pointerdown",
@@ -9777,12 +9701,7 @@
             },
             "selectedTool": "绘制"
           },
-          "texelBefore": [
-            17,
-            119,
-            238,
-            255
-          ],
+          "texelBefore": [17, 119, 238, 255],
           "after": {
             "header": "64 × 64 像素 · 已保存",
             "viewer": {
@@ -9801,12 +9720,7 @@
             },
             "selectedTool": "绘制"
           },
-          "texelAfter": [
-            238,
-            119,
-            51,
-            255
-          ],
+          "texelAfter": [238, 119, 51, 255],
           "changedBytes": 2
         },
         {
@@ -9848,12 +9762,7 @@
             },
             "selectedTool": "绘制"
           },
-          "texelBefore": [
-            17,
-            119,
-            238,
-            255
-          ],
+          "texelBefore": [17, 119, 238, 255],
           "after": {
             "header": "64 × 64 像素 · 有未保存更改",
             "viewer": {
@@ -9872,19 +9781,12 @@
             },
             "selectedTool": "绘制"
           },
-          "texelAfter": [
-            238,
-            119,
-            51,
-            255
-          ],
+          "texelAfter": [238, 119, 51, 255],
           "changedBytes": 4
         },
         {
           "kind": "stroke",
-          "args": [
-            false
-          ],
+          "args": [false],
           "at": 50237.40000000596,
           "pointer": {
             "type": "pointerup",
@@ -10363,107 +10265,45 @@
         {
           "x": 10,
           "y": 12,
-          "before": [
-            238,
-            119,
-            51,
-            255
-          ],
-          "after": [
-            17,
-            119,
-            238,
-            255
-          ]
+          "before": [238, 119, 51, 255],
+          "after": [17, 119, 238, 255]
         },
         {
           "x": 11,
           "y": 12,
-          "before": [
-            238,
-            119,
-            51,
-            255
-          ],
-          "after": [
-            17,
-            119,
-            238,
-            255
-          ]
+          "before": [238, 119, 51, 255],
+          "after": [17, 119, 238, 255]
         },
         {
           "x": 12,
           "y": 12,
-          "before": [
-            238,
-            119,
-            51,
-            255
-          ],
-          "after": [
-            17,
-            119,
-            238,
-            255
-          ]
+          "before": [238, 119, 51, 255],
+          "after": [17, 119, 238, 255]
         },
         {
           "x": 13,
           "y": 13,
-          "before": [
-            238,
-            119,
-            51,
-            255
-          ],
-          "after": [
-            17,
-            119,
-            238,
-            255
-          ]
+          "before": [238, 119, 51, 255],
+          "after": [17, 119, 238, 255]
         },
         {
           "x": 14,
           "y": 13,
-          "before": [
-            238,
-            119,
-            51,
-            255
-          ],
-          "after": [
-            17,
-            119,
-            238,
-            255
-          ]
+          "before": [238, 119, 51, 255],
+          "after": [17, 119, 238, 255]
         },
         {
           "x": 15,
           "y": 13,
-          "before": [
-            238,
-            119,
-            51,
-            255
-          ],
-          "after": [
-            17,
-            119,
-            238,
-            255
-          ]
+          "before": [238, 119, 51, 255],
+          "after": [17, 119, 238, 255]
         }
       ],
       "dirtyAssertionPassed": true,
       "events": [
         {
           "kind": "stroke",
-          "args": [
-            true
-          ],
+          "args": [true],
           "at": 71397.40000000596,
           "pointer": {
             "type": "pointerdown",
@@ -10550,12 +10390,7 @@
             },
             "selectedTool": "绘制"
           },
-          "texelBefore": [
-            238,
-            119,
-            51,
-            255
-          ],
+          "texelBefore": [238, 119, 51, 255],
           "after": {
             "header": "64 × 64 像素 · 已保存",
             "viewer": {
@@ -10574,12 +10409,7 @@
             },
             "selectedTool": "绘制"
           },
-          "texelAfter": [
-            17,
-            119,
-            238,
-            255
-          ],
+          "texelAfter": [17, 119, 238, 255],
           "changedBytes": 2
         },
         {
@@ -10621,12 +10451,7 @@
             },
             "selectedTool": "绘制"
           },
-          "texelBefore": [
-            238,
-            119,
-            51,
-            255
-          ],
+          "texelBefore": [238, 119, 51, 255],
           "after": {
             "header": "64 × 64 像素 · 有未保存更改",
             "viewer": {
@@ -10645,19 +10470,12 @@
             },
             "selectedTool": "绘制"
           },
-          "texelAfter": [
-            17,
-            119,
-            238,
-            255
-          ],
+          "texelAfter": [17, 119, 238, 255],
           "changedBytes": 10
         },
         {
           "kind": "stroke",
-          "args": [
-            false
-          ],
+          "args": [false],
           "at": 71406.19999998808,
           "pointer": {
             "type": "pointerup",
@@ -11136,27 +10954,15 @@
         {
           "x": 10,
           "y": 12,
-          "before": [
-            17,
-            119,
-            238,
-            255
-          ],
-          "after": [
-            238,
-            119,
-            51,
-            255
-          ]
+          "before": [17, 119, 238, 255],
+          "after": [238, 119, 51, 255]
         }
       ],
       "dirtyAssertionPassed": true,
       "events": [
         {
           "kind": "stroke",
-          "args": [
-            true
-          ],
+          "args": [true],
           "at": 92827.40000000596,
           "pointer": {
             "type": "pointerdown",
@@ -11243,12 +11049,7 @@
             },
             "selectedTool": "绘制"
           },
-          "texelBefore": [
-            17,
-            119,
-            238,
-            255
-          ],
+          "texelBefore": [17, 119, 238, 255],
           "after": {
             "header": "64 × 64 像素 · 已保存",
             "viewer": {
@@ -11267,12 +11068,7 @@
             },
             "selectedTool": "绘制"
           },
-          "texelAfter": [
-            238,
-            119,
-            51,
-            255
-          ],
+          "texelAfter": [238, 119, 51, 255],
           "changedBytes": 2
         },
         {
@@ -11327,9 +11123,7 @@
         },
         {
           "kind": "stroke",
-          "args": [
-            false
-          ],
+          "args": [false],
           "at": 92840.30000001192,
           "pointer": {
             "type": "pointerup",
@@ -11808,107 +11602,45 @@
         {
           "x": 10,
           "y": 12,
-          "before": [
-            17,
-            119,
-            238,
-            255
-          ],
-          "after": [
-            238,
-            119,
-            51,
-            255
-          ]
+          "before": [17, 119, 238, 255],
+          "after": [238, 119, 51, 255]
         },
         {
           "x": 11,
           "y": 12,
-          "before": [
-            17,
-            119,
-            238,
-            255
-          ],
-          "after": [
-            238,
-            119,
-            51,
-            255
-          ]
+          "before": [17, 119, 238, 255],
+          "after": [238, 119, 51, 255]
         },
         {
           "x": 12,
           "y": 12,
-          "before": [
-            17,
-            119,
-            238,
-            255
-          ],
-          "after": [
-            238,
-            119,
-            51,
-            255
-          ]
+          "before": [17, 119, 238, 255],
+          "after": [238, 119, 51, 255]
         },
         {
           "x": 13,
           "y": 13,
-          "before": [
-            17,
-            119,
-            238,
-            255
-          ],
-          "after": [
-            238,
-            119,
-            51,
-            255
-          ]
+          "before": [17, 119, 238, 255],
+          "after": [238, 119, 51, 255]
         },
         {
           "x": 14,
           "y": 13,
-          "before": [
-            17,
-            119,
-            238,
-            255
-          ],
-          "after": [
-            238,
-            119,
-            51,
-            255
-          ]
+          "before": [17, 119, 238, 255],
+          "after": [238, 119, 51, 255]
         },
         {
           "x": 15,
           "y": 13,
-          "before": [
-            17,
-            119,
-            238,
-            255
-          ],
-          "after": [
-            238,
-            119,
-            51,
-            255
-          ]
+          "before": [17, 119, 238, 255],
+          "after": [238, 119, 51, 255]
         }
       ],
       "dirtyAssertionPassed": true,
       "events": [
         {
           "kind": "stroke",
-          "args": [
-            true
-          ],
+          "args": [true],
           "at": 114591.69999998808,
           "pointer": {
             "type": "pointerdown",
@@ -11995,12 +11727,7 @@
             },
             "selectedTool": "绘制"
           },
-          "texelBefore": [
-            17,
-            119,
-            238,
-            255
-          ],
+          "texelBefore": [17, 119, 238, 255],
           "after": {
             "header": "64 × 64 像素 · 已保存",
             "viewer": {
@@ -12019,12 +11746,7 @@
             },
             "selectedTool": "绘制"
           },
-          "texelAfter": [
-            238,
-            119,
-            51,
-            255
-          ],
+          "texelAfter": [238, 119, 51, 255],
           "changedBytes": 2
         },
         {
@@ -12066,12 +11788,7 @@
             },
             "selectedTool": "绘制"
           },
-          "texelBefore": [
-            17,
-            119,
-            238,
-            255
-          ],
+          "texelBefore": [17, 119, 238, 255],
           "after": {
             "header": "64 × 64 像素 · 有未保存更改",
             "viewer": {
@@ -12090,19 +11807,12 @@
             },
             "selectedTool": "绘制"
           },
-          "texelAfter": [
-            238,
-            119,
-            51,
-            255
-          ],
+          "texelAfter": [238, 119, 51, 255],
           "changedBytes": 10
         },
         {
           "kind": "stroke",
-          "args": [
-            false
-          ],
+          "args": [false],
           "at": 114600.30000001192,
           "pointer": {
             "type": "pointerup",
@@ -12579,27 +12289,15 @@
         {
           "x": 10,
           "y": 12,
-          "before": [
-            238,
-            119,
-            51,
-            255
-          ],
-          "after": [
-            17,
-            119,
-            238,
-            255
-          ]
+          "before": [238, 119, 51, 255],
+          "after": [17, 119, 238, 255]
         }
       ],
       "dirtyAssertionPassed": true,
       "events": [
         {
           "kind": "stroke",
-          "args": [
-            true
-          ],
+          "args": [true],
           "at": 124362.69999998808,
           "pointer": {
             "type": "pointerdown",
@@ -12686,12 +12384,7 @@
             },
             "selectedTool": "绘制"
           },
-          "texelBefore": [
-            238,
-            119,
-            51,
-            255
-          ],
+          "texelBefore": [238, 119, 51, 255],
           "after": {
             "header": "64 × 64 像素 · 已保存",
             "viewer": {
@@ -12710,12 +12403,7 @@
             },
             "selectedTool": "绘制"
           },
-          "texelAfter": [
-            17,
-            119,
-            238,
-            255
-          ],
+          "texelAfter": [17, 119, 238, 255],
           "changedBytes": 2
         },
         {
@@ -12770,9 +12458,7 @@
         },
         {
           "kind": "stroke",
-          "args": [
-            false
-          ],
+          "args": [false],
           "at": 124371.5,
           "pointer": {
             "type": "pointerup",

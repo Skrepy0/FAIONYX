@@ -30,7 +30,7 @@ export function normalizeStoredResolution(
     width: GAME_WIDTH_MIN,
     height: GAME_HEIGHT_MIN,
     mode: 'windowed',
-    fullscreen: false
+    fullscreen: false,
   }
 ): GameResolution {
   const legacyFullscreen = value?.fullscreen === true
@@ -45,11 +45,7 @@ export function resolutionValidationError(value: GameResolution): string | null 
   if (!Number.isInteger(value.width) || value.width < GAME_WIDTH_MIN || value.width > GAME_WIDTH_MAX) {
     return `窗口宽度必须是 ${GAME_WIDTH_MIN}–${GAME_WIDTH_MAX} 之间的整数`
   }
-  if (
-    !Number.isInteger(value.height) ||
-    value.height < GAME_HEIGHT_MIN ||
-    value.height > GAME_HEIGHT_MAX
-  ) {
+  if (!Number.isInteger(value.height) || value.height < GAME_HEIGHT_MIN || value.height > GAME_HEIGHT_MAX) {
     return `窗口高度必须是 ${GAME_HEIGHT_MIN}–${GAME_HEIGHT_MAX} 之间的整数`
   }
   return null
@@ -61,14 +57,9 @@ export function assertValidResolution(value: GameResolution): void {
 }
 
 /** 实例设置存在时覆盖全局；结果重新同步旧 fullscreen 字段。 */
-export function resolveGameResolution(
-  globalResolution: GameResolution,
-  instanceResolution?: GameResolution | null
-): GameResolution {
+export function resolveGameResolution(globalResolution: GameResolution, instanceResolution?: GameResolution | null): GameResolution {
   const global = normalizeStoredResolution(globalResolution)
-  const resolved = instanceResolution
-    ? normalizeStoredResolution(instanceResolution, global)
-    : global
+  const resolved = instanceResolution ? normalizeStoredResolution(instanceResolution, global) : global
   assertValidResolution(resolved)
   return resolved
 }
@@ -118,6 +109,6 @@ export function buildGameWindowArguments(
     args: [...args, '--width', String(width), '--height', String(height)],
     mode: resolution.mode,
     width,
-    height
+    height,
   }
 }

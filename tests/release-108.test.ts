@@ -8,7 +8,6 @@ const read = (file: string) => fs.readFileSync(file, 'utf8')
 // Replaced implementation: behavior is exercised by skin3d-parity, download-policy,
 // download-stall, import-download-1049 and modpack-speed-1050 runtime tests.
 
-
 test('launch command assembly: no duplicate -cp/library-path/jna.tmpdir, trimmed values, correct order', () => {
   const launch = read('src/main/core/launch.ts')
   // json 自带参数不再被手动重复添加
@@ -25,7 +24,6 @@ test('launch command assembly: no duplicate -cp/library-path/jna.tmpdir, trimmed
 // Replaced implementation: behavior is exercised by skin3d-parity, download-policy,
 // download-stall, import-download-1049 and modpack-speed-1050 runtime tests.
 
-
 test('edit panel: topbar clickable in edit mode, details with empty groups show hint', () => {
   const app = read('src/renderer/src/App.vue')
   assert.match(app, /\.shell\.edit-mode \.topbar/)
@@ -41,7 +39,12 @@ test('SkinViewer3D and EditPanel compile', () => {
     const { descriptor, errors } = parse(source)
     assert.deepEqual(errors, [], file)
     const script = compileScript(descriptor, { id: file })
-    const result = compileTemplate({ source: descriptor.template!.content, filename: file, id: file, compilerOptions: { bindingMetadata: script.bindings } })
+    const result = compileTemplate({
+      source: descriptor.template!.content,
+      filename: file,
+      id: file,
+      compilerOptions: { bindingMetadata: script.bindings },
+    })
     assert.deepEqual(result.errors, [], file)
   }
 })

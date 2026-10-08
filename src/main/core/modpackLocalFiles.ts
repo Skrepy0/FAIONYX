@@ -15,26 +15,32 @@ export class LocalModpackFiles {
   private async scan(signal?: AbortSignal): Promise<Map<number, string[]>> {
     const files = new Map<number, string[]>()
     const entries = async (dir: string) => fs.promises.readdir(dir, { withFileTypes: true }).catch(() => [])
-    for (const root of new Set(this.roots.map(root => path.resolve(root)))) {
+    for (const root of new Set(this.roots.map((root) => path.resolve(root)))) {
       await waitIfTaskPaused(signal)
       const versions = path.join(root, 'versions')
-      const instances = (await entries(versions)).filter(e => e.isDirectory() && !e.name.startsWith('.'))
-      for (const base of [root, ...instances.map(e => path.join(versions, e.name))]) {
+      const instances = (await entries(versions)).filter((e) => e.isDirectory() && !e.name.startsWith('.'))
+      for (const base of [root, ...instances.map((e) => path.join(versions, e.name))]) {
         for (const rel of PACK_RESOURCE_DIRS) {
           await waitIfTaskPaused(signal)
-          let dir = base, regular = true
+          let dir = base,
+            regular = true
           for (const segment of rel.split('/')) {
             dir = path.join(dir, segment)
             const stat = await fs.promises.lstat(dir).catch(() => null)
-            if (!stat?.isDirectory() || stat.isSymbolicLink()) { regular = false; break }
+            if (!stat?.isDirectory() || stat.isSymbolicLink()) {
+              regular = false
+              break
+            }
           }
           if (!regular) continue
           for (const entry of await entries(dir)) {
             if (!entry.isFile() || !/\.(?:jar|zip)(?:\.disabled)?$/i.test(entry.name)) continue
-            const file = path.join(dir, entry.name), stat = await fs.promises.lstat(file).catch(() => null)
+            const file = path.join(dir, entry.name),
+              stat = await fs.promises.lstat(file).catch(() => null)
             if (!stat?.isFile() || stat.isSymbolicLink()) continue
             const group = files.get(stat.size) ?? []
-            group.push(file); files.set(stat.size, group)
+            group.push(file)
+            files.set(stat.size, group)
           }
         }
       }
@@ -47,8 +53,11 @@ export class LocalModpackFiles {
       await waitIfTaskPaused(signal)
       try {
         const stat = await fs.promises.lstat(candidate)
-        return stat.isFile() && !stat.isSymbolicLink() && !await verifyFile(candidate, file, signal)
-      } catch { signal?.throwIfAborted(); return false }
+        return stat.isFile() && !stat.isSymbolicLink() && !(await verifyFile(candidate, file, signal))
+      } catch {
+        signal?.throwIfAborted()
+        return false
+      }
     }
     // Verified cache may already exist after a previous cancelled installation.
     for (const root of this.roots) {

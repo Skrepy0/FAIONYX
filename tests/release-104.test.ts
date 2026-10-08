@@ -74,7 +74,7 @@ test('default config page: renamed, key sync switch, vanilla-aligned categories 
 test('options.txt merge covers key_* lines and preserves everything else', () => {
   const merged = mergeKeysIntoOptions('lang:zh_cn\nkey_key.forward:key.keyboard.w\ncustomLine:keep\n', {
     'key_key.forward': 'key.keyboard.s',
-    'key_key.back': 'key.keyboard.w'
+    'key_key.back': 'key.keyboard.w',
   })
   assert(merged.includes('key_key.forward:key.keyboard.s'), 'registered key overwritten')
   assert(merged.includes('key_key.back:key.keyboard.w'), 'missing key appended')
@@ -86,12 +86,23 @@ test('options.txt merge covers key_* lines and preserves everything else', () =>
 })
 
 test('new/changed Vue components compile', () => {
-  for (const file of ['src/renderer/src/views/KeysView.vue', 'src/renderer/src/components/HomeLayoutEditor.vue', 'src/renderer/src/views/SettingsView.vue', 'src/renderer/src/App.vue', 'src/renderer/src/views/AccountsView.vue']) {
+  for (const file of [
+    'src/renderer/src/views/KeysView.vue',
+    'src/renderer/src/components/HomeLayoutEditor.vue',
+    'src/renderer/src/views/SettingsView.vue',
+    'src/renderer/src/App.vue',
+    'src/renderer/src/views/AccountsView.vue',
+  ]) {
     const source = read(file)
     const { descriptor, errors } = parse(source)
     assert.deepEqual(errors, [], file)
     const script = compileScript(descriptor, { id: file })
-    const result = compileTemplate({ source: descriptor.template!.content, filename: file, id: file, compilerOptions: { bindingMetadata: script.bindings } })
+    const result = compileTemplate({
+      source: descriptor.template!.content,
+      filename: file,
+      id: file,
+      compilerOptions: { bindingMetadata: script.bindings },
+    })
     assert.deepEqual(result.errors, [], file)
   }
 })

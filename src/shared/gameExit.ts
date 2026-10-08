@@ -21,19 +21,37 @@ export class GameExitEvidence {
       if (this.stopping && /^Description: Client shutdown from post-main\s*$/.test(line)) this.shutdownWatchdog = true
       else this.otherFailure = true
     }
-    if (/A fatal error has been detected by the Java Runtime Environment|Encountered an unexpected exception|Reported exception thrown!|Exception in thread "(?:main|Render thread|Client thread)"/.test(line)) this.otherFailure = true
+    if (
+      /A fatal error has been detected by the Java Runtime Environment|Encountered an unexpected exception|Reported exception thrown!|Exception in thread "(?:main|Render thread|Client thread)"/.test(
+        line
+      )
+    )
+      this.otherFailure = true
   }
 
   classify(code: number | null, intentional = false, platform = 'win32'): GameExitKind {
     if (intentional) return 'stopped'
     if (code === 0) return 'normal'
     // -8 alone is not sufficient. A real crash followed by cleanup must still be reported.
-    if (platform === 'win32' && signedExitCode(code) === -8 && this.stopping && this.shutdownWatchdog && !this.otherFailure && this.reports === this.describedReports) return 'shutdown-timeout'
+    if (
+      platform === 'win32' &&
+      signedExitCode(code) === -8 &&
+      this.stopping &&
+      this.shutdownWatchdog &&
+      !this.otherFailure &&
+      this.reports === this.describedReports
+    )
+      return 'shutdown-timeout'
     return 'abnormal'
   }
 }
 
-export function shouldReportGameCrash(state: { code?: number; exitKind?: GameExitKind; intentionalStop?: boolean; intentionalRestart?: boolean }): boolean {
+export function shouldReportGameCrash(state: {
+  code?: number
+  exitKind?: GameExitKind
+  intentionalStop?: boolean
+  intentionalRestart?: boolean
+}): boolean {
   if (state.intentionalStop || state.intentionalRestart) return false
   return state.exitKind ? state.exitKind === 'abnormal' : state.code !== undefined && state.code !== 0
 }

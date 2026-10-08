@@ -4,29 +4,16 @@
   "archive_type": "zip",
   "availability_type": "CA",
   "build_date": "2026-08-07T21:11:30",
-  "certifications": [
-    "tck"
-  ],
+  "certifications": ["tck"],
   "cpu_gen": [],
   "crac_supported": false,
   "crs_supported": false,
-  "distro_version": [
-    8,
-    96,
-    0,
-    205
-  ],
+  "distro_version": [8, 96, 0, 205],
   "download_url": "https://cdn.azul.com/zulu/bin/zulu8.96.0.205-ca-jre8.0.504-win_x64.zip",
   "hw_bitness": 64,
-  "java_package_features": [
-    "headfull"
-  ],
+  "java_package_features": ["headfull"],
   "java_package_type": "jre",
-  "java_version": [
-    8,
-    0,
-    504
-  ],
+  "java_version": [8, 0, 504],
   "javafx_bundled": false,
   "last_modified": "2026-08-17T13:41:25",
   "latest": true,

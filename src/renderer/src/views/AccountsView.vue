@@ -18,7 +18,7 @@ import {
   removeYggdrasilProvider,
   saveYggdrasilProvider,
   selectYggdrasilProfile,
-  selectAccount
+  selectAccount,
 } from '../api'
 import { refreshAccounts, store, toast } from '../store'
 import Avatar from '../components/Avatar.vue'
@@ -35,7 +35,7 @@ import type {
   YggdrasilLoginResult,
   YggdrasilProvider,
   YggdrasilProviderCandidate,
-  YggdrasilProviderInput
+  YggdrasilProviderInput,
 } from '@shared/types'
 
 const accountMode = ref<'microsoft' | 'offline' | 'yggdrasil'>('microsoft')
@@ -76,7 +76,7 @@ const ms = reactive({
   waiting: false,
   starting: false,
   autoCopied: false,
-  info: null as MsDeviceCodeInfo | null
+  info: null as MsDeviceCodeInfo | null,
 })
 
 async function beginMsLogin() {
@@ -131,13 +131,13 @@ const providerModal = reactive({
   error: '',
   requireInsecure: false,
   allowInsecure: false,
-  candidate: null as YggdrasilProviderCandidate | null
+  candidate: null as YggdrasilProviderCandidate | null,
 })
 const yggLogin = reactive({
   providerId: '',
   identifier: '',
   password: '',
-  busy: false
+  busy: false,
 })
 const profileModal = reactive({
   open: false,
@@ -145,7 +145,7 @@ const profileModal = reactive({
   providerName: '',
   profiles: [] as Array<{ id: string; name: string }>,
   selectedId: '',
-  busy: false
+  busy: false,
 })
 const refreshingId = ref<string | null>(null)
 const removingProviderId = ref<string | null>(null)
@@ -172,7 +172,7 @@ function openProviderImport(input?: YggdrasilProviderInput) {
     error: '',
     requireInsecure: false,
     allowInsecure: false,
-    candidate: null
+    candidate: null,
   })
   if (input) void probeProviderInput()
 }
@@ -236,10 +236,7 @@ async function checkYggdrasilRuntime() {
   checkingRuntime.value = true
   try {
     const runtime = await prepareYggdrasilRuntime()
-    toast(
-      `authlib-injector ${runtime.version}（构建 ${runtime.buildNumber}）校验通过 · ${runtime.sha256.slice(0, 12)}…`,
-      'success'
-    )
+    toast(`authlib-injector ${runtime.version}（构建 ${runtime.buildNumber}）校验通过 · ${runtime.sha256.slice(0, 12)}…`, 'success')
   } catch (e) {
     toast('外置登录运行组件准备失败：' + errText(e), 'error')
   } finally {
@@ -255,7 +252,7 @@ async function finishYggLogin(result: YggdrasilLoginResult) {
       providerName: result.providerName,
       profiles: result.profiles,
       selectedId: result.profiles[0]?.id ?? '',
-      busy: false
+      busy: false,
     })
     return
   }
@@ -276,9 +273,7 @@ async function onYggLogin() {
   }
   yggLogin.busy = true
   try {
-    await finishYggLogin(
-      await loginYggdrasil(yggLogin.providerId, yggLogin.identifier, yggLogin.password)
-    )
+    await finishYggLogin(await loginYggdrasil(yggLogin.providerId, yggLogin.identifier, yggLogin.password))
   } catch (e) {
     toast('外置登录失败：' + errText(e), 'error')
   } finally {
@@ -290,10 +285,7 @@ async function confirmProfile() {
   if (!profileModal.selectedId || profileModal.busy) return
   profileModal.busy = true
   try {
-    const account = await selectYggdrasilProfile(
-      profileModal.challengeId,
-      profileModal.selectedId
-    )
+    const account = await selectYggdrasilProfile(profileModal.challengeId, profileModal.selectedId)
     profileModal.open = false
     yggLogin.password = ''
     await refreshAccounts()
@@ -326,10 +318,14 @@ function accountTypeLabel(account: Account): string {
 }
 
 onMounted(() => {
-  void getSystemInfo().then(info => {
-    credentialsPersistent.value = info.credentialStorage?.persistent ?? null
-    credentialNotice.value = info.credentialStorage?.message ?? '无法确认当前系统的安全存储状态。'
-  }).catch(() => { credentialNotice.value = '无法获取当前系统的安全存储状态。' })
+  void getSystemInfo()
+    .then((info) => {
+      credentialsPersistent.value = info.credentialStorage?.persistent ?? null
+      credentialNotice.value = info.credentialStorage?.message ?? '无法确认当前系统的安全存储状态。'
+    })
+    .catch(() => {
+      credentialNotice.value = '无法获取当前系统的安全存储状态。'
+    })
   void loadProviders()
   store.yggdrasilImportHandler = openProviderImport
   if (store.pendingYggdrasilImport) {
@@ -415,15 +411,9 @@ async function onRemove(acc: Account) {
     <div class="card">
       <h3 class="section-title">添加账号</h3>
       <div class="account-type-tabs" role="tablist" aria-label="账号类型">
-        <button :class="{ active: accountMode === 'microsoft' }" @click="accountMode = 'microsoft'">
-          Microsoft 正版登录
-        </button>
-        <button :class="{ active: accountMode === 'offline' }" @click="accountMode = 'offline'">
-          离线登录
-        </button>
-        <button :class="{ active: accountMode === 'yggdrasil' }" @click="accountMode = 'yggdrasil'">
-          外置 Yggdrasil 登录
-        </button>
+        <button :class="{ active: accountMode === 'microsoft' }" @click="accountMode = 'microsoft'">Microsoft 正版登录</button>
+        <button :class="{ active: accountMode === 'offline' }" @click="accountMode = 'offline'">离线登录</button>
+        <button :class="{ active: accountMode === 'yggdrasil' }" @click="accountMode = 'yggdrasil'">外置 Yggdrasil 登录</button>
       </div>
 
       <div v-if="accountMode === 'microsoft'" class="account-mode-panel">
@@ -450,11 +440,7 @@ async function onRemove(acc: Account) {
           />
           <p v-if="nameError" class="field-error">{{ nameError }}</p>
         </div>
-        <button
-          class="btn btn-gold add-btn"
-          :disabled="adding || !newName || !!nameError"
-          @click="onAddOffline"
-        >
+        <button class="btn btn-gold add-btn" :disabled="adding || !newName || !!nameError" @click="onAddOffline">
           {{ adding ? '添加中…' : '添加离线账号' }}
         </button>
       </div>
@@ -479,11 +465,7 @@ async function onRemove(acc: Account) {
               <span v-if="provider.insecure" class="tag tag-danger">HTTP 不安全</span>
               <p class="muted provider-url" :title="provider.apiRoot">{{ provider.apiRoot }}</p>
             </div>
-            <button
-              class="btn btn-danger btn-sm"
-              :disabled="removingProviderId === provider.id"
-              @click="onRemoveProvider(provider)"
-            >
+            <button class="btn btn-danger btn-sm" :disabled="removingProviderId === provider.id" @click="onRemoveProvider(provider)">
               删除
             </button>
           </div>
@@ -506,19 +488,9 @@ async function onRemove(acc: Account) {
           </label>
           <label>
             <span>密码</span>
-            <input
-              v-model="yggLogin.password"
-              class="input"
-              type="password"
-              autocomplete="current-password"
-              @keyup.enter="onYggLogin"
-            />
+            <input v-model="yggLogin.password" class="input" type="password" autocomplete="current-password" @keyup.enter="onYggLogin" />
           </label>
-          <button
-            class="btn btn-gold ygg-login-btn"
-            :disabled="yggLogin.busy || !providers.length"
-            @click="onYggLogin"
-          >
+          <button class="btn btn-gold ygg-login-btn" :disabled="yggLogin.busy || !providers.length" @click="onYggLogin">
             {{ yggLogin.busy ? '正在认证…' : '登录' }}
           </button>
         </div>
@@ -544,10 +516,7 @@ async function onRemove(acc: Account) {
           <div class="account-meta">
             <div class="account-name">
               {{ acc.username }}
-              <span
-                class="tag"
-                :class="acc.type === 'microsoft' ? 'tag-gold' : acc.type === 'yggdrasil' ? 'tag-cyan' : ''"
-              >
+              <span class="tag" :class="acc.type === 'microsoft' ? 'tag-gold' : acc.type === 'yggdrasil' ? 'tag-cyan' : ''">
                 {{ accountTypeLabel(acc) }}
               </span>
             </div>
@@ -563,11 +532,7 @@ async function onRemove(acc: Account) {
           >
             {{ refreshingId === acc.id ? '验证中…' : '验证会话' }}
           </button>
-          <button
-            class="btn btn-danger btn-sm remove-btn"
-            :disabled="removingId === acc.id"
-            @click.stop="onRemove(acc)"
-          >
+          <button class="btn btn-danger btn-sm remove-btn" :disabled="removingId === acc.id" @click.stop="onRemove(acc)">
             {{ removingId === acc.id ? '删除中…' : '删除' }}
           </button>
         </div>
@@ -579,15 +544,24 @@ async function onRemove(acc: Account) {
       <div v-if="ms.open" class="modal-mask">
         <div class="modal ms-modal">
           <h3 class="modal-title">微软账号登录</h3>
-          <p class="muted ms-tip">
-            请在浏览器中打开验证地址，输入下方代码完成授权。登录成功后本窗口会自动关闭。
-          </p>
+          <p class="muted ms-tip">请在浏览器中打开验证地址，输入下方代码完成授权。登录成功后本窗口会自动关闭。</p>
 
           <button class="user-code" title="点击复制" @click="copyCode">
             {{ ms.info?.userCode }}
           </button>
           <p v-if="ms.autoCopied" class="copy-hint copied">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+            <svg
+              viewBox="0 0 24 24"
+              width="12"
+              height="12"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
             已自动复制到剪贴板，到验证页直接粘贴即可
           </p>
           <p v-else class="muted copy-hint">点击代码即可复制</p>
@@ -629,12 +603,24 @@ async function onRemove(acc: Account) {
           </label>
           <p v-if="providerModal.error" class="provider-error">{{ providerModal.error }}</p>
           <div v-if="providerModal.candidate" class="provider-preview">
-            <div><span>名称</span><strong>{{ providerModal.candidate.name }}</strong></div>
-            <div><span>API Root</span><code>{{ providerModal.candidate.apiRoot }}</code></div>
-            <div><span>Auth Server</span><code>{{ providerModal.candidate.authServer }}</code></div>
-            <div><span>Account Server</span><code>{{ providerModal.candidate.accountServer }}</code></div>
-            <div><span>Session Server</span><code>{{ providerModal.candidate.sessionServer }}</code></div>
-            <div><span>Skin Domains</span><code>{{ providerModal.candidate.skinDomains.join(', ') || '未声明' }}</code></div>
+            <div>
+              <span>名称</span><strong>{{ providerModal.candidate.name }}</strong>
+            </div>
+            <div>
+              <span>API Root</span><code>{{ providerModal.candidate.apiRoot }}</code>
+            </div>
+            <div>
+              <span>Auth Server</span><code>{{ providerModal.candidate.authServer }}</code>
+            </div>
+            <div>
+              <span>Account Server</span><code>{{ providerModal.candidate.accountServer }}</code>
+            </div>
+            <div>
+              <span>Session Server</span><code>{{ providerModal.candidate.sessionServer }}</code>
+            </div>
+            <div>
+              <span>Skin Domains</span><code>{{ providerModal.candidate.skinDomains.join(', ') || '未声明' }}</code>
+            </div>
             <p v-if="providerModal.candidate.aliRedirected" class="ali-note">已按 ALI 标头解析到实际 API Root。</p>
           </div>
           <div class="modal-actions provider-actions">
@@ -642,11 +628,7 @@ async function onRemove(acc: Account) {
             <button class="btn btn-ghost" :disabled="providerModal.probing" @click="probeProviderInput">
               {{ providerModal.probing ? '正在获取元数据…' : '识别并校验' }}
             </button>
-            <button
-              class="btn btn-gold"
-              :disabled="!providerModal.candidate || providerModal.saving"
-              @click="confirmProvider"
-            >
+            <button class="btn btn-gold" :disabled="!providerModal.candidate || providerModal.saving" @click="confirmProvider">
               {{ providerModal.saving ? '保存中…' : '确认保存' }}
             </button>
           </div>
@@ -659,11 +641,7 @@ async function onRemove(acc: Account) {
           <h3 class="modal-title">选择 {{ profileModal.providerName }} 角色</h3>
           <p class="muted ms-tip">此账号拥有多个角色，请选择本次要保存并启动的角色。</p>
           <div class="profile-options">
-            <label
-              v-for="profile in profileModal.profiles"
-              :key="profile.id"
-              :class="{ selected: profileModal.selectedId === profile.id }"
-            >
+            <label v-for="profile in profileModal.profiles" :key="profile.id" :class="{ selected: profileModal.selectedId === profile.id }">
               <input v-model="profileModal.selectedId" type="radio" :value="profile.id" />
               <span>{{ profile.name }}</span>
               <code>{{ profile.id.slice(0, 8) }}</code>
@@ -709,7 +687,9 @@ async function onRemove(acc: Account) {
   font-size: var(--text-sm);
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 .back-btn:hover {
   background: var(--card-2);
@@ -750,7 +730,9 @@ async function onRemove(acc: Account) {
   font-size: var(--text-xs);
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 .account-type-tabs button:hover {
   color: var(--text);
@@ -832,7 +814,10 @@ async function onRemove(acc: Account) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font: var(--text-xs) 'Cascadia Code', Consolas, monospace;
+  font:
+    var(--text-xs) 'Cascadia Code',
+    Consolas,
+    monospace;
 }
 .provider-empty {
   padding: var(--space-3);
@@ -884,7 +869,9 @@ async function onRemove(acc: Account) {
   border-radius: var(--radius-md);
   background: var(--card-2);
   cursor: pointer;
-  transition: border-color 0.18s ease, background 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
 }
 .account-row:hover {
   border-color: var(--accent-deep);
@@ -1016,7 +1003,10 @@ async function onRemove(acc: Account) {
 .provider-source {
   min-height: 84px;
   resize: vertical;
-  font: var(--text-xs)/1.55 'Cascadia Code', Consolas, monospace;
+  font:
+    var(--text-xs)/1.55 'Cascadia Code',
+    Consolas,
+    monospace;
 }
 .insecure-confirm {
   display: flex;
@@ -1058,7 +1048,10 @@ async function onRemove(acc: Account) {
 .profile-options code {
   overflow-wrap: anywhere;
   color: var(--text);
-  font: var(--text-xs) 'Cascadia Code', Consolas, monospace;
+  font:
+    var(--text-xs) 'Cascadia Code',
+    Consolas,
+    monospace;
 }
 .ali-note {
   color: var(--ok);

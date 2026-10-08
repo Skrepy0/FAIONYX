@@ -48,7 +48,7 @@ export function registerTask(title: string, kind: TaskRecord['kind']): TaskRecor
     settled,
     settle,
     status: 'running',
-    resumeWaiters: new Set()
+    resumeWaiters: new Set(),
   }
   tasks.set(id, rec)
   taskBySignal.set(rec.controller.signal, rec)
@@ -147,7 +147,7 @@ export async function cancelTaskAndWait(id: string, timeoutMs = 30_000): Promise
       rec.settled,
       new Promise<never>((_, reject) => {
         timer = setTimeout(() => reject(new Error('取消超时：后台任务尚未停止，请稍后重试')), timeoutMs)
-      })
+      }),
     ])
   } catch (error) {
     taskLog.warn(`任务取消超时（${timeoutMs}ms）：${rec.title}（${id}）`, error)
@@ -160,10 +160,7 @@ export async function cancelTaskAndWait(id: string, timeoutMs = 30_000): Promise
 
 /** 取消错误的统一判定（abort 信号抛出） */
 export function isCancelError(e: unknown): boolean {
-  return (
-    e instanceof Error &&
-    (e.message === '已取消' || e.name === 'AbortError' || /aborted|取消/i.test(e.message))
-  )
+  return e instanceof Error && (e.message === '已取消' || e.name === 'AbortError' || /aborted|取消/i.test(e.message))
 }
 
 /** 阶段边界手动检查（下载循环之外的长流程节点调用） */

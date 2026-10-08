@@ -47,7 +47,7 @@ function persistFolders(folders: GameFolder[], active?: string): GameFolder[] {
   saveSettings({
     folders,
     activeFolder: selected?.path ?? fallback.path,
-    gameDir: selected?.path ?? fallback.path
+    gameDir: selected?.path ?? fallback.path,
   })
   return folders
 }
@@ -55,17 +55,16 @@ function persistFolders(folders: GameFolder[], active?: string): GameFolder[] {
 export function listGameFolders(): { folders: GameFolder[]; active: string } {
   const current = getSettings()
   const folders = normalizedFolders()
-  const selected = folders.find(
-    (folder) => pathIdentity(folder.path) === pathIdentity(current.activeFolder)
-  )
+  const selected = folders.find((folder) => pathIdentity(folder.path) === pathIdentity(current.activeFolder))
   const active = selected?.path ?? folders.find((folder) => folder.isDefault)?.path ?? folders[0].path
   const changed =
     folders.length !== current.folders.length ||
     active !== current.activeFolder ||
-    folders.some((folder, index) =>
-      folder.path !== current.folders[index]?.path ||
-      folder.name !== current.folders[index]?.name ||
-      folder.isDefault !== current.folders[index]?.isDefault
+    folders.some(
+      (folder, index) =>
+        folder.path !== current.folders[index]?.path ||
+        folder.name !== current.folders[index]?.name ||
+        folder.isDefault !== current.folders[index]?.isDefault
     )
   if (changed) persistFolders(folders, active)
   return { folders, active }
@@ -74,9 +73,7 @@ export function listGameFolders(): { folders: GameFolder[]; active: string } {
 export function addGameFolder(input: string): { folders: GameFolder[]; folder: GameFolder; structure: FolderScanResult['structure'] } {
   const resolved = resolveMinecraftRoot(input)
   const current = listGameFolders()
-  const duplicate = current.folders.find(
-    (folder) => pathIdentity(folder.path) === pathIdentity(resolved.path)
-  )
+  const duplicate = current.folders.find((folder) => pathIdentity(folder.path) === pathIdentity(resolved.path))
   if (duplicate) {
     folderLog.info(`游戏文件夹已登记，直接复用：${duplicate.path}（结构 ${resolved.structure}）`)
     return { folders: current.folders, folder: duplicate, structure: resolved.structure }
@@ -84,13 +81,13 @@ export function addGameFolder(input: string): { folders: GameFolder[]; folder: G
   const folder: GameFolder = {
     path: resolved.path,
     name: path.basename(resolved.path) || resolved.path,
-    isDefault: false
+    isDefault: false,
   }
   folderLog.info(`登记新游戏文件夹：${folder.path}（结构 ${resolved.structure}）`)
   return {
     folders: persistFolders([...current.folders, folder]),
     folder,
-    structure: resolved.structure
+    structure: resolved.structure,
   }
 }
 
@@ -102,9 +99,7 @@ export function renameGameFolder(input: string, displayName: string): GameFolder
     throw new Error('文件夹未登记')
   }
   return persistFolders(
-    current.folders.map((folder) =>
-      pathIdentity(folder.path) === identity ? { ...folder, name } : folder
-    ),
+    current.folders.map((folder) => (pathIdentity(folder.path) === identity ? { ...folder, name } : folder)),
     current.active
   )
 }
@@ -127,9 +122,7 @@ export function removeGameFolder(input: string): GameFolder[] {
   }
   if (target.isDefault) folders[0] = { ...folders[0], isDefault: true }
   const nextActive =
-    pathIdentity(current.active) === identity
-      ? (folders.find((folder) => folder.isDefault) ?? folders[0]).path
-      : current.active
+    pathIdentity(current.active) === identity ? (folders.find((folder) => folder.isDefault) ?? folders[0]).path : current.active
   return persistFolders(folders, nextActive)
 }
 
@@ -144,7 +137,7 @@ export function setDefaultGameFolder(input: string): GameFolder[] {
   return persistFolders(
     current.folders.map((folder) => ({
       ...folder,
-      isDefault: pathIdentity(folder.path) === identity
+      isDefault: pathIdentity(folder.path) === identity,
     })),
     selected.path
   )
@@ -157,7 +150,13 @@ function assertWritableDownloadFolder(folder: string): void {
     fs.writeFileSync(probe, '', { flag: 'wx' })
     fs.unlinkSync(probe)
   } catch (error) {
-    if (fs.existsSync(probe)) { try { fs.unlinkSync(probe) } catch { /* Preserve the write error. */ } }
+    if (fs.existsSync(probe)) {
+      try {
+        fs.unlinkSync(probe)
+      } catch {
+        /* Preserve the write error. */
+      }
+    }
     throw new Error(`下载文件夹不可写：${error instanceof Error ? error.message : String(error)}`)
   }
 }
@@ -168,11 +167,21 @@ export function setDownloadGameFolder(input: string): GameFolder[] {
   assertWritableDownloadFolder(resolved.path)
   const current = listGameFolders()
   const identity = pathIdentity(resolved.path)
-  const registered = current.folders.some(folder => pathIdentity(folder.path) === identity)
-  const folders = registered ? current.folders : [...current.folders, {
-    path: resolved.path, name: path.basename(resolved.path) || resolved.path, isDefault: false
-  }]
-  return persistFolders(folders.map(folder => ({ ...folder, isDefault: pathIdentity(folder.path) === identity })), resolved.path)
+  const registered = current.folders.some((folder) => pathIdentity(folder.path) === identity)
+  const folders = registered
+    ? current.folders
+    : [
+        ...current.folders,
+        {
+          path: resolved.path,
+          name: path.basename(resolved.path) || resolved.path,
+          isDefault: false,
+        },
+      ]
+  return persistFolders(
+    folders.map((folder) => ({ ...folder, isDefault: pathIdentity(folder.path) === identity })),
+    resolved.path
+  )
 }
 
 export function setActiveGameFolder(input: string): string {
@@ -200,7 +209,7 @@ export function scanGameFolder(input: string): FolderScanResult {
       versions: [],
       errors: ['文件夹不存在或磁盘当前不可用'],
       scannedAt: new Date().toISOString(),
-      durationMs: Date.now() - started
+      durationMs: Date.now() - started,
     }
   }
   const structure = fs.existsSync(path.join(folder.path, '.faionyx'))
@@ -210,7 +219,10 @@ export function scanGameFolder(input: string): FolderScanResult {
       : 'empty'
   const scanned = scanInstalledFolder(folder.path)
   if (scanned.errors.length) {
-    folderLog.warn(`扫描 ${folder.path} 完成（结构 ${structure}，${scanned.versions.length} 个版本，${scanned.errors.length} 条警告，耗时 ${Date.now() - started}ms）`, new Error(scanned.errors.join('；')))
+    folderLog.warn(
+      `扫描 ${folder.path} 完成（结构 ${structure}，${scanned.versions.length} 个版本，${scanned.errors.length} 条警告，耗时 ${Date.now() - started}ms）`,
+      new Error(scanned.errors.join('；'))
+    )
   } else {
     folderLog.info(`扫描 ${folder.path} 完成：结构 ${structure}，${scanned.versions.length} 个版本（耗时 ${Date.now() - started}ms）`)
   }
@@ -221,6 +233,6 @@ export function scanGameFolder(input: string): FolderScanResult {
     versions: scanned.versions,
     errors: scanned.errors,
     scannedAt: new Date().toISOString(),
-    durationMs: Date.now() - started
+    durationMs: Date.now() - started,
   }
 }

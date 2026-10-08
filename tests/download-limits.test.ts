@@ -10,20 +10,32 @@ import { DEFAULT_DOWNLOAD_LIMITS, downloadLimiter, DownloadLimiter, validateDown
 
 test('default pool downloads distinct files concurrently and respects the shared configured ceiling', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'faionyx-many-files-'))
-  let active = 0, peak = 0
+  let active = 0,
+    peak = 0
   const paths = new Set<string>()
   const server = http.createServer((req, res) => {
-    paths.add(req.url!); active++; peak = Math.max(peak, active)
-    setTimeout(() => { active--; res.end(req.url) }, 150)
+    paths.add(req.url!)
+    active++
+    peak = Math.max(peak, active)
+    setTimeout(() => {
+      active--
+      res.end(req.url)
+    }, 150)
   })
-  server.listen(0, '127.0.0.1'); await once(server, 'listening')
+  server.listen(0, '127.0.0.1')
+  await once(server, 'listening')
   downloadLimiter.configure(DEFAULT_DOWNLOAD_LIMITS)
   try {
     const base = `http://127.0.0.1:${(server.address() as any).port}`
     await downloadAll(Array.from({ length: 40 }, (_, i) => ({ url: `${base}/${i}`, dest: path.join(dir, String(i)) })))
-    assert.equal(paths.size, 40); assert(peak >= 16 && peak <= DEFAULT_DOWNLOAD_LIMITS.downloadThreads, `peak=${peak}`)
+    assert.equal(paths.size, 40)
+    assert(peak >= 16 && peak <= DEFAULT_DOWNLOAD_LIMITS.downloadThreads, `peak=${peak}`)
     assert.equal(await fs.readFile(path.join(dir, '39'), 'utf8'), '/39')
-  } finally { server.closeAllConnections(); await new Promise<void>(r => server.close(() => r())); await fs.rm(dir, { recursive: true, force: true }) }
+  } finally {
+    server.closeAllConnections()
+    await new Promise<void>((r) => server.close(() => r()))
+    await fs.rm(dir, { recursive: true, force: true })
+  }
 })
 
 test('server Retry-After accepts seconds and HTTP dates without retrying early', () => {
@@ -35,14 +47,20 @@ test('server Retry-After accepts seconds and HTTP dates without retrying early',
 
 test('两个独立下载池共享 HTTP 并发上限和总速率，完成内容一致', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'faionyx-limits-'))
-  let active = 0, peak = 0
+  let active = 0,
+    peak = 0
   const payload = Buffer.alloc(64 * 1024, 83)
   const server = http.createServer((_req, res) => {
-    active++; peak = Math.max(peak, active)
+    active++
+    peak = Math.max(peak, active)
     res.on('close', () => active--)
-    setTimeout(() => { res.writeHead(200, { 'Content-Length': payload.length }); res.end(payload) }, 80)
+    setTimeout(() => {
+      res.writeHead(200, { 'Content-Length': payload.length })
+      res.end(payload)
+    }, 80)
   })
-  server.listen(0, '127.0.0.1'); await once(server, 'listening')
+  server.listen(0, '127.0.0.1')
+  await once(server, 'listening')
   const url = `http://127.0.0.1:${(server.address() as any).port}/file`
   downloadLimiter.configure({ downloadThreads: 2, downloadSpeedKBps: 128 })
   try {
@@ -54,7 +72,8 @@ test('两个独立下载池共享 HTTP 并发上限和总速率，完成内容�
     for (const task of tasks) assert.deepEqual(await fs.readFile(task.dest), payload)
   } finally {
     downloadLimiter.configure(DEFAULT_DOWNLOAD_LIMITS)
-    server.closeAllConnections(); await new Promise<void>(r => server.close(() => r()))
+    server.closeAllConnections()
+    await new Promise<void>((r) => server.close(() => r()))
     await fs.rm(dir, { recursive: true, force: true })
   }
 })
@@ -68,7 +87,8 @@ test('排队与限速等待均可立即取消，取消后不会泄漏并发名�
   abort.abort()
   await assert.rejects(queued)
   release()
-  const next = await limiter.acquire(); next()
+  const next = await limiter.acquire()
+  next()
   const slow = new AbortController()
   const waiting = limiter.consume(1e8, slow.signal)
   slow.abort()

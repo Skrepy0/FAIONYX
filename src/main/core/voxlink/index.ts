@@ -20,10 +20,14 @@ import { ModSyncService } from './modsyncService'
 import type { InstanceTarget } from '../../../shared/instanceCenter'
 import { registerTicketIpc } from './ticketsIpc'
 const modSync = new ModSyncService(vapp)
-const connectionLog = new ConnectionLog(() => vapp().baseURL(), () => !!vapp().settings.uploadDiagnostics, () => [vapp().engine.token])
+const connectionLog = new ConnectionLog(
+  () => vapp().baseURL(),
+  () => !!vapp().settings.uploadDiagnostics,
+  () => [vapp().engine.token]
+)
 let app: VoxlinkApp | null = null
-let requestGeneration=0
-let requestPending=false
+let requestGeneration = 0
+let requestPending = false
 
 function vapp(): VoxlinkApp {
   if (!app) app = new VoxlinkApp()
@@ -34,8 +38,15 @@ function vapp(): VoxlinkApp {
 function forwardEvent(ev: string, data: unknown): void {
   if (ev === 'conn:state') connectionLog.state((data as any).status, (data as any).detail)
   if (ev === 'stage') connectionLog.record('stage', `${(data as any).key}: ${(data as any).detail}`)
-  if (ev === 'mods:request') { void modSync.answer(data as Record<string, unknown>); return }
-  if (ev === 'session:state' && (data as any)?.state === 'closed') { modSync.stop(); connectionLog.state('failed', String((data as any).message || '信令会话已结束')); void connectionLog.stop() }
+  if (ev === 'mods:request') {
+    void modSync.answer(data as Record<string, unknown>)
+    return
+  }
+  if (ev === 'session:state' && (data as any)?.state === 'closed') {
+    modSync.stop()
+    connectionLog.state('failed', String((data as any).message || '信令会话已结束'))
+    void connectionLog.stop()
+  }
   push(ev, data)
   if (ev === 'session:state') push('state', snapshot())
 }
@@ -54,59 +65,89 @@ function snapshot(): unknown {
     room: a.room,
     session: a.getSessionStateJSON(),
     settings: a.settings,
-    pending: requestPending, joinedAt:a.engine.joinedAt, connection:a.engine.lastConnection, stages:a.engine.stages
+    pending: requestPending,
+    joinedAt: a.engine.joinedAt,
+    connection: a.engine.lastConnection,
+    stages: a.engine.stages,
   }
 }
 
 export function registerVoxlinkIpc(ipcMain: IpcMain): void {
-  registerTicketIpc(ipcMain,()=>vapp().baseURL())
+  registerTicketIpc(ipcMain, () => vapp().baseURL())
   modSync.register(ipcMain)
-  ipcMain.handle('voxlink:start', async (_e, payload: { mode?: 'host' | 'join'; code?: string; roomName?: string; isPublic?: boolean; category?: string; hostPort?: number; loader?: string; gameVersion?: string; target?: InstanceTarget }) => {
-    if(requestPending)throw new Error('正在处理联机请求，请先取消')
-    const generation=++requestGeneration;requestPending=true
-    try {
-    const a = vapp()
-    a.emit = (ev, data) => forwardEvent(ev, data)
-    a.netLog = (level, msg) => { connectionLog.record(level, msg); push('log', { level, msg }) }
-    if (payload.mode === 'join') {
-      const context=payload.target?await modSync.context(payload.target):undefined
-      if(generation!==requestGeneration)throw new Error('操作已取消')
-      const r = await a.joinRoom({ code: String(payload.code ?? '').trim(), loader:context?.loader, gameVersion:context?.mcVersion })
-      connectionLog.start(r.room.code, false)
-      push('state', snapshot())
-      return { ok: true, ...r }
+  ipcMain.handle(
+    'voxlink:start',
+    async (
+      _e,
+      payload: {
+        mode?: 'host' | 'join'
+        code?: string
+        roomName?: string
+        isPublic?: boolean
+        category?: string
+        hostPort?: number
+        loader?: string
+        gameVersion?: string
+        target?: InstanceTarget
+      }
+    ) => {
+      if (requestPending) throw new Error('正在处理联机请求，请先取消')
+      const generation = ++requestGeneration
+      requestPending = true
+      try {
+        const a = vapp()
+        a.emit = (ev, data) => forwardEvent(ev, data)
+        a.netLog = (level, msg) => {
+          connectionLog.record(level, msg)
+          push('log', { level, msg })
+        }
+        if (payload.mode === 'join') {
+          const context = payload.target ? await modSync.context(payload.target) : undefined
+          if (generation !== requestGeneration) throw new Error('操作已取消')
+          const r = await a.joinRoom({ code: String(payload.code ?? '').trim(), loader: context?.loader, gameVersion: context?.mcVersion })
+          connectionLog.start(r.room.code, false)
+          push('state', snapshot())
+          return { ok: true, ...r }
+        }
+        if (!payload.target) throw new Error('请先选择房主正在使用的游戏实例')
+        const context = await modSync.context(payload.target)
+        const name = normalizeVoxlinkRoomName(payload.roomName ?? DEFAULT_VOXLINK_ROOM_NAME)
+        // hostPort 必填：未传则自动探测本机 MC 局域网端口
+        let hostPort = Number(payload.hostPort ?? 0)
+        if (!hostPort) {
+          const ports = await a.detectMcPortsJSON().catch(() => ({ ports: [] }))
+          hostPort = ports.ports[0]?.port ?? 0
+        }
+        if (!hostPort) throw new Error('请先启动游戏并对局域网开放世界')
+        if (generation !== requestGeneration) throw new Error('操作已取消')
+        const req: CreateRoomParams = {
+          name,
+          visible: payload.isPublic !== false,
+          category: payload.category || '',
+          hostPort,
+          loader: context.loader,
+          gameVersion: context.mcVersion,
+        }
+        const r = await a.createRoom(req)
+        connectionLog.start(r.code, true)
+        modSync.startHost(context, r.code, r.hostToken)
+        push('state', snapshot())
+        return { ok: true, ...r }
+      } finally {
+        if (generation === requestGeneration) requestPending = false
+      }
     }
-    if (!payload.target) throw new Error('请先选择房主正在使用的游戏实例')
-    const context = await modSync.context(payload.target)
-    const name = normalizeVoxlinkRoomName(payload.roomName ?? DEFAULT_VOXLINK_ROOM_NAME)
-    // hostPort 必填：未传则自动探测本机 MC 局域网端口
-    let hostPort = Number(payload.hostPort ?? 0)
-    if (!hostPort) {
-      const ports = await a.detectMcPortsJSON().catch(() => ({ ports: [] }))
-      hostPort = ports.ports[0]?.port ?? 0
-    }
-    if (!hostPort) throw new Error('请先启动游戏并对局域网开放世界')
-    if(generation!==requestGeneration)throw new Error('操作已取消')
-    const req: CreateRoomParams = {
-      name,
-      visible: payload.isPublic !== false,
-      category: payload.category || '',
-      hostPort,
-      loader: context.loader,
-      gameVersion: context.mcVersion
-    }
-    const r = await a.createRoom(req)
-    connectionLog.start(r.code, true)
-    modSync.startHost(context, r.code, r.hostToken)
-    push('state', snapshot())
-    return { ok: true, ...r }
-    } finally {if(generation===requestGeneration)requestPending=false}
-  })
+  )
 
-  ipcMain.handle('voxlink:stop', async (_e,reason?:string) => {
-    requestGeneration++;requestPending=false
+  ipcMain.handle('voxlink:stop', async (_e, reason?: string) => {
+    requestGeneration++
+    requestPending = false
     modSync.stop()
-    try { await vapp().leaveRoom(typeof reason==='string'?reason:'用户退出房间') } catch { /* 已经不在房间 */ }
+    try {
+      await vapp().leaveRoom(typeof reason === 'string' ? reason : '用户退出房间')
+    } catch {
+      /* 已经不在房间 */
+    }
     void connectionLog.stop()
     push('state', snapshot())
     return snapshot()
@@ -114,12 +155,18 @@ export function registerVoxlinkIpc(ipcMain: IpcMain): void {
 
   ipcMain.handle('voxlink:status', () => snapshot())
 
-  ipcMain.handle('voxlink:lobby', (_e, query: { page?: number; size?: number; category?: string; loader?: string; search?: string } = {}) =>
-    vapp().listRooms(query) as Promise<{ rooms: LobbyRoom[]; total: number; page: number; size: number }>)
+  ipcMain.handle(
+    'voxlink:lobby',
+    (_e, query: { page?: number; size?: number; category?: string; loader?: string; search?: string } = {}) =>
+      vapp().listRooms(query) as Promise<{ rooms: LobbyRoom[]; total: number; page: number; size: number }>
+  )
 
   ipcMain.handle('voxlink:settings', (_e, partial: Partial<VoxlinkSettings>) => {
     const a = vapp()
-    if (typeof partial.uploadDiagnostics === 'boolean') { a.settings.uploadDiagnostics = partial.uploadDiagnostics; saveSettings(a.settings, a.settingsPath) }
+    if (typeof partial.uploadDiagnostics === 'boolean') {
+      a.settings.uploadDiagnostics = partial.uploadDiagnostics
+      saveSettings(a.settings, a.settingsPath)
+    }
     if (typeof partial.allowRelay === 'boolean') a.setAllowRelay(partial.allowRelay)
     if (typeof partial.theme === 'string' && partial.theme) a.saveSettingsJSON({ theme: partial.theme })
     return a.settings
@@ -135,6 +182,10 @@ export function registerVoxlinkIpc(ipcMain: IpcMain): void {
 export async function stopVoxlinkOnQuit(): Promise<void> {
   modSync.stop()
   if (!app) return
-  try { await app.leaveRoom('启动器关闭') } catch { /* 忽略 */ }
+  try {
+    await app.leaveRoom('启动器关闭')
+  } catch {
+    /* 忽略 */
+  }
   await connectionLog.stop(true)
 }

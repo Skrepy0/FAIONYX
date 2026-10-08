@@ -10,7 +10,7 @@ import type {
   WorldImportInfo,
   WorldImportOptions,
   WorldImportResult,
-  WorldResourcePackInfo
+  WorldResourcePackInfo,
 } from '../../shared/types'
 import { parseNbt, type NbtCompound } from './nbt'
 import { canonicalPath, samePath } from './folderPaths'
@@ -43,13 +43,10 @@ interface FolderCandidate {
 
 type ProgressEmit = (event: ProgressEvent) => void
 
-const textError = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error)
+const textError = (error: unknown): string => (error instanceof Error ? error.message : String(error))
 
 function asCompound(value: unknown): NbtCompound | undefined {
-  return value && typeof value === 'object' && !Array.isArray(value) && !Buffer.isBuffer(value)
-    ? (value as NbtCompound)
-    : undefined
+  return value && typeof value === 'object' && !Array.isArray(value) && !Buffer.isBuffer(value) ? (value as NbtCompound) : undefined
 }
 
 function asStringArray(value: unknown): string[] {
@@ -77,36 +74,29 @@ function approximateVersion(dataVersion: number): string | undefined {
     [1343, '约 1.12–1.12.2'],
     [819, '约 1.11–1.11.2'],
     [510, '约 1.10–1.10.2'],
-    [169, '约 1.9–1.9.4']
+    [169, '约 1.9–1.9.4'],
   ]
   return ranges.find(([minimum]) => dataVersion >= minimum)?.[1]
 }
 
-function metadataFromLevelDat(buffer: Buffer, fallbackName: string): Omit<
-  WorldCandidateInfo,
-  'id' | 'fileCount' | 'totalBytes' | 'resourcePacks' | 'hasWorldResourcePack' | 'datapackCount'
-> & { declaredDatapacks: number } {
+function metadataFromLevelDat(
+  buffer: Buffer,
+  fallbackName: string
+): Omit<WorldCandidateInfo, 'id' | 'fileCount' | 'totalBytes' | 'resourcePacks' | 'hasWorldResourcePack' | 'datapackCount'> & {
+  declaredDatapacks: number
+} {
   const root = parseNbt(buffer)
   const data = asCompound(root.Data) ?? root
   const version = asCompound(data.Version)
-  const dataVersion =
-    typeof data.DataVersion === 'number'
-      ? data.DataVersion
-      : typeof version?.Id === 'number'
-        ? version.Id
-        : undefined
-  const exactVersion = typeof version?.Name === 'string' && version.Name.trim()
-    ? version.Name.trim()
-    : undefined
+  const dataVersion = typeof data.DataVersion === 'number' ? data.DataVersion : typeof version?.Id === 'number' ? version.Id : undefined
+  const exactVersion = typeof version?.Name === 'string' && version.Name.trim() ? version.Name.trim() : undefined
   const dataPacks = asCompound(data.DataPacks)
-  const enabledPacks = asStringArray(dataPacks?.Enabled).filter(
-    (name) => name !== 'vanilla' && name !== 'minecraft'
-  )
+  const enabledPacks = asStringArray(dataPacks?.Enabled).filter((name) => name !== 'vanilla' && name !== 'minecraft')
   const gameModes: Record<number, WorldCandidateInfo['gameMode']> = {
     0: '生存',
     1: '创造',
     2: '冒险',
-    3: '旁观'
+    3: '旁观',
   }
   const keys = Object.keys(data).map((key) => key.toLowerCase())
   const modEvidence: string[] = []
@@ -122,10 +112,7 @@ function metadataFromLevelDat(buffer: Buffer, fallbackName: string): Omit<
   if (keys.some((key) => key.includes('bukkit'))) modEvidence.push('level.dat 含 Bukkit 元数据')
 
   return {
-    worldName:
-      typeof data.LevelName === 'string' && data.LevelName.trim()
-        ? data.LevelName.trim()
-        : fallbackName,
+    worldName: typeof data.LevelName === 'string' && data.LevelName.trim() ? data.LevelName.trim() : fallbackName,
     dataVersion,
     minecraftVersion: exactVersion ?? (dataVersion == null ? undefined : approximateVersion(dataVersion)),
     versionConfidence: exactVersion ? 'exact' : dataVersion == null ? 'unknown' : 'approximate',
@@ -134,7 +121,7 @@ function metadataFromLevelDat(buffer: Buffer, fallbackName: string): Omit<
     modEvidence,
     loader,
     loaderConfidence: loader ? 'inferred' : undefined,
-    declaredDatapacks: enabledPacks.length
+    declaredDatapacks: enabledPacks.length,
   }
 }
 
@@ -203,7 +190,7 @@ async function inspectZip(filePath: string): Promise<{ entries: SafeZipEntry[]; 
           directory: /\/$/.test(entry.fileName),
           compressedSize: entry.compressedSize,
           uncompressedSize: entry.uncompressedSize,
-          symlink
+          symlink,
         })
         zip.readEntry()
       } catch (error) {
@@ -213,10 +200,7 @@ async function inspectZip(filePath: string): Promise<{ entries: SafeZipEntry[]; 
     zip.on('end', () => {
       if (settled) return
       settled = true
-      if (
-        totalUncompressed > 64 * 1024 * 1024 &&
-        totalUncompressed / Math.max(1, totalCompressed) > MAX_COMPRESSION_RATIO
-      ) {
+      if (totalUncompressed > 64 * 1024 * 1024 && totalUncompressed / Math.max(1, totalCompressed) > MAX_COMPRESSION_RATIO) {
         reject(new Error('压缩包整体压缩比异常，疑似解压炸弹'))
       } else {
         resolve({ entries, warnings })
@@ -297,7 +281,7 @@ function archiveResourcePacks(entries: SafeZipEntry[], worldRoot: string): World
   for (const file of files) {
     if (path.posix.basename(file).toLowerCase() !== 'pack.mcmeta') continue
     const root = path.posix.dirname(file) === '.' ? '' : path.posix.dirname(file)
-    if (!root || relativeInRoot(root, worldRoot) != null && /(?:^|\/)datapacks(?:\/|$)/i.test(root)) continue
+    if (!root || (relativeInRoot(root, worldRoot) != null && /(?:^|\/)datapacks(?:\/|$)/i.test(root))) continue
     if (!rootsWithAssets.has(root)) continue
     result.push({ id: root || '.', name: path.posix.basename(root) || '资源包' })
     if (result.length >= 128) break
@@ -341,7 +325,7 @@ async function zipWorldInfo(filePath: string): Promise<WorldImportInfo | null> {
         resourcePacks: archiveResourcePacks(inspected.entries, root),
         hasWorldResourcePack,
         fileCount: members.length,
-        totalBytes: members.reduce((sum, entry) => sum + entry.uncompressedSize, 0)
+        totalBytes: members.reduce((sum, entry) => sum + entry.uncompressedSize, 0),
       })
     } catch (error) {
       parseErrors.push(`${level.name}：${textError(error)}`)
@@ -352,7 +336,7 @@ async function zipWorldInfo(filePath: string): Promise<WorldImportInfo | null> {
     sourcePath: canonicalPath(filePath),
     sourceType: 'zip',
     candidates,
-    warnings: [...new Set([...inspected.warnings, ...parseErrors])]
+    warnings: [...new Set([...inspected.warnings, ...parseErrors])],
   }
 }
 
@@ -419,7 +403,7 @@ async function inspectFolderWorld(root: string): Promise<{
     totalBytes,
     datapackCount: datapacks.size,
     hasWorldResourcePack,
-    modEvidence: hasServerConfig ? ['目录中存在模组配置痕迹'] : []
+    modEvidence: hasServerConfig ? ['目录中存在模组配置痕迹'] : [],
   }
 }
 
@@ -434,10 +418,7 @@ async function folderWorldInfo(folder: string): Promise<WorldImportInfo | null> 
       const levelPath = path.join(candidate.root, 'level.dat')
       const stat = await fs.promises.stat(levelPath)
       if (stat.size > MAX_LEVEL_DAT) throw new Error('level.dat 超过安全大小限制')
-      const { declaredDatapacks, ...metadata } = metadataFromLevelDat(
-        await fs.promises.readFile(levelPath),
-        path.basename(candidate.root)
-      )
+      const { declaredDatapacks, ...metadata } = metadataFromLevelDat(await fs.promises.readFile(levelPath), path.basename(candidate.root))
       const detail = await inspectFolderWorld(candidate.root)
       for (const evidence of detail.modEvidence) {
         if (!metadata.modEvidence.includes(evidence)) metadata.modEvidence.push(evidence)
@@ -449,7 +430,7 @@ async function folderWorldInfo(folder: string): Promise<WorldImportInfo | null> 
         resourcePacks: [],
         hasWorldResourcePack: detail.hasWorldResourcePack,
         fileCount: detail.fileCount,
-        totalBytes: detail.totalBytes
+        totalBytes: detail.totalBytes,
       })
     } catch (error) {
       warnings.push(`${candidate.id}：${textError(error)}`)
@@ -487,12 +468,7 @@ function safeFolderCandidate(source: string, id: string): string {
   return target
 }
 
-async function copyFolderWorld(
-  source: string,
-  destination: string,
-  signal: AbortSignal | undefined,
-  onFile: () => void
-): Promise<void> {
+async function copyFolderWorld(source: string, destination: string, signal: AbortSignal | undefined, onFile: () => void): Promise<void> {
   const queue: Array<{ source: string; destination: string }> = [{ source, destination }]
   while (queue.length) {
     throwIfCancelled(signal)
@@ -508,7 +484,7 @@ async function copyFolderWorld(
       else {
         await fs.promises.mkdir(path.dirname(to), { recursive: true })
         await pipeline(fs.createReadStream(from), fs.createWriteStream(to, { flags: 'wx' }), {
-          signal
+          signal,
         })
         onFile()
       }
@@ -568,8 +544,7 @@ async function extractZipWorld(
               streamReject(error ?? new Error('ZIP 条目无法读取'))
               return
             }
-            pipeline(stream, fs.createWriteStream(output, { flags: 'wx' }), { signal })
-              .then(streamResolve, streamReject)
+            pipeline(stream, fs.createWriteStream(output, { flags: 'wx' }), { signal }).then(streamResolve, streamReject)
           })
         })
         onFile()
@@ -645,13 +620,13 @@ async function importWorldInFolder(
         {
           instanceName,
           loader: options.newInstance.loader,
-          loaderVersion: options.newInstance.loaderVersion
+          loaderVersion: options.newInstance.loaderVersion,
         },
         (event) =>
           emit({
             ...event,
             overall: (event.overall ?? event.progress) * 0.65,
-            text: `创建目标实例 · ${event.text}`
+            text: `创建目标实例 · ${event.text}`,
           }),
         signal
       )
@@ -689,7 +664,7 @@ async function importWorldInFolder(
           stage: 'world',
           progress: ratio,
           overall: (createdInstance ? 0.65 : 0.05) + ratio * (createdInstance ? 0.32 : 0.9),
-          text: `导入存档文件 ${copied}/${candidate.fileCount}`
+          text: `导入存档文件 ${copied}/${candidate.fileCount}`,
         })
       }
     }
@@ -732,7 +707,7 @@ async function importWorldInFolder(
         worldName,
         worldDirectory: destination,
         installedResourcePacks,
-        createdInstance
+        createdInstance,
       }
     } catch (error) {
       for (const item of committed.reverse()) {

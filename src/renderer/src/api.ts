@@ -53,7 +53,7 @@ import type {
   YggdrasilProvider,
   YggdrasilProviderCandidate,
   YggdrasilProviderInput,
-  YggdrasilRuntimeInfo
+  YggdrasilRuntimeInfo,
 } from '@shared/types'
 
 function invoke<T>(channel: string, ...args: unknown[]): Promise<T> {
@@ -72,7 +72,10 @@ function invoke<T>(channel: string, ...args: unknown[]): Promise<T> {
 
 // ---------------- 设置 ----------------
 export const getSettings = () => invoke<Settings>(IPC.settingsGet)
-export const getExitHistory = () => invoke<Array<{ id: string; kind: string; time: number; text: string; seen: boolean; uncertain?: boolean; context?: Record<string,unknown> }>>(IPC.exitHistoryList)
+export const getExitHistory = () =>
+  invoke<
+    Array<{ id: string; kind: string; time: number; text: string; seen: boolean; uncertain?: boolean; context?: Record<string, unknown> }>
+  >(IPC.exitHistoryList)
 export const acknowledgeExitHistory = () => invoke<void>(IPC.exitHistoryAck)
 export const clearExitHistory = () => invoke<void>(IPC.exitHistoryClear)
 /** 真实系统信息（物理内存总量等），用于内存滑块上限等 */
@@ -88,16 +91,11 @@ export const selectImage = () => invoke<string | null>(IPC.appSelectImage)
 export const importBackground = () => invoke<Settings | null>(IPC.appearanceImportBackground)
 export const importBackgroundMulti = () => invoke<Settings | null>(IPC.appearanceImportBackgroundMulti)
 export const resetBackground = () => invoke<Settings>(IPC.appearanceResetBackground)
-export const importLaunchThumbnail = () =>
-  invoke<Settings | null>(IPC.appearanceImportLaunchThumbnail)
-export const resetLaunchThumbnail = () =>
-  invoke<Settings>(IPC.appearanceResetLaunchThumbnail)
+export const importLaunchThumbnail = () => invoke<Settings | null>(IPC.appearanceImportLaunchThumbnail)
+export const resetLaunchThumbnail = () => invoke<Settings>(IPC.appearanceResetLaunchThumbnail)
 /** 游戏目录迁移（异步）；结束经 onGameDirDone 回调 */
-export const migrateGameDir = (newDir: string, migrate: boolean) =>
-  invoke<void>(IPC.gameDirMigrate, newDir, migrate)
-export const onGameDirDone = (
-  cb: (r: { ok: boolean; error?: string; gameDir?: string }) => void
-) =>
+export const migrateGameDir = (newDir: string, migrate: boolean) => invoke<void>(IPC.gameDirMigrate, newDir, migrate)
+export const onGameDirDone = (cb: (r: { ok: boolean; error?: string; gameDir?: string }) => void) =>
   subscribe<{ ok: boolean; error?: string; gameDir?: string }>(IPC_EVENT.gameDirDone, cb)
 /** 选择整合包文件（.mrpack/.zip），取消返回 null */
 export const selectFile = () => invoke<string | null>(IPC.appSelectFile)
@@ -110,106 +108,81 @@ export const selectAccount = (id: string) => invoke<Account | null>(IPC.accounts
 export const getSelectedAccount = () => invoke<Account | null>(IPC.accountsSelected)
 export const msBeginLogin = () => invoke<MsDeviceCodeInfo>(IPC.accountsMsBegin)
 export const msCancelLogin = () => invoke<void>(IPC.accountsMsCancel)
-export const listYggdrasilProviders = () =>
-  invoke<YggdrasilProvider[]>(IPC.accountsYggProviders)
-export const probeYggdrasilProvider = (
-  input: YggdrasilProviderInput,
-  allowInsecure = false
-) => invoke<YggdrasilProviderCandidate>(IPC.accountsYggProbe, input, allowInsecure)
-export const saveYggdrasilProvider = (
-  candidate: YggdrasilProviderCandidate,
-  allowInsecure = false
-) =>
+export const listYggdrasilProviders = () => invoke<YggdrasilProvider[]>(IPC.accountsYggProviders)
+export const probeYggdrasilProvider = (input: YggdrasilProviderInput, allowInsecure = false) =>
+  invoke<YggdrasilProviderCandidate>(IPC.accountsYggProbe, input, allowInsecure)
+export const saveYggdrasilProvider = (candidate: YggdrasilProviderCandidate, allowInsecure = false) =>
   invoke<YggdrasilProvider[]>(IPC.accountsYggSaveProvider, candidate, allowInsecure)
-export const removeYggdrasilProvider = (id: string) =>
-  invoke<YggdrasilProvider[]>(IPC.accountsYggRemoveProvider, id)
+export const removeYggdrasilProvider = (id: string) => invoke<YggdrasilProvider[]>(IPC.accountsYggRemoveProvider, id)
 export const loginYggdrasil = (providerId: string, identifier: string, password: string) =>
   invoke<YggdrasilLoginResult>(IPC.accountsYggLogin, providerId, identifier, password)
 export const selectYggdrasilProfile = (challengeId: string, profileId: string) =>
   invoke<Account>(IPC.accountsYggSelectProfile, challengeId, profileId)
-export const prepareYggdrasilRuntime = () =>
-  invoke<YggdrasilRuntimeInfo>(IPC.accountsYggRuntime)
+export const prepareYggdrasilRuntime = () => invoke<YggdrasilRuntimeInfo>(IPC.accountsYggRuntime)
 export const refreshAccount = (id: string) => invoke<Account>(IPC.accountsRefresh, id)
 
 // ---------------- 版本 ----------------
-export const getVersionCatalog = (refresh = false) => invoke<{ versions: RemoteVersion[]; checkedAt: number; stale: boolean }>(IPC.versionsCatalog, refresh)
+export const getVersionCatalog = (refresh = false) =>
+  invoke<{ versions: RemoteVersion[]; checkedAt: number; stale: boolean }>(IPC.versionsCatalog, refresh)
 export const getManifest = (refresh = false) => invoke<RemoteVersion[]>(IPC.versionsManifest, refresh)
 export const getInstalled = (all = false) => invoke<InstalledVersion[]>(IPC.versionsInstalled, all)
 export const updateVersionCategories = (action: VersionCategoryAction) => invoke<Settings>(IPC.versionCategoriesUpdate, action)
-export const installVersion = (id: string, opts?: InstallOptions, folder?: string) =>
-  invoke<void>(IPC.versionsInstall, id, opts, folder)
+export const installVersion = (id: string, opts?: InstallOptions, folder?: string) => invoke<void>(IPC.versionsInstall, id, opts, folder)
 export const requestFavoriteVersions = (source: string, projectId: string, mc: string, loader: string, ticket: string) =>
   invoke<import('@shared/modFavorites').FavoriteVersionResult>('mods:favoriteVersions', source, projectId, mc, loader, ticket)
 export const cancelFavoriteVersions = (ticket: string) => invoke<void>('mods:favoriteVersionsCancel', ticket)
 export const removeVersion = (id: string, folder?: string) => invoke<void>(IPC.versionsRemove, id, folder)
-export const renameVersion = (id: string, newName: string, folder?: string) =>
-  invoke<void>(IPC.versionsRename, id, newName, folder)
+export const renameVersion = (id: string, newName: string, folder?: string) => invoke<void>(IPC.versionsRename, id, newName, folder)
 export const setVersionJava = (id: string, javaPath: string, automatic = false, folder?: string) =>
   invoke<void>(IPC.versionsSetJava, id, javaPath, automatic, folder)
 export const setVersionResolution = (id: string, resolution: GameResolution | null, folder?: string) =>
   invoke<void>(IPC.versionsSetResolution, id, resolution, folder)
-export const cleanupPartialInstall = (id: string, folder?: string) =>
-  invoke<boolean>(IPC.versionsCleanup, id, folder)
+export const cleanupPartialInstall = (id: string, folder?: string) => invoke<boolean>(IPC.versionsCleanup, id, folder)
 
 // ---------------- 游戏文件夹管理 ----------------
-export const listFolders = () =>
-  invoke<{ folders: GameFolder[]; active: string }>(IPC.foldersList)
+export const listFolders = () => invoke<{ folders: GameFolder[]; active: string }>(IPC.foldersList)
 export const addFolder = (path: string) =>
-  invoke<{ folders: GameFolder[]; folder: GameFolder; structure: FolderScanResult['structure'] }>(
-    IPC.foldersAdd,
-    path
-  )
+  invoke<{ folders: GameFolder[]; folder: GameFolder; structure: FolderScanResult['structure'] }>(IPC.foldersAdd, path)
 export const removeFolder = (path: string) => invoke<GameFolder[]>(IPC.foldersRemove, path)
-export const renameFolder = (path: string, displayName: string) =>
-  invoke<GameFolder[]>(IPC.foldersRename, path, displayName)
-export const setDefaultFolder = (path: string) =>
-  invoke<GameFolder[]>(IPC.foldersSetDefault, path)
-export const setDownloadFolder = (path: string) =>
-  invoke<GameFolder[]>(IPC.foldersSetDownload, path)
+export const renameFolder = (path: string, displayName: string) => invoke<GameFolder[]>(IPC.foldersRename, path, displayName)
+export const setDefaultFolder = (path: string) => invoke<GameFolder[]>(IPC.foldersSetDefault, path)
+export const setDownloadFolder = (path: string) => invoke<GameFolder[]>(IPC.foldersSetDownload, path)
 export const setActiveFolder = (path: string) => invoke<string>(IPC.foldersSetActive, path)
 export const scanFolder = (path: string) => invoke<FolderScanResult>(IPC.foldersScan, path)
 export const openGameFolder = (path: string) => invoke<void>(IPC.foldersOpen, path)
 export const showFolderContextMenu = (folder: string, versionId?: string) => invoke<void>(IPC.foldersContextMenu, folder, versionId)
 export const setVersionIsolation = (id: string, isolated: boolean, folder?: string) =>
   invoke<void>(IPC.versionsSetIsolation, id, isolated, folder)
-export const getIsolationPlan = (id: string, folder?: string) =>
-  invoke<IsolationMigrationPlan>(IPC.versionsIsolationPlan, id, folder)
+export const getIsolationPlan = (id: string, folder?: string) => invoke<IsolationMigrationPlan>(IPC.versionsIsolationPlan, id, folder)
 /** 设置实例图标（'mob:<id>' / 'file:<文件名>' / '' 恢复默认） */
-export const setVersionIcon = (id: string, icon: string, folder?: string) =>
-  invoke<void>(IPC.versionsSetIcon, id, icon, folder)
+export const setVersionIcon = (id: string, icon: string, folder?: string) => invoke<void>(IPC.versionsSetIcon, id, icon, folder)
 /** 上传自定义实例图标，返回新 icon 值（取消 = null） */
-export const uploadVersionIcon = (id: string, folder?: string) =>
-  invoke<string | null>(IPC.versionsUploadIcon, id, folder)
-export const uploadVersionThumbnail = (id: string, folder?: string) =>
-  invoke<string | null>(IPC.versionsUploadThumbnail, id, folder)
+export const uploadVersionIcon = (id: string, folder?: string) => invoke<string | null>(IPC.versionsUploadIcon, id, folder)
+export const uploadVersionThumbnail = (id: string, folder?: string) => invoke<string | null>(IPC.versionsUploadThumbnail, id, folder)
 export const setVersionThumbnailFit = (id: string, fit: ImageFit, folder?: string) =>
   invoke<void>(IPC.versionsSetThumbnailFit, id, fit, folder)
-export const resetVersionThumbnail = (id: string, folder?: string) =>
-  invoke<void>(IPC.versionsResetThumbnail, id, folder)
-export const listLoaders = (loader: LoaderName, mc: string) =>
-  invoke<string[]>(IPC.loadersList, loader, mc)
+export const resetVersionThumbnail = (id: string, folder?: string) => invoke<void>(IPC.versionsResetThumbnail, id, folder)
+export const listLoaders = (loader: LoaderName, mc: string) => invoke<string[]>(IPC.loadersList, loader, mc)
 export const listFabricApi = (mc: string) => invoke<FabricApiVersion[]>(IPC.fabricApiList, mc)
 
 // ---------------- 整合包 ----------------
 /** 只解析整合包元信息（不解压不下载），供导入确认弹窗展示；失败抛错 */
 export const probeModpack = (filePath: string) => invoke<ModpackInfo>(IPC.modpackProbe, filePath)
 export const probeImport = (inputPath: string) => invoke<ImportProbeResult>(IPC.importProbe, inputPath)
-export const supplyModpackFiles = (token: string) => invoke<{ accepted: number; remaining: number; rejected: string[] }>(IPC.modpackSupplyFiles, token)
+export const supplyModpackFiles = (token: string) =>
+  invoke<{ accepted: number; remaining: number; rejected: string[] }>(IPC.modpackSupplyFiles, token)
 export const openModpackFile = (token: string, fileID: number) => invoke<void>(IPC.modpackOpenFile, token, fileID)
 /** 异步安装整合包：invoke 仅表示任务已受理，完成/失败由 onInstallDone 推送 */
-export const installModpack = (filePath: string, opts?: ModpackInstallRequest) =>
-  invoke<void>(IPC.modpackInstall, filePath, opts)
+export const installModpack = (filePath: string, opts?: ModpackInstallRequest) => invoke<void>(IPC.modpackInstall, filePath, opts)
 
 // ---------------- 世界存档 ----------------
-export const probeWorld = (inputPath: string) =>
-  invoke<WorldImportInfo | null>(IPC.worldProbe, inputPath)
+export const probeWorld = (inputPath: string) => invoke<WorldImportInfo | null>(IPC.worldProbe, inputPath)
 export const importWorld = (inputPath: string, options: WorldImportOptions) =>
   invoke<WorldImportResult>(IPC.worldImport, inputPath, options)
 
 // ---------------- 社区资源 ----------------
 /** 搜索 Modrinth / CurseForge 社区资源 */
-export const communitySearch = (q: CommunityQuery) =>
-  invoke<CommunitySearchPage>(IPC.communitySearch, q)
+export const communitySearch = (q: CommunityQuery) => invoke<CommunitySearchPage>(IPC.communitySearch, q)
 /** Read verified MOD metadata independently of downloadable file versions. */
 export const communityProject = (source: CommunitySource, projectId: string) =>
   invoke<CommunityModProject>(IPC.communityProject, source, projectId, 'mod')
@@ -220,10 +193,8 @@ export const communityFiles = (
   filter?: { mcVersion?: string; loader?: LoaderName | ''; kind?: CommunityKind }
 ) => invoke<CommunityFile[]>(IPC.communityFiles, source, projectId, filter)
 /** 下载资源文件，返回保存路径；kind=modpack 时自动进入整合包安装流程 */
-export const communityDownload = (
-  file: CommunityFile,
-  target: { versionId: string; kind: CommunityKind; folder?: string }
-) => invoke<string>(IPC.communityDownload, file, target)
+export const communityDownload = (file: CommunityFile, target: { versionId: string; kind: CommunityKind; folder?: string }) =>
+  invoke<string>(IPC.communityDownload, file, target)
 
 // ---------------- Java ----------------
 export const listJava = () => invoke<JavaInfo[]>(IPC.javaList)
@@ -246,15 +217,13 @@ export const uploadSkin = (filePath: string, variant: SkinVariant) =>
 /** 本地离线皮肤不上传到任何外部服务。 */
 export const applyOfflineSkin = (filePath: string, variant: SkinVariant, accountId: string) =>
   refreshSkinAfter(invoke<ProfileSkins>(IPC.skinOfflineApply, filePath, variant, accountId))
-export const resetOfflineSkin = (accountId: string) =>
-  refreshSkinAfter(invoke<ProfileSkins>(IPC.skinOfflineReset, accountId))
+export const resetOfflineSkin = (accountId: string) => refreshSkinAfter(invoke<ProfileSkins>(IPC.skinOfflineReset, accountId))
 /** 激活披风（传 id）/ 卸下披风（传 null），返回最新档案 */
 export const changeCape = (capeId: string | null) => refreshSkinAfter(invoke<ProfileSkins>(IPC.skinCape, capeId))
 /** 历史皮肤（含 dataUrl 缩略图，新→旧） */
 export const getSkinHistory = (accountId?: string) => invoke<SkinHistoryEntry[]>(IPC.skinHistory, accountId)
 /** 删除一条历史，返回最新列表 */
-export const deleteSkinHistory = (id: string, accountId?: string) =>
-  invoke<SkinHistoryEntry[]>(IPC.skinHistoryDelete, id, accountId)
+export const deleteSkinHistory = (id: string, accountId?: string) => invoke<SkinHistoryEntry[]>(IPC.skinHistoryDelete, id, accountId)
 export const renameSkinHistory = (id: string, name: string, accountId?: string) =>
   invoke<SkinHistoryEntry[]>(IPC.skinHistoryRename, id, name, accountId)
 /** 用历史记录快速换回，返回最新档案 */
@@ -265,30 +234,29 @@ export const getSkinAvatar = (accountId?: string) => invoke<string | null>(IPC.s
 
 export const getDirectOverview = () => invoke<import('@shared/directConnect').DirectOverview>(IPC.directOverview)
 export const getDirectState = () => invoke<import('@shared/directConnect').DirectHostState>(IPC.directState)
-export const startDirectHost = (request: import('@shared/directConnect').DirectHostRequest) => invoke<import('@shared/directConnect').DirectHostState>(IPC.directHost, request)
+export const startDirectHost = (request: import('@shared/directConnect').DirectHostRequest) =>
+  invoke<import('@shared/directConnect').DirectHostState>(IPC.directHost, request)
 export const stopDirectHost = () => invoke<import('@shared/directConnect').DirectHostState>(IPC.directStop)
 export const resolveDirectInvitation = (text: string) => invoke<import('@shared/directConnect').DirectJoinResult>(IPC.directResolve, text)
-export const prepareDirectJoin = (text: string, versionId: string, folder: string) => invoke<{versionId:string; folder:string; address:string; directJoin:boolean}>(IPC.directPrepareJoin, text, versionId, folder)
+export const prepareDirectJoin = (text: string, versionId: string, folder: string) =>
+  invoke<{ versionId: string; folder: string; address: string; directJoin: boolean }>(IPC.directPrepareJoin, text, versionId, folder)
 
 // ---------------- 游戏 ----------------
 export const launchGame = (id: string, serverAddress?: string, folder?: string, createCommandWorld = false) =>
   invoke<void>(IPC.gameLaunch, id, serverAddress, folder, createCommandWorld)
-export const restartGame = (id: string, folder: string, forceToken?: string) => invoke<{ requiresForce: boolean; forceToken?: string }>(IPC.gameRestart, id, folder, forceToken)
+export const restartGame = (id: string, folder: string, forceToken?: string) =>
+  invoke<{ requiresForce: boolean; forceToken?: string }>(IPC.gameRestart, id, folder, forceToken)
 export const cancelGameRestart = () => invoke<void>(IPC.gameRestartCancel)
 export const killGame = (forceToken?: string) => invoke<{ requiresForce: boolean; forceToken?: string }>(IPC.gameKill, forceToken)
 
 // ---------------- 服务器 ----------------
 export const favoriteServer = (id: string, favorite: boolean) => invoke<ServerEntry[]>(IPC.serversFavorite, id, favorite)
 export const listServers = () => invoke<ServerEntry[]>(IPC.serversList)
-export const addServer = (name: string, address: string) =>
-  invoke<ServerEntry[]>(IPC.serversAdd, name, address)
+export const addServer = (name: string, address: string) => invoke<ServerEntry[]>(IPC.serversAdd, name, address)
 export const removeServer = (id: string) => invoke<ServerEntry[]>(IPC.serversRemove, id)
-export const editServer = (id: string, name: string, address: string) =>
-  invoke<ServerEntry[]>(IPC.serversEdit, id, name, address)
-export const pingServer = (address: string) =>
-  invoke<ServerPingResult>(IPC.serversPing, address)
-export const bindServer = (id: string, versionId: string, folder?: string) =>
-  invoke<ServerEntry[]>(IPC.serversBind, id, versionId, folder)
+export const editServer = (id: string, name: string, address: string) => invoke<ServerEntry[]>(IPC.serversEdit, id, name, address)
+export const pingServer = (address: string) => invoke<ServerPingResult>(IPC.serversPing, address)
+export const bindServer = (id: string, versionId: string, folder?: string) => invoke<ServerEntry[]>(IPC.serversBind, id, versionId, folder)
 export const syncServersFromDat = (versionId?: string, folder?: string) =>
   invoke<ServerSyncResult>(IPC.serversSyncFromDat, versionId, folder)
 export const prepareServerLaunch = (id: string, versionId?: string, folder?: string) =>
@@ -296,15 +264,20 @@ export const prepareServerLaunch = (id: string, versionId?: string, folder?: str
 
 // ---------------- MOD 拖入即装 ----------------
 export const getModTargets = () => invoke<{ versions: InstalledVersion[]; errors: string[] }>(IPC.modsTargets)
-export const prepareModInstall = (target: { id: string; folder: string }, input: { paths?: string[]; file?: CommunityFile }, operationId?: string) => invoke<ModInstallPlan>(IPC.modsPrepare, target, input, operationId)
-export const commitModInstall = (id: string, includeDependencies: boolean, operationId?: string) => invoke<string>(IPC.modsCommit, id, includeDependencies, operationId)
+export const prepareModInstall = (
+  target: { id: string; folder: string },
+  input: { paths?: string[]; file?: CommunityFile },
+  operationId?: string
+) => invoke<ModInstallPlan>(IPC.modsPrepare, target, input, operationId)
+export const commitModInstall = (id: string, includeDependencies: boolean, operationId?: string) =>
+  invoke<string>(IPC.modsCommit, id, includeDependencies, operationId)
 export const discardModInstall = (id: string) => invoke<void>(IPC.modsDiscard, id)
 export const parseMods = (paths: string[]) => invoke<ModInfo[]>(IPC.modsParse, paths)
 export const installMods = (files: string[], targetVersionId: string, folder?: string) =>
   invoke<ModInstallResult[]>(IPC.modsInstall, files, targetVersionId, folder)
-export const findModDuplicates = (versionId: string, folder?: string) =>
-  invoke<ModDuplicateGroup[]>(IPC.modsDuplicates, versionId, folder)
-export const getModIcons = (versionId: string, names: string[], folder?: string, kind = 'mods') => invoke<Record<string, string>>(IPC.modsIcons, versionId, names, folder, kind)
+export const findModDuplicates = (versionId: string, folder?: string) => invoke<ModDuplicateGroup[]>(IPC.modsDuplicates, versionId, folder)
+export const getModIcons = (versionId: string, names: string[], folder?: string, kind = 'mods') =>
+  invoke<Record<string, string>>(IPC.modsIcons, versionId, names, folder, kind)
 export const checkModUpdates = (versionId: string, folder?: string) =>
   invoke<import('@shared/types').ModUpdateReport>(IPC.modsCheckUpdates, versionId, folder)
 export const applyModUpdates = (versionId: string, items: import('@shared/types').ModUpdateTarget[], folder?: string) =>
@@ -322,17 +295,22 @@ export const openPluginsDir = () => invoke<void>(IPC.pluginsOpenDir)
 // ---------------- 默认按键 ----------------
 export const getDefaultKeys = () => invoke<Record<string, string>>(IPC.keysGetDefault)
 export const getDefaultGameOptions = () => invoke<import('@shared/gameOptions').DefaultGameOptions>(IPC.gameOptionsGet)
-export const setDefaultGameOptions = (change: { enabled?: boolean; id?: string; value?: import('@shared/gameOptions').GameOptionValue | null }) => invoke<import('@shared/gameOptions').DefaultGameOptions>(IPC.gameOptionsSet, change)
-export const setDefaultKey = (id: string, bind: string) =>
-  invoke<Record<string, string>>(IPC.keysSetDefault, id, bind)
+export const setDefaultGameOptions = (change: {
+  enabled?: boolean
+  id?: string
+  value?: import('@shared/gameOptions').GameOptionValue | null
+}) => invoke<import('@shared/gameOptions').DefaultGameOptions>(IPC.gameOptionsSet, change)
+export const setDefaultKey = (id: string, bind: string) => invoke<Record<string, string>>(IPC.keysSetDefault, id, bind)
 export const resetDefaultKeys = () => invoke<Record<string, string>>(IPC.keysReset)
 export const getDefaultResourcePacks = () => invoke<DefaultResourcePack[]>(IPC.defaultPacksGet)
 export const importDefaultResourcePacks = (files: string[]) => invoke<DefaultResourcePack[]>(IPC.defaultPacksImport, files)
 export const pickDefaultResourcePacks = () => invoke<DefaultResourcePack[]>(IPC.defaultPacksPick)
 export const removeDefaultResourcePack = (id: string) => invoke<DefaultResourcePack[]>(IPC.defaultPacksRemove, id)
 export const moveDefaultResourcePack = (id: string, direction: number) => invoke<DefaultResourcePack[]>(IPC.defaultPacksMove, id, direction)
-export const setDefaultResourcePackEnabled = (id: string, enabled: boolean) => invoke<DefaultResourcePack[]>(IPC.defaultPacksSetEnabled, id, enabled)
-export const reapplyDefaultResourcePacks = (folder: string, id: string) => invoke<{ count: number; shared: boolean }>(IPC.defaultPacksApply, folder, id)
+export const setDefaultResourcePackEnabled = (id: string, enabled: boolean) =>
+  invoke<DefaultResourcePack[]>(IPC.defaultPacksSetEnabled, id, enabled)
+export const reapplyDefaultResourcePacks = (folder: string, id: string) =>
+  invoke<{ count: number; shared: boolean }>(IPC.defaultPacksApply, folder, id)
 
 // ---------------- 启动器自更新与版本回退 ----------------
 export const checkUpdate = (force = false) => invoke<import('@shared/types').UpdateCheckResult>(IPC.updateCheck, force)
@@ -345,31 +323,24 @@ export const getUpdateState = () => invoke<import('@shared/types').UpdateStateIn
 export const restoreUpdateBackup = () => invoke<void>(IPC.updateRestoreBackup)
 export const pickLocalUpdateFile = () => invoke<import('@shared/types').LocalUpdateCheck | null>(IPC.updatePickLocalFile)
 export const applyLocalUpdate = (check: import('@shared/types').LocalUpdateCheck) => invoke<void>(IPC.updateApplyLocal, check)
-export const getConfigStatus = () =>
-  invoke<{ configVersion: number; current: number; mismatch: 'newer' | null }>(IPC.updateGetConfigStatus)
+export const getConfigStatus = () => invoke<{ configVersion: number; current: number; mismatch: 'newer' | null }>(IPC.updateGetConfigStatus)
 export const resetSettingsToDefaults = () => invoke<void>(IPC.updateResetSettings)
-export const getPendingUpdate = () =>
-  invoke<{ release: import('@shared/types').ReleaseInfo; file: string } | null>(IPC.updateGetPending)
+export const getPendingUpdate = () => invoke<{ release: import('@shared/types').ReleaseInfo; file: string } | null>(IPC.updateGetPending)
 export const applyPendingUpdate = () => invoke<void>(IPC.updateApplyPending)
 export const onUpdatePrompt = (cb: (r: import('@shared/types').ReleaseInfo & { rollbackNotice?: boolean }) => void) =>
   subscribe<import('@shared/types').ReleaseInfo & { rollbackNotice?: boolean }>(IPC_EVENT.updatePrompt, cb)
-export const onUpdateSlowHint = (cb: (r: { taskId: string }) => void) =>
-  subscribe<{ taskId: string }>(IPC_EVENT.updateSlowHint, cb)
-export const onUpdateReady = (cb: (r: { version: string }) => void) =>
-  subscribe<{ version: string }>(IPC_EVENT.updateReady, cb)
+export const onUpdateSlowHint = (cb: (r: { taskId: string }) => void) => subscribe<{ taskId: string }>(IPC_EVENT.updateSlowHint, cb)
+export const onUpdateReady = (cb: (r: { version: string }) => void) => subscribe<{ version: string }>(IPC_EVENT.updateReady, cb)
 
 // ---------------- 桥接 MOD 实时配置面板 ----------------
-export const bridgeStatus = (versionId: string) =>
-  invoke<import('@shared/types').BridgeStatus>(IPC.bridgeStatus, versionId)
+export const bridgeStatus = (versionId: string) => invoke<import('@shared/types').BridgeStatus>(IPC.bridgeStatus, versionId)
 export const bridgeManifest = (versionId: string) =>
   invoke<{ protocol: number; params: import('@shared/types').BridgeParam[] }>(IPC.bridgeManifest, versionId)
 export const bridgeSet = (versionId: string, id: string, value: unknown) =>
   invoke<{ ok: boolean; value?: unknown; notice?: string; error?: string }>(IPC.bridgeSet, versionId, id, value)
-export const bridgeReset = (versionId: string, id?: string) =>
-  invoke<{ ok: boolean; error?: string }>(IPC.bridgeReset, versionId, id)
+export const bridgeReset = (versionId: string, id?: string) => invoke<{ ok: boolean; error?: string }>(IPC.bridgeReset, versionId, id)
 export const bridgeInstalled = (versionId: string) => invoke<boolean>(IPC.bridgeInstalled, versionId)
-export const bridgeInstall = (versionId: string) =>
-  invoke<{ ok: boolean; already?: boolean; error?: string }>(IPC.bridgeInstall, versionId)
+export const bridgeInstall = (versionId: string) => invoke<{ ok: boolean; already?: boolean; error?: string }>(IPC.bridgeInstall, versionId)
 export const findModCrossDuplicates = (versionIds: string[], folder?: string) =>
   invoke<ModCrossDuplicate[]>(IPC.modsCrossDuplicates, versionIds, folder)
 
@@ -388,30 +359,37 @@ function subscribe<T>(channel: string, cb: (payload: T) => void): () => void {
   return window.faionyx.on(channel, (payload) => cb(payload as T))
 }
 
-export const onProgress = (cb: (e: ProgressEvent) => void) =>
-  subscribe<ProgressEvent>(IPC_EVENT.progress, cb)
-export const onLaunchLog = (cb: (line: string) => void) =>
-  subscribe<string>(IPC_EVENT.launchLog, cb)
-export const onLaunchState = (cb: (s: LaunchState) => void) =>
-  subscribe<LaunchState>(IPC_EVENT.launchState, cb)
+export const onProgress = (cb: (e: ProgressEvent) => void) => subscribe<ProgressEvent>(IPC_EVENT.progress, cb)
+export const onLaunchLog = (cb: (line: string) => void) => subscribe<string>(IPC_EVENT.launchLog, cb)
+export const onLaunchState = (cb: (s: LaunchState) => void) => subscribe<LaunchState>(IPC_EVENT.launchState, cb)
 export const onMsLoginDone = (cb: (result: { account: Account | null; error?: string | null }) => void) =>
   subscribe<{ account: Account | null; error?: string | null }>(IPC_EVENT.msLoginDone, cb)
 export const onInstallDone = (
-  cb: (r: { versionId: string; installedId?: string; ok: boolean; error?: string; taskId?: string; cancelled?: boolean; stage?: string; favoriteModsResult?: import('@shared/modFavorites').FavoriteInstallResult }) => void
+  cb: (r: {
+    versionId: string
+    installedId?: string
+    ok: boolean
+    error?: string
+    taskId?: string
+    cancelled?: boolean
+    stage?: string
+    favoriteModsResult?: import('@shared/modFavorites').FavoriteInstallResult
+  }) => void
 ) =>
-  subscribe<{ versionId: string; installedId?: string; ok: boolean; error?: string; taskId?: string; cancelled?: boolean; stage?: string; favoriteModsResult?: import('@shared/modFavorites').FavoriteInstallResult }>(
-    IPC_EVENT.installDone,
-    cb
-  )
+  subscribe<{
+    versionId: string
+    installedId?: string
+    ok: boolean
+    error?: string
+    taskId?: string
+    cancelled?: boolean
+    stage?: string
+    favoriteModsResult?: import('@shared/modFavorites').FavoriteInstallResult
+  }>(IPC_EVENT.installDone, cb)
 
 /** 所有后台任务的统一完成通知（版本安装/整合包导入/资源下载） */
-export const onTaskDone = (
-  cb: (r: { taskId: string; ok: boolean; error?: string; cancelled?: boolean; stage?: string }) => void
-) =>
-  subscribe<{ taskId: string; ok: boolean; error?: string; cancelled?: boolean; stage?: string }>(
-    IPC_EVENT.taskDone,
-    cb
-  )
+export const onTaskDone = (cb: (r: { taskId: string; ok: boolean; error?: string; cancelled?: boolean; stage?: string }) => void) =>
+  subscribe<{ taskId: string; ok: boolean; error?: string; cancelled?: boolean; stage?: string }>(IPC_EVENT.taskDone, cb)
 
 /** 取消进行中的后台任务 */
 export const cancelTask = (taskId: string) => invoke<boolean>(IPC.tasksCancel, taskId)
@@ -419,8 +397,7 @@ export const pauseTask = (taskId: string) => invoke<boolean>(IPC.tasksPause, tas
 export const resumeTask = (taskId: string) => invoke<boolean>(IPC.tasksResume, taskId)
 
 /** 导出启动失败日志包（弹系统保存对话框），返回保存路径（取消 = null） */
-export const exportLaunchLogs = (versionId: string, folder?: string) =>
-  invoke<string | null>(IPC.launchExportLogs, versionId, folder)
+export const exportLaunchLogs = (versionId: string, folder?: string) => invoke<string | null>(IPC.launchExportLogs, versionId, folder)
 
 // ---------------- 工具 ----------------
 /** 把 invoke 抛出的错误转成适合 toast 展示的短文本 */
@@ -459,4 +436,5 @@ export function formatSpeed(bytes?: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB/s`
 }
 
-export const importResources = (files: string[], id: string, folder: string, kind: string) => invoke<number>(IPC.fsImportResources, files, id, folder, kind)
+export const importResources = (files: string[], id: string, folder: string, kind: string) =>
+  invoke<number>(IPC.fsImportResources, files, id, folder, kind)

@@ -64,11 +64,7 @@ export function readImageDimensions(buffer: Buffer): ImageDimensions | null {
     return null
   }
 
-  if (
-    buffer.length >= 30 &&
-    buffer.toString('ascii', 0, 4) === 'RIFF' &&
-    buffer.toString('ascii', 8, 12) === 'WEBP'
-  ) {
+  if (buffer.length >= 30 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP') {
     const kind = buffer.toString('ascii', 12, 16)
     if (kind === 'VP8X') {
       return { width: u24le(buffer, 24) + 1, height: u24le(buffer, 27) + 1 }
@@ -76,7 +72,7 @@ export function readImageDimensions(buffer: Buffer): ImageDimensions | null {
     if (kind === 'VP8 ' && buffer[23] === 0x9d && buffer[24] === 0x01 && buffer[25] === 0x2a) {
       return {
         width: buffer.readUInt16LE(26) & 0x3fff,
-        height: buffer.readUInt16LE(28) & 0x3fff
+        height: buffer.readUInt16LE(28) & 0x3fff,
       }
     }
     if (kind === 'VP8L' && buffer[20] === 0x2f) {
@@ -86,18 +82,14 @@ export function readImageDimensions(buffer: Buffer): ImageDimensions | null {
       const b4 = buffer[24]
       return {
         width: 1 + b1 + ((b2 & 0x3f) << 8),
-        height: 1 + ((b2 & 0xc0) >> 6) + (b3 << 2) + ((b4 & 0x0f) << 10)
+        height: 1 + ((b2 & 0xc0) >> 6) + (b3 << 2) + ((b4 & 0x0f) << 10),
       }
     }
   }
   return null
 }
 
-export function validateImageInput(
-  filePath: string,
-  bytes: number,
-  dimensions: ImageDimensions | null
-): ImageDimensions {
+export function validateImageInput(filePath: string, bytes: number, dimensions: ImageDimensions | null): ImageDimensions {
   if (!ALLOWED_IMAGE_EXTENSIONS.has(path.extname(filePath).toLowerCase())) {
     throw new Error('仅支持 PNG、JPG、JPEG 或 WebP 图片')
   }
@@ -106,26 +98,19 @@ export function validateImageInput(
   if (!dimensions || dimensions.width < 1 || dimensions.height < 1) {
     throw new Error('无法识别图片格式或尺寸')
   }
-  if (
-    dimensions.width > 32_768 ||
-    dimensions.height > 32_768 ||
-    dimensions.width * dimensions.height > MAX_IMAGE_PIXELS
-  ) {
+  if (dimensions.width > 32_768 || dimensions.height > 32_768 || dimensions.width * dimensions.height > MAX_IMAGE_PIXELS) {
     throw new Error('图片像素尺寸过大（最多 8000 万像素）')
   }
   return dimensions
 }
 
 /** 按用途给出解码后的缓存尺寸，始终保持原始宽高比且不放大。 */
-export function boundedImageSize(
-  dimensions: ImageDimensions,
-  purpose: ManagedImagePurpose
-): ImageDimensions {
+export function boundedImageSize(dimensions: ImageDimensions, purpose: ManagedImagePurpose): ImageDimensions {
   const bounds = purpose === 'background' ? { width: 3840, height: 2160 } : { width: 1920, height: 1080 }
   const scale = Math.min(1, bounds.width / dimensions.width, bounds.height / dimensions.height)
   return {
     width: Math.max(1, Math.round(dimensions.width * scale)),
-    height: Math.max(1, Math.round(dimensions.height * scale))
+    height: Math.max(1, Math.round(dimensions.height * scale)),
   }
 }
 

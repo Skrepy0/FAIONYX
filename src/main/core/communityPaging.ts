@@ -6,9 +6,11 @@ export function communityPageSlots(totals: Record<CommunitySource, number>, offs
   const remainder: CommunitySource = totals.modrinth > paired ? 'modrinth' : 'curseforge'
   const slots: Array<{ source: CommunitySource; index: number }> = []
   for (let i = offset; i < Math.min(offset + limit, totals.modrinth + totals.curseforge); i++) {
-    slots.push(i < paired * 2
-      ? { source: i % 2 ? 'curseforge' : 'modrinth', index: Math.floor(i / 2) }
-      : { source: remainder, index: paired + i - paired * 2 })
+    slots.push(
+      i < paired * 2
+        ? { source: i % 2 ? 'curseforge' : 'modrinth', index: Math.floor(i / 2) }
+        : { source: remainder, index: paired + i - paired * 2 }
+    )
   }
   return slots
 }

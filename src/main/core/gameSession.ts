@@ -46,13 +46,13 @@ export class GameSession {
 
   /** 全部运行中的版本 id（改名/写操作的占用校验用） */
   runningIds(): Set<string> {
-    return new Set([...this.sessions.values()].filter(s => !s.exited).map((s) => s.versionId))
+    return new Set([...this.sessions.values()].filter((s) => !s.exited).map((s) => s.versionId))
   }
 
   /** 运行中游戏的 PID 列表（仅供退出日志等观测用途；清理流程绝不据此终止进程） */
   runningPids(): number[] {
     return [...this.sessions.values()]
-      .filter(s => !s.exited)
+      .filter((s) => !s.exited)
       .map((s) => s.child?.pid)
       .filter((p): p is number => typeof p === 'number')
   }
@@ -152,7 +152,9 @@ export class GameSession {
     // later (or a descendant can retain stdout); keep diagnostic ownership until
     // close, but do not continue blocking resource operations in that interval.
     // killed/signalCode only record a request, not confirmation of process exit.
-    entry.onExit = () => { entry.exited = true }
+    entry.onExit = () => {
+      entry.exited = true
+    }
     child.once('exit', entry.onExit)
   }
 
@@ -193,10 +195,7 @@ export class GameSession {
         clean()
         reject(error)
       }
-      const timer = setTimeout(
-        () => failed(new Error('游戏进程尚未确认退出；请在游戏内退出或检查进程状态')),
-        timeoutMs
-      )
+      const timer = setTimeout(() => failed(new Error('游戏进程尚未确认退出；请在游戏内退出或检查进程状态')), timeoutMs)
       child.once('close', exited)
       child.once('error', failed)
       try {

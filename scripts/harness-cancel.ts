@@ -15,13 +15,19 @@ async function main() {
     cancelTask(task.id)
   }, 1500)
   try {
-    await downloadAll([{ url, dest }], (d, t) => {
-      const pct = t ? Math.round((d / t) * 100) : 0
-      if (pct !== lastPct) {
-        lastPct = pct
-        process.stdout.write(`\r${pct}%`)
-      }
-    }, 1, 'official', task.controller.signal)
+    await downloadAll(
+      [{ url, dest }],
+      (d, t) => {
+        const pct = t ? Math.round((d / t) * 100) : 0
+        if (pct !== lastPct) {
+          lastPct = pct
+          process.stdout.write(`\r${pct}%`)
+        }
+      },
+      1,
+      'official',
+      task.controller.signal
+    )
     clearTimeout(timer)
     console.error('\n❌ 下载完成（取消未生效）')
     fs.rmSync(dest, { force: true })

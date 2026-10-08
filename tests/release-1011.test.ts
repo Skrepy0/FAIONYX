@@ -13,7 +13,10 @@ test('instance controls preserve folder identity and separate list scope from in
   assert.match(rows, /openInstanceCenter\(v\)/)
   assert.doesNotMatch(rows, /removeModal.open|iso-switch|btn-danger/)
   assert.match(gv, /v-model="installedFolder" :options="installedFolderOptions"/)
-  assert.match(gv, /const installFolder = computed\(\(\) => store\.settings\?\.folders\.find\(folder => folder\.isDefault\)\?\.path \|\| activeFolder\.value\)/)
+  assert.match(
+    gv,
+    /const installFolder = computed\(\(\) => store\.settings\?\.folders\.find\(folder => folder\.isDefault\)\?\.path \|\| activeFolder\.value\)/
+  )
   assert.match(gv, /:model-value="installFolder"/)
   assert.doesNotMatch(gv, /:model-value="activeFolder"/)
   assert.match(gv, /data-ui="download-location:game-path"[^>]*:title="installFolder"/)
@@ -31,6 +34,11 @@ test('GameView compiles after row redesign', () => {
   const { descriptor, errors } = parse(source)
   assert.deepEqual(errors, [])
   const script = compileScript(descriptor, { id: 'GameView.vue' })
-  const result = compileTemplate({ source: descriptor.template!.content, filename: 'GameView.vue', id: 'GameView.vue', compilerOptions: { bindingMetadata: script.bindings } })
+  const result = compileTemplate({
+    source: descriptor.template!.content,
+    filename: 'GameView.vue',
+    id: 'GameView.vue',
+    compilerOptions: { bindingMetadata: script.bindings },
+  })
   assert.deepEqual(result.errors, [])
 })

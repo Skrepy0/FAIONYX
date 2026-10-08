@@ -1915,10 +1915,7 @@
             "width": 1361,
             "height": 861
           },
-          "content": [
-            1360,
-            860
-          ],
+          "content": [1360, 860],
           "zoom": 1
         },
         "renderer": {

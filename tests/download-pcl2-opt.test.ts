@@ -11,7 +11,7 @@ import {
   noteHostSuccess,
   resetHostHealthForTest,
   setStatfsProbeForTest,
-  slowSpeedThresholds
+  slowSpeedThresholds,
 } from '../src/main/core/download'
 import { DEFAULT_DOWNLOAD_LIMITS, downloadLimiter } from '../src/main/core/downloadLimits'
 import { cancelTaskAndWait, finishTask, isCancelError, registerTask } from '../src/main/core/tasks'
@@ -48,7 +48,7 @@ test('本地文件复用：大小+sha1 命中时零网络请求直接复制', as
     const dest = path.join(root, 'versions', 'custom', 'custom.jar')
     await downloadFile(`${base}/client.jar`, dest, undefined, sha1, 'official', undefined, [], {
       size: payload.length,
-      reuseDirs: [reuseDir, path.join(root, 'no-such-dir')]
+      reuseDirs: [reuseDir, path.join(root, 'no-such-dir')],
     })
     assert.equal(requests, 0)
     assert.deepEqual(await fs.promises.readFile(dest), payload)
@@ -79,7 +79,7 @@ test('本地文件复用：大小相同但内容不符或扩展名不同时回�
     const destA = path.join(root, 'a.bin')
     await downloadFile(`${base}/a`, destA, undefined, sha1, 'official', undefined, [], {
       size: payload.length,
-      reuseDirs: [corruptDir]
+      reuseDirs: [corruptDir],
     })
     assert.equal(requests, 1)
     assert.deepEqual(await fs.promises.readFile(destA), payload)
@@ -97,7 +97,7 @@ test('本地文件复用：大小相同但内容不符或扩展名不同时回�
       fs.writeFileSync(path.join(wrongExtDir, 'same.bin'), 'direct download')
       const destB = path.join(root, 'b.bin')
       await downloadFile(`${base2}/b`, destB, undefined, undefined, 'official', undefined, [], {
-        reuseDirs: [wrongExtDir]
+        reuseDirs: [wrongExtDir],
       })
       assert.equal(requests2, 1)
     } finally {
@@ -117,7 +117,7 @@ test('本地文件复用：大小相同但内容不符或扩展名不同时回�
       fs.writeFileSync(path.join(destDir, 'sibling.jar'), 'network copy')
       const destC = path.join(destDir, 'x.jar')
       await downloadFile(`${base3}/c`, destC, undefined, undefined, 'official', undefined, [], {
-        reuseDirs: [destDir]
+        reuseDirs: [destDir],
       })
       assert.equal(requests3, 1)
     } finally {
@@ -152,10 +152,7 @@ test('慢速连接在滑动窗口内字节过少时主动掐断并重试耗尽',
   const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-slow-'))
   try {
     const base = await listen(server)
-    await assert.rejects(
-      downloadFile(`${base}/slow.bin`, path.join(root, 'slow.bin')),
-      /速度过慢|下载失败/
-    )
+    await assert.rejects(downloadFile(`${base}/slow.bin`, path.join(root, 'slow.bin')), /速度过慢|下载失败/)
     assert.equal(requests, 4, 'transient 掐断：第一轮重试 3 次 + 整体重试轮再试 1 次')
   } finally {
     Object.assign(slowSpeedThresholds, original)
@@ -220,17 +217,13 @@ test('会话级源健康度：冷却中的 host 沉底，成功后恢复原序',
     noteHostFailure(badBase)
     noteHostFailure(badBase)
     const dest = path.join(root, 'a.bin')
-    await downloadFile(`${badBase}/x`, dest, undefined, undefined, 'official', undefined, [
-      `${goodBase}/ok`
-    ])
+    await downloadFile(`${badBase}/x`, dest, undefined, undefined, 'official', undefined, [`${goodBase}/ok`])
     assert.equal(badHits, 0, '冷却中的源不应被首先尝试')
     assert.equal(goodHits, 1)
 
     // 成功（noteHostSuccess）清零后恢复正常顺序：坏源重新排在最前（404 一次后换源）
     noteHostSuccess(badBase)
-    await downloadFile(`${badBase}/x`, path.join(root, 'b.bin'), undefined, undefined, 'official', undefined, [
-      `${goodBase}/ok`
-    ])
+    await downloadFile(`${badBase}/x`, path.join(root, 'b.bin'), undefined, undefined, 'official', undefined, [`${goodBase}/ok`])
     assert.equal(badHits, 1, '冷却解除后坏源应重新被首先尝试')
     assert.equal(goodHits, 2)
   } finally {
@@ -257,7 +250,7 @@ test('磁盘空间预检：≥50MB 且空间不足时零请求直接失败，充
     setStatfsProbeForTest(() => ({ bavail: 1024, bsize: 4096 }))
     await assert.rejects(
       downloadFile(`${base}/big.jar`, path.join(root, 'big.jar'), undefined, undefined, 'official', undefined, [], {
-        size: 60 * 1024 * 1024
+        size: 60 * 1024 * 1024,
       }),
       /磁盘空间不足/
     )
@@ -267,7 +260,7 @@ test('磁盘空间预检：≥50MB 且空间不足时零请求直接失败，充
     setStatfsProbeForTest(() => ({ bavail: 1024 * 1024, bsize: 4096 }))
     await assert.rejects(
       downloadFile(`${base}/big.jar`, path.join(root, 'big2.jar'), undefined, undefined, 'official', undefined, [], {
-        size: 60 * 1024 * 1024
+        size: 60 * 1024 * 1024,
       }),
       /下载失败/
     )
@@ -276,7 +269,7 @@ test('磁盘空间预检：≥50MB 且空间不足时零请求直接失败，充
     // <50MB 的文件不做预检：即便可用空间接近 0 也可下载
     setStatfsProbeForTest(() => ({ bavail: 1, bsize: 1 }))
     await downloadFile(`${base}/small.bin`, path.join(root, 'small.bin'), undefined, undefined, 'official', undefined, [], {
-      size: small.length
+      size: small.length,
     })
     assert.equal(requests, 2)
   } finally {

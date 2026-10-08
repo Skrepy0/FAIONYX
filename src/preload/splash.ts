@@ -18,5 +18,5 @@ contextBridge.exposeInMainWorld('faionyxSplash', {
   onReveal: (callback: () => void) => {
     ipcRenderer.on('boot:reveal', callback)
     return () => ipcRenderer.removeListener('boot:reveal', callback)
-  }
+  },
 })

@@ -26572,9 +26572,7 @@
           "pidReuseObservations": [
             {
               "pid": 34812,
-              "previousCreationTimes": [
-                1791307677630
-              ],
+              "previousCreationTimes": [1791307677630],
               "currentCreationTime": 1791307712622,
               "currentParentPid": 52992,
               "currentGenerationOwned": false
@@ -50803,9 +50801,7 @@
           "pidReuseObservations": [
             {
               "pid": 25056,
-              "previousCreationTimes": [
-                1791307838177
-              ],
+              "previousCreationTimes": [1791307838177],
               "currentCreationTime": 1791307866021,
               "currentParentPid": 38036,
               "currentGenerationOwned": false

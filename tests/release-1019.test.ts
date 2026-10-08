@@ -28,7 +28,6 @@ test('game tabs: indicator follows the selected tab', () => {
 // Replaced implementation: behavior is exercised by skin3d-parity, download-policy,
 // download-stall, import-download-1049 and modpack-speed-1050 runtime tests.
 
-
 test('seg controls get sliding blob too (指令5 相邻按钮切换过渡)', () => {
   const skins = read('src/renderer/src/views/SkinsView.vue')
   assert.match(skins, /class="seg-blob" :style="animSegBlobStyle"/)
@@ -62,7 +61,12 @@ test('1.0.19 changed SFCs compile', () => {
     const { descriptor, errors } = parse(source)
     assert.deepEqual(errors, [], file)
     const script = compileScript(descriptor, { id: file })
-    const result = compileTemplate({ source: descriptor.template!.content, filename: file, id: file, compilerOptions: { bindingMetadata: script.bindings } })
+    const result = compileTemplate({
+      source: descriptor.template!.content,
+      filename: file,
+      id: file,
+      compilerOptions: { bindingMetadata: script.bindings },
+    })
     assert.deepEqual(result.errors, [], file)
   }
 })

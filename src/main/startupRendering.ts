@@ -19,9 +19,14 @@ export function prepareStartupFrames(window: BrowserWindow): void {
     window.removeListener('closed', stop)
     if (!window.isDestroyed() && !contents.isDestroyed()) contents.setBackgroundThrottling(true)
   }
-  const ready = (event: Electron.IpcMainEvent) => { if (event.sender === contents) stop() }
+  const ready = (event: Electron.IpcMainEvent) => {
+    if (event.sender === contents) stop()
+  }
   const pump = async () => {
-    if (stopped || window.isDestroyed() || contents.isDestroyed()) { stop(); return }
+    if (stopped || window.isDestroyed() || contents.isDestroyed()) {
+      stop()
+      return
+    }
     try {
       // Electron owns/relinquishes the capturer count; only one request may be in flight.
       await contents.capturePage({ x: 0, y: 0, width: 1, height: 1 })

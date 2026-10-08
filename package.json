@@ -1,7 +1,7 @@
 {
   "name": "faionyx",
   "productName": "FAIONYX",
-  "version": "1.1.19",
+  "version": "1.0.0",
   "description": "FAIONYX - FLY の Minecraft 启动器",
   "homepage": "https://github.com/Skrepy0/FAIONYX",
   "main": "out/main/index.js",
@@ -18,7 +18,8 @@
     "dist:harmonyos": "node scripts/build-harmonyos.cjs",
     "verify:harmonyos": "node scripts/verify-harmonyos.cjs",
     "dist:all": "node scripts/dist-platform.cjs",
-    "license:check": "node scripts/check-licenses.cjs"
+    "license:check": "node scripts/check-licenses.cjs",
+    "format": "prettier --write ."
   },
   "build": {
     "appId": "com.faionyx.launcher",
@@ -120,6 +121,7 @@
     "@iarna/toml": "2.2.5",
     "adm-zip": "^0.6.0",
     "koffi": "^3.2.1",
+    "prettier": "^3.9.9",
     "undici": "^6.28.0",
     "ws": "8.22.0"
   },

@@ -7,7 +7,7 @@ export const defaultGameFolder = (appData: string): string => path.join(appData,
 export function ensureDefaultGameFolder(appData: string, folders: readonly { path: string }[]): void {
   // A registered legacy default remains supported without moving existing games.
   for (const root of [defaultGameFolder(appData), path.join(appData, '.faionyx')]) {
-    if (folders.some(folder => path.resolve(folder.path) === path.resolve(root))) {
+    if (folders.some((folder) => path.resolve(folder.path) === path.resolve(root))) {
       fs.mkdirSync(root, { recursive: true })
     }
   }

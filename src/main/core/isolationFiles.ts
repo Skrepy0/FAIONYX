@@ -3,14 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import type { IsolationMigrationPlan } from '../../shared/types'
 
-export const ISOLATION_DIRS = [
-  'saves',
-  'mods',
-  'config',
-  'resourcepacks',
-  'shaderpacks',
-  'screenshots'
-] as const
+export const ISOLATION_DIRS = ['saves', 'mods', 'config', 'resourcepacks', 'shaderpacks', 'screenshots'] as const
 export const ISOLATION_FILES = ['options.txt', 'servers.dat'] as const
 export const ISOLATION_MARKERS = [...ISOLATION_DIRS, ...ISOLATION_FILES] as const
 
@@ -33,11 +26,7 @@ function treeSize(input: string): { files: number; bytes: number } {
 }
 
 /** 仅规划固定白名单中的玩家数据，符号链接不计入也不复制。 */
-export function planIsolationFiles(
-  versionId: string,
-  source: string,
-  destination: string
-): IsolationMigrationPlan {
+export function planIsolationFiles(versionId: string, source: string, destination: string): IsolationMigrationPlan {
   const items: IsolationMigrationPlan['items'] = []
   const conflicts: string[] = []
   for (const name of ISOLATION_MARKERS) {
@@ -56,7 +45,7 @@ export function planIsolationFiles(
     items,
     conflicts,
     totalFiles: items.reduce((sum, item) => sum + item.files, 0),
-    totalBytes: items.reduce((sum, item) => sum + item.bytes, 0)
+    totalBytes: items.reduce((sum, item) => sum + item.bytes, 0),
   }
 }
 
@@ -68,10 +57,7 @@ function isNotSymbolicLink(source: string): boolean {
  * 先把全部非冲突项复制到实例内的临时目录，再逐项原子改名提交。
  * commitMetadata（写版本 JSON）失败也会删除本次新增项；既有冲突项从不改动。
  */
-export async function commitIsolationFiles(
-  plan: IsolationMigrationPlan,
-  commitMetadata: () => void
-): Promise<void> {
+export async function commitIsolationFiles(plan: IsolationMigrationPlan, commitMetadata: () => void): Promise<void> {
   fs.mkdirSync(plan.destination, { recursive: true })
   const staging = path.join(plan.destination, `.isolation-staging-${crypto.randomUUID()}`)
   const created: string[] = []
@@ -87,7 +73,7 @@ export async function commitIsolationFiles(
           errorOnExist: true,
           force: false,
           dereference: false,
-          filter: isNotSymbolicLink
+          filter: isNotSymbolicLink,
         })
       } else {
         await fs.promises.copyFile(source, staged, fs.constants.COPYFILE_EXCL)

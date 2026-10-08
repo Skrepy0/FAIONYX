@@ -40,7 +40,7 @@ async function readTextTail(file: string): Promise<{
       originalBytes: stat.size,
       includedBytes,
       modifiedAt: stat.mtime.toISOString(),
-      truncated
+      truncated,
     }
   } finally {
     await handle.close()
@@ -56,7 +56,7 @@ async function addSanitizedLog(
   const entry: DiagnosticManifestEntry = {
     archivePath: spec.archivePath,
     source: redactDiagnosticPath(spec.source),
-    status: 'missing'
+    status: 'missing',
   }
   files.push(entry)
   try {
@@ -68,7 +68,7 @@ async function addSanitizedLog(
       originalBytes: value.originalBytes,
       includedBytes: Buffer.byteLength(text),
       modifiedAt: value.modifiedAt,
-      truncated: value.truncated
+      truncated: value.truncated,
     })
   } catch (error) {
     const code = (error as NodeJS.ErrnoException)?.code

@@ -24,4 +24,19 @@ const paths: Record<string, string> = {
   neoforge: 'M13 2s1 6-3 9c-1-3-3-4-3-4s-5 5-4 10c2 8 17 8 18-1 1-4-3-7-3-7s0 4-2 5c1-7-3-12-3-12z',
 }
 </script>
-<template><svg :width="size" :height="size" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path :d="paths[name] || paths.cube" /></svg></template>
+<template>
+  <svg
+    :width="size"
+    :height="size"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.7"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path :d="paths[name] || paths.cube" />
+  </svg>
+</template>

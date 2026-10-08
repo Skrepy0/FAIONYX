@@ -34,9 +34,10 @@ function latestNoteBody() {
   const compiled = require('esbuild').transformSync(src, { loader: 'ts', format: 'cjs' }).code
   const notesModule = { exports: {} }
   new Function('module', 'exports', compiled)(notesModule, notesModule.exports)
-  const note = notesModule.exports.updateNotes.find(n => n.version === version)
-  if (!note?.changes?.length || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(note.date)) throw new Error('当前版本缺少完整更新日志或分钟时间，停止发布')
-  return [`FAIONYX ${tag}`, note.date + '（UTC+8）', '', ...note.changes.map(i => `- ${i}`)].join('\n')
+  const note = notesModule.exports.updateNotes.find((n) => n.version === version)
+  if (!note?.changes?.length || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(note.date))
+    throw new Error('当前版本缺少完整更新日志或分钟时间，停止发布')
+  return [`FAIONYX ${tag}`, note.date + '（UTC+8）', '', ...note.changes.map((i) => `- ${i}`)].join('\n')
 }
 
 /** 从 git 凭据管理器取 GitHub 令牌（推送同款凭据） */
@@ -56,7 +57,9 @@ function resolveToken() {
     execFileSync('gh', ['auth', 'status'], { stdio: 'pipe' })
     const t = execFileSync('gh', ['auth', 'token'], { encoding: 'utf-8' }).trim()
     if (t) return t
-  } catch { /* gh 不可用 */ }
+  } catch {
+    /* gh 不可用 */
+  }
   return tokenFromGitCredential()
 }
 
@@ -70,9 +73,9 @@ async function api(method, url, token, body, isBinary = false) {
           Authorization: `Bearer ${token}`,
           Accept: 'application/vnd.github+json',
           'User-Agent': 'FAIONYX-Release-Script',
-          ...(isBinary ? { 'Content-Type': 'application/octet-stream' } : body ? { 'Content-Type': 'application/json' } : {})
+          ...(isBinary ? { 'Content-Type': 'application/octet-stream' } : body ? { 'Content-Type': 'application/json' } : {}),
         },
-        body: isBinary ? body : body ? JSON.stringify(body) : undefined
+        body: isBinary ? body : body ? JSON.stringify(body) : undefined,
       })
       return res
     } catch (e) {
@@ -100,9 +103,9 @@ async function taggedCommit(token) {
 
 async function main() {
   if (!dryRun && options.platform !== 'windows') require('./platform-release-gate.cjs').verifyPlatformRelease(root, version)
-  const packages = releaseAssetNames(version, options.platform).map(name => path.join(root, 'release', name))
+  const packages = releaseAssetNames(version, options.platform).map((name) => path.join(root, 'release', name))
   packages.push(...require('./release-history-assets.cjs')(path.join(root, 'release'), version))
-  assertUniqueAssetNames([...packages.map(file => path.basename(file)), 'SHA256SUMS.txt'])
+  assertUniqueAssetNames([...packages.map((file) => path.basename(file)), 'SHA256SUMS.txt'])
   for (const f of packages) {
     if (!fs.existsSync(f)) {
       console.error(`缺少构建产物：${f}（先运行打包）`)
@@ -110,7 +113,7 @@ async function main() {
     }
     if (fs.statSync(f).size >= 2_000_000_000) throw new Error('附件超过保守的单文件大小上限：' + path.basename(f))
   }
-  const sums = packages.map(file => `${sha256(file)}  ${path.basename(file)}`).join('\n') + '\n'
+  const sums = packages.map((file) => `${sha256(file)}  ${path.basename(file)}`).join('\n') + '\n'
   const sumsFile = path.join(root, 'release', 'SHA256SUMS.txt')
   fs.writeFileSync(sumsFile, sums, 'utf-8')
   console.log('SHA256SUMS.txt:\n' + sums)
@@ -119,7 +122,8 @@ async function main() {
   const body = notesPath ? fs.readFileSync(path.resolve(root, notesPath), 'utf8') : latestNoteBody()
   if (!body.trim()) throw new Error('Release 说明为空，停止发布')
   if (dryRun) {
-    if (options.platform !== 'windows') console.log('Preview only: native platform acceptance has not been inferred or granted by this dry run.')
+    if (options.platform !== 'windows')
+      console.log('Preview only: native platform acceptance has not been inferred or granted by this dry run.')
     console.log('Release platform: ' + options.platform)
     console.log('--- dry run，Release body ---')
     console.log(body)
@@ -136,7 +140,8 @@ async function main() {
   // GitHub may otherwise leave a published draft on an untagged-* reference.
   const commit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim()
   const masterResponse = await api('GET', `https://api.github.com/repos/${REPO}/branches/master`, token)
-  if (!masterResponse.ok || (await masterResponse.json()).commit?.sha !== commit) throw new Error('本地 HEAD 尚未同步到 origin/master，停止发布')
+  if (!masterResponse.ok || (await masterResponse.json()).commit?.sha !== commit)
+    throw new Error('本地 HEAD 尚未同步到 origin/master，停止发布')
   const existingTag = await taggedCommit(token)
   if (existingTag && existingTag !== commit) throw new Error('版本标签已指向其他提交，保留远端标签并停止发布')
   const binding = { tag_name: tag, target_commitish: commit, name: `FAIONYX ${tag}`, body, prerelease: false }
@@ -154,7 +159,7 @@ async function main() {
       const response = await api('GET', `https://api.github.com/repos/${REPO}/releases?per_page=100&page=${page}`, token)
       if (!response.ok) throw new Error(`无法检查已有草稿：HTTP ${response.status}`)
       const entries = await response.json()
-      release = entries.find(entry => entry.tag_name === tag) || null
+      release = entries.find((entry) => entry.tag_name === tag) || null
       if (entries.length < 100) break
     }
   } else {
@@ -180,7 +185,7 @@ async function main() {
     if (!assetResponse.ok) throw new Error(`无法检查远端附件：HTTP ${assetResponse.status}`)
     const assets = await assetResponse.json()
     assertRemotePlatformScope(assets, version, options.platform)
-    const same = assets.find(a => a.name === name)
+    const same = assets.find((a) => a.name === name)
     if (same?.size === fs.statSync(file).size && same.digest === `sha256:${sha256(file)}`) {
       console.log(`  ✓ ${name} 已存在且摘要一致`)
       continue
@@ -192,7 +197,13 @@ async function main() {
       }
     }
     console.log(`上传 ${name}（${(fs.statSync(file).size / 1048576).toFixed(1)} MB）…`)
-    const up = await api('POST', `https://uploads.github.com/repos/${REPO}/releases/${release.id}/assets?name=${encodeURIComponent(name)}`, token, fs.readFileSync(file), true)
+    const up = await api(
+      'POST',
+      `https://uploads.github.com/repos/${REPO}/releases/${release.id}/assets?name=${encodeURIComponent(name)}`,
+      token,
+      fs.readFileSync(file),
+      true
+    )
     if (!up.ok) {
       console.error(`上传 ${name} 失败：HTTP ${up.status} ${await up.text()}`)
       process.exit(1)
@@ -204,7 +215,7 @@ async function main() {
   const assets = await verified.json()
   assertRemotePlatformScope(assets, version, options.platform)
   for (const file of [...packages, sumsFile]) {
-    const asset = assets.find(a => a.name === path.basename(file))
+    const asset = assets.find((a) => a.name === path.basename(file))
     if (!asset || asset.size !== fs.statSync(file).size || asset.digest !== `sha256:${sha256(file)}`) {
       throw new Error('远端附件大小或 SHA256 不匹配：' + path.basename(file))
     }
@@ -215,8 +226,9 @@ async function main() {
   if (!publicResponse.ok) throw new Error(`公开标签无法读取：HTTP ${publicResponse.status}`)
   const publicRelease = await publicResponse.json()
   assertRemotePlatformScope(publicRelease.assets, version, options.platform)
-  if (publicRelease.id !== release.id || publicRelease.draft || publicRelease.tag_name !== tag || publicRelease.target_commitish !== commit) throw new Error('公开 Release 与已验证标签或 master 提交不一致')
-  if (await taggedCommit(token) !== commit) throw new Error('公开版本标签未指向已验证 master 提交')
+  if (publicRelease.id !== release.id || publicRelease.draft || publicRelease.tag_name !== tag || publicRelease.target_commitish !== commit)
+    throw new Error('公开 Release 与已验证标签或 master 提交不一致')
+  if ((await taggedCommit(token)) !== commit) throw new Error('公开版本标签未指向已验证 master 提交')
   console.log(`\n全部附件大小与 SHA256 已核对，发布完成：https://github.com/${REPO}/releases/tag/${tag}`)
 }
 

@@ -13,6 +13,7 @@
 使用独立配置预置“最新正式版 26.2”的刚写入旧缓存，启动生产构建页面后自动得到 26.3，最新卡片及列表首行时间均为 `2026/09/15 19:23`；缓存升级为新格式，安装入口和 880px 窄窗口布局验证通过。未安装测试游戏，未修改用户游戏目录。
 
 参考数据：
+
 - https://piston-meta.mojang.com/mc/game/version_manifest_v2.json
 - https://bmclapi2.bangbang93.com/mc/game/version_manifest.json
 

@@ -79,13 +79,10 @@ export function formatErrorText(error: unknown): string {
 }
 
 /** 统一行格式：[ISO] [LEVEL] [scope] message；scope 为空时省略。 */
-export function formatLauncherLogLine(
-  timestamp: Date,
-  level: LauncherLogLevel,
-  scope: string,
-  message: string
-): string {
-  const safe = redactDiagnosticText(message).replace(/[\r\n]+/g, ' ').trim()
+export function formatLauncherLogLine(timestamp: Date, level: LauncherLogLevel, scope: string, message: string): string {
+  const safe = redactDiagnosticText(message)
+    .replace(/[\r\n]+/g, ' ')
+    .trim()
   const tag = scope.trim() ? ` [${scope.trim()}]` : ''
   return `[${timestamp.toISOString()}] [${level.toUpperCase()}]${tag} ${safe}`
 }
@@ -133,7 +130,7 @@ export function initializeLauncherLog(): string {
         divider,
         `[${now.toISOString()}] FAIONYX ${app.getVersion()} session started (${process.platform} ${process.arch})`,
         `Electron ${process.versions.electron ?? '?'} / Node ${process.versions.node ?? '?'} / 日志级别下限 ${minimumLevel}`,
-        divider
+        divider,
       ].join('\n') + '\n',
       'utf-8'
     )
@@ -226,10 +223,7 @@ function record(level: LauncherLogLevel, scope: string, message: string, error?:
     if (!initialized) initializeLauncherLog()
     // 初始化彻底失败（如 userData 不可用）时静默丢弃，避免缓冲无限增长
     if (!currentLogPath || !shouldRecord(level)) return
-    const text =
-      error === undefined
-        ? message
-        : `${message} << ${formatErrorText(error)}`
+    const text = error === undefined ? message : `${message} << ${formatErrorText(error)}`
     appendToQueue(formatLauncherLogLine(new Date(), level, scope, text))
     // warn/error 同时镜像到控制台，开发期 DevTools 可见
     if (level === 'error') console.error(`[${scope || 'launcher'}]`, text)
@@ -273,6 +267,6 @@ export function logScope(scope: string): ScopedLauncherLog {
     debug: (message: string, error?: unknown) => record('debug', scope, message, error),
     info: (message: string, error?: unknown) => record('info', scope, message, error),
     warn: (message: string, error?: unknown) => record('warn', scope, message, error),
-    error: (message: string, error?: unknown) => record('error', scope, message, error)
+    error: (message: string, error?: unknown) => record('error', scope, message, error),
   }
 }

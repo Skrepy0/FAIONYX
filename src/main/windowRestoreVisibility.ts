@@ -33,11 +33,19 @@ export function resynchronizeWindowsRestore(
   if (platform !== 'win32') return { dispose() {} }
 
   const contents = window.webContents
-  let pending = false, disposed = false, pulsing = false
+  let pending = false,
+    disposed = false,
+    pulsing = false
   const warn = (phase: RestoreFailurePhase, error: unknown) => {
-    try { reportError(phase, error) } catch { /* Logging must not affect window lifecycle. */ }
+    try {
+      reportError(phase, error)
+    } catch {
+      /* Logging must not affect window lifecycle. */
+    }
   }
-  const clear = () => { pending = false }
+  const clear = () => {
+    pending = false
+  }
   const dispose = () => {
     if (disposed) return
     disposed = true
@@ -52,7 +60,10 @@ export function resynchronizeWindowsRestore(
   const retry = () => {
     if (!pending || disposed || pulsing) return
     try {
-      if (window.isDestroyed() || contents.isDestroyed()) { dispose(); return }
+      if (window.isDestroyed() || contents.isDestroyed()) {
+        dispose()
+        return
+      }
       if (!window.isVisible() || window.isMinimized() || !window.isFocused()) return
     } catch (error) {
       clear()
@@ -76,8 +87,11 @@ export function resynchronizeWindowsRestore(
     } finally {
       // Attempt restoration even when disabling threw or the window closed
       // during the call. Electron may then reject; isolate that failure too.
-      try { contents.setBackgroundThrottling(true) }
-      catch (error) { warn('restore-throttling', error) }
+      try {
+        contents.setBackgroundThrottling(true)
+      } catch (error) {
+        warn('restore-throttling', error)
+      }
       pulsing = false
     }
   }

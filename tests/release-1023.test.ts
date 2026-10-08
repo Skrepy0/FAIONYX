@@ -7,7 +7,6 @@ const read = (file: string) => fs.readFileSync(file, 'utf8')
 // Replaced implementation: behavior is exercised by skin3d-parity, download-policy,
 // download-stall, import-download-1049 and modpack-speed-1050 runtime tests.
 
-
 test('curseforge: official API with x-api-key when configured, mirror fallback otherwise (指令：官方 API)', () => {
   const c = read('src/main/core/community.ts')
   assert.match(c, /const CF_OFFICIAL = 'https:\/\/api\.curseforge\.com\/v1'/)

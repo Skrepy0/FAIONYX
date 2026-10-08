@@ -28,7 +28,10 @@ const assets = new Map()
 const realAssetFile = process.env.MOCK_ASSET_FILE
 for (const ver of ['99.0.0', '1.0.0', '0.9.9']) {
   const name = `FAIONYX-${ver}.exe`
-  const buf = crypto.createHash('sha256').update('faionyx-mock-' + ver).digest()
+  const buf = crypto
+    .createHash('sha256')
+    .update('faionyx-mock-' + ver)
+    .digest()
   const file = Buffer.alloc(1024 * 1024)
   for (let i = 0; i < file.length; i += buf.length) buf.copy(file, i)
   assets.set(name, file)
@@ -36,9 +39,8 @@ for (const ver of ['99.0.0', '1.0.0', '0.9.9']) {
 if (realAssetFile && fs.existsSync(realAssetFile)) {
   assets.set('FAIONYX-99.0.0.exe', fs.readFileSync(realAssetFile))
 }
-const sumsText = [...assets.entries()]
-  .map(([name, buf]) => `${crypto.createHash('sha256').update(buf).digest('hex')}  ${name}`)
-  .join('\n') + '\n'
+const sumsText =
+  [...assets.entries()].map(([name, buf]) => `${crypto.createHash('sha256').update(buf).digest('hex')}  ${name}`).join('\n') + '\n'
 
 const releases = ['99.0.0', '1.0.0', '0.9.9'].map((ver, i) => ({
   tag_name: `v${ver}`,
@@ -51,14 +53,14 @@ const releases = ['99.0.0', '1.0.0', '0.9.9'].map((ver, i) => ({
     {
       name: `FAIONYX-${ver}.exe`,
       browser_download_url: `http://127.0.0.1:${port}/download/FAIONYX-${ver}.exe`,
-      size: assets.get(`FAIONYX-${ver}.exe`).length
+      size: assets.get(`FAIONYX-${ver}.exe`).length,
     },
     {
       name: 'SHA256SUMS.txt',
       browser_download_url: `http://127.0.0.1:${port}/SHA256SUMS.txt`,
-      size: sumsText.length
-    }
-  ]
+      size: sumsText.length,
+    },
+  ],
 }))
 
 const server = http.createServer((req, res) => {

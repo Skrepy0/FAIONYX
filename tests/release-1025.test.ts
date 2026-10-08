@@ -35,7 +35,10 @@ test('fix-2: missing download targets preserve defaults and bindings; removal re
   assert.match(gv, /@click="removeMissingFolder">在启动器内移除该绑定/)
   assert.match(gv, /@click="folderMissingDismissed = true">稍后处理/)
   const folders = read('src/main/core/gameFolders.ts')
-  const setDefault = folders.slice(folders.indexOf('export function setDefaultGameFolder'), folders.indexOf('function assertWritableDownloadFolder'))
+  const setDefault = folders.slice(
+    folders.indexOf('export function setDefaultGameFolder'),
+    folders.indexOf('function assertWritableDownloadFolder')
+  )
   assert.match(setDefault, /assertWritableDownloadFolder\(selected\.path\)/)
   assert.ok(setDefault.indexOf('assertWritableDownloadFolder(selected.path)') < setDefault.indexOf('return persistFolders('))
   assert.match(folders, /下载文件夹已不存在，请重新选择/)
@@ -98,7 +101,12 @@ test('1.0.25 changed SFCs compile', () => {
     const { descriptor, errors } = parse(source)
     assert.deepEqual(errors, [], file)
     const script = compileScript(descriptor, { id: file })
-    const result = compileTemplate({ source: descriptor.template!.content, filename: file, id: file, compilerOptions: { bindingMetadata: script.bindings } })
+    const result = compileTemplate({
+      source: descriptor.template!.content,
+      filename: file,
+      id: file,
+      compilerOptions: { bindingMetadata: script.bindings },
+    })
     assert.deepEqual(result.errors, [], file)
   }
 })

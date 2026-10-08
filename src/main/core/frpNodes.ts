@@ -56,7 +56,7 @@ export const NODE_FLAG = {
   TLS_SUCKS: 1 << 7,
   FORCE_AUTH: 1 << 8,
   OFFLINE: 1 << 9,
-  BETA: 1 << 10
+  BETA: 1 << 10,
 } as const
 
 /** 展示用节点信息（/nodes + /node/stats 合并结果）。 */
@@ -136,9 +136,10 @@ async function apiGet(path: string, accessKey: string, body?: Record<string, unk
   let resp: Response
   try {
     resp = await httpFetch(`${API_BASE}${path}`, {
-      headers: { Authorization: `Bearer ${accessKey}`, ...(body ? {'Content-Type': 'application/json'} : {}) },
-      method: body ? 'POST' : 'GET', body: body ? JSON.stringify(body) : undefined,
-      signal: AbortSignal.timeout(20_000)
+      headers: { Authorization: `Bearer ${accessKey}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+      method: body ? 'POST' : 'GET',
+      body: body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(20_000),
     })
   } catch (e) {
     throw new Error('无法连接樱花穿透，请检查网络后重试')
@@ -161,7 +162,12 @@ async function apiGet(path: string, accessKey: string, body?: Record<string, unk
   }
 }
 
-export interface FrpCreateTunnel { name: string; node: number; localPort: number; remotePort?: number }
+export interface FrpCreateTunnel {
+  name: string
+  node: number
+  localPort: number
+  remotePort?: number
+}
 /** Explicit, single-target deletion using the official /tunnel/delete contract.
  * A 200 response alone is insufficient; verify the account's uncached tunnel list. */
 export async function deleteFrpTunnel(accessKey: string, id: string): Promise<{ remoteDisconnectPending: boolean }> {
@@ -169,33 +175,42 @@ export async function deleteFrpTunnel(accessKey: string, id: string): Promise<{ 
   if (!key || !/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id))) throw new Error('隧道或账号无效，无法删除')
   const exists = async () => {
     const rows = await apiGet('/tunnels', key)
-    if (!Array.isArray(rows) || rows.some(r => !Number.isSafeInteger(r?.id))) throw new Error('无法确认远端隧道列表，请刷新后重试删除')
-    return rows.some(r => r.id === Number(id))
+    if (!Array.isArray(rows) || rows.some((r) => !Number.isSafeInteger(r?.id))) throw new Error('无法确认远端隧道列表，请刷新后重试删除')
+    return rows.some((r) => r.id === Number(id))
   }
   cache = null
   try {
-    if (!await exists()) return { remoteDisconnectPending: false }
-    const result = await apiGet('/tunnel/delete', key, { ids: id }) as { deleted?: number[]; failed?: number[] }
+    if (!(await exists())) return { remoteDisconnectPending: false }
+    const result = (await apiGet('/tunnel/delete', key, { ids: id })) as { deleted?: number[]; failed?: number[] }
     if (!Array.isArray(result?.deleted) || !Array.isArray(result.failed)) throw new Error('删除结果不完整，请重试确认远端状态')
     // Official `failed` means deleted but the online connection could not be kicked.
-    if (!result.deleted.includes(Number(id)) && !result.failed.includes(Number(id))) throw new Error('樱花穿透未确认删除该隧道，请检查隧道是否被锁定')
+    if (!result.deleted.includes(Number(id)) && !result.failed.includes(Number(id)))
+      throw new Error('樱花穿透未确认删除该隧道，请检查隧道是否被锁定')
     if (await exists()) throw new Error('远端仍存在该隧道，尚未确认删除成功，请稍后重试')
     return { remoteDisconnectPending: result.failed.includes(Number(id)) }
-  } finally { cache = null }
+  } finally {
+    cache = null
+  }
 }
 /** Explicit user action only; no retries of POSTs, which might otherwise create duplicate tunnels. */
-export async function createFrpTunnel(accessKey: string, input: FrpCreateTunnel): Promise<{id: number; name: string}> {
+export async function createFrpTunnel(accessKey: string, input: FrpCreateTunnel): Promise<{ id: number; name: string }> {
   const name = String(input?.name ?? '').trim()
   if (!name || name.length > 64) throw new Error('请填写 1–64 字符的隧道名称')
-  if (!Number.isInteger(input.localPort) || input.localPort < 1 || input.localPort > 65535) throw new Error('请填写游戏中显示的局域网端口（1–65535）')
-  if (input.remotePort && (!Number.isInteger(input.remotePort) || input.remotePort < 1 || input.remotePort > 65535)) throw new Error('远程端口无效')
-  const result = await fetchFrpNodes(accessKey, {refresh:true})
-  const node = result.nodes.find(n => n.id === input.node)
+  if (!Number.isInteger(input.localPort) || input.localPort < 1 || input.localPort > 65535)
+    throw new Error('请填写游戏中显示的局域网端口（1–65535）')
+  if (input.remotePort && (!Number.isInteger(input.remotePort) || input.remotePort < 1 || input.remotePort > 65535))
+    throw new Error('远程端口无效')
+  const result = await fetchFrpNodes(accessKey, { refresh: true })
+  const node = result.nodes.find((n) => n.id === input.node)
   if (!node?.online || !node.canCreate) throw new Error('所选节点离线或已满，请选择其他节点')
-  const created = await apiGet('/tunnels', accessKey.trim(), {
-    name, type:'tcp', node: node.id, local_ip:'127.0.0.1', local_port:input.localPort,
-    ...(input.remotePort ? {remote:String(input.remotePort)} : {})
-  }) as {id: number; name: string}
+  const created = (await apiGet('/tunnels', accessKey.trim(), {
+    name,
+    type: 'tcp',
+    node: node.id,
+    local_ip: '127.0.0.1',
+    local_port: input.localPort,
+    ...(input.remotePort ? { remote: String(input.remotePort) } : {}),
+  })) as { id: number; name: string }
   cache = null
   if (!Number.isSafeInteger(created?.id) || created.id <= 0) throw new Error('创建结果不完整，请刷新隧道列表确认，勿重复创建')
   return created
@@ -203,12 +218,12 @@ export async function createFrpTunnel(accessKey: string, input: FrpCreateTunnel)
 
 export async function getRunnableFrpTunnel(accessKey: string, id: string): Promise<FrpTunnelInfo> {
   if (!/^\d+$/.test(id)) throw new Error('请先选择已创建的隧道')
-  const result = await fetchFrpNodes(accessKey, {refresh:true})
+  const result = await fetchFrpNodes(accessKey, { refresh: true })
   if (!result.tunnels) throw new Error('隧道列表获取失败，请检查访问密钥后重试')
-  const tunnel = result.tunnels.find(t => String(t.id) === id)
+  const tunnel = result.tunnels.find((t) => String(t.id) === id)
   if (!tunnel || tunnel.status !== 0) throw new Error('隧道不存在或不可用，请刷新列表重新选择')
   if (tunnel.type !== 'tcp') throw new Error('Minecraft Java 版请选择 TCP 隧道')
-  if (!result.nodes.find(n => n.id === tunnel.node)?.online) throw new Error('隧道所在节点已离线，请选择其他隧道')
+  if (!result.nodes.find((n) => n.id === tunnel.node)?.online) throw new Error('隧道所在节点已离线，请选择其他隧道')
   return tunnel
 }
 
@@ -250,7 +265,7 @@ export async function fetchFrpNodes(accessKey: string, opts: { refresh?: boolean
   const [nodesRes, statsRes, tunnelsRes] = await Promise.allSettled([
     apiGet('/nodes', key),
     apiGet('/node/stats', key),
-    apiGet('/tunnels', key)
+    apiGet('/tunnels', key),
   ])
   if (nodesRes.status === 'rejected') throw nodesRes.reason instanceof Error ? nodesRes.reason : new Error(String(nodesRes.reason))
 
@@ -262,7 +277,7 @@ export async function fetchFrpNodes(accessKey: string, opts: { refresh?: boolean
     if (Number.isNaN(id)) continue
     statById.set(id, {
       online: typeof s.online === 'number' ? s.online >= 0 : true,
-      load: typeof s.load === 'number' ? s.load : null
+      load: typeof s.load === 'number' ? s.load : null,
     })
   }
 
@@ -285,7 +300,7 @@ export async function fetchFrpNodes(accessKey: string, opts: { refresh?: boolean
         mainland: (flag & NODE_FLAG.MAINLAND) !== 0,
         canCreate: (flag & NODE_FLAG.CAN_CREATE) !== 0,
         noProtect: (flag & NODE_FLAG.NO_PROTECT) !== 0,
-        beta: (flag & NODE_FLAG.BETA) !== 0
+        beta: (flag & NODE_FLAG.BETA) !== 0,
       }
     })
     // 免费→专业版，在线优先，负载低优先，ID 升序兜底
@@ -311,7 +326,7 @@ export async function fetchFrpNodes(accessKey: string, opts: { refresh?: boolean
         status: typeof t.status === 'number' ? t.status : 0,
         localIp: typeof t.local_ip === 'string' ? t.local_ip : '',
         localPort: typeof t.local_port === 'number' ? t.local_port : 0,
-        remote: typeof t.remote === 'string' ? t.remote : ''
+        remote: typeof t.remote === 'string' ? t.remote : '',
       }))
   }
 

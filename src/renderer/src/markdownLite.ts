@@ -4,8 +4,7 @@
  * 不引第三方依赖；输出仅限安全标签（h4/strong/code/li/a/ul/p）。
  */
 export function renderMarkdownLite(md: string): string {
-  const esc = (s: string) =>
-    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   const inline = (s: string) =>
     esc(s)
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
@@ -14,7 +13,12 @@ export function renderMarkdownLite(md: string): string {
   const lines = String(md ?? '').split(/\r?\n/)
   const out: string[] = []
   let inList = false
-  const closeList = () => { if (inList) { out.push('</ul>'); inList = false } }
+  const closeList = () => {
+    if (inList) {
+      out.push('</ul>')
+      inList = false
+    }
+  }
   for (const raw of lines) {
     const line = raw.trimEnd()
     const heading = /^(#{1,4})\s+(.+)$/.exec(line)
@@ -25,7 +29,10 @@ export function renderMarkdownLite(md: string): string {
     }
     const item = /^[-*]\s+(.+)$/.exec(line)
     if (item) {
-      if (!inList) { out.push('<ul>'); inList = true }
+      if (!inList) {
+        out.push('<ul>')
+        inList = true
+      }
       out.push(`<li>${inline(item[1])}</li>`)
       continue
     }

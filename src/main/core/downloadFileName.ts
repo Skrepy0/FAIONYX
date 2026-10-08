@@ -5,7 +5,8 @@ const RESERVED_DEVICE = /^(?:con|prn|aux|nul|clock\$|conin\$|conout\$|com[1-9Â¹Â
 const MAX_NAME_BYTES = 200 // Leave room for .part and .segments-cache on every target filesystem.
 
 function trimToBytes(value: string, budget: number): string {
-  let result = '', bytes = 0
+  let result = '',
+    bytes = 0
   for (const character of value) {
     const length = Buffer.byteLength(character)
     if (bytes + length > budget) break

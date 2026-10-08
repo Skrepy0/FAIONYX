@@ -24,17 +24,17 @@ npm install
 
 ## 2. 常用命令
 
-| 命令 | 用途 |
-| --- | --- |
-| `npm run dev` | 启动 Electron + Vite 开发环境 |
-| `npm run build` | 构建主进程、Preload 和渲染进程到 `out/` |
-| `npm test` | 运行 `tests/all.test.ts` 汇总的测试 |
-| `npx tsc --noEmit` | 执行 TypeScript 类型检查 |
-| `npm run dist` | 构建 Windows portable 与 ZIP |
-| `npm run dist:win` | 构建 Windows portable 与 ZIP |
-| `npm run dist:mac` | 构建 macOS ZIP |
-| `npm run dist:all` | 构建所有已配置平台 |
-| `npm run license:check` | 校验第三方依赖的许可证文件 |
+| 命令                    | 用途                                    |
+| ----------------------- | --------------------------------------- |
+| `npm run dev`           | 启动 Electron + Vite 开发环境           |
+| `npm run build`         | 构建主进程、Preload 和渲染进程到 `out/` |
+| `npm test`              | 运行 `tests/all.test.ts` 汇总的测试     |
+| `npx tsc --noEmit`      | 执行 TypeScript 类型检查                |
+| `npm run dist`          | 构建 Windows portable 与 ZIP            |
+| `npm run dist:win`      | 构建 Windows portable 与 ZIP            |
+| `npm run dist:mac`      | 构建 macOS ZIP                          |
+| `npm run dist:all`      | 构建所有已配置平台                      |
+| `npm run license:check` | 校验第三方依赖的许可证文件              |
 
 只构建 Windows 单文件便携版：
 

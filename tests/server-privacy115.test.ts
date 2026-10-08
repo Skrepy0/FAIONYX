@@ -6,7 +6,7 @@ test('server display hides addresses in aliases and errors without modifying con
   for (const [address, host, text] of [
     ['192.0.2.10:25567', '192.0.2.10', '服务器 192.0.2.10:25567 无法连接 192.0.2.10'],
     ['mc.example.test', 'mc.example.test', '连接 MC.EXAMPLE.TEST:25565'],
-    ['[2001:db8::1]:25566', '2001:db8::1', '服务器 [2001:db8::1]:25566 未连接 2001:db8::1']
+    ['[2001:db8::1]:25566', '2001:db8::1', '服务器 [2001:db8::1]:25566 未连接 2001:db8::1'],
   ]) {
     const server = { id: 'a', address, host }
     const before = structuredClone(server)

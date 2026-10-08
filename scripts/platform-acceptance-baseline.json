@@ -539,846 +539,285 @@
     }
   ],
   "transports": {
-    "accounts:addOffline": [
-      "invoke"
-    ],
-    "accounts:list": [
-      "invoke"
-    ],
-    "accounts:msBegin": [
-      "invoke"
-    ],
-    "accounts:msCancel": [
-      "invoke"
-    ],
-    "accounts:refresh": [
-      "invoke"
-    ],
-    "accounts:remove": [
-      "invoke"
-    ],
-    "accounts:select": [
-      "invoke"
-    ],
-    "accounts:selected": [
-      "invoke"
-    ],
-    "accounts:yggLogin": [
-      "invoke"
-    ],
-    "accounts:yggProbe": [
-      "invoke"
-    ],
-    "accounts:yggProviders": [
-      "invoke"
-    ],
-    "accounts:yggRemoveProvider": [
-      "invoke"
-    ],
-    "accounts:yggRuntime": [
-      "invoke"
-    ],
-    "accounts:yggSaveProvider": [
-      "invoke"
-    ],
-    "accounts:yggSelectProfile": [
-      "invoke"
-    ],
-    "app:openDir": [
-      "invoke"
-    ],
-    "app:selectDir": [
-      "invoke"
-    ],
-    "app:selectFile": [
-      "invoke"
-    ],
-    "app:selectImage": [
-      "invoke"
-    ],
-    "app:systemInfo": [
-      "invoke"
-    ],
-    "appearance:draftApply": [
-      "invoke"
-    ],
-    "appearance:draftDiscard": [
-      "invoke"
-    ],
-    "appearance:draftRead": [
-      "invoke"
-    ],
-    "appearance:draftSave": [
-      "invoke"
-    ],
-    "appearance:exportTheme": [
-      "invoke"
-    ],
-    "appearance:importBackground": [
-      "invoke"
-    ],
-    "appearance:importBackgroundMulti": [
-      "invoke"
-    ],
-    "appearance:importLaunchThumbnail": [
-      "invoke"
-    ],
-    "appearance:importTheme": [
-      "invoke"
-    ],
-    "appearance:resetBackground": [
-      "invoke"
-    ],
-    "appearance:resetLaunchThumbnail": [
-      "invoke"
-    ],
-    "appearance:resetTheme": [
-      "invoke"
-    ],
-    "boot:renderer-ready": [
-      "send"
-    ],
-    "boot:stage": [
-      "send"
-    ],
-    "bridge:install": [
-      "invoke"
-    ],
-    "bridge:installed": [
-      "invoke"
-    ],
-    "bridge:manifest": [
-      "invoke"
-    ],
-    "bridge:reset": [
-      "invoke"
-    ],
-    "bridge:set": [
-      "invoke"
-    ],
-    "bridge:status": [
-      "invoke"
-    ],
-    "center:backups": [
-      "invoke"
-    ],
-    "center:dependencyApply": [
-      "invoke"
-    ],
-    "center:dependencyPlan": [
-      "invoke"
-    ],
-    "center:diagnose": [
-      "invoke"
-    ],
-    "center:file": [
-      "invoke"
-    ],
-    "center:operation": [
-      "invoke"
-    ],
-    "center:overview": [
-      "invoke"
-    ],
-    "center:screenshots": [
-      "invoke"
-    ],
-    "center:worlds": [
-      "invoke"
-    ],
-    "community:download": [
-      "invoke"
-    ],
-    "community:files": [
-      "invoke"
-    ],
-    "community:project": [
-      "invoke"
-    ],
-    "community:search": [
-      "invoke"
-    ],
-    "defaultPacks:get": [
-      "invoke"
-    ],
-    "defaultPacks:import": [
-      "invoke"
-    ],
-    "defaultPacks:move": [
-      "invoke"
-    ],
-    "defaultPacks:pick": [
-      "invoke"
-    ],
-    "defaultPacks:remove": [
-      "invoke"
-    ],
-    "defaultPacks:setEnabled": [
-      "invoke"
-    ],
-    "direct:host": [
-      "invoke"
-    ],
-    "direct:overview": [
-      "invoke"
-    ],
-    "direct:prepareJoin": [
-      "invoke"
-    ],
-    "direct:resolve": [
-      "invoke"
-    ],
-    "direct:state": [
-      "invoke"
-    ],
-    "direct:stop": [
-      "invoke"
-    ],
-    "event:gameDirDone": [
-      "event"
-    ],
-    "event:installDone": [
-      "event"
-    ],
-    "event:launchLog": [
-      "event"
-    ],
-    "event:launchState": [
-      "event"
-    ],
-    "event:msLoginDone": [
-      "event"
-    ],
-    "event:progress": [
-      "event"
-    ],
-    "event:taskDone": [
-      "event"
-    ],
-    "event:updatePrompt": [
-      "event"
-    ],
-    "event:updateReady": [
-      "event"
-    ],
-    "event:updateSlowHint": [
-      "event"
-    ],
-    "exitHistory:ack": [
-      "invoke"
-    ],
-    "exitHistory:clear": [
-      "invoke"
-    ],
-    "exitHistory:list": [
-      "invoke"
-    ],
-    "files:dragError": [
-      "event"
-    ],
-    "folders:add": [
-      "invoke"
-    ],
-    "folders:contextMenu": [
-      "invoke"
-    ],
-    "folders:list": [
-      "invoke"
-    ],
-    "folders:open": [
-      "invoke"
-    ],
-    "folders:remove": [
-      "invoke"
-    ],
-    "folders:rename": [
-      "invoke"
-    ],
-    "folders:scan": [
-      "invoke"
-    ],
-    "folders:setActive": [
-      "invoke"
-    ],
-    "folders:setDefault": [
-      "invoke"
-    ],
-    "frp:create-tunnel": [
-      "invoke"
-    ],
-    "frp:delete-tunnel": [
-      "invoke"
-    ],
-    "frp:event": [
-      "event"
-    ],
-    "frp:nodes": [
-      "invoke"
-    ],
-    "frp:start": [
-      "invoke"
-    ],
-    "frp:status": [
-      "invoke"
-    ],
-    "frp:stop": [
-      "invoke"
-    ],
-    "fs:drag": [
-      "send"
-    ],
-    "fs:importResources": [
-      "invoke"
-    ],
-    "fs:list": [
-      "invoke"
-    ],
-    "fs:remove": [
-      "invoke"
-    ],
-    "fs:toggleDisable": [
-      "invoke"
-    ],
-    "game:kill": [
-      "invoke"
-    ],
-    "game:launch": [
-      "invoke"
-    ],
-    "game:restart": [
-      "invoke"
-    ],
-    "game:restartCancel": [
-      "invoke"
-    ],
-    "gameDir:migrate": [
-      "invoke"
-    ],
-    "gameOptions:get": [
-      "invoke"
-    ],
-    "gameOptions:set": [
-      "invoke"
-    ],
-    "import:probe": [
-      "invoke"
-    ],
-    "java:addCustom": [
-      "invoke"
-    ],
-    "java:cancelScan": [
-      "invoke"
-    ],
-    "java:hide": [
-      "invoke"
-    ],
-    "java:list": [
-      "invoke"
-    ],
-    "java:pickAdd": [
-      "invoke"
-    ],
-    "java:refresh": [
-      "invoke"
-    ],
-    "faionyx:mem-trim": [
-      "event"
-    ],
-    "keys:getDefault": [
-      "invoke"
-    ],
-    "keys:reset": [
-      "invoke"
-    ],
-    "keys:setDefault": [
-      "invoke"
-    ],
-    "launch:exportLogs": [
-      "invoke"
-    ],
-    "loaders:fabricApi": [
-      "invoke"
-    ],
-    "loaders:list": [
-      "invoke"
-    ],
-    "mascots:batch": [
-      "invoke"
-    ],
-    "mascots:reset": [
-      "invoke"
-    ],
-    "mascots:slap": [
-      "invoke"
-    ],
-    "mascots:sound": [
-      "invoke"
-    ],
-    "mascots:state": [
-      "invoke"
-    ],
-    "memory:organize": [
-      "invoke"
-    ],
-    "modpack:install": [
-      "invoke"
-    ],
-    "modpack:openFile": [
-      "invoke"
-    ],
-    "modpack:probe": [
-      "invoke"
-    ],
-    "modpack:supplyFiles": [
-      "invoke"
-    ],
-    "mods:applyUpdates": [
-      "invoke"
-    ],
-    "mods:catalog": [
-      "invoke"
-    ],
-    "mods:checkUpdates": [
-      "invoke"
-    ],
-    "mods:commit": [
-      "invoke"
-    ],
-    "mods:crossDuplicates": [
-      "invoke"
-    ],
-    "mods:discard": [
-      "invoke"
-    ],
-    "mods:duplicates": [
-      "invoke"
-    ],
-    "mods:favorite": [
-      "invoke"
-    ],
-    "mods:favoriteLink": [
-      "invoke"
-    ],
-    "mods:favoriteLocal": [
-      "invoke"
-    ],
-    "mods:favoriteRemove": [
-      "invoke"
-    ],
-    "mods:favorites": [
-      "invoke"
-    ],
-    "mods:favoriteVersions": [
-      "invoke"
-    ],
-    "mods:icons": [
-      "invoke"
-    ],
-    "mods:install": [
-      "invoke"
-    ],
-    "mods:migrationApply": [
-      "invoke"
-    ],
-    "mods:migrationPlan": [
-      "invoke"
-    ],
-    "mods:parse": [
-      "invoke"
-    ],
-    "mods:prepare": [
-      "invoke"
-    ],
-    "mods:setEnabled": [
-      "invoke"
-    ],
-    "mods:setLocked": [
-      "invoke"
-    ],
-    "mods:supplementalKeep": [
-      "invoke"
-    ],
-    "mods:supplementalList": [
-      "invoke"
-    ],
-    "mods:supplementalPending": [
-      "event"
-    ],
-    "mods:supplementalRetry": [
-      "invoke"
-    ],
-    "mods:targets": [
-      "invoke"
-    ],
-    "mods:versionApply": [
-      "invoke"
-    ],
-    "mods:versionChoices": [
-      "invoke"
-    ],
-    "mods:versionPlan": [
-      "invoke"
-    ],
-    "plugins:install": [
-      "invoke"
-    ],
-    "plugins:list": [
-      "invoke"
-    ],
-    "plugins:openDir": [
-      "invoke"
-    ],
-    "plugins:readCode": [
-      "invoke"
-    ],
-    "plugins:remove": [
-      "invoke"
-    ],
-    "plugins:setEnabled": [
-      "invoke"
-    ],
-    "projections:analyze": [
-      "invoke"
-    ],
-    "projections:convert": [
-      "invoke"
-    ],
-    "projections:discardAnalysis": [
-      "invoke"
-    ],
-    "projections:drag": [
-      "send"
-    ],
-    "projections:import": [
-      "invoke"
-    ],
-    "projections:list": [
-      "invoke"
-    ],
-    "projections:open": [
-      "invoke"
-    ],
-    "projections:operate": [
-      "invoke"
-    ],
-    "projections:versions": [
-      "invoke"
-    ],
-    "recordings:drag": [
-      "send"
-    ],
-    "recordings:import": [
-      "invoke"
-    ],
-    "recordings:list": [
-      "invoke"
-    ],
-    "recordings:modVersions": [
-      "invoke"
-    ],
-    "recordings:open": [
-      "invoke"
-    ],
-    "recordings:operate": [
-      "invoke"
-    ],
-    "servers:add": [
-      "invoke"
-    ],
-    "servers:bind": [
-      "invoke"
-    ],
-    "servers:edit": [
-      "invoke"
-    ],
-    "servers:favorite": [
-      "invoke"
-    ],
-    "servers:list": [
-      "invoke"
-    ],
-    "servers:ping": [
-      "invoke"
-    ],
-    "servers:prepareLaunch": [
-      "invoke"
-    ],
-    "servers:remove": [
-      "invoke"
-    ],
-    "servers:syncFromDat": [
-      "invoke"
-    ],
-    "settings:get": [
-      "invoke"
-    ],
-    "settings:set": [
-      "invoke"
-    ],
-    "skin:avatar": [
-      "invoke"
-    ],
-    "skin:cape": [
-      "invoke"
-    ],
-    "skin:editorSave": [
-      "invoke"
-    ],
-    "skin:editorUpload": [
-      "invoke"
-    ],
-    "skin:history": [
-      "invoke"
-    ],
-    "skin:historyDelete": [
-      "invoke"
-    ],
-    "skin:historyRename": [
-      "invoke"
-    ],
-    "skin:profile": [
-      "invoke"
-    ],
-    "skin:upload": [
-      "invoke"
-    ],
-    "skin:uploadHistory": [
-      "invoke"
-    ],
-    "tasks:cancel": [
-      "invoke"
-    ],
-    "tasks:pause": [
-      "invoke"
-    ],
-    "tasks:resume": [
-      "invoke"
-    ],
-    "tc:cancel-install": [
-      "invoke"
-    ],
-    "tc:event": [
-      "event"
-    ],
-    "tc:install": [
-      "invoke"
-    ],
-    "tc:start": [
-      "invoke"
-    ],
-    "tc:status": [
-      "invoke"
-    ],
-    "tc:stop": [
-      "invoke"
-    ],
-    "update:apply": [
-      "invoke"
-    ],
-    "update:applyLocal": [
-      "invoke"
-    ],
-    "update:applyPending": [
-      "invoke"
-    ],
-    "update:check": [
-      "invoke"
-    ],
-    "update:getConfigStatus": [
-      "invoke"
-    ],
-    "update:getPending": [
-      "invoke"
-    ],
-    "update:getState": [
-      "invoke"
-    ],
-    "update:listReleases": [
-      "invoke"
-    ],
-    "update:pickLocalFile": [
-      "invoke"
-    ],
-    "update:resetSettings": [
-      "invoke"
-    ],
-    "update:restoreBackup": [
-      "invoke"
-    ],
-    "update:skip": [
-      "invoke"
-    ],
-    "update:start": [
-      "invoke"
-    ],
-    "versions:catalog": [
-      "invoke"
-    ],
-    "versions:cleanup": [
-      "invoke"
-    ],
-    "versions:install": [
-      "invoke"
-    ],
-    "versions:installed": [
-      "invoke"
-    ],
-    "versions:isolationPlan": [
-      "invoke"
-    ],
-    "versions:manifest": [
-      "invoke"
-    ],
-    "versions:remove": [
-      "invoke"
-    ],
-    "versions:rename": [
-      "invoke"
-    ],
-    "versions:resetThumbnail": [
-      "invoke"
-    ],
-    "versions:setIcon": [
-      "invoke"
-    ],
-    "versions:setIsolation": [
-      "invoke"
-    ],
-    "versions:setJava": [
-      "invoke"
-    ],
-    "versions:setResolution": [
-      "invoke"
-    ],
-    "versions:setThumbnailFit": [
-      "invoke"
-    ],
-    "versions:uploadIcon": [
-      "invoke"
-    ],
-    "versions:uploadThumbnail": [
-      "invoke"
-    ],
-    "voxlink:event": [
-      "event"
-    ],
-    "voxlink:lobby": [
-      "invoke"
-    ],
-    "voxlink:mods:bypass": [
-      "invoke"
-    ],
-    "voxlink:mods:cancel": [
-      "invoke"
-    ],
-    "voxlink:mods:check": [
-      "invoke"
-    ],
-    "voxlink:mods:download": [
-      "invoke"
-    ],
-    "voxlink:mods:progress": [
-      "event"
-    ],
-    "voxlink:settings": [
-      "invoke"
-    ],
-    "voxlink:start": [
-      "invoke"
-    ],
-    "voxlink:status": [
-      "invoke"
-    ],
-    "voxlink:stop": [
-      "invoke"
-    ],
-    "voxlink:tickets:cancel": [
-      "invoke"
-    ],
-    "voxlink:tickets:delete": [
-      "invoke"
-    ],
-    "voxlink:tickets:detail": [
-      "invoke"
-    ],
-    "voxlink:tickets:list": [
-      "invoke"
-    ],
-    "voxlink:tickets:pick": [
-      "invoke"
-    ],
-    "voxlink:tickets:poll": [
-      "invoke"
-    ],
-    "voxlink:tickets:progress": [
-      "event"
-    ],
-    "voxlink:tickets:release": [
-      "invoke"
-    ],
-    "voxlink:tickets:reply": [
-      "invoke"
-    ],
-    "voxlink:tickets:retract": [
-      "invoke"
-    ],
-    "voxlink:tickets:submit": [
-      "invoke"
-    ],
-    "voxlink:tryDirect": [
-      "invoke"
-    ],
-    "voxlink:usePlayerRelay": [
-      "invoke"
-    ],
-    "voxlink:useTurnRelay": [
-      "invoke"
-    ],
-    "window:caption-pointerdown": [
-      "event"
-    ],
-    "window:close": [
-      "send"
-    ],
-    "window:mascotClose": [
-      "event"
-    ],
-    "window:mascotPending": [
-      "send"
-    ],
-    "window:mascotQuit": [
-      "send"
-    ],
-    "window:maximize": [
-      "send"
-    ],
-    "window:minimize": [
-      "send"
-    ],
-    "window:skinEditorBusy": [
-      "send"
-    ],
-    "window:skinEditorClose": [
-      "event"
-    ],
-    "window:skinEditorDirty": [
-      "send"
-    ],
-    "window:skinEditorPrefsPending": [
-      "send"
-    ],
-    "window:skinEditorQuit": [
-      "send"
-    ],
-    "window:visibility": [
-      "event",
-      "invoke"
-    ],
-    "world:import": [
-      "invoke"
-    ],
-    "world:probe": [
-      "invoke"
-    ]
+    "accounts:addOffline": ["invoke"],
+    "accounts:list": ["invoke"],
+    "accounts:msBegin": ["invoke"],
+    "accounts:msCancel": ["invoke"],
+    "accounts:refresh": ["invoke"],
+    "accounts:remove": ["invoke"],
+    "accounts:select": ["invoke"],
+    "accounts:selected": ["invoke"],
+    "accounts:yggLogin": ["invoke"],
+    "accounts:yggProbe": ["invoke"],
+    "accounts:yggProviders": ["invoke"],
+    "accounts:yggRemoveProvider": ["invoke"],
+    "accounts:yggRuntime": ["invoke"],
+    "accounts:yggSaveProvider": ["invoke"],
+    "accounts:yggSelectProfile": ["invoke"],
+    "app:openDir": ["invoke"],
+    "app:selectDir": ["invoke"],
+    "app:selectFile": ["invoke"],
+    "app:selectImage": ["invoke"],
+    "app:systemInfo": ["invoke"],
+    "appearance:draftApply": ["invoke"],
+    "appearance:draftDiscard": ["invoke"],
+    "appearance:draftRead": ["invoke"],
+    "appearance:draftSave": ["invoke"],
+    "appearance:exportTheme": ["invoke"],
+    "appearance:importBackground": ["invoke"],
+    "appearance:importBackgroundMulti": ["invoke"],
+    "appearance:importLaunchThumbnail": ["invoke"],
+    "appearance:importTheme": ["invoke"],
+    "appearance:resetBackground": ["invoke"],
+    "appearance:resetLaunchThumbnail": ["invoke"],
+    "appearance:resetTheme": ["invoke"],
+    "boot:renderer-ready": ["send"],
+    "boot:stage": ["send"],
+    "bridge:install": ["invoke"],
+    "bridge:installed": ["invoke"],
+    "bridge:manifest": ["invoke"],
+    "bridge:reset": ["invoke"],
+    "bridge:set": ["invoke"],
+    "bridge:status": ["invoke"],
+    "center:backups": ["invoke"],
+    "center:dependencyApply": ["invoke"],
+    "center:dependencyPlan": ["invoke"],
+    "center:diagnose": ["invoke"],
+    "center:file": ["invoke"],
+    "center:operation": ["invoke"],
+    "center:overview": ["invoke"],
+    "center:screenshots": ["invoke"],
+    "center:worlds": ["invoke"],
+    "community:download": ["invoke"],
+    "community:files": ["invoke"],
+    "community:project": ["invoke"],
+    "community:search": ["invoke"],
+    "defaultPacks:get": ["invoke"],
+    "defaultPacks:import": ["invoke"],
+    "defaultPacks:move": ["invoke"],
+    "defaultPacks:pick": ["invoke"],
+    "defaultPacks:remove": ["invoke"],
+    "defaultPacks:setEnabled": ["invoke"],
+    "direct:host": ["invoke"],
+    "direct:overview": ["invoke"],
+    "direct:prepareJoin": ["invoke"],
+    "direct:resolve": ["invoke"],
+    "direct:state": ["invoke"],
+    "direct:stop": ["invoke"],
+    "event:gameDirDone": ["event"],
+    "event:installDone": ["event"],
+    "event:launchLog": ["event"],
+    "event:launchState": ["event"],
+    "event:msLoginDone": ["event"],
+    "event:progress": ["event"],
+    "event:taskDone": ["event"],
+    "event:updatePrompt": ["event"],
+    "event:updateReady": ["event"],
+    "event:updateSlowHint": ["event"],
+    "exitHistory:ack": ["invoke"],
+    "exitHistory:clear": ["invoke"],
+    "exitHistory:list": ["invoke"],
+    "files:dragError": ["event"],
+    "folders:add": ["invoke"],
+    "folders:contextMenu": ["invoke"],
+    "folders:list": ["invoke"],
+    "folders:open": ["invoke"],
+    "folders:remove": ["invoke"],
+    "folders:rename": ["invoke"],
+    "folders:scan": ["invoke"],
+    "folders:setActive": ["invoke"],
+    "folders:setDefault": ["invoke"],
+    "frp:create-tunnel": ["invoke"],
+    "frp:delete-tunnel": ["invoke"],
+    "frp:event": ["event"],
+    "frp:nodes": ["invoke"],
+    "frp:start": ["invoke"],
+    "frp:status": ["invoke"],
+    "frp:stop": ["invoke"],
+    "fs:drag": ["send"],
+    "fs:importResources": ["invoke"],
+    "fs:list": ["invoke"],
+    "fs:remove": ["invoke"],
+    "fs:toggleDisable": ["invoke"],
+    "game:kill": ["invoke"],
+    "game:launch": ["invoke"],
+    "game:restart": ["invoke"],
+    "game:restartCancel": ["invoke"],
+    "gameDir:migrate": ["invoke"],
+    "gameOptions:get": ["invoke"],
+    "gameOptions:set": ["invoke"],
+    "import:probe": ["invoke"],
+    "java:addCustom": ["invoke"],
+    "java:cancelScan": ["invoke"],
+    "java:hide": ["invoke"],
+    "java:list": ["invoke"],
+    "java:pickAdd": ["invoke"],
+    "java:refresh": ["invoke"],
+    "faionyx:mem-trim": ["event"],
+    "keys:getDefault": ["invoke"],
+    "keys:reset": ["invoke"],
+    "keys:setDefault": ["invoke"],
+    "launch:exportLogs": ["invoke"],
+    "loaders:fabricApi": ["invoke"],
+    "loaders:list": ["invoke"],
+    "mascots:batch": ["invoke"],
+    "mascots:reset": ["invoke"],
+    "mascots:slap": ["invoke"],
+    "mascots:sound": ["invoke"],
+    "mascots:state": ["invoke"],
+    "memory:organize": ["invoke"],
+    "modpack:install": ["invoke"],
+    "modpack:openFile": ["invoke"],
+    "modpack:probe": ["invoke"],
+    "modpack:supplyFiles": ["invoke"],
+    "mods:applyUpdates": ["invoke"],
+    "mods:catalog": ["invoke"],
+    "mods:checkUpdates": ["invoke"],
+    "mods:commit": ["invoke"],
+    "mods:crossDuplicates": ["invoke"],
+    "mods:discard": ["invoke"],
+    "mods:duplicates": ["invoke"],
+    "mods:favorite": ["invoke"],
+    "mods:favoriteLink": ["invoke"],
+    "mods:favoriteLocal": ["invoke"],
+    "mods:favoriteRemove": ["invoke"],
+    "mods:favorites": ["invoke"],
+    "mods:favoriteVersions": ["invoke"],
+    "mods:icons": ["invoke"],
+    "mods:install": ["invoke"],
+    "mods:migrationApply": ["invoke"],
+    "mods:migrationPlan": ["invoke"],
+    "mods:parse": ["invoke"],
+    "mods:prepare": ["invoke"],
+    "mods:setEnabled": ["invoke"],
+    "mods:setLocked": ["invoke"],
+    "mods:supplementalKeep": ["invoke"],
+    "mods:supplementalList": ["invoke"],
+    "mods:supplementalPending": ["event"],
+    "mods:supplementalRetry": ["invoke"],
+    "mods:targets": ["invoke"],
+    "mods:versionApply": ["invoke"],
+    "mods:versionChoices": ["invoke"],
+    "mods:versionPlan": ["invoke"],
+    "plugins:install": ["invoke"],
+    "plugins:list": ["invoke"],
+    "plugins:openDir": ["invoke"],
+    "plugins:readCode": ["invoke"],
+    "plugins:remove": ["invoke"],
+    "plugins:setEnabled": ["invoke"],
+    "projections:analyze": ["invoke"],
+    "projections:convert": ["invoke"],
+    "projections:discardAnalysis": ["invoke"],
+    "projections:drag": ["send"],
+    "projections:import": ["invoke"],
+    "projections:list": ["invoke"],
+    "projections:open": ["invoke"],
+    "projections:operate": ["invoke"],
+    "projections:versions": ["invoke"],
+    "recordings:drag": ["send"],
+    "recordings:import": ["invoke"],
+    "recordings:list": ["invoke"],
+    "recordings:modVersions": ["invoke"],
+    "recordings:open": ["invoke"],
+    "recordings:operate": ["invoke"],
+    "servers:add": ["invoke"],
+    "servers:bind": ["invoke"],
+    "servers:edit": ["invoke"],
+    "servers:favorite": ["invoke"],
+    "servers:list": ["invoke"],
+    "servers:ping": ["invoke"],
+    "servers:prepareLaunch": ["invoke"],
+    "servers:remove": ["invoke"],
+    "servers:syncFromDat": ["invoke"],
+    "settings:get": ["invoke"],
+    "settings:set": ["invoke"],
+    "skin:avatar": ["invoke"],
+    "skin:cape": ["invoke"],
+    "skin:editorSave": ["invoke"],
+    "skin:editorUpload": ["invoke"],
+    "skin:history": ["invoke"],
+    "skin:historyDelete": ["invoke"],
+    "skin:historyRename": ["invoke"],
+    "skin:profile": ["invoke"],
+    "skin:upload": ["invoke"],
+    "skin:uploadHistory": ["invoke"],
+    "tasks:cancel": ["invoke"],
+    "tasks:pause": ["invoke"],
+    "tasks:resume": ["invoke"],
+    "tc:cancel-install": ["invoke"],
+    "tc:event": ["event"],
+    "tc:install": ["invoke"],
+    "tc:start": ["invoke"],
+    "tc:status": ["invoke"],
+    "tc:stop": ["invoke"],
+    "update:apply": ["invoke"],
+    "update:applyLocal": ["invoke"],
+    "update:applyPending": ["invoke"],
+    "update:check": ["invoke"],
+    "update:getConfigStatus": ["invoke"],
+    "update:getPending": ["invoke"],
+    "update:getState": ["invoke"],
+    "update:listReleases": ["invoke"],
+    "update:pickLocalFile": ["invoke"],
+    "update:resetSettings": ["invoke"],
+    "update:restoreBackup": ["invoke"],
+    "update:skip": ["invoke"],
+    "update:start": ["invoke"],
+    "versions:catalog": ["invoke"],
+    "versions:cleanup": ["invoke"],
+    "versions:install": ["invoke"],
+    "versions:installed": ["invoke"],
+    "versions:isolationPlan": ["invoke"],
+    "versions:manifest": ["invoke"],
+    "versions:remove": ["invoke"],
+    "versions:rename": ["invoke"],
+    "versions:resetThumbnail": ["invoke"],
+    "versions:setIcon": ["invoke"],
+    "versions:setIsolation": ["invoke"],
+    "versions:setJava": ["invoke"],
+    "versions:setResolution": ["invoke"],
+    "versions:setThumbnailFit": ["invoke"],
+    "versions:uploadIcon": ["invoke"],
+    "versions:uploadThumbnail": ["invoke"],
+    "voxlink:event": ["event"],
+    "voxlink:lobby": ["invoke"],
+    "voxlink:mods:bypass": ["invoke"],
+    "voxlink:mods:cancel": ["invoke"],
+    "voxlink:mods:check": ["invoke"],
+    "voxlink:mods:download": ["invoke"],
+    "voxlink:mods:progress": ["event"],
+    "voxlink:settings": ["invoke"],
+    "voxlink:start": ["invoke"],
+    "voxlink:status": ["invoke"],
+    "voxlink:stop": ["invoke"],
+    "voxlink:tickets:cancel": ["invoke"],
+    "voxlink:tickets:delete": ["invoke"],
+    "voxlink:tickets:detail": ["invoke"],
+    "voxlink:tickets:list": ["invoke"],
+    "voxlink:tickets:pick": ["invoke"],
+    "voxlink:tickets:poll": ["invoke"],
+    "voxlink:tickets:progress": ["event"],
+    "voxlink:tickets:release": ["invoke"],
+    "voxlink:tickets:reply": ["invoke"],
+    "voxlink:tickets:retract": ["invoke"],
+    "voxlink:tickets:submit": ["invoke"],
+    "voxlink:tryDirect": ["invoke"],
+    "voxlink:usePlayerRelay": ["invoke"],
+    "voxlink:useTurnRelay": ["invoke"],
+    "window:caption-pointerdown": ["event"],
+    "window:close": ["send"],
+    "window:mascotClose": ["event"],
+    "window:mascotPending": ["send"],
+    "window:mascotQuit": ["send"],
+    "window:maximize": ["send"],
+    "window:minimize": ["send"],
+    "window:skinEditorBusy": ["send"],
+    "window:skinEditorClose": ["event"],
+    "window:skinEditorDirty": ["send"],
+    "window:skinEditorPrefsPending": ["send"],
+    "window:skinEditorQuit": ["send"],
+    "window:visibility": ["event", "invoke"],
+    "world:import": ["invoke"],
+    "world:probe": ["invoke"]
   }
 }

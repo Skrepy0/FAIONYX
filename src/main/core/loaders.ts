@@ -30,7 +30,7 @@ import {
   readVersionJson,
   scanInstalledFolder,
   flattenInstance,
-  type VersionJson
+  type VersionJson,
 } from './versions'
 
 export type ProgressEmit = (e: ProgressEvent) => void
@@ -71,49 +71,38 @@ function compareVersionDesc(a: string, b: string): number {
 }
 
 /** 获取加载器可用版本列表（最新在前）；signal 用于任务取消 */
-export async function listLoaderVersions(
-  loader: LoaderName,
-  mcVersion: string,
-  signal?: AbortSignal
-): Promise<string[]> {
+export async function listLoaderVersions(loader: LoaderName, mcVersion: string, signal?: AbortSignal): Promise<string[]> {
   loaderLog.debug(`查询 ${loader} 可用版本列表（MC ${mcVersion}）`)
   let list: string[]
   switch (loader) {
     case 'fabric': {
-      const arr = (await fetchJson(
-        `https://meta.fabricmc.net/v2/versions/loader/${mcVersion}`,
-        signal
-      )) as { loader?: { version?: string } }[]
+      const arr = (await fetchJson(`https://meta.fabricmc.net/v2/versions/loader/${mcVersion}`, signal)) as {
+        loader?: { version?: string }
+      }[]
       list = arr.map((x) => x.loader?.version).filter((v): v is string => !!v)
       break
     }
     case 'quilt': {
-      const arr = (await fetchJson(
-        `https://meta.quiltmc.org/v3/versions/loader/${mcVersion}`,
-        signal
-      )) as { loader?: { version?: string } }[]
+      const arr = (await fetchJson(`https://meta.quiltmc.org/v3/versions/loader/${mcVersion}`, signal)) as {
+        loader?: { version?: string }
+      }[]
       list = arr.map((x) => x.loader?.version).filter((v): v is string => !!v)
       break
     }
     case 'forge': {
-      const arr = (await fetchJson(
-        `https://bmclapi2.bangbang93.com/forge/minecraft/${mcVersion}`,
-        signal
-      )) as { version?: string }[]
+      const arr = (await fetchJson(`https://bmclapi2.bangbang93.com/forge/minecraft/${mcVersion}`, signal)) as { version?: string }[]
       list = arr.map((x) => x.version).filter((v): v is string => !!v)
       break
     }
     case 'neoforge': {
       try {
         const res = await fetch(`https://bmclapi2.bangbang93.com/neoforge/list/${mcVersion}`, {
-          signal: fetchSignal(signal)
+          signal: fetchSignal(signal),
         })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = (await res.json()) as unknown
         if (Array.isArray(data)) {
-          list = data
-            .map((x) => (typeof x === 'string' ? x : ((x as { version?: string }).version ?? '')))
-            .filter(Boolean)
+          list = data.map((x) => (typeof x === 'string' ? x : ((x as { version?: string }).version ?? ''))).filter(Boolean)
           break
         }
         throw new Error('返回格式异常')
@@ -122,10 +111,9 @@ export async function listLoaderVersions(
         if (signal?.aborted) throw new Error('已取消')
         // 回退：解析 maven-metadata.xml，过滤 mc 前缀（1.20.4 -> 20.4）
         loaderLog.warn(`NeoForge 列表接口不可用，回退解析 maven-metadata（MC ${mcVersion}）`)
-        const res = await fetch(
-          'https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml',
-          { signal: fetchSignal(signal) }
-        )
+        const res = await fetch('https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml', {
+          signal: fetchSignal(signal),
+        })
         if (!res.ok) throw new Error(`HTTP ${res.status}: neoforge maven-metadata`)
         const xml = await res.text()
         const all = [...xml.matchAll(/<version>([^<]+)<\/version>/g)].map((m) => m[1])
@@ -158,7 +146,13 @@ function runInstaller(javaPath: string, jar: string, emit: ProgressEmit, signal?
   })
 }
 
-function runInstallerUnlocked(javaPath: string, jar: string, emit: ProgressEmit, signal: AbortSignal | undefined, target: string): Promise<void> {
+function runInstallerUnlocked(
+  javaPath: string,
+  jar: string,
+  emit: ProgressEmit,
+  signal: AbortSignal | undefined,
+  target: string
+): Promise<void> {
   const useMirror = getSettings().mirror === 'bmclapi'
 
   const buildArgs = (withMirror: boolean): string[] => {
@@ -222,8 +216,7 @@ function runInstallerUnlocked(javaPath: string, jar: string, emit: ProgressEmit,
         else if (spawnError) {
           loaderLog.error(`安装器进程异常：${String(spawnError)}`)
           reject(spawnError)
-        }
-        else if (code === 0) resolve()
+        } else if (code === 0) resolve()
         else {
           const last = allLines.slice(-30).join('\n')
           loaderLog.error(`安装器失败（退出码 ${code ?? '未知'}），末尾输出：${last.slice(-400)}`)
@@ -245,7 +238,8 @@ function runInstallerUnlocked(javaPath: string, jar: string, emit: ProgressEmit,
  * The installer cannot rewrite a player's version JSON, options, mods or saves. */
 export async function repairNeoRuntime(json: VersionJson, clientJar: string, baseJson: VersionJson, emit: ProgressEmit): Promise<void> {
   if (!missingNeoRuntime(json, librariesDir()).length) return
-  const neo = fmlArgument(json, '--fml.neoForgeVersion'), mc = fmlArgument(json, '--fml.mcVersion')
+  const neo = fmlArgument(json, '--fml.neoForgeVersion'),
+    mc = fmlArgument(json, '--fml.mcVersion')
   if (!neo || !mc) throw new Error('NeoForge 本体库缺失，且启动元数据不完整；请修复该实例的加载器配置')
   loaderLog.info(`检测到 NeoForge ${neo} 本体库缺失，启动修复流程（不修改实例内容）`)
   const staging = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-runtime-repair-'))
@@ -259,16 +253,37 @@ export async function repairNeoRuntime(json: VersionJson, clientJar: string, bas
   fs.writeFileSync(path.join(staging, 'launcher_profiles.json'), JSON.stringify({ profiles: {}, settings: {}, version: 3 }))
   const tasks = libraryTasks(json)
   // Seed declared and generated libraries with copies, not directory junctions.
-  reuseExternalRuntimeLibraries(json, [path.dirname(librariesDir()), ...getSettings().folders.map(f => f.path)], path.join(staging, 'libraries'), tasks.map(t => path.join(staging, 'libraries', path.relative(librariesDir(), t.dest))))
+  reuseExternalRuntimeLibraries(
+    json,
+    [path.dirname(librariesDir()), ...getSettings().folders.map((f) => f.path)],
+    path.join(staging, 'libraries'),
+    tasks.map((t) => path.join(staging, 'libraries', path.relative(librariesDir(), t.dest)))
+  )
   try {
-    const mirror=getSettings().mirror
-    const repairEmit:ProgressEmit=event=>emit({...event,stage:'repair',text:`修复 NeoForge：${event.text}`})
-    await downloadLoaderInstaller(`https://maven.neoforged.net/releases/net/neoforged/neoforge/${neo}/neoforge-${neo}-installer.jar`, jar, mirror,
-      (done,total)=>repairEmit({stage:'repair',progress:total?done/total:0,text:'下载安装器 '+(done/1024/1024).toFixed(1)+'MB',bytesDone:done,bytesTotal:total||undefined}))
+    const mirror = getSettings().mirror
+    const repairEmit: ProgressEmit = (event) => emit({ ...event, stage: 'repair', text: `修复 NeoForge：${event.text}` })
+    await downloadLoaderInstaller(
+      `https://maven.neoforged.net/releases/net/neoforged/neoforge/${neo}/neoforge-${neo}-installer.jar`,
+      jar,
+      mirror,
+      (done, total) =>
+        repairEmit({
+          stage: 'repair',
+          progress: total ? done / total : 0,
+          text: '下载安装器 ' + (done / 1024 / 1024).toFixed(1) + 'MB',
+          bytesDone: done,
+          bytesTotal: total || undefined,
+        })
+    )
     const java = await ensureJava(baseJson, emit, mc)
     await prepareInstallerDependencies(jar, staging, mirror, repairEmit)
     await runInstaller(java, jar, repairEmit, undefined, staging)
-    reuseExternalRuntimeLibraries(json, [staging], librariesDir(), tasks.map(t => t.dest))
+    reuseExternalRuntimeLibraries(
+      json,
+      [staging],
+      librariesDir(),
+      tasks.map((t) => t.dest)
+    )
     const missing = missingNeoRuntime(json, librariesDir())
     if (missing.length) throw new Error(`安装器未生成必要本体库：${missing.join('、')}`)
     fs.rmSync(staging, { recursive: true, force: true })
@@ -283,9 +298,9 @@ function findInstalledDir(loader: LoaderName, mcVersion: string, loaderVersion: 
   const dir = versionsDir()
   if (!fs.existsSync(dir)) return null
   // Match resolved runtime metadata, never a display-name substring (e.g. .66 vs .660).
-  const candidates = scanInstalledFolder(gameDir()).versions
-    .filter(item => item.loader === loader && item.mcVersion === mcVersion && item.loaderVersion === loaderVersion)
-    .map(item => ({ name: item.id, mtime: fs.statSync(versionDir(item.id)).mtimeMs }))
+  const candidates = scanInstalledFolder(gameDir())
+    .versions.filter((item) => item.loader === loader && item.mcVersion === mcVersion && item.loaderVersion === loaderVersion)
+    .map((item) => ({ name: item.id, mtime: fs.statSync(versionDir(item.id)).mtimeMs }))
     .sort((a, b) => b.mtime - a.mtime)
   return candidates[0]?.name ?? null
 }
@@ -336,27 +351,16 @@ async function installLoaderInternal(
   emit({ stage: 'version-json', progress: 0, text: `检查原版 ${mcVersion}` })
   const vanillaPreExisted = fs.existsSync(versionJsonPath(mcVersion))
   const installerBased = loader === 'forge' || loader === 'neoforge'
-  const prepareVanilla = (report: ProgressEmit, signal?: AbortSignal, runtimeReady?: (signal: AbortSignal) => Promise<void>) => installVanilla(
-    mcVersion,
-    report,
-    vanillaPreExisted || installerBased ? 'versions' : 'base',
-    undefined,
-    signal,
-    false,
-    runtimeReady
-  )
+  const prepareVanilla = (report: ProgressEmit, signal?: AbortSignal, runtimeReady?: (signal: AbortSignal) => Promise<void>) =>
+    installVanilla(mcVersion, report, vanillaPreExisted || installerBased ? 'versions' : 'base', undefined, signal, false, runtimeReady)
 
   if (!installerBased) await prepareVanilla(emit, signal)
 
   // ---- fabric / quilt：profile json 直写 ----
   if (loader === 'fabric' || loader === 'quilt') {
-    const base =
-      loader === 'fabric' ? 'https://meta.fabricmc.net/v2' : 'https://meta.quiltmc.org/v3'
+    const base = loader === 'fabric' ? 'https://meta.fabricmc.net/v2' : 'https://meta.quiltmc.org/v3'
     emit({ stage: 'loader', progress: 0.1, text: `获取 ${loader} ${loaderVersion} 配置` })
-    const profile = (await fetchJson(
-      `${base}/versions/loader/${mcVersion}/${loaderVersion}/profile/json`,
-      signal
-    )) as VersionJson
+    const profile = (await fetchJson(`${base}/versions/loader/${mcVersion}/${loaderVersion}/profile/json`, signal)) as VersionJson
     const id = instanceName?.trim() || profile.id
     if (!id) throw new Error(`${loader} profile 缺少 id`)
     // 自定义实例名：json id 同步改写，inheritsFrom 保持不变
@@ -380,7 +384,7 @@ async function installLoaderInternal(
           etaSeconds: detail.etaSeconds ?? undefined,
           bytesDone: detail.bytesDone,
           bytesTotal: detail.bytesTotal ?? undefined,
-          indeterminate: detail.indeterminate
+          indeterminate: detail.indeterminate,
         }),
       downloadLimiter.maxConcurrent,
       mirror,
@@ -398,10 +402,7 @@ async function installLoaderInternal(
   }
 
   // ---- forge / neoforge：下载 installer 并运行 ----
-  const fileBase =
-    loader === 'forge'
-      ? `forge-${mcVersion}-${loaderVersion}-installer.jar`
-      : `neoforge-${loaderVersion}-installer.jar`
+  const fileBase = loader === 'forge' ? `forge-${mcVersion}-${loaderVersion}-installer.jar` : `neoforge-${loaderVersion}-installer.jar`
   const officialUrl =
     loader === 'forge'
       ? `https://maven.minecraftforge.net/net/minecraftforge/forge/${mcVersion}-${loaderVersion}/${fileBase}`
@@ -421,61 +422,96 @@ async function installLoaderInternal(
       // Installer metadata/libraries do not depend on assets or the client jar.
       // Java waits for client/libraries and installer dependencies; asset downloads
       // continue. Every writer is drained before committing or rolling back.
-      const parallel = new ParallelProgress([
-        { id: 'vanilla', label: '原版环境', weight: 0.6 },
-        { id: 'installer', label: '加载器下载', weight: 0.2 },
-        { id: 'processor', label: '生成运行文件', weight: 0.2 }
-      ], emit, '同步准备原版环境与加载器', [0, 0.9])
+      const parallel = new ParallelProgress(
+        [
+          { id: 'vanilla', label: '原版环境', weight: 0.6 },
+          { id: 'installer', label: '加载器下载', weight: 0.2 },
+          { id: 'processor', label: '生成运行文件', weight: 0.2 },
+        ],
+        emit,
+        '同步准备原版环境与加载器',
+        [0, 0.9]
+      )
       parallel.waiting('processor', '等待游戏本体、依赖库和加载器准备完成…')
       let resolvePrepared!: () => void, rejectPrepared!: (error: unknown) => void
-      const prepared = { promise: new Promise<void>((resolve, reject) => { resolvePrepared = resolve; rejectPrepared = reject }),
-        resolve: () => resolvePrepared(), reject: (error: unknown) => rejectPrepared(error) }
+      const prepared = {
+        promise: new Promise<void>((resolve, reject) => {
+          resolvePrepared = resolve
+          rejectPrepared = reject
+        }),
+        resolve: () => resolvePrepared(),
+        reject: (error: unknown) => rejectPrepared(error),
+      }
       void prepared.promise.catch(() => {}) // A sibling can fail before vanilla reaches this barrier.
-      await runParallelTasks([
-        async signal => {
-          await prepareVanilla(e => parallel.update('vanilla', e), signal, async signal => {
-            parallel.waiting('processor', '等待加载器依赖下载与校验完成…')
-            await prepared.promise
-            signal.throwIfAborted()
-            const processorEmit: ProgressEmit = e => parallel.update('processor', e)
-            processorEmit({ stage: 'java', progress: 0, indeterminate: true, text: '正在检查加载器所需的 Java 环境…' })
-            const javaPath = await pickJavaForInstaller(mcVersion, e => processorEmit({ ...e, progress: 0, overall: undefined, indeterminate: true }), signal)
-            // Forge/NeoForge 安装器要求目标目录存在 launcher_profiles.json，否则报错退出
-            const lp = path.join(gameDir(), 'launcher_profiles.json')
-            if (!fs.existsSync(lp)) {
-              fs.writeFileSync(lp, JSON.stringify({ profiles: {}, settings: {}, version: 3 }, null, 2), 'utf-8')
+      await runParallelTasks(
+        [
+          async (signal) => {
+            await prepareVanilla(
+              (e) => parallel.update('vanilla', e),
+              signal,
+              async (signal) => {
+                parallel.waiting('processor', '等待加载器依赖下载与校验完成…')
+                await prepared.promise
+                signal.throwIfAborted()
+                const processorEmit: ProgressEmit = (e) => parallel.update('processor', e)
+                processorEmit({ stage: 'java', progress: 0, indeterminate: true, text: '正在检查加载器所需的 Java 环境…' })
+                const javaPath = await pickJavaForInstaller(
+                  mcVersion,
+                  (e) => processorEmit({ ...e, progress: 0, overall: undefined, indeterminate: true }),
+                  signal
+                )
+                // Forge/NeoForge 安装器要求目标目录存在 launcher_profiles.json，否则报错退出
+                const lp = path.join(gameDir(), 'launcher_profiles.json')
+                if (!fs.existsSync(lp)) {
+                  fs.writeFileSync(lp, JSON.stringify({ profiles: {}, settings: {}, version: 3 }, null, 2), 'utf-8')
+                }
+                signal?.throwIfAborted()
+                processorEmit({ stage: 'loader-process', progress: 0, indeterminate: true, text: '生成加载器运行文件…' })
+                await runInstaller(javaPath, jarPath, processorEmit, signal)
+                processorEmit({ stage: 'loader-process', progress: 1, text: '加载器运行文件已生成' })
+
+                parallel.done('processor')
+              }
+            )
+            parallel.done('vanilla')
+          },
+          async (signal) => {
+            try {
+              const loaderEmit: ProgressEmit = (e) => parallel.update('installer', e)
+              loaderEmit({ stage: 'loader', progress: 0.2, text: `下载 ${loader} 安装器` })
+              const estimator = new SmoothedSpeedEstimator()
+              let networkBytes = 0
+              await downloadLoaderInstaller(
+                officialUrl,
+                jarPath,
+                getSettings().mirror,
+                (d, t, wire = 0) => {
+                  networkBytes += wire
+                  const rate = estimator.sample(networkBytes, t ? Math.max(0, t - d) : null, performance.now())
+                  loaderEmit({
+                    stage: 'loader',
+                    progress: 0.2 + (t ? (d / t) * 0.4 : 0),
+                    text: '下载安装器 ' + (d / 1024 / 1024).toFixed(1) + 'MB',
+                    speed: rate.speedBps,
+                    etaSeconds: rate.etaSeconds ?? undefined,
+                    bytesDone: d,
+                    bytesTotal: t || undefined,
+                  })
+                },
+                signal
+              )
+
+              await prepareInstallerDependencies(jarPath, gameDir(), getSettings().mirror, loaderEmit, signal)
+              parallel.done('installer')
+              prepared.resolve()
+            } catch (error) {
+              prepared.reject(error)
+              throw error
             }
-            signal?.throwIfAborted()
-            processorEmit({ stage: 'loader-process', progress: 0, indeterminate: true, text: '生成加载器运行文件…' })
-            await runInstaller(javaPath, jarPath, processorEmit, signal)
-            processorEmit({ stage: 'loader-process', progress: 1, text: '加载器运行文件已生成' })
-
-            parallel.done('processor')
-          })
-          parallel.done('vanilla')
-        },
-        async signal => {
-          try {
-            const loaderEmit: ProgressEmit = e => parallel.update('installer', e)
-            loaderEmit({ stage: 'loader', progress: 0.2, text: `下载 ${loader} 安装器` })
-            const estimator = new SmoothedSpeedEstimator()
-            let networkBytes = 0
-            await downloadLoaderInstaller(officialUrl, jarPath, getSettings().mirror, (d, t, wire = 0) => {
-              networkBytes += wire
-              const rate = estimator.sample(networkBytes, t ? Math.max(0, t - d) : null, performance.now())
-              loaderEmit({ stage: 'loader', progress: 0.2 + (t ? (d / t) * 0.4 : 0),
-                text: '下载安装器 ' + (d / 1024 / 1024).toFixed(1) + 'MB',
-                speed: rate.speedBps, etaSeconds: rate.etaSeconds ?? undefined, bytesDone: d, bytesTotal: t || undefined })
-            }, signal)
-
-
-            await prepareInstallerDependencies(jarPath, gameDir(), getSettings().mirror, loaderEmit, signal)
-            parallel.done('installer')
-            prepared.resolve()
-          } catch (error) { prepared.reject(error); throw error }
-        }
-      ], signal)
-
+          },
+        ],
+        signal
+      )
 
       const id0 = findInstalledDir(loader, mcVersion, loaderVersion)
       if (!id0) throw new Error('安装器运行结束，但未找到生成的版本目录')
@@ -494,7 +530,12 @@ async function installLoaderInternal(
     emit({ stage: 'loader', progress: 0.92, text: '校验依赖库完整性…' })
     const profileJson = readVersionJson(id)
     const libTasks = libraryTasks(profileJson)
-    reuseExternalRuntimeLibraries(profileJson, [gameDir(), ...getSettings().folders.map(f => f.path)], librariesDir(), libTasks.map(t => t.dest))
+    reuseExternalRuntimeLibraries(
+      profileJson,
+      [gameDir(), ...getSettings().folders.map((f) => f.path)],
+      librariesDir(),
+      libTasks.map((t) => t.dest)
+    )
     const missing = libTasks.filter((t) => !fs.existsSync(t.dest))
     if (missing.length) {
       emit({ stage: 'loader', progress: 0.94, text: `补全 ${missing.length} 个缺失依赖库…` })
@@ -509,7 +550,7 @@ async function installLoaderInternal(
             etaSeconds: detail.etaSeconds ?? undefined,
             bytesDone: detail.bytesDone,
             bytesTotal: detail.bytesTotal ?? undefined,
-            indeterminate: detail.indeterminate
+            indeterminate: detail.indeterminate,
           }),
         downloadLimiter.maxConcurrent,
         getSettings().mirror,
@@ -540,10 +581,7 @@ async function installLoaderInternal(
 
 // ---------------- Fabric API（Modrinth 数据源，MCIM 国内镜像回退） ----------------
 
-const MODRINTH_BASES = [
-  'https://api.modrinth.com/v2',
-  'https://mod.mcimirror.top/modrinth/v2'
-]
+const MODRINTH_BASES = ['https://api.modrinth.com/v2', 'https://mod.mcimirror.top/modrinth/v2']
 const MODRINTH_UA = { 'User-Agent': 'FAIONYX/0.4.1 (faionyx launcher)' }
 
 interface ModrinthFile {
@@ -561,10 +599,7 @@ interface ModrinthVersion {
 /** 按 mc 版本缓存查询结果，避免列表与下载两次请求 */
 const fabricApiCache = new Map<string, ModrinthVersion[]>()
 
-async function fetchFabricApiVersions(
-  mcVersion: string,
-  signal?: AbortSignal
-): Promise<ModrinthVersion[]> {
+async function fetchFabricApiVersions(mcVersion: string, signal?: AbortSignal): Promise<ModrinthVersion[]> {
   const cached = fabricApiCache.get(mcVersion)
   if (cached) return cached
   const gv = encodeURIComponent(JSON.stringify([mcVersion]))
@@ -574,7 +609,7 @@ async function fetchFabricApiVersions(
     try {
       const res = await fetch(`${base}/project/fabric-api/version?game_versions=${gv}&loaders=${ld}`, {
         headers: MODRINTH_UA,
-        signal: fetchSignal(signal)
+        signal: fetchSignal(signal),
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const arr = (await res.json()) as ModrinthVersion[]
@@ -592,9 +627,7 @@ async function fetchFabricApiVersions(
 /** Fabric API 可用版本列表（最新在前） */
 export async function listFabricApiVersions(mcVersion: string): Promise<FabricApiVersion[]> {
   const arr = await fetchFabricApiVersions(mcVersion)
-  return arr
-    .filter((v) => !!v.version_number)
-    .map((v) => ({ version: v.version_number as string, date: v.date_published ?? '' }))
+  return arr.filter((v) => !!v.version_number).map((v) => ({ version: v.version_number as string, date: v.date_published ?? '' }))
 }
 
 /** 下载指定版本 Fabric API 到 gameDir/mods */

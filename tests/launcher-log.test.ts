@@ -21,7 +21,7 @@ import {
   launcherLogError,
   launcherLogWarn,
   logScope,
-  flushLauncherLogSync
+  flushLauncherLogSync,
 } from '../src/main/core/launcherLog'
 
 test('归档文件名按 YYYYMMDD-HHMMSS 生成', () => {
@@ -36,7 +36,7 @@ test('修剪选择保留最近 keep 份，时间戳相同的按毫秒后缀视�
     'launcher-20260103-000000.log',
     'launcher-20260103-000000-999.log', // 同秒冲突的第二次归档，时间上最新
     'launcher-current.log', // 非 archv 命名，绝不能出现在删除列表
-    'settings.json'
+    'settings.json',
   ]
   const pruned = selectPrunableArchives(names, 2)
   // 保留最新两份：-999 毫秒后缀与 0103；删除其余归档

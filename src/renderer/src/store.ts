@@ -3,15 +3,19 @@
  */
 import { computed, reactive, watch } from 'vue'
 import { trackLaunchState } from '@shared/launchTracking'
-import type {
-  Account,
-  InstalledVersion,
-  LaunchState,
-  ProgressEvent,
-  Settings,
-  YggdrasilProviderInput
-} from '@shared/types'
-import { errText, getInstalled, getSelectedAccount, listAccounts, saveSettings, setActiveFolder, getSettings, getExitHistory, acknowledgeExitHistory, clearExitHistory } from './api'
+import type { Account, InstalledVersion, LaunchState, ProgressEvent, Settings, YggdrasilProviderInput } from '@shared/types'
+import {
+  errText,
+  getInstalled,
+  getSelectedAccount,
+  listAccounts,
+  saveSettings,
+  setActiveFolder,
+  getSettings,
+  getExitHistory,
+  acknowledgeExitHistory,
+  clearExitHistory,
+} from './api'
 
 export type ViewName =
   | 'home'
@@ -107,7 +111,7 @@ export const store = reactive({
   /** 当前选中的板块 key（对应元素 data-edit 值），空 = 未选中 */
   editTarget: '',
   /** 通知中心：最近的 toast 记录（新→旧，上限 30 条） */
-  notices: [] as Array<{ id: number; text: string; type: ToastType; time: number; exitTarget?: {id:string;folder:string} }>,
+  notices: [] as Array<{ id: number; text: string; type: ToastType; time: number; exitTarget?: { id: string; folder: string } }>,
   /** 通知是否有未读（驱动铃铛红点） */
   noticesUnread: false,
   /** 整合包导入处理器（App.vue 注册，供任意页面触发导入确认弹窗） */
@@ -120,27 +124,44 @@ export const store = reactive({
   pendingYggdrasilImport: null as YggdrasilProviderInput | null,
   /** 后台任务列表（版本安装/整合包导入/资源下载），驱动顶栏下载中心 */
   tasks: [] as TaskItem[],
-  toasts: [] as ToastItem[]
+  toasts: [] as ToastItem[],
 })
 
 const normalizeFolder = (value = '') => value.replaceAll('\\', '/').replace(/\/$/, '').toLowerCase()
-export const activeInstalled = computed(() => store.installed.filter(v => !v.folder || normalizeFolder(v.folder) === normalizeFolder(store.settings?.activeFolder || store.settings?.gameDir)))
-export const selectedInstance = computed(() => activeInstalled.value.find(v => v.id === store.resourceVersionId) ?? activeInstalled.value[0])
+export const activeInstalled = computed(() =>
+  store.installed.filter(
+    (v) => !v.folder || normalizeFolder(v.folder) === normalizeFolder(store.settings?.activeFolder || store.settings?.gameDir)
+  )
+)
+export const selectedInstance = computed(
+  () => activeInstalled.value.find((v) => v.id === store.resourceVersionId) ?? activeInstalled.value[0]
+)
 export async function selectInstance(id: string, folder?: string) {
   if (folder && normalizeFolder(folder) !== normalizeFolder(store.settings?.activeFolder || store.settings?.gameDir)) {
-    await setActiveFolder(folder); store.settings = await getSettings()
+    await setActiveFolder(folder)
+    store.settings = await getSettings()
   }
   store.resourceVersionId = id
 }
-watch([activeInstalled, () => store.settings?.activeFolder], () => {
-  if (!store.settings) return
-  const list = activeInstalled.value
-  if (!list.some(v => v.id === store.resourceVersionId)) {
-    const saved = localStorage.getItem('faionyx.lastVersion') || ''
-    store.resourceVersionId = list.find(v => v.id === saved)?.id || list[0]?.id || ''
-  }
-}, { flush: 'sync' })
-watch(() => store.resourceVersionId, id => { if (id) localStorage.setItem('faionyx.lastVersion', id) }, { flush: 'sync' })
+watch(
+  [activeInstalled, () => store.settings?.activeFolder],
+  () => {
+    if (!store.settings) return
+    const list = activeInstalled.value
+    if (!list.some((v) => v.id === store.resourceVersionId)) {
+      const saved = localStorage.getItem('faionyx.lastVersion') || ''
+      store.resourceVersionId = list.find((v) => v.id === saved)?.id || list[0]?.id || ''
+    }
+  },
+  { flush: 'sync' }
+)
+watch(
+  () => store.resourceVersionId,
+  (id) => {
+    if (id) localStorage.setItem('faionyx.lastVersion', id)
+  },
+  { flush: 'sync' }
+)
 
 export const applyLaunchState = (state: LaunchState) => trackLaunchState(store, state)
 
@@ -188,7 +209,7 @@ const STAGE_LABEL: Record<string, string> = {
   'mod-commit': '写入 MOD',
   launch: '启动',
   done: '完成',
-  error: '失败'
+  error: '失败',
 }
 
 export function stageLabel(stage: string): string {
@@ -206,7 +227,7 @@ export function upsertTaskProgress(e: ProgressEvent) {
       stage: e.stage,
       text: e.text,
       progress: e.progress,
-      status: 'running'
+      status: 'running',
     }
     store.tasks.unshift(t)
   }
@@ -222,20 +243,10 @@ export function upsertTaskProgress(e: ProgressEvent) {
 }
 
 /** 任务终态（成功/失败/取消），失败保留阶段与原因 */
-export function finalizeTask(r: {
-  taskId?: string
-  ok: boolean
-  error?: string
-  cancelled?: boolean
-  stage?: string
-}) {
+export function finalizeTask(r: { taskId?: string; ok: boolean; error?: string; cancelled?: boolean; stage?: string }) {
   if (!r.taskId) return
   const t = store.tasks.find((x) => x.id === r.taskId)
-  if (
-    !t ||
-    (t.status !== 'running' && t.status !== 'paused' && t.status !== 'cancelling')
-  )
-    return
+  if (!t || (t.status !== 'running' && t.status !== 'paused' && t.status !== 'cancelling')) return
   t.status = r.cancelled ? 'cancelled' : r.ok ? 'done' : 'error'
   t.error = r.error
   t.progress = r.ok ? 1 : t.progress
@@ -244,9 +255,7 @@ export function finalizeTask(r: {
     // 成功 8 秒、取消 3 秒后自动从下载中心移除
     setTimeout(
       () => {
-        const i = store.tasks.findIndex(
-          (x) => x.id === t.id && (x.status === 'done' || x.status === 'cancelled')
-        )
+        const i = store.tasks.findIndex((x) => x.id === t.id && (x.status === 'done' || x.status === 'cancelled'))
         if (i >= 0) store.tasks.splice(i, 1)
       },
       r.ok ? 8000 : 3000
@@ -265,20 +274,32 @@ let toastSeq = 0
 
 const toastTimers = new Map<number, ReturnType<typeof setTimeout>>()
 export function dismissToast(id: number) {
-  clearTimeout(toastTimers.get(id)); toastTimers.delete(id)
-  const i = store.toasts.findIndex(t => t.id === id); if (i >= 0) store.toasts.splice(i, 1)
+  clearTimeout(toastTimers.get(id))
+  toastTimers.delete(id)
+  const i = store.toasts.findIndex((t) => t.id === id)
+  if (i >= 0) store.toasts.splice(i, 1)
 }
 export function toast(text: string, type: ToastType = 'info') {
   // Repeated identical feedback refreshes one notification; unrelated completions stay in history.
-  const previous = store.toasts.find(t => t.text === text && t.type === type)
-  if (previous) { clearTimeout(toastTimers.get(previous.id)); toastTimers.set(previous.id, setTimeout(() => dismissToast(previous.id), type === 'error' ? 8000 : 3000)); return }
+  const previous = store.toasts.find((t) => t.text === text && t.type === type)
+  if (previous) {
+    clearTimeout(toastTimers.get(previous.id))
+    toastTimers.set(
+      previous.id,
+      setTimeout(() => dismissToast(previous.id), type === 'error' ? 8000 : 3000)
+    )
+    return
+  }
   const id = ++toastSeq
   store.toasts.push({ id, text, type })
   while (store.toasts.length > 3) dismissToast(store.toasts[0].id)
   store.notices.unshift({ id, text, type, time: Date.now() })
   if (store.notices.length > 30) store.notices.length = 30
   store.noticesUnread = true
-  toastTimers.set(id, setTimeout(() => dismissToast(id), type === 'error' ? 8000 : 3000))
+  toastTimers.set(
+    id,
+    setTimeout(() => dismissToast(id), type === 'error' ? 8000 : 3000)
+  )
 }
 
 /** 打开通知中心时调用：清除未读标记 */
@@ -290,10 +311,23 @@ export function markNoticesRead() {
 export async function loadExitNotices() {
   try {
     const records = await getExitHistory()
-    records.forEach((record, i) => store.notices.push({ id: -i - 1, time: record.time, text: record.text, type: record.uncertain || record.context?.exitKind === 'shutdown-timeout' ? 'info' : 'error', exitTarget: record.kind==='game'&&record.context?.versionId&&record.context?.folder?{id:String(record.context.versionId),folder:String(record.context.folder)}:undefined }))
+    records.forEach((record, i) =>
+      store.notices.push({
+        id: -i - 1,
+        time: record.time,
+        text: record.text,
+        type: record.uncertain || record.context?.exitKind === 'shutdown-timeout' ? 'info' : 'error',
+        exitTarget:
+          record.kind === 'game' && record.context?.versionId && record.context?.folder
+            ? { id: String(record.context.versionId), folder: String(record.context.folder) }
+            : undefined,
+      })
+    )
     store.notices.sort((a, b) => b.time - a.time)
-    store.noticesUnread ||= records.some(record => !record.seen)
-  } catch { /* Older test bridges or unreadable journal must not block startup. */ }
+    store.noticesUnread ||= records.some((record) => !record.seen)
+  } catch {
+    /* Older test bridges or unreadable journal must not block startup. */
+  }
 }
 export function clearNotices() {
   store.notices = []
@@ -323,7 +357,9 @@ export async function toggleFavorite(id: string, folder?: string) {
   try {
     store.settings = await saveSettings({ favoriteInstanceOverrides: next })
     // The star and ordering provide immediate local feedback.
-  } catch (e) { toast('收藏失败：' + errText(e), 'error') }
+  } catch (e) {
+    toast('收藏失败：' + errText(e), 'error')
+  }
 }
 
 /** 收藏置顶 + 组内最近游玩倒序 */
@@ -436,8 +472,7 @@ export function versionIconUrl(v: InstalledVersion): string {
   if (!icon) return ''
   if (icon.startsWith('mob:')) return `mobs/${icon.slice(4)}.png`
   if (icon.startsWith('file:')) {
-    const def =
-      store.settings?.folders.find((f) => f.isDefault)?.path ?? store.settings?.gameDir ?? ''
+    const def = store.settings?.folders.find((f) => f.isDefault)?.path ?? store.settings?.gameDir ?? ''
     if (!def) return ''
     const p = `${def}/.faionyx/icons/${icon.slice(5)}`.replace(/\\/g, '/')
     return 'file:///' + p.replace(/^\/+/, '')
@@ -446,19 +481,7 @@ export function versionIconUrl(v: InstalledVersion): string {
 }
 
 // ---------------- 进度平滑 ----------------/** 安装/启动任务的阶段顺序（用于把单阶段进度换算为单调不回退的整体进度） */
-const STAGE_ORDER = [
-  'version-json',
-  'libraries',
-  'client',
-  'assets',
-  'loader',
-  'fabric-api',
-  'repair',
-  'modpack',
-  'java',
-  'launch',
-  'done'
-]
+const STAGE_ORDER = ['version-json', 'libraries', 'client', 'assets', 'loader', 'fabric-api', 'repair', 'modpack', 'java', 'launch', 'done']
 
 /** 把当前阶段进度换算为整体进度（0-1，阶段单调推进不回退） */
 export function progressOverall(e: ProgressEvent): number {
@@ -492,7 +515,7 @@ export function resetProgressMono(taskId?: string) {
   else monoMap.clear()
 }
 
-/** 最后启动时间 -> 「今天 / 昨天 / x天前」，无记录返回 '—' */export function fmtLastPlayed(ts?: number): string {
+/** 最后启动时间 -> 「今天 / 昨天 / x天前」，无记录返回 '—' */ export function fmtLastPlayed(ts?: number): string {
   if (!ts) return '—'
   const d = new Date(ts)
   if (Number.isNaN(d.getTime())) return '—'
