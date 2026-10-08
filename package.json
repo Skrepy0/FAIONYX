@@ -3,6 +3,7 @@
   "productName": "FAIONYX",
   "version": "1.0.0",
   "description": "FAIONYX - FLY の Minecraft 启动器",
+  "author": "Skrepy-i <155234406+Skrepy0@users.noreply.github.com>",
   "homepage": "https://github.com/Skrepy0/FAIONYX",
   "main": "out/main/index.js",
   "scripts": {
@@ -22,6 +23,7 @@
     "format": "prettier --write ."
   },
   "build": {
+    "electronDist": "D:\\Front-projects\\FAIONYX\\node_modules\\electron\\electron-v44.3.0-win32-x64",
     "appId": "com.faionyx.launcher",
     "productName": "FAIONYX",
     "directories": {
@@ -76,7 +78,7 @@
         "zip"
       ],
       "artifactName": "FAIONYX-${version}-windows-${arch}.${ext}",
-      "icon": "build/icon.png"
+      "icon": "build/icon.ico"
     },
     "portable": {
       "unpackDirName": false,

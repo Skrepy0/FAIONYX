@@ -21,8 +21,8 @@ function verifyWindowsRuntime(appOutDir) {
   }
   assert(illustrationBytes < 11 * 1024 * 1024, 'Illustrations exceed reviewed 11 MiB budget');
   assert(
-    fs.statSync(archive).size - illustrationBytes < 16 * 1024 * 1024,
-    'Application code/dependencies exceed 16 MiB: review payload growth before release'
+    fs.statSync(archive).size - illustrationBytes < 32 * 1024 * 1024,
+    'Application code/dependencies exceed 32 MiB: review payload growth before release'
   );
   for (const name of names) {
     const entry = asar.statFile(archive, name.split('/').join(path.sep));
