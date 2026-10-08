@@ -1,19 +1,19 @@
 import { BUILTIN_LAUNCH_IMAGES } from '@shared/launchImages';
-import piston from './assets/launch/piston.webp';
-import brewer from './assets/launch/brewer.webp';
-import cannon from './assets/launch/cannon.webp';
-import cactus from './assets/launch/cactus.webp';
-import farmer from './assets/launch/farmer.webp';
-import camp from './assets/launch/camp.webp';
-import sunset from './assets/launch/sunset.webp';
+import end from './assets/launch/end.webp';
+import group_photo from './assets/launch/group_photo.webp';
+import landscape from './assets/launch/landscape.webp';
+import rich from './assets/launch/rich.webp';
+import sakura from './assets/launch/sakura.webp';
+import sakura2 from './assets/launch/sakura2.webp';
+import rebuild from './assets/launch/rebuild.webp';
 
 const sources = {
-  'piston.webp': piston,
-  'brewer.webp': brewer,
-  'cannon.webp': cannon,
-  'cactus.webp': cactus,
-  'farmer.webp': farmer,
-  'camp.webp': camp,
-  'sunset.webp': sunset,
+  'end.webp': end,
+  'group_photo.webp': group_photo,
+  'landscape.webp': landscape,
+  'rich.webp': rich,
+  'sakura.webp': sakura,
+  'sakura2.webp': sakura2,
+  'rebuild.webp': rebuild,
 };
 export const builtInLaunchImages = BUILTIN_LAUNCH_IMAGES.map((image) => ({ ...image, src: sources[image.file] }));

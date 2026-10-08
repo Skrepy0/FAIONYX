@@ -1,12 +1,12 @@
 /** Stable keys keep image selection and timing independent of bundled asset hashes. */
 export const BUILTIN_LAUNCH_IMAGES = [
-  { key: 'builtin:piston', title: 'Minecraft活塞压扁大冒险', file: 'piston.webp' },
-  { key: 'builtin:brewer', title: '暮色村庄酿药师', file: 'brewer.webp' },
-  { key: 'builtin:cannon', title: '熔岩悬崖上的失控大炮', file: 'cannon.webp' },
-  { key: 'builtin:cactus', title: '沙漠仙人掌飞跃大作战', file: 'cactus.webp' },
-  { key: 'builtin:farmer', title: '像素农夫与肥料伙伴', file: 'farmer.webp' },
-  { key: 'builtin:camp', title: '月夜篝火下的方块森林营地', file: 'camp.webp' },
-  { key: 'builtin:sunset', title: '方块世界的日落奇遇', file: 'sunset.webp' },
+  { key: 'builtin:end', title: '解放末地!', file: 'end.webp' },
+  { key: 'builtin:group_photo', title: '社团合影', file: 'group_photo.webp' },
+  { key: 'builtin:landscape', title: '生存乐事风景', file: 'landscape.webp' },
+  { key: 'builtin:rich', title: '与Jianjiazijin的合影', file: 'rich.webp' },
+  { key: 'builtin:sakura', title: '月光下的樱花林', file: 'sakura.webp' },
+  { key: 'builtin:sakura2', title: '月光下的樱花林2', file: 'sakura2.webp' },
+  { key: 'builtin:rebuild', title: '湖南大学红楼', file: 'rebuild.webp' },
 ] as const;
 
 export function isBuiltinLaunchImage(key: string): boolean {

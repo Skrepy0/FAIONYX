@@ -495,7 +495,7 @@ async function applyUpdates(fileNames: string[]) {
     }
     const failed = results.filter((r) => !r.ok);
     if (failed.length) toast(`${failed.length} 个更新失败：${failed[0].error ?? ''}`, 'error');
-    if (updatePanel.report.entries.length === 0) updatePanel.open = false;
+    if (updatePanel.report?.entries.length === 0) updatePanel.open = false;
   } catch (e) {
     if (operation === updateOperation)
       for (const target of targets) {

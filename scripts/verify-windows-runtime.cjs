@@ -11,7 +11,7 @@ function verifyWindowsRuntime(appOutDir) {
   // Verify those exact assets separately; keep the existing 16 MiB code/dependency budget.
   const digest = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
   let illustrationBytes = 0;
-  for (const id of ['piston', 'brewer', 'cannon', 'cactus', 'farmer', 'camp', 'sunset']) {
+  for (const id of ['end', 'group_photo', 'landscape', 'rebuild', 'rich', 'sakura', 'sakura2']) {
     const matches = names.filter((name) => new RegExp('^out/renderer/assets/' + id + '-[^/]+\\.webp$').test(name));
     assert.equal(matches.length, 1, 'Exactly one bundled illustration: ' + id);
     const bytes = asar.extractFile(archive, matches[0].split('/').join(path.sep));

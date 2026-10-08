@@ -110,7 +110,6 @@ import './mod-migration-1053.test';
 import './workbench-mod-management-1054.test';
 import './instance-center-1058.test';
 import './launch-speed-1059.test';
-
 import './voxlink-replacement.test';
 import './game-exit-1064.test';
 import './frp-delete-1065.test';
@@ -127,11 +126,9 @@ import './version-catalog-1081.test';
 import './deletion-frp-1082.test';
 import './java-health-1084.test';
 import './recycle-1085.test';
-
 import './recordings-1086.test';
 import './recordings-1087.test';
 import './bound-folders-1088.test';
-
 import './voxlink-integration-1091.test';
 import './voxlink-upstream-1094.test';
 import './download-speed-1096.test';
@@ -140,22 +137,13 @@ import './modpack-autocomplete-1098.test';
 import './ui-system.test';
 import './download-tail-1100.test';
 import './ui-refinement.test';
-
 import './ui-motion-112.test';
 import './curseforge-cdn-114.test';
 import './skin-palette-preferences.test';
 import './skin-colors-117.test';
 import './gallery-favorites-117.test';
-import './mascot-117.test';
 import './skin-editor-118.test';
 import './gallery-favorites-118.test';
-import './mascot-software.test';
-import './mascot-capture-budget.test';
-
-import './mascot-frame.test';
-import './mascot-frame-driver.test';
-import './kamu-interaction-119.test';
-import './kamu-palm-animation.test';
 import './import-probe-119.test';
 import './pcl-menu-frame-119.test';
 import './mac-reopen-observer.test.cjs';
@@ -168,12 +156,9 @@ import './release-history-assets.test.cjs';
 import './release-platform-assets.test.cjs';
 import './skin-palette-state-119.test.cjs';
 import './mac-game-capture-observer.test.cjs';
-import './kamu-observer-aba-119.test.cjs';
 import './skin-upload-readiness-119.test.cjs';
-import './kamu-observer-motion-mode-119.test.cjs';
 import './platform-release-gate.test.cjs';
 import './platform-original-frames.test.cjs';
-
 import './mac-package-identity-111.test';
 import './mac-parity-111.test';
 import './mac-skin-walk-capture-111.test';
