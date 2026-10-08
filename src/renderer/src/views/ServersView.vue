@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { withDeadline } from '@shared/deadline'
+import { withDeadline } from '@shared/deadline';
 // 服务器页：服务器列表管理 + SLP 实时状态 + 一键进服
-import ContentSkeleton from '../components/ContentSkeleton.vue'
-import { computed, onMounted, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import ContentSkeleton from '../components/ContentSkeleton.vue';
+import { computed, onMounted, onBeforeUnmount, reactive, ref, watch } from 'vue';
 import {
   addServer,
   favoriteServer,
@@ -17,392 +17,392 @@ import {
   prepareServerLaunch,
   removeServer,
   syncServersFromDat,
-} from '../api'
-import ConnectionStatus from '../components/connection/ConnectionStatus.vue'
-import ServerListItem from '../components/connection/ServerListItem.vue'
-import ServerDetails from '../components/connection/ServerDetails.vue'
-import ServerAddress from '../components/connection/ServerAddress.vue'
-import { privateServerText, serverAddressRevealed } from '@shared/serverPrivacy'
-import '../components/connection/connection.css'
-import { selectInstance, selectedInstance, refreshInstalled, store, toast } from '../store'
-import type { InstalledVersion, ServerEntry, ServerPingResult } from '@shared/types'
+} from '../api';
+import ConnectionStatus from '../components/connection/ConnectionStatus.vue';
+import ServerListItem from '../components/connection/ServerListItem.vue';
+import ServerDetails from '../components/connection/ServerDetails.vue';
+import ServerAddress from '../components/connection/ServerAddress.vue';
+import { privateServerText, serverAddressRevealed } from '@shared/serverPrivacy';
+import '../components/connection/connection.css';
+import { selectInstance, selectedInstance, refreshInstalled, store, toast } from '../store';
+import type { InstalledVersion, ServerEntry, ServerPingResult } from '@shared/types';
 
 // ---------------- 列表与状态 ----------------
-const servers = ref<ServerEntry[]>([])
-const targets = ref<InstalledVersion[]>([])
-const pings = reactive<Record<string, ServerPingResult | 'loading'>>({})
-const loading = ref(true)
+const servers = ref<ServerEntry[]>([]);
+const targets = ref<InstalledVersion[]>([]);
+const pings = reactive<Record<string, ServerPingResult | 'loading'>>({});
+const loading = ref(true);
 const refreshing = ref(false),
   launchBusy = ref(false),
   bindingId = ref(''),
-  loadError = ref('')
-const activeId = ref('')
-const revealedAddress = ref<{ id: string; address: string } | null>(null)
-const addressRevealed = (server: ServerEntry) => serverAddressRevealed(server, revealedAddress.value)
+  loadError = ref('');
+const activeId = ref('');
+const revealedAddress = ref<{ id: string; address: string } | null>(null);
+const addressRevealed = (server: ServerEntry) => serverAddressRevealed(server, revealedAddress.value);
 const hideAddresses = () => {
-  revealedAddress.value = null
-}
+  revealedAddress.value = null;
+};
 function toggleAddress(server: ServerEntry) {
-  activeId.value = server.id
-  revealedAddress.value = addressRevealed(server) ? null : { id: server.id, address: server.address }
+  activeId.value = server.id;
+  revealedAddress.value = addressRevealed(server) ? null : { id: server.id, address: server.address };
 }
-const publicName = (server?: ServerEntry | null) => (server ? privateServerText(server.name, server, addressRevealed(server)) : '')
+const publicName = (server?: ServerEntry | null) => (server ? privateServerText(server.name, server, addressRevealed(server)) : '');
 // Toasts are snapshots and may outlive the current reveal. Always mask them.
-const publicMessage = (message: string) => servers.value.reduce((text, server) => privateServerText(text, server), message)
-let offWindowVisibility: (() => void) | undefined
-const pingEpoch = new Map<string, number>()
+const publicMessage = (message: string) => servers.value.reduce((text, server) => privateServerText(text, server), message);
+let offWindowVisibility: (() => void) | undefined;
+const pingEpoch = new Map<string, number>();
 
 async function load() {
-  loading.value = true
-  loadError.value = ''
+  loading.value = true;
+  loadError.value = '';
   try {
     // 先从各版本 servers.dat 合并（游戏内添加的服务器自动纳入并标注所属版本）
-    const r = await syncServersFromDat()
-    servers.value = r.list
-    targets.value = r.targets ?? store.installed
-    if (r.added > 0) toast(`已从游戏内同步 ${r.added} 个服务器`, 'info')
-    if (r.errors?.length) toast(`有 ${r.errors.length} 条服务器记录未能读取，请检查游戏服务器列表或手动添加`, 'error')
+    const r = await syncServersFromDat();
+    servers.value = r.list;
+    targets.value = r.targets ?? store.installed;
+    if (r.added > 0) toast(`已从游戏内同步 ${r.added} 个服务器`, 'info');
+    if (r.errors?.length) toast(`有 ${r.errors.length} 条服务器记录未能读取，请检查游戏服务器列表或手动添加`, 'error');
   } catch (e) {
-    loadError.value = publicMessage('读取服务器列表失败：' + errText(e))
-    toast(loadError.value, 'error')
+    loadError.value = publicMessage('读取服务器列表失败：' + errText(e));
+    toast(loadError.value, 'error');
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-  void pingAll()
+  void pingAll();
 }
 
 async function syncNow() {
-  if (loading.value) return
-  loading.value = true
-  loadError.value = ''
+  if (loading.value) return;
+  loading.value = true;
+  loadError.value = '';
   try {
-    const r = await syncServersFromDat()
-    servers.value = r.list
-    targets.value = r.targets ?? store.installed
-    const detail = r.added || r.updated ? `新增 ${r.added}，更新 ${r.updated ?? 0}` : '没有发现变化'
-    toast(`游戏内服务器同步完成：${detail}`, r.errors?.length ? 'error' : 'success')
-    if (r.errors?.length) toast(`有 ${r.errors.length} 条服务器记录未能读取，请检查游戏服务器列表或手动添加`, 'error')
+    const r = await syncServersFromDat();
+    servers.value = r.list;
+    targets.value = r.targets ?? store.installed;
+    const detail = r.added || r.updated ? `新增 ${r.added}，更新 ${r.updated ?? 0}` : '没有发现变化';
+    toast(`游戏内服务器同步完成：${detail}`, r.errors?.length ? 'error' : 'success');
+    if (r.errors?.length) toast(`有 ${r.errors.length} 条服务器记录未能读取，请检查游戏服务器列表或手动添加`, 'error');
   } catch (e) {
-    loadError.value = publicMessage('同步失败：' + errText(e))
+    loadError.value = publicMessage('同步失败：' + errText(e));
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-  void pingAll()
+  void pingAll();
 }
 
 async function pingAll() {
-  if (refreshing.value) return
-  refreshing.value = true
+  if (refreshing.value) return;
+  refreshing.value = true;
   try {
-    await Promise.allSettled(servers.value.map((s) => pingOne(s)))
+    await Promise.allSettled(servers.value.map((s) => pingOne(s)));
   } finally {
-    refreshing.value = false
+    refreshing.value = false;
   }
 }
 
 async function pingOne(s: ServerEntry) {
-  const epoch = (pingEpoch.get(s.id) ?? 0) + 1
-  pingEpoch.set(s.id, epoch)
-  pings[s.id] = 'loading'
+  const epoch = (pingEpoch.get(s.id) ?? 0) + 1;
+  pingEpoch.set(s.id, epoch);
+  pings[s.id] = 'loading';
   try {
-    const result = await pingServer(s.address)
-    if (pingEpoch.get(s.id) === epoch && servers.value.some((item) => item.id === s.id && item.address === s.address)) pings[s.id] = result
+    const result = await pingServer(s.address);
+    if (pingEpoch.get(s.id) === epoch && servers.value.some((item) => item.id === s.id && item.address === s.address)) pings[s.id] = result;
   } catch {
-    if (pingEpoch.get(s.id) !== epoch || !servers.value.some((item) => item.id === s.id && item.address === s.address)) return
+    if (pingEpoch.get(s.id) !== epoch || !servers.value.some((item) => item.id === s.id && item.address === s.address)) return;
     pings[s.id] = {
       online: false,
       players: '-',
       motd: '无法连接（服务器离线或地址错误）',
       version: '-',
       latencyMs: 0,
-    }
+    };
   }
 }
 
 onMounted(() => {
-  document.addEventListener('visibilitychange', hideAddresses)
-  window.addEventListener('blur', hideAddresses)
+  document.addEventListener('visibilitychange', hideAddresses);
+  window.addEventListener('blur', hideAddresses);
   offWindowVisibility = window.faionyx.on('window:visibility', (visible) => {
-    if (visible !== true) hideAddresses()
-  })
-  void load()
-  if (!store.installed.length) void refreshInstalled()
-})
+    if (visible !== true) hideAddresses();
+  });
+  void load();
+  if (!store.installed.length) void refreshInstalled();
+});
 onBeforeUnmount(() => {
-  hideAddresses()
-  document.removeEventListener('visibilitychange', hideAddresses)
-  window.removeEventListener('blur', hideAddresses)
-  offWindowVisibility?.()
-})
+  hideAddresses();
+  document.removeEventListener('visibilitychange', hideAddresses);
+  window.removeEventListener('blur', hideAddresses);
+  offWindowVisibility?.();
+});
 
 // ---------------- 添加 ----------------
-const addModal = reactive({ open: false, id: '', name: '', address: '', busy: false, error: '' })
+const addModal = reactive({ open: false, id: '', name: '', address: '', busy: false, error: '' });
 function openAdd(server?: ServerEntry) {
-  Object.assign(addModal, { open: true, id: server?.id ?? '', name: server?.name ?? '', address: server?.address ?? '', error: '' })
+  Object.assign(addModal, { open: true, id: server?.id ?? '', name: server?.name ?? '', address: server?.address ?? '', error: '' });
 }
 
 async function onAdd() {
-  if (addModal.busy) return
-  addModal.busy = true
-  addModal.error = ''
+  if (addModal.busy) return;
+  addModal.busy = true;
+  addModal.error = '';
   try {
-    const editingId = addModal.id
+    const editingId = addModal.id;
     servers.value = editingId
       ? await editServer(editingId, addModal.name, addModal.address)
-      : await addServer(addModal.name, addModal.address)
-    addModal.open = false
-    addModal.name = ''
-    addModal.address = ''
-    toast(editingId ? '服务器已更新' : '服务器已添加', 'success')
-    const just = editingId ? servers.value.find((s) => s.id === editingId) : servers.value[servers.value.length - 1]
+      : await addServer(addModal.name, addModal.address);
+    addModal.open = false;
+    addModal.name = '';
+    addModal.address = '';
+    toast(editingId ? '服务器已更新' : '服务器已添加', 'success');
+    const just = editingId ? servers.value.find((s) => s.id === editingId) : servers.value[servers.value.length - 1];
     if (just) {
-      activeId.value = just.id
-      void pingOne(just)
+      activeId.value = just.id;
+      void pingOne(just);
     }
   } catch (e) {
-    addModal.error = errText(e)
+    addModal.error = errText(e);
   } finally {
-    addModal.busy = false
+    addModal.busy = false;
   }
 }
 
 // ---------------- 删除（二次确认，支持单个/多选/全选批量） ----------------
-const delModal = reactive({ open: false, target: null as ServerEntry | null, batch: false, busy: false })
+const delModal = reactive({ open: false, target: null as ServerEntry | null, batch: false, busy: false });
 
 // ---------------- 多选模式 ----------------
-const selectMode = ref(false)
-const selected = ref<Set<string>>(new Set())
-const allChecked = computed(() => filteredServers.value.length > 0 && filteredServers.value.every((s) => selected.value.has(s.id)))
-const selectedCount = computed(() => selected.value.size)
+const selectMode = ref(false);
+const selected = ref<Set<string>>(new Set());
+const allChecked = computed(() => filteredServers.value.length > 0 && filteredServers.value.every((s) => selected.value.has(s.id)));
+const selectedCount = computed(() => selected.value.size);
 
 function toggleSelectMode() {
-  selectMode.value = !selectMode.value
-  if (!selectMode.value) selected.value = new Set()
+  selectMode.value = !selectMode.value;
+  if (!selectMode.value) selected.value = new Set();
 }
 function toggleSelect(id: string) {
-  const next = new Set(selected.value)
-  if (next.has(id)) next.delete(id)
-  else next.add(id)
-  selected.value = next
+  const next = new Set(selected.value);
+  if (next.has(id)) next.delete(id);
+  else next.add(id);
+  selected.value = next;
 }
 function toggleAll() {
-  selected.value = allChecked.value ? new Set() : new Set(filteredServers.value.map((s) => s.id))
+  selected.value = allChecked.value ? new Set() : new Set(filteredServers.value.map((s) => s.id));
 }
 function openBatchDelete() {
-  if (!selectedCount.value) return
-  delModal.target = null
-  delModal.batch = true
-  delModal.open = true
+  if (!selectedCount.value) return;
+  delModal.target = null;
+  delModal.batch = true;
+  delModal.open = true;
 }
 
 async function onDelete() {
-  if (delModal.busy) return
-  delModal.busy = true
+  if (delModal.busy) return;
+  delModal.busy = true;
   try {
     if (delModal.batch) {
       // 批量：逐个删除（同一存储文件，顺序执行）
-      const ids = [...selected.value]
-      let okCount = 0
+      const ids = [...selected.value];
+      let okCount = 0;
       for (const id of ids) {
-        servers.value = await removeServer(id)
-        delete pings[id]
-        okCount++
+        servers.value = await removeServer(id);
+        delete pings[id];
+        okCount++;
       }
-      selected.value = new Set()
-      delModal.open = false
-      toast(`已删除 ${okCount} 个服务器`, 'success')
+      selected.value = new Set();
+      delModal.open = false;
+      toast(`已删除 ${okCount} 个服务器`, 'success');
     } else {
-      const t = delModal.target
-      if (!t) return
-      servers.value = await removeServer(t.id)
-      delete pings[t.id]
-      delModal.open = false
-      toast('已删除服务器', 'success')
+      const t = delModal.target;
+      if (!t) return;
+      servers.value = await removeServer(t.id);
+      delete pings[t.id];
+      delModal.open = false;
+      toast('已删除服务器', 'success');
     }
   } catch (e) {
-    toast(publicMessage('删除失败：' + errText(e)), 'error')
+    toast(publicMessage('删除失败：' + errText(e)), 'error');
   } finally {
-    delModal.busy = false
+    delModal.busy = false;
   }
 }
 
 // ---------------- 一键进服 ----------------
 function syncJoinSelection() {
-  const t = parseTargetToken(joinModal.versionId)
-  if (t) void selectInstance(t.id, t.folder)
+  const t = parseTargetToken(joinModal.versionId);
+  if (t) void selectInstance(t.id, t.folder);
 }
-const joinModal = reactive({ open: false, target: null as ServerEntry | null, versionId: '' })
+const joinModal = reactive({ open: false, target: null as ServerEntry | null, versionId: '' });
 
-const normalizedPath = (value: string) => value.replace(/\\/g, '/').replace(/\/$/, '').toLowerCase()
-const targetToken = (target: Pick<InstalledVersion, 'id' | 'folder'>) => JSON.stringify({ id: target.id, folder: target.folder })
+const normalizedPath = (value: string) => value.replace(/\\/g, '/').replace(/\/$/, '').toLowerCase();
+const targetToken = (target: Pick<InstalledVersion, 'id' | 'folder'>) => JSON.stringify({ id: target.id, folder: target.folder });
 const parseTargetToken = (value: string): { id: string; folder: string } | null => {
-  if (!value) return null
+  if (!value) return null;
   try {
-    const parsed = JSON.parse(value) as { id?: unknown; folder?: unknown }
-    return typeof parsed.id === 'string' && typeof parsed.folder === 'string' ? { id: parsed.id, folder: parsed.folder } : null
+    const parsed = JSON.parse(value) as { id?: unknown; folder?: unknown };
+    return typeof parsed.id === 'string' && typeof parsed.folder === 'string' ? { id: parsed.id, folder: parsed.folder } : null;
   } catch {
-    return null
+    return null;
   }
-}
+};
 const targetOf = (server: ServerEntry): InstalledVersion | undefined =>
   targets.value.find(
     (target) => target.id === server.versionId && (!server.folder || normalizedPath(target.folder) === normalizedPath(server.folder))
-  )
+  );
 const boundToken = (server: ServerEntry): string => {
-  const target = targetOf(server)
-  return target ? targetToken(target) : ''
-}
+  const target = targetOf(server);
+  return target ? targetToken(target) : '';
+};
 const folderLabel = (folder: string): string =>
   store.settings?.folders.find((item) => normalizedPath(item.path) === normalizedPath(folder))?.name ??
   folder.split(/[\\/]/).filter(Boolean).at(-1) ??
-  folder
+  folder;
 const targetLabel = (target: InstalledVersion): string =>
-  `${folderLabel(target.folder)} · ${target.id}${target.loader ? ` · ${target.loader} ${target.loaderVersion ?? ''}` : ''}`
+  `${folderLabel(target.folder)} · ${target.id}${target.loader ? ` · ${target.loader} ${target.loaderVersion ?? ''}` : ''}`;
 const formatLastUsed = (value?: string): string => {
-  if (!value) return '尚未从启动器进入'
-  const time = new Date(value)
-  return Number.isNaN(time.getTime()) ? '时间未知' : `上次启动 ${time.toLocaleString()}`
-}
+  if (!value) return '尚未从启动器进入';
+  const time = new Date(value);
+  return Number.isNaN(time.getTime()) ? '时间未知' : `上次启动 ${time.toLocaleString()}`;
+};
 
 /** 双击卡片：已绑定版本直接启动进服；未绑定弹版本选择 */
 function onCardDblClick(s: ServerEntry) {
-  if (launchBusy.value || bindingId.value || store.launchState?.status === 'running' || store.launchState?.status === 'launching') return
+  if (launchBusy.value || bindingId.value || store.launchState?.status === 'running' || store.launchState?.status === 'launching') return;
   if (s.versionId) {
-    const v = targetOf(s)
+    const v = targetOf(s);
     if (v) {
-      void doLaunch(s, s.versionId)
-      return
+      void doLaunch(s, s.versionId);
+      return;
     }
-    relinkMissing(s)
-    return
+    relinkMissing(s);
+    return;
   }
-  openJoin(s)
+  openJoin(s);
 }
 
 async function doLaunch(s: ServerEntry, versionId: string) {
-  if (launchBusy.value) return
-  launchBusy.value = true
+  if (launchBusy.value) return;
+  launchBusy.value = true;
   try {
     const target = targets.value.find(
       (item) => item.id === versionId && (!s.folder || normalizedPath(item.folder) === normalizedPath(s.folder))
-    )
+    );
     const prepared = await withDeadline(
       () => prepareServerLaunch(s.id, versionId, target?.folder ?? s.folder),
       15000,
       '服务器启动准备超时，请检查实例目录是否可访问后重试'
-    )
-    store.settings = await getSettings()
+    );
+    store.settings = await getSettings();
     // Preparation already pins the target folder. Reuse the list loaded by this
     // page instead of blocking launch on another scan of every installed instance.
-    store.installed = targets.value.filter((item) => normalizedPath(item.folder) === normalizedPath(prepared.folder))
-    await selectInstance(prepared.versionId, prepared.folder)
-    store.launchingVersionId = prepared.versionId
-    store.launchingFolder = prepared.folder
-    await launchGame(prepared.versionId, prepared.directJoin ? prepared.address : undefined, prepared.folder)
-    servers.value = await listServers()
+    store.installed = targets.value.filter((item) => normalizedPath(item.folder) === normalizedPath(prepared.folder));
+    await selectInstance(prepared.versionId, prepared.folder);
+    store.launchingVersionId = prepared.versionId;
+    store.launchingFolder = prepared.folder;
+    await launchGame(prepared.versionId, prepared.directJoin ? prepared.address : undefined, prepared.folder);
+    servers.value = await listServers();
     toast(
       prepared.directJoin
         ? `正在启动并进入 ${privateServerText(s.name, s)}…`
         : `Minecraft ${prepared.minecraftVersion} 不支持快速进入，已启动正确实例`,
       'info'
-    )
+    );
   } catch (e) {
-    toast(publicMessage('启动失败：' + errText(e)), 'error')
+    toast(publicMessage('启动失败：' + errText(e)), 'error');
   } finally {
-    launchBusy.value = false
+    launchBusy.value = false;
   }
 }
 
 /** 仅更新 FAIONYX 的实例关联；绝不写回或覆盖 Minecraft 的 servers.dat。 */
 async function onBind(s: ServerEntry, token: string) {
-  if (bindingId.value) return
-  bindingId.value = s.id
+  if (bindingId.value) return;
+  bindingId.value = s.id;
   try {
-    const target = parseTargetToken(token)
-    servers.value = await bindServer(s.id, target?.id ?? '', target?.folder)
-    if (target) await selectInstance(target.id, target.folder)
-    toast(publicMessage(target ? `已关联到 ${target.id}` : '已解除实例关联'), 'success')
+    const target = parseTargetToken(token);
+    servers.value = await bindServer(s.id, target?.id ?? '', target?.folder);
+    if (target) await selectInstance(target.id, target.folder);
+    toast(publicMessage(target ? `已关联到 ${target.id}` : '已解除实例关联'), 'success');
   } catch (e) {
-    toast(publicMessage('绑定失败：' + errText(e)), 'error')
+    toast(publicMessage('绑定失败：' + errText(e)), 'error');
   } finally {
-    bindingId.value = ''
+    bindingId.value = '';
   }
 }
 
 function relinkMissing(s: ServerEntry) {
-  toast('关联实例已缺失；可选择现有实例重新关联，或到游戏版本页重新下载', 'info')
-  openJoin(s)
+  toast('关联实例已缺失；可选择现有实例重新关联，或到游戏版本页重新下载', 'info');
+  openJoin(s);
 }
 
-const versionMissing = (s: ServerEntry): boolean => !!s.versionId && !targetOf(s)
+const versionMissing = (s: ServerEntry): boolean => !!s.versionId && !targetOf(s);
 
 function openJoin(s: ServerEntry) {
   if (!targets.value.length) {
-    toast('还没有安装任何版本，请先到游戏版本页安装', 'error')
-    return
+    toast('还没有安装任何版本，请先到游戏版本页安装', 'error');
+    return;
   }
-  joinModal.target = s
-  joinModal.versionId = targetOf(s) ? boundToken(s) : targetToken(selectedInstance.value ?? targets.value[0])
-  joinModal.open = true
+  joinModal.target = s;
+  joinModal.versionId = targetOf(s) ? boundToken(s) : targetToken(selectedInstance.value ?? targets.value[0]);
+  joinModal.open = true;
 }
 
 async function onJoin() {
-  const s = joinModal.target
-  if (!s || !joinModal.versionId) return
-  const target = parseTargetToken(joinModal.versionId)
-  if (!target) return
-  joinModal.open = false
+  const s = joinModal.target;
+  if (!s || !joinModal.versionId) return;
+  const target = parseTargetToken(joinModal.versionId);
+  if (!target) return;
+  joinModal.open = false;
   try {
-    servers.value = await bindServer(s.id, target.id, target.folder)
-    const linked = servers.value.find((server) => server.id === s.id) ?? s
-    await doLaunch(linked, target.id)
+    servers.value = await bindServer(s.id, target.id, target.folder);
+    const linked = servers.value.find((server) => server.id === s.id) ?? s;
+    await doLaunch(linked, target.id);
   } catch (e) {
-    toast(publicMessage('启动失败：' + errText(e)), 'error')
+    toast(publicMessage('启动失败：' + errText(e)), 'error');
   }
 }
 
 const pingOf = (s: ServerEntry): ServerPingResult | null =>
-  pings[s.id] && pings[s.id] !== 'loading' ? (pings[s.id] as ServerPingResult) : null
+  pings[s.id] && pings[s.id] !== 'loading' ? (pings[s.id] as ServerPingResult) : null;
 
 // ---------------- 顶栏搜索联动（过滤名称/地址/MOTD） ----------------
-const keyword = computed(() => store.searchKeyword.trim().toLowerCase())
+const keyword = computed(() => store.searchKeyword.trim().toLowerCase());
 const filteredServers = computed(() =>
   (keyword.value
     ? servers.value.filter((s) => {
-        const ping = pingOf(s)
+        const ping = pingOf(s);
         return (
           s.name.toLowerCase().includes(keyword.value) ||
           s.address.toLowerCase().includes(keyword.value) ||
           (ping?.motd.toLowerCase().includes(keyword.value) ?? false)
-        )
+        );
       })
     : servers.value
   )
     .slice()
     .sort((a, b) => Number(!!b.favorite) - Number(!!a.favorite))
-)
+);
 async function toggleFavorite(server: ServerEntry) {
   try {
-    servers.value = await favoriteServer(server.id, !server.favorite)
+    servers.value = await favoriteServer(server.id, !server.favorite);
   } catch (e) {
-    toast(publicMessage('收藏失败：' + errText(e)), 'error')
+    toast(publicMessage('收藏失败：' + errText(e)), 'error');
   }
 }
-const activeServer = computed(() => filteredServers.value.find((s) => s.id === activeId.value) ?? filteredServers.value[0])
-watch(() => [activeServer.value?.id, activeServer.value?.address] as const, hideAddresses, { flush: 'sync' })
-const onlineCount = computed(() => servers.value.filter((s) => pingOf(s)?.online).length)
+const activeServer = computed(() => filteredServers.value.find((s) => s.id === activeId.value) ?? filteredServers.value[0]);
+watch(() => [activeServer.value?.id, activeServer.value?.address] as const, hideAddresses, { flush: 'sync' });
+const onlineCount = computed(() => servers.value.filter((s) => pingOf(s)?.online).length);
 watch(servers, (list) => {
-  selected.value = new Set([...selected.value].filter((id) => list.some((s) => s.id === id)))
-})
+  selected.value = new Set([...selected.value].filter((id) => list.some((s) => s.id === id)));
+});
 function requestDelete(s: ServerEntry) {
-  Object.assign(delModal, { open: true, target: s, batch: false })
+  Object.assign(delModal, { open: true, target: s, batch: false });
 }
 async function copyAddress(s: ServerEntry) {
-  if (!addressRevealed(s)) return
+  if (!addressRevealed(s)) return;
   try {
-    toast((await copyText(s.address)) ? '服务器地址已复制' : '复制失败', 'info')
+    toast((await copyText(s.address)) ? '服务器地址已复制' : '复制失败', 'info');
   } catch (e) {
-    toast(publicMessage(errText(e)), 'error')
+    toast(publicMessage(errText(e)), 'error');
   }
 }
 </script>

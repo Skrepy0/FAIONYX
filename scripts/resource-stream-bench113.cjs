@@ -4,11 +4,11 @@ const fs = require('node:fs'),
   os = require('node:os'),
   assert = require('node:assert/strict'),
   crypto = require('node:crypto'),
-  { execFileSync, spawnSync } = require('node:child_process')
+  { execFileSync, spawnSync } = require('node:child_process');
 const { createRequire } = require('node:module'),
   { build } = require('esbuild'),
-  Zip = require('adm-zip')
-const baseRequire = createRequire(path.resolve('package.json'))
+  Zip = require('adm-zip');
+const baseRequire = createRequire(path.resolve('package.json'));
 async function bundle(old) {
   return (
     await build({
@@ -33,15 +33,15 @@ async function bundle(old) {
                   ? execFileSync('git', ['show', 'v1.1.12:src/main/core/modpacks.ts'], { encoding: 'utf8' })
                   : fs.readFileSync(args.path, 'utf8')) + '\nexport { openPackZip };',
               loader: 'ts',
-            }))
+            }));
           },
         },
       ],
     })
-  ).outputFiles[0].text
+  ).outputFiles[0].text;
 }
 function load(file, root) {
-  const m = { exports: {} }
+  const m = { exports: {} };
   new Function('require', 'module', 'exports', fs.readFileSync(file, 'utf8'))(
     (name) =>
       name === 'electron'
@@ -49,51 +49,51 @@ function load(file, root) {
         : baseRequire(name),
     m,
     m.exports
-  )
-  return m.exports
+  );
+  return m.exports;
 }
 async function worker() {
   const [moduleFile, mode, scenario, zipFile, root] = process.argv.slice(3),
     api = load(moduleFile, root),
-    samples = []
+    samples = [];
   const observe = () => {
-    const m = process.memoryUsage()
-    samples.push({ atMs: performance.now(), rss: m.rss, external: m.external, arrayBuffers: m.arrayBuffers, heapUsed: m.heapUsed })
-  }
-  observe()
+    const m = process.memoryUsage();
+    samples.push({ atMs: performance.now(), rss: m.rss, external: m.external, arrayBuffers: m.arrayBuffers, heapUsed: m.heapUsed });
+  };
+  observe();
   const before = process.cpuUsage(),
     start = performance.now(),
-    timer = setInterval(observe, 10)
-  let archive
+    timer = setInterval(observe, 10);
+  let archive;
   try {
-    if (scenario === 'probe') assert.equal((await api.probeModpack(zipFile)).mcVersion, '1.20.1')
+    if (scenario === 'probe') assert.equal((await api.probeModpack(zipFile)).mcVersion, '1.20.1');
     else if (scenario === 'hash') {
-      const file = zipFile
-      const expected = process.env.BENCH_SHA1
+      const file = zipFile;
+      const expected = process.env.BENCH_SHA1;
       const actual =
         mode === 'old'
           ? crypto
               .createHash('sha1')
               .update(await fs.promises.readFile(file))
               .digest('hex')
-          : await api.fileHash(file)
-      assert.equal(actual, expected)
+          : await api.fileHash(file);
+      assert.equal(actual, expected);
     } else {
-      archive = await api.openPackZip(zipFile)
-      observe()
-      const files = await api.extractOverrides(archive, 'overrides', path.join(root, 'files'))
-      assert.equal(files.length, scenario === 'small' ? 1000 : 8)
-      observe()
-      const hash = crypto.createHash('sha256')
+      archive = await api.openPackZip(zipFile);
+      observe();
+      const files = await api.extractOverrides(archive, 'overrides', path.join(root, 'files'));
+      assert.equal(files.length, scenario === 'small' ? 1000 : 8);
+      observe();
+      const hash = crypto.createHash('sha256');
       for (const rel of files.sort()) {
-        hash.update(rel)
-        hash.update(await api.fileHash(path.join(root, 'files', rel), 'sha256'))
+        hash.update(rel);
+        hash.update(await api.fileHash(path.join(root, 'files', rel), 'sha256'));
       }
-      assert.equal(hash.digest('hex'), process.env.BENCH_EXTRACT_SHA)
+      assert.equal(hash.digest('hex'), process.env.BENCH_EXTRACT_SHA);
     }
     const elapsedMs = performance.now() - start,
-      cpu = process.cpuUsage(before)
-    observe()
+      cpu = process.cpuUsage(before);
+    observe();
     console.log(
       JSON.stringify({
         mode,
@@ -104,32 +104,32 @@ async function worker() {
         samples,
         classification: 'isolated Node algorithm microbenchmark; not native application acceptance',
       })
-    )
+    );
   } finally {
-    clearInterval(timer)
-    await archive?.dispose?.()
-    archive?.close?.()
+    clearInterval(timer);
+    await archive?.dispose?.();
+    archive?.close?.();
   }
 }
 async function main() {
   const requested = process.argv.find((a) => a.startsWith('--scenarios=')),
-    scenarios = requested ? requested.slice(12).split(',') : ['probe', 'hash', 'large', 'small']
-  assert(scenarios.length && scenarios.every((s) => ['probe', 'hash', 'large', 'small'].includes(s)), 'Unknown benchmark scenario')
+    scenarios = requested ? requested.slice(12).split(',') : ['probe', 'hash', 'large', 'small'];
+  assert(scenarios.length && scenarios.every((s) => ['probe', 'hash', 'large', 'small'].includes(s)), 'Unknown benchmark scenario');
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX stream113 bench ')),
-    output = path.resolve('out/resource113/stream-bench-' + Date.now())
-  fs.mkdirSync(output, { recursive: true })
-  const files = {}
+    output = path.resolve('out/resource113/stream-bench-' + Date.now());
+  fs.mkdirSync(output, { recursive: true });
+  const files = {};
   for (const mode of ['old', 'candidate']) {
-    files[mode] = path.join(root, mode + '.cjs')
-    fs.writeFileSync(files[mode], await bundle(mode === 'old'))
+    files[mode] = path.join(root, mode + '.cjs');
+    fs.writeFileSync(files[mode], await bundle(mode === 'old'));
   }
-  const fixtures = {}
+  const fixtures = {};
   for (const [scenario, count, size] of [
     ['large', 8, 16 * 1024 * 1024],
     ['small', 1000, 1024],
   ]) {
     const zip = new Zip(),
-      hash = crypto.createHash('sha256')
+      hash = crypto.createHash('sha256');
     zip.addFile(
       'modrinth.index.json',
       Buffer.from(
@@ -141,24 +141,24 @@ async function main() {
           files: [],
         })
       )
-    )
-    const rows = []
+    );
+    const rows = [];
     for (let n = 0; n < count; n++) {
       const rel = 'config/中文 § ' + String(n).padStart(4, '0') + '.bin',
-        bytes = crypto.randomBytes(size)
-      zip.addFile('overrides/' + rel, bytes)
-      rows.push({ rel, sha: crypto.createHash('sha256').update(bytes).digest('hex') })
+        bytes = crypto.randomBytes(size);
+      zip.addFile('overrides/' + rel, bytes);
+      rows.push({ rel, sha: crypto.createHash('sha256').update(bytes).digest('hex') });
     }
     for (const row of rows.sort((a, b) => a.rel.localeCompare(b.rel))) {
-      hash.update(row.rel)
-      hash.update(row.sha)
+      hash.update(row.rel);
+      hash.update(row.sha);
     }
-    const file = path.join(root, scenario + '.mrpack')
-    zip.writeZip(file)
-    fixtures[scenario] = { file, sha: hash.digest('hex'), bytes: fs.statSync(file).size }
+    const file = path.join(root, scenario + '.mrpack');
+    zip.writeZip(file);
+    fixtures[scenario] = { file, sha: hash.digest('hex'), bytes: fs.statSync(file).size };
   }
-  fixtures.probe = fixtures.large
-  fixtures.hash = { file: fixtures.large.file, sha: crypto.createHash('sha1').update(fs.readFileSync(fixtures.large.file)).digest('hex') }
+  fixtures.probe = fixtures.large;
+  fixtures.hash = { file: fixtures.large.file, sha: crypto.createHash('sha1').update(fs.readFileSync(fixtures.large.file)).digest('hex') };
   const proof = {
     sourceBaseline: 'v1.1.12',
     candidateDiff: execFileSync(
@@ -174,9 +174,9 @@ async function main() {
     pairs: [],
     complete: false,
     classification: 'synthetic algorithm-only before/after; no native GUI or real-service claim',
-  }
-  const save = () => fs.writeFileSync(path.join(output, 'summary.json'), JSON.stringify(proof, null, 2))
-  save()
+  };
+  const save = () => fs.writeFileSync(path.join(output, 'summary.json'), JSON.stringify(proof, null, 2));
+  save();
   const run = (mode, scenario) => {
     const target = fs.mkdtempSync(path.join(root, 'run-')),
       env = { ...process.env, BENCH_EXTRACT_SHA: fixtures[scenario].sha, BENCH_SHA1: fixtures.hash.sha },
@@ -185,40 +185,40 @@ async function main() {
         encoding: 'utf8',
         timeout: 180000,
         maxBuffer: 8 * 1024 * 1024,
-      })
-    assert.equal(result.status, 0, result.stderr)
-    const row = JSON.parse(result.stdout.trim().split(/\r?\n/).at(-1))
-    fs.rmSync(target, { recursive: true, force: true })
-    return row
-  }
+      });
+    assert.equal(result.status, 0, result.stderr);
+    const row = JSON.parse(result.stdout.trim().split(/\r?\n/).at(-1));
+    fs.rmSync(target, { recursive: true, force: true });
+    return row;
+  };
   try {
     for (let n = 0; n < 10; n++) {
-      const rows = {}
-      for (const scenario of scenarios) rows[scenario] = run('old', scenario)
-      proof.baseline.push({ n, rows })
-      save()
-      console.log('baseline ' + (n + 1) + '/10')
+      const rows = {};
+      for (const scenario of scenarios) rows[scenario] = run('old', scenario);
+      proof.baseline.push({ n, rows });
+      save();
+      console.log('baseline ' + (n + 1) + '/10');
     }
     for (let n = 0; n < 10; n++) {
-      const rows = {}
+      const rows = {};
       for (const scenario of scenarios) {
-        rows[scenario] = {}
-        for (const mode of n % 2 ? ['candidate', 'old'] : ['old', 'candidate']) rows[scenario][mode] = run(mode, scenario)
+        rows[scenario] = {};
+        for (const mode of n % 2 ? ['candidate', 'old'] : ['old', 'candidate']) rows[scenario][mode] = run(mode, scenario);
       }
-      proof.pairs.push({ n, rows })
-      save()
-      console.log('pair ' + (n + 1) + '/10')
+      proof.pairs.push({ n, rows });
+      save();
+      console.log('pair ' + (n + 1) + '/10');
     }
-    proof.complete = true
-    save()
-    console.log('STREAM_BENCH_PROOF ' + path.join(output, 'summary.json'))
+    proof.complete = true;
+    save();
+    console.log('STREAM_BENCH_PROOF ' + path.join(output, 'summary.json'));
   } catch (error) {
-    proof.error = { message: error.message, stack: error.stack }
-    save()
-    throw error
+    proof.error = { message: error.message, stack: error.stack };
+    save();
+    throw error;
   }
 }
-;(process.argv[2] === '--worker' ? worker() : main()).catch((error) => {
-  console.error(error)
-  process.exitCode = 1
-})
+(process.argv[2] === '--worker' ? worker() : main()).catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

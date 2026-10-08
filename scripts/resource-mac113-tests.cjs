@@ -4,10 +4,10 @@ const test = require('node:test'),
   fs = require('node:fs'),
   os = require('node:os'),
   path = require('node:path'),
-  crypto = require('node:crypto')
+  crypto = require('node:crypto');
 const { summarizeMac, roleGroup, assertConfirmedLifecycleInvalidation, assertNativeCPUUnits } = require('./resource-mac113-native.cjs'),
   { freezeNoise, comparePaired, measurements, phases, signProbability } = require('./resource-mac113-analysis.cjs'),
-  { BASELINE, verifyAsset } = require('./resource-mac113.cjs')
+  { BASELINE, verifyAsset } = require('./resource-mac113.cjs');
 const identity = (pid, creation = '1000000', role = 'native-app-main', overrides = {}) => ({
   pid,
   ppid: pid === 1 ? 50 : 1,
@@ -25,7 +25,7 @@ const identity = (pid, creation = '1000000', role = 'native-app-main', overrides
   readBytes: 500,
   writeBytes: 200,
   ...overrides,
-})
+});
 const sample = (mono, rows, errors = []) => ({
   event: 'sample',
   atUnixMs: 1700000000000 + mono,
@@ -34,10 +34,10 @@ const sample = (mono, rows, errors = []) => ({
   collectionMs: 2,
   rows,
   counterErrors: errors,
-})
+});
 function visibilityFixture() {
-  const expected = { mainPid: 1, windowId: 2, rendererPid: 3, url: 'file:///owned/renderer/index.html' }
-  const originalPose = { seconds: 1, arm: 0.2, leg: 0.3 }
+  const expected = { mainPid: 1, windowId: 2, rendererPid: 3, url: 'file:///owned/renderer/index.html' };
+  const originalPose = { seconds: 1, arm: 0.2, leg: 0.3 };
   const observed = (atMs, hidden) => ({
     atMs,
     native: {
@@ -53,13 +53,13 @@ function visibilityFixture() {
       banner: 'data:image/png;base64,owned',
       bridgeVisible: !hidden,
     },
-  })
+  });
   const frames = [0, 1, 2, 3].map((i) => ({
     now: 100 + i * 1000,
     deliveredAt: 100 + i * 1000,
     hidden: false,
     skinPose: JSON.stringify({ seconds: 1.1 + i * 0.1, arm: 0.2 + i * 0.2, leg: 0.3 + i * 0.2 }),
-  }))
+  }));
   return {
     identity: { pid: 1, metrics: [{ type: 'Tab', pid: 3 }] },
     hiddenWindowIdentity: expected,
@@ -74,12 +74,12 @@ function visibilityFixture() {
       frames,
       poseObservations: frames.map((f) => ({ ...f, focus: true })),
     },
-  }
+  };
 }
 function group(offset = 0) {
-  const result = {}
+  const result = {};
   for (const label of ['cold', 'warm']) {
-    const nativeSummary = {}
+    const nativeSummary = {};
     for (const name of phases[label])
       nativeSummary[label + '/' + name] = {
         validFullFootprintSamples: 3,
@@ -91,7 +91,7 @@ function group(offset = 0) {
         pageFaults: 2,
         readBytes: 10,
         writeBytes: 4,
-      }
+      };
     result[label] = {
       complete: true,
       collectionComplete: true,
@@ -127,28 +127,28 @@ function group(offset = 0) {
           ],
         },
       ],
-    }
+    };
   }
-  const { operation, ...visibility } = visibilityFixture()
-  Object.assign(result.warm, visibility)
-  result.warm.operations.push(operation)
-  result.warm.editorCycles = Array.from({ length: 20 }, (_, i) => ({ i, elapsedMs: 40 + offset }))
-  result.warm.mascotContacts = { contacts: 32, sounds: 32, phase: 'front', queue: 0 }
-  result.warm.bigPack = { terminal: { ok: true }, elapsedMs: 50 + offset }
-  result.warm.restoreMs = 10 + offset
-  return result
+  const { operation, ...visibility } = visibilityFixture();
+  Object.assign(result.warm, visibility);
+  result.warm.operations.push(operation);
+  result.warm.editorCycles = Array.from({ length: 20 }, (_, i) => ({ i, elapsedMs: 40 + offset }));
+  result.warm.mascotContacts = { contacts: 32, sounds: 32, phase: 'front', queue: 0 };
+  result.warm.bigPack = { terminal: { ok: true }, elapsedMs: 50 + offset };
+  result.warm.restoreMs = 10 + offset;
+  return result;
 }
-const { attachCallbackFixture } = require('./resource-callback113-fixtures.cjs')
-const macCollectorFixture = require('./resource-provenance113.cjs').collectorSources('darwin')
-const originalGroup = group
+const { attachCallbackFixture } = require('./resource-callback113-fixtures.cjs');
+const macCollectorFixture = require('./resource-provenance113.cjs').collectorSources('darwin');
+const originalGroup = group;
 group = function (...args) {
-  const r = originalGroup(...args)
+  const r = originalGroup(...args);
   for (const label of ['cold', 'warm']) {
-    r[label].observerSources = structuredClone(macCollectorFixture)
-    for (const o of r[label].operations) attachCallbackFixture(o, 'synthetic-mac-' + label + '-' + o.name)
+    r[label].observerSources = structuredClone(macCollectorFixture);
+    for (const o of r[label].operations) attachCallbackFixture(o, 'synthetic-mac-' + label + '-' + o.name);
   }
-  return r
-}
+  return r;
+};
 test('Mac footprint is distinct from resident bytes and Game requires an explicit owned role', () => {
   const rows = [
       sample(0, [identity(1), identity(2, '1100000', 'unclassified-owned-descendant'), identity(3, '1200000', 'Game-owned-launch')]),
@@ -158,17 +158,17 @@ test('Mac footprint is distinct from resident bytes and Game requires an explici
         identity(3, '1200000', 'Game-owned-launch', { cpuNs: 3e6 + 1000 }),
       ]),
     ],
-    s = summarizeMac(rows)['warm/home-20-images']
-  assert.equal(s.physicalFootprintBytes.median, 3000)
-  assert.equal(s.residentSizeBytes.median, 6000)
-  assert.equal(s.roles.root.cpuMs, 1)
-  assert.equal(s.roles.helpers.cpuMs, 2)
-  assert.equal(s.roles.Game.cpuMs, 3)
-  assert.equal(s.cpuMs, 6)
-  assert.equal(roleGroup(identity(2)), 'root')
-  assert.equal(roleGroup(identity(2, '100', 'unclassified-owned-descendant')), 'helpers')
-  assert.deepEqual(s.actualGapsMs, [100])
-})
+    s = summarizeMac(rows)['warm/home-20-images'];
+  assert.equal(s.physicalFootprintBytes.median, 3000);
+  assert.equal(s.residentSizeBytes.median, 6000);
+  assert.equal(s.roles.root.cpuMs, 1);
+  assert.equal(s.roles.helpers.cpuMs, 2);
+  assert.equal(s.roles.Game.cpuMs, 3);
+  assert.equal(s.cpuMs, 6);
+  assert.equal(roleGroup(identity(2)), 'root');
+  assert.equal(roleGroup(identity(2, '100', 'unclassified-owned-descendant')), 'helpers');
+  assert.deepEqual(s.actualGapsMs, [100]);
+});
 test('PID reuse remains separate identities and a counter failure cannot turn into zero', () => {
   const rows = [
       sample(0, [identity(1)]),
@@ -178,20 +178,20 @@ test('PID reuse remains separate identities and a counter failure cannot turn in
         [{ pid: 1, stage: 'TASK_VM_INFO', kernResult: 5 }]
       ),
     ],
-    s = summarizeMac(rows)['warm/home-20-images']
-  assert.equal(Object.keys(s.identities).length, 2)
-  assert.equal(s.validFullFootprintSamples, 1)
-  assert.equal(s.physicalFootprintBytes.count, 1)
-  assert.equal(s.cpuMs, null)
-  assert.equal(s.counterErrors.length, 1)
-})
+    s = summarizeMac(rows)['warm/home-20-images'];
+  assert.equal(Object.keys(s.identities).length, 2);
+  assert.equal(s.validFullFootprintSamples, 1);
+  assert.equal(s.physicalFootprintBytes.count, 1);
+  assert.equal(s.cpuMs, null);
+  assert.equal(s.counterErrors.length, 1);
+});
 test('Empty post-exit samples cannot lower a measured phase memory median', () => {
-  const s = summarizeMac([sample(0, [identity(1)]), sample(100, [identity(1)]), sample(200, []), sample(300, [])])['warm/home-20-images']
-  assert.equal(s.sampleCount, 4)
-  assert.equal(s.validFullFootprintSamples, 2)
-  assert.equal(s.physicalFootprintBytes.median, 1000)
-  assert.equal(s.physicalFootprintBytes.min, 1000)
-})
+  const s = summarizeMac([sample(0, [identity(1)]), sample(100, [identity(1)]), sample(200, []), sample(300, [])])['warm/home-20-images'];
+  assert.equal(s.sampleCount, 4);
+  assert.equal(s.validFullFootprintSamples, 2);
+  assert.equal(s.physicalFootprintBytes.median, 1000);
+  assert.equal(s.physicalFootprintBytes.min, 1000);
+});
 test('Public native footprint remains primary when optional task port is denied, and denial remains recorded', () => {
   const a = sample(0, [
     identity(1, '1000000', 'Browser FAIONYX', {
@@ -200,8 +200,8 @@ test('Public native footprint remains primary when optional task port is denied,
       residentSizeBytes: 2000,
       taskForPIDResult: 5,
     }),
-  ])
-  a.optionalCounterErrors = [{ pid: 1, stage: 'task_for_pid', kernResult: 5, required: false }]
+  ]);
+  a.optionalCounterErrors = [{ pid: 1, stage: 'task_for_pid', kernResult: 5, required: false }];
   const b = sample(100, [
     identity(1, '1000000', 'Browser FAIONYX', {
       physicalFootprintSource: 'proc_pid_rusage RUSAGE_INFO_V2 ri_phys_footprint',
@@ -209,16 +209,16 @@ test('Public native footprint remains primary when optional task port is denied,
       residentSizeBytes: 2500,
       cpuNs: 2e6,
     }),
-  ])
-  const s = summarizeMac([a, b])['warm/home-20-images']
-  assert.equal(s.physicalFootprintBytes.sampledPeak, 10000)
-  assert.equal(s.residentSizeBytes.sampledPeak, 2500)
-  assert.equal(s.counterErrors.length, 0)
-  assert.equal(s.optionalCounterErrors.length, 1)
-  assert.equal(s.validFullFootprintSamples, 2)
-  assert.equal(s.roles.root.physicalFootprintBytes.sampledPeak, 10000)
-  assert.equal(s.roles.helpers.processCount.sampledPeak, 0)
-})
+  ]);
+  const s = summarizeMac([a, b])['warm/home-20-images'];
+  assert.equal(s.physicalFootprintBytes.sampledPeak, 10000);
+  assert.equal(s.residentSizeBytes.sampledPeak, 2500);
+  assert.equal(s.counterErrors.length, 0);
+  assert.equal(s.optionalCounterErrors.length, 1);
+  assert.equal(s.validFullFootprintSamples, 2);
+  assert.equal(s.roles.root.physicalFootprintBytes.sampledPeak, 10000);
+  assert.equal(s.roles.helpers.processCount.sampledPeak, 0);
+});
 function lifecycleSample() {
   const error = {
       pid: 2,
@@ -240,10 +240,10 @@ function lifecycleSample() {
       physicalFootprintBytes: 999999,
       identityInvalidation: error,
     }),
-    record = sample(100, [identity(1, '1000000', 'native-app-main', { cpuNs: 2000 })])
-  record.lifecycleInvalidations = [error]
-  record.invalidatedRows = [row]
-  return { error, row, record }
+    record = sample(100, [identity(1, '1000000', 'native-app-main', { cpuNs: 2000 })]);
+  record.lifecycleInvalidations = [error];
+  record.invalidatedRows = [row];
+  return { error, row, record };
 }
 test('Confirmed owned exit keeps original partial rows/errors, invalidates full-tree memory and never credits unobserved terminal CPU', () => {
   const { record, error, row } = lifecycleSample(),
@@ -252,141 +252,141 @@ test('Confirmed owned exit keeps original partial rows/errors, invalidates full-
       record,
       sample(200, [identity(1, '1000000', 'native-app-main', { cpuNs: 3000 })]),
     ],
-    original = JSON.stringify(records)
-  assertConfirmedLifecycleInvalidation(error, row)
-  const result = summarizeMac(records)['warm/home-20-images']
-  assert.equal(JSON.stringify(records), original)
-  assert.equal(result.counterErrors.length, 0)
-  assert.equal(result.lifecycleInvalidations.length, 1)
-  assert.equal(result.invalidatedSampleCount, 1)
-  assert.equal(result.validFullFootprintSamples, 2)
-  assert.equal(result.physicalFootprintBytes.count, 2)
-  assert.equal(result.physicalFootprintBytes.median, 1000)
-  assert.equal(result.physicalFootprintBytes.sampledPeak, 2000)
-  assert.equal(result.invalidatedSamples[0].invalidatedRows[0].cpuNs, 9e8)
-  assert.equal(result.invalidatedSamples[0].invalidatedRows[0].physicalFootprintBytes, 999999)
-  assert.equal(result.unobservedExitCounterTails[0].terminalCPUObserved, false)
-  assert.equal(result.identities['2:1100000'].last.cpuNs, 1000)
-  assert.equal(result.roles.helpers.cpuMs, 0)
-  assert.equal(result.cpuMs, 0.002)
-})
+    original = JSON.stringify(records);
+  assertConfirmedLifecycleInvalidation(error, row);
+  const result = summarizeMac(records)['warm/home-20-images'];
+  assert.equal(JSON.stringify(records), original);
+  assert.equal(result.counterErrors.length, 0);
+  assert.equal(result.lifecycleInvalidations.length, 1);
+  assert.equal(result.invalidatedSampleCount, 1);
+  assert.equal(result.validFullFootprintSamples, 2);
+  assert.equal(result.physicalFootprintBytes.count, 2);
+  assert.equal(result.physicalFootprintBytes.median, 1000);
+  assert.equal(result.physicalFootprintBytes.sampledPeak, 2000);
+  assert.equal(result.invalidatedSamples[0].invalidatedRows[0].cpuNs, 9e8);
+  assert.equal(result.invalidatedSamples[0].invalidatedRows[0].physicalFootprintBytes, 999999);
+  assert.equal(result.unobservedExitCounterTails[0].terminalCPUObserved, false);
+  assert.equal(result.identities['2:1100000'].last.cpuNs, 1000);
+  assert.equal(result.roles.helpers.cpuMs, 0);
+  assert.equal(result.cpuMs, 0.002);
+});
 test('Creation reuse is classified only from the original changed identity and never credits the replacement process', () => {
-  const { record, error, row } = lifecycleSample()
-  error.afterIdentity = { pid: 2, creationUnixUS: '1200000' }
-  error.existenceProbe = { result: 0, errno: 0, signal: 0 }
-  assertConfirmedLifecycleInvalidation(error, row)
-  const result = summarizeMac([sample(0, [identity(1)]), record, sample(200, [identity(1)])])['warm/home-20-images']
-  assert.equal(result.lifecycleInvalidations.length, 1)
+  const { record, error, row } = lifecycleSample();
+  error.afterIdentity = { pid: 2, creationUnixUS: '1200000' };
+  error.existenceProbe = { result: 0, errno: 0, signal: 0 };
+  assertConfirmedLifecycleInvalidation(error, row);
+  const result = summarizeMac([sample(0, [identity(1)]), record, sample(200, [identity(1)])])['warm/home-20-images'];
+  assert.equal(result.lifecycleInvalidations.length, 1);
   assert.equal(
     Object.keys(result.identities).some((k) => k.startsWith('2:')),
     false
-  )
-})
+  );
+});
 test('A live or unknown PID counter failure cannot be relabeled as lifecycle or omitted', () => {
   for (const mutate of [
     (e) => {
-      e.existenceProbe.result = 0
-      e.existenceProbe.errno = 0
+      e.existenceProbe.result = 0;
+      e.existenceProbe.errno = 0;
     },
     (e) => {
-      e.existenceProbe.errno = 1
+      e.existenceProbe.errno = 1;
     },
     (e) => {
-      e.afterIdentity = { pid: 2, creationUnixUS: '1100000' }
+      e.afterIdentity = { pid: 2, creationUnixUS: '1100000' };
     },
     (e) => {
-      e.beforeCreationUnixUS = 'bad'
+      e.beforeCreationUnixUS = 'bad';
     },
     (e) => {
-      e.originalCounterErrors = undefined
+      e.originalCounterErrors = undefined;
     },
     (e) => {
-      e.existenceProbe.signal = 15
+      e.existenceProbe.signal = 15;
     },
     (e) => {
-      e.atUnixMs = e.collectionStartUnixMs - 1
+      e.atUnixMs = e.collectionStartUnixMs - 1;
     },
   ]) {
-    const { error, row, record } = lifecycleSample()
-    mutate(error)
-    assert.throws(() => assertConfirmedLifecycleInvalidation(error, row))
-    assert.throws(() => summarizeMac([record]))
+    const { error, row, record } = lifecycleSample();
+    mutate(error);
+    assert.throws(() => assertConfirmedLifecycleInvalidation(error, row));
+    assert.throws(() => summarizeMac([record]));
   }
   const live = sample(
       0,
       [identity(1, '1000000', 'native-app-main', { physicalFootprintBytes: null, cpuNs: null })],
       [{ pid: 1, stage: 'proc_pid_rusage disk IO', errno: 1 }]
     ),
-    result = summarizeMac([live])['warm/home-20-images']
-  assert.equal(result.counterErrors.length, 1)
-  assert.equal(result.validFullFootprintSamples, 0)
-  assert.equal(result.physicalFootprintBytes.median, null)
-  assert.equal(result.cpuMs, null)
-  const fixture = group()
-  fixture.warm.nativeCounterErrors = live.counterErrors
-  assert.throws(() => freezeNoise(Array(10).fill(fixture)), /counter failures/)
-  const { record } = lifecycleSample()
-  record.lifecycleInvalidations = []
-  assert.throws(() => summarizeMac([record]), /omit/)
-})
+    result = summarizeMac([live])['warm/home-20-images'];
+  assert.equal(result.counterErrors.length, 1);
+  assert.equal(result.validFullFootprintSamples, 0);
+  assert.equal(result.physicalFootprintBytes.median, null);
+  assert.equal(result.cpuMs, null);
+  const fixture = group();
+  fixture.warm.nativeCounterErrors = live.counterErrors;
+  assert.throws(() => freezeNoise(Array(10).fill(fixture)), /counter failures/);
+  const { record } = lifecycleSample();
+  record.lifecycleInvalidations = [];
+  assert.throws(() => summarizeMac([record]), /omit/);
+});
 test('Original Mach CPU ticks require the actual native timebase conversion, never an assumed nanosecond unit', () => {
   const row = identity(1, '1000000', 'native-app-main', {
     cpuSource: 'PROC_PIDTASKINFO Mach absolute ticks converted with mach_timebase_info',
     cpuTimebase: { numer: 125, denom: 3 },
     procTaskInfo: { totalUserMachTicks: 120000, totalSystemMachTicks: 60000 },
     cpuNs: 7500000,
-  })
-  assertNativeCPUUnits(row)
+  });
+  assertNativeCPUUnits(row);
   for (const change of [
     (r) => {
-      r.cpuNs = 180000
+      r.cpuNs = 180000;
     },
     (r) => {
-      r.cpuTimebase.denom = 0
+      r.cpuTimebase.denom = 0;
     },
     (r) => {
-      delete r.procTaskInfo.totalUserMachTicks
+      delete r.procTaskInfo.totalUserMachTicks;
     },
     (r) => {
-      r.cpuTimebase.numer = 1.5
+      r.cpuTimebase.numer = 1.5;
     },
   ]) {
-    const bad = structuredClone(row)
-    change(bad)
-    assert.throws(() => assertNativeCPUUnits(bad))
+    const bad = structuredClone(row);
+    change(bad);
+    assert.throws(() => assertNativeCPUUnits(bad));
   }
-})
+});
 test('Historical unqualified CPU values remain original raw diagnostics and cannot become real CPU milliseconds or acceptance', () => {
   const first = identity(1),
-    last = identity(1, '1000000', 'native-app-main', { cpuNs: 2000 })
-  delete first.cpuSource
-  delete last.cpuSource
+    last = identity(1, '1000000', 'native-app-main', { cpuNs: 2000 });
+  delete first.cpuSource;
+  delete last.cpuSource;
   const rows = [sample(0, [first]), sample(100, [last])],
     original = JSON.stringify(rows),
-    summary = summarizeMac(rows)['warm/home-20-images']
-  assert.equal(summary.cpuUnitsQualified, false)
-  assert.equal(summary.cpuMs, null)
-  assert.equal(summary.roles.root.cpuMs, null)
-  assert.equal(JSON.stringify(rows), original)
-  const fixture = group()
-  delete fixture.cold.nativeSummary['cold/launch'].cpuUnitsQualified
-  assert.throws(() => freezeNoise(Array(10).fill(fixture)), /timebase/)
-})
+    summary = summarizeMac(rows)['warm/home-20-images'];
+  assert.equal(summary.cpuUnitsQualified, false);
+  assert.equal(summary.cpuMs, null);
+  assert.equal(summary.roles.root.cpuMs, null);
+  assert.equal(JSON.stringify(rows), original);
+  const fixture = group();
+  delete fixture.cold.nativeSummary['cold/launch'].cpuUnitsQualified;
+  assert.throws(() => freezeNoise(Array(10).fill(fixture)), /timebase/);
+});
 test('Noise freeze requires ten successful original groups and is immutable', () => {
-  assert.throws(() => freezeNoise(Array.from({ length: 9 }, () => group())), /10/)
+  assert.throws(() => freezeNoise(Array.from({ length: 9 }, () => group())), /10/);
   const old = Array.from({ length: 10 }, (_, i) => group(i % 2 ? 2 : 0)),
-    frozen = freezeNoise(old)
-  assert.equal(frozen.metrics['cold/interactiveMs'].frozenAbsoluteNoise, 2)
+    frozen = freezeNoise(old);
+  assert.equal(frozen.metrics['cold/interactiveMs'].frozenAbsoluteNoise, 2);
   const pairs = Array.from({ length: 10 }, (_, i) => ({
     i,
     order: i % 2 ? ['candidate', 'baseline'] : ['baseline', 'candidate'],
     baseline: group(),
     candidate: group(),
-  }))
-  assert.equal(comparePaired(pairs, frozen).pass, true)
-  frozen.metrics['cold/interactiveMs'].frozenAbsoluteNoise = 999
-  assert.throws(() => comparePaired(pairs, frozen), /cannot be changed/)
-})
+  }));
+  assert.equal(comparePaired(pairs, frozen).pass, true);
+  frozen.metrics['cold/interactiveMs'].frozenAbsoluteNoise = 999;
+  assert.throws(() => comparePaired(pairs, frozen), /cannot be changed/);
+});
 test('Stable slowdown fails even when smaller than frozen baseline noise', () => {
   const frozen = freezeNoise(Array.from({ length: 10 }, (_, i) => group(i % 2 ? 5 : 0))),
     pairs = Array.from({ length: 10 }, (_, i) => ({
@@ -395,24 +395,24 @@ test('Stable slowdown fails even when smaller than frozen baseline noise', () =>
       baseline: group(),
       candidate: group(1),
     })),
-    comparison = comparePaired(pairs, frozen)
-  assert.equal(comparison.pass, false)
-  assert(comparison.failures.includes('cold/interactiveMs'))
-  assert.equal(comparison.metrics['cold/interactiveMs'].aboveFrozenNoise, false)
-  assert.equal(comparison.metrics['cold/interactiveMs'].stableRegression, true)
-  assert.equal(signProbability(Array(10).fill(1)).oneSidedExactProbability, 1 / 1024)
-})
+    comparison = comparePaired(pairs, frozen);
+  assert.equal(comparison.pass, false);
+  assert(comparison.failures.includes('cold/interactiveMs'));
+  assert.equal(comparison.metrics['cold/interactiveMs'].aboveFrozenNoise, false);
+  assert.equal(comparison.metrics['cold/interactiveMs'].stableRegression, true);
+  assert.equal(signProbability(Array(10).fill(1)).oneSidedExactProbability, 1 / 1024);
+});
 test('Missing native metrics, failed exits and altered frames invalidate qualification', () => {
-  const fixture = group()
-  fixture.cold.nativeOwnedExit.complete = false
-  assert.throws(() => freezeNoise(Array(10).fill(fixture)), /tree/)
-  fixture.cold.nativeOwnedExit.complete = true
-  fixture.warm.operations[0].frames[1].now = 100
-  assert.throws(() => freezeNoise(Array(10).fill(fixture)), /duplicated or inserted/)
-  fixture.warm.operations[0].frames[1].now = 116
-  fixture.warm.nativeCounterErrors.push({ kernResult: 5 })
-  assert.throws(() => freezeNoise(Array(10).fill(fixture)), /counter failures/)
-})
+  const fixture = group();
+  fixture.cold.nativeOwnedExit.complete = false;
+  assert.throws(() => freezeNoise(Array(10).fill(fixture)), /tree/);
+  fixture.cold.nativeOwnedExit.complete = true;
+  fixture.warm.operations[0].frames[1].now = 100;
+  assert.throws(() => freezeNoise(Array(10).fill(fixture)), /duplicated or inserted/);
+  fixture.warm.operations[0].frames[1].now = 116;
+  fixture.warm.nativeCounterErrors.push({ kernResult: 5 });
+  assert.throws(() => freezeNoise(Array(10).fill(fixture)), /counter failures/);
+});
 test('Exact original contacts, logical sound plays, front phase and empty queue are all mandatory', () => {
   for (const [field, value] of [
     ['contacts', 33],
@@ -423,101 +423,101 @@ test('Exact original contacts, logical sound plays, front phase and empty queue 
     ['queue', 1],
     ['sounds', undefined],
   ]) {
-    const fixture = group()
-    fixture.warm.mascotContacts[field] = value
-    assert.throws(() => freezeNoise(Array(10).fill(fixture)), assert.AssertionError)
+    const fixture = group();
+    fixture.warm.mascotContacts[field] = value;
+    assert.throws(() => freezeNoise(Array(10).fill(fixture)), assert.AssertionError);
   }
-  assert.equal(freezeNoise(Array.from({ length: 10 }, () => group())).baselineGroups, 10)
-})
+  assert.equal(freezeNoise(Array.from({ length: 10 }, () => group())).baselineGroups, 10);
+});
 test('Actual full-motion renderer condition is mandatory even when OS preference was written', () => {
   for (const label of ['cold', 'warm'])
     for (const reduced of [true, undefined, null]) {
-      const fixture = group()
-      fixture[label].viewportContract.renderer.reduceMotion = reduced
-      assert.throws(() => freezeNoise(Array(10).fill(fixture)), /full-motion/)
+      const fixture = group();
+      fixture[label].viewportContract.renderer.reduceMotion = reduced;
+      assert.throws(() => freezeNoise(Array(10).fill(fixture)), /full-motion/);
     }
-  assert.equal(freezeNoise(Array.from({ length: 10 }, () => group())).baselineGroups, 10)
-})
+  assert.equal(freezeNoise(Array.from({ length: 10 }, () => group())).baselineGroups, 10);
+});
 test('Mac analysis derives owned native hiding, three seconds of original stable pose/banner and actual restored walking', () => {
-  assert.equal(freezeNoise(Array.from({ length: 10 }, () => group())).baselineGroups, 10)
+  assert.equal(freezeNoise(Array.from({ length: 10 }, () => group())).baselineGroups, 10);
   const mutations = [
     (p) => {
-      delete p.hiddenWindowIdentity
+      delete p.hiddenWindowIdentity;
     },
     (p) => {
-      p.hiddenWindowIdentity.rendererPid = 44
+      p.hiddenWindowIdentity.rendererPid = 44;
     },
     (p) => {
-      p.hiddenObservations.at(-1).atMs = 2999
+      p.hiddenObservations.at(-1).atMs = 2999;
     },
     (p) => {
-      p.hiddenObservations[1].native.window.minimized = false
-      p.hiddenObservations[1].native.window.visible = true
+      p.hiddenObservations[1].native.window.minimized = false;
+      p.hiddenObservations[1].native.window.visible = true;
     },
     (p) => {
-      p.hiddenObservations[1].renderer.bridgeVisible = true
+      p.hiddenObservations[1].renderer.bridgeVisible = true;
     },
     (p) => {
-      p.hiddenObservations[1].renderer.pose = JSON.stringify({ seconds: 1.1, arm: 0.2, leg: 0.3 })
+      p.hiddenObservations[1].renderer.pose = JSON.stringify({ seconds: 1.1, arm: 0.2, leg: 0.3 });
     },
     (p) => {
-      p.hiddenObservations[1].renderer.banner = 'changed'
+      p.hiddenObservations[1].renderer.banner = 'changed';
     },
     (p) => {
-      p.restoredVisibility.native.window.visible = false
+      p.restoredVisibility.native.window.visible = false;
     },
     (p) => {
-      p.restoredVisibility.renderer.focus = false
+      p.restoredVisibility.renderer.focus = false;
     },
     (p) => {
-      p.nativeVisibilityEvents = [{ visible: false }]
+      p.nativeVisibilityEvents = [{ visible: false }];
     },
     (p) => {
       for (const f of p.operations.find((o) => o.name === 'resource-hold restored').poseObservations)
-        f.skinPose = JSON.stringify({ seconds: 1, arm: 0.2, leg: 0.3 })
+        f.skinPose = JSON.stringify({ seconds: 1, arm: 0.2, leg: 0.3 });
     },
     (p) => {
-      p.operations.find((o) => o.name === 'resource-hold restored').poseObservations.at(-1).hidden = true
+      p.operations.find((o) => o.name === 'resource-hold restored').poseObservations.at(-1).hidden = true;
     },
     (p) => {
-      p.operations.find((o) => o.name === 'resource-hold restored').poseObservations.at(-1).focus = false
+      p.operations.find((o) => o.name === 'resource-hold restored').poseObservations.at(-1).focus = false;
     },
-  ]
+  ];
   for (const mutate of mutations) {
-    const fixture = group()
-    mutate(fixture.warm)
-    assert.throws(() => freezeNoise(Array(10).fill(fixture)))
+    const fixture = group();
+    mutate(fixture.warm);
+    assert.throws(() => freezeNoise(Array(10).fill(fixture)));
   }
-})
+});
 test('Mac callback analysis covers the complete original hold including terminal starvation', () => {
   const fixture = group(),
-    operation = fixture.cold.operations[0]
-  operation.rendererWindow.end = 3090
-  attachCallbackFixture(operation)
-  const measured = measurements(fixture)
-  assert.equal(measured['cold/launch/callbackRatePerSecond'], 4 / 3)
-  assert.equal(measured['cold/launch/frameTailGapMs'], 2942)
-  assert.equal(measured['cold/launch/frameGapMaxMs'], 2942)
-  delete operation.rendererWindow
-  assert.throws(() => measurements(fixture), /renderer window clocks/)
-  assert(!Object.hasOwn(measured, 'cold/launch/actualFPS'), 'RAF callbacks are not presented frame-rate proof')
-})
+    operation = fixture.cold.operations[0];
+  operation.rendererWindow.end = 3090;
+  attachCallbackFixture(operation);
+  const measured = measurements(fixture);
+  assert.equal(measured['cold/launch/callbackRatePerSecond'], 4 / 3);
+  assert.equal(measured['cold/launch/frameTailGapMs'], 2942);
+  assert.equal(measured['cold/launch/frameGapMaxMs'], 2942);
+  delete operation.rendererWindow;
+  assert.throws(() => measurements(fixture), /renderer window clocks/);
+  assert(!Object.hasOwn(measured, 'cold/launch/actualFPS'), 'RAF callbacks are not presented frame-rate proof');
+});
 test('Public old archive hash and size are fixed; download verification fails closed', async () => {
-  assert.equal(BASELINE.bytes, 127157251)
-  assert.equal(BASELINE.sha256, '4afc952a773bfd8fae80fac5e765e6bb609bfce5866c78cf9bb8aa3d004c7172')
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-mac113-asset-test-'))
+  assert.equal(BASELINE.bytes, 127157251);
+  assert.equal(BASELINE.sha256, '4afc952a773bfd8fae80fac5e765e6bb609bfce5866c78cf9bb8aa3d004c7172');
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-mac113-asset-test-'));
   try {
-    const file = path.join(directory, 'fixture.bin')
-    fs.writeFileSync(file, 'old-public-fixture')
-    const expected = { bytes: fs.statSync(file).size, sha256: crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex') }
-    assert.equal((await verifyAsset(file, expected)).sha256, expected.sha256)
-    await assert.rejects(verifyAsset(file, { ...expected, sha256: '0'.repeat(64) }), /SHA256/)
-    await assert.rejects(verifyAsset(file, { ...expected, bytes: 1 }), /size/)
+    const file = path.join(directory, 'fixture.bin');
+    fs.writeFileSync(file, 'old-public-fixture');
+    const expected = { bytes: fs.statSync(file).size, sha256: crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex') };
+    assert.equal((await verifyAsset(file, expected)).sha256, expected.sha256);
+    await assert.rejects(verifyAsset(file, { ...expected, sha256: '0'.repeat(64) }), /SHA256/);
+    await assert.rejects(verifyAsset(file, { ...expected, bytes: 1 }), /size/);
   } finally {
-    assert(path.resolve(directory).startsWith(path.resolve(os.tmpdir()) + path.sep))
-    fs.rmSync(directory, { recursive: true })
+    assert(path.resolve(directory).startsWith(path.resolve(os.tmpdir()) + path.sep));
+    fs.rmSync(directory, { recursive: true });
   }
-})
+});
 
 test('Only native owned input rows are split into Electron, Java, external tools and explicit Game; the total tree is unchanged', () => {
   const first = [
@@ -526,102 +526,102 @@ test('Only native owned input rows are split into Electron, Java, external tools
     identity(3, '1200000', 'unclassified-owned-descendant', { name: 'java' }),
     identity(4, '1300000', 'unclassified-owned-descendant', { name: 'terracotta-0.4.2-macos-arm64' }),
     identity(5, '1400000', 'Game-owned-launch', { name: 'java' }),
-  ]
+  ];
   const last = first.map((row) => ({ ...row, cpuNs: 2000, procTaskInfo: { totalUserMachTicks: 2000, totalSystemMachTicks: 0 } })),
     records = [sample(0, first), sample(100, last)],
     original = JSON.stringify(records),
-    result = summarizeMac(records)['warm/home-20-images']
-  assert.equal(JSON.stringify(records), original)
-  assert.equal(result.physicalFootprintBytes.median, 5000)
-  assert.equal(result.residentSizeBytes.median, 10000)
-  assert.equal(result.cpuMs, 0.005)
+    result = summarizeMac(records)['warm/home-20-images'];
+  assert.equal(JSON.stringify(records), original);
+  assert.equal(result.physicalFootprintBytes.median, 5000);
+  assert.equal(result.residentSizeBytes.median, 10000);
+  assert.equal(result.cpuMs, 0.005);
   for (const role of ['root', 'helpers', 'javaHelpers', 'ownedTools', 'Game']) {
-    assert.equal(result.roles[role].observed, true)
-    assert.equal(result.roles[role].physicalFootprintBytes.median, 1000)
-    assert.equal(result.roles[role].cpuMs, 0.001)
+    assert.equal(result.roles[role].observed, true);
+    assert.equal(result.roles[role].physicalFootprintBytes.median, 1000);
+    assert.equal(result.roles[role].cpuMs, 0.001);
   }
-  assert.equal(result.identities['3:1200000'].originalRole, 'unclassified-owned-descendant')
-  assert.equal(result.identities['3:1200000'].name, 'java')
-  assert.equal(result.identities['3:1200000'].role, 'javaHelpers')
+  assert.equal(result.identities['3:1200000'].originalRole, 'unclassified-owned-descendant');
+  assert.equal(result.identities['3:1200000'].name, 'java');
+  assert.equal(result.identities['3:1200000'].role, 'javaHelpers');
   for (const name of ['java', 'javaw', 'JAVA.EXE', 'javaw.exe'])
-    assert.equal(roleGroup({ role: 'unclassified-owned-descendant', name }), 'javaHelpers')
+    assert.equal(roleGroup({ role: 'unclassified-owned-descendant', name }), 'javaHelpers');
   for (const name of ['terracotta', 'terracotta-0.4.2-macos-arm64', 'voxlink', 'frpc', 'frpc.exe', 'node', 'python3'])
-    assert.equal(roleGroup({ role: 'unclassified-owned-descendant', name }), 'ownedTools')
-  assert.equal(roleGroup({ role: 'Game-owned-launch', name: 'java' }), 'Game')
-  assert.equal(roleGroup({ role: 'Utility Audio Service', name: 'FAIONYX Helper' }), 'helpers')
-  assert.equal(roleGroup({ role: 'unclassified-owned-descendant', name: 'javascript' }), 'ownedTools')
-  const noTools = summarizeMac([sample(0, [identity(1)]), sample(100, [identity(1)])])['warm/home-20-images']
+    assert.equal(roleGroup({ role: 'unclassified-owned-descendant', name }), 'ownedTools');
+  assert.equal(roleGroup({ role: 'Game-owned-launch', name: 'java' }), 'Game');
+  assert.equal(roleGroup({ role: 'Utility Audio Service', name: 'FAIONYX Helper' }), 'helpers');
+  assert.equal(roleGroup({ role: 'unclassified-owned-descendant', name: 'javascript' }), 'ownedTools');
+  const noTools = summarizeMac([sample(0, [identity(1)]), sample(100, [identity(1)])])['warm/home-20-images'];
   for (const role of ['javaHelpers', 'ownedTools', 'Game']) {
-    assert.equal(noTools.roles[role].observed, false)
-    assert.equal(noTools.roles[role].physicalFootprintBytes.median, null)
-    assert.equal(noTools.roles[role].cpuMs, null)
+    assert.equal(noTools.roles[role].observed, false);
+    assert.equal(noTools.roles[role].physicalFootprintBytes.median, null);
+    assert.equal(noTools.roles[role].cpuMs, null);
   }
-})
+});
 
 test('A native process-table failure invalidates a would-be empty tree instead of becoming zero memory or natural exit evidence', () => {
   const error = { stage: 'proc_listallpids collection', result: 0, errno: 1, atUnixMs: 1700000000100, required: true },
     record = sample(100, [], [error]),
     original = JSON.stringify(record),
-    result = summarizeMac([record])['warm/home-20-images']
-  assert.equal(JSON.stringify(record), original)
-  assert.equal(result.counterErrors.length, 1)
-  assert.equal(result.validFullFootprintSamples, 0)
-  assert.equal(result.physicalFootprintBytes.median, null)
-  const fixture = group()
-  fixture.warm.nativeCounterErrors = [error]
-  assert.throws(() => freezeNoise(Array(10).fill(fixture)), /counter failures/)
-})
+    result = summarizeMac([record])['warm/home-20-images'];
+  assert.equal(JSON.stringify(record), original);
+  assert.equal(result.counterErrors.length, 1);
+  assert.equal(result.validFullFootprintSamples, 0);
+  assert.equal(result.physicalFootprintBytes.median, null);
+  const fixture = group();
+  fixture.warm.nativeCounterErrors = [error];
+  assert.throws(() => freezeNoise(Array(10).fill(fixture)), /counter failures/);
+});
 
 test('Mac requires full collection and functional pass including restored endpoint, with no Windows baseline restore exception', () => {
   for (const mutate of [
     (p) => {
-      p.collectionComplete = false
+      p.collectionComplete = false;
     },
     (p) => {
-      p.functionalPass = false
+      p.functionalPass = false;
     },
     (p) => {
-      p.functionalFailures = [{ reason: 'historical Windows restore' }]
+      p.functionalFailures = [{ reason: 'historical Windows restore' }];
     },
     (p) => {
-      p.allowLegacyRestore112 = true
+      p.allowLegacyRestore112 = true;
     },
     (p) => {
-      p.protocol.normalWorkloadBeforeNativeHide = false
+      p.protocol.normalWorkloadBeforeNativeHide = false;
     },
     (p) => {
-      delete p.operations[0].wallWindow
+      delete p.operations[0].wallWindow;
     },
     (p) => {
-      p.operations[0].wallWindow.endUnixMs = p.operations[0].wallWindow.startUnixMs
+      p.operations[0].wallWindow.endUnixMs = p.operations[0].wallWindow.startUnixMs;
     },
   ]) {
-    const fixture = group()
-    mutate(fixture.warm)
-    assert.throws(() => freezeNoise(Array(10).fill(fixture)))
+    const fixture = group();
+    mutate(fixture.warm);
+    assert.throws(() => freezeNoise(Array(10).fill(fixture)));
   }
   for (const mutate of [
     (p) => {
-      delete p.afterRestoredVisibility
+      delete p.afterRestoredVisibility;
     },
     (p) => {
-      p.afterRestoredVisibility.renderer.hidden = true
+      p.afterRestoredVisibility.renderer.hidden = true;
     },
     (p) => {
-      p.afterRestoredVisibility.native.window.visible = false
+      p.afterRestoredVisibility.native.window.visible = false;
     },
     (p) => {
-      p.afterRestoredVisibility.native.window.pid = 99
+      p.afterRestoredVisibility.native.window.pid = 99;
     },
   ]) {
-    const fixture = group()
-    mutate(fixture.warm)
-    assert.throws(() => freezeNoise(Array(10).fill(fixture)))
+    const fixture = group();
+    mutate(fixture.warm);
+    assert.throws(() => freezeNoise(Array(10).fill(fixture)));
   }
-})
+});
 
 test('Failed native qualification preserves original stdout, stderr and failure exit before it throws', () => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-mac113-native-failure-'))
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-mac113-native-failure-'));
   try {
     const { runNativeReadout } = require('./resource-mac113-native.cjs'),
       original = '{"event":"self-test","passed":false,"originalCounter":125}\n',
@@ -629,74 +629,74 @@ test('Failed native qualification preserves original stdout, stderr and failure 
       args = [
         '-e',
         `process.stdout.write(${JSON.stringify(original)});process.stderr.write(${JSON.stringify(errorText)});process.exitCode=3`,
-      ]
-    assert.throws(() => runNativeReadout(process.execPath, args, { directory, name: 'native-failure-fixture' }))
-    assert.equal(fs.readFileSync(path.join(directory, 'native-failure-fixture.jsonl'), 'utf8'), original)
-    assert.equal(fs.readFileSync(path.join(directory, 'native-failure-fixture.stderr.log'), 'utf8'), errorText)
-    const receipt = JSON.parse(fs.readFileSync(path.join(directory, 'native-failure-fixture.readout.json')))
-    assert.equal(receipt.complete, false)
-    assert.equal(receipt.exit.code, 3)
-    assert.equal(receipt.exit.signal, null)
-    assert.equal(receipt.raw.bytes, Buffer.byteLength(original))
-    assert.equal(receipt.raw.sha256, crypto.createHash('sha256').update(original).digest('hex'))
-    assert(receipt.failure.message)
-    assert.throws(() => runNativeReadout(process.execPath, args, { directory, name: 'native-failure-fixture' }), /Preserve/)
+      ];
+    assert.throws(() => runNativeReadout(process.execPath, args, { directory, name: 'native-failure-fixture' }));
+    assert.equal(fs.readFileSync(path.join(directory, 'native-failure-fixture.jsonl'), 'utf8'), original);
+    assert.equal(fs.readFileSync(path.join(directory, 'native-failure-fixture.stderr.log'), 'utf8'), errorText);
+    const receipt = JSON.parse(fs.readFileSync(path.join(directory, 'native-failure-fixture.readout.json')));
+    assert.equal(receipt.complete, false);
+    assert.equal(receipt.exit.code, 3);
+    assert.equal(receipt.exit.signal, null);
+    assert.equal(receipt.raw.bytes, Buffer.byteLength(original));
+    assert.equal(receipt.raw.sha256, crypto.createHash('sha256').update(original).digest('hex'));
+    assert(receipt.failure.message);
+    assert.throws(() => runNativeReadout(process.execPath, args, { directory, name: 'native-failure-fixture' }), /Preserve/);
   } finally {
-    assert(path.resolve(directory).startsWith(path.resolve(os.tmpdir()) + path.sep))
-    fs.rmSync(directory, { recursive: true })
+    assert(path.resolve(directory).startsWith(path.resolve(os.tmpdir()) + path.sep));
+    fs.rmSync(directory, { recursive: true });
   }
-})
+});
 
 test('A legitimate pre-registration rAF frame clock remains untouched while the actual delivery window is mandatory', () => {
   const fixture = group(),
-    operation = fixture.cold.operations[0]
-  operation.frames[0].now = 89.6
-  attachCallbackFixture(operation)
+    operation = fixture.cold.operations[0];
+  operation.frames[0].now = 89.6;
+  attachCallbackFixture(operation);
   const original = JSON.stringify(operation.frames),
-    measured = measurements(fixture)
-  assert.equal(JSON.stringify(operation.frames), original)
-  assert.equal(measured['cold/launch/frameInitialGapMs'], 10)
-  assert.equal(measured['cold/launch/frameTailGapMs'], 10)
-  assert.equal(measured['cold/launch/callbackRatePerSecond'], 4000 / 68)
-  const stats = require('./resource-frames113.cjs').frameStats(operation)
-  assert.equal(stats.preRegistrationFrameClocks, 1)
-  assert.equal(stats.frameClockGapsMs[0], 116 - 89.6)
-  delete operation.frames[0].deliveredAt
-  assert.throws(() => measurements(fixture), /actual delivery clock/)
-})
+    measured = measurements(fixture);
+  assert.equal(JSON.stringify(operation.frames), original);
+  assert.equal(measured['cold/launch/frameInitialGapMs'], 10);
+  assert.equal(measured['cold/launch/frameTailGapMs'], 10);
+  assert.equal(measured['cold/launch/callbackRatePerSecond'], 4000 / 68);
+  const stats = require('./resource-frames113.cjs').frameStats(operation);
+  assert.equal(stats.preRegistrationFrameClocks, 1);
+  assert.equal(stats.frameClockGapsMs[0], 116 - 89.6);
+  delete operation.frames[0].deliveredAt;
+  assert.throws(() => measurements(fixture), /actual delivery clock/);
+});
 test('Original renderer clock origins must be finite and unchanged; cross-clock offsets remain diagnostics', () => {
   for (const change of [
     (o) => {
-      delete o.rendererWindow.timeOrigin
+      delete o.rendererWindow.timeOrigin;
     },
     (o) => {
-      delete o.rendererWindow.endTimeOrigin
+      delete o.rendererWindow.endTimeOrigin;
     },
     (o) => {
-      o.rendererWindow.endTimeOrigin++
+      o.rendererWindow.endTimeOrigin++;
     },
     (o) => {
-      o.rendererWindow.timeOrigin = NaN
+      o.rendererWindow.timeOrigin = NaN;
     },
   ]) {
-    const f = group()
-    change(f.cold.operations[0])
-    assert.throws(() => measurements(f))
+    const f = group();
+    change(f.cold.operations[0]);
+    assert.throws(() => measurements(f));
   }
   const f = group(),
-    o = f.cold.operations[0]
-  o.frames[0].now = o.frames[0].deliveredAt + 0.1
-  attachCallbackFixture(o)
+    o = f.cold.operations[0];
+  o.frames[0].now = o.frames[0].deliveredAt + 0.1;
+  attachCallbackFixture(o);
   const original = JSON.stringify(o),
-    stats = require('./resource-frames113.cjs').frameStats(o)
-  assert.equal(JSON.stringify(o), original)
-  assert.equal(stats.crossClockOffsetsMs[0], o.frames[0].now - o.frames[0].deliveredAt)
-  measurements(f)
-})
+    stats = require('./resource-frames113.cjs').frameStats(o);
+  assert.equal(JSON.stringify(o), original);
+  assert.equal(stats.crossClockOffsetsMs[0], o.frames[0].now - o.frames[0].deliveredAt);
+  measurements(f);
+});
 test('Only two fully observed empty native samples can prove an owned Mac tree naturally absent', () => {
   const { isCompleteEmptyNativeSample } = require('./resource-sample113.cjs'),
-    empty = { event: 'sample', rows: [], counterErrors: [] }
-  assert.equal(isCompleteEmptyNativeSample(empty), true)
+    empty = { event: 'sample', rows: [], counterErrors: [] };
+  assert.equal(isCompleteEmptyNativeSample(empty), true);
   for (const field of [
     'counterErrors',
     'partialRows',
@@ -705,32 +705,32 @@ test('Only two fully observed empty native samples can prove an owned Mac tree n
     'identityInvalidations',
     'optionalCounterErrors',
   ])
-    assert.equal(isCompleteEmptyNativeSample({ ...empty, [field]: [{ pid: 2 }] }), false)
+    assert.equal(isCompleteEmptyNativeSample({ ...empty, [field]: [{ pid: 2 }] }), false);
   for (const field of ['wholeTreeCountersComplete', 'completeFullTree'])
-    assert.equal(isCompleteEmptyNativeSample({ ...empty, [field]: false }), false)
-  assert.equal(isCompleteEmptyNativeSample({ ...empty, rows: [identity(1)] }), false)
-  assert.equal(isCompleteEmptyNativeSample({ rows: [] }), false)
+    assert.equal(isCompleteEmptyNativeSample({ ...empty, [field]: false }), false);
+  assert.equal(isCompleteEmptyNativeSample({ ...empty, rows: [identity(1)] }), false);
+  assert.equal(isCompleteEmptyNativeSample({ rows: [] }), false);
   for (const field of ['partialRows', 'invalidatedRows', 'lifecycleInvalidations', 'optionalCounterErrors']) {
-    const f = group()
-    f.warm.nativeOwnedExit.samples[0][field] = [{ pid: 2 }]
-    assert.throws(() => measurements(f), /two original complete empty/)
+    const f = group();
+    f.warm.nativeOwnedExit.samples[0][field] = [{ pid: 2 }];
+    assert.throws(() => measurements(f), /two original complete empty/);
   }
   for (const change of [
     (e) => {
-      delete e.samples
+      delete e.samples;
     },
     (e) => {
-      e.samples.pop()
+      e.samples.pop();
     },
     (e) => {
-      e.samples[1].atUnixMs = e.samples[0].atUnixMs
+      e.samples[1].atUnixMs = e.samples[0].atUnixMs;
     },
   ]) {
-    const f = group()
-    change(f.warm.nativeOwnedExit)
-    assert.throws(() => measurements(f))
+    const f = group();
+    change(f.warm.nativeOwnedExit);
+    assert.throws(() => measurements(f));
   }
-})
+});
 function kernelLifecycleSample() {
   const f = lifecycleSample(),
     token = '7',
@@ -756,8 +756,8 @@ function kernelLifecycleSample() {
         systemErrno: 0,
         observedAtUnixMs: 1700000000001,
       },
-    }
-  f.error.existenceProbe = { result: 0, errno: 0, signal: 0 }
+    };
+  f.error.existenceProbe = { result: 0, errno: 0, signal: 0 };
   f.error.kernelExitEvidence = {
     pid: f.row.pid,
     source: 'Actual original kqueue EVFILT_PROC NOTE_EXIT notification',
@@ -774,108 +774,108 @@ function kernelLifecycleSample() {
       systemErrno: 0,
       observedAtUnixMs: 1700000000101,
     },
-  }
-  return f
+  };
+  return f;
 }
 test('Original same-creation kernel NOTE_EXIT can classify an unavailable identity even when kill zero still sees its PID', () => {
   const { row, error, record } = kernelLifecycleSample(),
-    original = JSON.stringify(record)
-  assertConfirmedLifecycleInvalidation(error, row)
-  const s = summarizeMac([record])['warm/home-20-images']
-  assert.equal(JSON.stringify(record), original)
-  assert.equal(s.lifecycleInvalidations.length, 1)
-  assert.equal(s.counterErrors.length, 0)
-  assert.equal(s.validFullFootprintSamples, 0)
-  assert.equal(s.physicalFootprintBytes.median, null)
-  assert.equal(s.unobservedExitCounterTails[0].terminalCPUObserved, false)
-})
+    original = JSON.stringify(record);
+  assertConfirmedLifecycleInvalidation(error, row);
+  const s = summarizeMac([record])['warm/home-20-images'];
+  assert.equal(JSON.stringify(record), original);
+  assert.equal(s.lifecycleInvalidations.length, 1);
+  assert.equal(s.counterErrors.length, 0);
+  assert.equal(s.validFullFootprintSamples, 0);
+  assert.equal(s.physicalFootprintBytes.median, null);
+  assert.equal(s.unobservedExitCounterTails[0].terminalCPUObserved, false);
+});
 test('Registration races, failed receipts, a mismatched generation and non-exit/error kernel events never prove owned exit', () => {
   for (const mutate of [
     (e) => {
-      e.qualified = false
+      e.qualified = false;
     },
     (e) => {
-      e.registration.qualified = false
+      e.registration.qualified = false;
     },
     (e) => {
-      e.registration.beforeIdentity = null
+      e.registration.beforeIdentity = null;
     },
     (e) => {
-      e.registration.afterIdentity.creationUnixUS = 'different'
+      e.registration.afterIdentity.creationUnixUS = 'different';
     },
     (e) => {
-      e.registration.receipt.data = 3
+      e.registration.receipt.data = 3;
     },
     (e) => {
-      e.registration.receipt.flags = 0
+      e.registration.receipt.flags = 0;
     },
     (e) => {
-      e.registration.receipt.callResult = -1
+      e.registration.receipt.callResult = -1;
     },
     (e) => {
-      e.registration.receipt.systemErrno = 1
+      e.registration.receipt.systemErrno = 1;
     },
     (e) => {
-      e.registration.receipt.userDataGeneration = '8'
+      e.registration.receipt.userDataGeneration = '8';
     },
     (e) => {
-      e.registration.request.fflags = 0
+      e.registration.request.fflags = 0;
     },
     (e) => {
-      e.notification.userDataGeneration = '8'
+      e.notification.userDataGeneration = '8';
     },
     (e) => {
-      e.notification.ident++
+      e.notification.ident++;
     },
     (e) => {
-      e.notification.filter = -1
+      e.notification.filter = -1;
     },
     (e) => {
-      e.notification.flags = 0x4000
+      e.notification.flags = 0x4000;
     },
     (e) => {
-      e.notification.fflags = 0
+      e.notification.fflags = 0;
     },
     (e) => {
-      e.notification.systemErrno = 1
+      e.notification.systemErrno = 1;
     },
     (e) => {
-      e.notification.observedAtUnixMs = e.registration.registrationEndUnixMs - 1
+      e.notification.observedAtUnixMs = e.registration.registrationEndUnixMs - 1;
     },
   ]) {
-    const f = kernelLifecycleSample()
-    mutate(f.error.kernelExitEvidence)
-    assert.throws(() => assertConfirmedLifecycleInvalidation(f.error, f.row))
-    assert.throws(() => summarizeMac([f.record]))
+    const f = kernelLifecycleSample();
+    mutate(f.error.kernelExitEvidence);
+    assert.throws(() => assertConfirmedLifecycleInvalidation(f.error, f.row));
+    assert.throws(() => summarizeMac([f.record]));
   }
-})
+});
 test('A future exit notification cannot erase an earlier unknown-alive error or a failed live primary counter', () => {
-  const f = kernelLifecycleSample()
-  f.error.kernelExitEvidence.notification.observedAtUnixMs = f.error.atUnixMs + 1
-  assert.throws(() => assertConfirmedLifecycleInvalidation(f.error, f.row), /Later notifications/)
-  delete f.error.kernelExitEvidence
-  f.error.lifecycleInvalidation = false
-  f.error.required = true
-  f.record.lifecycleInvalidations = []
-  f.record.counterErrors = [f.error]
+  const f = kernelLifecycleSample();
+  f.error.kernelExitEvidence.notification.observedAtUnixMs = f.error.atUnixMs + 1;
+  assert.throws(() => assertConfirmedLifecycleInvalidation(f.error, f.row), /Later notifications/);
+  delete f.error.kernelExitEvidence;
+  f.error.lifecycleInvalidation = false;
+  f.error.required = true;
+  f.record.lifecycleInvalidations = [];
+  f.record.counterErrors = [f.error];
   const original = JSON.stringify(f.record),
-    s = summarizeMac([f.record])['warm/home-20-images']
-  assert.equal(JSON.stringify(f.record), original)
-  assert.equal(s.counterErrors.length, 1)
-  assert.equal(s.lifecycleInvalidations.length, 0)
-  assert.equal(s.validFullFootprintSamples, 0)
+    s = summarizeMac([f.record])['warm/home-20-images'];
+  assert.equal(JSON.stringify(f.record), original);
+  assert.equal(s.counterErrors.length, 1);
+  assert.equal(s.lifecycleInvalidations.length, 0);
+  assert.equal(s.validFullFootprintSamples, 0);
   const live = sample(
     100,
     [identity(1, '1000000', 'native-app-main', { physicalFootprintBytes: null })],
     [{ pid: 1, stage: 'proc_pid_rusage primary footprint/resident/IO', errno: 1 }]
-  )
-  assert.equal(summarizeMac([live])['warm/home-20-images'].counterErrors.length, 1)
-})
+  );
+  assert.equal(summarizeMac([live])['warm/home-20-images'].counterErrors.length, 1);
+});
 test('Native Mac baseline freezes an immutable source-bound snapshot before any pair and refuses overwrite or changed raw bytes', () => {
   const p = require('./resource-provenance113.cjs'),
     runner = require('./resource-mac113.cjs'),
     analysis = require('./resource-mac113-analysis.cjs'),
-    root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-mac-source-freeze-'))
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-mac-source-freeze-'));
   try {
     const receipt = {
       platform: 'darwin',
@@ -885,35 +885,35 @@ test('Native Mac baseline freezes an immutable source-bound snapshot before any 
       groups: [],
       observerSources: p.collectorSources('darwin'),
       analysisSources: analysis.analysisSources(),
-    }
+    };
     receipt.analysisSourceSnapshot = {
       directory: 'tool-sources-analysis',
       ...p.recordSourceSnapshot(path.join(root, 'tool-sources-analysis'), receipt.analysisSources),
-    }
+    };
     for (let i = 0; i < 10; i++) {
-      const record = { i, kind: 'baseline', stage: 'baseline-noise', complete: true }
+      const record = { i, kind: 'baseline', stage: 'baseline-noise', complete: true };
       for (const label of ['cold', 'warm']) {
-        const directory = path.join(root, 'group-' + i, label)
-        fs.mkdirSync(directory, { recursive: true })
-        record[label] = directory
-        fs.writeFileSync(path.join(directory, 'summary.json'), JSON.stringify({ platform: 'darwin', screenshots: [] }))
-        fs.writeFileSync(path.join(directory, 'native.jsonl'), 'original synthetic native ' + i)
-        fs.writeFileSync(path.join(directory, 'process.log'), 'original synthetic process ' + i)
+        const directory = path.join(root, 'group-' + i, label);
+        fs.mkdirSync(directory, { recursive: true });
+        record[label] = directory;
+        fs.writeFileSync(path.join(directory, 'summary.json'), JSON.stringify({ platform: 'darwin', screenshots: [] }));
+        fs.writeFileSync(path.join(directory, 'native.jsonl'), 'original synthetic native ' + i);
+        fs.writeFileSync(path.join(directory, 'process.log'), 'original synthetic process ' + i);
       }
-      receipt.groups.push(record)
+      receipt.groups.push(record);
     }
     const frozen = runner.freezeBaselineSnapshot(root, receipt),
-      original = fs.readFileSync(frozen.file)
-    assert.equal(frozen.provenance.raw.sessions.length, 20)
-    receipt.groups.push({ kind: 'candidate' })
-    receipt.pairs.push({ i: 0 })
-    fs.writeFileSync(path.join(root, 'run.json'), JSON.stringify(receipt))
-    assert.deepEqual(fs.readFileSync(frozen.file), original)
-    assert.equal(p.verifyRawEvidenceSnapshot(frozen.file, frozen.provenance.raw, root), true)
-    const originalReceipt = JSON.parse(original)
-    assert.throws(() => runner.freezeBaselineSnapshot(root, originalReceipt), /EEXIST/)
-    fs.appendFileSync(path.join(root, 'group-0', 'cold', 'native.jsonl'), 'altered')
-    assert.throws(() => p.assertFrozenBindings(frozen.provenance, runner.evidenceProvenance('darwin', frozen.file)), /bytes changed/)
+      original = fs.readFileSync(frozen.file);
+    assert.equal(frozen.provenance.raw.sessions.length, 20);
+    receipt.groups.push({ kind: 'candidate' });
+    receipt.pairs.push({ i: 0 });
+    fs.writeFileSync(path.join(root, 'run.json'), JSON.stringify(receipt));
+    assert.deepEqual(fs.readFileSync(frozen.file), original);
+    assert.equal(p.verifyRawEvidenceSnapshot(frozen.file, frozen.provenance.raw, root), true);
+    const originalReceipt = JSON.parse(original);
+    assert.throws(() => runner.freezeBaselineSnapshot(root, originalReceipt), /EEXIST/);
+    fs.appendFileSync(path.join(root, 'group-0', 'cold', 'native.jsonl'), 'altered');
+    assert.throws(() => p.assertFrozenBindings(frozen.provenance, runner.evidenceProvenance('darwin', frozen.file)), /bytes changed/);
     for (const mutate of [
       (r) => (r.n = 9),
       (r) => r.pairs.push({ i: 0 }),
@@ -923,24 +923,24 @@ test('Native Mac baseline freezes an immutable source-bound snapshot before any 
       (r) => (r.observerSources.files['resource-callback113.cjs'].sha256 = '0'.repeat(64)),
       (r) => (r.analysisSources['resource-mac113-analysis.cjs'].sha256 = '0'.repeat(64)),
     ]) {
-      const wrong = JSON.parse(original)
-      mutate(wrong)
-      assert.throws(() => runner.freezeBaselineSnapshot(root, wrong))
+      const wrong = JSON.parse(original);
+      mutate(wrong);
+      assert.throws(() => runner.freezeBaselineSnapshot(root, wrong));
     }
   } finally {
-    assert(path.resolve(root).startsWith(path.resolve(os.tmpdir()) + path.sep))
-    fs.rmSync(root, { recursive: true })
+    assert(path.resolve(root).startsWith(path.resolve(os.tmpdir()) + path.sep));
+    fs.rmSync(root, { recursive: true });
   }
-})
+});
 test('Mac source-byte mismatch cannot silently use host sources or bypass mandatory functional checks during explicit snapshot review', () => {
-  const fixture = group()
-  fixture.cold.observerSources.files['resource-callback113.cjs'].sha256 = '0'.repeat(64)
-  assert.throws(() => measurements(fixture), /source SHA/)
+  const fixture = group();
+  fixture.cold.observerSources.files['resource-callback113.cjs'].sha256 = '0'.repeat(64);
+  assert.throws(() => measurements(fixture), /source SHA/);
   const p = require('./resource-provenance113.cjs'),
-    expected = p.collectorSources('darwin')
-  assert(p.assertCollectorSources(group().cold, expected))
-  const valid = group()
-  assert.doesNotThrow(() => measurements(valid, { expectedCollectorSources: expected }))
-  valid.warm.functionalPass = false
-  assert.throws(() => measurements(valid, { expectedCollectorSources: expected }), /historical restore/)
-})
+    expected = p.collectorSources('darwin');
+  assert(p.assertCollectorSources(group().cold, expected));
+  const valid = group();
+  assert.doesNotThrow(() => measurements(valid, { expectedCollectorSources: expected }));
+  valid.warm.functionalPass = false;
+  assert.throws(() => measurements(valid, { expectedCollectorSources: expected }), /historical restore/);
+});

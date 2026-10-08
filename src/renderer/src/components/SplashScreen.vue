@@ -1,54 +1,54 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
-import splashFace from '../assets/splash-face.png'
+import { onMounted, onUnmounted, ref } from 'vue';
+import splashFace from '../assets/splash-face.png';
 
-defineProps<{ leaving?: boolean }>()
-const emit = defineEmits<{ done: [] }>()
+defineProps<{ leaving?: boolean }>();
+const emit = defineEmits<{ done: [] }>();
 
 // ---------------- 拼图参数（12×12 = 144 块，每块 24px，目标区 288×288） ----------------
-const GRID = 12
-const BOARD = 288
-const TILE = BOARD / GRID // 24
+const GRID = 12;
+const BOARD = 288;
+const TILE = BOARD / GRID; // 24
 
 // ---------------- 动画时间线（毫秒） ----------------
-const T_SCATTER = 700 // ① 散布期：块散布屏幕四边外各自晃动
-const T_STAGGER = 600 // ② 汇聚期：每块随机错开 0~600ms
-const T_FLY = 900 //    ② 汇聚期：单块 transform 过渡时长
-const T_SETTLE = T_SCATTER + T_STAGGER + T_FLY // ③ 定型期开始（2200ms）
-const T_DONE = T_SETTLE + 500 // 容器弹跳结束后对外发 done
+const T_SCATTER = 700; // ① 散布期：块散布屏幕四边外各自晃动
+const T_STAGGER = 600; // ② 汇聚期：每块随机错开 0~600ms
+const T_FLY = 900; //    ② 汇聚期：单块 transform 过渡时长
+const T_SETTLE = T_SCATTER + T_STAGGER + T_FLY; // ③ 定型期开始（2200ms）
+const T_DONE = T_SETTLE + 500; // 容器弹跳结束后对外发 done
 
-type Phase = 'scatter' | 'converge' | 'settle'
-const phase = ref<Phase>('scatter')
+type Phase = 'scatter' | 'converge' | 'settle';
+const phase = ref<Phase>('scatter');
 
 interface Tile {
-  col: number
-  row: number
-  dx: number // 散布期相对目标格子的 X 偏移
-  dy: number // 散布期相对目标格子的 Y 偏移
-  rot: number // 散布期随机旋转角
-  delay: number // 汇聚期过渡延迟（随机顺序错开）
-  wobble: 'a' | 'b' // 晃动动画变体（两个方向相反的 keyframes）
-  wobbleDelay: number
-  wobbleDuration: number
+  col: number;
+  row: number;
+  dx: number; // 散布期相对目标格子的 X 偏移
+  dy: number; // 散布期相对目标格子的 Y 偏移
+  rot: number; // 散布期随机旋转角
+  delay: number; // 汇聚期过渡延迟（随机顺序错开）
+  wobble: 'a' | 'b'; // 晃动动画变体（两个方向相反的 keyframes）
+  wobbleDelay: number;
+  wobbleDuration: number;
 }
 
 /** 屏幕随机一条边外的散布位置（相对拼图区中心的偏移量） */
 function scatterOffset() {
-  const vw = window.innerWidth
-  const vh = window.innerHeight
-  const m = BOARD / 2 + Math.random() * 160 // 边外余量
-  const edge = Math.floor(Math.random() * 4)
-  if (edge === 0) return { dx: (Math.random() - 0.5) * vw, dy: -(vh / 2 + m) } // 上
-  if (edge === 1) return { dx: vw / 2 + m, dy: (Math.random() - 0.5) * vh } // 右
-  if (edge === 2) return { dx: (Math.random() - 0.5) * vw, dy: vh / 2 + m } // 下
-  return { dx: -(vw / 2 + m), dy: (Math.random() - 0.5) * vh } // 左
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const m = BOARD / 2 + Math.random() * 160; // 边外余量
+  const edge = Math.floor(Math.random() * 4);
+  if (edge === 0) return { dx: (Math.random() - 0.5) * vw, dy: -(vh / 2 + m) }; // 上
+  if (edge === 1) return { dx: vw / 2 + m, dy: (Math.random() - 0.5) * vh }; // 右
+  if (edge === 2) return { dx: (Math.random() - 0.5) * vw, dy: vh / 2 + m }; // 下
+  return { dx: -(vw / 2 + m), dy: (Math.random() - 0.5) * vh }; // 左
 }
 
 // 生成 144 块（静态数据，无需响应式）
-const tiles: Tile[] = []
+const tiles: Tile[] = [];
 for (let row = 0; row < GRID; row++) {
   for (let col = 0; col < GRID; col++) {
-    const { dx, dy } = scatterOffset()
+    const { dx, dy } = scatterOffset();
     tiles.push({
       col,
       row,
@@ -59,7 +59,7 @@ for (let row = 0; row < GRID; row++) {
       wobble: Math.random() < 0.5 ? 'a' : 'b',
       wobbleDelay: -Math.random() * 500,
       wobbleDuration: 420 + Math.random() * 180,
-    })
+    });
   }
 }
 
@@ -74,7 +74,7 @@ function tileStyle(t: Tile) {
     top: t.row * TILE + 'px',
     backgroundImage: `url(${splashFace})`,
     backgroundPosition: `${-t.col * TILE}px ${-t.row * TILE}px`,
-  }
+  };
   if (phase.value === 'scatter') {
     return {
       ...base,
@@ -82,31 +82,31 @@ function tileStyle(t: Tile) {
       animationName: `splash-wobble-${t.wobble}`,
       animationDuration: `${t.wobbleDuration}ms`,
       animationDelay: `${t.wobbleDelay}ms`,
-    }
+    };
   }
   return {
     ...base,
     transform: 'translate(0px, 0px) rotate(0deg)',
     transitionDelay: `${t.delay}ms`,
-  }
+  };
 }
 
-const timers: Array<ReturnType<typeof setTimeout>> = []
-const later = (fn: () => void, ms: number) => timers.push(setTimeout(fn, ms))
+const timers: Array<ReturnType<typeof setTimeout>> = [];
+const later = (fn: () => void, ms: number) => timers.push(setTimeout(fn, ms));
 
 onMounted(() => {
   // 减少动态偏好：跳过全部动画，直接显示完整图
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    phase.value = 'settle'
-    later(() => emit('done'), 100)
-    return
+    phase.value = 'settle';
+    later(() => emit('done'), 100);
+    return;
   }
-  later(() => (phase.value = 'converge'), T_SCATTER)
-  later(() => (phase.value = 'settle'), T_SETTLE)
-  later(() => emit('done'), T_DONE)
-})
+  later(() => (phase.value = 'converge'), T_SCATTER);
+  later(() => (phase.value = 'settle'), T_SETTLE);
+  later(() => emit('done'), T_DONE);
+});
 
-onUnmounted(() => timers.forEach(clearTimeout))
+onUnmounted(() => timers.forEach(clearTimeout));
 </script>
 
 <template>

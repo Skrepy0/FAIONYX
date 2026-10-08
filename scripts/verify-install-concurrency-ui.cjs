@@ -1,13 +1,13 @@
 // Reuse the isolated production-renderer harness, replacing its scenarios only.
 const fs = require('node:fs'),
-  path = require('node:path')
-let source = fs.readFileSync(path.resolve('scripts/verify-resource-network-ui.cjs'), 'utf8')
+  path = require('node:path');
+let source = fs.readFileSync(path.resolve('scripts/verify-resource-network-ui.cjs'), 'utf8');
 source = source.replace(
   "case 'versions:manifest': return [{ id: '26.2', type: 'release', releaseTime: '2026-09-10' }]",
   "case 'versions:manifest': return ['1.21.9','1.21.11'].map(id=>({id,type:'release',releaseTime:'2026-09-10'}))"
-)
+);
 const start = source.indexOf(" await nav('mods');"),
-  end = source.indexOf('\n}).catch', start)
+  end = source.indexOf('\n}).catch', start);
 source =
   source.slice(0, start) +
   `
@@ -24,7 +24,7 @@ source =
  progress('1.21.11',.88);await wait(200);state=await rows();assert(state.find(x=>x.id==='1.21.11').text.includes('88%'));await shot('one-cancelled-other-continues');assert.deepEqual(errors,[]);
  fs.writeFileSync(path.join(root,'result.json'),JSON.stringify({pass:true,checks:['second version accepted during first download','independent progress','cancelled version unlocks','other task keeps updating'],errors},null,2));console.log('PASS production concurrent installation UI: '+root);win.destroy();app.quit();
 ` +
-  source.slice(end)
-const generated = path.resolve('out/verify-install-concurrency-ui.generated.cjs')
-fs.writeFileSync(generated, source)
-require(generated)
+  source.slice(end);
+const generated = path.resolve('out/verify-install-concurrency-ui.generated.cjs');
+fs.writeFileSync(generated, source);
+require(generated);

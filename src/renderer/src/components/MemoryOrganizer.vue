@@ -1,31 +1,31 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { store, toast } from '../store'
-import { saveSettings, errText } from '../api'
-import type { MemoryOrganizeResult } from '@shared/memoryOrganizer'
+import { ref } from 'vue';
+import { store, toast } from '../store';
+import { saveSettings, errText } from '../api';
+import type { MemoryOrganizeResult } from '@shared/memoryOrganizer';
 const emit = defineEmits<{ refresh: [] }>(),
   busy = ref(false),
-  result = ref<MemoryOrganizeResult>()
-const windows = window.faionyx.platform === 'win32'
+  result = ref<MemoryOrganizeResult>();
+const windows = window.faionyx.platform === 'win32';
 async function run() {
-  if (busy.value) return
-  busy.value = true
+  if (busy.value) return;
+  busy.value = true;
   try {
-    result.value = (await window.faionyx.invoke('memory:organize')) as MemoryOrganizeResult
-    emit('refresh')
+    result.value = (await window.faionyx.invoke('memory:organize')) as MemoryOrganizeResult;
+    emit('refresh');
   } catch (e) {
-    toast(errText(e), 'error')
+    toast(errText(e), 'error');
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 async function toggle(e: Event) {
-  const on = (e.target as HTMLInputElement).checked
+  const on = (e.target as HTMLInputElement).checked;
   try {
-    await saveSettings({ memoryOrganizeBeforeLaunch: on })
-    store.settings!.memoryOrganizeBeforeLaunch = on
+    await saveSettings({ memoryOrganizeBeforeLaunch: on });
+    store.settings!.memoryOrganizeBeforeLaunch = on;
   } catch (e) {
-    toast(errText(e), 'error')
+    toast(errText(e), 'error');
   }
 }
 </script>

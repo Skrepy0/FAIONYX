@@ -4,9 +4,9 @@ const fs = require('node:fs'),
   { app, nativeImage } = require('electron'),
   { buildSync } = require('esbuild'),
   { Worker } = require('node:worker_threads'),
-  Zip = require('adm-zip')
-const root = fs.mkdtempSync(path.resolve('out/theme-proof-'))
-app.setPath('userData', path.join(root, 'profile'))
+  Zip = require('adm-zip');
+const root = fs.mkdtempSync(path.resolve('out/theme-proof-'));
+app.setPath('userData', path.join(root, 'profile'));
 buildSync({
   stdin: {
     contents:
@@ -17,15 +17,15 @@ buildSync({
   platform: 'node',
   external: ['electron'],
   outfile: path.join(root, 'core.cjs'),
-})
-const core = require(path.join(root, 'core.cjs'))
+});
+const core = require(path.join(root, 'core.cjs'));
 app
   .whenReady()
   .then(async () => {
-    const source = path.join(root, 'image.png')
-    fs.writeFileSync(source, nativeImage.createFromBitmap(Buffer.alloc(16 * 16 * 4, 255), { width: 16, height: 16 }).toPNG())
-    const asset = await core.importGlobalImage(source, 'background')
-    let s = core.getSettings()
+    const source = path.join(root, 'image.png');
+    fs.writeFileSync(source, nativeImage.createFromBitmap(Buffer.alloc(16 * 16 * 4, 255), { width: 16, height: 16 }).toPNG());
+    const asset = await core.importGlobalImage(source, 'background');
+    let s = core.getSettings();
     const design = {
       version: 1,
       pages: {
@@ -59,46 +59,46 @@ app
         },
         mods: { width: 1440, height: 1000, components: { title: { text: '模组管理' } } },
       },
-    }
+    };
     core.saveSettings({
       visualDesign: design,
       theme: 'black-orange',
       background: { ...s.background, mode: 'image', image: asset.path, images: [asset.path] },
       memoryMB: 6144,
-    })
-    const code = core.exportVisualTheme()
-    core.resetVisualTheme()
-    const preview = await core.importVisualTheme(code, true)
-    assert.equal(core.getSettings().theme, 'transparent')
-    core.saveAppearanceDraft(preview)
-    assert.equal(core.readAppearanceDraft().theme, 'black-orange')
-    const restored = core.applyAppearanceDraft(preview)
-    assert.equal(core.readAppearanceDraft(), null)
-    assert.deepEqual(JSON.parse(JSON.stringify(restored.visualDesign)), design)
-    assert.equal(restored.theme, 'black-orange')
-    assert.equal(restored.memoryMB, 6144)
-    assert.deepEqual(nativeImage.createFromPath(restored.background.image).toBitmap(), nativeImage.createFromPath(source).toBitmap())
-    await assert.rejects(core.importVisualTheme('FAIONYX2.invalid'))
-    const dir = path.join(root, 'packs')
-    fs.mkdirSync(dir)
-    const zip = new Zip()
-    zip.addFile('pack.mcmeta', Buffer.from('{"pack":{"pack_format":1,"description":"test"}}'))
-    zip.addFile('pack.png', fs.readFileSync(source))
-    zip.writeZip(path.join(dir, 'resource.zip'))
+    });
+    const code = core.exportVisualTheme();
+    core.resetVisualTheme();
+    const preview = await core.importVisualTheme(code, true);
+    assert.equal(core.getSettings().theme, 'transparent');
+    core.saveAppearanceDraft(preview);
+    assert.equal(core.readAppearanceDraft().theme, 'black-orange');
+    const restored = core.applyAppearanceDraft(preview);
+    assert.equal(core.readAppearanceDraft(), null);
+    assert.deepEqual(JSON.parse(JSON.stringify(restored.visualDesign)), design);
+    assert.equal(restored.theme, 'black-orange');
+    assert.equal(restored.memoryMB, 6144);
+    assert.deepEqual(nativeImage.createFromPath(restored.background.image).toBitmap(), nativeImage.createFromPath(source).toBitmap());
+    await assert.rejects(core.importVisualTheme('FAIONYX2.invalid'));
+    const dir = path.join(root, 'packs');
+    fs.mkdirSync(dir);
+    const zip = new Zip();
+    zip.addFile('pack.mcmeta', Buffer.from('{"pack":{"pack_format":1,"description":"test"}}'));
+    zip.addFile('pack.png', fs.readFileSync(source));
+    zip.writeZip(path.join(dir, 'resource.zip'));
     const result = await new Promise((resolve, reject) => {
-      const w = new Worker(path.resolve('out/main/modScanWorker.cjs'), { workerData: { dir, hash: true, names: ['resource.zip'] } })
+      const w = new Worker(path.resolve('out/main/modScanWorker.cjs'), { workerData: { dir, hash: true, names: ['resource.zip'] } });
       w.on('message', (v) => {
-        w.terminate()
-        resolve(v)
-      })
-      w.on('error', reject)
-    })
-    assert.equal(result.result[0].sha1.length, 40)
-    assert.match(result.result[0].iconDataUrl, /^data:image/)
-    console.log('PASS full theme roundtrip, embedded image, preserved game settings, zip identity and icon ' + root)
-    app.quit()
+        w.terminate();
+        resolve(v);
+      });
+      w.on('error', reject);
+    });
+    assert.equal(result.result[0].sha1.length, 40);
+    assert.match(result.result[0].iconDataUrl, /^data:image/);
+    console.log('PASS full theme roundtrip, embedded image, preserved game settings, zip identity and icon ' + root);
+    app.quit();
   })
   .catch((e) => {
-    console.error(e)
-    app.exit(1)
-  })
+    console.error(e);
+    app.exit(1);
+  });

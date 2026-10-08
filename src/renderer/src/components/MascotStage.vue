@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import {
   AmbientLight,
   DirectionalLight,
@@ -13,56 +13,56 @@ import {
   Texture,
   Vector3,
   WebGLRenderer,
-} from 'three'
-import { MASCOTS, addMascotHits, normalizeMascotSound, type MascotBatch, type MascotState } from '@shared/mascots'
-import { KamuInteraction } from '@shared/kamuInteraction'
-import { useMotion } from '../motion'
-import { errText } from '../api'
-import { toast } from '../store'
-import { PreviewPlayer } from '../skinModel'
-import { MascotAudio } from '../mascotAudio'
-import { createMascotAtlas, MascotBatchRenderer } from '../mascotBatch'
-import { MascotSoftwareRenderer } from '../mascotSoftware'
-import { prepareFeedbackImages } from '../mascotFeedback'
-import { MascotFrameDriver, type MascotFrame } from '../mascotFrameDriver'
-import { KamuPalmAnimation } from '../kamuPalmAnimation'
-import skinUrl from '../assets/mascot-skins/kamu.png'
-import palmUrl from '../assets/mascot-feedback/pixel-palm.png'
-import printUrl from '../assets/mascot-feedback/palm-print.png'
+} from 'three';
+import { MASCOTS, addMascotHits, normalizeMascotSound, type MascotBatch, type MascotState } from '@shared/mascots';
+import { KamuInteraction } from '@shared/kamuInteraction';
+import { useMotion } from '../motion';
+import { errText } from '../api';
+import { toast } from '../store';
+import { PreviewPlayer } from '../skinModel';
+import { MascotAudio } from '../mascotAudio';
+import { createMascotAtlas, MascotBatchRenderer } from '../mascotBatch';
+import { MascotSoftwareRenderer } from '../mascotSoftware';
+import { prepareFeedbackImages } from '../mascotFeedback';
+import { MascotFrameDriver, type MascotFrame } from '../mascotFrameDriver';
+import { KamuPalmAnimation } from '../kamuPalmAnimation';
+import skinUrl from '../assets/mascot-skins/kamu.png';
+import palmUrl from '../assets/mascot-feedback/pixel-palm.png';
+import printUrl from '../assets/mascot-feedback/palm-print.png';
 const props = defineProps<{ focusOnReady?: boolean }>(),
-  emit = defineEmits<{ close: []; ready: []; activity: [active: boolean]; 'render-mode': [software: boolean] }>()
+  emit = defineEmits<{ close: []; ready: []; activity: [active: boolean]; 'render-mode': [software: boolean] }>();
 const { reduced, hidden, decorativeActive } = useMotion(),
   host = ref<HTMLElement>(),
   viewport = ref<HTMLElement>(),
   hit = ref<HTMLButtonElement>(),
-  menuButton = ref<HTMLButtonElement>()
+  menuButton = ref<HTMLButtonElement>();
 const ready = ref(false),
   supported = ref(true),
   closing = ref(false),
   menu = ref(false),
   confirmReset = ref(false),
   persistError = ref(''),
-  busy = ref(false)
-watch(busy, (value) => emit('activity', value), { flush: 'sync' })
-const state = ref<MascotState>({ counts: {}, order: MASCOTS.map((m) => m.id), sound: normalizeMascotSound() })
+  busy = ref(false);
+watch(busy, (value) => emit('activity', value), { flush: 'sync' });
+const state = ref<MascotState>({ counts: {}, order: MASCOTS.map((m) => m.id), sound: normalizeMascotSound() });
 const sound = computed(() => normalizeMascotSound(state.value.sound)),
-  interaction = new KamuInteraction()
+  interaction = new KamuInteraction();
 const audio = new MascotAudio(
   () => sound.value,
   (played, voices) => {
     if (host.value) {
-      host.value.dataset.soundsPlayed = String(played)
-      host.value.dataset.activeSounds = String(voices)
+      host.value.dataset.soundsPlayed = String(played);
+      host.value.dataset.activeSounds = String(voices);
     }
   },
   () => !hidden.value,
   (event) => {
-    data('audioPreparation', event.phase)
-    data('audioPrepareStartedAt', String(event.startedAt))
-    data('audioPrepareAt', String(event.at))
-    data('audioPrepareTime', String(event.audioTime))
+    data('audioPreparation', event.phase);
+    data('audioPrepareStartedAt', String(event.startedAt));
+    data('audioPrepareAt', String(event.at));
+    data('audioPrepareTime', String(event.audioTime));
   }
-)
+);
 let gl: WebGLRenderer | undefined,
   software: MascotSoftwareRenderer | undefined,
   batchRenderer: MascotBatchRenderer | undefined,
@@ -70,37 +70,37 @@ let gl: WebGLRenderer | undefined,
   camera: OrthographicCamera,
   player: PreviewPlayer | undefined,
   waist: Group,
-  pelvis: Object3D
+  pelvis: Object3D;
 const textures: Texture[] = [],
   feet: Array<{ mesh: Mesh; corners: Vector3[] }> = [],
   parts: Mesh[] = [],
   point = new Vector3(),
-  projected = new Vector3()
-let feedbackElement: HTMLElement | undefined, palmElement: HTMLImageElement | undefined, printElement: HTMLImageElement | undefined
-let palmAnimation: KamuPalmAnimation | undefined
+  projected = new Vector3();
+let feedbackElement: HTMLElement | undefined, palmElement: HTMLImageElement | undefined, printElement: HTMLImageElement | undefined;
+let palmAnimation: KamuPalmAnimation | undefined;
 let feedbackReady = false,
   feedbackPending = false,
   initialStateReady = false,
   restartFeedback = false,
-  cancelFeedback: undefined | (() => void)
-let previousPose: number[] | undefined
+  cancelFeedback: undefined | (() => void);
+let previousPose: number[] | undefined;
 const writtenStyles = new WeakMap<Element, Map<string, string>>(),
-  writtenData = new Map<string, string>()
+  writtenData = new Map<string, string>();
 function style(element: HTMLElement | SVGElement | undefined, key: string, value: string) {
-  if (!element) return
-  let values = writtenStyles.get(element)
+  if (!element) return;
+  let values = writtenStyles.get(element);
   if (!values) {
-    values = new Map()
-    writtenStyles.set(element, values)
+    values = new Map();
+    writtenStyles.set(element, values);
   }
-  if (values.get(key) === value) return
-  element.style.setProperty(key, value)
-  values.set(key, value)
+  if (values.get(key) === value) return;
+  element.style.setProperty(key, value);
+  values.set(key, value);
 }
 function data(key: string, value: string) {
-  if (!host.value || writtenData.get(key) === value) return
-  host.value.dataset[key] = value
-  writtenData.set(key, value)
+  if (!host.value || writtenData.get(key) === value) return;
+  host.value.dataset[key] = value;
+  writtenData.set(key, value);
 }
 let disposed = false,
   activated = 0,
@@ -108,149 +108,149 @@ let disposed = false,
   contactsTotal = 0,
   reported = false,
   acceptedClicks = 0,
-  rejectedClicks = 0
+  rejectedClicks = 0;
 const frameDriver = new MascotFrameDriver(render, {
   now: () => performance.now(),
   requestAnimationFrame: (callback) => requestAnimationFrame(callback),
   cancelAnimationFrame: (id) => cancelAnimationFrame(id),
   setTimeout: (callback, delay) => setTimeout(callback, delay),
   clearTimeout: (id) => clearTimeout(id),
-})
-let cancelImage: undefined | (() => void)
+});
+let cancelImage: undefined | (() => void);
 let gpuContext: WebGL2RenderingContext | undefined,
   gpuFence: WebGLSync | undefined,
   gpuFrame = 0,
   gpuStarted = 0,
-  gpuDeadline: ReturnType<typeof setTimeout> | undefined
-let contextCanvas: HTMLCanvasElement | undefined
+  gpuDeadline: ReturnType<typeof setTimeout> | undefined;
+let contextCanvas: HTMLCanvasElement | undefined;
 function cancelGpuReady() {
-  cancelAnimationFrame(gpuFrame)
-  gpuFrame = 0
-  clearTimeout(gpuDeadline)
-  gpuDeadline = undefined
+  cancelAnimationFrame(gpuFrame);
+  gpuFrame = 0;
+  clearTimeout(gpuDeadline);
+  gpuDeadline = undefined;
   if (gpuFence) {
-    gpuContext?.deleteSync(gpuFence)
-    gpuFence = undefined
+    gpuContext?.deleteSync(gpuFence);
+    gpuFence = undefined;
   }
-  gpuContext = undefined
+  gpuContext = undefined;
 }
 function publishReady(now: number) {
-  if (disposed || hidden.value || !feedbackReady || !player || !host.value || ready.value) return
-  ready.value = true
-  activated = now
-  interaction.resume(now)
-  palmAnimation?.resume()
-  host.value.dataset.readyAt = String(now)
-  emit('ready')
+  if (disposed || hidden.value || !feedbackReady || !player || !host.value || ready.value) return;
+  ready.value = true;
+  activated = now;
+  interaction.resume(now);
+  palmAnimation?.resume();
+  host.value.dataset.readyAt = String(now);
+  emit('ready');
   if (props.focusOnReady)
     void nextTick(() => {
-      if (!disposed && !hidden.value && ready.value) hit.value?.focus()
-    })
-  wake()
+      if (!disposed && !hidden.value && ready.value) hit.value?.focus();
+    });
+  wake();
 }
 function releaseGl() {
   if (contextCanvas) {
-    contextCanvas.removeEventListener('webglcontextlost', contextLost)
-    contextCanvas = undefined
+    contextCanvas.removeEventListener('webglcontextlost', contextLost);
+    contextCanvas = undefined;
   }
-  gl?.dispose()
-  gl?.forceContextLoss()
-  gl?.domElement.remove()
-  gl = undefined
+  gl?.dispose();
+  gl?.forceContextLoss();
+  gl?.domElement.remove();
+  gl = undefined;
 }
 function useSoftware(reason: string) {
-  cancelGpuReady()
-  ready.value = false
-  interaction.pause(performance.now())
-  palmAnimation?.pause()
-  data('gpuReadyFallback', reason)
-  data('gpuReadyStatus', 'software-pending')
-  releaseGl()
+  cancelGpuReady();
+  ready.value = false;
+  interaction.pause(performance.now());
+  palmAnimation?.pause();
+  data('gpuReadyFallback', reason);
+  data('gpuReadyStatus', 'software-pending');
+  releaseGl();
   try {
-    software ??= new MascotSoftwareRenderer()
-    software.setSize(48, 72, 1)
+    software ??= new MascotSoftwareRenderer();
+    software.setSize(48, 72, 1);
     if (disposed || !viewport.value) {
-      software.dispose()
-      software = undefined
-      return
+      software.dispose();
+      software = undefined;
+      return;
     }
-    viewport.value.prepend(software.domElement)
-    data('renderBackend', 'canvas2d-depth')
-    emit('render-mode', true)
-    supported.value = true
-    previousPose = undefined
-    wake()
+    viewport.value.prepend(software.domElement);
+    data('renderBackend', 'canvas2d-depth');
+    emit('render-mode', true);
+    supported.value = true;
+    previousPose = undefined;
+    wake();
   } catch (error) {
-    supported.value = false
-    data('gpuReadyStatus', 'failed')
-    persistError.value = '像素预览无法加载：' + errText(error)
+    supported.value = false;
+    data('gpuReadyStatus', 'failed');
+    persistError.value = '像素预览无法加载：' + errText(error);
   }
 }
 function contextLost(event: Event) {
-  event.preventDefault()
-  if (!disposed) useSoftware('WebGL context lost')
+  event.preventDefault();
+  if (!disposed) useSoftware('WebGL context lost');
 }
 function checkGpuReady() {
-  gpuFrame = 0
+  gpuFrame = 0;
   if (disposed || hidden.value) {
-    cancelGpuReady()
-    return
+    cancelGpuReady();
+    return;
   }
   const context = gpuContext,
-    fence = gpuFence
-  if (!context || !fence) return
+    fence = gpuFence;
+  if (!context || !fence) return;
   try {
     if (context.isContextLost()) {
-      useSoftware('WebGL context lost during first draw')
-      return
+      useSoftware('WebGL context lost during first draw');
+      return;
     }
-    const result = context.clientWaitSync(fence, 0, 0)
-    data('gpuCheckMs', String(performance.now() - gpuStarted))
+    const result = context.clientWaitSync(fence, 0, 0);
+    data('gpuCheckMs', String(performance.now() - gpuStarted));
     if (result === context.ALREADY_SIGNALED || result === context.CONDITION_SATISFIED) {
-      cancelGpuReady()
-      data('gpuReadyStatus', 'commands-complete')
-      publishReady(performance.now())
-    } else if (result === context.WAIT_FAILED) useSoftware('WebGL first draw fence WAIT_FAILED')
-    else gpuFrame = requestAnimationFrame(checkGpuReady)
+      cancelGpuReady();
+      data('gpuReadyStatus', 'commands-complete');
+      publishReady(performance.now());
+    } else if (result === context.WAIT_FAILED) useSoftware('WebGL first draw fence WAIT_FAILED');
+    else gpuFrame = requestAnimationFrame(checkGpuReady);
   } catch (error) {
-    useSoftware('WebGL first draw fence: ' + errText(error))
+    useSoftware('WebGL first draw fence: ' + errText(error));
   }
 }
 function confirmGpuDraw() {
-  if (!gl || gpuFence || disposed || hidden.value) return
+  if (!gl || gpuFence || disposed || hidden.value) return;
   try {
-    const context = gl.getContext()
+    const context = gl.getContext();
     if (context.isContextLost()) {
-      useSoftware('WebGL context lost before first draw')
-      return
+      useSoftware('WebGL context lost before first draw');
+      return;
     }
-    const fence = context.fenceSync(context.SYNC_GPU_COMMANDS_COMPLETE, 0)
+    const fence = context.fenceSync(context.SYNC_GPU_COMMANDS_COMPLETE, 0);
     if (!fence) {
-      useSoftware('WebGL first draw fence unavailable')
-      return
+      useSoftware('WebGL first draw fence unavailable');
+      return;
     }
-    gpuContext = context
-    gpuFence = fence
-    gpuStarted = performance.now()
-    data('gpuReadyStatus', 'pending')
-    context.flush()
+    gpuContext = context;
+    gpuFence = fence;
+    gpuStarted = performance.now();
+    data('gpuReadyStatus', 'pending');
+    context.flush();
     // This is only a failure boundary. A naturally signalled fence publishes immediately.
     gpuDeadline = setTimeout(() => {
-      if (!disposed && gpuFence) useSoftware('WebGL first draw fence timed out (3000ms)')
-    }, 3000)
-    checkGpuReady()
+      if (!disposed && gpuFence) useSoftware('WebGL first draw fence timed out (3000ms)');
+    }, 3000);
+    checkGpuReady();
   } catch (error) {
-    useSoftware('WebGL first draw submission: ' + errText(error))
+    useSoftware('WebGL first draw submission: ' + errText(error));
   }
 }
 function retryPreview() {
-  if (disposed) return
-  persistError.value = ''
+  if (disposed) return;
+  persistError.value = '';
   if (!feedbackReady) {
-    void prepareScene()
-    return
+    void prepareScene();
+    return;
   }
-  useSoftware('manual software preview retry')
+  useSoftware('manual software preview retry');
 }
 let hits: string[] = [],
   batch: MascotBatch | undefined,
@@ -259,433 +259,433 @@ let hits: string[] = [],
   retryTimer: ReturnType<typeof setTimeout> | undefined,
   retryDelay = 800,
   soundRevision = 0,
-  savedSoundRevision = 0
-const unsaved = () => !!batch || !!hits.length || soundRevision !== savedSoundRevision
+  savedSoundRevision = 0;
+const unsaved = () => !!batch || !!hits.length || soundRevision !== savedSoundRevision;
 function reportPending() {
-  const pending = unsaved() || interaction.busy
+  const pending = unsaved() || interaction.busy;
   if (pending !== reported) {
-    reported = pending
-    window.faionyx.send('window:mascotPending', pending)
+    reported = pending;
+    window.faionyx.send('window:mascotPending', pending);
   }
 }
 async function save(): Promise<void> {
-  if (flight) return flight
+  if (flight) return flight;
   flight = (async () => {
     while (unsaved()) {
       if (batch || hits.length) {
-        batch ??= { batchId: crypto.randomUUID(), hits: hits.splice(0, 512) }
-        await window.faionyx.invoke('mascots:batch', batch)
-        batch = undefined
+        batch ??= { batchId: crypto.randomUUID(), hits: hits.splice(0, 512) };
+        await window.faionyx.invoke('mascots:batch', batch);
+        batch = undefined;
       } else {
         const revision = soundRevision,
-          prefs = { ...sound.value }
-        await window.faionyx.invoke('mascots:sound', prefs)
-        savedSoundRevision = revision
+          prefs = { ...sound.value };
+        await window.faionyx.invoke('mascots:sound', prefs);
+        savedSoundRevision = revision;
       }
     }
-    persistError.value = ''
-    retryDelay = 800
+    persistError.value = '';
+    retryDelay = 800;
   })()
     .catch((error) => {
-      persistError.value = errText(error)
-      throw error
+      persistError.value = errText(error);
+      throw error;
     })
     .finally(() => {
-      flight = undefined
-      reportPending()
+      flight = undefined;
+      reportPending();
       if (unsaved() && !disposed) {
-        clearTimeout(retryTimer)
-        retryTimer = setTimeout(() => void save().catch(() => {}), retryDelay)
-        retryDelay = Math.min(8000, retryDelay * 2)
+        clearTimeout(retryTimer);
+        retryTimer = setTimeout(() => void save().catch(() => {}), retryDelay);
+        retryDelay = Math.min(8000, retryDelay * 2);
       }
-    })
-  return flight
+    });
+  return flight;
 }
 function queueSave() {
-  reportPending()
+  reportPending();
   if (!saveTimer)
     saveTimer = setTimeout(() => {
-      saveTimer = undefined
-      void save().catch(() => {})
-    }, 120)
+      saveTimer = undefined;
+      void save().catch(() => {});
+    }, 120);
 }
 function recordContacts(contacts: number[], now: number) {
   for (const contact of contacts) {
-    state.value = addMascotHits(state.value, ['kamu'])
-    hits.push('kamu')
-    lastContact = hidden.value ? -1000 : contact
-    contactsTotal++
-    if (!hidden.value) audio.play(0)
+    state.value = addMascotHits(state.value, ['kamu']);
+    hits.push('kamu');
+    lastContact = hidden.value ? -1000 : contact;
+    contactsTotal++;
+    if (!hidden.value) audio.play(0);
   }
-  if (contacts.length) queueSave()
+  if (contacts.length) queueSave();
 }
 async function drain() {
   while (interaction.busy && !disposed) {
-    if (!supported.value) throw new Error('互动预览不可用，请重试预览后保存')
+    if (!supported.value) throw new Error('互动预览不可用，请重试预览后保存');
     if (hidden.value) {
-      const now = performance.now()
-      interaction.resume(now)
-      recordContacts(interaction.advance(now + 10000, reduced.value).contacts, now + 10000)
-      interaction.pause(now)
-      busy.value = interaction.busy
-      reportPending()
+      const now = performance.now();
+      interaction.resume(now);
+      recordContacts(interaction.advance(now + 10000, reduced.value).contacts, now + 10000);
+      interaction.pause(now);
+      busy.value = interaction.busy;
+      reportPending();
     } else {
-      wake()
-      await new Promise<void>((resolve) => setTimeout(resolve, 16))
+      wake();
+      await new Promise<void>((resolve) => setTimeout(resolve, 16));
     }
   }
 }
 async function flush() {
-  const wasClosing = closing.value
-  closing.value = true
+  const wasClosing = closing.value;
+  closing.value = true;
   try {
-    await drain()
-    clearTimeout(saveTimer)
-    saveTimer = undefined
-    clearTimeout(retryTimer)
-    await save()
+    await drain();
+    clearTimeout(saveTimer);
+    saveTimer = undefined;
+    clearTimeout(retryTimer);
+    await save();
   } finally {
-    closing.value = wasClosing
+    closing.value = wasClosing;
   }
 }
 async function closeStage() {
-  if (closing.value) return
-  closing.value = true
+  if (closing.value) return;
+  closing.value = true;
   try {
-    await flush()
-    emit('close')
+    await flush();
+    emit('close');
   } catch (error) {
-    toast('互动次数尚未保存：' + errText(error), 'error')
+    toast('互动次数尚未保存：' + errText(error), 'error');
   } finally {
-    closing.value = false
+    closing.value = false;
   }
 }
 async function closeWindow(quit = false) {
-  if (closing.value) return
-  closing.value = true
+  if (closing.value) return;
+  closing.value = true;
   try {
-    await flush()
-    window.faionyx.send(quit ? 'window:mascotQuit' : 'window:close')
+    await flush();
+    window.faionyx.send(quit ? 'window:mascotQuit' : 'window:close');
   } catch (error) {
-    toast('互动次数尚未保存，关闭已暂停：' + errText(error), 'error')
+    toast('互动次数尚未保存，关闭已暂停：' + errText(error), 'error');
   } finally {
-    closing.value = false
+    closing.value = false;
   }
 }
 const unsubscribe = window.faionyx.on(
   'window:mascotClose',
   (payload) => void closeWindow((payload as { quit?: boolean } | undefined)?.quit === true)
-)
+);
 function slap() {
-  if (!ready.value || hidden.value || closing.value || confirmReset.value) return
-  void audio.unlock()
+  if (!ready.value || hidden.value || closing.value || confirmReset.value) return;
+  void audio.unlock();
   if (!interaction.accept(performance.now())) {
-    rejectedClicks++
-    data('rejectedClicks', String(rejectedClicks))
-    data('queue', String(interaction.queued))
-    toast('拍打队列已满，请稍候')
-    return
+    rejectedClicks++;
+    data('rejectedClicks', String(rejectedClicks));
+    data('queue', String(interaction.queued));
+    toast('拍打队列已满，请稍候');
+    return;
   }
-  acceptedClicks++
-  data('acceptedClicks', String(acceptedClicks))
-  data('queue', String(interaction.queued))
-  busy.value = true
-  reportPending()
-  wake()
+  acceptedClicks++;
+  data('acceptedClicks', String(acceptedClicks));
+  data('queue', String(interaction.queued));
+  busy.value = true;
+  reportPending();
+  wake();
 }
 function keyDown(event: KeyboardEvent) {
   if (event.key === ' ' || event.key === 'Enter') {
-    event.preventDefault()
-    if (!event.repeat) slap()
+    event.preventDefault();
+    if (!event.repeat) slap();
   }
 }
 function soundChanged(value: Partial<{ muted: boolean; volume: number }>) {
-  state.value.sound = normalizeMascotSound({ ...sound.value, ...value })
-  soundRevision++
-  audio.update()
-  void audio.unlock()
-  queueSave()
+  state.value.sound = normalizeMascotSound({ ...sound.value, ...value });
+  soundRevision++;
+  audio.update();
+  void audio.unlock();
+  queueSave();
 }
 async function resetCounts() {
   try {
-    await flush()
-    state.value = (await window.faionyx.invoke('mascots:reset', true, 'kamu')) as MascotState
-    confirmReset.value = false
-    menu.value = false
-    await nextTick(() => menuButton.value?.focus())
+    await flush();
+    state.value = (await window.faionyx.invoke('mascots:reset', true, 'kamu')) as MascotState;
+    confirmReset.value = false;
+    menu.value = false;
+    await nextTick(() => menuButton.value?.focus());
   } catch (error) {
-    toast(errText(error), 'error')
+    toast(errText(error), 'error');
   }
 }
 function closeMenu() {
-  menu.value = false
-  confirmReset.value = false
-  void nextTick(() => menuButton.value?.focus())
+  menu.value = false;
+  confirmReset.value = false;
+  void nextTick(() => menuButton.value?.focus());
 }
 function wake() {
-  if (!disposed && !hidden.value && player) frameDriver.request()
+  if (!disposed && !hidden.value && player) frameDriver.request();
 }
 function render(delivery: MascotFrame) {
-  const now = performance.now()
-  if (disposed || hidden.value || !player) return
+  const now = performance.now();
+  if (disposed || hidden.value || !player) return;
   // Host delivery may lag behind the rAF timestamp and recover on the next frame.
   // Phase, contact playback and feedback use the same actual callback clock.
   const started = now,
-    pose = interaction.advance(now, reduced.value, 50)
-  recordContacts(pose.contacts, now)
-  busy.value = interaction.busy
+    pose = interaction.advance(now, reduced.value, 50);
+  recordContacts(pose.contacts, now);
+  busy.value = interaction.busy;
   if (ready.value)
     palmAnimation?.present({
       cycleId: pose.cycleId,
       palm: pose.palm,
       contactAt: pose.contacts.length ? now : undefined,
       reduced: reduced.value,
-    })
+    });
   const activation = ready.value ? Math.min(1, (now - activated) / (reduced.value ? 100 : 380)) : 0,
-    ease = activation * activation * (3 - 2 * activation)
+    ease = activation * activation * (3 - 2 * activation);
   const idle = ready.value && decorativeActive.value ? Math.sin(now * 0.002) * 0.016 : 0,
-    pop = Math.max(0, 1 - (now - lastContact) / 210) * Math.sin(Math.min(1, Math.max(0, (now - lastContact) / 210)) * Math.PI)
+    pop = Math.max(0, 1 - (now - lastContact) / 210) * Math.sin(Math.min(1, Math.max(0, (now - lastContact) / 210)) * Math.PI);
   const waistAngle = Math.sin(pose.yaw / 2) * 0.28 + pop * 0.12,
     headAngle = -waistAngle + idle,
     armAngle = -0.04 + pop * 0.15,
-    scale = 0.75 + ease * 0.25
+    scale = 0.75 + ease * 0.25;
   const nextPose = [pose.yaw, waistAngle, headAngle, armAngle, scale],
-    modelChanged = !previousPose || nextPose.some((value, index) => value !== previousPose![index])
+    modelChanged = !previousPose || nextPose.some((value, index) => value !== previousPose![index]);
   if (modelChanged) {
-    player.rotation.y = pose.yaw
-    waist.rotation.x = waistAngle
-    player.skin.head.rotation.x = headAngle
-    player.skin.leftArm.rotation.set(-0.04 + pop * 0.15, 0, 0.05)
-    player.skin.rightArm.rotation.set(-0.04 + pop * 0.15, 0, -0.05)
-    player.skin.leftLeg.rotation.x = 0
-    player.skin.rightLeg.rotation.x = 0
-    player.scale.setScalar(scale)
-    player.position.y = 0
-    player.updateMatrixWorld(true)
-    let footY = Infinity
+    player.rotation.y = pose.yaw;
+    waist.rotation.x = waistAngle;
+    player.skin.head.rotation.x = headAngle;
+    player.skin.leftArm.rotation.set(-0.04 + pop * 0.15, 0, 0.05);
+    player.skin.rightArm.rotation.set(-0.04 + pop * 0.15, 0, -0.05);
+    player.skin.leftLeg.rotation.x = 0;
+    player.skin.rightLeg.rotation.x = 0;
+    player.scale.setScalar(scale);
+    player.position.y = 0;
+    player.updateMatrixWorld(true);
+    let footY = Infinity;
     for (const part of feet)
-      for (const corner of part.corners) footY = Math.min(footY, point.copy(corner).applyMatrix4(part.mesh.matrixWorld).y)
-    player.position.y += 1 - footY
-    player.updateMatrixWorld(true)
-    projected.copy(pelvis.getWorldPosition(point)).project(camera)
-    batchRenderer?.update()
+      for (const corner of part.corners) footY = Math.min(footY, point.copy(corner).applyMatrix4(part.mesh.matrixWorld).y);
+    player.position.y += 1 - footY;
+    player.updateMatrixWorld(true);
+    projected.copy(pelvis.getWorldPosition(point)).project(camera);
+    batchRenderer?.update();
     try {
-      if (software && batchRenderer) software.render(batchRenderer.mesh, camera)
+      if (software && batchRenderer) software.render(batchRenderer.mesh, camera);
       else if (gl) {
-        const drawingGl = gl
+        const drawingGl = gl;
         if (!ready.value) {
-          const compileStarted = performance.now()
-          gl.compile(scene, camera)
-          data('compileMs', String(performance.now() - compileStarted))
+          const compileStarted = performance.now();
+          gl.compile(scene, camera);
+          data('compileMs', String(performance.now() - compileStarted));
         }
-        const submitStarted = performance.now()
-        gl.render(scene, camera)
+        const submitStarted = performance.now();
+        gl.render(scene, camera);
         if (gl !== drawingGl) {
-          previousPose = undefined
-          return
+          previousPose = undefined;
+          return;
         }
-        if (!ready.value) data('firstSubmitMs', String(performance.now() - submitStarted))
+        if (!ready.value) data('firstSubmitMs', String(performance.now() - submitStarted));
       }
     } catch (error) {
       if (software) {
-        supported.value = false
-        persistError.value = '像素预览无法加载：' + errText(error)
-      } else useSoftware('WebGL compile/draw: ' + errText(error))
-      return
+        supported.value = false;
+        persistError.value = '像素预览无法加载：' + errText(error);
+      } else useSoftware('WebGL compile/draw: ' + errText(error));
+      return;
     }
-    previousPose = nextPose
+    previousPose = nextPose;
   }
   // Only the local compositor transform moves the feedback; left/top stay fixed.
   // The palm's own transform remains relative to this projected pelvis position.
-  style(feedbackElement, 'translate', `${(projected.x + 1) * 24}px ${(1 - projected.y) * 36}px`)
+  style(feedbackElement, 'translate', `${(projected.x + 1) * 24}px ${(1 - projected.y) * 36}px`);
   if (feedbackElement && feedbackElement.dataset.contacts !== String(contactsTotal))
-    feedbackElement.dataset.contacts = String(contactsTotal)
-  data('cycleId', String(pose.cycleId))
-  if (pose.contacts.length) data('contactAt', String(now))
-  const feedback = palmAnimation?.snapshot()
+    feedbackElement.dataset.contacts = String(contactsTotal);
+  data('cycleId', String(pose.cycleId));
+  if (pose.contacts.length) data('contactAt', String(now));
+  const feedback = palmAnimation?.snapshot();
   if (feedback) {
-    data('palmAnimationCurrentTime', String(feedback.palmCurrentTime))
-    data('printAnimationCurrentTime', String(feedback.printCurrentTime))
-    data('palmAnimationPlayState', feedback.palmPlayState)
-    data('printAnimationPlayState', feedback.printPlayState)
+    data('palmAnimationCurrentTime', String(feedback.palmCurrentTime));
+    data('printAnimationCurrentTime', String(feedback.printCurrentTime));
+    data('palmAnimationPlayState', feedback.palmPlayState);
+    data('printAnimationPlayState', feedback.printPlayState);
   }
-  data('phase', interaction.phase)
-  data('queue', String(interaction.queued))
-  data('contacts', String(contactsTotal))
-  data('bodyYaw', String(pose.yaw))
-  data('activation', String(activation))
-  data('renderDrawCalls', String(modelChanged ? (software?.info.render.calls ?? gl?.info.render.calls ?? 0) : 0))
-  data('rasterFrames', String(software?.info.frames ?? 0))
-  data('canvasUploads', String(software?.info.totalUploads ?? 0))
-  data('rafTimestamp', delivery.kind === 'raf' ? String(delivery.rafTimestamp) : 'NaN')
-  data('renderNow', String(now))
-  data('frameCallbackKind', delivery.kind)
-  data('frameFallbacks', String(delivery.fallbacks))
-  data('frameCallbackGap', String(delivery.gap))
-  data('framePendingAge', String(delivery.pendingAge))
+  data('phase', interaction.phase);
+  data('queue', String(interaction.queued));
+  data('contacts', String(contactsTotal));
+  data('bodyYaw', String(pose.yaw));
+  data('activation', String(activation));
+  data('renderDrawCalls', String(modelChanged ? (software?.info.render.calls ?? gl?.info.render.calls ?? 0) : 0));
+  data('rasterFrames', String(software?.info.frames ?? 0));
+  data('canvasUploads', String(software?.info.totalUploads ?? 0));
+  data('rafTimestamp', delivery.kind === 'raf' ? String(delivery.rafTimestamp) : 'NaN');
+  data('renderNow', String(now));
+  data('frameCallbackKind', delivery.kind);
+  data('frameFallbacks', String(delivery.fallbacks));
+  data('frameCallbackGap', String(delivery.gap));
+  data('framePendingAge', String(delivery.pendingAge));
   // A real callback observation is separate from raster work or canvas uploads.
   // Keep this observation even when exact pixels are unchanged.
-  if (host.value) host.value.dataset.renderMs = String(performance.now() - started)
-  reportPending()
+  if (host.value) host.value.dataset.renderMs = String(performance.now() - started);
+  reportPending();
   if (!ready.value) {
     if (software) {
-      data('gpuReadyStatus', 'software-first-raster')
-      publishReady(now)
-    } else confirmGpuDraw()
-    return
+      data('gpuReadyStatus', 'software-first-raster');
+      publishReady(now);
+    } else confirmGpuDraw();
+    return;
   }
-  if (decorativeActive.value || interaction.busy || now - lastContact < 500 || activation < 1) frameDriver.request()
+  if (decorativeActive.value || interaction.busy || now - lastContact < 500 || activation < 1) frameDriver.request();
 }
 async function prepareScene() {
-  if (disposed || hidden.value || !initialStateReady || !host.value) return
+  if (disposed || hidden.value || !initialStateReady || !host.value) return;
   if (feedbackPending) {
-    restartFeedback = true
-    return
+    restartFeedback = true;
+    return;
   }
-  feedbackPending = true
+  feedbackPending = true;
   try {
-    feedbackElement = host.value.querySelector<HTMLElement>('.mascot-feedback') ?? undefined
-    palmElement = feedbackElement?.querySelector<HTMLImageElement>('.pixel-palm') ?? undefined
-    printElement = feedbackElement?.querySelector<HTMLImageElement>('.palm-print') ?? undefined
-    if (!palmElement || !printElement) throw new Error('反馈像素图片节点不可用')
+    feedbackElement = host.value.querySelector<HTMLElement>('.mascot-feedback') ?? undefined;
+    palmElement = feedbackElement?.querySelector<HTMLImageElement>('.pixel-palm') ?? undefined;
+    printElement = feedbackElement?.querySelector<HTMLImageElement>('.palm-print') ?? undefined;
+    if (!palmElement || !printElement) throw new Error('反馈像素图片节点不可用');
     if (!feedbackReady) {
-      data('feedbackPreparation', 'pending')
+      data('feedbackPreparation', 'pending');
       const preparation = prepareFeedbackImages(
         [
           { name: 'palm', image: palmElement, url: palmUrl },
           { name: 'print', image: printElement, url: printUrl },
         ],
         (event) => {
-          if (disposed) return
-          const prefix = event.name === 'palm' ? 'feedbackPalm' : 'feedbackPrint'
-          data(prefix + 'Phase', event.phase)
-          data(prefix + event.phase[0].toUpperCase() + event.phase.slice(1) + 'At', String(event.at))
-          if (event.reason) data(prefix + 'Reason', event.reason)
+          if (disposed) return;
+          const prefix = event.name === 'palm' ? 'feedbackPalm' : 'feedbackPrint';
+          data(prefix + 'Phase', event.phase);
+          data(prefix + event.phase[0].toUpperCase() + event.phase.slice(1) + 'At', String(event.at));
+          if (event.reason) data(prefix + 'Reason', event.reason);
         }
-      )
-      cancelFeedback = preparation.cancel
-      await preparation.promise
-      if (disposed || hidden.value) return
-      feedbackReady = true
-      data('feedbackPreparation', 'decoded')
-      supported.value = true
+      );
+      cancelFeedback = preparation.cancel;
+      await preparation.promise;
+      if (disposed || hidden.value) return;
+      feedbackReady = true;
+      data('feedbackPreparation', 'decoded');
+      supported.value = true;
     }
     palmAnimation ??= new KamuPalmAnimation(
       palmElement,
       printElement,
       (event) => {
-        data(event.role === 'palm' ? 'palmAnimationPhase' : 'printAnimationPhase', event.phase)
-        data(event.role === 'palm' ? 'palmAnimationAt' : 'printAnimationAt', String(event.at))
+        data(event.role === 'palm' ? 'palmAnimationPhase' : 'printAnimationPhase', event.phase);
+        data(event.role === 'palm' ? 'palmAnimationAt' : 'printAnimationAt', String(event.at));
       },
       () => performance.now()
-    )
-    if (!player) await buildScene()
-    else wake()
+    );
+    if (!player) await buildScene();
+    else wake();
   } catch (error) {
     if (!disposed && !hidden.value) {
-      supported.value = false
-      data('feedbackPreparation', 'failed')
-      persistError.value = '互动反馈无法加载：' + errText(error)
+      supported.value = false;
+      data('feedbackPreparation', 'failed');
+      persistError.value = '互动反馈无法加载：' + errText(error);
     }
   } finally {
-    cancelFeedback = undefined
-    feedbackPending = false
-    const restart = restartFeedback
-    restartFeedback = false
-    if (restart && !disposed && !hidden.value && !feedbackReady) void prepareScene()
+    cancelFeedback = undefined;
+    feedbackPending = false;
+    const restart = restartFeedback;
+    restartFeedback = false;
+    if (restart && !disposed && !hidden.value && !feedbackReady) void prepareScene();
   }
 }
 async function buildScene() {
-  if (disposed || !host.value || !viewport.value) return
+  if (disposed || !host.value || !viewport.value) return;
   try {
-    scene = new Scene()
-    camera = new OrthographicCamera(-12, 12, 35, -1, 0.1, 300)
-    camera.position.set(0, 0, 100)
-    camera.lookAt(0, 0, 0)
-    scene.add(new AmbientLight(0xffffff, 2.1))
-    const light = new DirectionalLight(0xffffff, 1.2)
-    light.position.set(-40, 80, 70)
-    scene.add(light)
+    scene = new Scene();
+    camera = new OrthographicCamera(-12, 12, 35, -1, 0.1, 300);
+    camera.position.set(0, 0, 100);
+    camera.lookAt(0, 0, 0);
+    scene.add(new AmbientLight(0xffffff, 2.1));
+    const light = new DirectionalLight(0xffffff, 1.2);
+    light.position.set(-40, 80, 70);
+    scene.add(light);
     try {
-      gl = new WebGLRenderer({ alpha: true, antialias: false, powerPreference: 'low-power' })
-      gl.setPixelRatio(1)
-      gl.setSize(48, 72)
-      gl.setClearColor(0, 0)
+      gl = new WebGLRenderer({ alpha: true, antialias: false, powerPreference: 'low-power' });
+      gl.setPixelRatio(1);
+      gl.setSize(48, 72);
+      gl.setClearColor(0, 0);
       const context = gl.getContext(),
         debug = context.getExtension('WEBGL_debug_renderer_info'),
-        renderer = String(context.getParameter(debug?.UNMASKED_RENDERER_WEBGL ?? context.RENDERER))
-      host.value!.dataset.rendererProbe = renderer
+        renderer = String(context.getParameter(debug?.UNMASKED_RENDERER_WEBGL ?? context.RENDERER));
+      host.value!.dataset.rendererProbe = renderer;
       if (/swiftshader|llvmpipe|lavapipe|softpipe|software/i.test(renderer)) {
-        gl.dispose()
-        gl.forceContextLoss()
-        gl = undefined
-        software = new MascotSoftwareRenderer()
+        gl.dispose();
+        gl.forceContextLoss();
+        gl = undefined;
+        software = new MascotSoftwareRenderer();
       }
     } catch {
-      gl?.dispose()
-      gl = undefined
-      software = new MascotSoftwareRenderer()
+      gl?.dispose();
+      gl = undefined;
+      software = new MascotSoftwareRenderer();
     }
     if (gl) {
-      contextCanvas = gl.domElement
-      contextCanvas.addEventListener('webglcontextlost', contextLost)
+      contextCanvas = gl.domElement;
+      contextCanvas.addEventListener('webglcontextlost', contextLost);
     }
-    software?.setSize(48, 72, 1)
-    viewport.value!.prepend(software?.domElement ?? gl!.domElement)
-    host.value!.dataset.renderBackend = software ? 'canvas2d-depth' : 'webgl-pbr'
-    emit('render-mode', !!software)
+    software?.setSize(48, 72, 1);
+    viewport.value!.prepend(software?.domElement ?? gl!.domElement);
+    host.value!.dataset.renderBackend = software ? 'canvas2d-depth' : 'webgl-pbr';
+    emit('render-mode', !!software);
     const image = await new Promise<HTMLImageElement>((resolve, reject) => {
       const image = new Image(),
         clear = () => {
-          image.onload = null
-          image.onerror = null
-          cancelImage = undefined
-        }
+          image.onload = null;
+          image.onerror = null;
+          cancelImage = undefined;
+        };
       cancelImage = () => {
-        clear()
-        image.src = ''
-        reject(new Error('像素预览已关闭'))
-      }
+        clear();
+        image.src = '';
+        reject(new Error('像素预览已关闭'));
+      };
       image.onload = () => {
-        clear()
-        resolve(image)
-      }
+        clear();
+        resolve(image);
+      };
       image.onerror = (event) => {
-        clear()
-        reject(event)
-      }
-      image.src = skinUrl
-    })
-    if (disposed || !host.value || !viewport.value) return
-    const skin = new Texture(image)
-    skin.colorSpace = SRGBColorSpace
-    skin.magFilter = skin.minFilter = NearestFilter
-    skin.generateMipmaps = false
-    skin.needsUpdate = true
-    textures.push(skin)
-    player = new PreviewPlayer()
-    player.skin.map = skin
-    player.skin.setOuterLayerVisible(false)
-    player.skin.position.y = 16.8
-    player.skin.head.scale.setScalar(1.42)
-    player.skin.body.scale.y = 0.72
-    player.skin.body.position.y = -4.3
+        clear();
+        reject(event);
+      };
+      image.src = skinUrl;
+    });
+    if (disposed || !host.value || !viewport.value) return;
+    const skin = new Texture(image);
+    skin.colorSpace = SRGBColorSpace;
+    skin.magFilter = skin.minFilter = NearestFilter;
+    skin.generateMipmaps = false;
+    skin.needsUpdate = true;
+    textures.push(skin);
+    player = new PreviewPlayer();
+    player.skin.map = skin;
+    player.skin.setOuterLayerVisible(false);
+    player.skin.position.y = 16.8;
+    player.skin.head.scale.setScalar(1.42);
+    player.skin.body.scale.y = 0.72;
+    player.skin.body.position.y = -4.3;
     for (const leg of [player.skin.leftLeg, player.skin.rightLeg]) {
-      leg.scale.y = 0.68
-      leg.position.y = -8.6
+      leg.scale.y = 0.68;
+      leg.position.y = -8.6;
     }
     for (const arm of [player.skin.leftArm, player.skin.rightArm]) {
-      arm.scale.y = 0.72
-      arm.position.y = -1.4
+      arm.scale.y = 0.72;
+      arm.position.y = -1.4;
     }
-    waist = new Group()
-    waist.position.y = -8.6
-    player.skin.add(waist)
-    player.updateMatrixWorld(true)
-    for (const part of [player.skin.head, player.skin.body, player.skin.leftArm, player.skin.rightArm]) waist.attach(part)
-    pelvis = new Object3D()
-    pelvis.position.set(0, -7.9, -2.3)
-    player.skin.add(pelvis)
+    waist = new Group();
+    waist.position.y = -8.6;
+    player.skin.add(waist);
+    player.updateMatrixWorld(true);
+    for (const part of [player.skin.head, player.skin.body, player.skin.leftArm, player.skin.rightArm]) waist.attach(part);
+    pelvis = new Object3D();
+    pelvis.position.set(0, -7.9, -2.3);
+    player.skin.add(pelvis);
     for (const [name, part] of [
       ['head', player.skin.head],
       ['body', player.skin.body],
@@ -696,27 +696,27 @@ async function buildScene() {
     ] as const)
       part.innerLayer.traverse((object) => {
         if (object instanceof Mesh) {
-          parts.push(object)
+          parts.push(object);
           if (name.endsWith('Leg')) {
-            object.geometry.computeBoundingBox()
+            object.geometry.computeBoundingBox();
             const b = object.geometry.boundingBox!,
-              corners: Vector3[] = []
+              corners: Vector3[] = [];
             for (const x of [b.min.x, b.max.x])
-              for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) corners.push(new Vector3(x, y, z))
-            feet.push({ mesh: object, corners })
+              for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) corners.push(new Vector3(x, y, z));
+            feet.push({ mesh: object, corners });
           }
         }
-      })
-    const atlas = createMascotAtlas([image])
-    textures.push(atlas)
-    batchRenderer = new MascotBatchRenderer([parts], atlas)
-    scene.add(batchRenderer.mesh)
-    activated = performance.now()
-    wake()
+      });
+    const atlas = createMascotAtlas([image]);
+    textures.push(atlas);
+    batchRenderer = new MascotBatchRenderer([parts], atlas);
+    scene.add(batchRenderer.mesh);
+    activated = performance.now();
+    wake();
   } catch (error) {
     if (!disposed) {
-      supported.value = false
-      persistError.value = '像素预览无法加载：' + errText(error)
+      supported.value = false;
+      persistError.value = '像素预览无法加载：' + errText(error);
     }
   }
 }
@@ -724,64 +724,64 @@ watch(
   hidden,
   (value) => {
     if (value) {
-      interaction.pause(performance.now())
-      palmAnimation?.pause()
-      frameDriver.cancel()
-      cancelGpuReady()
-      cancelFeedback?.()
-      audio.pause()
-      void save().catch(() => {})
+      interaction.pause(performance.now());
+      palmAnimation?.pause();
+      frameDriver.cancel();
+      cancelGpuReady();
+      cancelFeedback?.();
+      audio.pause();
+      void save().catch(() => {});
     } else {
       if (ready.value) {
-        interaction.resume(performance.now())
-        palmAnimation?.resume()
-      } else previousPose = undefined
-      void audio.unlock()
-      if (!feedbackReady) void prepareScene()
-      else wake()
+        interaction.resume(performance.now());
+        palmAnimation?.resume();
+      } else previousPose = undefined;
+      void audio.unlock();
+      if (!feedbackReady) void prepareScene();
+      else wake();
     }
   },
   { flush: 'sync' }
-)
-watch(decorativeActive, wake)
-watch(reduced, wake)
+);
+watch(decorativeActive, wake);
+watch(reduced, wake);
 onMounted(async () => {
   try {
-    const initial = (await window.faionyx.invoke('mascots:state')) as MascotState
-    if (disposed) return
-    state.value = initial
-    await audio.unlock()
-    if (disposed) return
-    initialStateReady = true
-    await prepareScene()
+    const initial = (await window.faionyx.invoke('mascots:state')) as MascotState;
+    if (disposed) return;
+    state.value = initial;
+    await audio.unlock();
+    if (disposed) return;
+    initialStateReady = true;
+    await prepareScene();
   } catch (error) {
     if (!disposed) {
-      persistError.value = errText(error)
-      toast(errText(error), 'error')
+      persistError.value = errText(error);
+      toast(errText(error), 'error');
     }
   }
-})
+});
 onUnmounted(() => {
-  disposed = true
-  frameDriver.dispose()
-  palmAnimation?.dispose()
-  cancelFeedback?.()
-  palmElement?.removeAttribute('src')
-  printElement?.removeAttribute('src')
-  cancelImage?.()
-  cancelGpuReady()
-  unsubscribe()
-  clearTimeout(saveTimer)
-  clearTimeout(retryTimer)
-  batchRenderer?.dispose()
-  player?.dispose()
-  for (const texture of textures) texture.dispose()
-  releaseGl()
-  software?.dispose()
-  software?.domElement.remove()
-  void audio.dispose()
-})
-defineExpose({ flush, closeStage })
+  disposed = true;
+  frameDriver.dispose();
+  palmAnimation?.dispose();
+  cancelFeedback?.();
+  palmElement?.removeAttribute('src');
+  printElement?.removeAttribute('src');
+  cancelImage?.();
+  cancelGpuReady();
+  unsubscribe();
+  clearTimeout(saveTimer);
+  clearTimeout(retryTimer);
+  batchRenderer?.dispose();
+  player?.dispose();
+  for (const texture of textures) texture.dispose();
+  releaseGl();
+  software?.dispose();
+  software?.domElement.remove();
+  void audio.dispose();
+});
+defineExpose({ flush, closeStage });
 </script>
 <template>
   <section

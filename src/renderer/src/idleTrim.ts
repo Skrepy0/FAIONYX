@@ -10,33 +10,33 @@
 
 export interface IdleReleasable {
   /** 释放可重建的大缓存引用（不丢功能：回到前台时按需重建） */
-  release(): void
+  release(): void;
   /** 可选：窗口恢复时的即时重建钩子（懒加载场景可省略） */
-  restore?(): void
+  restore?(): void;
 }
 
-const releasables = new Set<IdleReleasable>()
+const releasables = new Set<IdleReleasable>();
 
 /** 注册可释放缓存；返回注销函数。重复注册同一对象会被去重。 */
 export function registerIdleReleasable(releasable: IdleReleasable): () => void {
-  releasables.add(releasable)
-  return () => releasables.delete(releasable)
+  releasables.add(releasable);
+  return () => releasables.delete(releasable);
 }
 
 declare global {
   interface Window {
     /** --expose-gc 开启后存在；缺失时静默跳过 */
-    gc?: () => void
+    gc?: () => void;
   }
 }
 
-let started = false
+let started = false;
 
 function applyHiddenState(hidden: boolean): void {
   for (const releasable of releasables) {
     try {
-      if (hidden) releasable.release()
-      else releasable.restore?.()
+      if (hidden) releasable.release();
+      else releasable.restore?.();
     } catch {
       /* 单个钩子失败不影响其他瘦身步骤 */
     }
@@ -44,7 +44,7 @@ function applyHiddenState(hidden: boolean): void {
   if (hidden) {
     // 释放引用后主动 GC，让堆立刻回落（无 --expose-gc 时静默跳过）
     try {
-      window.gc?.()
+      window.gc?.();
     } catch {
       /* GC 失败无碍 */
     }
@@ -53,11 +53,11 @@ function applyHiddenState(hidden: boolean): void {
 
 /** 全局只启动一次；在 main.ts 挂载后调用。 */
 export function startIdleTrim(): void {
-  if (started) return
-  started = true
-  document.addEventListener('visibilitychange', () => applyHiddenState(document.hidden))
+  if (started) return;
+  started = true;
+  document.addEventListener('visibilitychange', () => applyHiddenState(document.hidden));
   try {
-    window.faionyx.on('faionyx:mem-trim', () => applyHiddenState(true))
+    window.faionyx.on('faionyx:mem-trim', () => applyHiddenState(true));
   } catch {
     /* 桥接不可用（测试环境）时仅靠 visibilitychange 工作 */
   }

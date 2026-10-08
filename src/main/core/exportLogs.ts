@@ -1,71 +1,71 @@
 /** 启动失败诊断 ZIP：所有文本先脱敏，缺失项写入 manifest，不因单个日志缺失而失败。 */
-import fs from 'node:fs'
-import path from 'node:path'
-import os from 'node:os'
-import { execFile } from 'node:child_process'
-import { promisify } from 'node:util'
-import { app, dialog, type BrowserWindow } from 'electron'
-import { getSettings } from './settings'
-import { gameDir } from './paths'
-import { readVersionJson, listAllInstalled } from './versions'
-import { getLastLaunch } from './launch'
-import { samePath } from './folderPaths'
-import { JAVA_PROBE_VM_ARGS } from './javaScanUtils'
-import { exitHistory } from './exitHistory'
-import { instanceDirectoryState } from './instances'
-import { selectedAccount } from './accounts'
-import { launcherLogPath } from './launcherLog'
-import { redactDiagnosticPath, redactDiagnosticText, safeDiagnosticFilePart } from './diagnostics'
-import { writeDiagnosticArchive, type DiagnosticManifestEntry, type DiagnosticSource } from './diagnosticArchive'
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { app, dialog, type BrowserWindow } from 'electron';
+import { getSettings } from './settings';
+import { gameDir } from './paths';
+import { readVersionJson, listAllInstalled } from './versions';
+import { getLastLaunch } from './launch';
+import { samePath } from './folderPaths';
+import { JAVA_PROBE_VM_ARGS } from './javaScanUtils';
+import { exitHistory } from './exitHistory';
+import { instanceDirectoryState } from './instances';
+import { selectedAccount } from './accounts';
+import { launcherLogPath } from './launcherLog';
+import { redactDiagnosticPath, redactDiagnosticText, safeDiagnosticFilePart } from './diagnostics';
+import { writeDiagnosticArchive, type DiagnosticManifestEntry, type DiagnosticSource } from './diagnosticArchive';
 
-const execFileAsync = promisify(execFile)
+const execFileAsync = promisify(execFile);
 
 export interface DiagnosticManifest {
-  schemaVersion: 1
-  exportedAt: string
-  launcher: { name: 'FAIONYX'; version: string }
+  schemaVersion: 1;
+  exportedAt: string;
+  launcher: { name: 'FAIONYX'; version: string };
   instance: {
-    id: string
-    name: string
-    minecraftVersion: string
-    loader: string | null
-    loaderVersion: string | null
-    directory: string
-    isolated: boolean
-  }
+    id: string;
+    name: string;
+    minecraftVersion: string;
+    loader: string | null;
+    loaderVersion: string | null;
+    directory: string;
+    isolated: boolean;
+  };
   process: {
-    pid: number | null
-    startedAt: string | null
-    endedAt: string | null
-    exitCode: number | null
-    spawnError: string | null
-    command: string | null
-  }
-  java: { path: string; version: string; architecture: string }
-  operatingSystem: { platform: string; release: string; architecture: string }
-  files: DiagnosticManifestEntry[]
+    pid: number | null;
+    startedAt: string | null;
+    endedAt: string | null;
+    exitCode: number | null;
+    spawnError: string | null;
+    command: string | null;
+  };
+  java: { path: string; version: string; architecture: string };
+  operatingSystem: { platform: string; release: string; architecture: string };
+  files: DiagnosticManifestEntry[];
 }
 
 function fmtStamp(d: Date): string {
-  const p = (n: number): string => String(n).padStart(2, '0')
-  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`
+  const p = (n: number): string => String(n).padStart(2, '0');
+  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
 }
 
 async function newestCrashReport(dir: string): Promise<string | null> {
   try {
-    const root = path.join(dir, 'crash-reports')
-    const entries = await fs.promises.readdir(root, { withFileTypes: true })
+    const root = path.join(dir, 'crash-reports');
+    const entries = await fs.promises.readdir(root, { withFileTypes: true });
     const files = await Promise.all(
       entries
         .filter((entry) => entry.isFile() && /\.(?:txt|log)$/i.test(entry.name))
         .map(async (entry) => {
-          const file = path.join(root, entry.name)
-          return { file, mtime: (await fs.promises.stat(file)).mtimeMs }
+          const file = path.join(root, entry.name);
+          return { file, mtime: (await fs.promises.stat(file)).mtimeMs };
         })
-    )
-    return files.sort((a, b) => b.mtime - a.mtime)[0]?.file ?? null
+    );
+    return files.sort((a, b) => b.mtime - a.mtime)[0]?.file ?? null;
   } catch {
-    return null
+    return null;
   }
 }
 
@@ -74,29 +74,29 @@ async function javaSummary(javaPath: string): Promise<{ path: string; version: s
     path: redactDiagnosticPath(javaPath),
     version: '（未知）',
     architecture: '（未知）',
-  }
-  if (!javaPath) return unknown
+  };
+  if (!javaPath) return unknown;
   try {
     const result = await execFileAsync(javaPath, [...JAVA_PROBE_VM_ARGS, '-version'], {
       encoding: 'utf-8',
       timeout: 8_000,
       windowsHide: true,
       maxBuffer: 256 * 1024,
-    })
-    const output = `${result.stderr ?? ''}\n${result.stdout ?? ''}`
-    const version = /version\s+"([^"]+)"/i.exec(output)?.[1] ?? output.split(/\r?\n/)[0]?.trim() ?? '（未知）'
-    const architecture = /64-Bit|x86_64|aarch64/i.test(output) ? '64-bit' : /32-Bit|i[3-6]86|x86/i.test(output) ? '32-bit' : '（未知）'
-    return { path: redactDiagnosticPath(javaPath), version, architecture }
+    });
+    const output = `${result.stderr ?? ''}\n${result.stdout ?? ''}`;
+    const version = /version\s+"([^"]+)"/i.exec(output)?.[1] ?? output.split(/\r?\n/)[0]?.trim() ?? '（未知）';
+    const architecture = /64-Bit|x86_64|aarch64/i.test(output) ? '64-bit' : /32-Bit|i[3-6]86|x86/i.test(output) ? '32-bit' : '（未知）';
+    return { path: redactDiagnosticPath(javaPath), version, architecture };
   } catch (error) {
     return {
       ...unknown,
       version: `验证失败：${redactDiagnosticText(error instanceof Error ? error.message : String(error))}`,
-    }
+    };
   }
 }
 
 function summaryText(manifest: DiagnosticManifest): string {
-  const m = manifest
+  const m = manifest;
   return [
     '================ FAIONYX 启动失败诊断摘要 ================',
     `导出时间: ${m.exportedAt}`,
@@ -119,52 +119,52 @@ function summaryText(manifest: DiagnosticManifest): string {
     `启动参数摘要: ${m.process.command ?? '（尚未生成）'}`,
     '',
     '每个日志的来源、缺失与截断情况见 manifest.json。',
-  ].join('\n')
+  ].join('\n');
 }
 
 /** 弹原生保存对话框并异步生成 ZIP；取消保存返回 null。 */
 export async function exportLaunchLogs(win: BrowserWindow | null, versionId: string): Promise<string | null> {
   // 扫描会同时建立“版本 -> 游戏文件夹”映射，避免活动目录切换后收错实例日志。
-  let installed: ReturnType<typeof listAllInstalled> = []
+  let installed: ReturnType<typeof listAllInstalled> = [];
   try {
-    installed = listAllInstalled()
+    installed = listAllInstalled();
   } catch {
     // 单个来源缺失不阻断导出。
   }
-  const last = getLastLaunch()
-  const vid = versionId || last?.versionId || 'unknown'
-  const item = installed.find((value) => value.id === vid && samePath(value.folder, gameDir()))
-  const folder = item?.folder || gameDir()
+  const last = getLastLaunch();
+  const vid = versionId || last?.versionId || 'unknown';
+  const item = installed.find((value) => value.id === vid && samePath(value.folder, gameDir()));
+  const folder = item?.folder || gameDir();
   let directoryState = item
     ? {
         path: item.gameDirectory || folder,
         isolated: item.isolated === true,
       }
-    : { path: folder, isolated: false }
+    : { path: folder, isolated: false };
   try {
-    directoryState = instanceDirectoryState(vid, readVersionJson(vid))
+    directoryState = instanceDirectoryState(vid, readVersionJson(vid));
   } catch {
     // 版本 JSON 缺失时使用已扫描出的目录信息。
   }
-  const effectiveGameDir = last?.versionId === vid && last.effectiveGameDir ? last.effectiveGameDir : directoryState.path
-  const isolated = directoryState.isolated
-  const now = new Date()
-  const defName = `FAIONYX-Diagnostic-${safeDiagnosticFilePart(item?.mcVersion || vid)}-${fmtStamp(now)}.zip`
+  const effectiveGameDir = last?.versionId === vid && last.effectiveGameDir ? last.effectiveGameDir : directoryState.path;
+  const isolated = directoryState.isolated;
+  const now = new Date();
+  const defName = `FAIONYX-Diagnostic-${safeDiagnosticFilePart(item?.mcVersion || vid)}-${fmtStamp(now)}.zip`;
   const opts = {
     title: '导出错误日志',
     defaultPath: defName,
     filters: [{ name: 'ZIP 压缩包', extensions: ['zip'] }],
-  }
-  const result = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
-  if (result.canceled || !result.filePath) return null
+  };
+  const result = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts);
+  if (result.canceled || !result.filePath) return null;
 
-  const account = selectedAccount()
+  const account = selectedAccount();
   const secrets = [
     account?.accessToken ?? '',
     account?.refreshToken ?? '',
     account?.clientToken ?? '',
     account?.loginIdentifier ?? '',
-  ].filter(Boolean)
+  ].filter(Boolean);
   const currentLaunch =
     last?.versionId === vid && last.effectiveGameDir && samePath(last.effectiveGameDir, effectiveGameDir)
       ? last
@@ -176,7 +176,7 @@ export async function exportLaunchLogs(win: BrowserWindow | null, versionId: str
               e.context?.versionId === vid &&
               e.context?.effectiveGameDir &&
               samePath(String(e.context.effectiveGameDir), effectiveGameDir)
-          )?.context as unknown as typeof last)
+          )?.context as unknown as typeof last);
   const manifest: DiagnosticManifest = {
     schemaVersion: 1,
     exportedAt: now.toISOString(),
@@ -205,10 +205,10 @@ export async function exportLaunchLogs(win: BrowserWindow | null, versionId: str
       architecture: os.arch(),
     },
     files: [],
-  }
+  };
 
-  const crash = await newestCrashReport(effectiveGameDir)
-  const launchLogDir = currentLaunch?.logDir || path.join(folder, 'faionyx-logs')
+  const crash = await newestCrashReport(effectiveGameDir);
+  const launchLogDir = currentLaunch?.logDir || path.join(folder, 'faionyx-logs');
   const sources: DiagnosticSource[] = [
     {
       archivePath: crash ? `crash-reports/${path.basename(crash)}` : 'crash-reports/latest.txt',
@@ -245,27 +245,27 @@ export async function exportLaunchLogs(win: BrowserWindow | null, versionId: str
       source: path.join(launchLogDir, 'stderr.log'),
       missingPlaceholder: true,
     },
-  ]
+  ];
   // 历史会话归档一并带上（最多 3 份）；缺失时 manifest 只记 missing，不影响导出
-  const logsDir = path.dirname(launcherLogPath())
-  let archives: string[] = []
+  const logsDir = path.dirname(launcherLogPath());
+  let archives: string[] = [];
   try {
     archives = fs
       .readdirSync(logsDir)
       .filter((name) => /^launcher-\d{8}-\d{6}.*\.log$/.test(name))
       .sort()
       .reverse()
-      .slice(0, 3)
+      .slice(0, 3);
   } catch {
     /* 日志目录不可读时跳过归档 */
   }
   for (const name of archives) {
-    sources.push({ archivePath: `launcher/${name}`, source: path.join(logsDir, name) })
+    sources.push({ archivePath: `launcher/${name}`, source: path.join(logsDir, name) });
   }
   try {
-    await writeDiagnosticArchive(result.filePath, manifest, sources, summaryText(manifest), secrets)
-    return result.filePath
+    await writeDiagnosticArchive(result.filePath, manifest, sources, summaryText(manifest), secrets);
+    return result.filePath;
   } catch (error) {
-    throw new Error(`写入诊断包失败：${error instanceof Error ? error.message : String(error)}`)
+    throw new Error(`写入诊断包失败：${error instanceof Error ? error.message : String(error)}`);
   }
 }

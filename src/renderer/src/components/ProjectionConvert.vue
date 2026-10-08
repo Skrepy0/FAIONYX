@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import type { ProjectionEntry, ProjectionFormat, ProjectionAnalysis, ProjectionChoices } from '@shared/projections'
-import SelectMenu from './SelectMenu.vue'
-import { errText } from '../api'
-import { toast } from '../store'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import type { ProjectionEntry, ProjectionFormat, ProjectionAnalysis, ProjectionChoices } from '@shared/projections';
+import SelectMenu from './SelectMenu.vue';
+import { errText } from '../api';
+import { toast } from '../store';
 const props = defineProps<{ entry: ProjectionEntry }>(),
-  emit = defineEmits<{ close: []; done: [] }>()
+  emit = defineEmits<{ close: []; done: [] }>();
 const format = ref<ProjectionFormat>(props.entry.kind),
   version = ref(''),
   versions = ref<{ version: string; supported: boolean }[]>([]),
@@ -13,74 +13,74 @@ const format = ref<ProjectionFormat>(props.entry.kind),
   choices = ref<ProjectionChoices>({}),
   busy = ref(false),
   error = ref(''),
-  output = ref('')
+  output = ref('');
 let generation = 0,
-  disposed = false
+  disposed = false;
 const ready = computed(
   () => !!analysis.value && !analysis.value.unsupported && analysis.value.differences.every((d) => !!choices.value[d.key])
-)
+);
 function invalidate() {
-  generation++
-  if (analysis.value) void window.faionyx.invoke('projections:discardAnalysis', analysis.value.id)
-  analysis.value = undefined
-  choices.value = {}
-  error.value = ''
-  output.value = ''
+  generation++;
+  if (analysis.value) void window.faionyx.invoke('projections:discardAnalysis', analysis.value.id);
+  analysis.value = undefined;
+  choices.value = {};
+  error.value = '';
+  output.value = '';
 }
-watch([format, version], invalidate)
+watch([format, version], invalidate);
 async function analyze() {
-  if (busy.value) return
-  invalidate()
-  const request = ++generation
-  busy.value = true
+  if (busy.value) return;
+  invalidate();
+  const request = ++generation;
+  busy.value = true;
   try {
     const next = (await window.faionyx.invoke(
       'projections:analyze',
       props.entry.id,
       format.value,
       version.value || undefined
-    )) as ProjectionAnalysis
+    )) as ProjectionAnalysis;
     if (disposed || request !== generation) {
-      void window.faionyx.invoke('projections:discardAnalysis', next.id)
-      return
+      void window.faionyx.invoke('projections:discardAnalysis', next.id);
+      return;
     }
-    analysis.value = next
+    analysis.value = next;
   } catch (e) {
-    if (!disposed && request === generation) error.value = errText(e)
+    if (!disposed && request === generation) error.value = errText(e);
   } finally {
-    if (!disposed) busy.value = false
+    if (!disposed) busy.value = false;
   }
 }
 async function convert() {
-  if (!ready.value || busy.value) return
-  busy.value = true
-  error.value = ''
+  if (!ready.value || busy.value) return;
+  busy.value = true;
+  error.value = '';
   try {
     const result = (await window.faionyx.invoke('projections:convert', analysis.value!.id, JSON.parse(JSON.stringify(choices.value)))) as {
-      path: string
-      name: string
-    }
-    output.value = result.path
-    analysis.value = undefined
-    emit('done')
-    toast('投影副本已生成并重新读取验证', 'success')
+      path: string;
+      name: string;
+    };
+    output.value = result.path;
+    analysis.value = undefined;
+    emit('done');
+    toast('投影副本已生成并重新读取验证', 'success');
   } catch (e) {
-    error.value = errText(e)
+    error.value = errText(e);
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 onMounted(async () => {
   try {
-    versions.value = (await window.faionyx.invoke('projections:versions')) as typeof versions.value
+    versions.value = (await window.faionyx.invoke('projections:versions')) as typeof versions.value;
   } catch (e) {
-    error.value = errText(e)
+    error.value = errText(e);
   }
-})
+});
 onUnmounted(() => {
-  disposed = true
-  invalidate()
-})
+  disposed = true;
+  invalidate();
+});
 </script>
 <template>
   <Teleport to="body"

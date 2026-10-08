@@ -1,54 +1,54 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import type { CommunityFile, InstallOptions, LoaderName } from '@shared/types'
-import type { RecordingKind } from '@shared/recordings'
-import SelectMenu from './SelectMenu.vue'
-import { errText } from '../api'
-import { formatReleaseTime } from '@shared/releaseTime'
-const props = defineProps<{ mc: string; loader: '' | LoaderName; modelValue?: InstallOptions['recordingMod'] }>()
-const emit = defineEmits<{ (e: 'update:modelValue', value: InstallOptions['recordingMod']): void }>()
+import { computed, ref, watch } from 'vue';
+import type { CommunityFile, InstallOptions, LoaderName } from '@shared/types';
+import type { RecordingKind } from '@shared/recordings';
+import SelectMenu from './SelectMenu.vue';
+import { errText } from '../api';
+import { formatReleaseTime } from '@shared/releaseTime';
+const props = defineProps<{ mc: string; loader: '' | LoaderName; modelValue?: InstallOptions['recordingMod'] }>();
+const emit = defineEmits<{ (e: 'update:modelValue', value: InstallOptions['recordingMod']): void }>();
 const kind = ref(''),
   file = ref(''),
   choices = ref<CommunityFile[]>([]),
   busy = ref(false),
   error = ref(''),
-  retry = ref(0)
+  retry = ref(0);
 const options = computed(() =>
   choices.value.map((f) => ({
     value: f.fileId,
     label: `${f.version} · ${f.releaseType === 'release' ? '正式版' : f.releaseType} · ${formatReleaseTime(f.date)}`,
   }))
-)
+);
 watch(
   () => [props.mc, props.loader, kind.value, retry.value],
   async (_v, _p, cleanup) => {
-    let stale = false
+    let stale = false;
     cleanup(() => {
-      stale = true
-    })
-    choices.value = []
-    file.value = ''
-    error.value = ''
-    busy.value = false
-    emit('update:modelValue', kind.value ? { kind: kind.value as RecordingKind, fileId: '' } : undefined)
-    if (!kind.value || !props.loader) return
-    busy.value = true
+      stale = true;
+    });
+    choices.value = [];
+    file.value = '';
+    error.value = '';
+    busy.value = false;
+    emit('update:modelValue', kind.value ? { kind: kind.value as RecordingKind, fileId: '' } : undefined);
+    if (!kind.value || !props.loader) return;
+    busy.value = true;
     try {
-      const list = (await window.faionyx.invoke('recordings:modVersions', kind.value, props.mc, props.loader)) as CommunityFile[]
-      if (stale) return
-      choices.value = list
-      file.value = list.find((f) => f.releaseType === 'release')?.fileId || list[0]?.fileId || ''
-      emit('update:modelValue', { kind: kind.value as RecordingKind, fileId: file.value })
+      const list = (await window.faionyx.invoke('recordings:modVersions', kind.value, props.mc, props.loader)) as CommunityFile[];
+      if (stale) return;
+      choices.value = list;
+      file.value = list.find((f) => f.releaseType === 'release')?.fileId || list[0]?.fileId || '';
+      emit('update:modelValue', { kind: kind.value as RecordingKind, fileId: file.value });
     } catch (e) {
-      if (!stale) error.value = errText(e)
+      if (!stale) error.value = errText(e);
     } finally {
-      if (!stale) busy.value = false
+      if (!stale) busy.value = false;
     }
   },
   { immediate: true }
-)
+);
 function choose(value: string) {
-  emit('update:modelValue', { kind: kind.value as RecordingKind, fileId: value })
+  emit('update:modelValue', { kind: kind.value as RecordingKind, fileId: value });
 }
 </script>
 <template>

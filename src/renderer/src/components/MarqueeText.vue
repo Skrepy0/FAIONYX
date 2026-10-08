@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick, computed } from 'vue'
-const props = defineProps<{ text: string }>()
+import { ref, onMounted, onUnmounted, watch, nextTick, computed } from 'vue';
+const props = defineProps<{ text: string }>();
 const outer = ref<HTMLElement>(),
   inner = ref<HTMLElement>(),
-  distance = ref(0)
-let observer: ResizeObserver | undefined
+  distance = ref(0);
+let observer: ResizeObserver | undefined;
 const measure = () => {
-  distance.value = Math.max(0, (inner.value?.scrollWidth ?? 0) - (outer.value?.clientWidth ?? 0))
-}
+  distance.value = Math.max(0, (inner.value?.scrollWidth ?? 0) - (outer.value?.clientWidth ?? 0));
+};
 onMounted(() => {
-  observer = new ResizeObserver(measure)
-  if (outer.value) observer.observe(outer.value)
-  measure()
-})
-onUnmounted(() => observer?.disconnect())
+  observer = new ResizeObserver(measure);
+  if (outer.value) observer.observe(outer.value);
+  measure();
+});
+onUnmounted(() => observer?.disconnect());
 watch(
   () => props.text,
   async () => {
-    await nextTick()
-    measure()
+    await nextTick();
+    measure();
   }
-)
-const style = computed(() => ({ '--travel': `-${distance.value}px`, '--duration': `${Math.max(5, distance.value / 32 + 3)}s` }))
+);
+const style = computed(() => ({ '--travel': `-${distance.value}px`, '--duration': `${Math.max(5, distance.value / 32 + 3)}s` }));
 </script>
 <template>
   <span ref="outer" class="marquee" :class="{ overflow: distance > 1 }" :style="style" :title="text" tabindex="0"

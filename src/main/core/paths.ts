@@ -4,124 +4,124 @@
  *   新安装版本经 registerVersionFolder 注册）
  * - libraries / assets / runtimes 共享，统一放在「默认文件夹」下
  */
-import path from 'node:path'
-import fs from 'node:fs'
-import { AsyncLocalStorage } from 'node:async_hooks'
-import { getSettings } from './settings'
-import { samePath } from './folderPaths'
-const launchFolder = new AsyncLocalStorage<{ active: string; shared: string }>()
+import path from 'node:path';
+import fs from 'node:fs';
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { getSettings } from './settings';
+import { samePath } from './folderPaths';
+const launchFolder = new AsyncLocalStorage<{ active: string; shared: string }>();
 /** Freeze an accepted launch's directory across async authentication/downloads and UI folder changes. */
 export function withGameFolder<T>(folder: string, action: () => T): T {
-  const shared = launchFolder.getStore()?.shared ?? getSettings().folders.find((f) => f.isDefault)?.path ?? folder
-  return launchFolder.run({ active: folder, shared }, action)
+  const shared = launchFolder.getStore()?.shared ?? getSettings().folders.find((f) => f.isDefault)?.path ?? folder;
+  return launchFolder.run({ active: folder, shared }, action);
 }
 
 /** New downloads use the persisted default; explicit import/retry targets remain bound to their folder. */
 export function withDownloadFolder<T>(folder: string | undefined, action: () => T): T {
-  const requested = folder || defaultFolderPath()
-  const registered = getSettings().folders.find((item) => samePath(item.path, requested))
-  if (!registered) throw new Error('下载文件夹未绑定或已解除绑定，请重新选择默认下载位置')
+  const requested = folder || defaultFolderPath();
+  const registered = getSettings().folders.find((item) => samePath(item.path, requested));
+  if (!registered) throw new Error('下载文件夹未绑定或已解除绑定，请重新选择默认下载位置');
   if (!fs.existsSync(registered.path) || !fs.statSync(registered.path).isDirectory())
-    throw new Error('下载文件夹已不存在，请重新选择默认下载位置')
-  return withGameFolder(registered.path, action)
+    throw new Error('下载文件夹已不存在，请重新选择默认下载位置');
+  return withGameFolder(registered.path, action);
 }
 
 /** 当前活动游戏文件夹（新安装版本与常规寻址目标） */
 export function gameDir(): string {
-  return launchFolder.getStore()?.active ?? (getSettings().activeFolder || getSettings().gameDir)
+  return launchFolder.getStore()?.active ?? (getSettings().activeFolder || getSettings().gameDir);
 }
 
 /** 默认文件夹（libraries/assets/runtimes 的共享位置） */
 export function defaultFolderPath(): string {
-  if (launchFolder.getStore()) return launchFolder.getStore()!.shared
-  const s = getSettings()
-  return s.folders.find((f) => f.isDefault)?.path ?? gameDir()
+  if (launchFolder.getStore()) return launchFolder.getStore()!.shared;
+  const s = getSettings();
+  return s.folders.find((f) => f.isDefault)?.path ?? gameDir();
 }
 
 /** 全部已登记的游戏文件夹路径 */
 export function allFolders(): string[] {
-  const s = getSettings()
-  const list = s.folders.map((f) => f.path)
-  return list.length ? list : [gameDir()]
+  const s = getSettings();
+  const list = s.folders.map((f) => f.path);
+  return list.length ? list : [gameDir()];
 }
 
 // ---------------- 版本 → 文件夹 映射 ----------------
 
-const versionFolderMap = new Map<string, string>()
+const versionFolderMap = new Map<string, string>();
 
 /** 注册版本所属文件夹（安装时与 listInstalled 扫描时调用） */
 export function registerVersionFolder(id: string, folder: string): void {
-  versionFolderMap.set(id, folder)
+  versionFolderMap.set(id, folder);
 }
 
 /** 版本所属文件夹（未注册时回退为当前活动文件夹） */
 export function folderOfVersion(id: string): string {
-  return launchFolder.getStore()?.active ?? versionFolderMap.get(id) ?? gameDir()
+  return launchFolder.getStore()?.active ?? versionFolderMap.get(id) ?? gameDir();
 }
 
 // ---------------- versions ----------------
 
 /** 当前活动文件夹的 versions 目录（新安装与安装器输出位置） */
 export function versionsDir(): string {
-  return path.join(gameDir(), 'versions')
+  return path.join(gameDir(), 'versions');
 }
 
 /** 全部文件夹的 versions 目录（listInstalled 扫描用） */
 export function allVersionsDirs(): Array<{ folder: string; dir: string }> {
-  return allFolders().map((folder) => ({ folder, dir: path.join(folder, 'versions') }))
+  return allFolders().map((folder) => ({ folder, dir: path.join(folder, 'versions') }));
 }
 
 export function versionDir(id: string): string {
-  return path.join(folderOfVersion(id), 'versions', id)
+  return path.join(folderOfVersion(id), 'versions', id);
 }
 
 export function versionJsonPath(id: string): string {
-  return path.join(versionDir(id), `${id}.json`)
+  return path.join(versionDir(id), `${id}.json`);
 }
 
 export function versionJarPath(id: string): string {
-  return path.join(versionDir(id), `${id}.jar`)
+  return path.join(versionDir(id), `${id}.jar`);
 }
 
 export function nativesDir(id: string): string {
-  return path.join(versionDir(id), 'natives')
+  return path.join(versionDir(id), 'natives');
 }
 
 /** 安装事务标记文件路径（存在 = 安装未完成/失败） */
 export function installMarkPath(id: string): string {
-  return path.join(versionDir(id), '.installing')
+  return path.join(versionDir(id), '.installing');
 }
 
 // ---------------- 共享库 / 资源 / 运行时（默认文件夹下） ----------------
 
 export function librariesDir(): string {
-  return path.join(defaultFolderPath(), 'libraries')
+  return path.join(defaultFolderPath(), 'libraries');
 }
 
 /** rel 为 maven 风格的相对路径（正斜杠），Windows 下混合分隔符也可正常使用 */
 export function libraryPath(rel: string): string {
-  return path.join(librariesDir(), rel)
+  return path.join(librariesDir(), rel);
 }
 
 export function assetsDir(): string {
-  return path.join(defaultFolderPath(), 'assets')
+  return path.join(defaultFolderPath(), 'assets');
 }
 
 export function assetIndexPath(indexId: string): string {
-  return path.join(assetsDir(), 'indexes', `${indexId}.json`)
+  return path.join(assetsDir(), 'indexes', `${indexId}.json`);
 }
 
 export function assetObjectPath(hash: string): string {
-  return path.join(assetsDir(), 'objects', hash.slice(0, 2), hash)
+  return path.join(assetsDir(), 'objects', hash.slice(0, 2), hash);
 }
 
 /** legacy 版本的虚拟资源目录（assets/virtual/legacy） */
 export function virtualLegacyDir(): string {
-  return path.join(assetsDir(), 'virtual', 'legacy')
+  return path.join(assetsDir(), 'virtual', 'legacy');
 }
 
 export function runtimesDir(): string {
-  return path.join(defaultFolderPath(), 'runtimes')
+  return path.join(defaultFolderPath(), 'runtimes');
 }
 
 // ---------------- 依赖原版区（.faionyx/base，不进入版本列表） ----------------
@@ -130,18 +130,18 @@ export function runtimesDir(): string {
 
 /** 依赖原版目录：<默认文件夹>/.faionyx/base/<id> */
 export function baseVersionDir(id: string): string {
-  return path.join(defaultFolderPath(), '.faionyx', 'base', id)
+  return path.join(defaultFolderPath(), '.faionyx', 'base', id);
 }
 
 export function baseVersionJsonPath(id: string): string {
-  return path.join(baseVersionDir(id), `${id}.json`)
+  return path.join(baseVersionDir(id), `${id}.json`);
 }
 
 export function baseVersionJarPath(id: string): string {
-  return path.join(baseVersionDir(id), `${id}.jar`)
+  return path.join(baseVersionDir(id), `${id}.jar`);
 }
 
 /** 自定义实例图标目录：<默认文件夹>/.faionyx/icons（文件名随机，版本 json 以 file:<名> 引用） */
 export function instanceIconsDir(): string {
-  return path.join(defaultFolderPath(), '.faionyx', 'icons')
+  return path.join(defaultFolderPath(), '.faionyx', 'icons');
 }

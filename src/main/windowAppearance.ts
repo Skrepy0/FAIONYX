@@ -1,4 +1,4 @@
-import type { BrowserWindowConstructorOptions } from 'electron'
+import type { BrowserWindowConstructorOptions } from 'electron';
 
 /**
  * 主窗口的固定外观基线。
@@ -47,5 +47,5 @@ export function windowAppearance(
     roundedCorners: true,
     hasShadow: true,
     thickFrame: true,
-  }
+  };
 }

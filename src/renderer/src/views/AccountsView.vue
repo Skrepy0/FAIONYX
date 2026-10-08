@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
 import {
   addOfflineAccount,
   copyText,
@@ -19,16 +19,16 @@ import {
   saveYggdrasilProvider,
   selectYggdrasilProfile,
   selectAccount,
-} from '../api'
-import { refreshAccounts, store, toast } from '../store'
-import Avatar from '../components/Avatar.vue'
-const credentialNotice = ref('')
-const credentialsPersistent = ref<boolean | null>(null)
+} from '../api';
+import { refreshAccounts, store, toast } from '../store';
+import Avatar from '../components/Avatar.vue';
+const credentialNotice = ref('');
+const credentialsPersistent = ref<boolean | null>(null);
 const securityNote = computed(() => {
-  const password = '密码只用于本次认证请求，不会保存。'
-  if (credentialsPersistent.value === true) return password + '登录令牌由当前系统的安全存储加密保存。'
-  return password + (credentialNotice.value || '正在检查当前系统的安全存储状态。')
-})
+  const password = '密码只用于本次认证请求，不会保存。';
+  if (credentialsPersistent.value === true) return password + '登录令牌由当前系统的安全存储加密保存。';
+  return password + (credentialNotice.value || '正在检查当前系统的安全存储状态。');
+});
 import type {
   Account,
   MsDeviceCodeInfo,
@@ -36,37 +36,37 @@ import type {
   YggdrasilProvider,
   YggdrasilProviderCandidate,
   YggdrasilProviderInput,
-} from '@shared/types'
+} from '@shared/types';
 
-const accountMode = ref<'microsoft' | 'offline' | 'yggdrasil'>('microsoft')
+const accountMode = ref<'microsoft' | 'offline' | 'yggdrasil'>('microsoft');
 
 // ---------------- 添加离线账号 ----------------
-const newName = ref('')
-const adding = ref(false)
+const newName = ref('');
+const adding = ref(false);
 
-const NAME_RE = /^[A-Za-z0-9_]{3,16}$/
+const NAME_RE = /^[A-Za-z0-9_]{3,16}$/;
 const nameError = computed(() => {
-  if (!newName.value) return ''
-  if (!NAME_RE.test(newName.value)) return '用户名需为 3-16 位字母、数字或下划线'
-  return ''
-})
+  if (!newName.value) return '';
+  if (!NAME_RE.test(newName.value)) return '用户名需为 3-16 位字母、数字或下划线';
+  return '';
+});
 
 async function onAddOffline() {
-  const name = newName.value.trim()
+  const name = newName.value.trim();
   if (!NAME_RE.test(name)) {
-    toast('用户名需为 3-16 位字母、数字或下划线', 'error')
-    return
+    toast('用户名需为 3-16 位字母、数字或下划线', 'error');
+    return;
   }
-  adding.value = true
+  adding.value = true;
   try {
-    await addOfflineAccount(name)
-    await refreshAccounts()
-    newName.value = ''
-    toast(`已添加离线账号 ${name}`, 'success')
+    await addOfflineAccount(name);
+    await refreshAccounts();
+    newName.value = '';
+    toast(`已添加离线账号 ${name}`, 'success');
   } catch (e) {
-    toast('添加失败：' + errText(e), 'error')
+    toast('添加失败：' + errText(e), 'error');
   } finally {
-    adding.value = false
+    adding.value = false;
   }
 }
 
@@ -77,51 +77,51 @@ const ms = reactive({
   starting: false,
   autoCopied: false,
   info: null as MsDeviceCodeInfo | null,
-})
+});
 
 async function beginMsLogin() {
-  if (ms.starting) return
-  ms.starting = true
+  if (ms.starting) return;
+  ms.starting = true;
   try {
-    ms.info = await msBeginLogin()
-    ms.open = true
-    ms.waiting = true
+    ms.info = await msBeginLogin();
+    ms.open = true;
+    ms.waiting = true;
     // 设备代码出现的瞬间自动写入剪贴板，玩家到验证页直接粘贴即可
-    ms.autoCopied = false
+    ms.autoCopied = false;
     if (ms.info.userCode) {
-      ms.autoCopied = await copyText(ms.info.userCode)
+      ms.autoCopied = await copyText(ms.info.userCode);
     }
   } catch (e) {
-    toast('无法开始微软登录：' + errText(e), 'error')
+    toast('无法开始微软登录：' + errText(e), 'error');
   } finally {
-    ms.starting = false
+    ms.starting = false;
   }
 }
 
 async function cancelMsLogin() {
-  ms.open = false
-  ms.waiting = false
+  ms.open = false;
+  ms.waiting = false;
   try {
-    await msCancelLogin()
+    await msCancelLogin();
   } catch {
     /* 忽略取消时的异常 */
   }
 }
 
 async function copyCode() {
-  if (!ms.info) return
-  const ok = await copyText(ms.info.userCode)
-  toast(ok ? '已复制验证码' : '复制失败，请手动复制', ok ? 'success' : 'error')
+  if (!ms.info) return;
+  const ok = await copyText(ms.info.userCode);
+  toast(ok ? '已复制验证码' : '复制失败，请手动复制', ok ? 'success' : 'error');
 }
 
 function openVerifyPage() {
-  if (ms.info) window.open(ms.info.verificationUri)
+  if (ms.info) window.open(ms.info.verificationUri);
 }
 
-let offMsDone: (() => void) | null = null
+let offMsDone: (() => void) | null = null;
 
 // ---------------- 外置 Yggdrasil ----------------
-const providers = ref<YggdrasilProvider[]>([])
+const providers = ref<YggdrasilProvider[]>([]);
 const providerModal = reactive({
   open: false,
   source: '' as string,
@@ -132,13 +132,13 @@ const providerModal = reactive({
   requireInsecure: false,
   allowInsecure: false,
   candidate: null as YggdrasilProviderCandidate | null,
-})
+});
 const yggLogin = reactive({
   providerId: '',
   identifier: '',
   password: '',
   busy: false,
-})
+});
 const profileModal = reactive({
   open: false,
   challengeId: '',
@@ -146,19 +146,19 @@ const profileModal = reactive({
   profiles: [] as Array<{ id: string; name: string }>,
   selectedId: '',
   busy: false,
-})
-const refreshingId = ref<string | null>(null)
-const removingProviderId = ref<string | null>(null)
-const checkingRuntime = ref(false)
+});
+const refreshingId = ref<string | null>(null);
+const removingProviderId = ref<string | null>(null);
+const checkingRuntime = ref(false);
 
 async function loadProviders() {
   try {
-    providers.value = await listYggdrasilProviders()
+    providers.value = await listYggdrasilProviders();
     if (!yggLogin.providerId || !providers.value.some((p) => p.id === yggLogin.providerId)) {
-      yggLogin.providerId = providers.value[0]?.id ?? ''
+      yggLogin.providerId = providers.value[0]?.id ?? '';
     }
   } catch (e) {
-    toast('读取外置登录提供商失败：' + errText(e), 'error')
+    toast('读取外置登录提供商失败：' + errText(e), 'error');
   }
 }
 
@@ -173,74 +173,74 @@ function openProviderImport(input?: YggdrasilProviderInput) {
     requireInsecure: false,
     allowInsecure: false,
     candidate: null,
-  })
-  if (input) void probeProviderInput()
+  });
+  if (input) void probeProviderInput();
 }
 
 async function probeProviderInput() {
-  if (providerModal.probing) return
-  const input = providerModal.input ?? { kind: 'text' as const, value: providerModal.source }
-  if (input.kind === 'text') input.value = providerModal.source
-  providerModal.input = input
-  providerModal.probing = true
-  providerModal.error = ''
-  providerModal.candidate = null
+  if (providerModal.probing) return;
+  const input = providerModal.input ?? { kind: 'text' as const, value: providerModal.source };
+  if (input.kind === 'text') input.value = providerModal.source;
+  providerModal.input = input;
+  providerModal.probing = true;
+  providerModal.error = '';
+  providerModal.candidate = null;
   try {
-    providerModal.candidate = await probeYggdrasilProvider(input, providerModal.allowInsecure)
-    providerModal.requireInsecure = providerModal.candidate.insecure
+    providerModal.candidate = await probeYggdrasilProvider(input, providerModal.allowInsecure);
+    providerModal.requireInsecure = providerModal.candidate.insecure;
   } catch (e) {
-    const message = errText(e).replace(/^Error invoking remote method '[^']+':\s*/, '')
-    providerModal.requireInsecure = message.includes('INSECURE_YGGDRASIL')
-    providerModal.error = message.replace('INSECURE_YGGDRASIL:', '')
+    const message = errText(e).replace(/^Error invoking remote method '[^']+':\s*/, '');
+    providerModal.requireInsecure = message.includes('INSECURE_YGGDRASIL');
+    providerModal.error = message.replace('INSECURE_YGGDRASIL:', '');
   } finally {
-    providerModal.probing = false
+    providerModal.probing = false;
   }
 }
 
 async function confirmProvider() {
-  const candidate = providerModal.candidate
-  if (!candidate || providerModal.saving) return
+  const candidate = providerModal.candidate;
+  if (!candidate || providerModal.saving) return;
   if (candidate.insecure && !providerModal.allowInsecure) {
-    providerModal.error = '必须主动确认明文 HTTP 风险后才能保存'
-    return
+    providerModal.error = '必须主动确认明文 HTTP 风险后才能保存';
+    return;
   }
-  providerModal.saving = true
+  providerModal.saving = true;
   try {
-    providers.value = await saveYggdrasilProvider(candidate, providerModal.allowInsecure)
-    yggLogin.providerId = candidate.id
-    providerModal.open = false
-    toast(`已保存外置登录提供商 ${candidate.name}`, 'success')
+    providers.value = await saveYggdrasilProvider(candidate, providerModal.allowInsecure);
+    yggLogin.providerId = candidate.id;
+    providerModal.open = false;
+    toast(`已保存外置登录提供商 ${candidate.name}`, 'success');
   } catch (e) {
-    providerModal.error = errText(e)
+    providerModal.error = errText(e);
   } finally {
-    providerModal.saving = false
+    providerModal.saving = false;
   }
 }
 
 async function onRemoveProvider(provider: YggdrasilProvider) {
-  if (removingProviderId.value) return
-  removingProviderId.value = provider.id
+  if (removingProviderId.value) return;
+  removingProviderId.value = provider.id;
   try {
-    providers.value = await removeYggdrasilProvider(provider.id)
-    if (yggLogin.providerId === provider.id) yggLogin.providerId = providers.value[0]?.id ?? ''
-    toast(`已删除提供商 ${provider.name}`, 'success')
+    providers.value = await removeYggdrasilProvider(provider.id);
+    if (yggLogin.providerId === provider.id) yggLogin.providerId = providers.value[0]?.id ?? '';
+    toast(`已删除提供商 ${provider.name}`, 'success');
   } catch (e) {
-    toast('删除提供商失败：' + errText(e), 'error')
+    toast('删除提供商失败：' + errText(e), 'error');
   } finally {
-    removingProviderId.value = null
+    removingProviderId.value = null;
   }
 }
 
 async function checkYggdrasilRuntime() {
-  if (checkingRuntime.value) return
-  checkingRuntime.value = true
+  if (checkingRuntime.value) return;
+  checkingRuntime.value = true;
   try {
-    const runtime = await prepareYggdrasilRuntime()
-    toast(`authlib-injector ${runtime.version}（构建 ${runtime.buildNumber}）校验通过 · ${runtime.sha256.slice(0, 12)}…`, 'success')
+    const runtime = await prepareYggdrasilRuntime();
+    toast(`authlib-injector ${runtime.version}（构建 ${runtime.buildNumber}）校验通过 · ${runtime.sha256.slice(0, 12)}…`, 'success');
   } catch (e) {
-    toast('外置登录运行组件准备失败：' + errText(e), 'error')
+    toast('外置登录运行组件准备失败：' + errText(e), 'error');
   } finally {
-    checkingRuntime.value = false
+    checkingRuntime.value = false;
   }
 }
 
@@ -253,138 +253,138 @@ async function finishYggLogin(result: YggdrasilLoginResult) {
       profiles: result.profiles,
       selectedId: result.profiles[0]?.id ?? '',
       busy: false,
-    })
-    return
+    });
+    return;
   }
-  yggLogin.password = ''
-  await refreshAccounts()
-  toast(`外置登录成功，欢迎 ${result.account.username}`, 'success')
+  yggLogin.password = '';
+  await refreshAccounts();
+  toast(`外置登录成功，欢迎 ${result.account.username}`, 'success');
 }
 
 async function onYggLogin() {
-  if (yggLogin.busy) return
+  if (yggLogin.busy) return;
   if (!yggLogin.providerId) {
-    toast('请先添加并选择认证提供商', 'error')
-    return
+    toast('请先添加并选择认证提供商', 'error');
+    return;
   }
   if (!yggLogin.identifier.trim() || !yggLogin.password) {
-    toast('请输入账号和密码', 'error')
-    return
+    toast('请输入账号和密码', 'error');
+    return;
   }
-  yggLogin.busy = true
+  yggLogin.busy = true;
   try {
-    await finishYggLogin(await loginYggdrasil(yggLogin.providerId, yggLogin.identifier, yggLogin.password))
+    await finishYggLogin(await loginYggdrasil(yggLogin.providerId, yggLogin.identifier, yggLogin.password));
   } catch (e) {
-    toast('外置登录失败：' + errText(e), 'error')
+    toast('外置登录失败：' + errText(e), 'error');
   } finally {
-    yggLogin.busy = false
+    yggLogin.busy = false;
   }
 }
 
 async function confirmProfile() {
-  if (!profileModal.selectedId || profileModal.busy) return
-  profileModal.busy = true
+  if (!profileModal.selectedId || profileModal.busy) return;
+  profileModal.busy = true;
   try {
-    const account = await selectYggdrasilProfile(profileModal.challengeId, profileModal.selectedId)
-    profileModal.open = false
-    yggLogin.password = ''
-    await refreshAccounts()
-    toast(`已选择角色 ${account.username}`, 'success')
+    const account = await selectYggdrasilProfile(profileModal.challengeId, profileModal.selectedId);
+    profileModal.open = false;
+    yggLogin.password = '';
+    await refreshAccounts();
+    toast(`已选择角色 ${account.username}`, 'success');
   } catch (e) {
-    toast('角色选择失败：' + errText(e), 'error')
+    toast('角色选择失败：' + errText(e), 'error');
   } finally {
-    profileModal.busy = false
+    profileModal.busy = false;
   }
 }
 
 async function onRefreshAccount(account: Account) {
-  if (refreshingId.value) return
-  refreshingId.value = account.id
+  if (refreshingId.value) return;
+  refreshingId.value = account.id;
   try {
-    await refreshAccount(account.id)
-    await refreshAccounts()
-    toast(`${account.username} 的会话有效`, 'success')
+    await refreshAccount(account.id);
+    await refreshAccounts();
+    toast(`${account.username} 的会话有效`, 'success');
   } catch (e) {
-    toast('会话刷新失败：' + errText(e), 'error')
+    toast('会话刷新失败：' + errText(e), 'error');
   } finally {
-    refreshingId.value = null
+    refreshingId.value = null;
   }
 }
 
 function accountTypeLabel(account: Account): string {
-  if (account.type === 'microsoft') return '微软正版'
-  if (account.type === 'yggdrasil') return `外置 · ${account.providerName ?? '未知提供商'}`
-  return '离线'
+  if (account.type === 'microsoft') return '微软正版';
+  if (account.type === 'yggdrasil') return `外置 · ${account.providerName ?? '未知提供商'}`;
+  return '离线';
 }
 
 onMounted(() => {
   void getSystemInfo()
     .then((info) => {
-      credentialsPersistent.value = info.credentialStorage?.persistent ?? null
-      credentialNotice.value = info.credentialStorage?.message ?? '无法确认当前系统的安全存储状态。'
+      credentialsPersistent.value = info.credentialStorage?.persistent ?? null;
+      credentialNotice.value = info.credentialStorage?.message ?? '无法确认当前系统的安全存储状态。';
     })
     .catch(() => {
-      credentialNotice.value = '无法获取当前系统的安全存储状态。'
-    })
-  void loadProviders()
-  store.yggdrasilImportHandler = openProviderImport
+      credentialNotice.value = '无法获取当前系统的安全存储状态。';
+    });
+  void loadProviders();
+  store.yggdrasilImportHandler = openProviderImport;
   if (store.pendingYggdrasilImport) {
-    const pending = store.pendingYggdrasilImport
-    store.pendingYggdrasilImport = null
-    openProviderImport(pending)
+    const pending = store.pendingYggdrasilImport;
+    store.pendingYggdrasilImport = null;
+    openProviderImport(pending);
   }
   offMsDone = onMsLoginDone(async (result) => {
-    if (!ms.open) return
-    ms.open = false
-    ms.waiting = false
-    ms.info = null
-    const account = result?.account ?? null
+    if (!ms.open) return;
+    ms.open = false;
+    ms.waiting = false;
+    ms.info = null;
+    const account = result?.account ?? null;
     if (account) {
-      await refreshAccounts()
-      toast(`登录成功，欢迎 ${account.username}`, 'success')
+      await refreshAccounts();
+      toast(`登录成功，欢迎 ${account.username}`, 'success');
     } else if (result?.error) {
       // 具体失败步骤与原因（设备码/轮询/XBL/XSTS/MC 登录/拥有权/档案），可被查日志诊断
-      toast(`微软登录失败：${result.error}`, 'error')
+      toast(`微软登录失败：${result.error}`, 'error');
     } else {
-      toast('微软登录已取消', 'info')
+      toast('微软登录已取消', 'info');
     }
-  })
-})
+  });
+});
 
 onUnmounted(() => {
-  offMsDone?.()
-  store.yggdrasilImportHandler = null
-  yggLogin.password = ''
-})
+  offMsDone?.();
+  store.yggdrasilImportHandler = null;
+  yggLogin.password = '';
+});
 
 // ---------------- 账号卡片 ----------------
-const removingId = ref<string | null>(null)
-const selectingId = ref<string | null>(null)
+const removingId = ref<string | null>(null);
+const selectingId = ref<string | null>(null);
 
 async function onSelect(acc: Account) {
-  if (store.selectedAccount?.id === acc.id) return
-  selectingId.value = acc.id
+  if (store.selectedAccount?.id === acc.id) return;
+  selectingId.value = acc.id;
   try {
-    store.selectedAccount = await selectAccount(acc.id)
+    store.selectedAccount = await selectAccount(acc.id);
   } catch (e) {
-    toast('切换账号失败：' + errText(e), 'error')
+    toast('切换账号失败：' + errText(e), 'error');
   } finally {
-    selectingId.value = null
+    selectingId.value = null;
   }
 }
 
 async function onRemove(acc: Account) {
-  removingId.value = acc.id
+  removingId.value = acc.id;
   try {
-    store.accounts = await removeAccount(acc.id)
+    store.accounts = await removeAccount(acc.id);
     if (store.selectedAccount?.id === acc.id) {
-      store.selectedAccount = await getSelectedAccount()
+      store.selectedAccount = await getSelectedAccount();
     }
-    toast(`已删除账号 ${acc.username}`, 'success')
+    toast(`已删除账号 ${acc.username}`, 'success');
   } catch (e) {
-    toast('删除失败：' + errText(e), 'error')
+    toast('删除失败：' + errText(e), 'error');
   } finally {
-    removingId.value = null
+    removingId.value = null;
   }
 }
 </script>

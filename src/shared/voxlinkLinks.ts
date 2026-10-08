@@ -32,4 +32,4 @@ export const VOXLINK_LINKS = [
     label: 'QQ群',
     url: 'https://qm.qq.com/cgi-bin/qm/qr?k=OEkk9L8m8jdFMkbGDhKZs0u2U0azLAPo&jump_from=webapi&authKey=v0dYAQniGZypAJuoPZW/7FL0bfoc32h68oIHd9lqGwOvAduzcwsJNR7Mei9/YugW',
   },
-] as const
+] as const;

@@ -459,18 +459,18 @@ export const MOD_ZH: Record<string, string> = {
   'better-clouds': '更好的云',
   'simple-clouds': '简单云',
   nocubes: '平滑地形 NoCubes',
-}
+};
 
 /** 中文名 → slug 反向索引（检索用；一个中文名可命中多个 slug 的别名场景手动控制） */
 export const ZH_TO_SLUGS: Record<string, string[]> = (() => {
-  const map: Record<string, string[]> = {}
+  const map: Record<string, string[]> = {};
   for (const [slug, zh] of Object.entries(MOD_ZH)) {
-    const key = zh.toLowerCase()
-    if (!map[key]) map[key] = []
-    map[key].push(slug)
+    const key = zh.toLowerCase();
+    if (!map[key]) map[key] = [];
+    map[key].push(slug);
   }
-  return map
-})()
+  return map;
+})();
 
 /** Common community names supplement the display name, without changing project identity. */
 export const MOD_ZH_ALIASES: Record<string, string[]> = {
@@ -482,29 +482,29 @@ export const MOD_ZH_ALIASES: Record<string, string[]> = {
   大地图: ['xaeros-world-map', 'journeymap'],
   暮色: ['twilightforest'],
   万用皮肤: ['customskinloader'],
-}
+};
 export function normalizeChineseModKeyword(value: string): string {
   return value
     .normalize('NFKC')
     .toLowerCase()
     .replace(/\s+/g, '')
     .replace(/(?:模组|模組|mod)$/i, '')
-    .replace(/[·：:()（）]/g, '')
+    .replace(/[·：:()（）]/g, '');
 }
 /** A verified built-in exact name needs no network translation round trip. */
 export function hasExactChineseModName(keyword: string): boolean {
-  const key = normalizeChineseModKeyword(keyword)
-  return !!key && [...Object.keys(MOD_ZH_ALIASES), ...Object.keys(ZH_TO_SLUGS)].some((name) => normalizeChineseModKeyword(name) === key)
+  const key = normalizeChineseModKeyword(keyword);
+  return !!key && [...Object.keys(MOD_ZH_ALIASES), ...Object.keys(ZH_TO_SLUGS)].some((name) => normalizeChineseModKeyword(name) === key);
 }
 /** Exact names win over substrings ("钠" must not become Sodium Extra). */
 export function chineseModSearchTerms(keyword: string): string[] {
-  if (!/[一-鿿]/.test(keyword)) return []
-  const key = normalizeChineseModKeyword(keyword)
-  if (!key) return []
-  const entries = [...Object.entries(MOD_ZH_ALIASES), ...Object.entries(ZH_TO_SLUGS)]
-  const exact = entries.filter(([name]) => normalizeChineseModKeyword(name) === key)
+  if (!/[一-鿿]/.test(keyword)) return [];
+  const key = normalizeChineseModKeyword(keyword);
+  if (!key) return [];
+  const entries = [...Object.entries(MOD_ZH_ALIASES), ...Object.entries(ZH_TO_SLUGS)];
+  const exact = entries.filter(([name]) => normalizeChineseModKeyword(name) === key);
   const candidates = exact.length
     ? exact
-    : entries.filter(([name]) => normalizeChineseModKeyword(name).includes(key)).sort((a, b) => a[0].length - b[0].length)
-  return [...new Set(candidates.flatMap(([, slugs]) => slugs))].slice(0, 5)
+    : entries.filter(([name]) => normalizeChineseModKeyword(name).includes(key)).sort((a, b) => a[0].length - b[0].length);
+  return [...new Set(candidates.flatMap(([, slugs]) => slugs))].slice(0, 5);
 }

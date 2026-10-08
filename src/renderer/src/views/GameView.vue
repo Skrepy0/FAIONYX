@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { formatReleaseTime } from '@shared/releaseTime'
-import { openInstanceCenter } from '../instanceCenter'
-import ContentSkeleton from '../components/ContentSkeleton.vue'
-import { catalogSession } from '../catalogCache'
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { formatReleaseTime } from '@shared/releaseTime';
+import { openInstanceCenter } from '../instanceCenter';
+import ContentSkeleton from '../components/ContentSkeleton.vue';
+import { catalogSession } from '../catalogCache';
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import {
   cleanupPartialInstall,
   errText,
@@ -33,7 +33,7 @@ import {
   setVersionJava,
   setVersionResolution,
   updateVersionCategories,
-} from '../api'
+} from '../api';
 import {
   selectInstance,
   applyLaunchState,
@@ -49,24 +49,24 @@ import {
   toast,
   toggleFavorite,
   versionIconUrl,
-} from '../store'
-import { instanceLaunchBusy } from '@shared/launchTracking'
-import ConfirmModal from '../components/ConfirmModal.vue'
-import IconPickerModal from '../components/IconPickerModal.vue'
-import SelectMenu from '../components/SelectMenu.vue'
-import RecordingModPicker from '../components/RecordingModPicker.vue'
-import FavoriteModsPicker from '../components/FavoriteModsPicker.vue'
-import UiGlyph from '../components/UiGlyph.vue'
-import VersionCategoriesPanel from '../components/VersionCategoriesPanel.vue'
+} from '../store';
+import { instanceLaunchBusy } from '@shared/launchTracking';
+import ConfirmModal from '../components/ConfirmModal.vue';
+import IconPickerModal from '../components/IconPickerModal.vue';
+import SelectMenu from '../components/SelectMenu.vue';
+import RecordingModPicker from '../components/RecordingModPicker.vue';
+import FavoriteModsPicker from '../components/FavoriteModsPicker.vue';
+import UiGlyph from '../components/UiGlyph.vue';
+import VersionCategoriesPanel from '../components/VersionCategoriesPanel.vue';
 import {
   VERSION_CATEGORY_ALL,
   VERSION_CATEGORY_FAVORITES,
   VERSION_CATEGORY_UNCLASSIFIED,
   versionCategoryOf,
   versionMatchesCategory,
-} from '@shared/versionCategories'
-const favoritesReady = ref(true)
-import ThumbnailPickerModal from '../components/ThumbnailPickerModal.vue'
+} from '@shared/versionCategories';
+const favoritesReady = ref(true);
+import ThumbnailPickerModal from '../components/ThumbnailPickerModal.vue';
 import type {
   FabricApiVersion,
   FolderScanResult,
@@ -80,425 +80,425 @@ import type {
   LoaderName,
   RemoteVersion,
   VersionCategoryAction,
-} from '@shared/types'
+} from '@shared/types';
 
 // 列表范围独立于安装目标，保留其他页面的当前目录语义。
-const allInstalled = ref<InstalledVersion[]>([])
-const installedFolder = ref('')
-const installedError = ref('')
-const installedLoading = ref(false)
-const folderToolsOpen = ref(false)
-const installedSearch = ref('')
+const allInstalled = ref<InstalledVersion[]>([]);
+const installedFolder = ref('');
+const installedError = ref('');
+const installedLoading = ref(false);
+const folderToolsOpen = ref(false);
+const installedSearch = ref('');
 const installedCategory = ref(VERSION_CATEGORY_ALL),
   categoryManagerOpen = ref(false),
   categoryBusy = ref(false),
-  categoryError = ref('')
-const categories = computed(() => store.settings?.versionCategories ?? [])
-const categoryOf = (v: InstalledVersion) => versionCategoryOf(store.settings, v.folder, v.id, window.faionyx.platform)
-const categoryLabel = (v: InstalledVersion) => categories.value.find((c) => c.id === categoryOf(v))?.name ?? ''
+  categoryError = ref('');
+const categories = computed(() => store.settings?.versionCategories ?? []);
+const categoryOf = (v: InstalledVersion) => versionCategoryOf(store.settings, v.folder, v.id, window.faionyx.platform);
+const categoryLabel = (v: InstalledVersion) => categories.value.find((c) => c.id === categoryOf(v))?.name ?? '';
 const categoryCounts = computed(() =>
   Object.fromEntries(categories.value.map((c) => [c.id, allInstalled.value.filter((v) => categoryOf(v) === c.id).length]))
-)
+);
 watch(categories, (list) => {
   if (
     ![VERSION_CATEGORY_ALL, VERSION_CATEGORY_FAVORITES, VERSION_CATEGORY_UNCLASSIFIED, ...list.map((c) => c.id)].includes(
       installedCategory.value
     )
   )
-    installedCategory.value = VERSION_CATEGORY_ALL
-})
+    installedCategory.value = VERSION_CATEGORY_ALL;
+});
 async function onCategoryAction(action: VersionCategoryAction): Promise<boolean> {
-  if (categoryBusy.value) return false
-  categoryBusy.value = true
-  categoryError.value = ''
+  if (categoryBusy.value) return false;
+  categoryBusy.value = true;
+  categoryError.value = '';
   try {
-    store.settings = await updateVersionCategories(action)
-    if (action.type === 'remove' && installedCategory.value === action.id) installedCategory.value = VERSION_CATEGORY_UNCLASSIFIED
-    return true
+    store.settings = await updateVersionCategories(action);
+    if (action.type === 'remove' && installedCategory.value === action.id) installedCategory.value = VERSION_CATEGORY_UNCLASSIFIED;
+    return true;
   } catch (error) {
-    categoryError.value = '保存分类失败：' + errText(error)
-    return false
+    categoryError.value = '保存分类失败：' + errText(error);
+    return false;
   } finally {
-    categoryBusy.value = false
+    categoryBusy.value = false;
   }
 }
 async function assignCategory(v: InstalledVersion, event: Event) {
   const field = event.target as HTMLSelectElement,
-    categoryId = field.value
-  await onCategoryAction({ type: 'assign', target: { id: v.id, folder: v.folder }, categoryId })
+    categoryId = field.value;
+  await onCategoryAction({ type: 'assign', target: { id: v.id, folder: v.folder }, categoryId });
   // Retain the last confirmed value on IPC/write failure, with a visible error.
-  field.value = categoryOf(v)
+  field.value = categoryOf(v);
 }
-let installedGeneration = 0
+let installedGeneration = 0;
 async function refreshAllInstalled() {
-  const generation = ++installedGeneration
-  installedLoading.value = true
+  const generation = ++installedGeneration;
+  installedLoading.value = true;
   try {
-    const next = await getInstalled(true)
+    const next = await getInstalled(true);
     if (generation === installedGeneration) {
-      allInstalled.value = next
-      installedError.value = ''
+      allInstalled.value = next;
+      installedError.value = '';
     }
   } catch (e) {
-    if (generation === installedGeneration) installedError.value = errText(e)
+    if (generation === installedGeneration) installedError.value = errText(e);
   } finally {
-    if (generation === installedGeneration) installedLoading.value = false
+    if (generation === installedGeneration) installedLoading.value = false;
   }
 }
 watch(
   () => store.installed,
   () => {
-    void refreshAllInstalled()
+    void refreshAllInstalled();
   }
-)
+);
 watch(
   () => JSON.stringify(store.settings?.folders),
   () => {
-    void refreshAllInstalled()
+    void refreshAllInstalled();
   }
-)
-const folderKey = (p: string) => p.replace(/\\/g, '/').replace(/\/$/, '').toLowerCase()
+);
+const folderKey = (p: string) => p.replace(/\\/g, '/').replace(/\/$/, '').toLowerCase();
 const installedFolderOptions = computed(() => [
   { value: '', label: '全部文件夹' },
   { value: '@current', label: '当前文件夹' },
   ...(store.settings?.folders ?? []).map((f) => ({ value: f.path, label: `${f.name} · ${f.path}` })),
-])
+]);
 watch(installedFolderOptions, (options) => {
-  if (!options.some((o) => o.value === installedFolder.value)) installedFolder.value = ''
-})
+  if (!options.some((o) => o.value === installedFolder.value)) installedFolder.value = '';
+});
 // ---------------- 清单加载 ----------------
-const cachedCatalog = catalogSession.peek()
-const manifest = ref<RemoteVersion[]>(cachedCatalog?.versions ?? [])
-const loading = ref(false)
-const loadError = ref('')
-const staleCatalog = ref(cachedCatalog?.stale ?? false)
-const checkedAt = ref(cachedCatalog?.checkedAt ?? 0)
-let disposed = false
-let lastAttempt = 0
-let catalogTimer: ReturnType<typeof setInterval> | undefined
+const cachedCatalog = catalogSession.peek();
+const manifest = ref<RemoteVersion[]>(cachedCatalog?.versions ?? []);
+const loading = ref(false);
+const loadError = ref('');
+const staleCatalog = ref(cachedCatalog?.stale ?? false);
+const checkedAt = ref(cachedCatalog?.checkedAt ?? 0);
+let disposed = false;
+let lastAttempt = 0;
+let catalogTimer: ReturnType<typeof setInterval> | undefined;
 
 /** Each visit starts with local instances; remote metadata is loaded only on demand. */
-const tab = ref<'download' | 'installed'>('installed')
+const tab = ref<'download' | 'installed'>('installed');
 watch(tab, (value) => {
-  if (value === 'download') void load()
-})
+  if (value === 'download') void load();
+});
 
 // ---------------- Tab 滑动指示块（版本下载 ⇄ 已安装 平滑滑动，与导航水滴同款弹簧动效） ----------------
-const gameTabs = ref<HTMLElement | null>(null)
-const tabBlob = reactive({ left: 0, width: 0, on: false })
+const gameTabs = ref<HTMLElement | null>(null);
+const tabBlob = reactive({ left: 0, width: 0, on: false });
 function updateTabBlob() {
-  const root = gameTabs.value
-  if (!root) return
-  const active = root.querySelector<HTMLElement>(`.game-tab[data-tab="${tab.value}"]`)
-  if (!active) return
-  tabBlob.left = active.offsetLeft
-  tabBlob.width = active.offsetWidth
-  tabBlob.on = true
+  const root = gameTabs.value;
+  if (!root) return;
+  const active = root.querySelector<HTMLElement>(`.game-tab[data-tab="${tab.value}"]`);
+  if (!active) return;
+  tabBlob.left = active.offsetLeft;
+  tabBlob.width = active.offsetWidth;
+  tabBlob.on = true;
 }
-watch(tab, () => nextTick(updateTabBlob))
+watch(tab, () => nextTick(updateTabBlob));
 // 滑块宽度自适应：已安装数量变化（已安装（14）宽度变）与容器尺寸变化都重算
 watch(
   () => store.installed.length,
   () => nextTick(updateTabBlob)
-)
-let tabBlobObserver: ResizeObserver | null = null
+);
+let tabBlobObserver: ResizeObserver | null = null;
 onMounted(() => {
-  nextTick(updateTabBlob)
+  nextTick(updateTabBlob);
   // 字体/布局就绪后校准一次（首帧 offsetWidth 可能未稳定）
-  setTimeout(updateTabBlob, 200)
-  tabBlobObserver = new ResizeObserver(() => updateTabBlob())
-  if (gameTabs.value) tabBlobObserver.observe(gameTabs.value)
-})
+  setTimeout(updateTabBlob, 200);
+  tabBlobObserver = new ResizeObserver(() => updateTabBlob());
+  if (gameTabs.value) tabBlobObserver.observe(gameTabs.value);
+});
 onUnmounted(() => {
-  window.removeEventListener('resize', updateTabBlob)
-  tabBlobObserver?.disconnect()
-})
+  window.removeEventListener('resize', updateTabBlob);
+  tabBlobObserver?.disconnect();
+});
 const tabBlobStyle = computed(() => ({
   left: tabBlob.left + 'px',
   width: tabBlob.width + 'px',
   opacity: tabBlob.on ? 1 : 0,
-}))
+}));
 
 async function load(refresh = false) {
-  if (loading.value || disposed) return
-  lastAttempt = Date.now()
-  loading.value = true
-  loadError.value = ''
+  if (loading.value || disposed) return;
+  lastAttempt = Date.now();
+  loading.value = true;
+  loadError.value = '';
   try {
-    const result = await catalogSession.load(refresh)
-    if (disposed) return
-    manifest.value = result.versions
-    staleCatalog.value = result.stale
-    checkedAt.value = result.checkedAt
+    const result = await catalogSession.load(refresh);
+    if (disposed) return;
+    manifest.value = result.versions;
+    staleCatalog.value = result.stale;
+    checkedAt.value = result.checkedAt;
   } catch (e) {
-    if (!disposed) loadError.value = errText(e)
+    if (!disposed) loadError.value = errText(e);
   } finally {
-    if (!disposed) loading.value = false
+    if (!disposed) loading.value = false;
   }
 }
 function checkCatalogOnReturn() {
-  if (tab.value === 'download' && document.visibilityState === 'visible' && Date.now() - lastAttempt >= 60_000) void load()
+  if (tab.value === 'download' && document.visibilityState === 'visible' && Date.now() - lastAttempt >= 60_000) void load();
 }
 onUnmounted(() => {
-  disposed = true
-  clearInterval(catalogTimer)
-  window.removeEventListener('focus', checkCatalogOnReturn)
-  document.removeEventListener('visibilitychange', checkCatalogOnReturn)
-})
+  disposed = true;
+  clearInterval(catalogTimer);
+  window.removeEventListener('focus', checkCatalogOnReturn);
+  document.removeEventListener('visibilitychange', checkCatalogOnReturn);
+});
 
 // ---------------- 游戏文件夹（统一管理入口） ----------------
-const folders = ref<GameFolder[]>([])
-const activeFolder = ref('')
-const installFolder = computed(() => store.settings?.folders.find((folder) => folder.isDefault)?.path || activeFolder.value)
+const folders = ref<GameFolder[]>([]);
+const activeFolder = ref('');
+const installFolder = computed(() => store.settings?.folders.find((folder) => folder.isDefault)?.path || activeFolder.value);
 watch(
   () => store.settings?.folders,
   (value) => {
-    if (value) folders.value = value
+    if (value) folders.value = value;
   },
   { deep: true }
-)
+);
 watch(
   () => store.settings?.activeFolder,
   (folder) => {
     if (folder && folder !== activeFolder.value) {
-      activeFolder.value = folder
-      void refreshFolderScan(false)
+      activeFolder.value = folder;
+      void refreshFolderScan(false);
     }
   }
-)
-const folderScan = ref<FolderScanResult | null>(null)
-const folderBusy = ref(false)
-const folderRename = reactive({ open: false, name: '', busy: false, error: '' })
-const folderRemove = reactive({ open: false, busy: false })
+);
+const folderScan = ref<FolderScanResult | null>(null);
+const folderBusy = ref(false);
+const folderRename = reactive({ open: false, name: '', busy: false, error: '' });
+const folderRemove = reactive({ open: false, busy: false });
 
-const currentFolder = computed(() => folders.value.find((folder) => folder.path === activeFolder.value))
+const currentFolder = computed(() => folders.value.find((folder) => folder.path === activeFolder.value));
 /** 失效文件夹死锁解除：检测到当前绑定文件夹不存在（被删除/重命名）时给「移除绑定/稍后处理」选择 */
-const folderMissingDismissed = ref(false)
-const folderMissing = computed(() => folderScan.value?.structure === 'missing' && !folderMissingDismissed.value)
+const folderMissingDismissed = ref(false);
+const folderMissing = computed(() => folderScan.value?.structure === 'missing' && !folderMissingDismissed.value);
 /** 移除失效绑定后刷新 */
 async function removeMissingFolder() {
-  if (!activeFolder.value || folderRemove.busy) return
-  folderRemove.busy = true
+  if (!activeFolder.value || folderRemove.busy) return;
+  folderRemove.busy = true;
   try {
-    await removeFolder(activeFolder.value)
-    folderMissingDismissed.value = false
-    await loadFolderState()
-    store.settings = await getSettings()
-    toast('已移除失效的文件夹绑定', 'success')
+    await removeFolder(activeFolder.value);
+    folderMissingDismissed.value = false;
+    await loadFolderState();
+    store.settings = await getSettings();
+    toast('已移除失效的文件夹绑定', 'success');
   } catch (error) {
-    toast(`移除失败：${errText(error)}`, 'error')
+    toast(`移除失败：${errText(error)}`, 'error');
   } finally {
-    folderRemove.busy = false
+    folderRemove.busy = false;
   }
 }
 
 async function refreshFolderScan(syncList = true) {
-  if (!activeFolder.value) return
-  folderBusy.value = true
+  if (!activeFolder.value) return;
+  folderBusy.value = true;
   try {
-    const result = await scanFolder(activeFolder.value)
-    folderScan.value = result
+    const result = await scanFolder(activeFolder.value);
+    folderScan.value = result;
     if (syncList) {
-      await refreshInstalled()
-      await refreshAllInstalled()
+      await refreshInstalled();
+      await refreshAllInstalled();
     }
   } catch (error) {
-    folderScan.value = null
-    toast(`扫描游戏文件夹失败：${errText(error)}`, 'error')
+    folderScan.value = null;
+    toast(`扫描游戏文件夹失败：${errText(error)}`, 'error');
   } finally {
-    folderBusy.value = false
+    folderBusy.value = false;
   }
 }
 
 async function loadFolderState() {
   try {
-    const state = await listFolders()
-    folders.value = state.folders
-    activeFolder.value = state.active
-    await refreshFolderScan()
+    const state = await listFolders();
+    folders.value = state.folders;
+    activeFolder.value = state.active;
+    await refreshFolderScan();
   } catch (error) {
-    toast(`读取游戏文件夹失败：${errText(error)}`, 'error')
+    toast(`读取游戏文件夹失败：${errText(error)}`, 'error');
   }
 }
 
 async function chooseFolderPath(selected: string) {
-  if (!selected || selected === installFolder.value || folderBusy.value) return
-  folderBusy.value = true
-  let committed = false
+  if (!selected || selected === installFolder.value || folderBusy.value) return;
+  folderBusy.value = true;
+  let committed = false;
   try {
-    folders.value = await setDefaultFolder(selected)
-    committed = true
-    const destination = folders.value.find((folder) => folder.isDefault)!.path
-    if (store.settings) store.settings = { ...store.settings, folders: folders.value, activeFolder: destination, gameDir: destination }
-    store.settings = await getSettings()
-    activeFolder.value = store.settings.activeFolder
-    store.resourceVersionId = ''
-    await refreshInstalled()
-    await refreshFolderScan(false)
-    toast(`默认下载位置已改为「${currentFolder.value?.name ?? '游戏文件夹'}」`, 'success')
+    folders.value = await setDefaultFolder(selected);
+    committed = true;
+    const destination = folders.value.find((folder) => folder.isDefault)!.path;
+    if (store.settings) store.settings = { ...store.settings, folders: folders.value, activeFolder: destination, gameDir: destination };
+    store.settings = await getSettings();
+    activeFolder.value = store.settings.activeFolder;
+    store.resourceVersionId = '';
+    await refreshInstalled();
+    await refreshFolderScan(false);
+    toast(`默认下载位置已改为「${currentFolder.value?.name ?? '游戏文件夹'}」`, 'success');
   } catch (error) {
     toast(
       committed ? `下载位置已保存，但列表暂未刷新，请重试：${errText(error)}` : `切换失败：${errText(error)}`,
       committed ? 'info' : 'error'
-    )
-    if (!committed) await loadFolderState()
+    );
+    if (!committed) await loadFolderState();
   } finally {
-    folderBusy.value = false
+    folderBusy.value = false;
   }
 }
 
 async function addGameFolder() {
-  let committed = false
+  let committed = false;
   try {
-    const selected = await selectDir()
-    if (!selected) return
-    folderBusy.value = true
-    folders.value = await setDownloadFolder(selected)
-    committed = true
-    const destination = folders.value.find((folder) => folder.isDefault)!.path
-    if (store.settings) store.settings = { ...store.settings, folders: folders.value, activeFolder: destination, gameDir: destination }
-    const state = await listFolders()
-    folders.value = state.folders
-    activeFolder.value = state.active
-    store.settings = await getSettings()
-    await refreshInstalled()
-    await refreshFolderScan(false)
-    const count = folderScan.value?.versions.length ?? 0
-    toast(`默认下载位置已更改，识别到 ${count} 个版本；原位置的游戏已保留`, 'success')
+    const selected = await selectDir();
+    if (!selected) return;
+    folderBusy.value = true;
+    folders.value = await setDownloadFolder(selected);
+    committed = true;
+    const destination = folders.value.find((folder) => folder.isDefault)!.path;
+    if (store.settings) store.settings = { ...store.settings, folders: folders.value, activeFolder: destination, gameDir: destination };
+    const state = await listFolders();
+    folders.value = state.folders;
+    activeFolder.value = state.active;
+    store.settings = await getSettings();
+    await refreshInstalled();
+    await refreshFolderScan(false);
+    const count = folderScan.value?.versions.length ?? 0;
+    toast(`默认下载位置已更改，识别到 ${count} 个版本；原位置的游戏已保留`, 'success');
   } catch (error) {
     toast(
       committed ? `下载位置已保存，但列表暂未刷新，请重试：${errText(error)}` : `添加失败：${errText(error)}`,
       committed ? 'info' : 'error'
-    )
+    );
   } finally {
-    folderBusy.value = false
+    folderBusy.value = false;
   }
 }
 
 async function markCurrentDefault() {
-  if (!activeFolder.value || currentFolder.value?.isDefault) return
-  folderBusy.value = true
-  let committed = false
+  if (!activeFolder.value || currentFolder.value?.isDefault) return;
+  folderBusy.value = true;
+  let committed = false;
   try {
-    folders.value = await setDefaultFolder(activeFolder.value)
-    committed = true
-    const destination = folders.value.find((folder) => folder.isDefault)!.path
-    if (store.settings) store.settings = { ...store.settings, folders: folders.value, activeFolder: destination, gameDir: destination }
-    store.settings = await getSettings()
-    toast('已设为默认游戏文件夹', 'success')
+    folders.value = await setDefaultFolder(activeFolder.value);
+    committed = true;
+    const destination = folders.value.find((folder) => folder.isDefault)!.path;
+    if (store.settings) store.settings = { ...store.settings, folders: folders.value, activeFolder: destination, gameDir: destination };
+    store.settings = await getSettings();
+    toast('已设为默认游戏文件夹', 'success');
   } catch (error) {
-    toast(committed ? `下载位置已保存，请刷新页面读取：${errText(error)}` : `设置失败：${errText(error)}`, committed ? 'info' : 'error')
+    toast(committed ? `下载位置已保存，请刷新页面读取：${errText(error)}` : `设置失败：${errText(error)}`, committed ? 'info' : 'error');
   } finally {
-    folderBusy.value = false
+    folderBusy.value = false;
   }
 }
 
 function openFolderRename() {
-  if (!currentFolder.value) return
-  folderRename.name = currentFolder.value.name
-  folderRename.error = ''
-  folderRename.open = true
+  if (!currentFolder.value) return;
+  folderRename.name = currentFolder.value.name;
+  folderRename.error = '';
+  folderRename.open = true;
 }
 
 async function confirmFolderRename() {
-  if (!activeFolder.value || folderRename.busy) return
-  folderRename.busy = true
-  folderRename.error = ''
+  if (!activeFolder.value || folderRename.busy) return;
+  folderRename.busy = true;
+  folderRename.error = '';
   try {
-    folders.value = await renameFolder(activeFolder.value, folderRename.name)
-    folderRename.open = false
-    store.settings = await getSettings()
-    toast('显示名称已更新', 'success')
+    folders.value = await renameFolder(activeFolder.value, folderRename.name);
+    folderRename.open = false;
+    store.settings = await getSettings();
+    toast('显示名称已更新', 'success');
   } catch (error) {
-    folderRename.error = errText(error)
+    folderRename.error = errText(error);
   } finally {
-    folderRename.busy = false
+    folderRename.busy = false;
   }
 }
 
 async function confirmFolderRemove() {
-  if (!activeFolder.value || folderRemove.busy) return
-  folderRemove.busy = true
+  if (!activeFolder.value || folderRemove.busy) return;
+  folderRemove.busy = true;
   try {
-    await removeFolder(activeFolder.value)
-    folderRemove.open = false
-    await loadFolderState()
-    store.settings = await getSettings()
-    toast('已解除文件夹绑定；磁盘中的游戏、存档和 MOD 均未删除', 'success')
+    await removeFolder(activeFolder.value);
+    folderRemove.open = false;
+    await loadFolderState();
+    store.settings = await getSettings();
+    toast('已解除文件夹绑定；磁盘中的游戏、存档和 MOD 均未删除', 'success');
   } catch (error) {
-    toast(`解除绑定失败：${errText(error)}`, 'error')
+    toast(`解除绑定失败：${errText(error)}`, 'error');
   } finally {
-    folderRemove.busy = false
+    folderRemove.busy = false;
   }
 }
 
 async function revealCurrentFolder() {
-  if (!activeFolder.value) return
+  if (!activeFolder.value) return;
   try {
-    await openGameFolder(activeFolder.value)
+    await openGameFolder(activeFolder.value);
   } catch (error) {
-    toast(`打开文件夹失败：${errText(error)}`, 'error')
+    toast(`打开文件夹失败：${errText(error)}`, 'error');
   }
 }
 
 onMounted(() => {
-  window.addEventListener('focus', checkCatalogOnReturn)
-  document.addEventListener('visibilitychange', checkCatalogOnReturn)
+  window.addEventListener('focus', checkCatalogOnReturn);
+  document.addEventListener('visibilitychange', checkCatalogOnReturn);
   catalogTimer = setInterval(() => {
-    if (tab.value === 'download' && document.visibilityState === 'visible') void load()
-  }, 5 * 60_000)
-  void loadFolderState()
-})
+    if (tab.value === 'download' && document.visibilityState === 'visible') void load();
+  }, 5 * 60_000);
+  void loadFolderState();
+});
 
 // ---------------- 搜索与筛选（搜索框联动顶栏 store.searchKeyword） ----------------
-type TypeFilter = 'all' | 'release' | 'snapshot' | 'old'
-const typeFilter = ref<TypeFilter>('release')
+type TypeFilter = 'all' | 'release' | 'snapshot' | 'old';
+const typeFilter = ref<TypeFilter>('release');
 
 const typeFilters: Array<{ value: TypeFilter; label: string }> = [
   { value: 'release', label: '正式版' },
   { value: 'all', label: '全部' },
   { value: 'snapshot', label: '快照' },
   { value: 'old', label: '旧版' },
-]
+];
 
 const typeText: Record<RemoteVersion['type'], string> = {
   release: '正式版',
   snapshot: '快照',
   old_beta: 'Beta 旧版',
   old_alpha: 'Alpha 旧版',
-}
+};
 
 /* release 金 / snapshot 青灰 / 旧版 dim */
-const typeTagClass = (t: RemoteVersion['type']) => (t === 'release' ? 'tag-gold' : t === 'snapshot' ? 'tag-cyan' : '')
+const typeTagClass = (t: RemoteVersion['type']) => (t === 'release' ? 'tag-gold' : t === 'snapshot' ? 'tag-cyan' : '');
 
-const keyword = computed(() => store.searchKeyword.trim().toLowerCase())
+const keyword = computed(() => store.searchKeyword.trim().toLowerCase());
 
 /** ETA 由主进程基于字节速度指数平滑；未知总量/暂停时不伪造。 */
 function progressEta(id: string) {
-  const p = versionProgress(id)
-  const eta = p?.etaSeconds
-  if (eta == null || !Number.isFinite(eta) || eta <= 3) return ''
-  if (eta >= 3600) return `本阶段约剩 ${Math.ceil(eta / 3600)}h`
-  if (eta >= 60) return `本阶段约剩 ${Math.ceil(eta / 60)}min`
-  return `本阶段约剩 ${Math.round(eta)}s`
+  const p = versionProgress(id);
+  const eta = p?.etaSeconds;
+  if (eta == null || !Number.isFinite(eta) || eta <= 3) return '';
+  if (eta >= 3600) return `本阶段约剩 ${Math.ceil(eta / 3600)}h`;
+  if (eta >= 60) return `本阶段约剩 ${Math.ceil(eta / 60)}min`;
+  return `本阶段约剩 ${Math.round(eta)}s`;
 }
 function versionProgress(id: string) {
-  return store.installProgress[id] ?? { stage: 'version-json', progress: 0, text: '等待下载' }
+  return store.installProgress[id] ?? { stage: 'version-json', progress: 0, text: '等待下载' };
 }
 
 const filtered = computed(() =>
   manifest.value.filter((v) => {
-    if (keyword.value && !v.id.toLowerCase().includes(keyword.value)) return false
-    if (typeFilter.value === 'all') return true
-    if (typeFilter.value === 'old') return v.type === 'old_beta' || v.type === 'old_alpha'
-    return v.type === typeFilter.value
+    if (keyword.value && !v.id.toLowerCase().includes(keyword.value)) return false;
+    if (typeFilter.value === 'all') return true;
+    if (typeFilter.value === 'old') return v.type === 'old_beta' || v.type === 'old_alpha';
+    return v.type === typeFilter.value;
   })
-)
+);
 
-const formatDate = formatReleaseTime
-const latestRelease = computed(() => manifest.value.find((v) => v.type === 'release'))
+const formatDate = formatReleaseTime;
+const latestRelease = computed(() => manifest.value.find((v) => v.type === 'release'));
 
-const isInstalled = (v: RemoteVersion) => store.installed.some((i) => i.mcVersion === v.id)
+const isInstalled = (v: RemoteVersion) => store.installed.some((i) => i.mcVersion === v.id);
 
 // ---------------- 安装模态框 ----------------
 const loaderOptions: Array<{ value: '' | LoaderName; label: string }> = [
@@ -507,7 +507,7 @@ const loaderOptions: Array<{ value: '' | LoaderName; label: string }> = [
   { value: 'fabric', label: 'Fabric' },
   { value: 'quilt', label: 'Quilt' },
   { value: 'neoforge', label: 'NeoForge' },
-]
+];
 
 const modal = reactive({
   open: false,
@@ -529,102 +529,102 @@ const modal = reactive({
   instanceName: '',
   instanceEdited: false,
   targetFolder: '',
-})
+});
 
 /** 默认实例名（加载器类型+版本自动生成；纯净版固定为 MC 版本号） */
 const defaultInstanceName = computed(() => {
-  const mc = modal.version?.id ?? ''
-  if (!modal.loader) return mc
-  if (!modal.loaderVersion) return `${mc}-${modal.loader}`
-  if (modal.loader === 'forge') return `${mc}-forge-${modal.loaderVersion}`
-  if (modal.loader === 'neoforge') return `neoforge-${modal.loaderVersion || '?'}`
-  return `${modal.loader}-loader-${modal.loaderVersion || '?'}-${mc}`
-})
+  const mc = modal.version?.id ?? '';
+  if (!modal.loader) return mc;
+  if (!modal.loaderVersion) return `${mc}-${modal.loader}`;
+  if (modal.loader === 'forge') return `${mc}-forge-${modal.loaderVersion}`;
+  if (modal.loader === 'neoforge') return `neoforge-${modal.loaderVersion || '?'}`;
+  return `${modal.loader}-loader-${modal.loaderVersion || '?'}-${mc}`;
+});
 
 /** 实例名冲突/非法校验（返回错误文案，合法为 ''；与主进程 validateInstanceName 同规则） */
 const instanceError = computed(() => {
-  const n = (modal.instanceEdited ? modal.instanceName : defaultInstanceName.value).trim()
-  if (!n) return '实例名不能为空'
-  if (n.length > 64) return '实例名过长（最多 64 字符）'
-  if (/[\\/:*?"<>|]/.test(n)) return '实例名不能包含 \\ / : * ? " < > | 字符'
-  if (/^[.\s]|[.\s]$/.test(n)) return '实例名不能以空格或点开头/结尾'
-  if (allInstalled.value.some((v) => v.id === n && v.folder === modal.targetFolder)) return `实例「${n}」已存在，请改名后安装`
-  return ''
-})
+  const n = (modal.instanceEdited ? modal.instanceName : defaultInstanceName.value).trim();
+  if (!n) return '实例名不能为空';
+  if (n.length > 64) return '实例名过长（最多 64 字符）';
+  if (/[\\/:*?"<>|]/.test(n)) return '实例名不能包含 \\ / : * ? " < > | 字符';
+  if (/^[.\s]|[.\s]$/.test(n)) return '实例名不能以空格或点开头/结尾';
+  if (allInstalled.value.some((v) => v.id === n && v.folder === modal.targetFolder)) return `实例「${n}」已存在，请改名后安装`;
+  return '';
+});
 
 /** 实际生效的实例名（纯净版默认 MC 版本号，加载器实例按规则生成，均可自定义） */
-const effectiveInstanceName = computed(() => (modal.instanceEdited ? modal.instanceName.trim() : defaultInstanceName.value))
+const effectiveInstanceName = computed(() => (modal.instanceEdited ? modal.instanceName.trim() : defaultInstanceName.value));
 
 function openInstall(v: RemoteVersion) {
-  modal.open = true
-  modal.version = v
-  modal.loader = ''
-  modal.loaderVersions = []
-  modal.loaderVersion = ''
-  modal.loadingLoaders = false
-  modal.loadLoadersError = ''
-  modal.apiOn = true
-  modal.apiVersions = []
-  modal.apiVersion = ''
-  modal.loadingApi = false
-  modal.apiError = ''
-  modal.recordingMod = undefined
-  modal.favoriteMods = undefined
-  modal.favoriteInstallIntent = undefined
-  favoritesReady.value = true
-  modal.instanceName = ''
-  modal.instanceEdited = false
-  modal.targetFolder = installFolder.value
+  modal.open = true;
+  modal.version = v;
+  modal.loader = '';
+  modal.loaderVersions = [];
+  modal.loaderVersion = '';
+  modal.loadingLoaders = false;
+  modal.loadLoadersError = '';
+  modal.apiOn = true;
+  modal.apiVersions = [];
+  modal.apiVersion = '';
+  modal.loadingApi = false;
+  modal.apiError = '';
+  modal.recordingMod = undefined;
+  modal.favoriteMods = undefined;
+  modal.favoriteInstallIntent = undefined;
+  favoritesReady.value = true;
+  modal.instanceName = '';
+  modal.instanceEdited = false;
+  modal.targetFolder = installFolder.value;
 }
 
-const apiRetry = ref(0)
+const apiRetry = ref(0);
 watch(
   () => [modal.open, modal.loader, modal.version?.id, apiRetry.value] as const,
   async ([open, loader, mcVersion], _previous, onCleanup) => {
-    let stale = false
+    let stale = false;
     onCleanup(() => {
-      stale = true
-    })
-    modal.loaderVersions = []
-    modal.loaderVersion = ''
-    modal.loadLoadersError = ''
-    modal.apiVersions = []
-    modal.apiVersion = ''
-    modal.apiError = ''
-    modal.loadingLoaders = false
-    modal.loadingApi = false
-    if (!open || !loader || !mcVersion) return
-    modal.loadingLoaders = true
-    modal.loadingApi = loader === 'fabric'
+      stale = true;
+    });
+    modal.loaderVersions = [];
+    modal.loaderVersion = '';
+    modal.loadLoadersError = '';
+    modal.apiVersions = [];
+    modal.apiVersion = '';
+    modal.apiError = '';
+    modal.loadingLoaders = false;
+    modal.loadingApi = false;
+    if (!open || !loader || !mcVersion) return;
+    modal.loadingLoaders = true;
+    modal.loadingApi = loader === 'fabric';
     try {
-      const list = await listLoaders(loader, mcVersion)
-      if (stale) return
-      modal.loaderVersions = list
-      modal.loaderVersion = list[0] ?? ''
-      if (!list.length) modal.loadLoadersError = '该版本暂无可用的加载器版本'
+      const list = await listLoaders(loader, mcVersion);
+      if (stale) return;
+      modal.loaderVersions = list;
+      modal.loaderVersion = list[0] ?? '';
+      if (!list.length) modal.loadLoadersError = '该版本暂无可用的加载器版本';
     } catch (e) {
-      if (stale) return
-      modal.loadLoadersError = '获取加载器版本失败：' + errText(e)
+      if (stale) return;
+      modal.loadLoadersError = '获取加载器版本失败：' + errText(e);
     } finally {
-      if (!stale) modal.loadingLoaders = false
+      if (!stale) modal.loadingLoaders = false;
     }
     // 选择 Fabric 时联动拉取 Fabric API 版本列表
     if (loader === 'fabric' && !stale) {
       try {
-        const list = await listFabricApi(mcVersion)
-        if (stale) return
-        modal.apiVersions = list
-        modal.apiVersion = list[0]?.version ?? ''
-        if (!list.length) modal.apiError = '该版本暂无适配的 Fabric API'
+        const list = await listFabricApi(mcVersion);
+        if (stale) return;
+        modal.apiVersions = list;
+        modal.apiVersion = list[0]?.version ?? '';
+        if (!list.length) modal.apiError = '该版本暂无适配的 Fabric API';
       } catch (e) {
-        if (stale) return
-        modal.apiError = '获取 Fabric API 列表失败：' + errText(e)
+        if (stale) return;
+        modal.apiError = '获取 Fabric API 列表失败：' + errText(e);
       } finally {
-        if (!stale) modal.loadingApi = false
+        if (!stale) modal.loadingApi = false;
       }
     }
   }
-)
+);
 
 const canConfirm = computed(
   () =>
@@ -635,11 +635,11 @@ const canConfirm = computed(
     favoritesReady.value &&
     (!modal.recordingMod || (!!modal.loader && !!modal.recordingMod.fileId)) &&
     !instanceError.value
-)
+);
 
 async function confirmInstall() {
-  const v = modal.version
-  if (!v || !canConfirm.value || store.installing.has(v.id)) return
+  const v = modal.version;
+  if (!v || !canConfirm.value || store.installing.has(v.id)) return;
   const opts: InstallOptions = modal.loader
     ? {
         loader: modal.loader,
@@ -654,17 +654,17 @@ async function confirmInstall() {
         instanceName: effectiveInstanceName.value || undefined,
         favoriteMods: modal.favoriteMods,
         favoriteInstallIntent: modal.favoriteInstallIntent,
-      }
-  modal.open = false
+      };
+  modal.open = false;
   // 主进程后台异步下载，invoke 仅表示任务已受理；
   // 完成/失败由 App.vue 订阅的 installDone 事件统一提示并刷新已安装列表
-  store.installing.add(v.id)
-  toast(`开始下载版本 ${v.id}，请稍候…`, 'info')
+  store.installing.add(v.id);
+  toast(`开始下载版本 ${v.id}，请稍候…`, 'info');
   try {
-    await installVersion(v.id, opts, modal.targetFolder)
+    await installVersion(v.id, opts, modal.targetFolder);
   } catch (e) {
-    store.installing.delete(v.id)
-    toast('安装失败：' + errText(e), 'error')
+    store.installing.delete(v.id);
+    toast('安装失败：' + errText(e), 'error');
   }
 }
 
@@ -673,146 +673,146 @@ const removeModal = reactive({
   open: false,
   target: null as InstalledVersion | null,
   busy: false,
-})
+});
 
 async function onConfirmRemove() {
-  const v = removeModal.target
-  if (!v || removeModal.busy) return
-  removeModal.busy = true
+  const v = removeModal.target;
+  if (!v || removeModal.busy) return;
+  removeModal.busy = true;
   try {
-    await removeVersion(v.id, v.folder)
-    await refreshInstalled()
-    removeModal.open = false
-    toast(`已删除 ${v.id}`, 'success')
+    await removeVersion(v.id, v.folder);
+    await refreshInstalled();
+    removeModal.open = false;
+    toast(`已删除 ${v.id}`, 'success');
   } catch (e) {
-    toast('删除失败：' + errText(e), 'error')
+    toast('删除失败：' + errText(e), 'error');
   } finally {
-    removeModal.busy = false
+    removeModal.busy = false;
   }
 }
 
 /** 清理安装失败的残留目录 */
 async function onCleanup(id: string, folder: string) {
   try {
-    await cleanupPartialInstall(id, folder)
-    await refreshInstalled()
-    toast('残留已清理', 'success')
+    await cleanupPartialInstall(id, folder);
+    await refreshInstalled();
+    toast('残留已清理', 'success');
   } catch (e) {
-    toast('清理失败：' + errText(e), 'error')
+    toast('清理失败：' + errText(e), 'error');
   }
 }
 
 /** 打开该版本的版本文件夹（versions/<id>） */
 async function openVersionFolder(v: InstalledVersion) {
   try {
-    await openDir('versions/' + v.id, v.folder)
+    await openDir('versions/' + v.id, v.folder);
   } catch (e) {
-    toast('打开文件夹失败：' + errText(e), 'error')
+    toast('打开文件夹失败：' + errText(e), 'error');
   }
 }
 
 /** 版本列表条目的主操作：直接用该版本启动游戏（与首页最近游戏卡片行为一致） */
 async function launchVersion(v: InstalledVersion) {
-  await selectInstance(v.id, v.folder)
-  const folder = v.folder ?? store.settings?.activeFolder ?? store.settings?.gameDir
-  if (instanceLaunchBusy(store.launchStates, v.id, folder)) return
-  applyLaunchState({ status: 'launching', text: '正在准备启动…', versionId: v.id, folder })
+  await selectInstance(v.id, v.folder);
+  const folder = v.folder ?? store.settings?.activeFolder ?? store.settings?.gameDir;
+  if (instanceLaunchBusy(store.launchStates, v.id, folder)) return;
+  applyLaunchState({ status: 'launching', text: '正在准备启动…', versionId: v.id, folder });
   try {
-    await launchGame(v.id, undefined, v.folder)
+    await launchGame(v.id, undefined, v.folder);
   } catch (e) {
-    applyLaunchState({ status: 'error', text: errText(e), versionId: v.id, folder })
-    toast('启动失败：' + errText(e), 'error')
+    applyLaunchState({ status: 'error', text: errText(e), versionId: v.id, folder });
+    toast('启动失败：' + errText(e), 'error');
   }
 }
 
 // ---------------- 版本隔离开关 ----------------
-const isoBusy = ref<string | null>(null)
+const isoBusy = ref<string | null>(null);
 const isolationModal = reactive<{
-  open: boolean
-  target: InstalledVersion | null
-  plan: IsolationMigrationPlan | null
-  busy: boolean
-  error: string
-}>({ open: false, target: null, plan: null, busy: false, error: '' })
+  open: boolean;
+  target: InstalledVersion | null;
+  plan: IsolationMigrationPlan | null;
+  busy: boolean;
+  error: string;
+}>({ open: false, target: null, plan: null, busy: false, error: '' });
 
 function fmtBytes(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B'
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`
-  if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MB`
-  return `${(bytes / 1024 ** 3).toFixed(2)} GB`
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+  return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
 }
 
 function closeIsolationModal() {
-  if (isolationModal.busy) return
-  isoBusy.value = null
-  isolationModal.open = false
-  isolationModal.target = null
-  isolationModal.plan = null
-  isolationModal.error = ''
+  if (isolationModal.busy) return;
+  isoBusy.value = null;
+  isolationModal.open = false;
+  isolationModal.target = null;
+  isolationModal.plan = null;
+  isolationModal.error = '';
 }
 
 // ---------------- 管理快捷菜单 ----------------
-const manageMenu = reactive({ id: '', folder: '', top: 0, left: 0 })
-const menuVersion = computed(() => allInstalled.value.find((v) => v.id === manageMenu.id && v.folder === manageMenu.folder))
+const manageMenu = reactive({ id: '', folder: '', top: 0, left: 0 });
+const menuVersion = computed(() => allInstalled.value.find((v) => v.id === manageMenu.id && v.folder === manageMenu.folder));
 const loaderLabel = (v: InstalledVersion) =>
   v.loader
     ? `${({ fabric: 'Fabric', forge: 'Forge', neoforge: 'NeoForge', quilt: 'Quilt' } as Record<string, string>)[v.loader] || v.loader} ${v.loaderVersion || ''}`.trim()
-    : '原版'
-let menuTrigger: HTMLElement | null = null
+    : '原版';
+let menuTrigger: HTMLElement | null = null;
 function closeManageMenu() {
-  manageMenu.id = ''
-  menuTrigger?.focus()
+  manageMenu.id = '';
+  menuTrigger?.focus();
 }
 function trapMenuFocus(event: KeyboardEvent) {
-  if (event.key !== 'Tab') return
+  if (event.key !== 'Tab') return;
   const items = [
     ...(event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>(
       'button:not(:disabled), input:not(:disabled), select:not(:disabled), [tabindex="0"]'
     ),
-  ]
-  const edge = event.shiftKey ? items[0] : items[items.length - 1]
+  ];
+  const edge = event.shiftKey ? items[0] : items[items.length - 1];
   if (document.activeElement === edge) {
-    event.preventDefault()
-    ;(event.shiftKey ? items[items.length - 1] : items[0])?.focus()
+    event.preventDefault();
+    (event.shiftKey ? items[items.length - 1] : items[0])?.focus();
   }
 }
 
 /** 下载源切换（镜像 ⇄ 官方），持久化并刷新版本清单 */
 async function onToggleMirror() {
-  const next = store.settings?.mirror === 'bmclapi' ? 'official' : 'bmclapi'
+  const next = store.settings?.mirror === 'bmclapi' ? 'official' : 'bmclapi';
   try {
-    await saveSettings({ mirror: next })
-    store.settings = await getSettings()
-    toast(next === 'bmclapi' ? '已切换为 BMCLAPI 镜像源' : '已切换为官方源', 'success')
-    void load(true)
+    await saveSettings({ mirror: next });
+    store.settings = await getSettings();
+    toast(next === 'bmclapi' ? '已切换为 BMCLAPI 镜像源' : '已切换为官方源', 'success');
+    void load(true);
   } catch (e) {
-    toast('切换下载源失败：' + errText(e), 'error')
+    toast('切换下载源失败：' + errText(e), 'error');
   }
 }
 
 /** 重试安装失败的版本 */
 function onRetry(versionId: string, folder = activeFolder.value) {
-  store.failedInstalls.delete(versionId)
-  store.installing.add(versionId)
-  toast(`重新开始下载版本 ${versionId}…`, 'info')
+  store.failedInstalls.delete(versionId);
+  store.installing.add(versionId);
+  toast(`重新开始下载版本 ${versionId}…`, 'info');
   void installVersion(versionId, {}, folder).catch((e) => {
-    store.installing.delete(versionId)
-    toast('安装失败：' + errText(e), 'error')
-  })
+    store.installing.delete(versionId);
+    toast('安装失败：' + errText(e), 'error');
+  });
 }
 
 /** 安装中的版本（进度条显示在已安装页顶部） */
-const installingVersions = computed(() => [...store.installing])
+const installingVersions = computed(() => [...store.installing]);
 
 /** 文件夹显示名：优先用文件夹登记时的命名，未登记回退路径末级目录名 */
 const folderShortName = (p: string): string => {
-  const norm = (v: string) => v.replace(/\\/g, '/').replace(/\/$/, '').toLowerCase()
-  const hit = store.settings?.folders.find((f) => norm(f.path) === norm(p))
-  if (hit?.name?.trim()) return hit.name.trim()
-  const parts = p.replace(/[\\/]+$/, '').split(/[\\/]/)
-  return parts[parts.length - 1] || p
-}
+  const norm = (v: string) => v.replace(/\\/g, '/').replace(/\/$/, '').toLowerCase();
+  const hit = store.settings?.folders.find((f) => norm(f.path) === norm(p));
+  if (hit?.name?.trim()) return hit.name.trim();
+  const parts = p.replace(/[\\/]+$/, '').split(/[\\/]/);
+  return parts[parts.length - 1] || p;
+};
 
 /** 收藏置顶 + 组内最近游玩倒序 */
 const scopedInstalled = computed(() =>
@@ -827,56 +827,56 @@ const scopedInstalled = computed(() =>
         .toLowerCase()
         .includes(installedSearch.value.trim().toLowerCase())
     )
-)
+);
 const sortedInstalled = computed(() =>
   sortWithFavorite(
     scopedInstalled.value.filter((v) => versionMatchesCategory(installedCategory.value, categoryOf(v), isFavorite(v.id, v.folder)))
   )
-)
+);
 const categoryFilters = computed(() => [
   { id: VERSION_CATEGORY_ALL, name: '全部', count: scopedInstalled.value.length },
   { id: VERSION_CATEGORY_FAVORITES, name: '收藏', count: scopedInstalled.value.filter((v) => isFavorite(v.id, v.folder)).length },
   { id: VERSION_CATEGORY_UNCLASSIFIED, name: '未分类', count: scopedInstalled.value.filter((v) => !categoryOf(v)).length },
   ...categories.value.map((c) => ({ ...c, count: scopedInstalled.value.filter((v) => categoryOf(v) === c.id).length })),
-])
+]);
 /** 已收藏分组（不含残缺/失败版本） */
-const favoriteInstalled = computed(() => store.installed.filter((v) => isFavorite(v.id, v.folder) && !v.incomplete && !v.failed))
+const favoriteInstalled = computed(() => store.installed.filter((v) => isFavorite(v.id, v.folder) && !v.incomplete && !v.failed));
 
 function openManageMenu(e: MouseEvent, id: string, folder: string) {
   if (manageMenu.id === id && manageMenu.folder === folder) {
-    manageMenu.id = ''
-    return
+    manageMenu.id = '';
+    return;
   }
-  const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
-  menuTrigger = e.currentTarget as HTMLElement
-  manageMenu.top = Math.max(8, Math.min(r.bottom + 6, window.innerHeight - 520))
-  manageMenu.left = Math.max(8, r.right - 290)
-  manageMenu.id = id
-  manageMenu.folder = folder
-  void nextTick(() => document.querySelector<HTMLElement>('.instance-more-menu button')?.focus())
+  const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+  menuTrigger = e.currentTarget as HTMLElement;
+  manageMenu.top = Math.max(8, Math.min(r.bottom + 6, window.innerHeight - 520));
+  manageMenu.left = Math.max(8, r.right - 290);
+  manageMenu.id = id;
+  manageMenu.folder = folder;
+  void nextTick(() => document.querySelector<HTMLElement>('.instance-more-menu button')?.focus());
 }
 
 /** 跳转资源管理对应子页，并把上下文版本切到该版本 */
 async function goManage(view: 'mods' | 'packs' | 'shaders') {
-  const { id, folder } = manageMenu
-  await selectInstance(id, folder)
-  store.resourceVersionId = id
-  manageMenu.id = ''
-  store.currentView = view
+  const { id, folder } = manageMenu;
+  await selectInstance(id, folder);
+  store.resourceVersionId = id;
+  manageMenu.id = '';
+  store.currentView = view;
 }
 
 // ---------------- 实例重命名 ----------------
-const renameModal = reactive({ open: false, id: '', folder: '', name: '', error: '', busy: false })
+const renameModal = reactive({ open: false, id: '', folder: '', name: '', error: '', busy: false });
 
 // ---------------- 实例图标 ----------------
-const iconModal = reactive({ open: false, id: '', folder: '', current: '' })
+const iconModal = reactive({ open: false, id: '', folder: '', current: '' });
 
 function openIconPicker(id: string, folder = manageMenu.folder) {
-  iconModal.folder = folder
-  iconModal.id = id
-  iconModal.current = allInstalled.value.find((v) => v.id === id && v.folder === folder)?.icon ?? ''
-  iconModal.open = true
-  manageMenu.id = ''
+  iconModal.folder = folder;
+  iconModal.id = id;
+  iconModal.current = allInstalled.value.find((v) => v.id === id && v.folder === folder)?.icon ?? '';
+  iconModal.open = true;
+  manageMenu.id = '';
 }
 
 // ---------------- 首页启动卡缩略图 ----------------
@@ -886,16 +886,16 @@ const thumbnailModal = reactive({
   folder: '',
   current: '',
   fit: 'crop' as ImageFit,
-})
+});
 
 function openThumbnailPicker(id: string, folder = manageMenu.folder) {
-  const version = allInstalled.value.find((item) => item.id === id && item.folder === folder)
-  thumbnailModal.folder = folder
-  thumbnailModal.id = id
-  thumbnailModal.current = version?.thumbnail ?? ''
-  thumbnailModal.fit = version?.thumbnailFit ?? 'crop'
-  thumbnailModal.open = true
-  manageMenu.id = ''
+  const version = allInstalled.value.find((item) => item.id === id && item.folder === folder);
+  thumbnailModal.folder = folder;
+  thumbnailModal.id = id;
+  thumbnailModal.current = version?.thumbnail ?? '';
+  thumbnailModal.fit = version?.thumbnailFit ?? 'crop';
+  thumbnailModal.open = true;
+  manageMenu.id = '';
 }
 
 // ---------------- 指定 Java ----------------
@@ -906,33 +906,33 @@ const javaModal = reactive({
   value: '',
   list: [] as Awaited<ReturnType<typeof listJava>>,
   busy: false,
-})
+});
 
 async function openJavaModal() {
-  javaModal.folder = manageMenu.folder
-  javaModal.id = manageMenu.id
-  manageMenu.id = ''
-  javaModal.busy = true
-  javaModal.open = true
+  javaModal.folder = manageMenu.folder;
+  javaModal.id = manageMenu.id;
+  manageMenu.id = '';
+  javaModal.busy = true;
+  javaModal.open = true;
   try {
-    javaModal.list = await listJava()
-    const cur = allInstalled.value.find((v) => v.id === javaModal.id && v.folder === javaModal.folder)
-    javaModal.value = cur?.javaPath ?? ''
+    javaModal.list = await listJava();
+    const cur = allInstalled.value.find((v) => v.id === javaModal.id && v.folder === javaModal.folder);
+    javaModal.value = cur?.javaPath ?? '';
   } catch (e) {
-    toast('读取 Java 列表失败：' + errText(e), 'error')
+    toast('读取 Java 列表失败：' + errText(e), 'error');
   } finally {
-    javaModal.busy = false
+    javaModal.busy = false;
   }
 }
 
 async function onConfirmJava() {
   try {
-    await setVersionJava(javaModal.id, javaModal.value, false, javaModal.folder)
-    await refreshInstalled()
-    javaModal.open = false
-    toast(javaModal.value ? '已为该版本指定 Java' : '已恢复自动匹配 Java', 'success')
+    await setVersionJava(javaModal.id, javaModal.value, false, javaModal.folder);
+    await refreshInstalled();
+    javaModal.open = false;
+    toast(javaModal.value ? '已为该版本指定 Java' : '已恢复自动匹配 Java', 'success');
   } catch (e) {
-    toast('设置失败：' + errText(e), 'error')
+    toast('设置失败：' + errText(e), 'error');
   }
 }
 
@@ -946,137 +946,137 @@ const resolutionModal = reactive({
   height: 480,
   error: '',
   busy: false,
-})
+});
 
 function openResolutionModal() {
-  resolutionModal.folder = manageMenu.folder
-  resolutionModal.id = manageMenu.id
-  manageMenu.id = ''
-  const current = allInstalled.value.find((version) => version.id === resolutionModal.id && version.folder === resolutionModal.folder)
-  const fallback = store.settings?.resolution
-  resolutionModal.mode = current?.resolution?.mode ?? 'inherit'
-  resolutionModal.width = current?.resolution?.width ?? fallback?.width ?? 854
-  resolutionModal.height = current?.resolution?.height ?? fallback?.height ?? 480
-  resolutionModal.error = ''
-  resolutionModal.open = true
+  resolutionModal.folder = manageMenu.folder;
+  resolutionModal.id = manageMenu.id;
+  manageMenu.id = '';
+  const current = allInstalled.value.find((version) => version.id === resolutionModal.id && version.folder === resolutionModal.folder);
+  const fallback = store.settings?.resolution;
+  resolutionModal.mode = current?.resolution?.mode ?? 'inherit';
+  resolutionModal.width = current?.resolution?.width ?? fallback?.width ?? 854;
+  resolutionModal.height = current?.resolution?.height ?? fallback?.height ?? 480;
+  resolutionModal.error = '';
+  resolutionModal.open = true;
 }
 
 async function onConfirmResolution() {
-  if (resolutionModal.busy) return
-  resolutionModal.error = ''
-  let override: GameResolution | null = null
+  if (resolutionModal.busy) return;
+  resolutionModal.error = '';
+  let override: GameResolution | null = null;
   if (resolutionModal.mode !== 'inherit') {
-    const width = Number(resolutionModal.width)
-    const height = Number(resolutionModal.height)
+    const width = Number(resolutionModal.width);
+    const height = Number(resolutionModal.height);
     if (!Number.isInteger(width) || width < 854 || width > 7680) {
-      resolutionModal.error = '窗口宽度必须是 854–7680 之间的整数'
-      return
+      resolutionModal.error = '窗口宽度必须是 854–7680 之间的整数';
+      return;
     }
     if (!Number.isInteger(height) || height < 480 || height > 4320) {
-      resolutionModal.error = '窗口高度必须是 480–4320 之间的整数'
-      return
+      resolutionModal.error = '窗口高度必须是 480–4320 之间的整数';
+      return;
     }
     override = {
       width,
       height,
       mode: resolutionModal.mode,
       fullscreen: resolutionModal.mode === 'fullscreen',
-    }
+    };
   }
-  resolutionModal.busy = true
+  resolutionModal.busy = true;
   try {
-    await setVersionResolution(resolutionModal.id, override, resolutionModal.folder)
-    await refreshInstalled()
-    resolutionModal.open = false
-    toast(override ? '已保存实例窗口设置' : '该实例已改为跟随全局窗口设置', 'success')
+    await setVersionResolution(resolutionModal.id, override, resolutionModal.folder);
+    await refreshInstalled();
+    resolutionModal.open = false;
+    toast(override ? '已保存实例窗口设置' : '该实例已改为跟随全局窗口设置', 'success');
   } catch (error) {
-    resolutionModal.error = errText(error)
+    resolutionModal.error = errText(error);
   } finally {
-    resolutionModal.busy = false
+    resolutionModal.busy = false;
   }
 }
 
 function openRename() {
-  openRenameFor(manageMenu.id)
-  manageMenu.id = ''
+  openRenameFor(manageMenu.id);
+  manageMenu.id = '';
 }
 
 /** 点击版本名直接进入改名 */
 function openRenameFor(id: string, folder = manageMenu.folder) {
-  renameModal.folder = folder
-  renameModal.id = id
-  renameModal.name = id
-  renameModal.error = ''
-  renameModal.open = true
+  renameModal.folder = folder;
+  renameModal.id = id;
+  renameModal.name = id;
+  renameModal.error = '';
+  renameModal.open = true;
 }
 
 async function onConfirmRename() {
-  if (renameModal.busy) return
-  renameModal.busy = true
-  renameModal.error = ''
-  const oldId = renameModal.id
-  const newId = renameModal.name.trim()
+  if (renameModal.busy) return;
+  renameModal.busy = true;
+  renameModal.error = '';
+  const oldId = renameModal.id;
+  const newId = renameModal.name.trim();
   try {
-    await renameVersion(oldId, newId, renameModal.folder)
-    store.settings = await getSettings()
+    await renameVersion(oldId, newId, renameModal.folder);
+    store.settings = await getSettings();
     // 引用同步（渲染端）：最近游玩记录以版本 id 为键（收藏/服务器绑定由主进程同步）
-    renameLastPlayed(oldId, newId)
-    await refreshInstalled()
-    renameModal.open = false
-    toast('实例已重命名', 'success')
+    renameLastPlayed(oldId, newId);
+    await refreshInstalled();
+    renameModal.open = false;
+    toast('实例已重命名', 'success');
   } catch (e) {
-    renameModal.error = errText(e)
+    renameModal.error = errText(e);
   } finally {
-    renameModal.busy = false
+    renameModal.busy = false;
   }
 }
 
 async function onToggleIsolation(v: InstalledVersion, event: Event) {
   // 原生 checkbox 会先自行翻转；状态只有在主进程事务成功后才允许改变。
-  const input = event.currentTarget as HTMLInputElement
-  input.checked = !!v.isolated
-  if (isoBusy.value) return
-  isoBusy.value = v.id
-  const next = !v.isolated
+  const input = event.currentTarget as HTMLInputElement;
+  input.checked = !!v.isolated;
+  if (isoBusy.value) return;
+  isoBusy.value = v.id;
+  const next = !v.isolated;
   try {
     if (next) {
-      const plan = await getIsolationPlan(v.id, v.folder)
+      const plan = await getIsolationPlan(v.id, v.folder);
       if (plan.items.length > 0) {
-        isolationModal.target = v
-        isolationModal.plan = plan
-        isolationModal.error = ''
-        isolationModal.open = true
-        return
+        isolationModal.target = v;
+        isolationModal.plan = plan;
+        isolationModal.error = '';
+        isolationModal.open = true;
+        return;
       }
     }
-    await setVersionIsolation(v.id, next, v.folder)
-    await refreshInstalled()
-    toast(next ? `已为「${v.id}」开启版本隔离` : `已关闭「${v.id}」的版本隔离；独立目录中的原数据已保留`, 'success')
+    await setVersionIsolation(v.id, next, v.folder);
+    await refreshInstalled();
+    toast(next ? `已为「${v.id}」开启版本隔离` : `已关闭「${v.id}」的版本隔离；独立目录中的原数据已保留`, 'success');
   } catch (e) {
-    toast('切换隔离失败：' + errText(e), 'error')
+    toast('切换隔离失败：' + errText(e), 'error');
   } finally {
-    if (!isolationModal.open) isoBusy.value = null
+    if (!isolationModal.open) isoBusy.value = null;
   }
 }
 
 async function confirmIsolation() {
-  const target = isolationModal.target
-  if (!target || isolationModal.busy) return
-  isolationModal.busy = true
-  isolationModal.error = ''
+  const target = isolationModal.target;
+  if (!target || isolationModal.busy) return;
+  isolationModal.busy = true;
+  isolationModal.error = '';
   try {
-    await setVersionIsolation(target.id, true, target.folder)
-    await refreshInstalled()
-    isolationModal.open = false
-    toast(`已为「${target.id}」开启版本隔离，共享数据已安全复制`, 'success')
+    await setVersionIsolation(target.id, true, target.folder);
+    await refreshInstalled();
+    isolationModal.open = false;
+    toast(`已为「${target.id}」开启版本隔离，共享数据已安全复制`, 'success');
   } catch (error) {
-    isolationModal.error = errText(error)
+    isolationModal.error = errText(error);
   } finally {
-    isolationModal.busy = false
-    isoBusy.value = null
+    isolationModal.busy = false;
+    isoBusy.value = null;
     if (!isolationModal.open) {
-      isolationModal.target = null
-      isolationModal.plan = null
+      isolationModal.target = null;
+      isolationModal.plan = null;
     }
   }
 }
@@ -1162,8 +1162,8 @@ async function confirmIsolation() {
         新版本、整合包和共享资源使用默认下载位置；已有游戏保留原目录。<button
           class="btn btn-ghost btn-sm"
           @click="
-            store.settingsSection = 'installation'
-            store.currentView = 'settings'
+            store.settingsSection = 'installation';
+            store.currentView = 'settings';
           "
         >
           下载位置设置
@@ -1345,8 +1345,8 @@ async function confirmIsolation() {
           data-ui="games:categories-manage"
           :disabled="categoryBusy"
           @click="
-            categoryError = ''
-            categoryManagerOpen = true
+            categoryError = '';
+            categoryManagerOpen = true;
           "
         >
           管理分类
@@ -1486,8 +1486,8 @@ async function confirmIsolation() {
           v-if="menuVersion"
           class="menu-item"
           @click="
-            openVersionFolder(menuVersion)
-            closeManageMenu()
+            openVersionFolder(menuVersion);
+            closeManageMenu();
           "
         >
           打开实例文件夹
@@ -1496,8 +1496,8 @@ async function confirmIsolation() {
           v-if="menuVersion"
           class="menu-item"
           @click="
-            openInstanceCenter(menuVersion)
-            closeManageMenu()
+            openInstanceCenter(menuVersion);
+            closeManageMenu();
           "
         >
           实例设置与详情
@@ -1659,8 +1659,8 @@ async function confirmIsolation() {
             v-if="menuVersion.failed"
             class="menu-item error"
             @click="
-              onCleanup(menuVersion.id, menuVersion.folder)
-              closeManageMenu()
+              onCleanup(menuVersion.id, menuVersion.folder);
+              closeManageMenu();
             "
           >
             清理安装残留
@@ -1669,9 +1669,9 @@ async function confirmIsolation() {
             v-else
             class="menu-item error"
             @click="
-              removeModal.target = menuVersion
-              removeModal.open = true
-              closeManageMenu()
+              removeModal.target = menuVersion;
+              removeModal.open = true;
+              closeManageMenu();
             "
           >
             删除实例

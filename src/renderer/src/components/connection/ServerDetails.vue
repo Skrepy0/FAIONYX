@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import type { ServerEntry, ServerPingResult, InstalledVersion } from '@shared/types'
-import ConnectionPanel from './ConnectionPanel.vue'
-import ConnectionStatus from './ConnectionStatus.vue'
-import ServerAddress from './ServerAddress.vue'
-import { privateServerText } from '@shared/serverPrivacy'
+import type { ServerEntry, ServerPingResult, InstalledVersion } from '@shared/types';
+import ConnectionPanel from './ConnectionPanel.vue';
+import ConnectionStatus from './ConnectionStatus.vue';
+import ServerAddress from './ServerAddress.vue';
+import { privateServerText } from '@shared/serverPrivacy';
 defineProps<{
-  server: ServerEntry
-  ping: ServerPingResult | null
-  pending: boolean
-  busy: boolean
-  running?: boolean
-  binding: boolean
-  targets: InstalledVersion[]
-  bound: string
-  missing: boolean
-  lastUsed: string
-  targetToken: (target: InstalledVersion) => string
-  targetLabel: (target: InstalledVersion) => string
-  addressRevealed: boolean
-}>()
-defineEmits<{ bind: [value: string]; connect: []; refresh: []; edit: []; remove: []; relink: []; versions: []; copy: []; address: [] }>()
+  server: ServerEntry;
+  ping: ServerPingResult | null;
+  pending: boolean;
+  busy: boolean;
+  running?: boolean;
+  binding: boolean;
+  targets: InstalledVersion[];
+  bound: string;
+  missing: boolean;
+  lastUsed: string;
+  targetToken: (target: InstalledVersion) => string;
+  targetLabel: (target: InstalledVersion) => string;
+  addressRevealed: boolean;
+}>();
+defineEmits<{ bind: [value: string]; connect: []; refresh: []; edit: []; remove: []; relink: []; versions: []; copy: []; address: [] }>();
 </script>
 <template>
   <ConnectionPanel title="连接服务器" class="server-detail">

@@ -1,6 +1,6 @@
 // Pure policy/receipt qualification; never compile Swift or call CoreGraphics.
 const test = require('node:test'),
-  assert = require('node:assert/strict')
+  assert = require('node:assert/strict');
 const {
   assertEphemeralCI,
   selectMode,
@@ -8,7 +8,7 @@ const {
   assertRestored,
   prepareNativeDisplay,
   REQUIREMENTS,
-} = require('./mac-native-display113.cjs')
+} = require('./mac-native-display113.cjs');
 const env = () => ({
   GITHUB_ACTIONS: 'true',
   CI: 'true',
@@ -17,7 +17,7 @@ const env = () => ({
   RUNNER_ARCH: 'ARM64',
   GITHUB_RUN_ID: '12345',
   GITHUB_RUN_ATTEMPT: '1',
-})
+});
 const mode = (id, width, height, refresh = 60, scale = 2) => ({
   ioDisplayModeID: id,
   width,
@@ -29,10 +29,10 @@ const mode = (id, width, height, refresh = 60, scale = 2) => ({
   ioFlags: 3,
   guiUsable: true,
   qualityExcluded: false,
-})
-const rect = (width, height) => ({ x: 0, y: 0, width, height })
+});
+const rect = (width, height) => ({ x: 0, y: 0, width, height });
 function inventory() {
-  const current = mode(1, 1024, 768)
+  const current = mode(1, 1024, 768);
   return {
     platform: 'darwin',
     arch: 'arm64',
@@ -49,19 +49,19 @@ function inventory() {
         availableModes: [current, mode(3, 1920, 1200), mode(2, 1600, 1080)],
       },
     ],
-  }
+  };
 }
 function prepared(original, decision) {
   const after = structuredClone(original),
     main = after.displays[0],
-    selected = decision.selectedMode ?? decision.originalMode
-  main.currentMode = structuredClone(selected)
-  main.frame = rect(selected.width, selected.height)
-  main.workArea = rect(selected.width, selected.height - 90)
-  return { event: 'prepared', changed: decision.changed, selectedMode: decision.selectedMode, original, after }
+    selected = decision.selectedMode ?? decision.originalMode;
+  main.currentMode = structuredClone(selected);
+  main.frame = rect(selected.width, selected.height);
+  main.workArea = rect(selected.width, selected.height - 90);
+  return { event: 'prepared', changed: decision.changed, selectedMode: decision.selectedMode, original, after };
 }
 test('Only actual native ephemeral GitHub-hosted Mac ARM64 context permits the helper', () => {
-  assert.equal(assertEphemeralCI({ env: env(), platform: 'darwin', arch: 'arm64' }).runId, '12345')
+  assert.equal(assertEphemeralCI({ env: env(), platform: 'darwin', arch: 'arm64' }).runId, '12345');
   for (const [key, value] of [
     ['GITHUB_ACTIONS', 'false'],
     ['CI', 'false'],
@@ -71,100 +71,100 @@ test('Only actual native ephemeral GitHub-hosted Mac ARM64 context permits the h
     ['GITHUB_RUN_ID', ''],
     ['GITHUB_RUN_ATTEMPT', '0'],
   ]) {
-    const invalid = env()
-    invalid[key] = value
-    assert.throws(() => assertEphemeralCI({ env: invalid, platform: 'darwin', arch: 'arm64' }))
+    const invalid = env();
+    invalid[key] = value;
+    assert.throws(() => assertEphemeralCI({ env: invalid, platform: 'darwin', arch: 'arm64' }));
   }
   for (const [platform, arch] of [
     ['win32', 'x64'],
     ['linux', 'arm64'],
     ['darwin', 'x64'],
   ])
-    assert.throws(() => assertEphemeralCI({ env: env(), platform, arch }))
-})
+    assert.throws(() => assertEphemeralCI({ env: env(), platform, arch }));
+});
 test('Adequate actual workArea is a no-op, including an unchanged unknown-refresh original mode', () => {
   const original = inventory(),
-    main = original.displays[0]
-  main.currentMode = mode(2, 1600, 1080, 0)
-  main.currentMode.pixelEncoding = null
-  main.frame = rect(1600, 1080)
-  main.workArea = rect(1600, 990)
-  main.availableModes = [main.currentMode]
-  const selected = selectMode(original)
-  assert.equal(selected.changed, false)
-  assert.equal(selected.selectedMode, null)
-  assert.deepEqual(REQUIREMENTS, { logicalWidth: 1600, logicalHeight: 1080, workWidth: 1440, workHeight: 960 })
-})
+    main = original.displays[0];
+  main.currentMode = mode(2, 1600, 1080, 0);
+  main.currentMode.pixelEncoding = null;
+  main.frame = rect(1600, 1080);
+  main.workArea = rect(1600, 990);
+  main.availableModes = [main.currentMode];
+  const selected = selectMode(original);
+  assert.equal(selected.changed, false);
+  assert.equal(selected.selectedMode, null);
+  assert.deepEqual(REQUIREMENTS, { logicalWidth: 1600, logicalHeight: 1080, workWidth: 1440, workHeight: 960 });
+});
 test('Choose the smallest actual sufficient mode with original refresh and pixel quality, regardless of list order', () => {
   const original = inventory(),
     before = JSON.stringify(original),
-    selected = selectMode(original)
-  assert.equal(selected.changed, true)
-  assert.equal(selected.displayID, 42)
-  assert.equal(selected.selectedMode.ioDisplayModeID, 2)
-  assert.equal(selected.selectedMode.refreshRate, 60)
-  assert.equal(JSON.stringify(original), before)
-  assertApplied(original, selected, prepared(original, selected))
-})
+    selected = selectMode(original);
+  assert.equal(selected.changed, true);
+  assert.equal(selected.displayID, 42);
+  assert.equal(selected.selectedMode.ioDisplayModeID, 2);
+  assert.equal(selected.selectedMode.refreshRate, 60);
+  assert.equal(JSON.stringify(original), before);
+  assertApplied(original, selected, prepared(original, selected));
+});
 test('Predicted actual menu/Dock inset must leave enough unchanged 1440x960 window workArea', () => {
-  const original = inventory()
-  original.displays[0].workArea.height = 518
-  assert.throws(() => selectMode(original), /No actual sufficient mode/)
-  original.displays[0].availableModes.push(mode(4, 1920, 1280))
-  assert.equal(selectMode(original).selectedMode.ioDisplayModeID, 4)
-  const event = prepared(original, selectMode(original))
-  event.after.displays[0].workArea.height = 678
-  assert.throws(() => assertApplied(original, selectMode(original), event), /workArea/)
-})
+  const original = inventory();
+  original.displays[0].workArea.height = 518;
+  assert.throws(() => selectMode(original), /No actual sufficient mode/);
+  original.displays[0].availableModes.push(mode(4, 1920, 1280));
+  assert.equal(selectMode(original).selectedMode.ioDisplayModeID, 4);
+  const event = prepared(original, selectMode(original));
+  event.after.displays[0].workArea.height = 678;
+  assert.throws(() => assertApplied(original, selectMode(original), event), /workArea/);
+});
 test('Unknown or lower refresh, lower backing pixels, different encoding and low-quality modes never supply a fallback', () => {
   for (const change of [
     (m) => (m.refreshRate = 0),
     (m) => (m.refreshRate = 59),
     (m) => {
-      m.pixelWidth = m.width
-      m.pixelHeight = m.height
+      m.pixelWidth = m.width;
+      m.pixelHeight = m.height;
     },
     (m) => (m.pixelEncoding = 'lower-format'),
     (m) => (m.qualityExcluded = true),
     (m) => (m.guiUsable = false),
   ]) {
-    const original = inventory()
-    original.displays[0].availableModes = [original.displays[0].currentMode, mode(2, 1600, 1080)]
-    change(original.displays[0].availableModes[1])
-    assert.throws(() => selectMode(original), /No actual sufficient mode/)
+    const original = inventory();
+    original.displays[0].availableModes = [original.displays[0].currentMode, mode(2, 1600, 1080)];
+    change(original.displays[0].availableModes[1]);
+    assert.throws(() => selectMode(original), /No actual sufficient mode/);
   }
-  const unknown = inventory()
-  unknown.displays[0].currentMode.refreshRate = 0
-  assert.throws(() => selectMode(unknown), /refresh rate unknown/)
-  const encoding = inventory()
-  encoding.displays[0].currentMode.pixelEncoding = null
-  assert.throws(() => selectMode(encoding), /encoding unknown/)
-})
+  const unknown = inventory();
+  unknown.displays[0].currentMode.refreshRate = 0;
+  assert.throws(() => selectMode(unknown), /refresh rate unknown/);
+  const encoding = inventory();
+  encoding.displays[0].currentMode.pixelEncoding = null;
+  assert.throws(() => selectMode(encoding), /encoding unknown/);
+});
 test('No logical-mode invention, ambiguous native mode ID, foreign main or multiscreen/mirrored changes', () => {
   for (const change of [
     (s) => (s.displays[0].frame.height = 767),
     (s) => (s.mainDisplayID = 99),
     (s) => {
-      const copy = structuredClone(s.displays[0])
-      copy.displayID = 43
-      copy.isMain = false
-      s.displays.push(copy)
+      const copy = structuredClone(s.displays[0]);
+      copy.displayID = 43;
+      copy.isMain = false;
+      s.displays.push(copy);
     },
     (s) => (s.displays[0].mirrored = true),
     (s) => {
-      const alias = structuredClone(s.displays[0].availableModes[2])
-      alias.refreshRate = 75
-      s.displays[0].availableModes.push(alias)
+      const alias = structuredClone(s.displays[0].availableModes[2]);
+      alias.refreshRate = 75;
+      s.displays[0].availableModes.push(alias);
     },
   ]) {
-    const original = inventory()
-    change(original)
-    assert.throws(() => selectMode(original))
+    const original = inventory();
+    change(original);
+    assert.throws(() => selectMode(original));
   }
-})
+});
 test('Applied mode must be the exact native ID/properties and actual frame/workArea, never requested dimensions alone', () => {
   const original = inventory(),
-    decision = selectMode(original)
+    decision = selectMode(original);
   for (const change of [
     (e) => (e.after.displays[0].currentMode.ioDisplayModeID = 99),
     (e) => (e.after.displays[0].workArea.height = 678),
@@ -173,16 +173,16 @@ test('Applied mode must be the exact native ID/properties and actual frame/workA
     (e) => (e.changed = false),
     (e) => (e.selectedMode = { ...e.selectedMode, ioDisplayModeID: 99 }),
   ]) {
-    const event = prepared(original, decision)
-    event.selectedMode = structuredClone(event.selectedMode)
-    change(event)
-    assert.throws(() => assertApplied(original, decision, event))
+    const event = prepared(original, decision);
+    event.selectedMode = structuredClone(event.selectedMode);
+    change(event);
+    assert.throws(() => assertApplied(original, decision, event));
   }
-})
+});
 test('Normal restoration needs the original actual mode and workArea, with failure kept as failure', () => {
   const original = inventory(),
-    event = { event: 'restored', pass: true, original, after: structuredClone(original) }
-  assertRestored(original, event)
+    event = { event: 'restored', pass: true, original, after: structuredClone(original) };
+  assertRestored(original, event);
   for (const change of [
     (e) => (e.pass = false),
     (e) => (e.after.mainDisplayID = 43),
@@ -190,12 +190,12 @@ test('Normal restoration needs the original actual mode and workArea, with failu
     (e) => (e.after.displays[0].workArea.height = 677),
     (e) => (e.after.displays[0].backingScaleFactor = 1),
   ]) {
-    const invalid = structuredClone(event)
-    change(invalid)
-    assert.throws(() => assertRestored(original, invalid))
+    const invalid = structuredClone(event);
+    change(invalid);
+    assert.throws(() => assertRestored(original, invalid));
   }
-})
+});
 test('Calling the actual driver on this Windows guard test host refuses before any compiler/native action', async () => {
-  if (process.platform !== 'win32') return
-  await assert.rejects(() => prepareNativeDisplay({ outputDirectory: '/must-not-create-display-proof' }), /requires macOS/)
-})
+  if (process.platform !== 'win32') return;
+  await assert.rejects(() => prepareNativeDisplay({ outputDirectory: '/must-not-create-display-proof' }), /requires macOS/);
+});

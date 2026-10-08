@@ -1,45 +1,45 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
-import SkinViewer3D from './SkinViewer3D.vue'
-import SkinColorPalette from './SkinColorPalette.vue'
-import UiGlyph from './UiGlyph.vue'
-import { loadImage, migrateLegacySkin } from '../skin-render'
-import { makeBaseOpaque, paintSkinPixel, type SkinFace } from '@shared/skinPixels'
-import { parseSkinHex, rememberSkinColor, rgbToSkinHex, sampleSkinBrush, skinBrushIsInvisible, skinBrushRgba } from '@shared/skinColors'
-import { normalizeSkinPalettePreferences } from '@shared/skinPalettePreferences'
-import type { SkinEditorPaletteSettings } from '@shared/types'
-import { store, toast } from '../store'
-import { errText, saveSettings } from '../api'
-import { refreshSkinAfter } from '../skinRevision'
-import { mergeSkinCloseIntent, type SkinCloseIntent } from '../skinEditorInteraction'
-const props = defineProps<{ current?: string; variant?: 'classic' | 'slim' }>()
-const emit = defineEmits<{ close: []; uploaded: [] }>()
-const canvas = shallowRef(document.createElement('canvas'))
-canvas.value.width = canvas.value.height = 64
-const ctx = canvas.value.getContext('2d', { willReadFrequently: true })!
-const blank = ctx.createImageData(64, 64)
-makeBaseOpaque(blank.data)
-for (let i = 0; i < blank.data.length; i += 4) if (blank.data[i + 3] === 255) blank.data[i] = blank.data[i + 1] = blank.data[i + 2] = 220
-ctx.putImageData(blank, 0, 0)
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
+import SkinViewer3D from './SkinViewer3D.vue';
+import SkinColorPalette from './SkinColorPalette.vue';
+import UiGlyph from './UiGlyph.vue';
+import { loadImage, migrateLegacySkin } from '../skin-render';
+import { makeBaseOpaque, paintSkinPixel, type SkinFace } from '@shared/skinPixels';
+import { parseSkinHex, rememberSkinColor, rgbToSkinHex, sampleSkinBrush, skinBrushIsInvisible, skinBrushRgba } from '@shared/skinColors';
+import { normalizeSkinPalettePreferences } from '@shared/skinPalettePreferences';
+import type { SkinEditorPaletteSettings } from '@shared/types';
+import { store, toast } from '../store';
+import { errText, saveSettings } from '../api';
+import { refreshSkinAfter } from '../skinRevision';
+import { mergeSkinCloseIntent, type SkinCloseIntent } from '../skinEditorInteraction';
+const props = defineProps<{ current?: string; variant?: 'classic' | 'slim' }>();
+const emit = defineEmits<{ close: []; uploaded: [] }>();
+const canvas = shallowRef(document.createElement('canvas'));
+canvas.value.width = canvas.value.height = 64;
+const ctx = canvas.value.getContext('2d', { willReadFrequently: true })!;
+const blank = ctx.createImageData(64, 64);
+makeBaseOpaque(blank.data);
+for (let i = 0; i < blank.data.length; i += 4) if (blank.data[i + 3] === 255) blank.data[i] = blank.data[i + 1] = blank.data[i + 2] = 220;
+ctx.putImageData(blank, 0, 0);
 const viewer = ref<InstanceType<typeof SkinViewer3D>>(),
   closeButton = ref<HTMLButtonElement>(),
-  fileInput = ref<HTMLInputElement>()
+  fileInput = ref<HTMLInputElement>();
 const variant = ref(props.variant || 'classic'),
-  layer = ref<'inner' | 'outer'>('inner')
-const palettePreferences = ref(normalizeSkinPalettePreferences(store.settings?.skinEditorPalette))
+  layer = ref<'inner' | 'outer'>('inner');
+const palettePreferences = ref(normalizeSkinPalettePreferences(store.settings?.skinEditorPalette));
 const color = computed({
   get: () => palettePreferences.value.color,
   set: (value) => {
-    const rgb = parseSkinHex(value)
-    if (rgb) palettePreferences.value.color = rgbToSkinHex(rgb)
+    const rgb = parseSkinHex(value);
+    if (rgb) palettePreferences.value.color = rgbToSkinHex(rgb);
   },
-})
+});
 const alpha = computed({
   get: () => palettePreferences.value.alpha,
   set: (value) => {
-    if (Number.isFinite(value)) palettePreferences.value.alpha = Math.max(0, Math.min(1, value))
+    if (Number.isFinite(value)) palettePreferences.value.alpha = Math.max(0, Math.min(1, value));
   },
-})
+});
 const tool = ref('brush'),
   revision = ref(0),
   dirty = ref(false),
@@ -47,51 +47,51 @@ const tool = ref('brush'),
   busyText = ref(''),
   finishingClose = ref(false),
   askClose = ref(false),
-  uploadConfirm = ref(false)
-const sampleHint = ref('')
-const invisibleBrush = computed(() => ['brush', 'fill'].includes(tool.value) && skinBrushIsInvisible(alpha.value, layer.value === 'outer'))
-const operationError = ref('')
+  uploadConfirm = ref(false);
+const sampleHint = ref('');
+const invisibleBrush = computed(() => ['brush', 'fill'].includes(tool.value) && skinBrushIsInvisible(alpha.value, layer.value === 'outer'));
+const operationError = ref('');
 const hiddenParts = ref<string[]>([]),
   undo = ref<Uint8ClampedArray[]>([]),
-  redo = ref<Uint8ClampedArray[]>([])
-type CloseIntent = SkinCloseIntent<typeof store.currentView>
-const closeIntent = shallowRef<CloseIntent>()
-const blocked = computed(() => busy.value || finishingClose.value || askClose.value || uploadConfirm.value)
-const ownerId = crypto.randomUUID()
+  redo = ref<Uint8ClampedArray[]>([]);
+type CloseIntent = SkinCloseIntent<typeof store.currentView>;
+const closeIntent = shallowRef<CloseIntent>();
+const blocked = computed(() => busy.value || finishingClose.value || askClose.value || uploadConfirm.value);
+const ownerId = crypto.randomUUID();
 let disposed = false,
   paletteTimer: ReturnType<typeof setTimeout> | undefined,
   pendingPalette: SkinEditorPaletteSettings | undefined,
-  paletteWrite: Promise<void> | undefined
+  paletteWrite: Promise<void> | undefined;
 function flushPalette(): Promise<void> {
-  if (paletteWrite) return paletteWrite
+  if (paletteWrite) return paletteWrite;
   paletteWrite = (async () => {
     while (pendingPalette) {
-      const next = pendingPalette
-      pendingPalette = undefined
+      const next = pendingPalette;
+      pendingPalette = undefined;
       try {
-        await saveSettings({ skinEditorPalette: next })
+        await saveSettings({ skinEditorPalette: next });
       } catch (error) {
-        toast('调色板偏好未能保存：' + errText(error), 'error')
+        toast('调色板偏好未能保存：' + errText(error), 'error');
       }
     }
   })().finally(() => {
-    paletteWrite = undefined
-    window.faionyx.send('window:skinEditorPrefsPending', { ownerId, pending: !!pendingPalette })
-  })
-  return paletteWrite
+    paletteWrite = undefined;
+    window.faionyx.send('window:skinEditorPrefsPending', { ownerId, pending: !!pendingPalette });
+  });
+  return paletteWrite;
 }
 watch(
   palettePreferences,
   (value) => {
-    pendingPalette = normalizeSkinPalettePreferences(value)
-    window.faionyx.send('window:skinEditorPrefsPending', { ownerId, pending: true })
-    if (store.settings) store.settings.skinEditorPalette = pendingPalette
-    clearTimeout(paletteTimer)
-    paletteTimer = setTimeout(() => void flushPalette(), 350)
+    pendingPalette = normalizeSkinPalettePreferences(value);
+    window.faionyx.send('window:skinEditorPrefsPending', { ownerId, pending: true });
+    if (store.settings) store.settings.skinEditorPalette = pendingPalette;
+    clearTimeout(paletteTimer);
+    paletteTimer = setTimeout(() => void flushPalette(), 350);
   },
   { deep: true, flush: 'sync' }
-)
-watch(busy, (pending) => window.faionyx.send('window:skinEditorBusy', { ownerId, pending }), { flush: 'sync' })
+);
+watch(busy, (pending) => window.faionyx.send('window:skinEditorBusy', { ownerId, pending }), { flush: 'sync' });
 const parts = [
   { key: 'head', name: '头部' },
   { key: 'body', name: '身体' },
@@ -99,7 +99,7 @@ const parts = [
   { key: 'rightArm', name: '右臂' },
   { key: 'leftLeg', name: '左腿' },
   { key: 'rightLeg', name: '右腿' },
-]
+];
 const views = [
   { name: '正面', yaw: 0, pitch: 0 },
   { name: '背面', yaw: Math.PI, pitch: 0 },
@@ -107,109 +107,109 @@ const views = [
   { name: '右侧', yaw: -Math.PI / 2, pitch: 0 },
   { name: '俯视', yaw: 0, pitch: (Math.PI * 5) / 12 },
   { name: '仰视', yaw: 0, pitch: (-Math.PI * 5) / 12 },
-]
-const selectedView = ref('')
+];
+const selectedView = ref('');
 const previewExpanded = ref(false),
-  studioLight = ref(true)
+  studioLight = ref(true);
 const contentElement = ref<HTMLElement>(),
-  toolRailHeight = ref(300)
-let contentResize: ResizeObserver | undefined
+  toolRailHeight = ref(300);
+let contentResize: ResizeObserver | undefined;
 onMounted(() => {
   contentResize = new ResizeObserver(() => {
-    const el = contentElement.value
-    if (el) toolRailHeight.value = Math.max(40, el.clientHeight - parseFloat(getComputedStyle(el).paddingBottom || '0'))
-  })
-  if (contentElement.value) contentResize.observe(contentElement.value)
-})
+    const el = contentElement.value;
+    if (el) toolRailHeight.value = Math.max(40, el.clientHeight - parseFloat(getComputedStyle(el).paddingBottom || '0'));
+  });
+  if (contentElement.value) contentResize.observe(contentElement.value);
+});
 const drawingTools = [
   { key: 'brush', name: '绘制', shortcut: 'B' },
   { key: 'erase', name: '橡皮', shortcut: 'E' },
   { key: 'pick', name: '吸色', shortcut: 'I' },
   { key: 'fill', name: '填色', shortcut: 'G' },
-]
+];
 function toggleLighting() {
   if (!blocked.value) {
-    endGesture()
-    studioLight.value = !studioLight.value
-    viewer.value?.setLighting(studioLight.value)
+    endGesture();
+    studioLight.value = !studioLight.value;
+    viewer.value?.setLighting(studioLight.value);
   }
 }
 function togglePreview() {
   if (!blocked.value) {
-    endGesture()
-    previewExpanded.value = !previewExpanded.value
+    endGesture();
+    previewExpanded.value = !previewExpanded.value;
   }
 }
-const isOffline = computed(() => store.selectedAccount?.type === 'offline')
-const canApplySkin = computed(() => isOffline.value || store.selectedAccount?.type === 'microsoft')
-const uploadTarget = shallowRef<{ id: string; username: string; type: string; variant: 'classic' | 'slim' }>()
+const isOffline = computed(() => store.selectedAccount?.type === 'offline');
+const canApplySkin = computed(() => isOffline.value || store.selectedAccount?.type === 'microsoft');
+const uploadTarget = shallowRef<{ id: string; username: string; type: string; variant: 'classic' | 'slim' }>();
 const uploadState = computed(() =>
   isOffline.value
     ? '应用到此离线账号，下次启动游戏在本机显示'
     : store.selectedAccount?.type === 'microsoft'
       ? `上传至 ${store.selectedAccount.username}`
       : '请选择离线或微软正版账号；可编辑与保存 PNG'
-)
-let snapshot: Uint8ClampedArray | undefined, last: { x: number; y: number; key: string } | undefined
-const pixels = () => ctx.getImageData(0, 0, 64, 64)
-const canEdit = () => !disposed && !blocked.value
+);
+let snapshot: Uint8ClampedArray | undefined, last: { x: number; y: number; key: string } | undefined;
+const pixels = () => ctx.getImageData(0, 0, 64, 64);
+const canEdit = () => !disposed && !blocked.value;
 function changed() {
-  revision.value++
-  dirty.value = true
+  revision.value++;
+  dirty.value = true;
 }
 function commit() {
-  const current = pixels().data
+  const current = pixels().data;
   if (snapshot && snapshot.some((v, i) => v !== current[i])) {
-    undo.value.push(snapshot)
-    if (undo.value.length > 80) undo.value.shift()
-    redo.value = []
-    changed()
+    undo.value.push(snapshot);
+    if (undo.value.length > 80) undo.value.shift();
+    redo.value = [];
+    changed();
   }
-  snapshot = undefined
-  last = undefined
+  snapshot = undefined;
+  last = undefined;
 }
 function endGesture() {
-  viewer.value?.finishGesture()
-  commit()
+  viewer.value?.finishGesture();
+  commit();
 }
 function stroke(active: boolean) {
   if (!active) {
-    commit()
-    return
+    commit();
+    return;
   }
   if (canEdit()) {
-    snapshot = pixels().data
-    last = undefined
-    selectedView.value = ''
+    snapshot = pixels().data;
+    last = undefined;
+    selectedView.value = '';
   }
 }
 function paint(x: number, y: number, face: SkinFace) {
-  if (!canEdit()) return
+  if (!canEdit()) return;
   const image = pixels(),
-    i = (y * 64 + x) * 4
+    i = (y * 64 + x) * 4;
   if (tool.value === 'pick') {
-    const sample = sampleSkinBrush(image.data.slice(i, i + 4), layer.value === 'outer')
+    const sample = sampleSkinBrush(image.data.slice(i, i + 4), layer.value === 'outer');
     if (!sample) {
-      sampleHint.value = '此处是透明像素，已保留当前画笔颜色与透明度。'
-      return
+      sampleHint.value = '此处是透明像素，已保留当前画笔颜色与透明度。';
+      return;
     }
-    color.value = sample.color
-    if (layer.value === 'outer') alpha.value = sample.alpha
-    sampleHint.value = ''
-    return
+    color.value = sample.color;
+    if (layer.value === 'outer') alpha.value = sample.alpha;
+    sampleHint.value = '';
+    return;
   }
-  const before = new Uint8ClampedArray(image.data)
+  const before = new Uint8ClampedArray(image.data);
   const value =
     tool.value === 'erase'
       ? layer.value === 'outer'
         ? [0, 0, 0, 0]
         : [255, 255, 255, 255]
-      : skinBrushRgba(color.value, alpha.value, layer.value === 'outer')
-  if (!value) return
-  const key = JSON.stringify(face)
-  if (tool.value === 'fill') paintSkinPixel(image.data, x, y, value, face, true)
+      : skinBrushRgba(color.value, alpha.value, layer.value === 'outer');
+  if (!value) return;
+  const key = JSON.stringify(face);
+  if (tool.value === 'fill') paintSkinPixel(image.data, x, y, value, face, true);
   else {
-    const steps = last?.key === key ? Math.max(Math.abs(x - last.x), Math.abs(y - last.y)) : 0
+    const steps = last?.key === key ? Math.max(Math.abs(x - last.x), Math.abs(y - last.y)) : 0;
     for (let s = 0; s <= steps; s++)
       paintSkinPixel(
         image.data,
@@ -217,287 +217,289 @@ function paint(x: number, y: number, face: SkinFace) {
         steps ? Math.round(last!.y + ((y - last!.y) * s) / steps) : y,
         value,
         face
-      )
+      );
   }
-  last = { x, y, key }
-  ctx.putImageData(image, 0, 0)
-  revision.value++
-  const rendered = pixels().data
+  last = { x, y, key };
+  ctx.putImageData(image, 0, 0);
+  revision.value++;
+  const rendered = pixels().data;
   if (before.some((v, index) => v !== rendered[index])) {
-    dirty.value = true
+    dirty.value = true;
     if (tool.value !== 'erase' && palettePreferences.value.recent[0] !== color.value)
-      palettePreferences.value.recent = rememberSkinColor(palettePreferences.value.recent, color.value)
+      palettePreferences.value.recent = rememberSkinColor(palettePreferences.value.recent, color.value);
   }
 }
 function history(back: boolean) {
-  if (!canEdit()) return
-  endGesture()
+  if (!canEdit()) return;
+  endGesture();
   const from = back ? undo.value : redo.value,
     to = back ? redo.value : undo.value,
-    next = from.pop()
-  if (!next) return
-  to.push(pixels().data)
-  ctx.putImageData(new ImageData(new Uint8ClampedArray(next), 64, 64), 0, 0)
-  changed()
+    next = from.pop();
+  if (!next) return;
+  to.push(pixels().data);
+  ctx.putImageData(new ImageData(new Uint8ClampedArray(next), 64, 64), 0, 0);
+  changed();
 }
 async function replaceImage(src: string) {
-  const raw = await loadImage(src)
-  if (disposed || finishingClose.value) return
-  if (raw.width !== 64 || ![32, 64].includes(raw.height)) throw Error('请选择 64×64 或 64×32 皮肤 PNG')
-  const image = migrateLegacySkin(raw)
-  snapshot = pixels().data
-  ctx.clearRect(0, 0, 64, 64)
-  ctx.drawImage(image, 0, 0)
-  const result = pixels()
-  makeBaseOpaque(result.data)
-  ctx.putImageData(result, 0, 0)
-  commit()
-  revision.value++
+  const raw = await loadImage(src);
+  if (disposed || finishingClose.value) return;
+  if (raw.width !== 64 || ![32, 64].includes(raw.height)) throw Error('请选择 64×64 或 64×32 皮肤 PNG');
+  const image = migrateLegacySkin(raw);
+  snapshot = pixels().data;
+  ctx.clearRect(0, 0, 64, 64);
+  ctx.drawImage(image, 0, 0);
+  const result = pixels();
+  makeBaseOpaque(result.data);
+  ctx.putImageData(result, 0, 0);
+  commit();
+  revision.value++;
 }
 function beginOperation(text: string) {
-  endGesture()
-  operationError.value = ''
-  busyText.value = text
-  busy.value = true
+  endGesture();
+  operationError.value = '';
+  busyText.value = text;
+  busy.value = true;
 }
 function finishOperation() {
-  busy.value = false
-  busyText.value = ''
-  if (!disposed) processClose()
+  busy.value = false;
+  busyText.value = '';
+  if (!disposed) processClose();
 }
 function failOperation(error: unknown) {
-  operationError.value = errText(error)
-  toast(operationError.value, 'error')
+  operationError.value = errText(error);
+  toast(operationError.value, 'error');
 }
 async function importImage(src: string) {
-  if (!canEdit()) return
-  beginOperation('正在读取皮肤…')
+  if (!canEdit()) return;
+  beginOperation('正在读取皮肤…');
   try {
-    await replaceImage(src)
+    await replaceImage(src);
   } catch (error) {
-    failOperation(error)
+    failOperation(error);
   } finally {
-    finishOperation()
+    finishOperation();
   }
 }
 async function choose(event: Event) {
   const input = event.target as HTMLInputElement,
-    file = input.files?.[0]
+    file = input.files?.[0];
   if (!file || !canEdit()) {
-    input.value = ''
-    return
+    input.value = '';
+    return;
   }
-  beginOperation('正在读取皮肤…')
+  beginOperation('正在读取皮肤…');
   try {
-    if (file.size > 200000) throw Error('皮肤 PNG 文件过大，请使用标准 64×64 或 64×32 PNG')
+    if (file.size > 200000) throw Error('皮肤 PNG 文件过大，请使用标准 64×64 或 64×32 PNG');
     const src = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(String(reader.result))
-      reader.onerror = () => reject(Error('皮肤 PNG 读取失败'))
-      reader.readAsDataURL(file)
-    })
-    await replaceImage(src)
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(Error('皮肤 PNG 读取失败'));
+      reader.readAsDataURL(file);
+    });
+    await replaceImage(src);
   } catch (error) {
-    failOperation(error)
+    failOperation(error);
   } finally {
-    input.value = ''
-    finishOperation()
+    input.value = '';
+    finishOperation();
   }
 }
 function newSkin() {
   if (canEdit()) {
-    endGesture()
-    operationError.value = ''
-    snapshot = pixels().data
-    ctx.putImageData(blank, 0, 0)
-    commit()
-    revision.value++
+    endGesture();
+    operationError.value = '';
+    snapshot = pixels().data;
+    ctx.putImageData(blank, 0, 0);
+    commit();
+    revision.value++;
   }
 }
 async function save() {
-  if (busy.value || finishingClose.value || disposed) return false
-  beginOperation('正在保存皮肤…')
+  if (busy.value || finishingClose.value || disposed) return false;
+  beginOperation('正在保存皮肤…');
   try {
-    const saved = await window.faionyx.invoke('skin:editorSave', canvas.value.toDataURL('image/png'))
+    const saved = await window.faionyx.invoke('skin:editorSave', canvas.value.toDataURL('image/png'));
     if (saved) {
-      dirty.value = false
-      toast('皮肤 PNG 已保存', 'success')
+      dirty.value = false;
+      toast('皮肤 PNG 已保存', 'success');
     }
-    return !!saved
+    return !!saved;
   } catch (error) {
-    failOperation(error)
-    return false
+    failOperation(error);
+    return false;
   } finally {
-    finishOperation()
+    finishOperation();
   }
 }
 function openUpload() {
   if (canEdit() && canApplySkin.value && store.selectedAccount) {
-    endGesture()
-    operationError.value = ''
+    endGesture();
+    operationError.value = '';
     uploadTarget.value = {
       id: store.selectedAccount.id,
       username: store.selectedAccount.username,
       type: store.selectedAccount.type,
       variant: variant.value,
-    }
-    uploadConfirm.value = true
+    };
+    uploadConfirm.value = true;
   }
 }
 async function upload() {
-  if (busy.value || finishingClose.value || disposed) return
-  const target = uploadTarget.value
+  if (busy.value || finishingClose.value || disposed) return;
+  const target = uploadTarget.value;
   if (!target || target.id !== store.selectedAccount?.id) {
-    uploadConfirm.value = false
-    failOperation(Error('账号已变更，请重新确认应用账号'))
-    return
+    uploadConfirm.value = false;
+    failOperation(Error('账号已变更，请重新确认应用账号'));
+    return;
   }
-  const local = target.type === 'offline'
-  beginOperation(local ? '正在应用本地皮肤…' : '正在上传皮肤…')
+  const local = target.type === 'offline';
+  beginOperation(local ? '正在应用本地皮肤…' : '正在上传皮肤…');
   try {
-    await refreshSkinAfter(window.faionyx.invoke('skin:editorUpload', canvas.value.toDataURL('image/png'), target.variant, target.id))
-    uploadConfirm.value = false
-    if (local) dirty.value = false
-    emit('uploaded')
-    toast(local ? `已应用到「${target.username}」离线账号，下次启动游戏生效` : '皮肤已上传，预览与历史已更新', 'success')
+    await refreshSkinAfter(window.faionyx.invoke('skin:editorUpload', canvas.value.toDataURL('image/png'), target.variant, target.id));
+    uploadConfirm.value = false;
+    if (local) dirty.value = false;
+    emit('uploaded');
+    toast(local ? `已应用到「${target.username}」离线账号，下次启动游戏生效` : '皮肤已上传，预览与历史已更新', 'success');
   } catch (error) {
-    failOperation(error)
+    failOperation(error);
   } finally {
-    finishOperation()
+    finishOperation();
   }
 }
 watch(
   () => store.selectedAccount?.id,
   () => {
     if (!busy.value) {
-      uploadConfirm.value = false
-      uploadTarget.value = undefined
+      uploadConfirm.value = false;
+      uploadTarget.value = undefined;
     }
   }
-)
+);
 function requestClose(intent: CloseIntent = { kind: 'editor' }) {
-  if (disposed) return
-  closeIntent.value = mergeSkinCloseIntent(closeIntent.value, intent)
-  if (finishingClose.value) return
-  endGesture()
-  uploadConfirm.value = false
-  processClose()
+  if (disposed) return;
+  closeIntent.value = mergeSkinCloseIntent(closeIntent.value, intent);
+  if (finishingClose.value) return;
+  endGesture();
+  uploadConfirm.value = false;
+  processClose();
 }
 function processClose() {
-  if (!closeIntent.value || busy.value || finishingClose.value || disposed) return
-  if (dirty.value) askClose.value = true
-  else void finishClose()
+  if (!closeIntent.value || busy.value || finishingClose.value || disposed) return;
+  if (dirty.value) askClose.value = true;
+  else void finishClose();
 }
 function cancelClose() {
-  if (finishingClose.value) return
-  askClose.value = false
-  closeIntent.value = undefined
-  void nextTick(() => closeButton.value?.focus({ preventScroll: true }))
+  if (finishingClose.value) return;
+  askClose.value = false;
+  closeIntent.value = undefined;
+  void nextTick(() => closeButton.value?.focus({ preventScroll: true }));
 }
 function cancelUpload() {
-  if (busy.value) requestClose()
+  if (busy.value) requestClose();
   else {
-    uploadConfirm.value = false
-    void nextTick(() => closeButton.value?.focus({ preventScroll: true }))
+    uploadConfirm.value = false;
+    void nextTick(() => closeButton.value?.focus({ preventScroll: true }));
   }
 }
 async function finishClose() {
-  if (finishingClose.value || busy.value || disposed) return
-  endGesture()
-  finishingClose.value = true
-  askClose.value = false
-  uploadConfirm.value = false
-  clearTimeout(paletteTimer)
-  await flushPalette()
-  const intent = closeIntent.value
-  closeIntent.value = undefined
-  dirty.value = false
-  window.faionyx.send('window:skinEditorDirty', false)
-  emit('close')
-  if (intent?.kind === 'quit') window.faionyx.send('window:skinEditorQuit')
-  else if (intent?.kind === 'window') window.faionyx.send('window:close')
-  else if (intent?.kind === 'navigate') store.currentView = intent.destination
+  if (finishingClose.value || busy.value || disposed) return;
+  endGesture();
+  finishingClose.value = true;
+  askClose.value = false;
+  uploadConfirm.value = false;
+  clearTimeout(paletteTimer);
+  await flushPalette();
+  const intent = closeIntent.value;
+  closeIntent.value = undefined;
+  dirty.value = false;
+  window.faionyx.send('window:skinEditorDirty', false);
+  emit('close');
+  if (intent?.kind === 'quit') window.faionyx.send('window:skinEditorQuit');
+  else if (intent?.kind === 'window') window.faionyx.send('window:close');
+  else if (intent?.kind === 'navigate') store.currentView = intent.destination;
 }
 async function saveClose() {
-  if ((await save()) && closeIntent.value) await finishClose()
+  if ((await save()) && closeIntent.value) await finishClose();
 }
 function selectView(view: (typeof views)[number]) {
   if (!blocked.value) {
-    endGesture()
-    selectedView.value = view.name
-    viewer.value?.view(view.yaw, view.pitch)
+    endGesture();
+    selectedView.value = view.name;
+    viewer.value?.view(view.yaw, view.pitch);
   }
 }
 function resetView() {
   if (!blocked.value) {
-    endGesture()
-    selectedView.value = ''
-    viewer.value?.resetView()
+    endGesture();
+    selectedView.value = '';
+    viewer.value?.resetView();
   }
 }
 function togglePart(key: string) {
   if (!blocked.value) {
-    endGesture()
-    hiddenParts.value = hiddenParts.value.includes(key) ? hiddenParts.value.filter((v) => v !== key) : [...hiddenParts.value, key]
+    endGesture();
+    hiddenParts.value = hiddenParts.value.includes(key) ? hiddenParts.value.filter((v) => v !== key) : [...hiddenParts.value, key];
   }
 }
 function keys(event: KeyboardEvent) {
-  if (event.isComposing || event.defaultPrevented) return
+  if (event.isComposing || event.defaultPrevented) return;
   if (event.key === 'Escape') {
-    event.preventDefault()
-    event.stopPropagation()
-    if (askClose.value || (busy.value && closeIntent.value)) cancelClose()
-    else if (uploadConfirm.value) cancelUpload()
-    else if (previewExpanded.value) previewExpanded.value = false
-    else requestClose()
-    return
+    event.preventDefault();
+    event.stopPropagation();
+    if (askClose.value || (busy.value && closeIntent.value)) cancelClose();
+    else if (uploadConfirm.value) cancelUpload();
+    else if (previewExpanded.value) previewExpanded.value = false;
+    else requestClose();
+    return;
   }
-  const target = event.target as HTMLElement
-  if (target?.closest('input,textarea,select') || target?.isContentEditable || blocked.value) return
-  const key = event.key.toLowerCase()
+  const target = event.target as HTMLElement;
+  if (target?.closest('input,textarea,select') || target?.isContentEditable || blocked.value) return;
+  const key = event.key.toLowerCase();
   if ((event.ctrlKey || event.metaKey) && key === 'z') {
-    event.preventDefault()
-    history(!event.shiftKey)
+    event.preventDefault();
+    history(!event.shiftKey);
   } else if ((event.ctrlKey || event.metaKey) && key === 's') {
-    event.preventDefault()
-    void save()
+    event.preventDefault();
+    void save();
   } else if (!event.ctrlKey && !event.metaKey && !event.altKey && ['b', 'e', 'i', 'g'].includes(key)) {
-    event.preventDefault()
-    tool.value = ({ b: 'brush', e: 'erase', i: 'pick', g: 'fill' } as Record<string, string>)[key]
+    event.preventDefault();
+    tool.value = ({ b: 'brush', e: 'erase', i: 'pick', g: 'fill' } as Record<string, string>)[key];
   }
 }
-watch([tool, color, alpha], () => viewer.value?.finishGesture(), { flush: 'sync' })
+watch([tool, color, alpha], () => viewer.value?.finishGesture(), { flush: 'sync' });
 watch(
   [tool, color, alpha, layer],
   () => {
-    sampleHint.value = ''
+    sampleHint.value = '';
   },
   { flush: 'sync' }
-)
-let restoringView = false
+);
+let restoringView = false;
 watch(
   () => store.currentView,
   (next, old) => {
-    if (restoringView || next === old || !(dirty.value || busy.value || finishingClose.value)) return
-    restoringView = true
-    store.currentView = old
-    restoringView = false
-    requestClose({ kind: 'navigate', destination: next })
+    if (restoringView || next === old || !(dirty.value || busy.value || finishingClose.value)) return;
+    restoringView = true;
+    store.currentView = old;
+    restoringView = false;
+    requestClose({ kind: 'navigate', destination: next });
   },
   { flush: 'sync' }
-)
-watch(dirty, (value) => window.faionyx.send('window:skinEditorDirty', value), { flush: 'sync' })
-const offClose = window.faionyx.on('window:skinEditorClose', (data: any) => requestClose({ kind: data?.quit === true ? 'quit' : 'window' }))
+);
+watch(dirty, (value) => window.faionyx.send('window:skinEditorDirty', value), { flush: 'sync' });
+const offClose = window.faionyx.on('window:skinEditorClose', (data: any) =>
+  requestClose({ kind: data?.quit === true ? 'quit' : 'window' })
+);
 onBeforeUnmount(() => {
-  endGesture()
-  disposed = true
-  contentResize?.disconnect()
-  clearTimeout(paletteTimer)
-  void flushPalette()
-  offClose()
-  window.faionyx.send('window:skinEditorDirty', false)
-  window.faionyx.send('window:skinEditorBusy', { ownerId, pending: false })
-})
+  endGesture();
+  disposed = true;
+  contentResize?.disconnect();
+  clearTimeout(paletteTimer);
+  void flushPalette();
+  offClose();
+  window.faionyx.send('window:skinEditorDirty', false);
+  window.faionyx.send('window:skinEditorBusy', { ownerId, pending: false });
+});
 </script>
 
 <template>
@@ -680,8 +682,8 @@ onBeforeUnmount(() => {
                 class="btn btn-ghost btn-sm"
                 :disabled="blocked"
                 @click="
-                  endGesture()
-                  alpha = 1
+                  endGesture();
+                  alpha = 1;
                 "
               >
                 恢复不透明（100%）

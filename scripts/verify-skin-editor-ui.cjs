@@ -4,64 +4,64 @@ const assert = require('node:assert/strict'),
   path = require('node:path'),
   crypto = require('node:crypto'),
   sharp = require('sharp'),
-  { execFileSync } = require('node:child_process')
+  { execFileSync } = require('node:child_process');
 // Runs only in the disposable QA renderer. Production Vue omits DOM component
 // expandos; walk the actual mounted VNode tree, without saving or editing pixels.
 function installSkinFixtureDiagnostic() {
   const componentInstances = () => {
-    const root = document.querySelector('#app')?.__vue_app__?._container?._vnode
-    if (!root) throw Error('Mounted production Vue root is unavailable for skin diagnostics')
+    const root = document.querySelector('#app')?.__vue_app__?._container?._vnode;
+    if (!root) throw Error('Mounted production Vue root is unavailable for skin diagnostics');
     const seen = new WeakSet(),
-      instances = []
+      instances = [];
     const visit = (node) => {
-      if (!node || typeof node !== 'object' || seen.has(node)) return
-      seen.add(node)
+      if (!node || typeof node !== 'object' || seen.has(node)) return;
+      seen.add(node);
       if (Array.isArray(node)) {
-        for (const child of node) visit(child)
-        return
+        for (const child of node) visit(child);
+        return;
       }
       if (node.component) {
-        instances.push(node.component)
-        visit(node.component.subTree)
+        instances.push(node.component);
+        visit(node.component.subTree);
       }
-      if (Array.isArray(node.children)) visit(node.children)
-      visit(node.ssContent)
-      visit(node.ssFallback)
-      visit(node.suspense?.activeBranch)
-    }
-    visit(root)
-    return instances
-  }
+      if (Array.isArray(node.children)) visit(node.children);
+      visit(node.ssContent);
+      visit(node.ssFallback);
+      visit(node.suspense?.activeBranch);
+    };
+    visit(root);
+    return instances;
+  };
   const current = () => {
     const instances = componentInstances(),
-      viewers = instances.filter((i) => i.props?.editCanvas instanceof HTMLCanvasElement)
-    if (viewers.length !== 1) throw Error('Expected one actual skin document viewer; found ' + viewers.length)
+      viewers = instances.filter((i) => i.props?.editCanvas instanceof HTMLCanvasElement);
+    if (viewers.length !== 1) throw Error('Expected one actual skin document viewer; found ' + viewers.length);
     const viewer = viewers[0],
-      canvas = viewer.props.editCanvas
-    if (canvas.width !== 64 || canvas.height !== 64) throw Error('Actual skin document is not 64 x 64')
+      canvas = viewer.props.editCanvas;
+    if (canvas.width !== 64 || canvas.height !== 64) throw Error('Actual skin document is not 64 x 64');
     const palettes = instances.filter(
       (i) =>
         typeof i.props?.color === 'string' &&
         typeof i.props?.alphaEnabled === 'boolean' &&
         Array.isArray(i.props.custom) &&
         Array.isArray(i.props.recent)
-    )
-    if (palettes.length !== 1) throw Error('Expected one actual skin palette; found ' + palettes.length)
-    return { viewer, palette: palettes[0], canvas, context: canvas.getContext('2d') }
-  }
+    );
+    if (palettes.length !== 1) throw Error('Expected one actual skin palette; found ' + palettes.length);
+    return { viewer, palette: palettes[0], canvas, context: canvas.getContext('2d') };
+  };
   const inputs = () =>
     [...document.querySelectorAll('.skin-color-palette input')].map((e) => ({
       label: e.getAttribute('aria-label'),
       value: e.value,
       invalid: e.getAttribute('aria-invalid'),
       disabled: !!e.disabled,
-    }))
+    }));
   const state = () => {
     const { viewer, palette, context } = current(),
       p = viewer.props,
       c = palette.props,
       rendered = document.querySelector('.skin-editor .viewer3d canvas'),
-      r = rendered?.getBoundingClientRect()
+      r = rendered?.getBoundingClientRect();
     return {
       at: performance.now(),
       viewerId: viewer.uid,
@@ -88,15 +88,15 @@ function installSkinFixtureDiagnostic() {
       active: document.activeElement?.getAttribute('aria-label') || document.activeElement?.className,
       renderedCanvas: r ? { x: r.x, y: r.y, width: r.width, height: r.height } : null,
       rgba: Array.from(context.getImageData(0, 0, 64, 64).data),
-    }
-  }
+    };
+  };
   const events = [],
     restores = [],
     wrapped = new WeakSet(),
-    types = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
-  let actualPointer
+    types = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture'];
+  let actualPointer;
   const observer = (event) => {
-    if (!event.isTrusted || !event.target?.closest?.('.skin-editor .viewer3d')) return
+    if (!event.isTrusted || !event.target?.closest?.('.skin-editor .viewer3d')) return;
     actualPointer = {
       type: event.type,
       x: event.clientX,
@@ -104,23 +104,23 @@ function installSkinFixtureDiagnostic() {
       button: event.button,
       buttons: event.buttons,
       trusted: event.isTrusted,
-    }
+    };
     const { viewer } = current(),
-      props = viewer.vnode.props
-    if (!props || wrapped.has(props)) return
-    wrapped.add(props)
+      props = viewer.vnode.props;
+    if (!props || wrapped.has(props)) return;
+    wrapped.add(props);
     for (const [name, kind] of [
       ['onStroke', 'stroke'],
       ['onPixel', 'pixel'],
       ['onGap', 'gap'],
       ['onRotate', 'rotate'],
     ]) {
-      const original = props[name]
-      if (typeof original !== 'function' && !Array.isArray(original)) continue
+      const original = props[name];
+      if (typeof original !== 'function' && !Array.isArray(original)) continue;
       const wrap = (fn) =>
         function (...args) {
           const before = state(),
-            index = kind === 'pixel' ? (args[1] * 64 + args[0]) * 4 : undefined
+            index = kind === 'pixel' ? (args[1] * 64 + args[0]) * 4 : undefined;
           const record = {
             kind,
             args,
@@ -128,33 +128,33 @@ function installSkinFixtureDiagnostic() {
             pointer: { ...actualPointer },
             before: { header: before.header, viewer: before.viewer, palette: before.palette, selectedTool: before.selectedTool },
             texelBefore: index === undefined ? undefined : before.rgba.slice(index, index + 4),
-          }
-          events.push(record)
+          };
+          events.push(record);
           try {
-            return fn.apply(this, args)
+            return fn.apply(this, args);
           } finally {
-            const after = state()
-            record.after = { header: after.header, viewer: after.viewer, palette: after.palette, selectedTool: after.selectedTool }
-            record.texelAfter = index === undefined ? undefined : after.rgba.slice(index, index + 4)
-            record.changedBytes = after.rgba.reduce((n, v, i) => n + (v !== before.rgba[i]), 0)
+            const after = state();
+            record.after = { header: after.header, viewer: after.viewer, palette: after.palette, selectedTool: after.selectedTool };
+            record.texelAfter = index === undefined ? undefined : after.rgba.slice(index, index + 4);
+            record.changedBytes = after.rgba.reduce((n, v, i) => n + (v !== before.rgba[i]), 0);
           }
-        }
-      const wrapper = Array.isArray(original) ? original.map(wrap) : wrap(original)
-      props[name] = wrapper
-      restores.push({ props, name, original, wrapper })
+        };
+      const wrapper = Array.isArray(original) ? original.map(wrap) : wrap(original);
+      props[name] = wrapper;
+      restores.push({ props, name, original, wrapper });
     }
-  }
-  for (const type of types) document.addEventListener(type, observer, true)
+  };
+  for (const type of types) document.addEventListener(type, observer, true);
   window.__skinFixtureDiagnostic = {
     snapshot: state,
     events,
     finish() {
-      for (const type of types) document.removeEventListener(type, observer, true)
-      for (const { props, name, original, wrapper } of restores) if (props[name] === wrapper) props[name] = original
-      return { events, restoredListeners: restores.length }
+      for (const type of types) document.removeEventListener(type, observer, true);
+      for (const { props, name, original, wrapper } of restores) if (props[name] === wrapper) props[name] = original;
+      return { events, restoredListeners: restores.length };
     },
-  }
-  return state()
+  };
+  return state();
 }
 module.exports = async ({ call, evaluate, main, nav, wait, root, screenshot, version }) => {
   const theme = process.env.FAIONYX_TEST_THEME || 'black-orange',
@@ -168,23 +168,23 @@ module.exports = async ({ call, evaluate, main, nav, wait, root, screenshot, ver
       queuedCancellation: false,
       uploadBusy: false,
     },
-    output = path.join(root, 'skin-editor-118.png')
+    output = path.join(root, 'skin-editor-118.png');
   const persist = () =>
-    fs.writeFileSync('out/skin-editor-ui-' + theme + '.json', JSON.stringify({ ...proof, recordedAt: new Date().toISOString() }, null, 2))
+    fs.writeFileSync('out/skin-editor-ui-' + theme + '.json', JSON.stringify({ ...proof, recordedAt: new Date().toISOString() }, null, 2));
   const until = async (label, expression, onWaiting, maxAttempts = 80) => {
-    let state
+    let state;
     for (let i = 0; i < maxAttempts; i++) {
-      state = await evaluate(expression)
-      if (state && (typeof state === 'object' && 'ready' in state ? state.ready : true)) return state
-      if (onWaiting) await onWaiting(state)
-      await wait(80)
+      state = await evaluate(expression);
+      if (state && (typeof state === 'object' && 'ready' in state ? state.ready : true)) return state;
+      if (onWaiting) await onWaiting(state);
+      await wait(80);
     }
-    proof.failure = { label, state }
-    persist()
-    console.error('Skin readiness diagnostics', JSON.stringify(proof.failure))
-    await screenshot('skin-failure-' + label.replace(/[^a-z0-9]/gi, '-').slice(0, 75))
-    throw Error(label + ' was not ready: ' + JSON.stringify(state))
-  }
+    proof.failure = { label, state };
+    persist();
+    console.error('Skin readiness diagnostics', JSON.stringify(proof.failure));
+    await screenshot('skin-failure-' + label.replace(/[^a-z0-9]/gi, '-').slice(0, 75));
+    throw Error(label + ' was not ready: ' + JSON.stringify(state));
+  };
   const key = async (value, modifiers = 0) => {
     for (const type of ['keyDown', 'keyUp'])
       await call('Input.dispatchKeyEvent', {
@@ -193,18 +193,18 @@ module.exports = async ({ call, evaluate, main, nav, wait, root, screenshot, ver
         code: value === 'Escape' ? 'Escape' : value === 'Tab' ? 'Tab' : value,
         modifiers,
         windowsVirtualKeyCode: value === 'Escape' ? 27 : value === 'Tab' ? 9 : undefined,
-      })
-    await wait(80)
-  }
+      });
+    await wait(80);
+  };
   const clickText = async (scope, text) => {
     const selector = await evaluate(
       `(()=>{const e=[...document.querySelectorAll(${JSON.stringify(scope + ' button')})].find(e=>e.textContent.trim()===${JSON.stringify(text)});if(!e)throw Error('Missing skin button: '+${JSON.stringify(text)});e.dataset.skinCoordinate='target';return '[data-skin-coordinate="target"]'})()`
-    )
-    await coordinateClick(selector)
-    await evaluate(`document.querySelector('[data-skin-coordinate="target"]')?.removeAttribute('data-skin-coordinate')`)
-  }
+    );
+    await coordinateClick(selector);
+    await evaluate(`document.querySelector('[data-skin-coordinate="target"]')?.removeAttribute('data-skin-coordinate')`);
+  };
   const coordinateClick = async (selector) => {
-    const pendingToasts = new Map()
+    const pendingToasts = new Map();
     await until(
       'visible click ' + selector,
       `(()=>{const e=document.querySelector(${JSON.stringify(selector)});if(!e)return{ready:false,exists:false,innerWidth,innerHeight};if(!e.closest('[inert]'))e.scrollIntoView({block:'nearest'});const r=e.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,hit=document.elementFromPoint(x,y),signature=JSON.stringify([r.left,r.top,r.right,r.bottom,innerWidth,innerHeight,e.contains(hit)]),stable=window.__skin118ClickSignature===signature;window.__skin118ClickSignature=signature;const toast=hit?.closest('.toast'),close=toast?.querySelector('.toast-close'),c=close?.getBoundingClientRect();return{ready:stable&&!e.disabled&&!e.closest('[inert]')&&r.width>0&&r.height>0&&r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight&&e.contains(hit),exists:true,disabled:!!e.disabled,inert:!!e.closest('[inert]'),rect:{left:r.left,top:r.top,right:r.right,bottom:r.bottom,width:r.width,height:r.height},innerWidth,innerHeight,viewport:{width:visualViewport?.width,height:visualViewport?.height,scale:visualViewport?.scale},hit:hit?{tag:hit.tagName,classes:hit.className,aria:hit.getAttribute('aria-label'),text:hit.textContent?.trim().slice(0,120)}:null,toast:toast?.textContent?.trim(),dismiss:close&&c&&!close.disabled&&c.left>=0&&c.top>=0&&c.right<=innerWidth&&c.bottom<=innerHeight&&close.contains(document.elementFromPoint(c.left+c.width/2,c.top+c.height/2))?{x:c.left+c.width/2,y:c.top+c.height/2}:null}})()`,
@@ -212,24 +212,24 @@ module.exports = async ({ call, evaluate, main, nav, wait, root, screenshot, ver
         // Success/error notifications expire naturally after 3/8 seconds. Never
         // click a timed toast: even a fresh hit-test can race its removal before
         // the separate CDP press, accidentally opening the underlying editor.
-        if (!state?.toast || pendingToasts.has(state.toast)) return
-        const record = { selector, ...state, handling: 'wait for natural notification expiry; no close click', startedAt: Date.now() }
-        pendingToasts.set(state.toast, record)
-        proof.occlusions.push(record)
-        persist()
-        await call('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 4, y: state.innerHeight - 4, button: 'none', buttons: 0 })
-        await screenshot('skin-notification-occlusion-' + proof.occlusions.length)
+        if (!state?.toast || pendingToasts.has(state.toast)) return;
+        const record = { selector, ...state, handling: 'wait for natural notification expiry; no close click', startedAt: Date.now() };
+        pendingToasts.set(state.toast, record);
+        proof.occlusions.push(record);
+        persist();
+        await call('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 4, y: state.innerHeight - 4, button: 'none', buttons: 0 });
+        await screenshot('skin-notification-occlusion-' + proof.occlusions.length);
       },
       150
-    )
+    );
     for (const record of pendingToasts.values()) {
-      record.resolvedAt = Date.now()
-      record.waitedMs = record.resolvedAt - record.startedAt
+      record.resolvedAt = Date.now();
+      record.waitedMs = record.resolvedAt - record.startedAt;
     }
-    if (pendingToasts.size) persist()
+    if (pendingToasts.size) persist();
     const p = await evaluate(
       `(()=>{const r=document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2}})()`
-    )
+    );
     for (const [type, buttons] of [
       ['mouseMoved', 0],
       ['mousePressed', 1],
@@ -241,34 +241,34 @@ module.exports = async ({ call, evaluate, main, nav, wait, root, screenshot, ver
         button: type === 'mouseMoved' ? 'none' : 'left',
         buttons,
         clickCount: type === 'mouseMoved' ? 0 : 1,
-      })
-    await wait(90)
-  }
+      });
+    await wait(90);
+  };
   const open = async () => {
-    await coordinateClick('.skin-editor-entry')
-    await until('editor mounted', `!!document.querySelector('.skin-editor canvas')`)
-    await wait(350)
-  }
+    await coordinateClick('.skin-editor-entry');
+    await until('editor mounted', `!!document.querySelector('.skin-editor canvas')`);
+    await wait(350);
+  };
   const pose = async (text) => {
-    await clickText('.view-tools', text)
-    await evaluate(`document.querySelector('.editor-model').scrollTop=0`)
-    await wait(750)
-  }
+    await clickText('.view-tools', text);
+    await evaluate(`document.querySelector('.editor-model').scrollTop=0`);
+    await wait(750);
+  };
   const gesture = async (button = 'left', modifiers = 0) => {
     // Use the same visible canvas positioning as compositor capture. Saving can
     // scroll the editor body to its footer; model.scrollTop alone cannot undo it.
     await evaluate(
       `document.activeElement?.blur();document.querySelector('.skin-editor canvas').scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});window.__skin118GestureSignature=null`
-    )
+    );
     const state = await until(
         'visible stable skin gesture',
         `(()=>{const c=document.querySelector('.skin-editor canvas'),r=c.getBoundingClientRect(),start={x:r.x+r.width*.49,y:r.y+r.height*.19},end={x:r.x+r.width*${button === 'middle' || modifiers ? 0.61 : 0.53},y:r.y+r.height*.22},hits=[start,end].map(p=>document.elementFromPoint(p.x,p.y)),signature=JSON.stringify([r.x,r.y,r.width,r.height,innerWidth,innerHeight]),stable=window.__skin118GestureSignature===signature;window.__skin118GestureSignature=signature;return{ready:stable&&!c.closest('[inert]')&&r.width>0&&r.height>0&&r.top>=0&&r.bottom<=innerHeight&&r.left>=0&&r.right<=innerWidth&&hits.every(e=>e===c),start,end,rect:{x:r.x,y:r.y,width:r.width,height:r.height},hits:hits.map(e=>({tag:e?.tagName,classes:e?.className})),bodyScroll:document.querySelector('.editor-content').scrollTop,modelScroll:document.querySelector('.editor-model').scrollTop}})()`
       ),
       { start, end } = state,
-      buttons = button === 'middle' ? 4 : 1
-    const record = { button, modifiers, ...state }
-    ;(proof.gestures ??= []).push(record)
-    persist()
+      buttons = button === 'middle' ? 4 : 1;
+    const record = { button, modifiers, ...state };
+    (proof.gestures ??= []).push(record);
+    persist();
     await evaluate(`(()=>{
       window.__skin118PointerTrace=[];
       const trace=window.__skin118PointerTrace,viewer=()=>document.querySelector('.skin-editor .viewer3d');
@@ -278,40 +278,40 @@ module.exports = async ({ call, evaluate, main, nav, wait, root, screenshot, ver
       for(const type of ['blur','focus','resize','scroll','visibilitychange'])window.addEventListener(type,window.__skin118EnvironmentObserver,true);
       window.__skin118CaptureMethods={};
       for(const name of ['setPointerCapture','releasePointerCapture']){const original=Element.prototype[name];window.__skin118CaptureMethods[name]=original;Element.prototype[name]=function(pointerId){trace.push({type:'call:'+name,pointerId,target:this.className,before:this.hasPointerCapture(pointerId),stack:new Error().stack,at:performance.now()});return original.call(this,pointerId)}}
-    })()`)
+    })()`);
     try {
-      await call('Input.dispatchMouseEvent', { type: 'mouseMoved', ...start, button: 'none', buttons: 0 })
-      await call('Input.dispatchMouseEvent', { type: 'mousePressed', ...start, button, buttons, modifiers, clickCount: 1 })
+      await call('Input.dispatchMouseEvent', { type: 'mouseMoved', ...start, button: 'none', buttons: 0 });
+      await call('Input.dispatchMouseEvent', { type: 'mousePressed', ...start, button, buttons, modifiers, clickCount: 1 });
       await until(
         'trusted skin pointerdown',
         `window.__skin118PointerTrace.some(e=>e.type==='pointerdown'&&e.trusted&&e.canvas&&e.buttons===${buttons})`
-      )
+      );
       // Keep CDP's held button consistent with its bitmask throughout the drag.
       // 'none' describes a hover and can drop native pointer capture on macOS.
-      await call('Input.dispatchMouseEvent', { type: 'mouseMoved', ...end, button, buttons, modifiers })
+      await call('Input.dispatchMouseEvent', { type: 'mouseMoved', ...end, button, buttons, modifiers });
       // CDP acknowledgement is not evidence that Chromium has delivered its
       // coalesced pointermove. Observe the real trusted event before releasing.
       await until(
         'trusted skin drag movement',
         `window.__skin118PointerTrace.some(e=>e.type==='pointermove'&&e.trusted&&e.viewer&&e.buttons===${buttons}&&Math.abs(e.x-${end.x})<1&&Math.abs(e.y-${end.y})<1)`
-      )
-      await call('Input.dispatchMouseEvent', { type: 'mouseReleased', ...end, button, buttons: 0, modifiers, clickCount: 1 })
-      await wait(750)
-      await until('trusted skin pointerup', `window.__skin118PointerTrace.some(e=>e.type==='pointerup'&&e.trusted&&e.viewer)`)
+      );
+      await call('Input.dispatchMouseEvent', { type: 'mouseReleased', ...end, button, buttons: 0, modifiers, clickCount: 1 });
+      await wait(750);
+      await until('trusted skin pointerup', `window.__skin118PointerTrace.some(e=>e.type==='pointerup'&&e.trusted&&e.viewer)`);
     } finally {
       record.events = await evaluate(
         `(()=>{for(const type of ['pointerdown','pointermove','pointerup','pointercancel','gotpointercapture','lostpointercapture'])document.removeEventListener(type,window.__skin118PointerObserver,true);for(const type of ['blur','focus','resize','scroll','visibilitychange'])window.removeEventListener(type,window.__skin118EnvironmentObserver,true);for(const [name,original]of Object.entries(window.__skin118CaptureMethods))Element.prototype[name]=original;return window.__skin118PointerTrace})()`
-      )
-      persist()
+      );
+      persist();
     }
-  }
+  };
   const png = async () => {
-    await clickText('.editor-footer', '保存 PNG…')
-    await until('save finished', `document.querySelector('.skin-editor')&&!document.querySelector('.skin-editor .editor-content').inert`)
-    assert(fs.existsSync(output))
-    const bytes = await sharp(output).ensureAlpha().raw().toBuffer()
-    return crypto.createHash('sha256').update(bytes).digest('hex')
-  }
+    await clickText('.editor-footer', '保存 PNG…');
+    await until('save finished', `document.querySelector('.skin-editor')&&!document.querySelector('.skin-editor .editor-content').inert`);
+    assert(fs.existsSync(output));
+    const bytes = await sharp(output).ensureAlpha().raw().toBuffer();
+    return crypto.createHash('sha256').update(bytes).digest('hex');
+  };
   const canvasShot = async () => {
     // macOS may return a black WebGL surface for CDP's clipped capture. Capture
     // the actual visible compositor frame and crop its pixels using the live
@@ -319,13 +319,13 @@ module.exports = async ({ call, evaluate, main, nav, wait, root, screenshot, ver
     const measure = () =>
       evaluate(
         `(()=>{const c=document.querySelector('.skin-editor canvas'),r=c.getBoundingClientRect(),v=visualViewport;return{bounds:{x:r.x,y:r.y,width:r.width,height:r.height},viewport:{width:v?.width||innerWidth,height:v?.height||innerHeight,offsetLeft:v?.offsetLeft||0,offsetTop:v?.offsetTop||0,devicePixelRatio}}})()`
-      )
+      );
     for (let attempt = 0; attempt < 8; attempt++) {
-      await evaluate(`document.querySelector('.skin-editor canvas').scrollIntoView({block:'center',inline:'nearest',behavior:'instant'})`)
-      await wait(80)
+      await evaluate(`document.querySelector('.skin-editor canvas').scrollIntoView({block:'center',inline:'nearest',behavior:'instant'})`);
+      await wait(80);
       const before = await measure(),
         b = before.bounds,
-        v = before.viewport
+        v = before.viewport;
       if (!(
         b.width > 0 &&
         b.height > 0 &&
@@ -334,37 +334,37 @@ module.exports = async ({ call, evaluate, main, nav, wait, root, screenshot, ver
         b.x + b.width <= v.offsetLeft + v.width &&
         b.y + b.height <= v.offsetTop + v.height
       ))
-        continue
+        continue;
       const frame = Buffer.from(
           (await call('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false })).data,
           'base64'
         ),
-        after = await measure()
-      if (JSON.stringify(before) !== JSON.stringify(after)) continue
+        after = await measure();
+      if (JSON.stringify(before) !== JSON.stringify(after)) continue;
       const meta = await sharp(frame).metadata(),
         scaleX = meta.width / v.width,
-        scaleY = meta.height / v.height
+        scaleY = meta.height / v.height;
       const left = Math.max(0, Math.floor((b.x - v.offsetLeft) * scaleX)),
         top = Math.max(0, Math.floor((b.y - v.offsetTop) * scaleY)),
         right = Math.min(meta.width, Math.ceil((b.x + b.width - v.offsetLeft) * scaleX)),
         bottom = Math.min(meta.height, Math.ceil((b.y + b.height - v.offsetTop) * scaleY)),
-        crop = { left, top, width: right - left, height: bottom - top }
-      assert(crop.width > 0 && crop.height > 0, 'visible skin canvas crop must contain real pixels')
-      ;(proof.canvasCaptures ??= []).push({
+        crop = { left, top, width: right - left, height: bottom - top };
+      assert(crop.width > 0 && crop.height > 0, 'visible skin canvas crop must contain real pixels');
+      (proof.canvasCaptures ??= []).push({
         source: 'full visible compositor frame cropped with sharp',
         ...before,
         frame: { width: meta.width, height: meta.height },
         scale: { x: scaleX, y: scaleY },
         crop,
-      })
-      persist()
+      });
+      persist();
       return crypto
         .createHash('sha256')
         .update(await sharp(frame).extract(crop).ensureAlpha().raw().toBuffer())
-        .digest('hex')
+        .digest('hex');
     }
-    assert.fail('skin canvas never reached a fully visible stable viewport for compositor capture')
-  }
+    assert.fail('skin canvas never reached a fully visible stable viewport for compositor capture');
+  };
   async function checkHeadVisibility(width, height, zoom) {
     const record = {
       width,
@@ -372,80 +372,80 @@ module.exports = async ({ call, evaluate, main, nav, wait, root, screenshot, ver
       zoom,
       classification: 'one original trusted head-button click; read-only actual events, DOM and mounted document state',
       samples: [],
-    }
-    ;(proof.partVisibilityObservations ??= []).push(record)
-    let installed = false
+    };
+    (proof.partVisibilityObservations ??= []).push(record);
+    let installed = false;
     const observe = async (label) => {
       const actual = await evaluate('window.__skinPartObservation.snapshot()'),
-        rgba = actual.document.rgba
-      actual.document.rgbaSHA256 = crypto.createHash('sha256').update(Buffer.from(rgba)).digest('hex')
-      delete actual.document.rgba
-      record.samples.push({ label, ...actual })
-      persist()
-      return actual
-    }
+        rgba = actual.document.rgba;
+      actual.document.rgbaSHA256 = crypto.createHash('sha256').update(Buffer.from(rgba)).digest('hex');
+      delete actual.document.rgba;
+      record.samples.push({ label, ...actual });
+      persist();
+      return actual;
+    };
     try {
-      await evaluate('(' + installSkinFixtureDiagnostic.toString() + ')()')
+      await evaluate('(' + installSkinFixtureDiagnostic.toString() + ')()');
       await evaluate(`(()=>{
         const types=['pointerdown','pointerup','pointercancel','click'],events=[];
         const snapshot=()=>({at:performance.now(),document:window.__skinFixtureDiagnostic.snapshot(),buttons:[...document.querySelectorAll('.part-tools button')].map(e=>{const r=e.getBoundingClientRect();return{name:e.textContent.trim(),pressed:e.getAttribute('aria-pressed'),disabled:!!e.disabled,inert:!!e.closest('[inert]'),rect:{x:r.x,y:r.y,width:r.width,height:r.height}}}),dialog:!!document.querySelector('.skin-close-dialog'),busy:document.querySelector('.editor-operation-status')?.textContent});
         const observer=e=>{const b=e.target?.closest?.('.part-tools button');if(!b)return;events.push({type:e.type,at:performance.now(),trusted:e.isTrusted,name:b.textContent.trim(),button:e.button,buttons:e.buttons,x:e.clientX,y:e.clientY,pressed:b.getAttribute('aria-pressed'),disabled:!!b.disabled,inert:!!b.closest('[inert]'),documentFocus:document.hasFocus(),hidden:document.hidden})};
         for(const type of types)document.addEventListener(type,observer,true);
         window.__skinPartObservation={snapshot,events,finish(){for(const type of types)document.removeEventListener(type,observer,true);return events}};
-      })()`)
-      installed = true
-      await observe('before original head click')
-      await clickText('.part-tools', '头部')
-      await observe('after original click and unchanged coordinate settling')
+      })()`);
+      installed = true;
+      await observe('before original head click');
+      await clickText('.part-tools', '头部');
+      await observe('after original click and unchanged coordinate settling');
       await until(
         'actual head visibility settled',
         `(()=>{const s=window.__skinPartObservation.snapshot(),b=s.buttons.find(b=>b.name==='头部');return{ready:b?.pressed==='false'&&s.document.viewer.hiddenParts.includes('head'),at:s.at,button:b,viewer:s.document.viewer,documentFocus:s.document.documentFocus,hidden:s.document.hidden,dialog:s.dialog,busy:s.busy}})()`,
         (state) => {
-          record.samples.push({ label: 'pending actual head visibility', ...state })
-          persist()
+          record.samples.push({ label: 'pending actual head visibility', ...state });
+          persist();
         }
-      )
-      await observe('actual head visibility settled')
-      const clicks = await evaluate("window.__skinPartObservation.events.filter(e=>e.type==='click'&&e.trusted&&e.name==='头部')")
-      assert.equal(clicks.length, 1, 'visibility must follow exactly one real original head-button click')
+      );
+      await observe('actual head visibility settled');
+      const clicks = await evaluate("window.__skinPartObservation.events.filter(e=>e.type==='click'&&e.trusted&&e.name==='头部')");
+      assert.equal(clicks.length, 1, 'visibility must follow exactly one real original head-button click');
       assert.equal(
         await evaluate(
           `[...document.querySelectorAll('.part-tools button')].find(b=>b.textContent.trim()==='头部').getAttribute('aria-pressed')`
         ),
         'false'
-      )
-      record.complete = true
+      );
+      record.complete = true;
     } catch (error) {
-      record.complete = false
-      record.failure = { at: new Date().toISOString(), message: error.message, stack: error.stack }
-      persist()
+      record.complete = false;
+      record.failure = { at: new Date().toISOString(), message: error.message, stack: error.stack };
+      persist();
       try {
-        await observe('failed original head click')
+        await observe('failed original head click');
       } catch (observationError) {
-        record.failure.observationError = observationError.message
+        record.failure.observationError = observationError.message;
       }
       try {
         const frame = await call('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false }),
-          name = 'extension-118-skin-head-click-failure-' + width + '-' + height + '-' + zoom + '-' + theme + '.png'
-        fs.writeFileSync(path.join('out', name), Buffer.from(frame.data, 'base64'))
-        record.failure.screenshot = name
+          name = 'extension-118-skin-head-click-failure-' + width + '-' + height + '-' + zoom + '-' + theme + '.png';
+        fs.writeFileSync(path.join('out', name), Buffer.from(frame.data, 'base64'));
+        record.failure.screenshot = name;
       } catch (captureError) {
-        record.failure.captureError = captureError.message
+        record.failure.captureError = captureError.message;
       }
-      throw error
+      throw error;
     } finally {
       if (installed)
         try {
-          record.events = await evaluate('window.__skinPartObservation.finish()')
+          record.events = await evaluate('window.__skinPartObservation.finish()');
         } catch (error) {
-          record.cleanupError = error.message
+          record.cleanupError = error.message;
         }
       try {
-        record.fixtureListenersRestored = await evaluate('window.__skinFixtureDiagnostic.finish().restoredListeners')
+        record.fixtureListenersRestored = await evaluate('window.__skinFixtureDiagnostic.finish().restoredListeners');
       } catch (error) {
-        record.cleanupError = error.message
+        record.cleanupError = error.message;
       }
-      persist()
+      persist();
     }
   }
   const makeDirty = async () => {
@@ -453,34 +453,34 @@ module.exports = async ({ call, evaluate, main, nav, wait, root, screenshot, ver
       sequence: (proof.fixtureDiagnostics ??= []).length + 1,
       classification: 'single original fixture stroke; read-only document observation and original listeners forwarded',
       snapshots: [],
-    }
-    proof.fixtureDiagnostics.push(record)
+    };
+    proof.fixtureDiagnostics.push(record);
     const snapshot = async (label, expression = 'window.__skinFixtureDiagnostic.snapshot()') => {
       const actual = await evaluate(expression),
-        rgba = actual.rgba
-      assert(Array.isArray(rgba) && rgba.length === 64 * 64 * 4, 'diagnostic must read the actual 64 x 64 skin document')
-      const sha256 = crypto.createHash('sha256').update(Buffer.from(rgba)).digest('hex')
-      delete actual.rgba
-      record.snapshots.push({ label, sha256, ...actual })
-      return rgba
-    }
+        rgba = actual.rgba;
+      assert(Array.isArray(rgba) && rgba.length === 64 * 64 * 4, 'diagnostic must read the actual 64 x 64 skin document');
+      const sha256 = crypto.createHash('sha256').update(Buffer.from(rgba)).digest('hex');
+      delete actual.rgba;
+      record.snapshots.push({ label, sha256, ...actual });
+      return rgba;
+    };
     let installed = false,
       initial,
-      last
+      last;
     try {
-      initial = await snapshot('before colour toggle', `(${installSkinFixtureDiagnostic.toString()})()`)
-      installed = true
+      initial = await snapshot('before colour toggle', `(${installSkinFixtureDiagnostic.toString()})()`);
+      installed = true;
       // Preserve the original toggle and exactly one original pose/gesture. The
       // diagnostic does not choose another colour, retry a stroke, or wait longer.
       await evaluate(
         `(()=>{const e=document.querySelector('.palette-hex');e.value=e.value==='#1177ee'?'#ee7733':'#1177ee';e.dispatchEvent(new Event('input',{bubbles:true}))})()`
-      )
-      await snapshot('after colour toggle')
-      await pose('正面')
-      await snapshot('before single gesture')
-      await gesture()
-      last = await snapshot('after single gesture')
-      record.changedTexels = []
+      );
+      await snapshot('after colour toggle');
+      await pose('正面');
+      await snapshot('before single gesture');
+      await gesture();
+      last = await snapshot('after single gesture');
+      record.changedTexels = [];
       for (let i = 0; i < last.length; i += 4)
         if (last.slice(i, i + 4).some((v, k) => v !== initial[i + k]))
           record.changedTexels.push({
@@ -488,79 +488,88 @@ module.exports = async ({ call, evaluate, main, nav, wait, root, screenshot, ver
             y: Math.floor(i / 256),
             before: initial.slice(i, i + 4),
             after: last.slice(i, i + 4),
-          })
+          });
       assert(
         await evaluate(`document.querySelector('.editor-header p').textContent.includes('有未保存更改')`),
         'native-close fixture must actually be dirty'
-      )
-      record.dirtyAssertionPassed = true
+      );
+      record.dirtyAssertionPassed = true;
     } catch (error) {
-      record.dirtyAssertionPassed = false
-      record.failure = { message: error.message, stack: error.stack }
-      persist()
+      record.dirtyAssertionPassed = false;
+      record.failure = { message: error.message, stack: error.stack };
+      persist();
       // Capture immediately, without the normal screenshot helper's settling
       // wait. The failed assertion remains failed even if capture also fails.
-      record.failure.captures = []
+      record.failure.captures = [];
       if (process.platform === 'darwin')
         try {
           const bounds = await main(
               `(()=>{const w=testElectron.BrowserWindow.getAllWindows().find(w=>!w.isDestroyed()&&/\\/renderer\\/index\\.html(?:[?#]|$)/.test(w.webContents.getURL()));if(!w)throw Error('Owned native skin window unavailable');return w.getBounds()})()`
             ),
-            region = [bounds.x, bounds.y, bounds.width, bounds.height].map(Math.round)
-          assert(region.every(Number.isFinite) && region[2] > 0 && region[3] > 0, 'valid native failed skin bounds required')
-          const file = path.resolve('out', 'extension-118-skin-dirty-fixture-native-failure-' + record.sequence + '-' + theme + '.png')
-          execFileSync('/usr/sbin/screencapture', ['-x', '-R' + region.join(','), file], { timeout: 10000 })
-          const bytes = fs.readFileSync(file)
-          assert(bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), 'actual native failed skin PNG required')
-          record.failure.captures.push({ source: 'actual native screen pixels; no added settling wait', file, bounds, bytes: bytes.length })
+            region = [bounds.x, bounds.y, bounds.width, bounds.height].map(Math.round);
+          assert(region.every(Number.isFinite) && region[2] > 0 && region[3] > 0, 'valid native failed skin bounds required');
+          const file = path.resolve('out', 'extension-118-skin-dirty-fixture-native-failure-' + record.sequence + '-' + theme + '.png');
+          execFileSync('/usr/sbin/screencapture', ['-x', '-R' + region.join(','), file], { timeout: 10000 });
+          const bytes = fs.readFileSync(file);
+          assert(bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), 'actual native failed skin PNG required');
+          record.failure.captures.push({
+            source: 'actual native screen pixels; no added settling wait',
+            file,
+            bounds,
+            bytes: bytes.length,
+          });
         } catch (captureError) {
-          record.failure.nativeScreenshotError = captureError.message
+          record.failure.nativeScreenshotError = captureError.message;
         }
       try {
         const file = path.resolve('out', 'extension-118-skin-dirty-fixture-compositor-failure-' + record.sequence + '-' + theme + '.png'),
           bytes = Buffer.from(
             (await call('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false })).data,
             'base64'
-          )
-        fs.writeFileSync(file, bytes)
-        record.failure.captures.push({ source: 'actual full visible compositor pixels; no added settling wait', file, bytes: bytes.length })
+          );
+        fs.writeFileSync(file, bytes);
+        record.failure.captures.push({
+          source: 'actual full visible compositor pixels; no added settling wait',
+          file,
+          bytes: bytes.length,
+        });
       } catch (captureError) {
-        record.failure.compositorScreenshotError = captureError.message
+        record.failure.compositorScreenshotError = captureError.message;
       }
-      throw error
+      throw error;
     } finally {
       if (installed) {
-        const trace = await evaluate(`window.__skinFixtureDiagnostic.finish()`)
-        record.events = trace.events
-        record.restoredListeners = trace.restoredListeners
+        const trace = await evaluate(`window.__skinFixtureDiagnostic.finish()`);
+        record.events = trace.events;
+        record.restoredListeners = trace.restoredListeners;
       }
-      persist()
+      persist();
     }
-  }
+  };
   const cancelConfirm = async () => {
-    await key('Escape')
-    assert(!(await evaluate(`!!document.querySelector('.skin-close-dialog')`)))
-    assert(await evaluate(`document.activeElement?.getAttribute('aria-label')==='关闭绘制皮肤'`), 'close cancellation restores X focus')
-  }
+    await key('Escape');
+    assert(!(await evaluate(`!!document.querySelector('.skin-close-dialog')`)));
+    assert(await evaluate(`document.activeElement?.getAttribute('aria-label')==='关闭绘制皮肤'`), 'close cancellation restores X focus');
+  };
   const visibleError = async (scope, text) => {
     const state = await until(
       'visible operation error',
       `(()=>{const e=document.querySelector(${JSON.stringify(scope + ' .editor-operation-error')}),r=e?.getBoundingClientRect(),hit=r&&document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return{ready:!!e&&e.textContent.includes(${JSON.stringify(text)})&&r.width>0&&r.height>0&&r.top>=0&&r.bottom<=innerHeight&&e.contains(hit),text:e?.textContent,rect:r&&{left:r.left,top:r.top,right:r.right,bottom:r.bottom},hit:hit?.className}})()`
-    )
-    ;(proof.visibleErrors ??= []).push({ scope, ...state })
-    await screenshot('skin-operation-error-' + proof.visibleErrors.length)
-  }
+    );
+    (proof.visibleErrors ??= []).push({ scope, ...state });
+    await screenshot('skin-operation-error-' + proof.visibleErrors.length);
+  };
   const discardEditor = async () => {
-    await coordinateClick('[aria-label="关闭绘制皮肤"]')
-    await until('close confirmation', `!!document.querySelector('.skin-close-dialog')`)
-    await clickText('.skin-close-dialog', '放弃更改')
-    await until('editor removed', `!document.querySelector('.skin-editor')`)
-  }
+    await coordinateClick('[aria-label="关闭绘制皮肤"]');
+    await until('close confirmation', `!!document.querySelector('.skin-close-dialog')`);
+    await clickText('.skin-close-dialog', '放弃更改');
+    await until('editor removed', `!document.querySelector('.skin-editor')`);
+  };
   await main(
     `globalThis.skin118OriginalDialog=testElectron.dialog.showSaveDialog;globalThis.skin118SaveMode='normal';testElectron.dialog.showSaveDialog=async()=>{if(skin118SaveMode==='delay')return await new Promise(r=>globalThis.skin118ResumeSave=r);if(skin118SaveMode==='error')throw Error('验证保存拒绝');return skin118SaveMode==='cancel'?{canceled:true}:{canceled:false,filePath:${JSON.stringify(output)}}}`
-  )
+  );
   try {
-    await nav('skins')
+    await nav('skins');
     const layouts =
       process.env.FAIONYX_SKIN_LAYOUT_PROBE === 'narrow'
         ? [
@@ -575,36 +584,36 @@ module.exports = async ({ call, evaluate, main, nav, wait, root, screenshot, ver
               [1440, 960, 1.5],
               [1440, 684, 1.5],
               [960, 620, 1.5],
-            ]
+            ];
     for (const [width, height, zoom] of layouts) {
       await main(
         `testElectron.BrowserWindow.getAllWindows()[0].setSize(${width},${height});testElectron.BrowserWindow.getAllWindows()[0].webContents.setZoomFactor(${zoom})`
-      )
-      await wait(250)
-      await screenshot('skin-page-' + width + '-' + zoom + (height === 684 ? '-compact' : ''))
-      await open()
-      await pose('正面')
-      await evaluate(`document.querySelector('.editor-content').scrollTop=0;document.querySelector('.editor-model').scrollTop=0`)
-      await wait(80)
-      await screenshot('skin-editor-' + width + '-' + zoom + (height === 684 ? '-compact' : ''))
-      const previewHeight = await evaluate(`document.querySelector('.skin-editor canvas').getBoundingClientRect().height`)
-      assert(previewHeight >= 120, 'skin canvas must remain large enough to draw: ' + previewHeight)
+      );
+      await wait(250);
+      await screenshot('skin-page-' + width + '-' + zoom + (height === 684 ? '-compact' : ''));
+      await open();
+      await pose('正面');
+      await evaluate(`document.querySelector('.editor-content').scrollTop=0;document.querySelector('.editor-model').scrollTop=0`);
+      await wait(80);
+      await screenshot('skin-editor-' + width + '-' + zoom + (height === 684 ? '-compact' : ''));
+      const previewHeight = await evaluate(`document.querySelector('.skin-editor canvas').getBoundingClientRect().height`);
+      assert(previewHeight >= 120, 'skin canvas must remain large enough to draw: ' + previewHeight);
       const partControls = await evaluate(
         `(()=>{const scope=document.querySelector('.editor-model').getBoundingClientRect();return [...document.querySelectorAll('.part-tools button')].map(e=>{const r=e.getBoundingClientRect();return{name:e.textContent.trim(),visible:r.width>0&&r.height>0&&r.left>=scope.left&&r.right<=scope.right&&r.top>=scope.top&&r.bottom<=scope.bottom&&r.bottom<=innerHeight&&e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}})})()`
-      )
-      assert.equal(partControls.length, 6)
+      );
+      assert.equal(partControls.length, 6);
       assert(
         partControls.every((p) => p.visible),
         'all six part controls must be visible without preview scrolling: ' + JSON.stringify(partControls)
-      )
+      );
       if (await evaluate(`innerWidth<=700`)) {
         const fixed = () =>
             evaluate(
               `(()=>{const x=document.querySelector('.editor-close').getBoundingClientRect(),f=document.querySelector('.editor-footer').getBoundingClientRect();return{x:x.top,footer:f.top,bottom:f.bottom}})()`
             ),
-          beforeFixed = await fixed()
-        await coordinateClick('.palette-hex')
-        await until('actual HEX focus', `document.activeElement===document.querySelector('.palette-hex')`)
+          beforeFixed = await fixed();
+        await coordinateClick('.palette-hex');
+        await until('actual HEX focus', `document.activeElement===document.querySelector('.palette-hex')`);
         // Supply Chromium's native editing command as well as the real platform
         // shortcut: an isolated macOS harness need not have an application Edit
         // menu to map Cmd+A. Never insert into a maxlength field unselected.
@@ -616,28 +625,28 @@ module.exports = async ({ call, evaluate, main, nav, wait, root, screenshot, ver
             windowsVirtualKeyCode: 65,
             modifiers: process.platform === 'darwin' ? 4 : 2,
             ...(type === 'keyDown' ? { commands: ['selectAll'] } : {}),
-          })
+          });
         const selection = await until(
           'actual HEX selection',
           `(()=>{const e=document.querySelector('.palette-hex');return{ready:document.activeElement===e&&e.selectionStart===0&&e.selectionEnd===e.value.length,value:e.value,start:e.selectionStart,end:e.selectionEnd,focused:document.activeElement?.className}})()`
-        )
-        ;(proof.colourInputs ??= []).push({ width, height, zoom, selection })
-        persist()
-        await call('Input.insertText', { text: '#1177ee' })
-        await key('Tab')
+        );
+        (proof.colourInputs ??= []).push({ width, height, zoom, selection });
+        persist();
+        await call('Input.insertText', { text: '#1177ee' });
+        await key('Tab');
         await until(
           'small-window actual colour input',
           `(()=>{const hex=document.querySelector('.palette-hex').value,red=document.querySelector('[aria-label="RGB R"]').value;return{ready:red==='17'&&hex==='#1177ee',hex,red,focus:document.activeElement?.getAttribute('aria-label')}})()`
-        )
-        assert.deepEqual(await fixed(), beforeFixed, 'header and footer remain fixed while scrolling to colour tools')
+        );
+        assert.deepEqual(await fixed(), beforeFixed, 'header and footer remain fixed while scrolling to colour tools');
         assert(
           await evaluate(`document.querySelector('.editor-header p').textContent.includes('已保存')`),
           'real colour input does not edit skin pixels'
-        )
-        await screenshot('skin-small-tools-' + width + '-' + zoom)
-        await evaluate(`document.querySelector('.editor-content').scrollTop=0;document.querySelector('.editor-model').scrollTop=0`)
-        await wait(80)
-        ;(proof.smallTools ??= []).push({
+        );
+        await screenshot('skin-small-tools-' + width + '-' + zoom);
+        await evaluate(`document.querySelector('.editor-content').scrollTop=0;document.querySelector('.editor-model').scrollTop=0`);
+        await wait(80);
+        (proof.smallTools ??= []).push({
           width,
           height,
           zoom,
@@ -645,96 +654,96 @@ module.exports = async ({ call, evaluate, main, nav, wait, root, screenshot, ver
           colour: '#1177ee',
           fixed: beforeFixed,
           returnedToModel: true,
-        })
+        });
       }
       const baseline = await png(),
-        initialPreview = await canvasShot()
-      await coordinateClick('[aria-label="放大皮肤预览"]')
-      await wait(750)
-      assert.notEqual(await canvasShot(), initialPreview, 'zoom button changes rendered geometry')
-      assert.equal(await png(), baseline, 'preview zoom preserves texture')
-      await coordinateClick('[aria-label="缩小皮肤预览"]')
-      await wait(750)
-      const beforeLight = await canvasShot()
-      await coordinateClick('[aria-label="切换预览灯光"]')
-      await wait(120)
-      assert.notEqual(await canvasShot(), beforeLight, 'light preset changes rendered shading')
-      assert.equal(await png(), baseline, 'light preset preserves texture')
-      await coordinateClick('[aria-label="切换预览灯光"]')
-      await coordinateClick('[aria-label="扩大模型预览"]')
-      assert(await evaluate(`document.querySelector('.editor-content').classList.contains('preview-expanded')`))
-      await screenshot('skin-expanded-' + width + '-' + zoom)
-      await key('Escape')
+        initialPreview = await canvasShot();
+      await coordinateClick('[aria-label="放大皮肤预览"]');
+      await wait(750);
+      assert.notEqual(await canvasShot(), initialPreview, 'zoom button changes rendered geometry');
+      assert.equal(await png(), baseline, 'preview zoom preserves texture');
+      await coordinateClick('[aria-label="缩小皮肤预览"]');
+      await wait(750);
+      const beforeLight = await canvasShot();
+      await coordinateClick('[aria-label="切换预览灯光"]');
+      await wait(120);
+      assert.notEqual(await canvasShot(), beforeLight, 'light preset changes rendered shading');
+      assert.equal(await png(), baseline, 'light preset preserves texture');
+      await coordinateClick('[aria-label="切换预览灯光"]');
+      await coordinateClick('[aria-label="扩大模型预览"]');
+      assert(await evaluate(`document.querySelector('.editor-content').classList.contains('preview-expanded')`));
+      await screenshot('skin-expanded-' + width + '-' + zoom);
+      await key('Escape');
       assert(
         await evaluate(
           `!!document.querySelector('.skin-editor')&&!document.querySelector('.editor-content').classList.contains('preview-expanded')`
         ),
         'Escape exits expanded preview without closing editor'
-      )
-      assert.equal(await png(), baseline, 'expanded preview preserves pixels')
-      const before = await canvasShot()
-      await gesture('middle')
-      assert.notEqual(await canvasShot(), before, 'middle drag changes actual model rendering')
-      assert.equal(await png(), baseline, 'middle rotation preserves all exported RGBA pixels')
+      );
+      assert.equal(await png(), baseline, 'expanded preview preserves pixels');
+      const before = await canvasShot();
+      await gesture('middle');
+      assert.notEqual(await canvasShot(), before, 'middle drag changes actual model rendering');
+      assert.equal(await png(), baseline, 'middle rotation preserves all exported RGBA pixels');
       assert(
         await evaluate(`[...document.querySelectorAll('.editor-tool-rail button:nth-last-child(-n+2)')].every(b=>b.disabled)`),
         'rotation has no undo record'
-      )
-      const middle = await canvasShot()
-      await gesture('left', 1)
-      assert.notEqual(await canvasShot(), middle, 'Alt-left rotates rendered model')
-      assert.equal(await png(), baseline)
-      await pose('正面')
-      await gesture()
-      const painted = await png()
-      assert.notEqual(painted, baseline, 'left stroke changes actual PNG pixels')
-      await clickText('.editor-tool-rail', '撤销')
-      assert.equal(await png(), baseline, 'one undo removes the full stroke')
-      await clickText('.editor-tool-rail', '重做')
-      assert.equal(await png(), painted)
-      await pose('背面')
-      await pose('俯视')
-      await pose('仰视')
-      assert.equal(await png(), painted, 'quick views preserve pixels')
-      await checkHeadVisibility(width, height, zoom)
-      await clickText('.control-heading', '全部显示')
-      assert.equal(await png(), painted, 'part visibility preserves pixels')
-      await makeDirty()
-      await coordinateClick('[aria-label="关闭绘制皮肤"]')
-      await until('visible dirty confirmation', `!!document.querySelector('.skin-close-dialog')`)
+      );
+      const middle = await canvasShot();
+      await gesture('left', 1);
+      assert.notEqual(await canvasShot(), middle, 'Alt-left rotates rendered model');
+      assert.equal(await png(), baseline);
+      await pose('正面');
+      await gesture();
+      const painted = await png();
+      assert.notEqual(painted, baseline, 'left stroke changes actual PNG pixels');
+      await clickText('.editor-tool-rail', '撤销');
+      assert.equal(await png(), baseline, 'one undo removes the full stroke');
+      await clickText('.editor-tool-rail', '重做');
+      assert.equal(await png(), painted);
+      await pose('背面');
+      await pose('俯视');
+      await pose('仰视');
+      assert.equal(await png(), painted, 'quick views preserve pixels');
+      await checkHeadVisibility(width, height, zoom);
+      await clickText('.control-heading', '全部显示');
+      assert.equal(await png(), painted, 'part visibility preserves pixels');
+      await makeDirty();
+      await coordinateClick('[aria-label="关闭绘制皮肤"]');
+      await until('visible dirty confirmation', `!!document.querySelector('.skin-close-dialog')`);
       const layout = await evaluate(
         `(()=>{const d=document.querySelector('.skin-close-dialog'),r=d.getBoundingClientRect(),x=document.querySelector('.editor-close').getBoundingClientRect(),f=document.querySelector('.editor-footer').getBoundingClientRect();return{innerWidth,innerHeight,confirm:{left:r.left,top:r.top,right:r.right,bottom:r.bottom},x:{top:x.top,right:x.right,bottom:x.bottom},footer:{top:f.top,bottom:f.bottom},focus:document.activeElement.textContent.trim(),role:d.getAttribute('role')}})()`
-      )
-      assert(layout.confirm.top >= 0 && layout.confirm.bottom <= layout.innerHeight && layout.confirm.right <= layout.innerWidth)
-      assert(layout.x.top >= 0 && layout.x.bottom <= layout.innerHeight)
-      assert(layout.footer.bottom <= layout.innerHeight)
-      assert.equal(layout.role, 'alertdialog')
-      assert.equal(layout.focus, '继续绘制')
+      );
+      assert(layout.confirm.top >= 0 && layout.confirm.bottom <= layout.innerHeight && layout.confirm.right <= layout.innerWidth);
+      assert(layout.x.top >= 0 && layout.x.bottom <= layout.innerHeight);
+      assert(layout.footer.bottom <= layout.innerHeight);
+      assert.equal(layout.role, 'alertdialog');
+      assert.equal(layout.focus, '继续绘制');
       for (let i = 0; i < 6; i++) {
-        await key('Tab')
+        await key('Tab');
         assert(
           await evaluate(`document.querySelector('.skin-close-dialog').contains(document.activeElement)`),
           'Tab stays inside confirmation'
-        )
+        );
       }
-      await screenshot('skin-close-' + width + '-' + zoom + (height === 684 ? '-compact' : ''))
-      await cancelConfirm()
-      await coordinateClick('[aria-label="关闭绘制皮肤"]')
-      await main(`skin118SaveMode='cancel'`)
-      await clickText('.skin-close-dialog', '保存并退出')
-      assert(await evaluate(`!!document.querySelector('.skin-close-dialog')`), 'cancelled save keeps document open')
-      await cancelConfirm()
+      await screenshot('skin-close-' + width + '-' + zoom + (height === 684 ? '-compact' : ''));
+      await cancelConfirm();
+      await coordinateClick('[aria-label="关闭绘制皮肤"]');
+      await main(`skin118SaveMode='cancel'`);
+      await clickText('.skin-close-dialog', '保存并退出');
+      assert(await evaluate(`!!document.querySelector('.skin-close-dialog')`), 'cancelled save keeps document open');
+      await cancelConfirm();
       if (width === 960) {
-        await coordinateClick('[aria-label="关闭绘制皮肤"]')
-        await main(`skin118SaveMode='error'`)
-        await clickText('.skin-close-dialog', '保存并退出')
-        assert(await evaluate(`!!document.querySelector('.skin-close-dialog')`))
-        await visibleError('.skin-close-dialog', '验证保存拒绝')
-        await cancelConfirm()
+        await coordinateClick('[aria-label="关闭绘制皮肤"]');
+        await main(`skin118SaveMode='error'`);
+        await clickText('.skin-close-dialog', '保存并退出');
+        assert(await evaluate(`!!document.querySelector('.skin-close-dialog')`));
+        await visibleError('.skin-close-dialog', '验证保存拒绝');
+        await cancelConfirm();
       }
-      await main(`skin118SaveMode='normal'`)
-      await discardEditor()
-      assert(await evaluate(`document.activeElement?.classList.contains('skin-editor-entry')`), 'editor restores page opener focus')
+      await main(`skin118SaveMode='normal'`);
+      await discardEditor();
+      assert(await evaluate(`document.activeElement?.classList.contains('skin-editor-entry')`), 'editor restores page opener focus');
       proof.layouts.push({
         width,
         height,
@@ -749,85 +758,85 @@ module.exports = async ({ call, evaluate, main, nav, wait, root, screenshot, ver
         zoomButton: true,
         lightingButton: true,
         expandedPreview: true,
-      })
-      persist()
+      });
+      persist();
     }
     // Suppress only the final acknowledged destroy/quit IPC in this throwaway process.
     await main(
       `globalThis.skin118CloseListeners=testElectron.ipcMain.listeners('window:close');globalThis.skin118QuitListeners=testElectron.ipcMain.listeners('window:skinEditorQuit');globalThis.skin118WindowRequests=0;globalThis.skin118QuitRequests=0;testElectron.ipcMain.removeAllListeners('window:close');testElectron.ipcMain.removeAllListeners('window:skinEditorQuit');testElectron.ipcMain.on('window:close',()=>skin118WindowRequests++);testElectron.ipcMain.on('window:skinEditorQuit',()=>skin118QuitRequests++);testElectron.BrowserWindow.getAllWindows()[0].setSize(960,620);testElectron.BrowserWindow.getAllWindows()[0].webContents.setZoomFactor(1)`
-    )
-    await wait(250)
-    await open()
-    await main(`skin118SaveMode='delay';skin118ResumeSave=undefined`)
-    await clickText('.editor-footer', '保存 PNG…')
-    assert(await main(`!!skin118ResumeSave`))
-    await main(`testElectron.BrowserWindow.getAllWindows()[0].close()`)
-    await until('queued clean busy native close', `document.querySelector('.editor-operation-status').textContent.includes('关闭请求')`)
-    await main(`skin118ResumeSave({canceled:true})`)
-    await until('clean busy close acknowledged', `!document.querySelector('.skin-editor')`)
-    assert.equal(await main(`skin118WindowRequests`), 1)
-    assert.equal(await main(`testElectron.BrowserWindow.getAllWindows().length`), 1)
-    proof.nativeBusy = true
-    await open()
-    await pose('正面')
-    await gesture()
-    await coordinateClick('[aria-label="关闭绘制皮肤"]')
-    await main(`skin118ResumeSave=undefined`)
-    await clickText('.skin-close-dialog', '保存并退出')
-    assert(await main(`!!skin118ResumeSave`))
-    await key('Escape')
-    await main(`skin118ResumeSave({canceled:false,filePath:${JSON.stringify(output)}})`)
+    );
+    await wait(250);
+    await open();
+    await main(`skin118SaveMode='delay';skin118ResumeSave=undefined`);
+    await clickText('.editor-footer', '保存 PNG…');
+    assert(await main(`!!skin118ResumeSave`));
+    await main(`testElectron.BrowserWindow.getAllWindows()[0].close()`);
+    await until('queued clean busy native close', `document.querySelector('.editor-operation-status').textContent.includes('关闭请求')`);
+    await main(`skin118ResumeSave({canceled:true})`);
+    await until('clean busy close acknowledged', `!document.querySelector('.skin-editor')`);
+    assert.equal(await main(`skin118WindowRequests`), 1);
+    assert.equal(await main(`testElectron.BrowserWindow.getAllWindows().length`), 1);
+    proof.nativeBusy = true;
+    await open();
+    await pose('正面');
+    await gesture();
+    await coordinateClick('[aria-label="关闭绘制皮肤"]');
+    await main(`skin118ResumeSave=undefined`);
+    await clickText('.skin-close-dialog', '保存并退出');
+    assert(await main(`!!skin118ResumeSave`));
+    await key('Escape');
+    await main(`skin118ResumeSave({canceled:false,filePath:${JSON.stringify(output)}})`);
     await until(
       'cancelled intent save finished',
       `!!document.querySelector('.skin-editor')&&!document.querySelector('.editor-content').inert`
-    )
-    assert(!(await evaluate(`!!document.querySelector('.skin-close-dialog')`)), 'Escape during save-close cancels the exit intent')
-    proof.queuedCancellation = true
-    await main(`skin118SaveMode='normal'`)
-    await makeDirty()
-    await main(`testElectron.app.quit()`)
-    await until('actual native quit guarded', `!!document.querySelector('.skin-close-dialog')`)
-    await cancelConfirm()
-    await discardEditor()
-    assert.equal(await main(`skin118QuitRequests`), 0, 'cancelled quit is not reused by editor X')
-    await open()
-    await pose('正面')
-    await gesture()
-    await main(`testElectron.app.quit()`)
-    await until('native quit confirmation', `!!document.querySelector('.skin-close-dialog')`)
-    await clickText('.skin-close-dialog', '放弃更改')
-    await until('quit acknowledgement', `!document.querySelector('.skin-editor')`)
-    assert.equal(await main(`skin118QuitRequests`), 1)
+    );
+    assert(!(await evaluate(`!!document.querySelector('.skin-close-dialog')`)), 'Escape during save-close cancels the exit intent');
+    proof.queuedCancellation = true;
+    await main(`skin118SaveMode='normal'`);
+    await makeDirty();
+    await main(`testElectron.app.quit()`);
+    await until('actual native quit guarded', `!!document.querySelector('.skin-close-dialog')`);
+    await cancelConfirm();
+    await discardEditor();
+    assert.equal(await main(`skin118QuitRequests`), 0, 'cancelled quit is not reused by editor X');
+    await open();
+    await pose('正面');
+    await gesture();
+    await main(`testElectron.app.quit()`);
+    await until('native quit confirmation', `!!document.querySelector('.skin-close-dialog')`);
+    await clickText('.skin-close-dialog', '放弃更改');
+    await until('quit acknowledgement', `!document.querySelector('.skin-editor')`);
+    assert.equal(await main(`skin118QuitRequests`), 1);
     await main(
       `globalThis.skin118UploadHandler=testElectron.ipcMain._invokeHandlers.get('skin:editorUpload');testElectron.ipcMain.removeHandler('skin:editorUpload');testElectron.ipcMain.handle('skin:editorUpload',()=>new Promise((resolve,reject)=>globalThis.skin118RejectUpload=reject))`
-    )
-    await open()
-    await pose('正面')
-    await gesture()
-    await coordinateClick('.editor-upload')
-    await clickText('.skin-upload-dialog', '确认上传')
-    assert(await main(`!!skin118RejectUpload`))
-    await main(`testElectron.BrowserWindow.getAllWindows()[0].close()`)
-    await until('upload busy queued close', `document.querySelector('.editor-operation-status').textContent.includes('关闭请求')`)
-    await main(`skin118RejectUpload(Error('验证上传中断'))`)
-    await until('failed upload resumes dirty close', `!!document.querySelector('.skin-close-dialog')`)
-    await visibleError('.skin-close-dialog', '验证上传中断')
-    await cancelConfirm()
-    await visibleError('.editor-footer', '验证上传中断')
+    );
+    await open();
+    await pose('正面');
+    await gesture();
+    await coordinateClick('.editor-upload');
+    await clickText('.skin-upload-dialog', '确认上传');
+    assert(await main(`!!skin118RejectUpload`));
+    await main(`testElectron.BrowserWindow.getAllWindows()[0].close()`);
+    await until('upload busy queued close', `document.querySelector('.editor-operation-status').textContent.includes('关闭请求')`);
+    await main(`skin118RejectUpload(Error('验证上传中断'))`);
+    await until('failed upload resumes dirty close', `!!document.querySelector('.skin-close-dialog')`);
+    await visibleError('.skin-close-dialog', '验证上传中断');
+    await cancelConfirm();
+    await visibleError('.editor-footer', '验证上传中断');
     await evaluate(
       `(()=>{const e=document.querySelector('.palette-hex');e.value='#d88c58';e.dispatchEvent(new Event('input',{bubbles:true}))})()`
-    )
-    await discardEditor()
-    assert.equal(await main(`skin118WindowRequests`), 1)
-    proof.uploadBusy = true
-    proof.complete = true
-    persist()
-    console.log('PASS 1.1.8 actual skin gestures, visible/focused close, native busy/quit and cancellation')
+    );
+    await discardEditor();
+    assert.equal(await main(`skin118WindowRequests`), 1);
+    proof.uploadBusy = true;
+    proof.complete = true;
+    persist();
+    console.log('PASS 1.1.8 actual skin gestures, visible/focused close, native busy/quit and cancellation');
   } finally {
     await main(
       `testElectron.dialog.showSaveDialog=skin118OriginalDialog;if(globalThis.skin118CloseListeners){testElectron.ipcMain.removeAllListeners('window:close');for(const fn of skin118CloseListeners)testElectron.ipcMain.on('window:close',fn);testElectron.ipcMain.removeAllListeners('window:skinEditorQuit');for(const fn of skin118QuitListeners)testElectron.ipcMain.on('window:skinEditorQuit',fn)}if(globalThis.skin118UploadHandler){testElectron.ipcMain.removeHandler('skin:editorUpload');testElectron.ipcMain.handle('skin:editorUpload',skin118UploadHandler)}testElectron.BrowserWindow.getAllWindows()[0].webContents.setZoomFactor(1);testElectron.BrowserWindow.getAllWindows()[0].setSize(1280,900)`
-    )
-    persist()
+    );
+    persist();
   }
-}
-module.exports.installSkinFixtureDiagnostic = installSkinFixtureDiagnostic
+};
+module.exports.installSkinFixtureDiagnostic = installSkinFixtureDiagnostic;

@@ -1,22 +1,22 @@
 // Real business-layer integration against temporary instances; only shared runtime caches are reused.
 // Bundle first (including dynamic imports) with esbuild, then run using Electron. See release validation report.
-const { app } = require('electron')
-const fs = require('node:fs')
-const path = require('node:path')
-const os = require('node:os')
-const assert = require('node:assert/strict')
-const AdmZip = require('adm-zip')
-const previous = JSON.parse(fs.readFileSync(path.join(app.getPath('appData'), 'faionyx', 'settings.json'), 'utf8'))
-const qaRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-runtime-069-'))
-const folder = path.join(qaRoot, 'games')
-const target = path.join(folder, 'versions', '26.2')
-fs.mkdirSync(target, { recursive: true })
-const source = previous.folders.map((f) => path.join(f.path, 'versions', '26.2')).find((p) => fs.existsSync(path.join(p, '26.2.jar')))
-if (!source) throw new Error('Requires existing vanilla 26.2')
-const profile = JSON.parse(fs.readFileSync(path.join(source, '26.2.json'), 'utf8'))
-fs.writeFileSync(path.join(target, '26.2.json'), JSON.stringify({ ...profile, _mcVersion: '26.2', _gameDir: true }))
-fs.copyFileSync(path.join(source, '26.2.jar'), path.join(target, '26.2.jar'))
-app.setPath('userData', qaRoot)
+const { app } = require('electron');
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
+const assert = require('node:assert/strict');
+const AdmZip = require('adm-zip');
+const previous = JSON.parse(fs.readFileSync(path.join(app.getPath('appData'), 'faionyx', 'settings.json'), 'utf8'));
+const qaRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-runtime-069-'));
+const folder = path.join(qaRoot, 'games');
+const target = path.join(folder, 'versions', '26.2');
+fs.mkdirSync(target, { recursive: true });
+const source = previous.folders.map((f) => path.join(f.path, 'versions', '26.2')).find((p) => fs.existsSync(path.join(p, '26.2.jar')));
+if (!source) throw new Error('Requires existing vanilla 26.2');
+const profile = JSON.parse(fs.readFileSync(path.join(source, '26.2.json'), 'utf8'));
+fs.writeFileSync(path.join(target, '26.2.json'), JSON.stringify({ ...profile, _mcVersion: '26.2', _gameDir: true }));
+fs.copyFileSync(path.join(source, '26.2.jar'), path.join(target, '26.2.jar'));
+app.setPath('userData', qaRoot);
 fs.writeFileSync(
   path.join(qaRoot, 'settings.json'),
   JSON.stringify({
@@ -28,41 +28,41 @@ fs.writeFileSync(
     closeAfterLaunch: false,
     resolution: { width: 854, height: 480, mode: 'windowed', fullscreen: false },
   })
-)
-console.log('QA_RUNTIME_ROOT=' + qaRoot)
+);
+console.log('QA_RUNTIME_ROOT=' + qaRoot);
 const timeout = setTimeout(() => {
-  console.error('QA_TIMEOUT')
-  app.exit(1)
-}, 240000)
+  console.error('QA_TIMEOUT');
+  app.exit(1);
+}, 240000);
 app.whenReady().then(async () => {
-  const accounts = require('../src/main/core/accounts.ts')
-  const launch = require('../src/main/core/launch.ts')
-  const paths = require('../src/main/core/paths.ts')
-  const packs = require('../src/main/core/modpacks.ts')
-  const versions = require('../src/main/core/versions.ts')
-  accounts.addOffline('FaionyxQA')
+  const accounts = require('../src/main/core/accounts.ts');
+  const launch = require('../src/main/core/launch.ts');
+  const paths = require('../src/main/core/paths.ts');
+  const packs = require('../src/main/core/modpacks.ts');
+  const versions = require('../src/main/core/versions.ts');
+  accounts.addOffline('FaionyxQA');
   try {
-    const states = []
-    let lastStage = ''
+    const states = [];
+    let lastStage = '';
     const progress = (e) => {
       if (e.stage !== lastStage) {
-        lastStage = e.stage
-        console.log('STAGE=' + e.stage)
+        lastStage = e.stage;
+        console.log('STAGE=' + e.stage);
       }
-    }
+    };
     const promise = paths.withGameFolder(folder, () =>
       launch.launch(
         '26.2',
         progress,
         (line) => {
-          if (/ERROR|Exception|OpenAL|Created:.*atlas\/gui|LWJGL/i.test(line)) console.log('GAME=' + line.slice(0, 230))
+          if (/ERROR|Exception|OpenAL|Created:.*atlas\/gui|LWJGL/i.test(line)) console.log('GAME=' + line.slice(0, 230));
         },
         (state) => {
-          states.push(state.status)
-          console.log('STATE=' + state.status)
+          states.push(state.status);
+          console.log('STATE=' + state.status);
         }
       )
-    )
+    );
     await assert.rejects(
       launch.launch(
         '26.2',
@@ -71,20 +71,20 @@ app.whenReady().then(async () => {
         () => {}
       ),
       /已有游戏/
-    )
-    console.log('PASS_DUPLICATE_LAUNCH_REJECTED')
-    await promise
-    for (let i = 0; i < 80 && !states.includes('running'); i++) await new Promise((r) => setTimeout(r, 100))
-    assert(states.includes('running'))
-    await new Promise((r) => setTimeout(r, 20000))
-    assert.equal(launch.getRunningVersionId(), '26.2')
-    console.log('PASS_GAME_ALIVE_20S')
-    await launch.killGame()
-    for (let i = 0; i < 50 && launch.isBusy(); i++) await new Promise((r) => setTimeout(r, 100))
-    assert(!launch.isBusy())
-    assert(states.includes('exited'))
-    console.log('PASS_CONFIRMED_GAME_EXIT')
-    const zip = new AdmZip()
+    );
+    console.log('PASS_DUPLICATE_LAUNCH_REJECTED');
+    await promise;
+    for (let i = 0; i < 80 && !states.includes('running'); i++) await new Promise((r) => setTimeout(r, 100));
+    assert(states.includes('running'));
+    await new Promise((r) => setTimeout(r, 20000));
+    assert.equal(launch.getRunningVersionId(), '26.2');
+    console.log('PASS_GAME_ALIVE_20S');
+    await launch.killGame();
+    for (let i = 0; i < 50 && launch.isBusy(); i++) await new Promise((r) => setTimeout(r, 100));
+    assert(!launch.isBusy());
+    assert(states.includes('exited'));
+    console.log('PASS_CONFIRMED_GAME_EXIT');
+    const zip = new AdmZip();
     zip.addFile(
       'modrinth.index.json',
       Buffer.from(
@@ -97,32 +97,32 @@ app.whenReady().then(async () => {
           files: [],
         })
       )
-    )
-    zip.addFile('overrides/config/qa-pack-marker.txt', Buffer.from('real overrides extraction'))
-    const pack = path.join(qaRoot, 'faionyx-pack-temporary-prefix.mrpack')
-    zip.writeZip(pack)
-    const id = await packs.installModpack(pack, progress, { targetFolder: folder, nameSource: 'inner' })
-    assert.equal(id, 'QA Vanilla Pack')
-    const list = versions.scanInstalledFolder(folder)
-    assert.equal(list.versions.filter((v) => v.id === id).length, 1)
-    assert.deepEqual(fs.readdirSync(path.join(folder, 'versions')).sort(), ['26.2', id].sort())
-    const json = JSON.parse(fs.readFileSync(path.join(folder, 'versions', id, `${id}.json`), 'utf8'))
-    assert.equal(json.inheritsFrom, undefined)
-    assert.equal(json._gameDir, true)
-    assert(fs.existsSync(path.join(folder, 'versions', id, 'config', 'qa-pack-marker.txt')))
-    assert(fs.existsSync(path.join(target, '26.2.jar')))
-    console.log('PASS_PACK_SINGLE_INSTANCE_USER_VERSION_PRESERVED')
-    const loaderId = 'Runtime-with-arbitrary-display-name'
+    );
+    zip.addFile('overrides/config/qa-pack-marker.txt', Buffer.from('real overrides extraction'));
+    const pack = path.join(qaRoot, 'faionyx-pack-temporary-prefix.mrpack');
+    zip.writeZip(pack);
+    const id = await packs.installModpack(pack, progress, { targetFolder: folder, nameSource: 'inner' });
+    assert.equal(id, 'QA Vanilla Pack');
+    const list = versions.scanInstalledFolder(folder);
+    assert.equal(list.versions.filter((v) => v.id === id).length, 1);
+    assert.deepEqual(fs.readdirSync(path.join(folder, 'versions')).sort(), ['26.2', id].sort());
+    const json = JSON.parse(fs.readFileSync(path.join(folder, 'versions', id, `${id}.json`), 'utf8'));
+    assert.equal(json.inheritsFrom, undefined);
+    assert.equal(json._gameDir, true);
+    assert(fs.existsSync(path.join(folder, 'versions', id, 'config', 'qa-pack-marker.txt')));
+    assert(fs.existsSync(path.join(target, '26.2.jar')));
+    console.log('PASS_PACK_SINGLE_INSTANCE_USER_VERSION_PRESERVED');
+    const loaderId = 'Runtime-with-arbitrary-display-name';
     const loaderSource = previous.folders
       .map((f) => path.join(f.path, 'versions', '26.2-NeoForge_26.2.0.66', '26.2-NeoForge_26.2.0.66.json'))
-      .find((p) => fs.existsSync(p))
-    if (!loaderSource) throw new Error('NeoForge integration fixture requires installed 26.2.0.66')
-    const loaderDir = path.join(folder, 'versions', loaderId)
-    fs.mkdirSync(path.join(loaderDir, 'saves'), { recursive: true })
-    const loaderJson = JSON.stringify({ ...JSON.parse(fs.readFileSync(loaderSource, 'utf8')), id: loaderId })
-    fs.writeFileSync(path.join(loaderDir, `${loaderId}.json`), loaderJson)
-    fs.writeFileSync(path.join(loaderDir, 'saves', 'keep.txt'), 'preserve existing instance')
-    const neoZip = new AdmZip()
+      .find((p) => fs.existsSync(p));
+    if (!loaderSource) throw new Error('NeoForge integration fixture requires installed 26.2.0.66');
+    const loaderDir = path.join(folder, 'versions', loaderId);
+    fs.mkdirSync(path.join(loaderDir, 'saves'), { recursive: true });
+    const loaderJson = JSON.stringify({ ...JSON.parse(fs.readFileSync(loaderSource, 'utf8')), id: loaderId });
+    fs.writeFileSync(path.join(loaderDir, `${loaderId}.json`), loaderJson);
+    fs.writeFileSync(path.join(loaderDir, 'saves', 'keep.txt'), 'preserve existing instance');
+    const neoZip = new AdmZip();
     neoZip.addFile(
       'modrinth.index.json',
       Buffer.from(
@@ -135,57 +135,57 @@ app.whenReady().then(async () => {
           files: [],
         })
       )
-    )
-    neoZip.addFile('overrides/config/qa.txt', Buffer.from('pack override'))
-    const neoPack = path.join(qaRoot, 'neoforge.mrpack')
-    neoZip.writeZip(neoPack)
-    const before = fs.readdirSync(path.join(folder, 'versions'))
-    const neoId = await packs.installModpack(neoPack, progress, { targetFolder: folder, nameSource: 'inner' })
-    const added = fs.readdirSync(path.join(folder, 'versions')).filter((name) => !before.includes(name))
-    assert.deepEqual(added, [neoId])
-    const installed = versions.scanInstalledFolder(folder).versions.find((v) => v.id === neoId)
-    assert.equal(installed.loader, 'neoforge')
-    assert.equal(installed.loaderVersion, '26.2.0.66')
-    assert.equal(installed.mcVersion, '26.2')
-    assert.equal(fs.readFileSync(path.join(loaderDir, `${loaderId}.json`), 'utf8'), loaderJson)
-    assert(!fs.existsSync(path.join(folder, 'versions', neoId, 'saves', 'keep.txt')))
-    console.log('PASS_NEOFORGE_PACK_SINGLE_INSTANCE_METADATA_REUSE')
-    const cancel = new AbortController()
+    );
+    neoZip.addFile('overrides/config/qa.txt', Buffer.from('pack override'));
+    const neoPack = path.join(qaRoot, 'neoforge.mrpack');
+    neoZip.writeZip(neoPack);
+    const before = fs.readdirSync(path.join(folder, 'versions'));
+    const neoId = await packs.installModpack(neoPack, progress, { targetFolder: folder, nameSource: 'inner' });
+    const added = fs.readdirSync(path.join(folder, 'versions')).filter((name) => !before.includes(name));
+    assert.deepEqual(added, [neoId]);
+    const installed = versions.scanInstalledFolder(folder).versions.find((v) => v.id === neoId);
+    assert.equal(installed.loader, 'neoforge');
+    assert.equal(installed.loaderVersion, '26.2.0.66');
+    assert.equal(installed.mcVersion, '26.2');
+    assert.equal(fs.readFileSync(path.join(loaderDir, `${loaderId}.json`), 'utf8'), loaderJson);
+    assert(!fs.existsSync(path.join(folder, 'versions', neoId, 'saves', 'keep.txt')));
+    console.log('PASS_NEOFORGE_PACK_SINGLE_INSTANCE_METADATA_REUSE');
+    const cancel = new AbortController();
     await assert.rejects(
       packs.installModpack(
         neoPack,
         (e) => {
-          if (e.stage === 'modpack' && e.progress === 0.96) cancel.abort()
+          if (e.stage === 'modpack' && e.progress === 0.96) cancel.abort();
         },
         { targetFolder: folder, instanceName: 'QA Cancelled Pack', signal: cancel.signal }
       ),
       /取消/
-    )
-    assert(!fs.existsSync(path.join(folder, 'versions', 'QA Cancelled Pack')))
-    assert.equal(fs.readFileSync(path.join(loaderDir, `${loaderId}.json`), 'utf8'), loaderJson)
-    console.log('PASS_MODPACK_CANCEL_ROLLBACK')
-    const appearance = require('../src/main/core/appearanceAssets.ts')
-    const settings = require('../src/main/core/settings.ts')
-    const gallery = []
+    );
+    assert(!fs.existsSync(path.join(folder, 'versions', 'QA Cancelled Pack')));
+    assert.equal(fs.readFileSync(path.join(loaderDir, `${loaderId}.json`), 'utf8'), loaderJson);
+    console.log('PASS_MODPACK_CANCEL_ROLLBACK');
+    const appearance = require('../src/main/core/appearanceAssets.ts');
+    const settings = require('../src/main/core/settings.ts');
+    const gallery = [];
     for (const name of ['piston.webp', 'brewer.webp']) {
-      gallery.push((await appearance.importGlobalImage(path.resolve('src/renderer/src/assets/launch', name), 'launch-thumbnail')).path)
+      gallery.push((await appearance.importGlobalImage(path.resolve('src/renderer/src/assets/launch', name), 'launch-thumbnail')).path);
     }
-    settings.saveSettings({ launchThumbnail: { images: gallery, image: gallery[0], fit: 'crop' } })
-    const stored = JSON.parse(fs.readFileSync(path.join(qaRoot, 'settings.json'), 'utf8'))
-    assert.deepEqual(stored.launchThumbnail.images, gallery)
-    assert(gallery.every((image) => image.startsWith(qaRoot) && fs.existsSync(image)))
-    settings.saveSettings({ launchThumbnail: { images: [...gallery].reverse(), image: gallery[1], fit: 'fit' } })
-    assert.deepEqual(settings.getSettings().launchThumbnail.images, [...gallery].reverse())
-    settings.saveSettings({ launchThumbnail: { images: [gallery[0]], image: gallery[0], fit: 'crop' } })
-    assert(!fs.existsSync(gallery[1]))
-    assert(fs.existsSync(path.resolve('src/renderer/src/assets/launch/brewer.webp')))
-    console.log('PASS_GALLERY_IMPORT_PERSIST_REORDER_REMOVE_ORIGINAL_PRESERVED')
+    settings.saveSettings({ launchThumbnail: { images: gallery, image: gallery[0], fit: 'crop' } });
+    const stored = JSON.parse(fs.readFileSync(path.join(qaRoot, 'settings.json'), 'utf8'));
+    assert.deepEqual(stored.launchThumbnail.images, gallery);
+    assert(gallery.every((image) => image.startsWith(qaRoot) && fs.existsSync(image)));
+    settings.saveSettings({ launchThumbnail: { images: [...gallery].reverse(), image: gallery[1], fit: 'fit' } });
+    assert.deepEqual(settings.getSettings().launchThumbnail.images, [...gallery].reverse());
+    settings.saveSettings({ launchThumbnail: { images: [gallery[0]], image: gallery[0], fit: 'crop' } });
+    assert(!fs.existsSync(gallery[1]));
+    assert(fs.existsSync(path.resolve('src/renderer/src/assets/launch/brewer.webp')));
+    console.log('PASS_GALLERY_IMPORT_PERSIST_REORDER_REMOVE_ORIGINAL_PRESERVED');
   } catch (error) {
-    console.error('QA_FAILED=' + (error.stack ?? error))
-    process.exitCode = 1
+    console.error('QA_FAILED=' + (error.stack ?? error));
+    process.exitCode = 1;
   } finally {
-    if (launch.isBusy()) await launch.killGame().catch(() => {})
-    clearTimeout(timeout)
-    app.exit(process.exitCode || 0)
+    if (launch.isBusy()) await launch.killGame().catch(() => {});
+    clearTimeout(timeout);
+    app.exit(process.exitCode || 0);
   }
-})
+});

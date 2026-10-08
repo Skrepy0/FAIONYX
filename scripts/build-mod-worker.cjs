@@ -6,7 +6,7 @@ require('esbuild').buildSync({
   format: 'cjs',
   target: 'node20',
   minify: true,
-})
+});
 require('esbuild').buildSync({
   entryPoints: ['src/main/core/projectionWorker.ts'],
   outfile: 'out/main/projectionWorker.cjs',
@@ -16,4 +16,4 @@ require('esbuild').buildSync({
   format: 'cjs',
   target: 'node20',
   minify: true,
-})
+});

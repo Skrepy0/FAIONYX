@@ -1,69 +1,69 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 // VoxLink 924845e897d8fb36dca2474ade30e675278559d0; generated from unmodified PunchProfile.java.
 export interface SendParams {
-  readonly intervalMs: number
-  readonly socketTimeoutMs: number
-  readonly extraWaitMs: number
-  readonly extraWaitLongMs: number
-  readonly jitterBaseMs: number
-  readonly jitterRangeMs: number
-  readonly minRounds: number
-  readonly minPass: number
-  readonly sleepShortMs: number
-  readonly sleepLongMs: number
-  readonly sweepWindowSize: number
+  readonly intervalMs: number;
+  readonly socketTimeoutMs: number;
+  readonly extraWaitMs: number;
+  readonly extraWaitLongMs: number;
+  readonly jitterBaseMs: number;
+  readonly jitterRangeMs: number;
+  readonly minRounds: number;
+  readonly minPass: number;
+  readonly sleepShortMs: number;
+  readonly sleepLongMs: number;
+  readonly sweepWindowSize: number;
 }
 export interface SymParams {
-  readonly easySymBombSockets: number
-  readonly easySymBombWindow: number
-  readonly easySymRoundIntervalMs: number
-  readonly easySymBombDurationMs: number
-  readonly hardSymSprayPortMin: number
-  readonly hardSymSprayPortMax: number
-  readonly hardSymPacketsPerPort: number
-  readonly hardSymPortIntervalMs: number
-  readonly hardSymDecayNumerator: number
-  readonly hardSymDecayFloor: number
-  readonly maxPps: number
+  readonly easySymBombSockets: number;
+  readonly easySymBombWindow: number;
+  readonly easySymRoundIntervalMs: number;
+  readonly easySymBombDurationMs: number;
+  readonly hardSymSprayPortMin: number;
+  readonly hardSymSprayPortMax: number;
+  readonly hardSymPacketsPerPort: number;
+  readonly hardSymPortIntervalMs: number;
+  readonly hardSymDecayNumerator: number;
+  readonly hardSymDecayFloor: number;
+  readonly maxPps: number;
 }
 export interface PunchProfile {
-  readonly name: string
-  readonly punchTimeoutMs: number
-  readonly firewallDetectCycles: number
-  readonly portPredictionMaxRange: number
-  readonly progressiveRanges: readonly number[]
-  readonly cyclesPerRange: number
-  readonly easySymDualSocketCount: number
-  readonly easySymDualPortRange: number
-  readonly defaultPortRange: number
-  readonly widePortRange: number
-  readonly maxPortRange: number
-  readonly minPortRange: number
-  readonly easySymPortRange: number
-  readonly hostMultiSocketCount: number
-  readonly hostMultiMinSocketCount: number
-  readonly hostMultiBaseSocketCount: number
-  readonly hardSymSocketCount: number
-  readonly birthdaySocketCount: number
-  readonly joinerSymSocketCount: number
-  readonly relaySocketCount: number
-  readonly joinerMultiPortRange: number
-  readonly easySymMutualSocketCount: number
-  readonly easySymMutualRetrySocketCount: number
-  readonly coneBackupPortRange: number
-  readonly socketStunCount: number
-  readonly socketCreateIntervalMs: number
-  readonly hostRoundTimeoutMs: number
-  readonly reverseWindowSec: number
-  readonly connectionTimeoutSec: number
-  readonly symmetricConnectionTimeoutSec: number
-  readonly punchMaxAttempts: number
-  readonly punchRetryDelayMs: number
-  readonly maxCycles: number
-  readonly maxSymCycles: number
-  readonly fallbackCycles: number
-  readonly send: SendParams
-  readonly sym: SymParams
+  readonly name: string;
+  readonly punchTimeoutMs: number;
+  readonly firewallDetectCycles: number;
+  readonly portPredictionMaxRange: number;
+  readonly progressiveRanges: readonly number[];
+  readonly cyclesPerRange: number;
+  readonly easySymDualSocketCount: number;
+  readonly easySymDualPortRange: number;
+  readonly defaultPortRange: number;
+  readonly widePortRange: number;
+  readonly maxPortRange: number;
+  readonly minPortRange: number;
+  readonly easySymPortRange: number;
+  readonly hostMultiSocketCount: number;
+  readonly hostMultiMinSocketCount: number;
+  readonly hostMultiBaseSocketCount: number;
+  readonly hardSymSocketCount: number;
+  readonly birthdaySocketCount: number;
+  readonly joinerSymSocketCount: number;
+  readonly relaySocketCount: number;
+  readonly joinerMultiPortRange: number;
+  readonly easySymMutualSocketCount: number;
+  readonly easySymMutualRetrySocketCount: number;
+  readonly coneBackupPortRange: number;
+  readonly socketStunCount: number;
+  readonly socketCreateIntervalMs: number;
+  readonly hostRoundTimeoutMs: number;
+  readonly reverseWindowSec: number;
+  readonly connectionTimeoutSec: number;
+  readonly symmetricConnectionTimeoutSec: number;
+  readonly punchMaxAttempts: number;
+  readonly punchRetryDelayMs: number;
+  readonly maxCycles: number;
+  readonly maxSymCycles: number;
+  readonly fallbackCycles: number;
+  readonly send: SendParams;
+  readonly sym: SymParams;
 }
 export const SEND_DEFAULT: SendParams = Object.freeze({
   intervalMs: 200, // PunchProfile.java: SEND_DEFAULT.intervalMs
@@ -77,7 +77,7 @@ export const SEND_DEFAULT: SendParams = Object.freeze({
   sleepShortMs: 1, // PunchProfile.java: SEND_DEFAULT.sleepShortMs
   sleepLongMs: 10, // PunchProfile.java: SEND_DEFAULT.sleepLongMs
   sweepWindowSize: 800, // PunchProfile.java: SEND_DEFAULT.sweepWindowSize
-})
+});
 export const SEND_DEFAULT_FAST: SendParams = Object.freeze({
   intervalMs: 200, // PunchProfile.java: SEND_DEFAULT_FAST.intervalMs
   socketTimeoutMs: 500, // PunchProfile.java: SEND_DEFAULT_FAST.socketTimeoutMs
@@ -90,7 +90,7 @@ export const SEND_DEFAULT_FAST: SendParams = Object.freeze({
   sleepShortMs: 1, // PunchProfile.java: SEND_DEFAULT_FAST.sleepShortMs
   sleepLongMs: 5, // PunchProfile.java: SEND_DEFAULT_FAST.sleepLongMs
   sweepWindowSize: 800, // PunchProfile.java: SEND_DEFAULT_FAST.sweepWindowSize
-})
+});
 export const SEND_SPRINT: SendParams = Object.freeze({
   intervalMs: 100, // PunchProfile.java: SEND_SPRINT.intervalMs
   socketTimeoutMs: 300, // PunchProfile.java: SEND_SPRINT.socketTimeoutMs
@@ -103,7 +103,7 @@ export const SEND_SPRINT: SendParams = Object.freeze({
   sleepShortMs: 1, // PunchProfile.java: SEND_SPRINT.sleepShortMs
   sleepLongMs: 3, // PunchProfile.java: SEND_SPRINT.sleepLongMs
   sweepWindowSize: 400, // PunchProfile.java: SEND_SPRINT.sweepWindowSize
-})
+});
 export const SEND_WIDE: SendParams = Object.freeze({
   intervalMs: 150, // PunchProfile.java: SEND_WIDE.intervalMs
   socketTimeoutMs: 500, // PunchProfile.java: SEND_WIDE.socketTimeoutMs
@@ -116,7 +116,7 @@ export const SEND_WIDE: SendParams = Object.freeze({
   sleepShortMs: 1, // PunchProfile.java: SEND_WIDE.sleepShortMs
   sleepLongMs: 5, // PunchProfile.java: SEND_WIDE.sleepLongMs
   sweepWindowSize: 800, // PunchProfile.java: SEND_WIDE.sweepWindowSize
-})
+});
 export const SEND_WEAK: SendParams = Object.freeze({
   intervalMs: 250, // PunchProfile.java: SEND_WEAK.intervalMs
   socketTimeoutMs: 800, // PunchProfile.java: SEND_WEAK.socketTimeoutMs
@@ -129,7 +129,7 @@ export const SEND_WEAK: SendParams = Object.freeze({
   sleepShortMs: 2, // PunchProfile.java: SEND_WEAK.sleepShortMs
   sleepLongMs: 8, // PunchProfile.java: SEND_WEAK.sleepLongMs
   sweepWindowSize: 600, // PunchProfile.java: SEND_WEAK.sweepWindowSize
-})
+});
 export const RECIPE: SymParams = Object.freeze({
   easySymBombSockets: 25, // PunchProfile.java: RECIPE.easySymBombSockets
   easySymBombWindow: 20, // PunchProfile.java: RECIPE.easySymBombWindow
@@ -142,7 +142,7 @@ export const RECIPE: SymParams = Object.freeze({
   hardSymDecayNumerator: 2, // PunchProfile.java: RECIPE.hardSymDecayNumerator
   hardSymDecayFloor: 180, // PunchProfile.java: RECIPE.hardSymDecayFloor
   maxPps: 3000, // PunchProfile.java: RECIPE.maxPps
-})
+});
 export const DEFAULT: PunchProfile = Object.freeze({
   name: 'DEFAULT', // PunchProfile.java: DEFAULT.name
   punchTimeoutMs: 12000, // PunchProfile.java: DEFAULT.punchTimeoutMs
@@ -181,7 +181,7 @@ export const DEFAULT: PunchProfile = Object.freeze({
   fallbackCycles: 3, // PunchProfile.java: DEFAULT.fallbackCycles
   send: SEND_DEFAULT, // PunchProfile.java: DEFAULT.send
   sym: RECIPE, // PunchProfile.java: constructor assigns RECIPE
-})
+});
 export const AGGRESSIVE: PunchProfile = Object.freeze({
   name: 'AGGRESSIVE', // PunchProfile.java: AGGRESSIVE.name
   punchTimeoutMs: 20000, // PunchProfile.java: AGGRESSIVE.punchTimeoutMs
@@ -220,7 +220,7 @@ export const AGGRESSIVE: PunchProfile = Object.freeze({
   fallbackCycles: 3, // PunchProfile.java: AGGRESSIVE.fallbackCycles
   send: SEND_DEFAULT_FAST, // PunchProfile.java: AGGRESSIVE.send
   sym: RECIPE, // PunchProfile.java: constructor assigns RECIPE
-})
+});
 export const HARDSYM: PunchProfile = Object.freeze({
   name: 'HARDSYM', // PunchProfile.java: HARDSYM.name
   punchTimeoutMs: 30000, // PunchProfile.java: HARDSYM.punchTimeoutMs
@@ -259,7 +259,7 @@ export const HARDSYM: PunchProfile = Object.freeze({
   fallbackCycles: 3, // PunchProfile.java: HARDSYM.fallbackCycles
   send: SEND_WIDE, // PunchProfile.java: HARDSYM.send
   sym: RECIPE, // PunchProfile.java: constructor assigns RECIPE
-})
+});
 export const EASY_SYM_DUAL: PunchProfile = Object.freeze({
   name: 'EASY_SYM_DUAL', // PunchProfile.java: EASY_SYM_DUAL.name
   punchTimeoutMs: 12000, // PunchProfile.java: EASY_SYM_DUAL.punchTimeoutMs
@@ -298,7 +298,7 @@ export const EASY_SYM_DUAL: PunchProfile = Object.freeze({
   fallbackCycles: 3, // PunchProfile.java: EASY_SYM_DUAL.fallbackCycles
   send: SEND_DEFAULT, // PunchProfile.java: EASY_SYM_DUAL.send
   sym: RECIPE, // PunchProfile.java: constructor assigns RECIPE
-})
+});
 export const V100: PunchProfile = Object.freeze({
   name: 'V100', // PunchProfile.java: V100.name
   punchTimeoutMs: 8000, // PunchProfile.java: V100.punchTimeoutMs
@@ -337,7 +337,7 @@ export const V100: PunchProfile = Object.freeze({
   fallbackCycles: 3, // PunchProfile.java: V100.fallbackCycles
   send: SEND_DEFAULT, // PunchProfile.java: V100.send
   sym: RECIPE, // PunchProfile.java: constructor assigns RECIPE
-})
+});
 export const FAST_LANE: PunchProfile = Object.freeze({
   name: 'FAST_LANE', // PunchProfile.java: FAST_LANE.name
   punchTimeoutMs: 6000, // PunchProfile.java: FAST_LANE.punchTimeoutMs
@@ -376,7 +376,7 @@ export const FAST_LANE: PunchProfile = Object.freeze({
   fallbackCycles: 3, // PunchProfile.java: FAST_LANE.fallbackCycles
   send: SEND_SPRINT, // PunchProfile.java: FAST_LANE.send
   sym: RECIPE, // PunchProfile.java: constructor assigns RECIPE
-})
+});
 export const RELIABLE_CONE: PunchProfile = Object.freeze({
   name: 'RELIABLE_CONE', // PunchProfile.java: RELIABLE_CONE.name
   punchTimeoutMs: 15000, // PunchProfile.java: RELIABLE_CONE.punchTimeoutMs
@@ -415,7 +415,7 @@ export const RELIABLE_CONE: PunchProfile = Object.freeze({
   fallbackCycles: 3, // PunchProfile.java: RELIABLE_CONE.fallbackCycles
   send: SEND_WEAK, // PunchProfile.java: RELIABLE_CONE.send
   sym: RECIPE, // PunchProfile.java: constructor assigns RECIPE
-})
+});
 export const WIDE_SWEEP: PunchProfile = Object.freeze({
   name: 'WIDE_SWEEP', // PunchProfile.java: WIDE_SWEEP.name
   punchTimeoutMs: 35000, // PunchProfile.java: WIDE_SWEEP.punchTimeoutMs
@@ -454,5 +454,5 @@ export const WIDE_SWEEP: PunchProfile = Object.freeze({
   fallbackCycles: 3, // PunchProfile.java: WIDE_SWEEP.fallbackCycles
   send: SEND_WIDE, // PunchProfile.java: WIDE_SWEEP.send
   sym: RECIPE, // PunchProfile.java: constructor assigns RECIPE
-})
-export const PROFILES = { DEFAULT, AGGRESSIVE, HARDSYM, EASY_SYM_DUAL, V100, FAST_LANE, RELIABLE_CONE, WIDE_SWEEP } as const
+});
+export const PROFILES = { DEFAULT, AGGRESSIVE, HARDSYM, EASY_SYM_DUAL, V100, FAST_LANE, RELIABLE_CONE, WIDE_SWEEP } as const;

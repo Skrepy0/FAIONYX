@@ -1,6 +1,6 @@
-import { downloadFile, type MirrorPref } from './download'
-import { modpackCachedFile } from './modpackDownloads'
-import type { ResolvedCfFile } from './curseforgeDownload'
+import { downloadFile, type MirrorPref } from './download';
+import { modpackCachedFile } from './modpackDownloads';
+import type { ResolvedCfFile } from './curseforgeDownload';
 
 /** Public CurseMaven coordinates: curse.maven:<descriptor>-<projectID>:<fileID>.
  * https://cursemaven.com/#usage (also linked on CurseForge file pages).
@@ -21,19 +21,19 @@ export async function prepareCurseMavenFile(
     !Number.isSafeInteger(file.size) ||
     file.size <= 0
   )
-    return null
-  const artifact = `mod-${projectID}`
-  const url = `https://cursemaven.com/curse/maven/${artifact}/${fileID}/${artifact}-${fileID}.jar`
-  const dest = modpackCachedFile(file)
+    return null;
+  const artifact = `mod-${projectID}`;
+  const url = `https://cursemaven.com/curse/maven/${artifact}/${fileID}/${artifact}-${fileID}.jar`;
+  const dest = modpackCachedFile(file);
   try {
     await downloadFile(url, dest, undefined, file.sha1, mirror, signal, [], {
       size: file.size,
       maxAttempts: 1,
       maxSegments: 1,
-    })
-    return dest
+    });
+    return dest;
   } catch {
-    signal?.throwIfAborted()
-    return null
+    signal?.throwIfAborted();
+    return null;
   }
 }

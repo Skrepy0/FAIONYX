@@ -1,74 +1,74 @@
 <script setup lang="ts">
-import { natLabel } from '@shared/voxlinkNat'
-import VoxLinkModSync from './VoxLinkModSync.vue'
-import VoxLinkTickets from './VoxLinkTickets.vue'
-import { unreadTickets } from '../../voxlinkTickets'
-import SelectMenu from '../SelectMenu.vue'
-import type { InstalledVersion } from '@shared/types'
-import type { ModSyncGate } from '@shared/voxlinkMods'
-import VoxLinkRelatedLinks from './VoxLinkRelatedLinks.vue'
-import { displayVersionName as versionLabel } from '../../store'
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { natLabel } from '@shared/voxlinkNat';
+import VoxLinkModSync from './VoxLinkModSync.vue';
+import VoxLinkTickets from './VoxLinkTickets.vue';
+import { unreadTickets } from '../../voxlinkTickets';
+import SelectMenu from '../SelectMenu.vue';
+import type { InstalledVersion } from '@shared/types';
+import type { ModSyncGate } from '@shared/voxlinkMods';
+import VoxLinkRelatedLinks from './VoxLinkRelatedLinks.vue';
+import { displayVersionName as versionLabel } from '../../store';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import {
   DEFAULT_VOXLINK_ROOM_NAME,
   VOXLINK_ROOM_NAME_MAX,
   normalizeVoxlinkRoomName,
   isVoxlinkContentBlocked,
   VOXLINK_ROOM_BLOCKED_MESSAGE,
-} from '@shared/voxlinkRoom'
-import ConnectionPanel from './ConnectionPanel.vue'
-import ConnectionStatus from './ConnectionStatus.vue'
-import { toast, store } from '../../store'
-import { copyText, getInstalled } from '../../api'
+} from '@shared/voxlinkRoom';
+import ConnectionPanel from './ConnectionPanel.vue';
+import ConnectionStatus from './ConnectionStatus.vue';
+import { toast, store } from '../../store';
+import { copyText, getInstalled } from '../../api';
 
 interface LobbyRoom {
-  code: string
-  name: string
-  currentPlayers?: number
-  maxPlayers?: number
-  hasPassword?: boolean
-  category?: string
-  gameVersion?: string
-  loader?: string
-  clientTag?: string
-  natType?: string
+  code: string;
+  name: string;
+  currentPlayers?: number;
+  maxPlayers?: number;
+  hasPassword?: boolean;
+  category?: string;
+  gameVersion?: string;
+  loader?: string;
+  clientTag?: string;
+  natType?: string;
 }
 interface RoomInfo {
-  code: string
-  name: string
-  currentPlayers: number
-  maxPlayers: number
-  isHost: boolean
-  gameVersion?: string
-  loader?: string
+  code: string;
+  name: string;
+  currentPlayers: number;
+  maxPlayers: number;
+  isHost: boolean;
+  gameVersion?: string;
+  loader?: string;
 }
 interface Snapshot {
-  pending?: boolean
-  joinedAt?: number
-  connection?: ConnStateEvent | null
-  stages?: Record<string, StageEvent>
-  state: string
-  room: RoomInfo | null
-  session: { state: string; code: string; isHost: boolean; room: RoomInfo | null }
-  settings: { allowRelay: boolean; theme: string; uploadDiagnostics?: boolean }
+  pending?: boolean;
+  joinedAt?: number;
+  connection?: ConnStateEvent | null;
+  stages?: Record<string, StageEvent>;
+  state: string;
+  room: RoomInfo | null;
+  session: { state: string; code: string; isHost: boolean; room: RoomInfo | null };
+  settings: { allowRelay: boolean; theme: string; uploadDiagnostics?: boolean };
 }
 /** 引擎 stage 事件（voxlink/engine.ts emitStage）：阶段条唯一数据源，禁止前端自演进度 */
 interface StageEvent {
-  key: 'stun' | 'punch' | 'relay' | 'host_stun' | 'host_punch' | 'turn'
-  status: 'active' | 'retry' | 'ok' | 'degraded' | 'fail'
-  detail: string
-  ts: number
+  key: 'stun' | 'punch' | 'relay' | 'host_stun' | 'host_punch' | 'turn';
+  status: 'active' | 'retry' | 'ok' | 'degraded' | 'fail';
+  detail: string;
+  ts: number;
 }
 /** 引擎 conn:state 事件：phase = p2p | direct | prelay */
 interface ConnStateEvent {
-  phase?: string
-  status?: string
-  address?: string
-  detail?: string
+  phase?: string;
+  status?: string;
+  address?: string;
+  detail?: string;
 }
 
-const instances = ref<InstalledVersion[]>([])
-const instanceKey = ref('')
+const instances = ref<InstalledVersion[]>([]);
+const instanceKey = ref('');
 const instanceOptions = computed(() =>
   instances.value
     .filter((v) => !v.failed && !v.incomplete)
@@ -77,36 +77,36 @@ const instanceOptions = computed(() =>
       label: versionLabel(v),
       description: `${v.mcVersion} · ${v.loader || '原版'} · ${v.folder}`,
     }))
-)
-const chosenInstance = computed(() => instances.value.find((v) => JSON.stringify([v.folder, v.id]) === instanceKey.value))
+);
+const chosenInstance = computed(() => instances.value.find((v) => JSON.stringify([v.folder, v.id]) === instanceKey.value));
 const selectedTarget = computed(() =>
   chosenInstance.value ? { id: chosenInstance.value.id, folder: chosenInstance.value.folder } : undefined
-)
-const pendingJoin = ref('')
-const ticketsOpen = ref(false)
+);
+const pendingJoin = ref('');
+const ticketsOpen = ref(false);
 const gateNote = ref(''),
-  signalingNote = ref('')
-const natInfo = ref<{ local: string; remote: string; profile: string } | null>(null)
-const state = ref<Snapshot | null>(null)
-const busy = ref(false)
-const error = ref('')
+  signalingNote = ref('');
+const natInfo = ref<{ local: string; remote: string; profile: string } | null>(null);
+const state = ref<Snapshot | null>(null);
+const busy = ref(false);
+const error = ref('');
 const leaving = ref(false),
-  turnBusy = ref(false)
-let uiOperation = 0
-const logs = ref<Array<{ ts: string; text: string; stage: string; level: string }>>([])
-const manualPort = ref('')
-const logLevel = ref('important')
+  turnBusy = ref(false);
+let uiOperation = 0;
+const logs = ref<Array<{ ts: string; text: string; stage: string; level: string }>>([]);
+const manualPort = ref('');
+const logLevel = ref('important');
 const logGroups = computed(() => {
-  const groups = new Map<string, typeof logs.value>()
+  const groups = new Map<string, typeof logs.value>();
   for (const log of logs.value) {
-    if (logLevel.value === 'important' && !['warn', 'error', 'stage'].includes(log.level)) continue
-    const rows = groups.get(log.stage) || []
-    rows.push(log)
-    groups.set(log.stage, rows)
+    if (logLevel.value === 'important' && !['warn', 'error', 'stage'].includes(log.level)) continue;
+    const rows = groups.get(log.stage) || [];
+    rows.push(log);
+    groups.set(log.stage, rows);
   }
-  return [...groups].map(([label, rows]) => ({ label, rows }))
-})
-const inFlow = computed(() => joined.value || busy.value || !!state.value?.pending)
+  return [...groups].map(([label, rows]) => ({ label, rows }));
+});
+const inFlow = computed(() => joined.value || busy.value || !!state.value?.pending);
 const nextStep = computed(() =>
   connected.value
     ? '地址已就绪，按下方指引进入好友的世界。'
@@ -117,7 +117,7 @@ const nextStep = computed(() =>
         : conn.value?.phase === 'turn'
           ? '正在建立你选择的中继通路，请稍候。'
           : '正在尝试直连；满 20 秒后，你可以选择使用中继。'
-)
+);
 const LOG_GROUP_LABELS: Record<string, string> = {
   stun: '网络检测',
   host_stun: '房主网络检测',
@@ -126,31 +126,31 @@ const LOG_GROUP_LABELS: Record<string, string> = {
   p2p: '直连',
   turn: 'TURN 中继',
   relay: '玩家中继',
-}
-const logGroupLabel = (key: string): string => LOG_GROUP_LABELS[key] ?? key
+};
+const logGroupLabel = (key: string): string => LOG_GROUP_LABELS[key] ?? key;
 // 主操作区页内 Tab：创建房间 / 加入房间 / 公共大厅 分开，避免同屏拥挤
-const tab = ref<'host' | 'join' | 'lobby'>('host')
+const tab = ref<'host' | 'join' | 'lobby'>('host');
 function switchTab(next: 'host' | 'join' | 'lobby'): void {
-  tab.value = next
-  error.value = ''
-  if (next === 'lobby' && !rooms.value.length) void loadLobby()
+  tab.value = next;
+  error.value = '';
+  if (next === 'lobby' && !rooms.value.length) void loadLobby();
 }
 
 // 创建房间
-const roomName = ref(DEFAULT_VOXLINK_ROOM_NAME)
-const roomNameInput = ref<HTMLInputElement | null>(null)
-const roomNameError = ref('')
+const roomName = ref(DEFAULT_VOXLINK_ROOM_NAME);
+const roomNameInput = ref<HTMLInputElement | null>(null);
+const roomNameError = ref('');
 watch(roomName, () => {
-  if (error.value === roomNameError.value) error.value = ''
-  roomNameError.value = ''
-})
-const isPublic = ref(true)
+  if (error.value === roomNameError.value) error.value = '';
+  roomNameError.value = '';
+});
+const isPublic = ref(true);
 // 加入房间
-const joinCode = ref('')
+const joinCode = ref('');
 // 大厅
-const rooms = ref<LobbyRoom[]>([])
-const search = ref('')
-const loadingLobby = ref(false)
+const rooms = ref<LobbyRoom[]>([]);
+const search = ref('');
+const loadingLobby = ref(false);
 
 /**
  * MC 手填地址：只有隧道真正建立（conn:state success）后才有值。
@@ -159,88 +159,88 @@ const loadingLobby = ref(false)
  * - phase=prelay：玩家中继本地桥 127.0.0.1:端口
  * 它是「已连接」的唯一判定，绝不因「已加入房间」而置位。
  */
-const mcAddress = ref('')
-const mcPhase = ref('')
-const conn = ref<ConnStateEvent | null>(null)
+const mcAddress = ref('');
+const mcPhase = ref('');
+const conn = ref<ConnStateEvent | null>(null);
 /** 阶段事件表（key → 最新事件） */
-const stageMap = ref<Record<string, StageEvent>>({})
+const stageMap = ref<Record<string, StageEvent>>({});
 /** 各阶段耗时（秒）：由真实事件时间戳计算 */
-const stageSeconds = ref<Record<string, number>>({})
+const stageSeconds = ref<Record<string, number>>({});
 /** UDP 打洞开始时刻（真实事件 ts），驱动 20 秒后出现手动后备 */
-const punchStartTs = ref(0)
-const relayTried = ref(false)
-const directTried = ref(false)
-const nowTick = ref(Date.now())
-let tickTimer: ReturnType<typeof setInterval> | undefined
+const punchStartTs = ref(0);
+const relayTried = ref(false);
+const directTried = ref(false);
+const nowTick = ref(Date.now());
+let tickTimer: ReturnType<typeof setInterval> | undefined;
 
-const connected = computed(() => mcAddress.value !== '')
-const sessionState = computed(() => state.value?.state ?? 'idle')
-const joined = computed(() => sessionState.value === 'hosting' || sessionState.value === 'in_room')
-const sessionClosed = computed(() => sessionState.value === 'closed')
-const isHost = computed(() => !!state.value?.session?.isHost)
-const punchStage = computed(() => stageMap.value[isHost.value ? 'host_punch' : 'punch'])
-const stunStage = computed(() => stageMap.value[isHost.value ? 'host_stun' : 'stun'])
-const relayStage = computed(() => stageMap.value.relay)
+const connected = computed(() => mcAddress.value !== '');
+const sessionState = computed(() => state.value?.state ?? 'idle');
+const joined = computed(() => sessionState.value === 'hosting' || sessionState.value === 'in_room');
+const sessionClosed = computed(() => sessionState.value === 'closed');
+const isHost = computed(() => !!state.value?.session?.isHost);
+const punchStage = computed(() => stageMap.value[isHost.value ? 'host_punch' : 'punch']);
+const stunStage = computed(() => stageMap.value[isHost.value ? 'host_stun' : 'stun']);
+const relayStage = computed(() => stageMap.value.relay);
 const punching = computed(
   () =>
     joined.value && !connected.value && !!punchStage.value && (punchStage.value.status === 'active' || punchStage.value.status === 'retry')
-)
-const punchElapsed = computed(() => (punchStartTs.value > 0 ? Math.max(0, Math.floor((nowTick.value - punchStartTs.value) / 1000)) : 0))
+);
+const punchElapsed = computed(() => (punchStartTs.value > 0 ? Math.max(0, Math.floor((nowTick.value - punchStartTs.value) / 1000)) : 0));
 /** 打洞持续约 20 秒未成功 → 出现「尝试直连」「使用玩家中继」（时刻取自真实引擎事件） */
 const fallbackVisible = computed(
   () => joined.value && !isHost.value && !connected.value && punchStartTs.value > 0 && nowTick.value - punchStartTs.value >= 20_000
-)
+);
 
 /** 状态区徽标：由会话与隧道真实状态推导（文案不含「已连接」，判定以 mcAddress 为准） */
 const overallTone = computed<'neutral' | 'success' | 'danger' | 'pending'>(() => {
-  if (sessionClosed.value || conn.value?.status === 'failed') return 'danger'
-  if (connected.value) return 'success'
-  if (joined.value) return 'pending'
-  return 'neutral'
-})
+  if (sessionClosed.value || conn.value?.status === 'failed') return 'danger';
+  if (connected.value) return 'success';
+  if (joined.value) return 'pending';
+  return 'neutral';
+});
 const overallLabel = computed(() => {
-  if (sessionClosed.value) return '会话已结束'
-  if (conn.value?.status === 'failed') return '连接未完成'
-  if (connected.value) return '数据隧道已建立'
-  if (joined.value) return '连接进行中'
-  return '尚未开始'
-})
+  if (sessionClosed.value) return '会话已结束';
+  if (conn.value?.status === 'failed') return '连接未完成';
+  if (connected.value) return '数据隧道已建立';
+  if (joined.value) return '连接进行中';
+  return '尚未开始';
+});
 
 interface Step {
-  key: string
-  label: string
-  state: 'done' | 'active' | 'pending' | 'fail' | 'degraded'
-  detail?: string
-  seconds?: number
+  key: string;
+  label: string;
+  state: 'done' | 'active' | 'pending' | 'fail' | 'degraded';
+  detail?: string;
+  seconds?: number;
 }
 const stepState = (st: StageEvent | undefined, done: boolean): 'done' | 'active' | 'pending' | 'fail' | 'degraded' => {
-  if (done) return 'done'
-  if (!st) return 'pending'
-  if (st.status === 'ok') return 'done'
-  if (st.status === 'fail') return 'fail'
-  if (st.status === 'degraded') return 'degraded'
-  return 'active'
-}
+  if (done) return 'done';
+  if (!st) return 'pending';
+  if (st.status === 'ok') return 'done';
+  if (st.status === 'fail') return 'fail';
+  if (st.status === 'degraded') return 'degraded';
+  return 'active';
+};
 /** 连接过程阶段条：全部由引擎真实事件（stage / conn:state / 会话状态）驱动 */
 const steps = computed<Step[]>(() => {
-  if (!joined.value) return []
-  const list: Step[] = []
-  list.push({ key: 'join', label: isHost.value ? '创建房间' : '加入房间', state: 'done', detail: state.value?.room?.name })
+  if (!joined.value) return [];
+  const list: Step[] = [];
+  list.push({ key: 'join', label: isHost.value ? '创建房间' : '加入房间', state: 'done', detail: state.value?.room?.name });
   if (!isHost.value && ['turn', 'prelay'].includes(conn.value?.phase || '')) {
-    const key = conn.value?.phase === 'turn' ? 'turn' : 'relay'
+    const key = conn.value?.phase === 'turn' ? 'turn' : 'relay';
     list.push({
       key,
       label: key === 'turn' ? 'TURN 中继' : '玩家中继',
       state: conn.value?.status === 'failed' ? 'fail' : stepState(stageMap.value[key], connected.value),
       detail: stageMap.value[key]?.detail || conn.value?.detail,
-    })
+    });
     list.push({
       key: 'tunnel',
       label: '游戏地址',
       state: connected.value ? 'done' : 'pending',
       detail: connected.value ? '地址已就绪' : '中继连通后显示',
-    })
-    return list
+    });
+    return list;
   }
   list.push({
     key: isHost.value ? 'host_stun' : 'stun',
@@ -248,14 +248,14 @@ const steps = computed<Step[]>(() => {
     state: stepState(stunStage.value, false),
     detail: stunStage.value?.detail,
     seconds: stageSeconds.value[isHost.value ? 'host_stun' : 'stun'],
-  })
+  });
   list.push({
     key: isHost.value ? 'host_punch' : 'punch',
     label: isHost.value ? '等待好友连接' : '建立直连',
     state: stepState(punchStage.value, connected.value && mcPhase.value === 'p2p'),
     detail: punching.value ? `已进行 ${punchElapsed.value} 秒` : punchStage.value?.detail,
     seconds: stageSeconds.value[isHost.value ? 'host_punch' : 'punch'],
-  })
+  });
   if (!isHost.value && (relayTried.value || relayStage.value)) {
     list.push({
       key: 'relay',
@@ -263,7 +263,7 @@ const steps = computed<Step[]>(() => {
       state: stepState(relayStage.value, connected.value && mcPhase.value === 'prelay'),
       detail: relayStage.value?.detail,
       seconds: stageSeconds.value.relay,
-    })
+    });
   }
   if (stageMap.value.turn)
     list.push({
@@ -271,138 +271,138 @@ const steps = computed<Step[]>(() => {
       label: 'TURN 中继',
       state: stepState(stageMap.value.turn, connected.value && mcPhase.value === 'turn'),
       detail: stageMap.value.turn.detail,
-    })
+    });
   list.push({
     key: 'tunnel',
     label: isHost.value ? '房客隧道建立' : '数据隧道建立',
     state: connected.value ? 'done' : punching.value ? 'active' : 'pending',
     detail: connected.value ? '隧道已建立' : undefined,
-  })
-  return list
-})
+  });
+  return list;
+});
 
-let offEvent: (() => void) | undefined
+let offEvent: (() => void) | undefined;
 
 /** 消敏：远程地址/中继节点地址不写入日志（本地 127.0.0.1:端口 除外，那是用户要填的） */
 function sanitizeLog(text: string): string {
   return text
     .replace(/(\d{1,3}\.){3}\d{1,3}:\d+/g, (m) => (m.startsWith('127.0.0.1') ? m : '***:***'))
-    .replace(/(\d{1,3}\.){3}\d{1,3}/g, (m) => (m === '127.0.0.1' ? m : '***'))
+    .replace(/(\d{1,3}\.){3}\d{1,3}/g, (m) => (m === '127.0.0.1' ? m : '***'));
 }
 
 function pushLog(text: string, level = 'info', stage = conn.value?.phase || '准备'): void {
-  const d = new Date()
-  const ts = [d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, '0')).join(':')
-  logs.value.push({ ts, text: sanitizeLog(text), level, stage })
-  if (logs.value.length > 300) logs.value.shift()
+  const d = new Date();
+  const ts = [d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, '0')).join(':');
+  logs.value.push({ ts, text: sanitizeLog(text), level, stage });
+  if (logs.value.length > 300) logs.value.shift();
 }
 
-const logViewport = ref<HTMLElement | null>(null)
+const logViewport = ref<HTMLElement | null>(null);
 function scrollLogBottom(): void {
-  const el = logViewport.value
-  if (el) el.scrollTop = el.scrollHeight
+  const el = logViewport.value;
+  if (el) el.scrollTop = el.scrollHeight;
 }
 async function copyLogs(): Promise<void> {
-  const text = logs.value.map((l) => `[${l.ts}] ${l.text}`).join('\n')
-  toast((await copyText(text)) ? '日志已复制' : '复制失败', 'info')
+  const text = logs.value.map((l) => `[${l.ts}] ${l.text}`).join('\n');
+  toast((await copyText(text)) ? '日志已复制' : '复制失败', 'info');
 }
 
 function resetConn(): void {
-  mcAddress.value = ''
-  mcPhase.value = ''
-  conn.value = null
-  stageMap.value = {}
-  stageSeconds.value = {}
-  punchStartTs.value = 0
-  relayTried.value = false
-  directTried.value = false
-  natInfo.value = null
+  mcAddress.value = '';
+  mcPhase.value = '';
+  conn.value = null;
+  stageMap.value = {};
+  stageSeconds.value = {};
+  punchStartTs.value = 0;
+  relayTried.value = false;
+  directTried.value = false;
+  natInfo.value = null;
 }
 
 function onStage(s: StageEvent): void {
-  const prev = stageMap.value[s.key]
-  if ((s.status === 'active' || s.status === 'retry') && !prev) stageSeconds.value = { ...stageSeconds.value, [s.key]: 0 }
+  const prev = stageMap.value[s.key];
+  if ((s.status === 'active' || s.status === 'retry') && !prev) stageSeconds.value = { ...stageSeconds.value, [s.key]: 0 };
   if (s.status === 'ok' && prev && (prev.status === 'active' || prev.status === 'retry')) {
-    const sec = Math.max(1, Math.round((s.ts - prev.ts) / 1000))
-    stageSeconds.value = { ...stageSeconds.value, [s.key]: sec }
+    const sec = Math.max(1, Math.round((s.ts - prev.ts) / 1000));
+    stageSeconds.value = { ...stageSeconds.value, [s.key]: sec };
   }
-  stageMap.value = { ...stageMap.value, [s.key]: s }
-  if (s.key === 'punch' && s.status === 'active' && !punchStartTs.value) punchStartTs.value = s.ts
-  if (s.key === 'relay' && s.status === 'active') relayTried.value = true
-  pushLog(s.detail, s.status === 'fail' ? 'error' : s.status === 'retry' ? 'warn' : 'stage', s.key)
+  stageMap.value = { ...stageMap.value, [s.key]: s };
+  if (s.key === 'punch' && s.status === 'active' && !punchStartTs.value) punchStartTs.value = s.ts;
+  if (s.key === 'relay' && s.status === 'active') relayTried.value = true;
+  pushLog(s.detail, s.status === 'fail' ? 'error' : s.status === 'retry' ? 'warn' : 'stage', s.key);
 }
 
 function onConnState(d: ConnStateEvent): void {
-  const changed = conn.value?.phase !== d.phase || (d.status === 'trying' && conn.value?.status !== 'trying')
+  const changed = conn.value?.phase !== d.phase || (d.status === 'trying' && conn.value?.status !== 'trying');
   if (changed) {
-    stageMap.value = {}
-    stageSeconds.value = {}
+    stageMap.value = {};
+    stageSeconds.value = {};
   }
-  conn.value = d
-  mcAddress.value = d.status === 'success' ? (d.address || '').trim() : ''
-  mcPhase.value = d.status === 'success' ? d.phase || '' : ''
+  conn.value = d;
+  mcAddress.value = d.status === 'success' ? (d.address || '').trim() : '';
+  mcPhase.value = d.status === 'success' ? d.phase || '' : '';
   if (d.status === 'trying') {
-    directTried.value = d.phase === 'direct'
-    relayTried.value = d.phase === 'prelay'
+    directTried.value = d.phase === 'direct';
+    relayTried.value = d.phase === 'prelay';
   }
-  if (d.status === 'failed') pushLog(d.detail || '连接未完成', 'error', d.phase || '连接')
+  if (d.status === 'failed') pushLog(d.detail || '连接未完成', 'error', d.phase || '连接');
 }
 
 function onEvent(payload: { type: string; data: unknown }): void {
   if (payload.type === 'state') {
-    applySnapshot(payload.data as Snapshot)
-    return
+    applySnapshot(payload.data as Snapshot);
+    return;
   }
   if (payload.type === 'log') {
-    const d = payload.data as { level: string; msg: string }
-    if (d?.msg) pushLog(d.msg, d.level)
-    return
+    const d = payload.data as { level: string; msg: string };
+    if (d?.msg) pushLog(d.msg, d.level);
+    return;
   }
   if (payload.type === 'stage') {
-    onStage(payload.data as StageEvent)
-    return
+    onStage(payload.data as StageEvent);
+    return;
   }
   if (payload.type === 'conn:state') {
-    onConnState(payload.data as ConnStateEvent)
-    return
+    onConnState(payload.data as ConnStateEvent);
+    return;
   }
   if (payload.type === 'mods:download-result')
-    toast(String((payload.data as { message?: string })?.message || '模组已下载，请重启游戏使其生效'), 'info')
-  if (payload.type === 'mods:gate') gateNote.value = String((payload.data as { message?: string })?.message || '')
-  if (payload.type === 'signaling:degraded') signalingNote.value = String((payload.data as { message?: string })?.message || '')
-  if (payload.type === 'signaling:recovered') signalingNote.value = ''
-  if (payload.type === 'nat:state') natInfo.value = payload.data as typeof natInfo.value
-  if (payload.type === 'bridge') pushLog(`[bridge] ${JSON.stringify(payload.data)}`)
+    toast(String((payload.data as { message?: string })?.message || '模组已下载，请重启游戏使其生效'), 'info');
+  if (payload.type === 'mods:gate') gateNote.value = String((payload.data as { message?: string })?.message || '');
+  if (payload.type === 'signaling:degraded') signalingNote.value = String((payload.data as { message?: string })?.message || '');
+  if (payload.type === 'signaling:recovered') signalingNote.value = '';
+  if (payload.type === 'nat:state') natInfo.value = payload.data as typeof natInfo.value;
+  if (payload.type === 'bridge') pushLog(`[bridge] ${JSON.stringify(payload.data)}`);
 }
 
 async function call<T>(channel: string, payload?: unknown): Promise<T | undefined> {
   try {
-    return (await window.faionyx.invoke(channel, payload)) as T
+    return (await window.faionyx.invoke(channel, payload)) as T;
   } catch (e) {
-    error.value = (e as Error).message?.replace(/^Error invoking remote method '[^']*': (Error: )?/, '') ?? '操作失败'
-    return undefined
+    error.value = (e as Error).message?.replace(/^Error invoking remote method '[^']*': (Error: )?/, '') ?? '操作失败';
+    return undefined;
   }
 }
 
 async function startHost(): Promise<void> {
-  if (busy.value) return
+  if (busy.value) return;
   if (!selectedTarget.value) {
-    error.value = '请选择房主正在使用的游戏实例'
-    return
+    error.value = '请选择房主正在使用的游戏实例';
+    return;
   }
-  error.value = ''
-  roomNameError.value = ''
-  let name: string
+  error.value = '';
+  roomNameError.value = '';
+  let name: string;
   try {
-    name = normalizeVoxlinkRoomName(roomName.value)
+    name = normalizeVoxlinkRoomName(roomName.value);
   } catch (e) {
-    roomNameError.value = (e as Error).message
-    await nextTick()
-    roomNameInput.value?.focus()
-    return
+    roomNameError.value = (e as Error).message;
+    await nextTick();
+    roomNameInput.value?.focus();
+    return;
   }
-  busy.value = true
-  const operation = ++uiOperation
+  busy.value = true;
+  const operation = ++uiOperation;
   try {
     const r = (await window.faionyx.invoke('voxlink:start', {
       mode: 'host',
@@ -410,35 +410,35 @@ async function startHost(): Promise<void> {
       isPublic: isPublic.value,
       target: selectedTarget.value,
       hostPort: manualPort.value.trim() ? Number(manualPort.value) : undefined,
-    })) as { ok: boolean }
+    })) as { ok: boolean };
     if (r?.ok) {
-      resetConn()
-      await status()
+      resetConn();
+      await status();
     }
   } catch (e) {
-    if (operation !== uiOperation) return
+    if (operation !== uiOperation) return;
     if (isVoxlinkContentBlocked(e)) {
-      roomNameError.value = VOXLINK_ROOM_BLOCKED_MESSAGE
-      error.value = roomNameError.value
+      roomNameError.value = VOXLINK_ROOM_BLOCKED_MESSAGE;
+      error.value = roomNameError.value;
     } else {
-      error.value = (e as Error).message?.replace(/^Error invoking remote method '[^']*': (Error: )?/, '') ?? '创建房间失败'
+      error.value = (e as Error).message?.replace(/^Error invoking remote method '[^']*': (Error: )?/, '') ?? '创建房间失败';
     }
   } finally {
-    if (operation === uiOperation) busy.value = false
+    if (operation === uiOperation) busy.value = false;
     if (roomNameError.value) {
-      await nextTick()
-      roomNameInput.value?.focus()
+      await nextTick();
+      roomNameInput.value?.focus();
     }
   }
 }
 async function startJoin(code: string): Promise<void> {
-  const c = code.trim().toUpperCase()
+  const c = code.trim().toUpperCase();
   if (!/^[A-HJ-NP-Z2-9]{6}$/.test(c)) {
-    error.value = 'VoxLink 房间码为 6 位字符（不含 I、L、O、0、1）'
-    return
+    error.value = 'VoxLink 房间码为 6 位字符（不含 I、L、O、0、1）';
+    return;
   }
-  if (busy.value) return
-  pendingJoin.value = c
+  if (busy.value) return;
+  pendingJoin.value = c;
 }
 async function joinAfterMods(gate: ModSyncGate): Promise<void> {
   gateNote.value = {
@@ -447,114 +447,114 @@ async function joinAfterMods(gate: ModSyncGate): Promise<void> {
     EMPTY: '房主模组清单为空',
     NOT_READY: '房主清单未就绪或获取失败，尚未检查一致性',
     BYPASSED: '你已跳过模组检查',
-  }[gate]
-  const c = pendingJoin.value
-  pendingJoin.value = ''
-  const operation = ++uiOperation
-  busy.value = true
-  error.value = ''
-  resetConn()
-  const r = await call<{ ok: boolean }>('voxlink:start', { mode: 'join', code: c, target: selectedTarget.value })
-  if (operation !== uiOperation) return
-  if (r?.ok) await status()
-  busy.value = false
+  }[gate];
+  const c = pendingJoin.value;
+  pendingJoin.value = '';
+  const operation = ++uiOperation;
+  busy.value = true;
+  error.value = '';
+  resetConn();
+  const r = await call<{ ok: boolean }>('voxlink:start', { mode: 'join', code: c, target: selectedTarget.value });
+  if (operation !== uiOperation) return;
+  if (r?.ok) await status();
+  busy.value = false;
 }
 async function stop(): Promise<void> {
-  if (leaving.value) return
-  ++uiOperation
-  leaving.value = true
+  if (leaving.value) return;
+  ++uiOperation;
+  leaving.value = true;
   try {
-    await call('voxlink:stop', busy.value ? '用户取消加入' : '用户退出房间')
-    resetConn()
-    await status()
+    await call('voxlink:stop', busy.value ? '用户取消加入' : '用户退出房间');
+    resetConn();
+    await status();
   } finally {
-    leaving.value = false
-    busy.value = false
-    turnBusy.value = false
+    leaving.value = false;
+    busy.value = false;
+    turnBusy.value = false;
   }
 }
 async function useTurn() {
-  if (turnBusy.value) return
-  turnBusy.value = true
-  error.value = ''
+  if (turnBusy.value) return;
+  turnBusy.value = true;
+  error.value = '';
   try {
-    await call('voxlink:useTurnRelay')
+    await call('voxlink:useTurnRelay');
   } finally {
-    turnBusy.value = false
+    turnBusy.value = false;
   }
 }
 function applySnapshot(s: Snapshot) {
-  state.value = s
+  state.value = s;
   if (s.state === 'idle' || s.state === 'closed') {
-    resetConn()
-    return
+    resetConn();
+    return;
   }
-  if (s.joinedAt) punchStartTs.value = s.joinedAt
-  if (s.connection) onConnState(s.connection)
+  if (s.joinedAt) punchStartTs.value = s.joinedAt;
+  if (s.connection) onConnState(s.connection);
   else {
-    mcAddress.value = ''
-    mcPhase.value = ''
-    conn.value = null
+    mcAddress.value = '';
+    mcPhase.value = '';
+    conn.value = null;
   }
-  stageMap.value = s.stages || {}
+  stageMap.value = s.stages || {};
 }
 async function status(): Promise<void> {
-  const s = await call<Snapshot>('voxlink:status')
-  if (s) applySnapshot(s)
+  const s = await call<Snapshot>('voxlink:status');
+  if (s) applySnapshot(s);
 }
 async function loadLobby(): Promise<void> {
-  loadingLobby.value = true
-  const r = await call<{ rooms: LobbyRoom[] }>('voxlink:lobby', { search: search.value || undefined, size: 50 })
-  if (r) rooms.value = r.rooms ?? []
-  loadingLobby.value = false
+  loadingLobby.value = true;
+  const r = await call<{ rooms: LobbyRoom[] }>('voxlink:lobby', { search: search.value || undefined, size: 50 });
+  if (r) rooms.value = r.rooms ?? [];
+  loadingLobby.value = false;
 }
 async function toggleDiagnostics(): Promise<void> {
   const result = await call<{ uploadDiagnostics: boolean }>('voxlink:settings', {
     uploadDiagnostics: !state.value?.settings.uploadDiagnostics,
-  })
-  if (state.value && result) state.value.settings.uploadDiagnostics = result.uploadDiagnostics
+  });
+  if (state.value && result) state.value.settings.uploadDiagnostics = result.uploadDiagnostics;
 }
 async function toggleRelay(): Promise<void> {
-  if (!state.value) return
-  const allowRelay = await call<{ allowRelay: boolean }>('voxlink:settings', { allowRelay: !state.value.settings.allowRelay })
-  if (allowRelay) state.value.settings.allowRelay = allowRelay.allowRelay
+  if (!state.value) return;
+  const allowRelay = await call<{ allowRelay: boolean }>('voxlink:settings', { allowRelay: !state.value.settings.allowRelay });
+  if (allowRelay) state.value.settings.allowRelay = allowRelay.allowRelay;
 }
 /** 手动后备 1：直连探测（app-desktop TryDirect） */
 async function tryDirect(): Promise<void> {
-  if (directTried.value) return
-  const r = await call<{ ok: boolean; err?: string }>('voxlink:tryDirect')
-  if (r && !r.ok) error.value = r.err ?? '直连探测无法启动'
-  directTried.value = true
+  if (directTried.value) return;
+  const r = await call<{ ok: boolean; err?: string }>('voxlink:tryDirect');
+  if (r && !r.ok) error.value = r.err ?? '直连探测无法启动';
+  directTried.value = true;
 }
 /** 手动后备 2：玩家中继（app-desktop UsePlayerRelay） */
 async function useRelay(): Promise<void> {
-  if (relayTried.value) return
-  const r = await call<{ ok: boolean; err?: string }>('voxlink:usePlayerRelay')
-  if (r && !r.ok) error.value = r.err ?? '玩家中继无法启动'
-  relayTried.value = true
+  if (relayTried.value) return;
+  const r = await call<{ ok: boolean; err?: string }>('voxlink:usePlayerRelay');
+  if (r && !r.ok) error.value = r.err ?? '玩家中继无法启动';
+  relayTried.value = true;
 }
 async function copy(value?: string | null): Promise<void> {
-  if (value) toast((await copyText(value)) ? '已复制' : '复制失败', 'info')
+  if (value) toast((await copyText(value)) ? '已复制' : '复制失败', 'info');
 }
 
 onMounted(async () => {
-  offEvent = window.faionyx.on('voxlink:event', (payload) => onEvent(payload as { type: string; data: unknown }))
-  await status()
+  offEvent = window.faionyx.on('voxlink:event', (payload) => onEvent(payload as { type: string; data: unknown }));
+  await status();
   try {
-    instances.value = await getInstalled(true)
-    instanceKey.value = JSON.stringify([store.settings?.activeFolder, store.resourceVersionId])
-    if (!chosenInstance.value) instanceKey.value = instanceOptions.value[0]?.value || ''
+    instances.value = await getInstalled(true);
+    instanceKey.value = JSON.stringify([store.settings?.activeFolder, store.resourceVersionId]);
+    if (!chosenInstance.value) instanceKey.value = instanceOptions.value[0]?.value || '';
   } catch {}
-  if (sessionState.value === 'idle') await loadLobby()
+  if (sessionState.value === 'idle') await loadLobby();
   // 仅用于把真实事件的耗时换算成秒，不是进度动画
   tickTimer = setInterval(() => {
-    nowTick.value = Date.now()
-  }, 1000)
-})
+    nowTick.value = Date.now();
+  }, 1000);
+});
 onUnmounted(() => {
-  offEvent?.()
-  if (tickTimer) clearInterval(tickTimer)
-})
+  offEvent?.();
+  if (tickTimer) clearInterval(tickTimer);
+});
 </script>
 
 <template>

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
-import type { RemoteVersion } from '@shared/types'
-import { filterVersions, versionCategories, versionCategory, type VersionCategory } from '@shared/versionPicker'
-import { getManifest } from '../api'
+import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
+import type { RemoteVersion } from '@shared/types';
+import { filterVersions, versionCategories, versionCategory, type VersionCategory } from '@shared/versionPicker';
+import { getManifest } from '../api';
 const props = defineProps<{ modelValue: string; disabled?: boolean }>(),
-  emit = defineEmits<{ (e: 'update:modelValue', v: string): void }>()
+  emit = defineEmits<{ (e: 'update:modelValue', v: string): void }>();
 const open = ref(false),
   loading = ref(false),
   error = ref(''),
@@ -18,106 +18,106 @@ const open = ref(false),
   panel = ref<HTMLElement>(),
   search = ref<HTMLInputElement>(),
   list = ref<HTMLElement>(),
-  position = ref<Record<string, string>>({})
-const rows = computed(() => filterVersions(versions.value, category.value, query.value))
+  position = ref<Record<string, string>>({});
+const rows = computed(() => filterVersions(versions.value, category.value, query.value));
 function locate() {
-  const r = anchor.value?.getBoundingClientRect()
-  if (!r) return
+  const r = anchor.value?.getBoundingClientRect();
+  if (!r) return;
   const below = innerHeight - r.bottom - 16,
     above = r.top - 16,
-    up = below < 300 && above > below
+    up = below < 300 && above > below;
   const h = Math.max(100, Math.min(430, up ? above : below)),
-    w = Math.min(Math.max(420, r.width), innerWidth - 24)
+    w = Math.min(Math.max(420, r.width), innerWidth - 24);
   position.value = {
     left: Math.max(12, Math.min(r.left, innerWidth - w - 12)) + 'px',
     width: w + 'px',
     height: h + 'px',
     ...(up ? { bottom: innerHeight - r.top + 6 + 'px' } : { top: r.bottom + 6 + 'px' }),
-  }
+  };
 }
 async function load(refresh = false) {
-  loading.value = true
-  error.value = ''
+  loading.value = true;
+  error.value = '';
   try {
-    versions.value = await getManifest(refresh)
+    versions.value = await getManifest(refresh);
   } catch {
-    error.value = '版本列表加载失败，请重试或手动输入。'
+    error.value = '版本列表加载失败，请重试或手动输入。';
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 async function show() {
-  if (props.disabled) return
+  if (props.disabled) return;
   if (open.value) {
-    close()
-    return
+    close();
+    return;
   }
-  open.value = true
-  locate()
-  addEventListener('pointerdown', outside, true)
-  addEventListener('keydown', keyboard, true)
-  addEventListener('resize', locate)
-  addEventListener('scroll', scroll, true)
-  if (!versions.value.length) await load()
+  open.value = true;
+  locate();
+  addEventListener('pointerdown', outside, true);
+  addEventListener('keydown', keyboard, true);
+  addEventListener('resize', locate);
+  addEventListener('scroll', scroll, true);
+  if (!versions.value.length) await load();
   active.value = Math.max(
     0,
     rows.value.findIndex((v) => v.id === props.modelValue)
-  )
-  await nextTick()
-  search.value?.focus()
-  reveal()
+  );
+  await nextTick();
+  search.value?.focus();
+  reveal();
 }
 function close() {
-  open.value = false
-  manual.value = false
-  removeEventListener('pointerdown', outside, true)
-  removeEventListener('keydown', keyboard, true)
-  removeEventListener('resize', locate)
-  removeEventListener('scroll', scroll, true)
+  open.value = false;
+  manual.value = false;
+  removeEventListener('pointerdown', outside, true);
+  removeEventListener('keydown', keyboard, true);
+  removeEventListener('resize', locate);
+  removeEventListener('scroll', scroll, true);
 }
 function outside(e: PointerEvent) {
-  if (!panel.value?.contains(e.target as Node) && !anchor.value?.contains(e.target as Node)) close()
+  if (!panel.value?.contains(e.target as Node) && !anchor.value?.contains(e.target as Node)) close();
 }
 function scroll(e: Event) {
-  if (!panel.value?.contains(e.target as Node)) locate()
+  if (!panel.value?.contains(e.target as Node)) locate();
 }
 function choose(id: string) {
-  emit('update:modelValue', id)
-  close()
-  anchor.value?.focus()
+  emit('update:modelValue', id);
+  close();
+  anchor.value?.focus();
 }
 function reveal() {
-  void nextTick(() => list.value?.querySelector<HTMLElement>('[data-active=true]')?.scrollIntoView({ block: 'nearest' }))
+  void nextTick(() => list.value?.querySelector<HTMLElement>('[data-active=true]')?.scrollIntoView({ block: 'nearest' }));
 }
 function reset() {
-  active.value = 0
-  if (list.value) list.value.scrollTop = 0
+  active.value = 0;
+  if (list.value) list.value.scrollTop = 0;
 }
 function keyboard(e: KeyboardEvent) {
-  if (!open.value) return
+  if (!open.value) return;
   if (e.key === 'Escape') {
-    e.preventDefault()
-    e.stopImmediatePropagation()
-    close()
-    anchor.value?.focus()
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    close();
+    anchor.value?.focus();
   }
   if (['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key) && !manual.value) {
-    e.preventDefault()
-    e.stopImmediatePropagation()
+    e.preventDefault();
+    e.stopImmediatePropagation();
     active.value =
       e.key === 'Home'
         ? 0
         : e.key === 'End'
           ? rows.value.length - 1
-          : Math.max(0, Math.min(rows.value.length - 1, active.value + (e.key === 'ArrowDown' ? 1 : -1)))
-    reveal()
+          : Math.max(0, Math.min(rows.value.length - 1, active.value + (e.key === 'ArrowDown' ? 1 : -1)));
+    reveal();
   }
   if (e.key === 'Enter' && e.target === search.value && rows.value[active.value]) {
-    e.preventDefault()
-    choose(rows.value[active.value].id)
+    e.preventDefault();
+    choose(rows.value[active.value].id);
   }
 }
-onBeforeUnmount(close)
+onBeforeUnmount(close);
 </script>
 <template>
   <button
@@ -155,8 +155,8 @@ onBeforeUnmount(close)
               :class="{ active: category === c.value }"
               :aria-pressed="category === c.value"
               @click="
-                category = c.value
-                reset()
+                category = c.value;
+                reset();
               "
             >
               {{ c.label }}
@@ -173,8 +173,8 @@ onBeforeUnmount(close)
             当前分类没有匹配版本<button
               class="btn btn-ghost"
               @click="
-                category = 'all'
-                reset()
+                category = 'all';
+                reset();
               "
             >
               搜索全部分类

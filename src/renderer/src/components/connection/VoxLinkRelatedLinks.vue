@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { VOXLINK_LINKS } from '@shared/voxlinkLinks'
-import UpdateDialogShell from '../UpdateDialogShell.vue'
-const open = ref(false)
+import { ref } from 'vue';
+import { VOXLINK_LINKS } from '@shared/voxlinkLinks';
+import UpdateDialogShell from '../UpdateDialogShell.vue';
+const open = ref(false);
 </script>
 <template>
   <div data-ui="voxlink:related-links">

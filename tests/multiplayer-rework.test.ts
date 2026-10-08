@@ -1,11 +1,11 @@
-import test from 'node:test'
-import assert from 'node:assert/strict'
-import fs from 'node:fs'
-import { parse, compileScript, compileTemplate } from '@vue/compiler-sfc'
-import { filterFrpNodes, fetchFrpNodes, type FrpNodeInfo } from '../src/main/core/frpNodes'
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { parse, compileScript, compileTemplate } from '@vue/compiler-sfc';
+import { filterFrpNodes, fetchFrpNodes, type FrpNodeInfo } from '../src/main/core/frpNodes';
 
-const read = (file: string): string => fs.readFileSync(file, 'utf8')
-const connectionComponents = ['VoxLinkPanel', 'TerracottaPanel', 'FrpPanel'].map((s) => `src/renderer/src/components/connection/${s}.vue`)
+const read = (file: string): string => fs.readFileSync(file, 'utf8');
+const connectionComponents = ['VoxLinkPanel', 'TerracottaPanel', 'FrpPanel'].map((s) => `src/renderer/src/components/connection/${s}.vue`);
 /** 联机模块全部渲染端入口（多页结构后：视图 + 三个方式页面 + 共享面板） */
 const multiplayerSources = [
   'src/renderer/src/views/FriendConnectView.vue',
@@ -13,16 +13,16 @@ const multiplayerSources = [
   'src/renderer/src/components/connection/ConnectionPanel.vue',
   'src/renderer/src/components/connection/ConnectionStatus.vue',
   'src/renderer/src/components/connection/connection.css',
-]
+];
 
 test('联机文案纠错：多页全部文件不得出现「一点即连/一键联机/输码即连/备选/在多人游戏中查看」', () => {
   for (const file of multiplayerSources) {
-    const source = read(file)
+    const source = read(file);
     for (const banned of ['一点即连', '一键联机', '输码即连', '在多人游戏中查看', '备选方案', 'VoxLink 的备选', 'VoxLink 备选']) {
-      assert.ok(!source.includes(banned), `${file} 不应出现「${banned}」`)
+      assert.ok(!source.includes(banned), `${file} 不应出现「${banned}」`);
     }
   }
-  const view = read('src/renderer/src/views/FriendConnectView.vue')
+  const view = read('src/renderer/src/views/FriendConnectView.vue');
   // 方式选择页卡片：准确介绍 + 适用场景标签
   for (const text of [
     '注册樱花穿透（natfrp.com）并创建隧道',
@@ -34,60 +34,60 @@ test('联机文案纠错：多页全部文件不得出现「一点即连/一键�
     'burningtnt/Terracotta',
     '独立开源 · 开箱即用',
   ]) {
-    assert.ok(view.includes(text), `方式选择页缺少：${text}`)
+    assert.ok(view.includes(text), `方式选择页缺少：${text}`);
   }
   // 横向卡片各配一句适用场景（含还原的玩家直连）
   for (const scene of ['适合愿意配置隧道的玩家', '适合所有普通玩家的连接方式', '适合使用官方工具和房间码联机的玩家']) {
-    assert.ok(view.includes(scene), `方式选择页缺少场景标签：${scene}`)
+    assert.ok(view.includes(scene), `方式选择页缺少场景标签：${scene}`);
   }
   // 方式选择页恰好三张卡片（玩家直连属冗余已移除，1.0.25）
-  assert.equal((view.match(/key: '/g) ?? []).length, 3)
-})
+  assert.equal((view.match(/key: '/g) ?? []).length, 3);
+});
 
 test('联机多页结构：landing=方式选择，每种方式独立页并保留「← 更换方式」返回', () => {
-  const view = read('src/renderer/src/views/FriendConnectView.vue')
+  const view = read('src/renderer/src/views/FriendConnectView.vue');
   // 页面路由：choose 为 landing，四种方式各自独立页
-  for (const key of ["'choose'", "'frp'", "'voxlink'", "'terracotta'"]) assert.ok(view.includes(key), `缺少页面态 ${key}`)
-  assert.ok(view.includes('v-if="page === \'choose\'"'), 'landing 应为方式选择页')
-  assert.ok(view.includes('v-if="page === \'frp\'"'), 'FRP 应是独立页面')
-  assert.ok(view.includes('v-else-if="page === \'voxlink\'"'), 'VoxLink 应是独立页面')
-  assert.ok(view.includes('v-else-if="page === \'terracotta\'"'), '陶瓦应是独立页面')
-  assert.ok(view.includes('← 更换方式'), '独立页必须保留「← 更换方式」返回')
+  for (const key of ["'choose'", "'frp'", "'voxlink'", "'terracotta'"]) assert.ok(view.includes(key), `缺少页面态 ${key}`);
+  assert.ok(view.includes('v-if="page === \'choose\'"'), 'landing 应为方式选择页');
+  assert.ok(view.includes('v-if="page === \'frp\'"'), 'FRP 应是独立页面');
+  assert.ok(view.includes('v-else-if="page === \'voxlink\'"'), 'VoxLink 应是独立页面');
+  assert.ok(view.includes('v-else-if="page === \'terracotta\'"'), '陶瓦应是独立页面');
+  assert.ok(view.includes('← 更换方式'), '独立页必须保留「← 更换方式」返回');
   // 玩家直连卡片已移除（冗余，1.0.25）
-  assert.ok(!view.includes("'direct'"), '不得残留玩家直连页面态')
-})
+  assert.ok(!view.includes("'direct'"), '不得残留玩家直连页面态');
+});
 
 test('FRP 页重排：独立隧道卡片、启停与恢复提示、参考折叠及宽松节点行', () => {
-  const panel = read('src/renderer/src/components/connection/FrpPanel.vue')
+  const panel = read('src/renderer/src/components/connection/FrpPanel.vue');
   // 主流程：一键开始（上次配置预填） + 刷新状态
   for (const text of ['启动隧道', '停止隧道', '下次打开自动恢复', '刷新状态', 'frp:status', 'frp:start', 'frp:create-tunnel']) {
-    assert.ok(panel.includes(text), `FrpPanel 缺少：${text}`)
+    assert.ok(panel.includes(text), `FrpPanel 缺少：${text}`);
   }
   // 节点参考与运行日志默认折叠（details 不带 open 属性）
-  assert.match(panel, /<details\b[^>]*class="reference-details"[^>]*>/)
-  assert.match(panel, /<details\b[^>]*class="frp-card-logs"[^>]*>/)
-  assert.ok(!/<details[^>]*class="(?:reference-details|frp-card-logs)"[^>]*\sopen(?:\s|>)/.test(panel), '参考及日志默认折叠')
+  assert.match(panel, /<details\b[^>]*class="reference-details"[^>]*>/);
+  assert.match(panel, /<details\b[^>]*class="frp-card-logs"[^>]*>/);
+  assert.ok(!/<details[^>]*class="(?:reference-details|frp-card-logs)"[^>]*\sopen(?:\s|>)/.test(panel), '参考及日志默认折叠');
   // 节点列表：宽松行（自适应高度 + 内边距），行间距 ≥ --space-2，不再固定小行高
-  const scoped = panel.slice(panel.indexOf('<style'))
-  assert.match(scoped, /\.node-item \{[^}]*align-items: flex-start/)
-  assert.match(scoped, /\.node-item \{[^}]*padding: var\(--space-3\) var\(--space-4\)/)
-  assert.match(scoped, /\.node-list \{[^}]*gap: var\(--space-3\)/)
-  assert.match(scoped, /\.node-item \{[^}]*min-height: var\(--row-h\)/)
-  assert.ok(!/\.node-item \{[^}]*height: \d/.test(scoped), '节点行不得固定高度（会重叠贴死）')
+  const scoped = panel.slice(panel.indexOf('<style'));
+  assert.match(scoped, /\.node-item \{[^}]*align-items: flex-start/);
+  assert.match(scoped, /\.node-item \{[^}]*padding: var\(--space-3\) var\(--space-4\)/);
+  assert.match(scoped, /\.node-list \{[^}]*gap: var\(--space-3\)/);
+  assert.match(scoped, /\.node-item \{[^}]*min-height: var\(--row-h\)/);
+  assert.ok(!/\.node-item \{[^}]*height: \d/.test(scoped), '节点行不得固定高度（会重叠贴死）');
   // 我的隧道小卡位于节点列表上方
-  const tunnelsAt = panel.indexOf('我的隧道')
-  const listAt = panel.indexOf('class="node-list"')
-  assert.ok(tunnelsAt > -1 && listAt > tunnelsAt, '我的隧道小卡应在节点列表上方')
+  const tunnelsAt = panel.indexOf('我的隧道');
+  const listAt = panel.indexOf('class="node-list"');
+  assert.ok(tunnelsAt > -1 && listAt > tunnelsAt, '我的隧道小卡应在节点列表上方');
   // 高级选项（本地端口自动识别）折叠；远程地址+复制在状态卡
-  assert.ok(panel.includes('localPort'), '创建隧道需要实际本地端口')
-  assert.ok(panel.includes('复制地址'), '远程地址应可复制')
+  assert.ok(panel.includes('localPort'), '创建隧道需要实际本地端口');
+  assert.ok(panel.includes('复制地址'), '远程地址应可复制');
   for (const text of ['只看免费节点', "'免费'", "'专业版'", '负载', '直接连接']) {
-    assert.ok(panel.includes(text), `FrpPanel 缺少：${text}`)
+    assert.ok(panel.includes(text), `FrpPanel 缺少：${text}`);
   }
-})
+});
 
 test('FRP 节点数据层：接口/字段注释、IPC 通道、筛选逻辑与免费判定', async () => {
-  const nodes = read('src/main/core/frpNodes.ts')
+  const nodes = read('src/main/core/frpNodes.ts');
   for (const text of [
     'https://api.natfrp.com/v4',
     '/nodes',
@@ -98,7 +98,7 @@ test('FRP 节点数据层：接口/字段注释、IPC 通道、筛选逻辑与�
     'flag',
     '缓存 10 分钟',
   ]) {
-    assert.ok(nodes.includes(text), `frpNodes.ts 缺少数据来源/字段说明：${text}`)
+    assert.ok(nodes.includes(text), `frpNodes.ts 缺少数据来源/字段说明：${text}`);
   }
   // 免费节点筛选逻辑（vip === 0 视为免费）
   const node = (id: number, vip: number, load = 10): FrpNodeInfo => ({
@@ -115,52 +115,52 @@ test('FRP 节点数据层：接口/字段注释、IPC 通道、筛选逻辑与�
     canCreate: true,
     noProtect: false,
     beta: false,
-  })
-  const list = [node(1, 2), node(2, 0), node(3, 0, 5), node(4, 7)]
+  });
+  const list = [node(1, 2), node(2, 0), node(3, 0, 5), node(4, 7)];
   assert.deepEqual(
     filterFrpNodes(list, true).map((n) => n.id),
     [2, 3]
-  )
-  assert.equal(filterFrpNodes(list, false).length, 4)
+  );
+  assert.equal(filterFrpNodes(list, false).length, 4);
   // 无密钥时抛真实错误（不触网）
-  await assert.rejects(fetchFrpNodes(''), /访问密钥/)
+  await assert.rejects(fetchFrpNodes(''), /访问密钥/);
 
-  assert.ok(read('src/main/core/frpIpc.ts').includes("nodes: 'frp:nodes'"), 'frpIpc 必须注册 frp:nodes')
-  assert.ok(read('src/shared/types.ts').includes("frpNodes: 'frp:nodes'"), 'types.ts 必须追加 frp:nodes 常量')
-})
+  assert.ok(read('src/main/core/frpIpc.ts').includes("nodes: 'frp:nodes'"), 'frpIpc 必须注册 frp:nodes');
+  assert.ok(read('src/shared/types.ts').includes("frpNodes: 'frp:nodes'"), 'types.ts 必须追加 frp:nodes 常量');
+});
 
 test('陶瓦房间码：实现与文案统一为 U/ + 四段（U/XXXX-XXXX-XXXX-XXXX），页面按分区排布', () => {
-  const tc = read('src/main/core/terracotta.ts')
-  assert.ok(tc.includes('/^U\\/[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/'), 'terracotta.ts 应保留四段房间码正则')
-  assert.ok(!/U\/XXXX-XXXX-XXXX(?![\-X])/.test(tc.replace(/U\/XXXX-XXXX-XXXX-XXXX/g, '')), 'terracotta.ts 不得残留三段式房间码描述')
-  assert.ok(tc.includes('U/XXXX-XXXX-XXXX-XXXX'), '注释/报错应使用四段格式')
-  const panel = read('src/renderer/src/components/connection/TerracottaPanel.vue')
-  assert.ok(panel.includes('U/XXXX-XXXX-XXXX-XXXX'), '面板占位符应为四段')
-  assert.ok(!panel.includes('U/XXXX-XXXX-XXXX"'), '面板不得残留三段占位符')
+  const tc = read('src/main/core/terracotta.ts');
+  assert.ok(tc.includes('/^U\\/[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/'), 'terracotta.ts 应保留四段房间码正则');
+  assert.ok(!/U\/XXXX-XXXX-XXXX(?![\-X])/.test(tc.replace(/U\/XXXX-XXXX-XXXX-XXXX/g, '')), 'terracotta.ts 不得残留三段式房间码描述');
+  assert.ok(tc.includes('U/XXXX-XXXX-XXXX-XXXX'), '注释/报错应使用四段格式');
+  const panel = read('src/renderer/src/components/connection/TerracottaPanel.vue');
+  assert.ok(panel.includes('U/XXXX-XXXX-XXXX-XXXX'), '面板占位符应为四段');
+  assert.ok(!panel.includes('U/XXXX-XXXX-XXXX"'), '面板不得残留三段占位符');
   // 正则行为抽查
-  const re = /^U\/[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/
-  assert.ok(re.test('U/AB12-CD34-EF56-GH78'))
-  assert.ok(!re.test('U/AB12-CD34-EF56'))
-  assert.ok(!re.test('U/AB12-CD34-EF56-GH78-9'))
+  const re = /^U\/[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/;
+  assert.ok(re.test('U/AB12-CD34-EF56-GH78'));
+  assert.ok(!re.test('U/AB12-CD34-EF56'));
+  assert.ok(!re.test('U/AB12-CD34-EF56-GH78-9'));
   // 分区结构：状态区 → 主操作区 → 参考折叠 → 日志窄区
-  const statusAt = panel.indexOf('title="当前连接"')
-  const opsAt = panel.indexOf('class="tc-operations"')
-  const refAt = panel.indexOf('reference-details')
-  const logAt = panel.indexOf('log-details')
-  assert.ok(statusAt > -1 && opsAt > statusAt && refAt > opsAt && logAt > refAt, '陶瓦页应按 状态→主操作→参考→日志 顺序向下分区')
+  const statusAt = panel.indexOf('title="当前连接"');
+  const opsAt = panel.indexOf('class="tc-operations"');
+  const refAt = panel.indexOf('reference-details');
+  const logAt = panel.indexOf('log-details');
+  assert.ok(statusAt > -1 && opsAt > statusAt && refAt > opsAt && logAt > refAt, '陶瓦页应按 状态→主操作→参考→日志 顺序向下分区');
   for (const text of ['多人游戏', '直接连接', '复制地址', 'burningtnt/Terracotta', 'SHA-256', 'U/ 开头的房间码发给好友（官方四段格式）']) {
-    assert.ok(panel.includes(text), `TerracottaPanel 缺少：${text}`)
+    assert.ok(panel.includes(text), `TerracottaPanel 缺少：${text}`);
   }
-})
+});
 
 test('VoxLink 集成补全：后备 IPC、阶段事件、已连接判定、消敏日志与页内 Tab', () => {
-  const index = read('src/main/core/voxlink/index.ts')
-  for (const channel of ["'voxlink:tryDirect'", "'voxlink:usePlayerRelay'"]) assert.ok(index.includes(channel), `index.ts 缺少 ${channel}`)
-  const shared = read('src/shared/types.ts')
-  for (const key of ['voxlinkTryDirect', 'voxlinkUsePlayerRelay']) assert.ok(shared.includes(key), `types.ts 缺少 ${key}`)
+  const index = read('src/main/core/voxlink/index.ts');
+  for (const channel of ["'voxlink:tryDirect'", "'voxlink:usePlayerRelay'"]) assert.ok(index.includes(channel), `index.ts 缺少 ${channel}`);
+  const shared = read('src/shared/types.ts');
+  for (const key of ['voxlinkTryDirect', 'voxlinkUsePlayerRelay']) assert.ok(shared.includes(key), `types.ts 缺少 ${key}`);
 
   // Engine events and connectivity are exercised by voxlink-replacement.test.ts.
-  const panel = read('src/renderer/src/components/connection/VoxLinkPanel.vue')
+  const panel = read('src/renderer/src/components/connection/VoxLinkPanel.vue');
   for (const text of [
     '尝试直连',
     '使用玩家中继',
@@ -176,34 +176,34 @@ test('VoxLink 集成补全：后备 IPC、阶段事件、已连接判定、消�
     '20_000',
     '不含 I、L、O、0、1',
   ]) {
-    assert.ok(panel.includes(text), `VoxLinkPanel 缺少：${text}`)
+    assert.ok(panel.includes(text), `VoxLinkPanel 缺少：${text}`);
   }
-  assert.ok(!panel.includes('已连接到房主'), '不得保留过早的「已连接到房主」')
+  assert.ok(!panel.includes('已连接到房主'), '不得保留过早的「已连接到房主」');
   // 公共大厅/建房/加入用页内 Tab 分开
   for (const text of ['connect-tab', "tab === 'host'", "tab === 'join'", "tab === 'lobby'", '公共大厅']) {
-    assert.ok(panel.includes(text), `VoxLinkPanel 应使用页内 Tab 分开入口，缺少：${text}`)
+    assert.ok(panel.includes(text), `VoxLinkPanel 应使用页内 Tab 分开入口，缺少：${text}`);
   }
   // Entry, progress and result are mutually exclusive; links remain above them.
-  const template = panel.slice(panel.indexOf('<template>'))
-  assert.ok(template.indexOf('<VoxLinkRelatedLinks') < template.indexOf('v-if="inFlow"'))
-  assert.ok(template.includes('v-if="connected && !isHost"'))
-  assert.match(template, /<ConnectionPanel\b[^>]*v-else[^>]*title="游戏与房间"/)
-  assert.ok(template.includes('aria-label="连接进度"'))
-  assert.ok(template.includes('class="address-hero"'))
-  assert.ok(template.includes('logGroups'))
-})
+  const template = panel.slice(panel.indexOf('<template>'));
+  assert.ok(template.indexOf('<VoxLinkRelatedLinks') < template.indexOf('v-if="inFlow"'));
+  assert.ok(template.includes('v-if="connected && !isHost"'));
+  assert.match(template, /<ConnectionPanel\b[^>]*v-else[^>]*title="游戏与房间"/);
+  assert.ok(template.includes('aria-label="连接进度"'));
+  assert.ok(template.includes('class="address-hero"'));
+  assert.ok(template.includes('logGroups'));
+});
 
 test('重排后的联机组件可编译且遵守配色铁律（无十六进制/rgb 字面量）', () => {
   const files = [
     ...multiplayerSources.filter((f) => f.endsWith('.vue')),
     'src/renderer/src/components/connection/ServerListItem.vue',
     'src/renderer/src/components/connection/ServerDetails.vue',
-  ]
+  ];
   for (const file of files) {
-    const source = read(file)
-    const { descriptor, errors } = parse(source)
-    assert.deepEqual(errors, [], file)
-    const script = compileScript(descriptor, { id: file })
+    const source = read(file);
+    const { descriptor, errors } = parse(source);
+    assert.deepEqual(errors, [], file);
+    const script = compileScript(descriptor, { id: file });
     assert.deepEqual(
       compileTemplate({
         source: descriptor.template!.content,
@@ -213,17 +213,17 @@ test('重排后的联机组件可编译且遵守配色铁律（无十六进制/r
       }).errors,
       [],
       file
-    )
-    for (const style of descriptor.styles) assert.ok(!/#[0-9a-f]{3,8}\b|rgba?\(/i.test(style.content), file)
+    );
+    for (const style of descriptor.styles) assert.ok(!/#[0-9a-f]{3,8}\b|rgba?\(/i.test(style.content), file);
   }
-  const css = read('src/renderer/src/components/connection/connection.css')
-  assert.ok(!/#[0-9a-f]{3,8}\b|rgba?\(/i.test(css))
-  assert.match(css, /prefers-reduced-motion/)
-  assert.match(css, /focus-visible/)
-  assert.match(css, /grid-template-columns: 1fr/)
+  const css = read('src/renderer/src/components/connection/connection.css');
+  assert.ok(!/#[0-9a-f]{3,8}\b|rgba?\(/i.test(css));
+  assert.match(css, /prefers-reduced-motion/);
+  assert.match(css, /focus-visible/);
+  assert.match(css, /grid-template-columns: 1fr/);
   // 区块间距回归设计令牌：区块间 --sec-gap，日志窄区共享样式存在
-  assert.match(css, /\.connection-log-viewport \{[^}]*max-height: 180px/)
-  assert.match(read('src/renderer/src/components/connection/FrpPanel.vue'), /gap: var\(--sec-gap\)/)
-  assert.match(read('src/renderer/src/components/connection/VoxLinkPanel.vue'), /gap: var\(--sec-gap\)/)
-  assert.match(read('src/renderer/src/components/connection/TerracottaPanel.vue'), /gap: var\(--sec-gap\)/)
-})
+  assert.match(css, /\.connection-log-viewport \{[^}]*max-height: 180px/);
+  assert.match(read('src/renderer/src/components/connection/FrpPanel.vue'), /gap: var\(--sec-gap\)/);
+  assert.match(read('src/renderer/src/components/connection/VoxLinkPanel.vue'), /gap: var\(--sec-gap\)/);
+  assert.match(read('src/renderer/src/components/connection/TerracottaPanel.vue'), /gap: var\(--sec-gap\)/);
+});

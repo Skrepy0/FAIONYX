@@ -1,69 +1,69 @@
 <script setup lang="ts">
-import { nextTick, reactive, ref, watch } from 'vue'
-import type { VersionCategory, VersionCategoryAction } from '@shared/types'
+import { nextTick, reactive, ref, watch } from 'vue';
+import type { VersionCategory, VersionCategoryAction } from '@shared/types';
 
-const props = defineProps<{ open: boolean; categories: VersionCategory[]; counts: Record<string, number>; busy: boolean; error: string }>()
-const emit = defineEmits<{ close: []; action: [action: VersionCategoryAction] }>()
+const props = defineProps<{ open: boolean; categories: VersionCategory[]; counts: Record<string, number>; busy: boolean; error: string }>();
+const emit = defineEmits<{ close: []; action: [action: VersionCategoryAction] }>();
 const panel = ref<HTMLElement | null>(null),
   name = ref(''),
   renaming = reactive({ id: '', name: '' }),
-  deleting = ref<VersionCategory | null>(null)
-let returnFocus: HTMLElement | null = null
+  deleting = ref<VersionCategory | null>(null);
+let returnFocus: HTMLElement | null = null;
 watch(
   () => props.open,
   async (open) => {
     if (open) {
-      returnFocus = document.activeElement as HTMLElement | null
-      name.value = ''
-      renaming.id = ''
-      deleting.value = null
-      await nextTick()
-      panel.value?.querySelector<HTMLInputElement>('input')?.focus()
-    } else returnFocus?.focus()
+      returnFocus = document.activeElement as HTMLElement | null;
+      name.value = '';
+      renaming.id = '';
+      deleting.value = null;
+      await nextTick();
+      panel.value?.querySelector<HTMLInputElement>('input')?.focus();
+    } else returnFocus?.focus();
   }
-)
+);
 function close() {
-  if (!props.busy) emit('close')
+  if (!props.busy) emit('close');
 }
 watch(deleting, async (value) => {
-  await nextTick()
-  if (value) panel.value?.querySelector<HTMLButtonElement>('[data-ui="games:category-delete-cancel"]')?.focus()
-  else panel.value?.querySelector<HTMLInputElement>('input')?.focus()
-})
+  await nextTick();
+  if (value) panel.value?.querySelector<HTMLButtonElement>('[data-ui="games:category-delete-cancel"]')?.focus();
+  else panel.value?.querySelector<HTMLInputElement>('input')?.focus();
+});
 function trapFocus(event: KeyboardEvent) {
   if (event.key === 'Escape') {
-    event.stopPropagation()
+    event.stopPropagation();
     if (!props.busy) {
-      if (deleting.value) deleting.value = null
-      else close()
+      if (deleting.value) deleting.value = null;
+      else close();
     }
-    return
+    return;
   }
-  if (event.key !== 'Tab') return
+  if (event.key !== 'Tab') return;
   const items = [
     ...(event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),[tabindex="0"]'),
-  ]
-  if (!items.length) return
-  const edge = event.shiftKey ? items[0] : items.at(-1)
+  ];
+  if (!items.length) return;
+  const edge = event.shiftKey ? items[0] : items.at(-1);
   if (document.activeElement === edge) {
-    event.preventDefault()
-    ;(event.shiftKey ? items.at(-1) : items[0])?.focus()
+    event.preventDefault();
+    (event.shiftKey ? items.at(-1) : items[0])?.focus();
   }
 }
 function create() {
-  if (!props.busy && name.value.trim()) emit('action', { type: 'create', name: name.value })
+  if (!props.busy && name.value.trim()) emit('action', { type: 'create', name: name.value });
 }
 function rename() {
-  if (!props.busy && renaming.id && renaming.name.trim()) emit('action', { type: 'rename', id: renaming.id, name: renaming.name })
+  if (!props.busy && renaming.id && renaming.name.trim()) emit('action', { type: 'rename', id: renaming.id, name: renaming.name });
 }
 watch(
   () => props.categories,
   (categories) => {
-    if (renaming.id && categories.find((c) => c.id === renaming.id)?.name === renaming.name.trim()) renaming.id = ''
-    if (deleting.value && !categories.some((c) => c.id === deleting.value?.id)) deleting.value = null
-    if (name.value.trim() && categories.some((c) => c.name === name.value.trim())) name.value = ''
+    if (renaming.id && categories.find((c) => c.id === renaming.id)?.name === renaming.name.trim()) renaming.id = '';
+    if (deleting.value && !categories.some((c) => c.id === deleting.value?.id)) deleting.value = null;
+    if (name.value.trim() && categories.some((c) => c.name === name.value.trim())) name.value = '';
   }
-)
+);
 </script>
 
 <template>
@@ -125,8 +125,8 @@ watch(
                     :disabled="busy"
                     :aria-label="'重命名分类 ' + category.name"
                     @click="
-                      renaming.id = category.id
-                      renaming.name = category.name
+                      renaming.id = category.id;
+                      renaming.name = category.name;
                     "
                   >
                     重命名</button

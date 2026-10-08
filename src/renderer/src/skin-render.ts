@@ -1,4 +1,4 @@
-import { loadCapeToCanvas, loadSkinToCanvas } from 'skinview-utils'
+import { loadCapeToCanvas, loadSkinToCanvas } from 'skinview-utils';
 /**
  * 皮肤渲染工具：用 canvas 把 64×64 皮肤 PNG 渲染为 2D 人偶正面图。
  * 含外层 hat/装甲层叠加，最近邻缩放保持像素风；失败返回空字符串由 UI 兜底。
@@ -7,28 +7,28 @@ import { loadCapeToCanvas, loadSkinToCanvas } from 'skinview-utils'
 
 export function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    const img = new Image()
+    const img = new Image();
     // textures.minecraft.net 带 CORS *，dataUrl 本地加载，均可安全绘制
-    img.crossOrigin = 'anonymous'
-    img.onload = () => resolve(img)
-    img.onerror = () => reject(new Error('图片加载失败'))
-    img.src = src
-  })
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('图片加载失败'));
+    img.src = src;
+  });
 }
 
 /**
  * 旧版皮肤判定：宽为 64 的整数倍且高为宽的一半（如 64×32 / 128×64 HD）。
  */
 export function isLegacySkin(width: number, height: number): boolean {
-  return width > 0 && width % 64 === 0 && height === width / 2
+  return width > 0 && width % 64 === 0 && height === width / 2;
 }
 
 /** Legacy conversion delegated to skinview-utils 0.7.1 (MIT). */
 export function migrateLegacySkin(img: HTMLImageElement): HTMLImageElement | HTMLCanvasElement {
-  if (!isLegacySkin(img.naturalWidth || img.width, img.naturalHeight || img.height)) return img
-  const canvas = document.createElement('canvas')
-  loadSkinToCanvas(canvas, img)
-  return canvas
+  if (!isLegacySkin(img.naturalWidth || img.width, img.naturalHeight || img.height)) return img;
+  const canvas = document.createElement('canvas');
+  loadSkinToCanvas(canvas, img);
+  return canvas;
 }
 
 /**
@@ -38,27 +38,27 @@ export function migrateLegacySkin(img: HTMLImageElement): HTMLImageElement | HTM
  */
 export function detectSkinVariant(source: HTMLImageElement | HTMLCanvasElement): 'slim' | 'classic' | null {
   try {
-    const canvas = document.createElement('canvas')
-    canvas.width = 64
-    canvas.height = 64
-    const ctx = canvas.getContext('2d', { willReadFrequently: true })
-    if (!ctx) return null
-    ctx.imageSmoothingEnabled = false
-    ctx.drawImage(source, 0, 0, 64, 64)
-    const data = ctx.getImageData(54, 20, 1, 12).data
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return null;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(source, 0, 0, 64, 64);
+    const data = ctx.getImageData(54, 20, 1, 12).data;
     for (let i = 3; i < data.length; i += 4) {
-      if (data[i] !== 0) return 'classic'
+      if (data[i] !== 0) return 'classic';
     }
-    return 'slim'
+    return 'slim';
   } catch {
-    return null
+    return null;
   }
 }
 
 // ---------------- 2D 正面人偶 / 头像 / 披风渲染 ----------------
 
 /** 部件：[源x, 源y, 宽, 高, 目标x, 目标y]，单位均为皮肤像素 */
-type Part = [number, number, number, number, number, number]
+type Part = [number, number, number, number, number, number];
 
 /** 人偶画布为 16×32 皮肤像素（头 8 + 躯干 12 + 腿 12；臂 4 + 躯干 8 + 臂 4） */
 const BASE_PARTS: Part[] = [
@@ -68,7 +68,7 @@ const BASE_PARTS: Part[] = [
   [36, 52, 4, 12, 12, 8], // 左臂
   [4, 20, 4, 12, 4, 20], // 右腿
   [20, 52, 4, 12, 8, 20], // 左腿
-]
+];
 
 /** 外层（hat / 衣袖 / 裤腿 / 外套），叠加在对应基础层之上 */
 const OVERLAY_PARTS: Part[] = [
@@ -78,11 +78,11 @@ const OVERLAY_PARTS: Part[] = [
   [52, 52, 4, 12, 12, 8], // 左臂外层
   [4, 36, 4, 12, 4, 20], // 右腿外层
   [4, 52, 4, 12, 8, 20], // 左腿外层
-]
+];
 
 function drawParts(img: CanvasImageSource, parts: Part[], ctx: CanvasRenderingContext2D, scale: number) {
   for (const [sx, sy, sw, sh, dx, dy] of parts) {
-    ctx.drawImage(img, sx, sy, sw, sh, dx * scale, dy * scale, sw * scale, sh * scale)
+    ctx.drawImage(img, sx, sy, sw, sh, dx * scale, dy * scale, sw * scale, sh * scale);
   }
 }
 
@@ -93,19 +93,19 @@ function drawParts(img: CanvasImageSource, parts: Part[], ctx: CanvasRenderingCo
  */
 export async function renderSkinFront(source: HTMLImageElement | string, scale = 10): Promise<string> {
   try {
-    const img = typeof source === 'string' ? await loadImage(source) : source
-    const skin = migrateLegacySkin(img)
-    const canvas = document.createElement('canvas')
-    canvas.width = 16 * scale
-    canvas.height = 32 * scale
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return ''
-    ctx.imageSmoothingEnabled = false
-    drawParts(skin, BASE_PARTS, ctx, scale)
-    drawParts(skin, OVERLAY_PARTS, ctx, scale)
-    return canvas.toDataURL('image/png')
+    const img = typeof source === 'string' ? await loadImage(source) : source;
+    const skin = migrateLegacySkin(img);
+    const canvas = document.createElement('canvas');
+    canvas.width = 16 * scale;
+    canvas.height = 32 * scale;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return '';
+    ctx.imageSmoothingEnabled = false;
+    drawParts(skin, BASE_PARTS, ctx, scale);
+    drawParts(skin, OVERLAY_PARTS, ctx, scale);
+    return canvas.toDataURL('image/png');
   } catch {
-    return ''
+    return '';
   }
 }
 
@@ -115,18 +115,18 @@ export async function renderSkinFront(source: HTMLImageElement | string, scale =
  */
 export async function renderSkinHead(source: HTMLImageElement | string, scale = 64): Promise<string> {
   try {
-    const img = typeof source === 'string' ? await loadImage(source) : source
-    const canvas = document.createElement('canvas')
-    canvas.width = scale
-    canvas.height = scale
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return ''
-    ctx.imageSmoothingEnabled = false
-    ctx.drawImage(img, 8, 8, 8, 8, 0, 0, scale, scale)
-    ctx.drawImage(img, 40, 8, 8, 8, 0, 0, scale, scale)
-    return canvas.toDataURL('image/png')
+    const img = typeof source === 'string' ? await loadImage(source) : source;
+    const canvas = document.createElement('canvas');
+    canvas.width = scale;
+    canvas.height = scale;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return '';
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, 8, 8, 8, 8, 0, 0, scale, scale);
+    ctx.drawImage(img, 40, 8, 8, 8, 0, 0, scale, scale);
+    return canvas.toDataURL('image/png');
   } catch {
-    return ''
+    return '';
   }
 }
 
@@ -137,25 +137,25 @@ export async function renderSkinHead(source: HTMLImageElement | string, scale = 
  */
 export async function renderCape(source: HTMLImageElement | string, w = 100, h = 160): Promise<string> {
   try {
-    const img = typeof source === 'string' ? await loadImage(source) : source
+    const img = typeof source === 'string' ? await loadImage(source) : source;
     const atlas = normalizeCape(img),
-      scale = atlas.width / 64
-    const canvas = document.createElement('canvas')
-    canvas.width = w
-    canvas.height = h
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return ''
-    ctx.imageSmoothingEnabled = false
-    ctx.drawImage(atlas, scale, scale, 10 * scale, 16 * scale, 0, 0, w, h)
-    return canvas.toDataURL('image/png')
+      scale = atlas.width / 64;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return '';
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(atlas, scale, scale, 10 * scale, 16 * scale, 0, 0, w, h);
+    return canvas.toDataURL('image/png');
   } catch {
-    return ''
+    return '';
   }
 }
 
 /** Preserve every original pixel; pad compact atlases to the 3D model's 64:32 UV layout. */
 export function normalizeCape(image: HTMLImageElement): HTMLCanvasElement {
-  const canvas = document.createElement('canvas')
-  loadCapeToCanvas(canvas, image)
-  return canvas
+  const canvas = document.createElement('canvas');
+  loadCapeToCanvas(canvas, image);
+  return canvas;
 }

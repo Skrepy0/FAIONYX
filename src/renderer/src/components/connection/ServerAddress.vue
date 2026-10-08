@@ -1,6 +1,6 @@
 <script setup lang="ts">
-defineProps<{ address: string; revealed: boolean; copyable?: boolean }>()
-defineEmits<{ toggle: []; copy: [] }>()
+defineProps<{ address: string; revealed: boolean; copyable?: boolean }>();
+defineEmits<{ toggle: []; copy: [] }>();
 </script>
 
 <template>

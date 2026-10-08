@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { store, dismissToast } from '../store'
+import { store, dismissToast } from '../store';
 </script>
 
 <template>

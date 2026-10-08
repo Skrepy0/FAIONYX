@@ -1,10 +1,10 @@
-'use strict'
+'use strict';
 
-const fs = require('node:fs/promises')
-const path = require('node:path')
-const crypto = require('node:crypto')
-const base = 'web_engine/src/main/ets/'
-const sha256 = (data) => crypto.createHash('sha256').update(data).digest('hex')
+const fs = require('node:fs/promises');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const base = 'web_engine/src/main/ets/';
+const sha256 = (data) => crypto.createHash('sha256').update(data).digest('hex');
 
 // These are files from the exact SHA-pinned 37.2.0 archive, not a moving SDK
 // template. Refuse a new template until its native API differences are reviewed.
@@ -19,24 +19,24 @@ const sourceHashes = {
   'adapter/DialogAdapter.ets': 'a343e6b2723cab7b0d6a3165dffe5f87f50ff21c34452040537d8705532e2175',
   'ability/WebAbility.ets': '90c0dc0781a3083659c42e2fb3c3a64d8cf2d8bf0c3db23db757c4edd241979a',
   'ability/WebEmbeddedAbility.ets': 'eee595c58ca73e3656b4ce5e096ac146a8f5384303b69879977e204bb83feda7',
-}
+};
 
 function replaceOnce(text, from, to) {
-  if (text.split(from).length !== 2) throw new Error('Native template adaptation anchor is missing or ambiguous')
-  return text.replace(from, to)
+  if (text.split(from).length !== 2) throw new Error('Native template adaptation anchor is missing or ambiguous');
+  return text.replace(from, to);
 }
 function replaceRange(text, from, until, replacement) {
   const begin = text.indexOf(from),
-    end = text.indexOf(until, begin + from.length)
+    end = text.indexOf(until, begin + from.length);
   if (begin < 0 || end < 0 || text.indexOf(from, begin + from.length) >= 0)
-    throw new Error('Native template adaptation range is missing or ambiguous')
-  return text.slice(0, begin) + replacement + text.slice(end)
+    throw new Error('Native template adaptation range is missing or ambiguous');
+  return text.slice(0, begin) + replacement + text.slice(end);
 }
 
 function adapt(relative, bytes) {
   if (!sourceHashes[relative] || sha256(bytes) !== sourceHashes[relative])
-    throw new Error(`Unreviewed Harmony native template: ${relative}`)
-  return Buffer.from(transform(relative, bytes.toString('utf8').replaceAll('\r\n', '\n')))
+    throw new Error(`Unreviewed Harmony native template: ${relative}`);
+  return Buffer.from(transform(relative, bytes.toString('utf8').replaceAll('\r\n', '\n')));
 }
 
 function transform(relative, text) {
@@ -47,7 +47,7 @@ function transform(relative, text) {
       `  private nativeThemeAdapter: NativeThemeAdapter | undefined;
   private pendingTermination: boolean = false;
   private bindingsReady: boolean = false;`
-    )
+    );
     text = replaceRange(
       text,
       '  onPrepareTermination():',
@@ -75,7 +75,7 @@ function transform(relative, text) {
   }
 
 `
-    )
+    );
     text = replaceOnce(
       text,
       '        this.nativeThemeAdapter = Inject.get(NativeThemeAdapter);',
@@ -83,7 +83,7 @@ function transform(relative, text) {
         this.bindingsReady = true;
         GlobalThisHelper.setCloseDispatcher(() => this.dispatchPendingTermination());
         this.dispatchPendingTermination();`
-    )
+    );
   } else if (relative === 'adapter/PermissionManagerAdapter.ets') {
     text = replaceOnce(
       text,
@@ -91,7 +91,7 @@ function transform(relative, text) {
       `  private isInitialized: boolean = false;
   private initializing: Promise<void> | undefined;
   private permissionWrites: Promise<void> = Promise.resolve();`
-    )
+    );
     text = replaceRange(
       text,
       '  @LogMethod\n  public async initPermissions()',
@@ -178,7 +178,7 @@ function transform(relative, text) {
   }
 
 `
-    )
+    );
     text = replaceRange(
       text,
       '  @LogMethod\n  public fileAccessPersist(',
@@ -198,7 +198,7 @@ function transform(relative, text) {
   }
 
 `
-    )
+    );
   } else if (relative === 'adapter/FilePickerAdapter.ets') {
     text = replaceRange(
       text,
@@ -226,7 +226,7 @@ function transform(relative, text) {
   }
 
 `
-    )
+    );
   } else if (relative === 'jsbindings/PermissionManagerAdapterBind.ets') {
     text = replaceOnce(
       text,
@@ -235,7 +235,7 @@ function transform(relative, text) {
   implPermissionManagerAdapter().fileAccessPersist(uris).catch((error: Error) => {
     console.error('FAIONYX directory permission request failed: ' + JSON.stringify(error));
   });`
-    )
+    );
   } else if (relative === 'adapter/DialogAdapter.ets') {
     text = replaceOnce(
       text,
@@ -244,7 +244,7 @@ function transform(relative, text) {
 import Inject from '../common/InjectModule';
 import { PermissionManagerAdapter } from './PermissionManagerAdapter';
 import fileUri from '@ohos.file.fileuri';`
-    )
+    );
     text = replaceRange(
       text,
       '    documentPicker.select(DocumentSelectOptions).then(',
@@ -269,7 +269,7 @@ import fileUri from '@ohos.file.fileuri';`
   }
 
 `
-    )
+    );
   } else if (relative === 'ability/WebAbility.ets' || relative === 'ability/WebEmbeddedAbility.ets') {
     text = replaceOnce(
       text,
@@ -278,7 +278,7 @@ import fileUri from '@ohos.file.fileuri';`
       // WebWindow reports the failure and offers an explicit retry/reauthorize.
       LogUtil.error(TAG, 'Directory permission restore failed: ' + JSON.stringify(error));
     });`
-    )
+    );
   } else if (relative === 'utils/GlobalThisHelper.ets') {
     text = replaceOnce(
       text,
@@ -307,7 +307,7 @@ import fileUri from '@ohos.file.fileuri';`
     GlobalThisHelper.terminationApproved = true;
   }
 `
-    )
+    );
     text = replaceOnce(
       text,
       '  public static appInit(provider: DependencyProvider): void {',
@@ -315,13 +315,13 @@ import fileUri from '@ohos.file.fileuri';`
     GlobalThisHelper.terminationApproved = false;
     GlobalThisHelper.browserReady = false;
     GlobalThisHelper.closeDispatcher = undefined;`
-    )
+    );
   } else if (relative === 'adapter/AppLifecycleAdapter.ets') {
     text = replaceOnce(
       text,
       "import { BaseAdapter } from '../common/BaseAdapter';",
       "import { BaseAdapter } from '../common/BaseAdapter';\nimport { GlobalThisHelper } from '../utils/GlobalThisHelper';"
-    )
+    );
     text = replaceOnce(
       text,
       `  onWebDestroy() {
@@ -331,7 +331,7 @@ import fileUri from '@ohos.file.fileuri';`
     // request, an editor cancel or a failed incremental save never sets this.
     GlobalThisHelper.confirmTermination();
     this.webStatus = WebStatus.kDestroy;`
-    )
+    );
     text = replaceOnce(
       text,
       `  onWebCreate() {
@@ -340,13 +340,13 @@ import fileUri from '@ohos.file.fileuri';`
     this.webStatus = WebStatus.kStart;
     // Browser::Get is established by the actual native startup, not bindings.
     GlobalThisHelper.markBrowserReady();`
-    )
+    );
   } else if (relative === 'components/WebWindow.ets') {
     text = replaceOnce(
       text,
       "import Inject from '../common/InjectModule';",
       "import Inject from '../common/InjectModule';\nimport { PermissionManagerAdapter } from '../adapter/PermissionManagerAdapter';"
-    )
+    );
     text = replaceOnce(
       text,
       `        this.config.nativeContext.runBrowser(vec_args);
@@ -354,7 +354,7 @@ import fileUri from '@ohos.file.fileuri';`
           this.config.nativeContext.ExecuteCommand(CommandType.kNewWindow, { url: this.config.uri, is_sync: true });`,
       `        // Restore recorded grants before Electron opens configured game folders.
         this.startBrowserWithDirectoryPermissions(vec_args);`
-    )
+    );
     text = replaceOnce(
       text,
       '  private setDefaultBounds() {',
@@ -377,21 +377,21 @@ import fileUri from '@ohos.file.fileuri';`
   }
 
   private setDefaultBounds() {`
-    )
+    );
   }
-  return text
+  return text;
 }
 
 async function applyNativeAdaptations(project) {
-  const changes = []
+  const changes = [];
   for (const relative of Object.keys(sourceHashes)) {
-    const file = path.join(project, base, relative)
-    const original = await fs.readFile(file)
-    const adapted = adapt(relative, original)
-    await fs.writeFile(file, adapted)
-    changes.push({ path: base + relative, originalSHA256: sha256(original), adaptedSHA256: sha256(adapted) })
+    const file = path.join(project, base, relative);
+    const original = await fs.readFile(file);
+    const adapted = adapt(relative, original);
+    await fs.writeFile(file, adapted);
+    changes.push({ path: base + relative, originalSHA256: sha256(original), adaptedSHA256: sha256(adapted) });
   }
-  return { schemaVersion: 1, runtime: '37.2.0', scope: 'native-template-source-adaptation-not-SDK-or-device-validation', changes }
+  return { schemaVersion: 1, runtime: '37.2.0', scope: 'native-template-source-adaptation-not-SDK-or-device-validation', changes };
 }
 
-module.exports = { adapt, sourceHashes, applyNativeAdaptations, transform }
+module.exports = { adapt, sourceHashes, applyNativeAdaptations, transform };

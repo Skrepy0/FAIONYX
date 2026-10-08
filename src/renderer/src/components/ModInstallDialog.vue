@@ -1,96 +1,96 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
-import type { CommunityFile, InstalledVersion, ModInstallPlan, ProgressEvent } from '@shared/types'
-import { prepareModInstall, commitModInstall, discardModInstall, errText, onProgress, cancelTask, formatSpeed } from '../api'
-import { matchingModProgress, modProgressPercent, modProgressBytes } from '../modInstallProgress'
-import { store, toast } from '../store'
-import MarqueeText from './MarqueeText.vue'
-import CommunityModDetails from './CommunityModDetails.vue'
-import type { CommunityProjectReference } from '@shared/types'
-const props = defineProps<{ target: InstalledVersion; input: { paths?: string[]; file?: CommunityFile } }>()
-const emit = defineEmits<{ close: []; installed: [] }>()
+import { computed, ref, onMounted, onUnmounted } from 'vue';
+import type { CommunityFile, InstalledVersion, ModInstallPlan, ProgressEvent } from '@shared/types';
+import { prepareModInstall, commitModInstall, discardModInstall, errText, onProgress, cancelTask, formatSpeed } from '../api';
+import { matchingModProgress, modProgressPercent, modProgressBytes } from '../modInstallProgress';
+import { store, toast } from '../store';
+import MarqueeText from './MarqueeText.vue';
+import CommunityModDetails from './CommunityModDetails.vue';
+import type { CommunityProjectReference } from '@shared/types';
+const props = defineProps<{ target: InstalledVersion; input: { paths?: string[]; file?: CommunityFile } }>();
+const emit = defineEmits<{ close: []; installed: [] }>();
 const plan = ref<ModInstallPlan>(),
   busy = ref(true),
-  error = ref('')
+  error = ref('');
 const includeDependencies = ref(true),
-  detail = ref<CommunityProjectReference | null>(null)
-const dependencies = computed(() => plan.value?.files.filter((file) => file.dependency) ?? [])
-const dependencyOptOut = computed(() => dependencies.value.length > 0 && !includeDependencies.value)
+  detail = ref<CommunityProjectReference | null>(null);
+const dependencies = computed(() => plan.value?.files.filter((file) => file.dependency) ?? []);
+const dependencyOptOut = computed(() => dependencies.value.length > 0 && !includeDependencies.value);
 const progress = ref<ProgressEvent>(),
-  cancelling = ref(false)
-const progressPercent = computed(() => (progress.value ? modProgressPercent(progress.value) : undefined))
-let operationId = ''
+  cancelling = ref(false);
+const progressPercent = computed(() => (progress.value ? modProgressPercent(progress.value) : undefined));
+let operationId = '';
 const offProgress = onProgress((event) => {
-  const matching = matchingModProgress(event, operationId, busy.value)
-  if (matching) progress.value = matching
-})
-let disposed = false
-let generation = 0
+  const matching = matchingModProgress(event, operationId, busy.value);
+  if (matching) progress.value = matching;
+});
+let disposed = false;
+let generation = 0;
 async function prepare() {
-  if (busy.value && plan.value) return
-  const current = ++generation
+  if (busy.value && plan.value) return;
+  const current = ++generation;
   if (plan.value) {
-    void discardModInstall(plan.value.id)
-    plan.value = undefined
+    void discardModInstall(plan.value.id);
+    plan.value = undefined;
   }
-  busy.value = true
-  error.value = ''
-  includeDependencies.value = true
-  operationId = crypto.randomUUID()
-  progress.value = undefined
-  cancelling.value = false
+  busy.value = true;
+  error.value = '';
+  includeDependencies.value = true;
+  operationId = crypto.randomUUID();
+  progress.value = undefined;
+  cancelling.value = false;
   try {
-    const result = await prepareModInstall({ id: props.target.id, folder: props.target.folder! }, props.input, operationId)
+    const result = await prepareModInstall({ id: props.target.id, folder: props.target.folder! }, props.input, operationId);
     if (disposed || current !== generation) {
-      void discardModInstall(result.id)
-      return
+      void discardModInstall(result.id);
+      return;
     }
-    plan.value = result
+    plan.value = result;
   } catch (e) {
-    if (!disposed && current === generation) error.value = errText(e)
+    if (!disposed && current === generation) error.value = errText(e);
   } finally {
-    if (!disposed && current === generation) busy.value = false
+    if (!disposed && current === generation) busy.value = false;
   }
 }
-onMounted(() => void prepare())
+onMounted(() => void prepare());
 onUnmounted(() => {
-  disposed = true
-  generation++
-  operationId = ''
-  offProgress()
-  if (plan.value) void discardModInstall(plan.value.id)
-})
+  disposed = true;
+  generation++;
+  operationId = '';
+  offProgress();
+  if (plan.value) void discardModInstall(plan.value.id);
+});
 function dependencyDetails(file: ModInstallPlan['files'][number]) {
-  if (file.source && file.projectId) detail.value = { source: file.source, projectId: file.projectId, title: file.fileName }
+  if (file.source && file.projectId) detail.value = { source: file.source, projectId: file.projectId, title: file.fileName };
 }
 async function install() {
-  if (!plan.value || busy.value || dependencyOptOut.value || plan.value.warnings.length) return
-  busy.value = true
-  error.value = ''
-  operationId = crypto.randomUUID()
-  progress.value = undefined
-  cancelling.value = false
+  if (!plan.value || busy.value || dependencyOptOut.value || plan.value.warnings.length) return;
+  busy.value = true;
+  error.value = '';
+  operationId = crypto.randomUUID();
+  progress.value = undefined;
+  cancelling.value = false;
   try {
-    const message = await commitModInstall(plan.value.id, includeDependencies.value, operationId)
-    toast(message, 'success')
-    store.fsRefreshTick++
-    emit('installed')
+    const message = await commitModInstall(plan.value.id, includeDependencies.value, operationId);
+    toast(message, 'success');
+    store.fsRefreshTick++;
+    emit('installed');
   } catch (e) {
-    error.value = errText(e)
-    plan.value = undefined
+    error.value = errText(e);
+    plan.value = undefined;
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 async function cancelDownload() {
-  if (!progress.value?.taskId || cancelling.value || !busy.value) return
-  cancelling.value = true
+  if (!progress.value?.taskId || cancelling.value || !busy.value) return;
+  cancelling.value = true;
   try {
-    await cancelTask(progress.value.taskId)
+    await cancelTask(progress.value.taskId);
   } catch (e) {
-    if (!disposed) error.value = errText(e)
+    if (!disposed) error.value = errText(e);
   } finally {
-    if (!disposed) cancelling.value = false
+    if (!disposed) cancelling.value = false;
   }
 }
 </script>

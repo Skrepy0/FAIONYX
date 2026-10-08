@@ -2,14 +2,14 @@
 // Run after build: node_modules/electron/dist/electron.exe scripts/verify-design-ui.cjs
 const fs = require('node:fs'),
   path = require('node:path'),
-  assert = require('node:assert/strict')
-const { app, BrowserWindow, ipcMain, session } = require('electron')
-const { buildSync } = require('esbuild')
-const root = fs.mkdtempSync(path.resolve('out/network-ui-'))
-app.setPath('userData', path.join(root, 'userData'))
-app.commandLine.appendSwitch('enable-unsafe-swiftshader')
-buildSync({ entryPoints: ['src/shared/types.ts'], bundle: true, platform: 'node', format: 'cjs', outfile: path.join(root, 'types.cjs') })
-const types = require(path.join(root, 'types.cjs'))
+  assert = require('node:assert/strict');
+const { app, BrowserWindow, ipcMain, session } = require('electron');
+const { buildSync } = require('esbuild');
+const root = fs.mkdtempSync(path.resolve('out/network-ui-'));
+app.setPath('userData', path.join(root, 'userData'));
+app.commandLine.appendSwitch('enable-unsafe-swiftshader');
+buildSync({ entryPoints: ['src/shared/types.ts'], bundle: true, platform: 'node', format: 'cjs', outfile: path.join(root, 'types.cjs') });
+const types = require(path.join(root, 'types.cjs'));
 buildSync({
   entryPoints: ['src/main/core/defaultGameOptions.ts'],
   bundle: true,
@@ -17,19 +17,19 @@ buildSync({
   format: 'cjs',
   external: ['electron'],
   outfile: path.join(root, 'gameOptions.cjs'),
-})
-const gameOptions = require(path.join(root, 'gameOptions.cjs'))
+});
+const gameOptions = require(path.join(root, 'gameOptions.cjs'));
 buildSync({
   entryPoints: ['src/main/core/exitJournal.ts'],
   bundle: true,
   platform: 'node',
   format: 'cjs',
   outfile: path.join(root, 'exitJournal.cjs'),
-})
-const journal = new (require(path.join(root, 'exitJournal.cjs')).ExitJournal)(path.join(root, 'exit-history.json'))
-journal.fault('launcher', '上次启动器未正常关闭，已保留异常退出记录。')
-journal.fault('game', '游戏「测试实例」异常退出（代码 -1）。')
-const folder = 'C:/Design fixture/.minecraft'
+});
+const journal = new (require(path.join(root, 'exitJournal.cjs')).ExitJournal)(path.join(root, 'exit-history.json'));
+journal.fault('launcher', '上次启动器未正常关闭，已保留异常退出记录。');
+journal.fault('game', '游戏「测试实例」异常退出（代码 -1）。');
+const folder = 'C:/Design fixture/.minecraft';
 const versions = ['26.2-Fabric 0.19.5', '1.21.11-NeoForge Adventures', '1.21.10-Forge Survival', '26.2 Creative'].map((name, i) => ({
   id: name,
   name,
@@ -39,7 +39,7 @@ const versions = ['26.2-Fabric 0.19.5', '1.21.11-NeoForge Adventures', '1.21.10-
   folder,
   isolated: true,
   modpackName: i === 3 ? 'Creative 整合包' : undefined,
-}))
+}));
 let settings = {
   gameDir: folder,
   activeFolder: folder,
@@ -61,10 +61,10 @@ let settings = {
   background: types.DEFAULT_BACKGROUND,
   launchThumbnail: types.DEFAULT_LAUNCH_THUMBNAIL,
   configVersion: 1,
-}
-const account = { id: 'fixture', type: 'offline', username: 'KaMuaMua', uuid: '00000000000000000000000000000000' }
+};
+const account = { id: 'fixture', type: 'offline', username: 'KaMuaMua', uuid: '00000000000000000000000000000000' };
 const calls = [],
-  errors = []
+  errors = [];
 const updateRelease = {
   version: '1.0.46',
   tag: 'v1.0.46',
@@ -72,7 +72,7 @@ const updateRelease = {
   assetSize: 67616046,
   body: 'FAIONYX v1.0.46\n\n- 修复：皮肤重命名后恢复默认名称的问题\n- 优化：默认配置的分组、数值输入和同步状态',
   assetUrl: 'https://example.invalid/test.exe',
-}
+};
 let vox = {
   joinedAt: Date.now() - 25000,
   state: 'in_room',
@@ -82,12 +82,12 @@ let vox = {
   settings: { allowRelay: true },
   connection: { phase: 'p2p', status: 'failed', detail: '打洞重试中' },
   stages: { punch: { key: 'punch', status: 'retry', detail: '打洞重试中', ts: Date.now() - 25000 } },
-}
-let tcReady = false
-const requests = []
+};
+let tcReady = false;
+const requests = [];
 ipcMain.handle('design:invoke', (_event, channel, ...args) => {
-  calls.push(channel)
-  requests.push({ channel, args })
+  calls.push(channel);
+  requests.push({ channel, args });
   switch (channel) {
     case 'fs:list':
       return Array.from({ length: 3000 }, (_, i) => ({
@@ -95,21 +95,21 @@ ipcMain.handle('design:invoke', (_event, channel, ...args) => {
         size: 100000,
         isDir: false,
         mtime: Date.now(),
-      }))
+      }));
     case 'tc:status':
-      return { phase: 'idle', binaryReady: tcReady, running: false }
+      return { phase: 'idle', binaryReady: tcReady, running: false };
     case 'tc:install':
-      tcReady = true
-      return null
+      tcReady = true;
+      return null;
     case 'voxlink:status':
-      return vox
+      return vox;
     case 'voxlink:stop':
-      vox = { ...vox, state: 'idle', session: { state: 'idle', code: '', isHost: false }, room: null, joinedAt: 0, stages: {} }
-      return vox
+      vox = { ...vox, state: 'idle', session: { state: 'idle', code: '', isHost: false }, room: null, joinedAt: 0, stages: {} };
+      return vox;
     case 'voxlink:useTurnRelay':
-      return { ok: true }
+      return { ok: true };
     case 'frp:status':
-      return { status: 'idle', config: null, logs: [], message: '尚未启动' }
+      return { status: 'idle', config: null, logs: [], message: '尚未启动' };
     case 'frp:nodes':
       return {
         nodes: [{ id: 7, name: '测试免费节点', free: true, online: true, canCreate: true, load: 12 }],
@@ -125,45 +125,45 @@ ipcMain.handle('design:invoke', (_event, channel, ...args) => {
             status: 0,
           },
         ],
-      }
+      };
     case 'frp:create-tunnel':
-      return { id: 123 }
+      return { id: 123 };
     case 'update:check':
-      return { ok: true, hasUpdate: true, release: updateRelease }
+      return { ok: true, hasUpdate: true, release: updateRelease };
     case 'update:start':
-      return { taskId: 'fixture-update' }
+      return { taskId: 'fixture-update' };
     case 'update:pickLocalFile':
-      return { fileName: 'FAIONYX-1.0.46.exe', fileSize: 67616046, version: '1.0.46', versionOk: true, sha256: 'match' }
+      return { fileName: 'FAIONYX-1.0.46.exe', fileSize: 67616046, version: '1.0.46', versionOk: true, sha256: 'match' };
     case 'update:listReleases':
       return Array.from({ length: 18 }, (_, i) => ({
         ...updateRelease,
         version: '1.0.' + (43 - i),
         body: 'FAIONYX v1.0.' + (43 - i) + '\n\n- 改善下载体验，修复界面显示问题',
-      }))
+      }));
     case 'gameOptions:get':
-      return gameOptions.getDefaultGameOptions()
+      return gameOptions.getDefaultGameOptions();
     case 'gameOptions:set':
-      return gameOptions.setDefaultGameOptions(args[0])
+      return gameOptions.setDefaultGameOptions(args[0]);
     case 'exitHistory:list':
-      return journal.list()
+      return journal.list();
     case 'exitHistory:ack':
-      return journal.acknowledge()
+      return journal.acknowledge();
     case 'exitHistory:clear':
-      return journal.clearHistory()
+      return journal.clearHistory();
     case 'settings:get':
-      return settings
+      return settings;
     case 'settings:set':
-      return (settings = { ...settings, ...args[0] })
+      return (settings = { ...settings, ...args[0] });
     case 'accounts:list':
-      return [account]
+      return [account];
     case 'accounts:selected':
-      return account
+      return account;
     case 'versions:installed':
-      return versions
+      return versions;
     case 'versions:manifest':
-      return [{ id: '26.2', type: 'release', releaseTime: '2026-09-10' }]
+      return [{ id: '26.2', type: 'release', releaseTime: '2026-09-10' }];
     case 'folders:list':
-      return { folders: settings.folders, active: folder }
+      return { folders: settings.folders, active: folder };
     case 'folders:scan':
       return {
         folder: settings.folders[0],
@@ -173,18 +173,18 @@ ipcMain.handle('design:invoke', (_event, channel, ...args) => {
         errors: [],
         durationMs: 12,
         scannedAt: '2026-09-10',
-      }
+      };
     case 'mods:targets':
-      return { versions, errors: [] }
+      return { versions, errors: [] };
     case 'skin:profile':
-      return { skins: [], capes: [] }
+      return { skins: [], capes: [] };
     case 'skin:avatar':
-      return null
+      return null;
     case 'update:getPending':
     case 'update:getState':
-      return null
+      return null;
     case 'app:systemInfo':
-      return { totalMemoryMB: 32768, freeMemoryMB: 16384, platform: 'win32' }
+      return { totalMemoryMB: 32768, freeMemoryMB: 16384, platform: 'win32' };
     case 'community:search':
       return {
         total: 44,
@@ -202,7 +202,7 @@ ipcMain.handle('design:invoke', (_event, channel, ...args) => {
           categories: [],
           iconUrl: '',
         })),
-      }
+      };
     case 'community:files':
       return [
         {
@@ -214,110 +214,112 @@ ipcMain.handle('design:invoke', (_event, channel, ...args) => {
           date: '2026-09-10',
           size: 1024,
         },
-      ]
+      ];
     default:
-      return []
+      return [];
   }
-})
+});
 fs.writeFileSync(
   path.join(root, 'preload.cjs'),
   `const {contextBridge,ipcRenderer}=require('electron');contextBridge.exposeInMainWorld('faionyx',{invoke:(c,...a)=>ipcRenderer.invoke('design:invoke',c,...a),on:(c,fn)=>{const h=(_,p)=>fn(p);ipcRenderer.on(c,h);return ()=>ipcRenderer.removeListener(c,h)},send:()=>{},getFilePath:()=>'',platform:'win32'});`
-)
+);
 app
   .whenReady()
   .then(async () => {
-    session.defaultSession.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*'] }, (_d, cb) => cb({ cancel: true }))
+    session.defaultSession.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*'] }, (_d, cb) => cb({ cancel: true }));
     const win = new BrowserWindow({
       show: false,
       width: 1440,
       height: 1000,
       webPreferences: { preload: path.join(root, 'preload.cjs'), backgroundThrottling: false, offscreen: true },
-    })
+    });
     win.webContents.on('console-message', (_e, l, m) => {
-      if (l >= 3) errors.push(m)
-    })
+      if (l >= 3) errors.push(m);
+    });
     const run = (c) =>
         win.webContents.executeJavaScript(c).catch((e) => {
-          throw new Error(e.message + '\n' + c + '\n' + JSON.stringify(errors))
+          throw new Error(e.message + '\n' + c + '\n' + JSON.stringify(errors));
         }),
-      wait = (ms) => new Promise((r) => setTimeout(r, ms))
+      wait = (ms) => new Promise((r) => setTimeout(r, ms));
     const click = async (text) => {
       await run(
         `(()=>{const b=[...document.querySelectorAll('button')].find(x=>x.textContent.trim()===${JSON.stringify(text)});if(!b)throw Error('Missing '+${JSON.stringify(text)});if(b.disabled)throw Error('Disabled '+${JSON.stringify(text)});b.scrollIntoView({block:'center'});b.click()})()`
-      )
-      await wait(300)
-    }
+      );
+      await wait(300);
+    };
     const nav = async (key) => {
-      await run(`(()=>{if(!document.querySelector('[data-nav="${key}"]'))document.querySelector('[data-nav="resources"]').click()})()`)
-      await wait(180)
-      await run(`document.querySelector('[data-nav="${key}"]').click()`)
-      await wait(500)
-    }
+      await run(`(()=>{if(!document.querySelector('[data-nav="${key}"]'))document.querySelector('[data-nav="resources"]').click()})()`);
+      await wait(180);
+      await run(`document.querySelector('[data-nav="${key}"]').click()`);
+      await wait(500);
+    };
     const shot = async (name) => {
-      await run(`document.querySelector('.content').scrollTop=0`)
-      await wait(300)
-      const overflow = await run(`(()=>{const e=document.querySelector('.content');return e.scrollWidth-e.clientWidth})()`)
-      assert(overflow <= 1, name + ' overflow ' + overflow)
-      fs.writeFileSync(path.join(root, name + '.png'), (await win.webContents.capturePage()).toPNG())
-    }
-    await win.loadFile(path.resolve('out/renderer/index.html'))
-    await wait(1300)
-    await nav('mods')
-    assert.equal(await run(`document.querySelectorAll('.fm-row').length`), 100)
-    assert(!calls.some((c) => /duplicates/i.test(c)), 'Opening resource page must not scan archives')
-    await shot('mods-3000')
-    await click('下一页')
-    assert(await run(`document.querySelector('.fm-row').textContent.includes('0100.jar')`))
+      await run(`document.querySelector('.content').scrollTop=0`);
+      await wait(300);
+      const overflow = await run(`(()=>{const e=document.querySelector('.content');return e.scrollWidth-e.clientWidth})()`);
+      assert(overflow <= 1, name + ' overflow ' + overflow);
+      fs.writeFileSync(path.join(root, name + '.png'), (await win.webContents.capturePage()).toPNG());
+    };
+    await win.loadFile(path.resolve('out/renderer/index.html'));
+    await wait(1300);
+    await nav('mods');
+    assert.equal(await run(`document.querySelectorAll('.fm-row').length`), 100);
+    assert(!calls.some((c) => /duplicates/i.test(c)), 'Opening resource page must not scan archives');
+    await shot('mods-3000');
+    await click('下一页');
+    assert(await run(`document.querySelector('.fm-row').textContent.includes('0100.jar')`));
     for (const key of ['packs', 'shaders']) {
-      await nav(key)
-      assert.equal(await run(`document.querySelectorAll('.fm-row').length`), 100)
+      await nav(key);
+      assert.equal(await run(`document.querySelectorAll('.fm-row').length`), 100);
     }
     for (const call of requests.filter((r) => r.channel === 'fs:list')) {
-      assert.equal(call.args[1], folder)
-      assert(call.args[0].startsWith('versions/' + versions[0].id + '/'))
+      assert.equal(call.args[1], folder);
+      assert(call.args[0].startsWith('versions/' + versions[0].id + '/'));
     }
-    await nav('keys')
-    await run(`document.querySelector('.mouse-shortcut').click()`)
-    await wait(200)
+    await nav('keys');
+    await run(`document.querySelector('.mouse-shortcut').click()`);
+    await wait(200);
     await run(
       `const input=document.querySelector('[aria-label="鼠标灵敏度"]');input.value='125';input.dispatchEvent(new Event('change',{bubbles:true}))`
-    )
-    await wait(200)
-    assert.equal(gameOptions.getDefaultGameOptions().values.mouseSensitivity, 125)
-    await shot('sensitivity')
-    await nav('friends')
-    await run(`document.querySelectorAll('.pick-card')[2].click()`)
-    await wait(500)
-    assert(!calls.includes('tc:install'))
-    await shot('terracotta-manual')
-    await click('下载陶瓦工具')
-    assert(calls.includes('tc:install'))
-    await click('← 更换方式')
-    await run(`document.querySelectorAll('.pick-card')[1].click()`)
-    await wait(500)
-    assert(await run(`!![...document.querySelectorAll('.session-actions button')].find(b=>b.textContent.includes('TURN'))`))
-    await shot('voxlink-20s')
-    await click('退出房间')
-    assert(calls.includes('voxlink:stop'))
-    await click('← 更换方式')
-    await run(`document.querySelectorAll('.pick-card')[0].click()`)
-    await wait(500)
-    assert(await run(`!!document.querySelector('a[href="https://www.natfrp.com/"]')`))
-    await run(`const i=document.querySelector('input[type=password]');i.value='fixture';i.dispatchEvent(new Event('input',{bubbles:true}))`)
-    await wait(100)
-    await click('读取我的隧道与节点')
-    await shot('frp-guide')
-    versions.length = 0
-    await win.reload()
-    await wait(1000)
-    const before = calls.filter((c) => c === 'fs:list').length
+    );
+    await wait(200);
+    assert.equal(gameOptions.getDefaultGameOptions().values.mouseSensitivity, 125);
+    await shot('sensitivity');
+    await nav('friends');
+    await run(`document.querySelectorAll('.pick-card')[2].click()`);
+    await wait(500);
+    assert(!calls.includes('tc:install'));
+    await shot('terracotta-manual');
+    await click('下载陶瓦工具');
+    assert(calls.includes('tc:install'));
+    await click('← 更换方式');
+    await run(`document.querySelectorAll('.pick-card')[1].click()`);
+    await wait(500);
+    assert(await run(`!![...document.querySelectorAll('.session-actions button')].find(b=>b.textContent.includes('TURN'))`));
+    await shot('voxlink-20s');
+    await click('退出房间');
+    assert(calls.includes('voxlink:stop'));
+    await click('← 更换方式');
+    await run(`document.querySelectorAll('.pick-card')[0].click()`);
+    await wait(500);
+    assert(await run(`!!document.querySelector('a[href="https://www.natfrp.com/"]')`));
+    await run(
+      `const i=document.querySelector('input[type=password]');i.value='fixture';i.dispatchEvent(new Event('input',{bubbles:true}))`
+    );
+    await wait(100);
+    await click('读取我的隧道与节点');
+    await shot('frp-guide');
+    versions.length = 0;
+    await win.reload();
+    await wait(1000);
+    const before = calls.filter((c) => c === 'fs:list').length;
     for (const key of ['mods', 'packs', 'shaders']) {
-      await nav(key)
-      assert(await run(`document.querySelector('.empty').textContent.includes('没有可选版本')`))
-      assert.equal(calls.filter((c) => c === 'fs:list').length, before)
+      await nav(key);
+      assert(await run(`document.querySelector('.empty').textContent.includes('没有可选版本')`));
+      assert.equal(calls.filter((c) => c === 'fs:list').length, before);
     }
-    await shot('empty-versions')
-    assert.deepEqual(errors, [])
+    await shot('empty-versions');
+    assert.deepEqual(errors, []);
     fs.writeFileSync(
       path.join(root, 'result.json'),
       JSON.stringify(
@@ -339,13 +341,13 @@ app
         null,
         2
       )
-    )
-    console.log('PASS production resource/network UI: ' + root)
-    win.destroy()
-    app.quit()
+    );
+    console.log('PASS production resource/network UI: ' + root);
+    win.destroy();
+    app.quit();
   })
   .catch((e) => {
-    console.error(e)
-    fs.writeFileSync(path.join(root, 'error.txt'), e.stack)
-    app.exit(1)
-  })
+    console.error(e);
+    fs.writeFileSync(path.join(root, 'error.txt'), e.stack);
+    app.exit(1);
+  });

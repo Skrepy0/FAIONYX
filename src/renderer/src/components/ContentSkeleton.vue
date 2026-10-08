@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
-withDefaults(defineProps<{ label?: string; rows?: number; retry?: boolean }>(), { label: '正在加载…', rows: 5, retry: false })
-defineEmits<{ retry: [] }>()
-const delayed = ref(false)
-let timer: ReturnType<typeof setTimeout>
+import { onMounted, onUnmounted, ref } from 'vue';
+withDefaults(defineProps<{ label?: string; rows?: number; retry?: boolean }>(), { label: '正在加载…', rows: 5, retry: false });
+defineEmits<{ retry: [] }>();
+const delayed = ref(false);
+let timer: ReturnType<typeof setTimeout>;
 onMounted(() => {
   timer = setTimeout(() => {
-    delayed.value = true
-  }, 8000)
-})
-onUnmounted(() => clearTimeout(timer))
+    delayed.value = true;
+  }, 8000);
+});
+onUnmounted(() => clearTimeout(timer));
 </script>
 <template>
   <div class="content-skeleton" role="status" aria-busy="true">

@@ -1,50 +1,50 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import { randomUUID } from 'node:crypto'
-import { execFile, spawn } from 'node:child_process'
-import { promisify } from 'node:util'
-import AdmZip from 'adm-zip'
-import { app } from 'electron'
-import type { ReleaseInfo } from '../../shared/types'
-import { atomicUpdateJson, validateUpdatePayload, type UpdateTransaction } from './updateTransaction'
-import { updateAssetName } from './updateTrust'
-import { sha256File, currentVersion } from './selfUpdate'
-import { compareSemver } from '../../shared/semver'
+import fs from 'node:fs';
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
+import { execFile, spawn } from 'node:child_process';
+import { promisify } from 'node:util';
+import AdmZip from 'adm-zip';
+import { app } from 'electron';
+import type { ReleaseInfo } from '../../shared/types';
+import { atomicUpdateJson, validateUpdatePayload, type UpdateTransaction } from './updateTransaction';
+import { updateAssetName } from './updateTrust';
+import { sha256File, currentVersion } from './selfUpdate';
+import { compareSemver } from '../../shared/semver';
 
-const run = promisify(execFile)
-const data = () => app.getPath('userData')
-const marker = () => path.join(data(), 'mac-update.json')
-const claim = () => marker() + '.applying'
+const run = promisify(execFile);
+const data = () => app.getPath('userData');
+const marker = () => path.join(data(), 'mac-update.json');
+const claim = () => marker() + '.applying';
 function recordFailure(error: unknown): void {
   try {
-    fs.appendFileSync(path.join(data(), 'mac-updater.log'), `${new Date().toISOString()} ${String(error)}\n`)
+    fs.appendFileSync(path.join(data(), 'mac-updater.log'), `${new Date().toISOString()} ${String(error)}\n`);
   } catch {
     /* preserve startup on read-only storage */
   }
 }
-export const macUpdateDir = () => path.join(data(), 'mac-updates')
+export const macUpdateDir = () => path.join(data(), 'mac-updates');
 export function macAppTarget(): string | null {
-  if (process.platform !== 'darwin' || !app.isPackaged) return null
-  const target = path.resolve(process.execPath, '../../..')
-  return target.endsWith('.app') && fs.existsSync(path.join(target, 'Contents/Info.plist')) ? target : null
+  if (process.platform !== 'darwin' || !app.isPackaged) return null;
+  const target = path.resolve(process.execPath, '../../..');
+  return target.endsWith('.app') && fs.existsSync(path.join(target, 'Contents/Info.plist')) ? target : null;
 }
 export function macUpdateSupported(): boolean {
-  const target = macAppTarget()
-  if (!target || target.startsWith('/Volumes/') || target.includes('/AppTranslocation/')) return false
+  const target = macAppTarget();
+  if (!target || target.startsWith('/Volumes/') || target.includes('/AppTranslocation/')) return false;
   try {
-    fs.accessSync(path.dirname(target), fs.constants.W_OK)
-    return true
+    fs.accessSync(path.dirname(target), fs.constants.W_OK);
+    return true;
   } catch {
-    return false
+    return false;
   }
 }
 function inside(root: string, file: string): boolean {
-  const relative = path.relative(root, file)
-  return !!relative && !relative.startsWith('..') && !path.isAbsolute(relative)
+  const relative = path.relative(root, file);
+  return !!relative && !relative.startsWith('..') && !path.isAbsolute(relative);
 }
 export function readMacUpdate(file = marker()): UpdateTransaction | null {
   try {
-    const t = JSON.parse(fs.readFileSync(file, 'utf8')) as UpdateTransaction
+    const t = JSON.parse(fs.readFileSync(file, 'utf8')) as UpdateTransaction;
     if (
       t.schema !== 1 ||
       !/^[a-f\d-]{36}$/i.test(t.id) ||
@@ -57,22 +57,22 @@ export function readMacUpdate(file = marker()): UpdateTransaction | null {
       path.basename(t.file) !== updateAssetName(t.release.version) ||
       !['upgrade', 'rollback', 'local'].includes(t.mode)
     )
-      return null
-    return t
+      return null;
+    return t;
   } catch {
-    return null
+    return null;
   }
 }
 export function clearMacUpdate(): void {
-  fs.rmSync(marker(), { force: true })
+  fs.rmSync(marker(), { force: true });
 }
 export function blockedMacVersion(): string | undefined {
-  return (readMacUpdate(claim()) ?? readMacUpdate(claim() + '.failed'))?.release.version
+  return (readMacUpdate(claim()) ?? readMacUpdate(claim() + '.failed'))?.release.version;
 }
 export async function stageMacUpdate(release: ReleaseInfo, file: string, sha256: string, mode: UpdateTransaction['mode']): Promise<void> {
-  if (!macUpdateSupported()) throw new Error('请将 FAIONYX.app 拖入可写的应用程序目录后再更新')
+  if (!macUpdateSupported()) throw new Error('请将 FAIONYX.app 拖入可写的应用程序目录后再更新');
   if (path.basename(file) !== updateAssetName(release.version) || !inside(macUpdateDir(), file))
-    throw new Error('请选择与当前 Mac 架构一致的官方 ZIP 包')
+    throw new Error('请选择与当前 Mac 架构一致的官方 ZIP 包');
   const t: UpdateTransaction = {
     schema: 1,
     id: randomUUID(),
@@ -83,57 +83,57 @@ export async function stageMacUpdate(release: ReleaseInfo, file: string, sha256:
     from: currentVersion(),
     release,
     mode,
-  }
-  await validateUpdatePayload(t)
-  validateMacArchive(file)
-  atomicUpdateJson(marker(), t)
+  };
+  await validateUpdatePayload(t);
+  validateMacArchive(file);
+  atomicUpdateJson(marker(), t);
 }
 
 /** Reject traversal and escaping symlinks before handing the archive to ditto. */
 export function validateMacArchive(file: string): void {
-  const entries = new AdmZip(file).getEntries()
+  const entries = new AdmZip(file).getEntries();
   let total = 0,
-    hasApp = false
+    hasApp = false;
   for (const e of entries) {
-    const name = e.entryName
+    const name = e.entryName;
     if (
       name.includes('\\') ||
       name.startsWith('/') ||
       name.split('/').includes('..') ||
       !(name.startsWith('FAIONYX.app/') || name === 'FAIONYX.app' || name.startsWith('__MACOSX/'))
     )
-      throw new Error('Mac 更新包包含越界路径')
-    total += e.header.size
-    if (total > 3 * 1024 ** 3) throw new Error('Mac 更新包解压大小异常')
-    if (name === 'FAIONYX.app/Contents/Resources/app.asar') hasApp = true
+      throw new Error('Mac 更新包包含越界路径');
+    total += e.header.size;
+    if (total > 3 * 1024 ** 3) throw new Error('Mac 更新包解压大小异常');
+    if (name === 'FAIONYX.app/Contents/Resources/app.asar') hasApp = true;
     if (((e.attr >>> 16) & 0xf000) === 0xa000) {
-      const link = e.getData().toString('utf8')
-      const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(name), link))
-      if (path.posix.isAbsolute(link) || !resolved.startsWith('FAIONYX.app/')) throw new Error('Mac 更新包符号链接越界')
+      const link = e.getData().toString('utf8');
+      const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(name), link));
+      if (path.posix.isAbsolute(link) || !resolved.startsWith('FAIONYX.app/')) throw new Error('Mac 更新包符号链接越界');
     }
   }
-  if (!hasApp) throw new Error('更新包缺少 FAIONYX.app')
+  if (!hasApp) throw new Error('更新包缺少 FAIONYX.app');
 }
 async function verifyBundle(bundle: string, version: string): Promise<void> {
-  const plist = path.join(bundle, 'Contents/Info.plist')
-  const value = async (key: string) => (await run('/usr/libexec/PlistBuddy', ['-c', `Print :${key}`, plist])).stdout.trim()
+  const plist = path.join(bundle, 'Contents/Info.plist');
+  const value = async (key: string) => (await run('/usr/libexec/PlistBuddy', ['-c', `Print :${key}`, plist])).stdout.trim();
   if (
     (await value('CFBundleIdentifier')) !== 'com.faionyx.launcher' ||
     (await value('CFBundleShortVersionString')) !== version ||
     (await value('CFBundleExecutable')) !== 'FAIONYX'
   )
-    throw new Error('Mac 更新包身份或版本不匹配')
-  await run('/usr/bin/lipo', [path.join(bundle, 'Contents/MacOS/FAIONYX'), '-verify_arch', process.arch === 'arm64' ? 'arm64' : 'x86_64'])
-  await run('/usr/bin/codesign', ['--verify', '--deep', '--strict', bundle])
+    throw new Error('Mac 更新包身份或版本不匹配');
+  await run('/usr/bin/lipo', [path.join(bundle, 'Contents/MacOS/FAIONYX'), '-verify_arch', process.arch === 'arm64' ? 'arm64' : 'x86_64']);
+  await run('/usr/bin/codesign', ['--verify', '--deep', '--strict', bundle]);
 }
-const asar = (bundle: string) => path.join(bundle, 'Contents/Resources/app.asar')
+const asar = (bundle: string) => path.join(bundle, 'Contents/Resources/app.asar');
 // Hash the archive bytes outside Electron's virtual ASAR filesystem.
 async function asarHash(bundle: string): Promise<string> {
-  const hash = (await run('/usr/bin/shasum', ['-a', '256', asar(bundle)])).stdout.slice(0, 64)
-  if (!/^[a-f\d]{64}$/.test(hash)) throw new Error('无法校验 Mac 应用归档')
-  return hash
+  const hash = (await run('/usr/bin/shasum', ['-a', '256', asar(bundle)])).stdout.slice(0, 64);
+  if (!/^[a-f\d]{64}$/.test(hash)) throw new Error('无法校验 Mac 应用归档');
+  return hash;
 }
-const q = (value: string) => "'" + value.replace(/'/g, "'\\''") + "'"
+const q = (value: string) => "'" + value.replace(/'/g, "'\\''") + "'";
 export function macUpdaterScript(
   t: UpdateTransaction,
   stage: string,
@@ -142,8 +142,8 @@ export function macUpdaterScript(
   pid: number,
   stateDir: string
 ): string {
-  const backup = path.join(path.dirname(t.target), `.FAIONYX-backup-${t.id}.app`)
-  const applying = path.join(stateDir, 'mac-update.json.applying')
+  const backup = path.join(path.dirname(t.target), `.FAIONYX-backup-${t.id}.app`);
+  const applying = path.join(stateDir, 'mac-update.json.applying');
   const state = JSON.stringify({
     from: t.from,
     to: t.release.version,
@@ -151,7 +151,7 @@ export function macUpdaterScript(
     backupPath: backup,
     backupVersion: t.from,
     result: 'applied',
-  })
+  });
   return `#!/bin/sh
 set -eu
 exec >>${q(path.join(stateDir, 'mac-updater.log'))} 2>&1
@@ -178,102 +178,102 @@ while [ "$n" -lt 240 ]; do
 done
 # Never kill the relaunched app or a game to roll back; retain the backup for explicit recovery.
 exit 1
-`
+`;
 }
-let acknowledged: UpdateTransaction | null = null
+let acknowledged: UpdateTransaction | null = null;
 export async function applyMacUpdateOnStartup(): Promise<boolean> {
-  if (!macUpdateSupported()) return false
+  if (!macUpdateSupported()) return false;
   try {
-    const previous = readMacUpdate(claim()) as (UpdateTransaction & { installedHash?: string }) | null
+    const previous = readMacUpdate(claim()) as (UpdateTransaction & { installedHash?: string }) | null;
     if (previous) {
       if (previous.release.version === currentVersion() && previous.installedHash === (await asarHash(previous.target))) {
-        await verifyBundle(previous.target, currentVersion())
-        acknowledged = previous
-        return false
+        await verifyBundle(previous.target, currentVersion());
+        acknowledged = previous;
+        return false;
       }
       try {
         if (previous.helperPid) {
-          process.kill(previous.helperPid, 0)
-          return false
+          process.kill(previous.helperPid, 0);
+          return false;
         }
       } catch {
         /* interrupted */
       }
-      fs.renameSync(claim(), claim() + '.failed')
+      fs.renameSync(claim(), claim() + '.failed');
     }
   } catch (error) {
-    recordFailure(error)
+    recordFailure(error);
     // A damaged/interrupted transaction must never prevent the launcher from opening.
     try {
-      fs.renameSync(claim(), claim() + '.failed')
-      fs.writeFileSync(path.join(data(), 'update-failed.flag'), String(error))
+      fs.renameSync(claim(), claim() + '.failed');
+      fs.writeFileSync(path.join(data(), 'update-failed.flag'), String(error));
     } catch {
       /* read-only state */
     }
-    return false
+    return false;
   }
-  const t = readMacUpdate()
-  if (!t) return false
+  const t = readMacUpdate();
+  if (!t) return false;
   try {
     if (t.mode === 'upgrade' && compareSemver(t.release.version, currentVersion()) <= 0) {
-      clearMacUpdate()
-      return false
+      clearMacUpdate();
+      return false;
     }
-    await validateUpdatePayload(t)
-    validateMacArchive(t.file)
-    const stagingDir = fs.mkdtempSync(path.join(path.dirname(t.target), '.FAIONYX-update-'))
-    await run('/usr/bin/ditto', ['-x', '-k', t.file, stagingDir])
-    const stagedApp = path.join(stagingDir, 'FAIONYX.app')
-    await verifyBundle(stagedApp, t.release.version)
+    await validateUpdatePayload(t);
+    validateMacArchive(t.file);
+    const stagingDir = fs.mkdtempSync(path.join(path.dirname(t.target), '.FAIONYX-update-'));
+    await run('/usr/bin/ditto', ['-x', '-k', t.file, stagingDir]);
+    const stagedApp = path.join(stagingDir, 'FAIONYX.app');
+    await verifyBundle(stagedApp, t.release.version);
     const oldHash = await asarHash(t.target),
-      installedHash = await asarHash(stagedApp)
-    const script = path.join(macUpdateDir(), `apply-${t.id}.sh`)
-    fs.writeFileSync(script, macUpdaterScript(t, stagedApp, oldHash, installedHash, process.pid, data()), { mode: 0o700 })
-    fs.renameSync(marker(), claim())
-    atomicUpdateJson(claim(), { ...t, installedHash })
-    const helper = spawn('/bin/sh', [script], { detached: true, stdio: 'ignore' })
+      installedHash = await asarHash(stagedApp);
+    const script = path.join(macUpdateDir(), `apply-${t.id}.sh`);
+    fs.writeFileSync(script, macUpdaterScript(t, stagedApp, oldHash, installedHash, process.pid, data()), { mode: 0o700 });
+    fs.renameSync(marker(), claim());
+    atomicUpdateJson(claim(), { ...t, installedHash });
+    const helper = spawn('/bin/sh', [script], { detached: true, stdio: 'ignore' });
     await new Promise<void>((resolve, reject) => {
-      helper.once('spawn', resolve)
-      helper.once('error', reject)
-    })
-    atomicUpdateJson(claim(), { ...t, installedHash, helperPid: helper.pid })
-    helper.unref()
-    app.exit(0)
-    return true
+      helper.once('spawn', resolve);
+      helper.once('error', reject);
+    });
+    atomicUpdateJson(claim(), { ...t, installedHash, helperPid: helper.pid });
+    helper.unref();
+    app.exit(0);
+    return true;
   } catch (error) {
-    recordFailure(error)
+    recordFailure(error);
     try {
-      atomicUpdateJson(claim() + '.failed', t)
-      clearMacUpdate()
-      fs.rmSync(claim(), { force: true })
-      fs.writeFileSync(path.join(data(), 'update-failed.flag'), String(error))
+      atomicUpdateJson(claim() + '.failed', t);
+      clearMacUpdate();
+      fs.rmSync(claim(), { force: true });
+      fs.writeFileSync(path.join(data(), 'update-failed.flag'), String(error));
     } catch {
       /* Reporting failure must not block opening the existing application. */
     }
-    return false
+    return false;
   }
 }
 export async function acknowledgeMacUpdate(): Promise<void> {
-  if (!acknowledged) return
-  const stateFile = path.join(data(), 'update-state.json')
-  const state = JSON.parse(fs.readFileSync(stateFile, 'utf8'))
-  atomicUpdateJson(stateFile, { ...state, result: 'ok' })
-  fs.writeFileSync(claim() + '.receipt', acknowledged.id)
+  if (!acknowledged) return;
+  const stateFile = path.join(data(), 'update-state.json');
+  const state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+  atomicUpdateJson(stateFile, { ...state, result: 'ok' });
+  fs.writeFileSync(claim() + '.receipt', acknowledged.id);
 }
 export async function stageMacBackup(backup: string, version: string): Promise<void> {
-  await verifyBundle(backup, version)
-  const dir = path.join(macUpdateDir(), randomUUID())
-  fs.mkdirSync(dir, { recursive: true })
+  await verifyBundle(backup, version);
+  const dir = path.join(macUpdateDir(), randomUUID());
+  fs.mkdirSync(dir, { recursive: true });
   // Backup's unique basename must become the canonical app name inside the ZIP.
-  const copy = path.join(dir, 'FAIONYX.app')
-  await run('/usr/bin/ditto', [backup, copy])
+  const copy = path.join(dir, 'FAIONYX.app');
+  await run('/usr/bin/ditto', [backup, copy]);
   const assetName = updateAssetName(version),
-    file = path.join(dir, assetName)
-  await run('/usr/bin/ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', copy, file])
+    file = path.join(dir, assetName);
+  await run('/usr/bin/ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', copy, file]);
   await stageMacUpdate(
     { version, publishedAt: '', body: '', assetUrl: '', assetName, assetSize: fs.statSync(file).size },
     file,
     await sha256File(file),
     'rollback'
-  )
+  );
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ name: string; size?: number }>(), { size: 20 })
+withDefaults(defineProps<{ name: string; size?: number }>(), { size: 20 });
 const paths: Record<string, string> = {
   brush: 'm15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15z',
   erase: 'm4 14 9-10a2 2 0 0 1 3 0l5 5a2 2 0 0 1 0 3L13 21H8zM8 10l9 8M13 21h8',
@@ -22,7 +22,7 @@ const paths: Record<string, string> = {
   fabric: 'm7 3 14 7-7 11L3 14zM7 3l7 18M3 14l18-4M9 6l-4 9M16 8l-5 10',
   quilt: 'm12 2 4 4-4 4-4-4zM6 8l4 4-4 4-4-4zM18 8l4 4-4 4-4-4zM12 14l4 4-4 4-4-4z',
   neoforge: 'M13 2s1 6-3 9c-1-3-3-4-3-4s-5 5-4 10c2 8 17 8 18-1 1-4-3-7-3-7s0 4-2 5c1-7-3-12-3-12z',
-}
+};
 </script>
 <template>
   <svg

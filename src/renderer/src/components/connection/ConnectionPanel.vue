@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ title: string; subtitle?: string; step?: string }>()
+defineProps<{ title: string; subtitle?: string; step?: string }>();
 </script>
 <template>
   <section class="connection-panel">

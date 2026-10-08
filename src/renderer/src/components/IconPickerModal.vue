@@ -2,50 +2,50 @@
 /**
  * 实例头像选择弹窗：默认图标 / MC 生物头像网格（83 种）/ 上传自定义图片
  */
-import { ref } from 'vue'
-import { setVersionIcon, uploadVersionIcon, errText } from '../api'
-import { refreshInstalled, toast } from '../store'
-import { MOB_ICONS } from '../mobIcons'
+import { ref } from 'vue';
+import { setVersionIcon, uploadVersionIcon, errText } from '../api';
+import { refreshInstalled, toast } from '../store';
+import { MOB_ICONS } from '../mobIcons';
 
 const props = defineProps<{
-  open: boolean
-  folder?: string
-  versionId: string
-  currentIcon?: string
-}>()
-const emit = defineEmits<{ (e: 'close'): void }>()
+  open: boolean;
+  folder?: string;
+  versionId: string;
+  currentIcon?: string;
+}>();
+const emit = defineEmits<{ (e: 'close'): void }>();
 
-const busy = ref(false)
+const busy = ref(false);
 
 async function pick(icon: string) {
-  if (busy.value) return
-  busy.value = true
+  if (busy.value) return;
+  busy.value = true;
   try {
-    await setVersionIcon(props.versionId, icon, props.folder)
-    await refreshInstalled()
-    toast(icon ? '实例图标已更新' : '已恢复默认图标', 'success')
-    emit('close')
+    await setVersionIcon(props.versionId, icon, props.folder);
+    await refreshInstalled();
+    toast(icon ? '实例图标已更新' : '已恢复默认图标', 'success');
+    emit('close');
   } catch (e) {
-    toast('设置图标失败：' + errText(e), 'error')
+    toast('设置图标失败：' + errText(e), 'error');
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 
 async function onUpload() {
-  if (busy.value) return
-  busy.value = true
+  if (busy.value) return;
+  busy.value = true;
   try {
-    const icon = await uploadVersionIcon(props.versionId, props.folder)
+    const icon = await uploadVersionIcon(props.versionId, props.folder);
     if (icon) {
-      await refreshInstalled()
-      toast('自定义图标已应用', 'success')
-      emit('close')
+      await refreshInstalled();
+      toast('自定义图标已应用', 'success');
+      emit('close');
     }
   } catch (e) {
-    toast('上传图标失败：' + errText(e), 'error')
+    toast('上传图标失败：' + errText(e), 'error');
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 </script>

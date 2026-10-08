@@ -277,7 +277,7 @@ const definitions = {
   'update-02': ['检查更新', '缓存', '跳过版本', '版本列表', '下载', '选择本地包', '校验', '暂存', '备份', '替换', '重启', '更新状态真实'],
   'update-03': ['损坏包拒绝', '权限失败恢复', '复制失败恢复', '重启失败恢复', '未确认启动回滚', '备份恢复', 'DEB安装器待确认不记完成'],
   'update-04': ['每种包干净安装解压', '冷启动', '暖启动', '重启持久化', '实际架构', '实际依赖', '签名权限', '无用户资料泄露'],
-}
+};
 module.exports = Object.entries(definitions).map(([id, criteria]) => ({
   id,
   subassertions: criteria.map((criterion, i) => ({
@@ -289,4 +289,4 @@ module.exports = Object.entries(definitions).map(([id, criteria]) => ({
         ? { platforms: ['linux'] }
         : {}),
   })),
-}))
+}));

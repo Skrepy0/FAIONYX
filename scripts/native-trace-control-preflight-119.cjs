@@ -3,8 +3,8 @@ const fs = require('node:fs'),
   path = require('node:path'),
   { execFileSync } = require('node:child_process'),
   { createHash } = require('node:crypto'),
-  assert = require('node:assert/strict')
-const allowedFile = (name) => !name.toLowerCase().includes('private') && /\.(?:json|bgra|png|log)$/.test(name)
+  assert = require('node:assert/strict');
+const allowedFile = (name) => !name.toLowerCase().includes('private') && /\.(?:json|bgra|png|log)$/.test(name);
 function eligible({ version, arch, stage, ci }) {
   return (
     version === require('../package.json').version &&
@@ -12,28 +12,28 @@ function eligible({ version, arch, stage, ci }) {
     arch === 'x64' &&
     stage === 'dmg' &&
     ci === 'true'
-  )
+  );
 }
 function copySafe(from, to, receipt, root = to) {
-  fs.mkdirSync(to, { recursive: true })
+  fs.mkdirSync(to, { recursive: true });
   for (const entry of fs.readdirSync(from, { withFileTypes: true })) {
-    assert(!entry.isSymbolicLink(), 'no symlink in independent diagnostic evidence')
-    if (entry.name.toLowerCase().includes('private')) continue
+    assert(!entry.isSymbolicLink(), 'no symlink in independent diagnostic evidence');
+    if (entry.name.toLowerCase().includes('private')) continue;
     const source = path.join(from, entry.name),
-      target = path.join(to, entry.name)
-    if (entry.isDirectory()) copySafe(source, target, receipt, root)
+      target = path.join(to, entry.name);
+    if (entry.isDirectory()) copySafe(source, target, receipt, root);
     else if (allowedFile(entry.name)) {
-      fs.copyFileSync(source, target)
+      fs.copyFileSync(source, target);
       receipt.push({
         file: path.relative(root, target),
         bytes: fs.statSync(target).size,
         sha256: createHash('sha256').update(fs.readFileSync(target)).digest('hex'),
-      })
+      });
     }
   }
 }
 function run(options, dependencies = {}) {
-  if (!eligible(options)) return { enabled: false }
+  if (!eligible(options)) return { enabled: false };
   const { env, exe, extensionProof } = options,
     outRoot = options.outRoot || 'out',
     began = Date.now(),
@@ -48,26 +48,26 @@ function run(options, dependencies = {}) {
       complete: false,
       directories: [],
       copied: [],
-    }
-  const invoke = dependencies.invoke || execFileSync
+    };
+  const invoke = dependencies.invoke || execFileSync;
   try {
     const appRoot = options.appRoot || path.resolve('release/mac-proof-x64-app/extensions'),
-      prior = JSON.parse(fs.readFileSync(path.join(appRoot, 'observer-aba-preflight.json')))
+      prior = JSON.parse(fs.readFileSync(path.join(appRoot, 'observer-aba-preflight.json')));
     assert(
       prior.complete === true && prior.processExitCode === 0 && prior.directories.length === 1,
       'original independent six-case ABA must finish before trace controls'
-    )
-    const original = JSON.parse(fs.readFileSync(path.join(appRoot, prior.directories[0].name, 'observer-aba.json')))
+    );
+    const original = JSON.parse(fs.readFileSync(path.join(appRoot, prior.directories[0].name, 'observer-aba.json')));
     assert(
       original.complete === true && original.cases.length === 6 && original.cases.every((c) => c.complete),
       'all original six cases must remain complete'
-    )
+    );
     proof.priorABA = {
       source: prior.directories[0].name,
       startedAt: original.startedAt,
       finishedAt: original.finishedAt,
       sourceSHA256: original.sourceSHA256 ?? null,
-    }
+    };
     invoke(process.execPath, ['scripts/verify-ui-refinement.cjs'], {
       env: {
         ...env,
@@ -82,47 +82,47 @@ function run(options, dependencies = {}) {
       stdio: 'inherit',
       timeout: proof.executionBudgetMs,
       killSignal: 'SIGTERM',
-    })
-    proof.processExitCode = 0
+    });
+    proof.processExitCode = 0;
   } catch (error) {
-    proof.error = { name: error.name, code: error.code ?? null, status: error.status ?? null, signal: error.signal ?? null }
-    console.warn('DIAGNOSTIC trace controls failed; original formal result unchanged', proof.error)
+    proof.error = { name: error.name, code: error.code ?? null, status: error.status ?? null, signal: error.signal ?? null };
+    console.warn('DIAGNOSTIC trace controls failed; original formal result unchanged', proof.error);
   } finally {
     try {
       for (const name of fs.readdirSync(outRoot).filter((n) => /^kamu-observer-trace-control-119-[0-9a-f-]{36}-black-orange$/.test(n))) {
         const source = path.join(outRoot, name),
           file = path.join(source, 'observer-aba.json'),
-          result = JSON.parse(fs.readFileSync(file))
-        if (Date.parse(result.startedAt) < began) continue
-        const files = []
-        copySafe(source, path.join(extensionProof, name), files)
-        proof.directories.push({ name, complete: result.complete === true, files, sourceSHA256: result.sourceSHA256 ?? null })
+          result = JSON.parse(fs.readFileSync(file));
+        if (Date.parse(result.startedAt) < began) continue;
+        const files = [];
+        copySafe(source, path.join(extensionProof, name), files);
+        proof.directories.push({ name, complete: result.complete === true, files, sourceSHA256: result.sourceSHA256 ?? null });
       }
       for (const name of fs.readdirSync(outRoot).filter((n) => /^qa-owned-process-119-[0-9a-f-]{36}\.json$/.test(n)))
         if (fs.statSync(path.join(outRoot, name)).mtimeMs >= began) {
-          const target = path.join(extensionProof, 'owned-process-ledgers', name)
-          fs.mkdirSync(path.dirname(target), { recursive: true })
-          fs.copyFileSync(path.join(outRoot, name), target)
-          proof.copied.push('owned-process-ledgers/' + name)
+          const target = path.join(extensionProof, 'owned-process-ledgers', name);
+          fs.mkdirSync(path.dirname(target), { recursive: true });
+          fs.copyFileSync(path.join(outRoot, name), target);
+          proof.copied.push('owned-process-ledgers/' + name);
         }
     } catch (error) {
-      proof.collectionError = error.name
-      console.warn('DIAGNOSTIC trace collection failure retained', error.name)
+      proof.collectionError = error.name;
+      console.warn('DIAGNOSTIC trace collection failure retained', error.name);
     }
-    proof.finishedAt = new Date().toISOString()
-    proof.elapsedMs = Date.now() - began
+    proof.finishedAt = new Date().toISOString();
+    proof.elapsedMs = Date.now() - began;
     proof.complete =
       proof.processExitCode === 0 &&
       !proof.collectionError &&
       proof.directories.length === 1 &&
       proof.directories.every((d) => d.complete) &&
-      proof.elapsedMs <= proof.deadlineMs
+      proof.elapsedMs <= proof.deadlineMs;
     try {
-      fs.writeFileSync(path.join(extensionProof, 'trace-control-preflight.json'), JSON.stringify(proof, null, 2))
+      fs.writeFileSync(path.join(extensionProof, 'trace-control-preflight.json'), JSON.stringify(proof, null, 2));
     } catch (error) {
-      console.warn('DIAGNOSTIC trace receipt failure retained', error.name)
+      console.warn('DIAGNOSTIC trace receipt failure retained', error.name);
     }
   }
-  return proof
+  return proof;
 }
-module.exports = { run, eligible, allowedFile, copySafe }
+module.exports = { run, eligible, allowedFile, copySafe };

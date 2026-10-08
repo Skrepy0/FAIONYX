@@ -1,19 +1,19 @@
-import { mcVersionAtLeast } from './keybindings'
+import { mcVersionAtLeast } from './keybindings';
 
-export type GameOptionValue = number | boolean | string
+export type GameOptionValue = number | boolean | string;
 export interface GameOptionDef {
-  id: string
-  label: string
-  page: string
-  initial: GameOptionValue
-  min?: number
-  max?: number
-  step?: number
-  unit?: string
-  since?: string
-  until?: string
-  choices?: readonly (readonly [GameOptionValue, string])[]
-  encoding?: 'percent' | 'sensitivity' | 'fov' | 'text' | 'json' | 'chatOpacity' | 'chatWidth' | 'chatHeight'
+  id: string;
+  label: string;
+  page: string;
+  initial: GameOptionValue;
+  min?: number;
+  max?: number;
+  step?: number;
+  unit?: string;
+  since?: string;
+  until?: string;
+  choices?: readonly (readonly [GameOptionValue, string])[];
+  encoding?: 'percent' | 'sensitivity' | 'fov' | 'text' | 'json' | 'chatOpacity' | 'chatWidth' | 'chatHeight';
 }
 const bool = (id: string, label: string, page: string, initial = true, since?: string): GameOptionDef => ({
   id,
@@ -21,7 +21,7 @@ const bool = (id: string, label: string, page: string, initial = true, since?: s
   page,
   initial,
   since,
-})
+});
 const percent = (id: string, label: string, page: string, initial = 100, since?: string): GameOptionDef => ({
   id,
   label,
@@ -33,7 +33,7 @@ const percent = (id: string, label: string, page: string, initial = 100, since?:
   unit: '%',
   encoding: 'percent',
   since,
-})
+});
 const integer = (id: string, label: string, page: string, initial: number, min: number, max: number, since?: string): GameOptionDef => ({
   id,
   label,
@@ -43,7 +43,7 @@ const integer = (id: string, label: string, page: string, initial: number, min: 
   max,
   step: 1,
   since,
-})
+});
 export const GAME_OPTION_PAGES = [
   ['skin', '皮肤自定义'],
   ['sounds', '音乐和声音'],
@@ -55,7 +55,7 @@ export const GAME_OPTION_PAGES = [
   ['accessibility', '辅助功能'],
   ['telemetry', '遥测数据'],
   ['credits', '鸣谢和著作权'],
-] as const
+] as const;
 export const GAME_OPTIONS: GameOptionDef[] = [
   { ...integer('fov', '视场角', 'root', 70, 30, 110), encoding: 'fov', unit: '°' },
   {
@@ -261,8 +261,8 @@ export const GAME_OPTIONS: GameOptionDef[] = [
   bool('highContrastBlockOutline', '高对比度方块轮廓', 'accessibility', false, '1.21.2'),
   bool('narratorHotkey', '旁白快捷键', 'accessibility', true, '1.21.2'),
   bool('telemetryOptInExtra', '发送可选遥测数据', 'telemetry', false, '1.19.3'),
-]
-export const uniqueGameOptions = GAME_OPTIONS.filter((d, i, a) => a.findIndex((other) => other.id === d.id) === i)
+];
+export const uniqueGameOptions = GAME_OPTIONS.filter((d, i, a) => a.findIndex((other) => other.id === d.id) === i);
 // Same row-major sequence as the game's video submenus: quality, display, appearance.
 export const VIDEO_OPTION_ORDER = [
   'renderDistance',
@@ -287,35 +287,35 @@ export const VIDEO_OPTION_ORDER = [
   'vignette',
   'attackIndicator',
   'chunkSectionFadeInTime',
-]
+];
 export function supportedGameOption(def: GameOptionDef, version: string): boolean {
-  return (!def.since || mcVersionAtLeast(version, def.since)) && (!def.until || !mcVersionAtLeast(version, def.until))
+  return (!def.since || mcVersionAtLeast(version, def.since)) && (!def.until || !mcVersionAtLeast(version, def.until));
 }
 export function validateGameOption(id: string, value: unknown): asserts value is GameOptionValue {
-  const d = uniqueGameOptions.find((d) => d.id === id)
-  if (!d) throw new Error('未知游戏选项')
-  if (d.choices ? !d.choices.some((c) => c[0] === value) : typeof value !== typeof d.initial) throw new Error('游戏选项值无效')
+  const d = uniqueGameOptions.find((d) => d.id === id);
+  if (!d) throw new Error('未知游戏选项');
+  if (d.choices ? !d.choices.some((c) => c[0] === value) : typeof value !== typeof d.initial) throw new Error('游戏选项值无效');
   if (
     typeof value === 'number' &&
     (!Number.isFinite(value) || value < d.min! || value > d.max! || (d.step === 1 && !Number.isInteger(value)))
   )
-    throw new Error('游戏选项超出有效范围')
+    throw new Error('游戏选项超出有效范围');
 }
 export function encodeGameOption(d: GameOptionDef, value: GameOptionValue, version: string): string {
-  validateGameOption(d.id, value)
-  if (d.encoding === 'fov') return String((Number(value) - 70) / 40)
-  if (d.encoding === 'chatOpacity') return String((Number(value) - 10) / 90)
-  if (d.encoding === 'chatWidth') return String((Number(value) - 40) / 280)
-  if (d.encoding === 'chatHeight') return String((Number(value) - 20) / 160)
-  if (d.encoding === 'percent') return String(Number(value) / 100)
-  if (d.encoding === 'sensitivity') return String(Number(value) / 200)
-  if (d.encoding === 'json') return JSON.stringify(value)
+  validateGameOption(d.id, value);
+  if (d.encoding === 'fov') return String((Number(value) - 70) / 40);
+  if (d.encoding === 'chatOpacity') return String((Number(value) - 10) / 90);
+  if (d.encoding === 'chatWidth') return String((Number(value) - 40) / 280);
+  if (d.encoding === 'chatHeight') return String((Number(value) - 20) / 160);
+  if (d.encoding === 'percent') return String(Number(value) / 100);
+  if (d.encoding === 'sensitivity') return String(Number(value) / 200);
+  if (d.encoding === 'json') return JSON.stringify(value);
   if (d.id === 'lang' && !mcVersionAtLeast(version, '1.11'))
-    return String(value).replace(/_([a-z]+)/, (_, region) => '_' + region.toUpperCase())
-  if (d.id === 'mainHand' && mcVersionAtLeast(version, '1.19')) return JSON.stringify(value)
-  return String(value)
+    return String(value).replace(/_([a-z]+)/, (_, region) => '_' + region.toUpperCase());
+  if (d.id === 'mainHand' && mcVersionAtLeast(version, '1.19')) return JSON.stringify(value);
+  return String(value);
 }
 export interface DefaultGameOptions {
-  enabled: boolean
-  values: Record<string, GameOptionValue>
+  enabled: boolean;
+  values: Record<string, GameOptionValue>;
 }

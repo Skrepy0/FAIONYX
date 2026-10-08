@@ -1,51 +1,51 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { errText, getSettings, importWorld, listFolders, listLoaders, scanFolder } from '../api'
-import { refreshInstalled, store, toast } from '../store'
-import type { GameFolder, InstalledVersion, LoaderName, WorldCandidateInfo, WorldImportInfo, WorldImportOptions } from '@shared/types'
+import { computed, ref, watch } from 'vue';
+import { errText, getSettings, importWorld, listFolders, listLoaders, scanFolder } from '../api';
+import { refreshInstalled, store, toast } from '../store';
+import type { GameFolder, InstalledVersion, LoaderName, WorldCandidateInfo, WorldImportInfo, WorldImportOptions } from '@shared/types';
 
 const props = defineProps<{
-  open: boolean
-  filePath: string
-  info: WorldImportInfo | null
-}>()
-const emit = defineEmits<{ (event: 'close'): void }>()
+  open: boolean;
+  filePath: string;
+  info: WorldImportInfo | null;
+}>();
+const emit = defineEmits<{ (event: 'close'): void }>();
 
-const selectedCandidateId = ref('')
-const worldName = ref('')
-const folders = ref<GameFolder[]>([])
-const targetFolder = ref('')
-const versions = ref<InstalledVersion[]>([])
-const loadingTargets = ref(false)
-const mode = ref<'existing' | 'new'>('existing')
-const targetVersionId = ref('')
-const newMinecraftVersion = ref('')
-const newLoader = ref<LoaderName | ''>('')
-const newLoaderVersion = ref('')
-const newInstanceName = ref('')
-const loaderVersions = ref<string[]>([])
-const loaderError = ref('')
-const allowMismatch = ref(false)
-const acknowledgeUnknownMods = ref(false)
-const busy = ref(false)
-const error = ref('')
-let folderLoadSequence = 0
-let loaderLoadSequence = 0
+const selectedCandidateId = ref('');
+const worldName = ref('');
+const folders = ref<GameFolder[]>([]);
+const targetFolder = ref('');
+const versions = ref<InstalledVersion[]>([]);
+const loadingTargets = ref(false);
+const mode = ref<'existing' | 'new'>('existing');
+const targetVersionId = ref('');
+const newMinecraftVersion = ref('');
+const newLoader = ref<LoaderName | ''>('');
+const newLoaderVersion = ref('');
+const newInstanceName = ref('');
+const loaderVersions = ref<string[]>([]);
+const loaderError = ref('');
+const allowMismatch = ref(false);
+const acknowledgeUnknownMods = ref(false);
+const busy = ref(false);
+const error = ref('');
+let folderLoadSequence = 0;
+let loaderLoadSequence = 0;
 
 const candidate = computed<WorldCandidateInfo | null>(
   () => props.info?.candidates.find((item) => item.id === selectedCandidateId.value) ?? null
-)
+);
 
 const orderedVersions = computed(() => {
-  const current = candidate.value
+  const current = candidate.value;
   return [...versions.value].sort((a, b) => {
-    const aMatch = current?.versionConfidence === 'exact' && a.mcVersion === current.minecraftVersion
-    const bMatch = current?.versionConfidence === 'exact' && b.mcVersion === current.minecraftVersion
-    return Number(bMatch) - Number(aMatch) || a.id.localeCompare(b.id)
-  })
-})
+    const aMatch = current?.versionConfidence === 'exact' && a.mcVersion === current.minecraftVersion;
+    const bMatch = current?.versionConfidence === 'exact' && b.mcVersion === current.minecraftVersion;
+    return Number(bMatch) - Number(aMatch) || a.id.localeCompare(b.id);
+  });
+});
 
-const targetVersion = computed(() => versions.value.find((version) => version.id === targetVersionId.value))
+const targetVersion = computed(() => versions.value.find((version) => version.id === targetVersionId.value));
 
 const exactMismatch = computed(
   () =>
@@ -54,44 +54,44 @@ const exactMismatch = computed(
     !!candidate.value.minecraftVersion &&
     !!targetVersion.value &&
     targetVersion.value.mcVersion !== candidate.value.minecraftVersion
-)
+);
 
-const needsModAcknowledgement = computed(() => (candidate.value?.modEvidence.length ?? 0) > 0)
+const needsModAcknowledgement = computed(() => (candidate.value?.modEvidence.length ?? 0) > 0);
 
 const canSubmit = computed(() => {
-  if (!candidate.value || !worldName.value.trim() || !targetFolder.value || busy.value) return false
-  if (exactMismatch.value && !allowMismatch.value) return false
-  if (needsModAcknowledgement.value && !acknowledgeUnknownMods.value) return false
-  if (mode.value === 'existing') return !!targetVersion.value
-  return !!newMinecraftVersion.value.trim() && !!newInstanceName.value.trim() && (!newLoader.value || !!newLoaderVersion.value)
-})
+  if (!candidate.value || !worldName.value.trim() || !targetFolder.value || busy.value) return false;
+  if (exactMismatch.value && !allowMismatch.value) return false;
+  if (needsModAcknowledgement.value && !acknowledgeUnknownMods.value) return false;
+  if (mode.value === 'existing') return !!targetVersion.value;
+  return !!newMinecraftVersion.value.trim() && !!newInstanceName.value.trim() && (!newLoader.value || !!newLoaderVersion.value);
+});
 
 function fmtSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`
-  if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MB`
-  return `${(bytes / 1024 ** 3).toFixed(2)} GB`
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+  return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
 }
 
 function suggestedInstanceName(item: WorldCandidateInfo): string {
-  const suffix = item.versionConfidence === 'exact' && item.minecraftVersion ? `-${item.minecraftVersion}` : ''
-  return `${item.worldName}${suffix}`.replace(/[\\/:*?"<>|]/g, '').slice(0, 100)
+  const suffix = item.versionConfidence === 'exact' && item.minecraftVersion ? `-${item.minecraftVersion}` : '';
+  return `${item.worldName}${suffix}`.replace(/[\\/:*?"<>|]/g, '').slice(0, 100);
 }
 
 function resetForCandidate(item: WorldCandidateInfo) {
-  selectedCandidateId.value = item.id
-  worldName.value = item.worldName
-  newMinecraftVersion.value = item.versionConfidence === 'exact' ? (item.minecraftVersion ?? '') : ''
-  newLoader.value = item.loader ?? ''
-  newLoaderVersion.value = ''
-  newInstanceName.value = suggestedInstanceName(item)
-  allowMismatch.value = false
-  acknowledgeUnknownMods.value = false
-  chooseDefaultTarget()
+  selectedCandidateId.value = item.id;
+  worldName.value = item.worldName;
+  newMinecraftVersion.value = item.versionConfidence === 'exact' ? (item.minecraftVersion ?? '') : '';
+  newLoader.value = item.loader ?? '';
+  newLoaderVersion.value = '';
+  newInstanceName.value = suggestedInstanceName(item);
+  allowMismatch.value = false;
+  acknowledgeUnknownMods.value = false;
+  chooseDefaultTarget();
 }
 
 function chooseDefaultTarget() {
-  const current = candidate.value
+  const current = candidate.value;
   const match =
     versions.value.find(
       (version) =>
@@ -100,102 +100,102 @@ function chooseDefaultTarget() {
         current?.versionConfidence === 'exact' &&
         version.mcVersion === current.minecraftVersion &&
         (!current.loader || version.loader === current.loader)
-    ) ?? versions.value.find((version) => !version.incomplete && !version.failed)
-  targetVersionId.value = match?.id ?? ''
-  mode.value = match ? 'existing' : 'new'
+    ) ?? versions.value.find((version) => !version.incomplete && !version.failed);
+  targetVersionId.value = match?.id ?? '';
+  mode.value = match ? 'existing' : 'new';
 }
 
 async function loadTargetFolder() {
-  if (!targetFolder.value) return
-  const sequence = ++folderLoadSequence
-  loadingTargets.value = true
-  error.value = ''
+  if (!targetFolder.value) return;
+  const sequence = ++folderLoadSequence;
+  loadingTargets.value = true;
+  error.value = '';
   try {
-    const result = await scanFolder(targetFolder.value)
-    if (sequence !== folderLoadSequence) return
-    versions.value = result.versions
-    chooseDefaultTarget()
+    const result = await scanFolder(targetFolder.value);
+    if (sequence !== folderLoadSequence) return;
+    versions.value = result.versions;
+    chooseDefaultTarget();
   } catch (reason) {
-    if (sequence === folderLoadSequence) error.value = `读取目标文件夹失败：${errText(reason)}`
+    if (sequence === folderLoadSequence) error.value = `读取目标文件夹失败：${errText(reason)}`;
   } finally {
-    if (sequence === folderLoadSequence) loadingTargets.value = false
+    if (sequence === folderLoadSequence) loadingTargets.value = false;
   }
 }
 
 async function initialize() {
-  if (!props.open || !props.info?.candidates.length) return
-  error.value = ''
-  busy.value = false
+  if (!props.open || !props.info?.candidates.length) return;
+  error.value = '';
+  busy.value = false;
   try {
-    const state = await listFolders()
-    folders.value = state.folders
-    targetFolder.value = state.folders.find((folder) => folder.isDefault)?.path || state.active || state.folders[0]?.path || ''
-    const first = props.info.candidates[0]
-    selectedCandidateId.value = first.id
-    await loadTargetFolder()
-    resetForCandidate(first)
+    const state = await listFolders();
+    folders.value = state.folders;
+    targetFolder.value = state.folders.find((folder) => folder.isDefault)?.path || state.active || state.folders[0]?.path || '';
+    const first = props.info.candidates[0];
+    selectedCandidateId.value = first.id;
+    await loadTargetFolder();
+    resetForCandidate(first);
   } catch (reason) {
-    error.value = errText(reason)
+    error.value = errText(reason);
   }
 }
 
-watch(() => [props.open, props.info] as const, initialize, { immediate: true })
+watch(() => [props.open, props.info] as const, initialize, { immediate: true });
 
 watch(selectedCandidateId, (id, oldId) => {
-  if (!id || id === oldId) return
-  const item = props.info?.candidates.find((value) => value.id === id)
-  if (item) resetForCandidate(item)
-})
+  if (!id || id === oldId) return;
+  const item = props.info?.candidates.find((value) => value.id === id);
+  if (item) resetForCandidate(item);
+});
 
 watch([newLoader, newMinecraftVersion], async ([loader, minecraftVersion]) => {
-  const sequence = ++loaderLoadSequence
-  loaderVersions.value = []
-  loaderError.value = ''
-  newLoaderVersion.value = ''
-  if (!loader || !minecraftVersion.trim()) return
+  const sequence = ++loaderLoadSequence;
+  loaderVersions.value = [];
+  loaderError.value = '';
+  newLoaderVersion.value = '';
+  if (!loader || !minecraftVersion.trim()) return;
   try {
-    const list = await listLoaders(loader, minecraftVersion.trim())
-    if (sequence !== loaderLoadSequence) return
-    loaderVersions.value = list
-    newLoaderVersion.value = list[0] ?? ''
-    if (!list.length) loaderError.value = `${loader} 暂无适配 ${minecraftVersion} 的可用版本`
+    const list = await listLoaders(loader, minecraftVersion.trim());
+    if (sequence !== loaderLoadSequence) return;
+    loaderVersions.value = list;
+    newLoaderVersion.value = list[0] ?? '';
+    if (!list.length) loaderError.value = `${loader} 暂无适配 ${minecraftVersion} 的可用版本`;
   } catch (reason) {
-    if (sequence === loaderLoadSequence) loaderError.value = errText(reason)
+    if (sequence === loaderLoadSequence) loaderError.value = errText(reason);
   }
-})
+});
 
 async function submit() {
-  const item = candidate.value
-  if (!item || !canSubmit.value) return
-  busy.value = true
-  error.value = ''
+  const item = candidate.value;
+  if (!item || !canSubmit.value) return;
+  busy.value = true;
+  error.value = '';
   const options: WorldImportOptions = {
     candidateId: item.id,
     worldName: worldName.value.trim(),
     targetFolder: targetFolder.value,
     allowVersionMismatch: allowMismatch.value,
-  }
+  };
   if (mode.value === 'existing') {
-    options.targetVersionId = targetVersionId.value
+    options.targetVersionId = targetVersionId.value;
   } else {
     options.newInstance = {
       minecraftVersion: newMinecraftVersion.value.trim(),
       instanceName: newInstanceName.value.trim(),
       loader: newLoader.value || undefined,
       loaderVersion: newLoaderVersion.value || undefined,
-    }
+    };
   }
   try {
-    const result = await importWorld(props.filePath, options)
-    store.settings = await getSettings()
-    await refreshInstalled()
-    const packs = result.installedResourcePacks.length ? `，并安装 ${result.installedResourcePacks.length} 个资源包` : ''
-    toast(`存档「${result.worldName}」已导入到 ${result.versionId}${packs}`, 'success')
-    emit('close')
+    const result = await importWorld(props.filePath, options);
+    store.settings = await getSettings();
+    await refreshInstalled();
+    const packs = result.installedResourcePacks.length ? `，并安装 ${result.installedResourcePacks.length} 个资源包` : '';
+    toast(`存档「${result.worldName}」已导入到 ${result.versionId}${packs}`, 'success');
+    emit('close');
   } catch (reason) {
-    error.value = errText(reason)
+    error.value = errText(reason);
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 </script>

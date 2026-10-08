@@ -4,229 +4,229 @@
  */
 
 // ---------------- 账号 ----------------
-export type AccountType = 'offline' | 'microsoft' | 'yggdrasil'
+export type AccountType = 'offline' | 'microsoft' | 'yggdrasil';
 
 export interface Account {
-  id: string
-  type: AccountType
-  username: string
-  uuid: string
-  accessToken?: string
+  id: string;
+  type: AccountType;
+  username: string;
+  uuid: string;
+  accessToken?: string;
   /** 微软 OAuth refresh_token，用于静默续期 */
-  refreshToken?: string
+  refreshToken?: string;
   /** MC accessToken 过期时间（epoch 秒） */
-  expiresAt?: number
+  expiresAt?: number;
   /** 外置 Yggdrasil 账号所属提供商。 */
-  providerId?: string
-  providerName?: string
-  apiRoot?: string
+  providerId?: string;
+  providerName?: string;
+  apiRoot?: string;
   /** 外置登录内部字段；IPC 列表会剥离凭据和用户属性。 */
-  clientToken?: string
-  loginIdentifier?: string
-  userId?: string
-  userProperties?: Array<{ name: string; value: string }>
+  clientToken?: string;
+  loginIdentifier?: string;
+  userId?: string;
+  userProperties?: Array<{ name: string; value: string }>;
 }
 
 /** 微软 device code 登录开始时返回给前端的展示信息 */
 export interface MsDeviceCodeInfo {
-  userCode: string
-  verificationUri: string
-  message: string
+  userCode: string;
+  verificationUri: string;
+  message: string;
 }
 
 export interface YggdrasilProviderInput {
-  kind: 'text' | 'file'
-  value: string
+  kind: 'text' | 'file';
+  value: string;
 }
 
 export interface YggdrasilProvider {
-  id: string
-  name: string
-  apiRoot: string
-  authServer: string
-  accountServer: string
-  sessionServer: string
-  servicesUrl?: string
-  skinDomains: string[]
-  insecure: boolean
-  metadataFetchedAt: string
+  id: string;
+  name: string;
+  apiRoot: string;
+  authServer: string;
+  accountServer: string;
+  sessionServer: string;
+  servicesUrl?: string;
+  skinDomains: string[];
+  insecure: boolean;
+  metadataFetchedAt: string;
 }
 
 /** 网络探测后的待确认配置；保存前不会进入提供商列表。 */
 export interface YggdrasilProviderCandidate extends YggdrasilProvider {
-  sourceLabel: string
-  aliRedirected: boolean
+  sourceLabel: string;
+  aliRedirected: boolean;
 }
 
 export interface YggdrasilProfileChoice {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export interface YggdrasilRuntimeInfo {
-  path: string
-  version: string
-  buildNumber: number
-  sha256: string
+  path: string;
+  version: string;
+  buildNumber: number;
+  sha256: string;
 }
 
 export type YggdrasilLoginResult =
   | { status: 'complete'; account: Account }
   | {
-      status: 'select-profile'
-      challengeId: string
-      providerName: string
-      profiles: YggdrasilProfileChoice[]
-      expiresAt: number
-    }
+      status: 'select-profile';
+      challengeId: string;
+      providerName: string;
+      profiles: YggdrasilProfileChoice[];
+      expiresAt: number;
+    };
 
 // ---------------- 版本 ----------------
 export interface RemoteVersion {
-  id: string
-  type: 'release' | 'snapshot' | 'old_beta' | 'old_alpha'
-  url: string
-  releaseTime: string
+  id: string;
+  type: 'release' | 'snapshot' | 'old_beta' | 'old_alpha';
+  url: string;
+  releaseTime: string;
 }
 
 // ---------------- 游戏文件夹 ----------------
 export interface GameFolder {
   /** 绝对路径 */
-  path: string
+  path: string;
   /** 显示名（默认取目录名） */
-  name: string
+  name: string;
   /** 是否为默认文件夹（承接新安装版本；libraries/assets/runtimes 共享位置） */
-  isDefault: boolean
+  isDefault: boolean;
 }
 
 export interface FolderScanResult {
-  folder: GameFolder
-  structure: 'minecraft' | 'faionyx' | 'empty' | 'missing'
-  status: 'ready' | 'warning' | 'error'
-  versions: InstalledVersion[]
-  errors: string[]
-  scannedAt: string
-  durationMs: number
+  folder: GameFolder;
+  structure: 'minecraft' | 'faionyx' | 'empty' | 'missing';
+  status: 'ready' | 'warning' | 'error';
+  versions: InstalledVersion[];
+  errors: string[];
+  scannedAt: string;
+  durationMs: number;
 }
 
 export interface InstalledVersion {
-  id: string
+  id: string;
   /** 基于的原版版本（加载器版本等于对应 mc 版本） */
-  mcVersion: string
-  loader?: 'forge' | 'fabric' | 'quilt' | 'neoforge'
-  loaderVersion?: string
+  mcVersion: string;
+  loader?: 'forge' | 'fabric' | 'quilt' | 'neoforge';
+  loaderVersion?: string;
   /** 整合包实例：来源整合包名称/版本（非整合包安装时为空） */
-  modpackName?: string
-  modpackVersion?: string
+  modpackName?: string;
+  modpackVersion?: string;
   /** 版本隔离：独立的 mods/存档/配置目录（versions/<id>/ 作为游戏目录） */
-  isolated?: boolean
+  isolated?: boolean;
   /** 实际游戏目录；由启动与 UI 共用的解析器计算。 */
-  gameDirectory?: string
-  isolationReason?: 'explicit' | 'configured-path' | 'modpack' | 'detected-content' | 'shared'
+  gameDirectory?: string;
+  isolationReason?: 'explicit' | 'configured-path' | 'modpack' | 'detected-content' | 'shared';
   /** 下载未完成的残缺版本（json 在但客户端 jar 缺失/有 .part 残留），不算正常已安装 */
-  incomplete?: boolean
+  incomplete?: boolean;
   /** 安装事务失败的标记（.installing 存在），提供清理残留入口 */
-  failed?: boolean
+  failed?: boolean;
   /** 版本独立指定的 Java 路径（空 = 自动匹配） */
-  javaPath?: string
+  javaPath?: string;
   /** 当前实例显式自动匹配，优先于全局手动设置。 */
-  javaAuto?: boolean
+  javaAuto?: boolean;
   /** 实例窗口设置覆盖；未设置时跟随全局设置。 */
-  resolution?: GameResolution
+  resolution?: GameResolution;
   /** 实例图标：'mob:<内置生物头像id>' | 'file:<自定义图标文件名>'（空 = 默认图标） */
-  icon?: string
+  icon?: string;
   /** 首页启动卡专属缩略图；主进程只返回已验证的 FAIONYX 受管文件路径。 */
-  thumbnail?: string
+  thumbnail?: string;
   /** 专属缩略图显示方式。 */
-  thumbnailFit?: ImageFit
+  thumbnailFit?: ImageFit;
   /** 该版本所属的游戏文件夹路径 */
-  folder: string
+  folder: string;
 }
 
 export interface IsolationMigrationPlan {
-  versionId: string
-  source: string
-  destination: string
+  versionId: string;
+  source: string;
+  destination: string;
   items: Array<{
-    name: string
-    kind: 'file' | 'directory'
-    files: number
-    bytes: number
-  }>
-  conflicts: string[]
-  totalFiles: number
-  totalBytes: number
+    name: string;
+    kind: 'file' | 'directory';
+    files: number;
+    bytes: number;
+  }>;
+  conflicts: string[];
+  totalFiles: number;
+  totalBytes: number;
 }
 
-export type LoaderName = 'forge' | 'fabric' | 'quilt' | 'neoforge'
+export type LoaderName = 'forge' | 'fabric' | 'quilt' | 'neoforge';
 
 export interface InstallOptions {
-  favoriteMods?: import('./modFavorites').FavoriteSelection[]
-  favoriteInstallIntent?: import('./modFavorites').FavoriteInstallIntent
-  recordingMod?: { kind: import('./recordings').RecordingKind; fileId: string }
-  loader?: LoaderName
-  loaderVersion?: string
+  favoriteMods?: import('./modFavorites').FavoriteSelection[];
+  favoriteInstallIntent?: import('./modFavorites').FavoriteInstallIntent;
+  recordingMod?: { kind: import('./recordings').RecordingKind; fileId: string };
+  loader?: LoaderName;
+  loaderVersion?: string;
   /** Fabric 专用：同时安装的 Fabric API 版本号（不传 = 不装） */
-  fabricApi?: string
+  fabricApi?: string;
   /** 自定义实例名（作为 versions/<名> 目录名与版本 id）；不填按规则自动生成 */
-  instanceName?: string
+  instanceName?: string;
 }
 
 /** Fabric API 版本条目（来自 Modrinth） */
 export interface FabricApiVersion {
-  version: string
-  date: string
+  version: string;
+  date: string;
 }
 
 // ---------------- Java ----------------
 export interface JavaInfo {
-  path: string
+  path: string;
   /** 主版本号，如 8 / 17 / 21 */
-  major: number
-  version: string
-  is64Bit: boolean
+  major: number;
+  version: string;
+  is64Bit: boolean;
   /** Java 进程实际报告的架构，如 x64 / x86 / arm64。 */
-  architecture?: string
+  architecture?: string;
   /** java.vendor / java.vm.vendor，无法读取时省略。 */
-  vendor?: string
+  vendor?: string;
   /** 来源：自动扫描 / 手动添加 */
-  source?: 'auto' | 'manual'
+  source?: 'auto' | 'manual';
   /** 自动发现入口，例如注册表、PATH、FAIONYX Runtime、本地磁盘。 */
-  sourceDetail?: string
+  sourceDetail?: string;
 }
 
 // ---------------- 设置 ----------------
-export type ThemeName = 'blue-white' | 'black-orange' | 'white-pink' | 'black-pink' | 'custom' | 'transparent'
+export type ThemeName = 'blue-white' | 'black-orange' | 'white-pink' | 'black-pink' | 'custom' | 'transparent';
 
-export type BuiltinThemeName = Exclude<ThemeName, 'custom'>
+export type BuiltinThemeName = Exclude<ThemeName, 'custom'>;
 
-export type GameWindowMode = 'windowed' | 'maximized' | 'fullscreen'
+export type GameWindowMode = 'windowed' | 'maximized' | 'fullscreen';
 
 export interface GameResolution {
-  width: number
-  height: number
-  mode: GameWindowMode
+  width: number;
+  height: number;
+  mode: GameWindowMode;
   /** 兼容 0.6.x 旧配置；保存时始终与 mode 同步。 */
-  fullscreen: boolean
+  fullscreen: boolean;
 }
 
 /** 自定义主题：颜色实时生效；layout 字段仅用于兼容旧主题码与旧配置。 */
 export interface CustomTheme {
   colors: {
-    accent: string // 主色调（按钮/选中/链接）
-    bg: string // 界面背景
-    card: string // 卡片背景
-    text: string // 主要文字
-    textDim: string // 次要文字
-    border: string // 边框
-    sidebarBg: string // 侧栏背景
-    sidebarText: string // 侧栏文字
-    bannerText: string // Banner 上的文字
-  }
+    accent: string; // 主色调（按钮/选中/链接）
+    bg: string; // 界面背景
+    card: string; // 卡片背景
+    text: string; // 主要文字
+    textDim: string; // 次要文字
+    border: string; // 边框
+    sidebarBg: string; // 侧栏背景
+    sidebarText: string; // 侧栏文字
+    bannerText: string; // Banner 上的文字
+  };
   layout: {
-    sidebarWidth: number // 侧栏宽度 px（200-300）
-    bannerHeight: number // 首页 Banner 高度 px（220-420）
-    radius: number // 全局圆角 px（0-24）
-  }
+    sidebarWidth: number; // 侧栏宽度 px（200-300）
+    bannerHeight: number; // 首页 Banner 高度 px（220-420）
+    radius: number; // 全局圆角 px（0-24）
+  };
 }
 
 export const DEFAULT_CUSTOM_THEME: CustomTheme = {
@@ -246,7 +246,7 @@ export const DEFAULT_CUSTOM_THEME: CustomTheme = {
     bannerHeight: 430,
     radius: 14,
   },
-}
+};
 
 /** 正式主题色板。所有主题共用同一套布局和玻璃材质，只改变配色与背景策略。 */
 export const THEME_PRESETS: Record<BuiltinThemeName, { label: string; colors: CustomTheme['colors']; description: string }> = {
@@ -326,7 +326,7 @@ export const THEME_PRESETS: Record<BuiltinThemeName, { label: string; colors: Cu
       bannerText: '#ffffff',
     },
   },
-}
+};
 
 /** 兼容 0.6.x 与早期预设 key，未知值安全回退到图一默认主题。 */
 export function normalizeThemeName(value: unknown): ThemeName {
@@ -336,9 +336,9 @@ export function normalizeThemeName(value: unknown): ThemeName {
     'pink-white': 'white-pink',
     'pink-black': 'black-pink',
     personalized: 'custom',
-  }
-  const raw = typeof value === 'string' ? value : ''
-  if (raw in aliases) return aliases[raw]
+  };
+  const raw = typeof value === 'string' ? value : '';
+  if (raw in aliases) return aliases[raw];
   if (
     raw === 'blue-white' ||
     raw === 'black-orange' ||
@@ -347,97 +347,97 @@ export function normalizeThemeName(value: unknown): ThemeName {
     raw === 'custom' ||
     raw === 'transparent'
   ) {
-    return raw
+    return raw;
   }
-  return 'transparent'
+  return 'transparent';
 }
 
 export interface VersionCategory {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 export type VersionCategoryAction =
   | { type: 'create'; name: string }
   | { type: 'rename'; id: string; name: string }
   | { type: 'remove'; id: string }
-  | { type: 'assign'; target: { id: string; folder: string }; categoryId: string }
+  | { type: 'assign'; target: { id: string; folder: string }; categoryId: string };
 
 export interface Settings {
   /** Fit the launcher to available desktop space only when explicitly enabled. */
-  uiWindowAutoFit?: boolean
+  uiWindowAutoFit?: boolean;
   /** Explicit reduction is additive to the operating system preference; absent means follow system. */
-  reduceMotion?: boolean
-  visualDesign?: import('./visualDesign').VisualDesign
-  gameDir: string
+  reduceMotion?: boolean;
+  visualDesign?: import('./visualDesign').VisualDesign;
+  gameDir: string;
   /** 游戏文件夹登记列表（每个文件夹独立 versions/；libraries/assets/runtimes 共享于默认文件夹） */
-  folders: GameFolder[]
+  folders: GameFolder[];
   /** 当前活动文件夹（新安装版本与常规寻址目标） */
-  activeFolder: string
+  activeFolder: string;
   /** 指定 java 可执行文件路径；空字符串 = 自动 */
-  javaPath: string
+  javaPath: string;
   /** Java 自动管理：自动检测版本所需 Java，缺失时自动下载（默认开启） */
-  javaAuto: boolean
+  javaAuto: boolean;
   /** 手动添加的 Java 路径（展示来源标注「手动」） */
-  javaCustom: string[]
+  javaCustom: string[];
   /** 从扫描结果中隐藏的 Java 路径 */
-  javaHidden: string[]
-  memoryMB: number
+  javaHidden: string[];
+  memoryMB: number;
   /** 自动分配内存（推荐）：开启后按物理内存 25% 自动计算（2-8GB），忽略 memoryMB 手动值 */
-  memoryAuto?: boolean
+  memoryAuto?: boolean;
   /** Windows only; default off. One working set pass per accepted launch. */
-  memoryOrganizeBeforeLaunch?: boolean
-  jvmArgs: string
-  resolution: GameResolution
+  memoryOrganizeBeforeLaunch?: boolean;
+  jvmArgs: string;
+  resolution: GameResolution;
   /** Windows: remember the last observed normal game client size on clean exit; default off. */
-  rememberGameWindowSize?: boolean
-  mirror: 'official' | 'bmclapi'
+  rememberGameWindowSize?: boolean;
+  mirror: 'official' | 'bmclapi';
   /** 跨所有任务的 HTTP 并发上限。 */
-  downloadThreads: number
+  downloadThreads: number;
   /** 合计限速（KiB/s），0 = 不限速。 */
-  downloadSpeedKBps: number
+  downloadSpeedKBps: number;
   /** 新版本安装后默认开启版本隔离（独立游戏目录），可在设置中关闭 */
-  defaultIsolation: boolean
+  defaultIsolation: boolean;
   /** 微软登录用的 Azure 应用 client_id（device code flow） */
-  msClientId: string
-  theme: ThemeName
+  msClientId: string;
+  theme: ThemeName;
   /** theme === 'custom' 时使用的自定义配色与布局 */
-  custom: CustomTheme
+  custom: CustomTheme;
   /** 禁用的功能模块 key（mods/packs/shaders/servers/skins/community），关闭后侧栏入口隐藏 */
-  disabledFeatures: string[]
+  disabledFeatures: string[];
   /** 收藏的版本 id 列表（各列表置顶） */
-  favoriteVersions: string[]
-  favoriteInstanceOverrides?: Record<string, boolean>
+  favoriteVersions: string[];
+  favoriteInstanceOverrides?: Record<string, boolean>;
   /** User labels only; no instance directory is moved or removed. */
-  versionCategories?: VersionCategory[]
-  versionCategoryAssignments?: Record<string, string>
+  versionCategories?: VersionCategory[];
+  versionCategoryAssignments?: Record<string, string>;
   /** 首页布局：模块顺序与显隐（main=主列，side=右栏，数组顺序即渲染顺序） */
-  homeLayout: HomeLayout
+  homeLayout: HomeLayout;
   /** 背景自定义 */
-  background: BackgroundSettings
+  background: BackgroundSettings;
   /** 首页启动卡的全局默认缩略图（实例专属缩略图优先）。 */
-  launchThumbnail: LaunchThumbnailSettings
+  launchThumbnail: LaunchThumbnailSettings;
   /** Skin painter colors are local preferences; changing them does not edit the skin. */
-  skinEditorPalette?: SkinEditorPaletteSettings
-  closeAfterLaunch: boolean
+  skinEditorPalette?: SkinEditorPaletteSettings;
+  closeAfterLaunch: boolean;
   /** 默认按键同步：开启后启动任何版本时把启动器默认键位写入该实例 options.txt 的 key_* 项 */
-  keySync?: boolean
-  resourcePackSync?: boolean
+  keySync?: boolean;
+  resourcePackSync?: boolean;
   /** 正版登录使用系统代理：默认直连（安全优先）；直连微软端点失败时用户可开启（CONNECT 隧道+端到端 TLS 校验保持） */
-  msUseProxy?: boolean
+  msUseProxy?: boolean;
   /** 配置格式版本：升级/回退后启动时检查，不兼容时迁移或提示重置，不得直接崩溃 */
-  configVersion?: number
+  configVersion?: number;
   /** 跳过提示的版本号（该版本不再弹更新提示，直到更新的版本出现） */
-  skipUpdateVersion?: string
+  skipUpdateVersion?: string;
   /** 更新下载源：auto=直连优先镜像兜底；direct=仅 GitHub 直连；mirror=仅自定义镜像 */
-  updateSource?: 'auto' | 'direct' | 'mirror'
+  updateSource?: 'auto' | 'direct' | 'mirror';
   /** 自定义镜像前缀（拼接在 GitHub 文件 URL 前，如 https://ghproxy.net/） */
-  updateMirrorUrl?: string
+  updateMirrorUrl?: string;
   /** 内测群号覆盖（免打包临时改；默认取 shared/branding.ts 的 QQ_GROUP_NUMBER） */
-  qqGroupNumber?: string
+  qqGroupNumber?: string;
   /** CurseForge 官方 API Key（console.curseforge.com 免费申请）；留空走 MCIM 镜像兜底 */
-  curseforgeApiKey?: string
+  curseforgeApiKey?: string;
   /** 自动安装更新（默认开启）：发现新版本静默下载，启动器关闭时自动安装；关闭则弹窗询问 */
-  autoUpdate?: boolean
+  autoUpdate?: boolean;
 }
 
 // ---------------- 启动器自更新 ----------------
@@ -445,72 +445,72 @@ export interface Settings {
 /** GitHub Release 信息（检查/列表共用） */
 export interface ReleaseInfo {
   /** 语义化版本号（tag 去前导 v） */
-  version: string
+  version: string;
   /** 发布日期 ISO 串 */
-  publishedAt: string
+  publishedAt: string;
   /** Release body（Markdown 原文，渲染端做轻量渲染） */
-  body: string
+  body: string;
   /** 便携 exe 资产下载地址（空 = 该 Release 无可更新资产） */
-  assetUrl: string
+  assetUrl: string;
   /** 资产文件大小（字节） */
-  assetSize: number
+  assetSize: number;
   /** 资产文件名（FAIONYX-x.y.z.exe） */
-  assetName: string
+  assetName: string;
 }
 
 /** 更新检查结果 */
 export interface UpdateCheckResult {
   /** ok=false 时 reason 仅记日志，不打扰用户 */
-  ok: boolean
+  ok: boolean;
   /** 是否有新版本 */
-  hasUpdate: boolean
-  release?: ReleaseInfo
+  hasUpdate: boolean;
+  release?: ReleaseInfo;
   /** 命中限流/网络失败等原因（静默降级） */
-  reason?: string
+  reason?: string;
   /** 结果来自缓存（离线/限流时的兜底展示） */
-  fromCache?: boolean
+  fromCache?: boolean;
 }
 
 /** 更新状态记录（userData/update-state.json）：备份还原入口与失败提示的数据源 */
 export interface UpdateStateInfo {
   /** 更新前版本 */
-  from: string
+  from: string;
   /** 目标版本 */
-  to: string
-  time: string
+  to: string;
+  time: string;
   /** 备份的完整路径（启动器目录 FAIONYX-backup 下） */
-  backupPath: string
+  backupPath: string;
   /** 备份对应版本号 */
-  backupVersion: string
+  backupVersion: string;
   /** 结果：applied=已替换待验证；ok=新版已确认存活 */
-  result: 'applied' | 'ok'
+  result: 'applied' | 'ok';
 }
 
 /** 本地文件安装更新的校验结果 */
 export interface LocalUpdateCheck {
-  filePath: string
-  fileName: string
-  fileSize: number
+  filePath: string;
+  fileName: string;
+  fileSize: number;
   /** 从文件名解析出的版本号（空 = 无法识别） */
-  version: string
+  version: string;
   /** 版本是否 ≥ 当前版本（无法识别版本时为 false，由用户自担确认） */
-  versionOk: boolean
+  versionOk: boolean;
   /** SHA256 校验：match=与 Release 一致；mismatch=不一致；unknown=无法联网校验 */
-  sha256: 'match' | 'mismatch' | 'unknown'
-  detail?: string
+  sha256: 'match' | 'mismatch' | 'unknown';
+  detail?: string;
 }
 
 // ---------------- 首页布局 ----------------
 export interface HomeModule {
-  key: string
-  visible: boolean
+  key: string;
+  visible: boolean;
 }
 
 export interface HomeLayout {
   /** 主列模块（欢迎横幅/启动日志/最近游戏） */
-  main: HomeModule[]
+  main: HomeModule[];
   /** 右栏模块（账户信息/系统信息/快速操作/作者卡片） */
-  side: HomeModule[]
+  side: HomeModule[];
 }
 
 export const DEFAULT_HOME_LAYOUT: HomeLayout = {
@@ -525,7 +525,7 @@ export const DEFAULT_HOME_LAYOUT: HomeLayout = {
     { key: 'quickActions', visible: true },
     { key: 'authorCard', visible: true },
   ],
-}
+};
 
 export const HOME_MODULE_LABELS: Record<string, string> = {
   banner: '欢迎横幅',
@@ -535,53 +535,53 @@ export const HOME_MODULE_LABELS: Record<string, string> = {
   sysInfo: '系统信息',
   quickActions: '快速操作',
   authorCard: '作者卡片',
-}
+};
 
 // ---------------- 背景 ----------------
 export interface BackgroundSettings {
   /** none=默认透明/颜色 / color=纯色 / image=自定义图片 */
-  mode: 'none' | 'color' | 'image'
-  color: string
+  mode: 'none' | 'color' | 'image';
+  color: string;
   /** 图片路径（userData 内复制的文件名） */
-  image: string
+  image: string;
   /** 多张背景图（自动切换用；为空时回退单张 image） */
-  images?: string[]
+  images?: string[];
   /** 切换策略：off=固定第一张 / order=按顺序 / random=随机；每次启动自动切换一张 */
-  switchMode?: 'off' | 'order' | 'random'
+  switchMode?: 'off' | 'order' | 'random';
   /** 运行中自动切换间隔秒数（默认 300） */
-  switchIntervalSec?: number
+  switchIntervalSec?: number;
   /** 0-1 背景不透明度 */
-  opacity: number
+  opacity: number;
   /** 0-40 模糊度 px */
-  blur: number
+  blur: number;
   /** fill=拉伸填充 / fit=完整适应 / crop=等比裁切 */
-  fit: ImageFit
+  fit: ImageFit;
 }
 
-export type ImageFit = 'fill' | 'fit' | 'crop'
+export type ImageFit = 'fill' | 'fit' | 'crop';
 
 export interface LaunchThumbnailSettings {
   /** FAIONYX userData 受管资源路径；空字符串使用内置轮播。 */
-  image: string
+  image: string;
   /** Ordered managed carousel images; absent means migrate legacy `image`. */
-  images?: string[]
+  images?: string[];
   /** Mixed ordering: stable builtin:<id> keys and managed custom image paths. */
-  order?: string[]
+  order?: string[];
   /** Disabled slides remain in the managed image library until explicitly deleted. */
-  disabled?: string[]
+  disabled?: string[];
   /** Default/per-image dwell time, in seconds (1..120). */
-  intervalSeconds?: number
-  durations?: Record<string, number>
+  intervalSeconds?: number;
+  durations?: Record<string, number>;
   /** Shuffle enabled slides without modifying the saved display order. */
-  randomPlayback?: boolean
-  fit: ImageFit
+  randomPlayback?: boolean;
+  fit: ImageFit;
 }
 
 export interface SkinEditorPaletteSettings {
-  custom: string[]
-  recent: string[]
-  color: string
-  alpha: number
+  custom: string[];
+  recent: string[];
+  color: string;
+  alpha: number;
 }
 
 export const DEFAULT_BACKGROUND: BackgroundSettings = {
@@ -591,121 +591,121 @@ export const DEFAULT_BACKGROUND: BackgroundSettings = {
   opacity: 0.5,
   blur: 0,
   fit: 'crop',
-}
+};
 
 export const DEFAULT_LAUNCH_THUMBNAIL: LaunchThumbnailSettings = {
   image: '',
   fit: 'crop',
-}
+};
 
 // ---------------- 皮肤/披风 ----------------
-export type SkinVariant = 'classic' | 'slim'
+export type SkinVariant = 'classic' | 'slim';
 
 export interface SkinInfo {
-  variant: SkinVariant
-  url: string
-  state?: string
+  variant: SkinVariant;
+  url: string;
+  state?: string;
   /** 主进程下载纹理转的 dataURL（前端渲染更稳，不受 CORS 影响） */
-  dataUrl?: string
+  dataUrl?: string;
   /** Public texture download/decoding failure, without credentials or URL details. */
-  textureError?: string
+  textureError?: string;
 }
 
 export interface CapeInfo {
-  id: string
-  alias: string
-  active: boolean
-  url?: string
+  id: string;
+  alias: string;
+  active: boolean;
+  url?: string;
   /** 披风纹理 dataURL */
-  dataUrl?: string
-  textureError?: string
+  dataUrl?: string;
+  textureError?: string;
 }
 
 /** 当前微软账号的皮肤档案 */
 export interface ProfileSkins {
-  username: string
-  skins: SkinInfo[]
-  capes: CapeInfo[]
+  username: string;
+  skins: SkinInfo[];
+  capes: CapeInfo[];
 }
 
 export interface SkinHistoryItem {
-  id: string
-  variant: SkinVariant
-  time: number
+  id: string;
+  variant: SkinVariant;
+  time: number;
   /** 显示名（默认上传时的源文件名，可重命名） */
-  name?: string
+  name?: string;
   /** 内容哈希：重复上传同一皮肤只保留一条记录 */
-  hash?: string
+  hash?: string;
 }
 
 export interface SkinHistoryEntry extends SkinHistoryItem {
-  dataUrl: string
+  dataUrl: string;
 }
 export interface ParallelStage {
-  id: string
+  id: string;
   /** Semantic child phase, so nested preparation does not hide Java→installer transitions. */
-  stage?: string
-  label: string
-  text: string
-  progress: number
-  state: 'waiting' | 'running' | 'done'
-  speed?: number
-  indeterminate?: boolean
+  stage?: string;
+  label: string;
+  text: string;
+  progress: number;
+  state: 'waiting' | 'running' | 'done';
+  speed?: number;
+  indeterminate?: boolean;
 }
 export interface ManualModpackFile {
-  projectID: number
-  fileID: number
-  fileName: string
-  size: number
-  sha1: string
+  projectID: number;
+  fileID: number;
+  fileName: string;
+  size: number;
+  sha1: string;
 }
 export interface ManualModpackRequest {
-  token: string
-  files: ManualModpackFile[]
+  token: string;
+  files: ManualModpackFile[];
 }
 export interface ProgressEvent {
   /** Optional renderer-generated correlation ID; separates simultaneous MOD dialogs. */
-  operationId?: string
-  manualFiles?: ManualModpackRequest | null
+  operationId?: string;
+  manualFiles?: ManualModpackRequest | null;
   /** Concurrent preparation lanes; absent once the task enters its final commit stage. */
-  parallelStages?: ParallelStage[]
+  parallelStages?: ParallelStage[];
   /** 版本安装任务的原始 Minecraft 版本；列表按任务独立展示进度。 */
-  versionId?: string
+  versionId?: string;
   /** 当前阶段，如 'version-json' | 'client' | 'libraries' | 'assets' | 'java' | 'loader' */
-  stage: string
+  stage: string;
   /** 0-1 */
-  progress: number
+  progress: number;
   /** 跨阶段的任务总进度；由主进程稳定模型计算，存在时优先于 progress。 */
-  overall?: number
+  overall?: number;
   /** 人类可读描述 */
-  text: string
+  text: string;
   /** 字节/秒，可空 */
-  speed?: number
+  speed?: number;
   /** 平滑后的剩余秒数；未知、暂停或速度不足时省略。 */
-  etaSeconds?: number
+  etaSeconds?: number;
   /** 下载字节统计；总量未知时 bytesTotal 省略并设置 indeterminate。 */
-  bytesDone?: number
-  bytesTotal?: number
-  indeterminate?: boolean
+  bytesDone?: number;
+  bytesTotal?: number;
+  indeterminate?: boolean;
   /** 当前下载源（BMCLAPI 镜像 / 官方源） */
-  source?: string
+  source?: string;
   /** 所属后台任务 id（下载中心按任务聚合；无 = 全局进度条） */
-  taskId?: string
+  taskId?: string;
   /** 任务展示名（随首条进度事件下发） */
-  taskTitle?: string
+  taskTitle?: string;
 }
 
 export interface LaunchState {
-  savedWindowSize?: { scope: 'global' | 'instance'; previous: GameResolution; resolution: GameResolution }
-  launchId?: string
-  versionId?: string
-  folder?: string
-  status: 'launching' | 'running' | 'exited' | 'error'
-  text: string
-  code?: number
-  intentionalRestart?: boolean
-  intentionalStop?: boolean
-  exitKind?: import('./gameExit').GameExitKind
+  savedWindowSize?: { scope: 'global' | 'instance'; previous: GameResolution; resolution: GameResolution };
+  launchId?: string;
+  versionId?: string;
+  folder?: string;
+  status: 'launching' | 'running' | 'exited' | 'error';
+  text: string;
+  code?: number;
+  intentionalRestart?: boolean;
+  intentionalStop?: boolean;
+  exitKind?: import('./gameExit').GameExitKind;
 }
 
 // ---------------- IPC 通道（invoke: 前端 await 调用） ----------------
@@ -943,13 +943,13 @@ export const IPC = {
   updateResetSettings: 'update:resetSettings', // () => void  配置不兼容时重置设置（先备份原文件）
   updateGetPending: 'update:getPending', // () => { release: ReleaseInfo; file: string } | null  已就绪待安装
   updateApplyPending: 'update:applyPending', // () => void  立即安装已就绪的更新并重启
-} as const
+} as const;
 
 export interface FsEntry {
-  name: string
-  size: number
-  isDir: boolean
-  mtime: number
+  name: string;
+  size: number;
+  isDir: boolean;
+  mtime: number;
 }
 
 // ---------------- IPC 事件（主进程 -> 前端，on 订阅） ----------------
@@ -964,404 +964,404 @@ export const IPC_EVENT = {
   updatePrompt: 'event:updatePrompt', // (r: ReleaseInfo)  启动自动检查发现新版本 → 弹窗
   updateSlowHint: 'event:updateSlowHint', // (r: { taskId: string })  更新下载连续 30s 低于 100KB/s → 进度界面内嵌提示一次
   updateReady: 'event:updateReady', // (r: { version: string })  更新已下载校验就绪，关闭启动器时自动安装
-} as const
+} as const;
 
 /**
  * 默认微软登录 client_id：Prism Launcher 注册的公开 Azure 应用，
  * 已在 consumers 租户实测支持 device code 流程；可在设置中替换为自注册应用
  */
-export const DEFAULT_MS_CLIENT_ID = 'c36a9fb6-4f2a-41ff-90bd-ae7cc92031eb'
+export const DEFAULT_MS_CLIENT_ID = 'c36a9fb6-4f2a-41ff-90bd-ae7cc92031eb';
 
 // ---------------- 社区资源 ----------------
-export type CommunityKind = 'mod' | 'modpack' | 'resourcepack' | 'shader' | 'datapack'
-export type CommunitySource = 'modrinth' | 'curseforge'
+export type CommunityKind = 'mod' | 'modpack' | 'resourcepack' | 'shader' | 'datapack';
+export type CommunitySource = 'modrinth' | 'curseforge';
 
 export interface CommunityQuery {
-  keyword: string
-  kind: CommunityKind
-  source: 'all' | CommunitySource
-  mcVersion?: string
-  loader?: LoaderName | ''
+  keyword: string;
+  kind: CommunityKind;
+  source: 'all' | CommunitySource;
+  mcVersion?: string;
+  loader?: LoaderName | '';
   /** 排序：相关度（默认）/ 最多下载 / 最新发布 */
-  sort?: 'relevance' | 'downloads' | 'newest'
+  sort?: 'relevance' | 'downloads' | 'newest';
   /** 分页偏移 */
-  offset: number
-  limit: number
+  offset: number;
+  limit: number;
 }
 
 export interface CommunityResult {
-  source: CommunitySource
-  projectId: string
-  slug: string
-  title: string
+  source: CommunitySource;
+  projectId: string;
+  slug: string;
+  title: string;
   /** 源站原始名称，不包含启动器追加的中文译名。 */
-  originalTitle?: string
-  author: string
-  description: string
-  iconUrl: string
-  downloads: number
-  updatedAt: string
-  categories: string[]
+  originalTitle?: string;
+  author: string;
+  description: string;
+  iconUrl: string;
+  downloads: number;
+  updatedAt: string;
+  categories: string[];
 }
 
 /** An identity can open download/metadata without inventing absent search metrics. */
 export type CommunityProjectReference = Pick<CommunityResult, 'source' | 'projectId' | 'title'> &
-  Partial<Pick<CommunityResult, 'slug' | 'originalTitle'>>
+  Partial<Pick<CommunityResult, 'slug' | 'originalTitle'>>;
 export interface CommunityModProject extends CommunityProjectReference {
-  kind: 'mod'
-  iconUrl?: string
-  description?: string
-  author?: string
-  license?: string
-  categories: string[]
-  downloads?: number
-  followers?: number
-  updatedAt?: string
-  webpage?: string
+  kind: 'mod';
+  iconUrl?: string;
+  description?: string;
+  author?: string;
+  license?: string;
+  categories: string[];
+  downloads?: number;
+  followers?: number;
+  updatedAt?: string;
+  webpage?: string;
 }
 
 export interface DefaultResourcePack {
-  id: string
-  name: string
-  size: number
-  enabled: boolean
+  id: string;
+  name: string;
+  size: number;
+  enabled: boolean;
 }
 
 export interface CommunitySearchPage {
-  items: CommunityResult[]
-  total: number
-  offset: number
-  limit: number
-  warnings?: string[]
+  items: CommunityResult[];
+  total: number;
+  offset: number;
+  limit: number;
+  warnings?: string[];
 }
 
 export interface CommunityFile {
-  source?: CommunitySource
-  projectId?: string
-  dependencies?: CommunityDependency[]
-  fileId: string
-  fileName: string
-  version: string
-  url: string
-  sha1?: string
-  size: number
-  releaseType: 'release' | 'beta' | 'alpha'
-  gameVersions: string[]
-  loaders: string[]
-  date: string
+  source?: CommunitySource;
+  projectId?: string;
+  dependencies?: CommunityDependency[];
+  fileId: string;
+  fileName: string;
+  version: string;
+  url: string;
+  sha1?: string;
+  size: number;
+  releaseType: 'release' | 'beta' | 'alpha';
+  gameVersions: string[];
+  loaders: string[];
+  date: string;
 }
 
 export interface CommunityDependency {
-  projectId?: string
-  fileId?: string
-  required: boolean
+  projectId?: string;
+  fileId?: string;
+  required: boolean;
 }
 
 export interface ModRequirement {
-  id: string
-  range: string
+  id: string;
+  range: string;
 }
 
 export interface ModInstallPlan {
-  id: string
-  target: InstalledVersion
-  files: Array<{ name: string; version: string; dependency: boolean; fileName: string; source?: CommunitySource; projectId?: string }>
-  missing: string[]
-  warnings: string[]
+  id: string;
+  target: InstalledVersion;
+  files: Array<{ name: string; version: string; dependency: boolean; fileName: string; source?: CommunitySource; projectId?: string }>;
+  missing: string[];
+  warnings: string[];
 }
 
 /** 整合包探测信息（导入确认弹窗用） */
 export interface ModpackInfo {
-  format: 'mrpack' | 'curseforge' | 'fullpack'
+  format: 'mrpack' | 'curseforge' | 'fullpack';
   /** 包内声明的名称 */
-  innerName: string
+  innerName: string;
   /** 压缩包文件名（去扩展名） */
-  fileName: string
-  version: string
-  mcVersion: string
-  loader?: LoaderName
-  loaderVersion?: string
-  fileCount: number
-  downloadBytes: number
-  hasOverrides: boolean
-  hasClientOverrides: boolean
+  fileName: string;
+  version: string;
+  mcVersion: string;
+  loader?: LoaderName;
+  loaderVersion?: string;
+  fileCount: number;
+  downloadBytes: number;
+  hasOverrides: boolean;
+  hasClientOverrides: boolean;
   /** 包内 overrides 含 options.txt（作者预设键位/设置） */
-  hasPresetKeys?: boolean
+  hasPresetKeys?: boolean;
   existingInstances: Array<{
-    id: string
-    folder: string
-    sameNormalizedName: boolean
-    samePackVersion: boolean
-  }>
+    id: string;
+    folder: string;
+    sameNormalizedName: boolean;
+    samePackVersion: boolean;
+  }>;
 }
 
-export type ModpackConflictAction = 'rename' | 'new' | 'update' | 'overwrite'
+export type ModpackConflictAction = 'rename' | 'new' | 'update' | 'overwrite';
 
 export interface ModpackInstallRequest {
-  nameSource?: 'file' | 'inner'
-  instanceName?: string
-  targetFolder?: string
-  conflictAction?: ModpackConflictAction
-  existingId?: string
+  nameSource?: 'file' | 'inner';
+  instanceName?: string;
+  targetFolder?: string;
+  conflictAction?: ModpackConflictAction;
+  existingId?: string;
   /** 更新/覆盖涉及既有实例时，必须由确认页显式置 true。 */
-  confirmReplace?: boolean
+  confirmReplace?: boolean;
   /** 导入时用启动器默认键位替换整合包 options.txt 中的 key_* 预设（默认关闭=保留作者预设） */
-  keySyncOverride?: boolean
+  keySyncOverride?: boolean;
 }
 
-export type WorldVersionConfidence = 'exact' | 'approximate' | 'unknown'
+export type WorldVersionConfidence = 'exact' | 'approximate' | 'unknown';
 
 export interface WorldResourcePackInfo {
   /** 相对于拖入目录或压缩包根的安全标识。 */
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export interface WorldCandidateInfo {
   /** 相对于拖入目录或压缩包根的世界根；“.” 表示根目录。 */
-  id: string
-  worldName: string
-  dataVersion?: number
-  minecraftVersion?: string
-  versionConfidence: WorldVersionConfidence
-  gameMode?: '生存' | '创造' | '冒险' | '旁观'
-  hardcore: boolean
-  datapackCount: number
-  resourcePacks: WorldResourcePackInfo[]
-  hasWorldResourcePack: boolean
-  modEvidence: string[]
-  loader?: LoaderName
-  loaderConfidence?: 'metadata' | 'inferred'
-  fileCount: number
-  totalBytes: number
+  id: string;
+  worldName: string;
+  dataVersion?: number;
+  minecraftVersion?: string;
+  versionConfidence: WorldVersionConfidence;
+  gameMode?: '生存' | '创造' | '冒险' | '旁观';
+  hardcore: boolean;
+  datapackCount: number;
+  resourcePacks: WorldResourcePackInfo[];
+  hasWorldResourcePack: boolean;
+  modEvidence: string[];
+  loader?: LoaderName;
+  loaderConfidence?: 'metadata' | 'inferred';
+  fileCount: number;
+  totalBytes: number;
 }
 
 export interface WorldImportInfo {
-  sourcePath: string
-  sourceType: 'folder' | 'zip'
-  candidates: WorldCandidateInfo[]
-  warnings: string[]
+  sourcePath: string;
+  sourceType: 'folder' | 'zip';
+  candidates: WorldCandidateInfo[];
+  warnings: string[];
 }
 
 export type ImportProbeResult =
   | { kind: 'modpack'; info: ModpackInfo }
   | { kind: 'world'; info: WorldImportInfo }
   | { kind: 'mod' }
-  | { kind: 'unsupported'; message: string }
+  | { kind: 'unsupported'; message: string };
 
 export interface WorldImportOptions {
-  candidateId: string
-  worldName: string
-  targetFolder: string
-  targetVersionId?: string
+  candidateId: string;
+  worldName: string;
+  targetFolder: string;
+  targetVersionId?: string;
   newInstance?: {
-    minecraftVersion: string
-    instanceName: string
-    loader?: LoaderName
-    loaderVersion?: string
-  }
-  allowVersionMismatch?: boolean
+    minecraftVersion: string;
+    instanceName: string;
+    loader?: LoaderName;
+    loaderVersion?: string;
+  };
+  allowVersionMismatch?: boolean;
 }
 
 export interface WorldImportResult {
-  versionId: string
-  worldName: string
-  worldDirectory: string
-  installedResourcePacks: string[]
-  createdInstance: boolean
+  versionId: string;
+  worldName: string;
+  worldDirectory: string;
+  installedResourcePacks: string[];
+  createdInstance: boolean;
 }
 
 // ---------------- 服务器 ----------------
 export interface ServerEntry {
-  favorite?: boolean
-  id: string
-  name: string
+  favorite?: boolean;
+  id: string;
+  name: string;
   /** 交给 Minecraft 的规范化地址（默认端口省略）。 */
-  address: string
+  address: string;
   /** 用于去重的 host:port；IPv6 host 带方括号。 */
-  normalizedAddress?: string
-  host?: string
-  port?: number
+  normalizedAddress?: string;
+  host?: string;
+  port?: number;
   /** 绑定的实例 id；folder 一起构成唯一实例引用。 */
-  versionId?: string
-  folder?: string
-  minecraftVersion?: string
-  loader?: LoaderName
-  loaderVersion?: string
+  versionId?: string;
+  folder?: string;
+  minecraftVersion?: string;
+  loader?: LoaderName;
+  loaderVersion?: string;
   /** FAIONYX 一键启动该条目的时间；servers.dat 本身不包含游玩时间。 */
-  lastUsedAt?: string
-  lastSeenAt?: string
-  source?: 'launcher' | 'minecraft'
+  lastUsedAt?: string;
+  lastSeenAt?: string;
+  source?: 'launcher' | 'minecraft';
   /** 多个非隔离实例共用同一 servers.dat 时只能确定的候选实例。 */
-  candidateVersionIds?: string[]
+  candidateVersionIds?: string[];
   /** 仅用于稳定区分不同共享目录中的未绑定记录，不在 UI 展示完整路径。 */
-  sourceGameDirectory?: string
+  sourceGameDirectory?: string;
 }
 
 export interface ServerSyncResult {
-  list: ServerEntry[]
-  targets: InstalledVersion[]
-  added: number
-  updated: number
-  errors: string[]
+  list: ServerEntry[];
+  targets: InstalledVersion[];
+  added: number;
+  updated: number;
+  errors: string[];
 }
 
 export interface ServerLaunchPreparation {
-  serverId: string
-  versionId: string
-  folder: string
-  address: string
-  minecraftVersion: string
-  loader?: LoaderName
-  loaderVersion?: string
+  serverId: string;
+  versionId: string;
+  folder: string;
+  address: string;
+  minecraftVersion: string;
+  loader?: LoaderName;
+  loaderVersion?: string;
   /** false 时仅启动正确实例，由玩家在多人游戏菜单中选择服务器。 */
-  directJoin: boolean
+  directJoin: boolean;
 }
 
 // ---------------- MOD 拖入即装 ----------------
 /** 单个 MOD 文件的元数据解析结果 */
 export interface ModInfo {
   /** jar 文件绝对路径 */
-  filePath: string
-  fileName: string
+  filePath: string;
+  fileName: string;
   /** 解析出的 mod id（失败为空） */
-  id: string
+  id: string;
   /** 展示名 */
-  name: string
+  name: string;
   /** MOD 版本号 */
-  version: string
+  version: string;
   /** 所属加载器 */
-  loader: LoaderName | null
+  loader: LoaderName | null;
   /** 支持的 MC 版本范围原文（如 [1.20,) / 1.20.1） */
-  mcRange: string
+  mcRange: string;
   /** 要求的加载器版本范围原文（如 >=0.15.0 / [65.0,)） */
-  loaderRange?: string
+  loaderRange?: string;
   /** 前置依赖 mod id 列表 */
-  dependencies: string[]
-  requirements?: ModRequirement[]
+  dependencies: string[];
+  requirements?: ModRequirement[];
   /** Actual JVM dependency/features from enabled JARs, including bundled mods. */
-  javaRequirements?: Array<{ loader: LoaderName; range: string; source: string; exclude?: boolean }>
+  javaRequirements?: Array<{ loader: LoaderName; range: string; source: string; exclude?: boolean }>;
   /** Multi-loader jars may contain several independent metadata descriptors. */
-  variants?: Array<{ loader: LoaderName; mcRange: string; loaderRange?: string; requirements?: ModRequirement[] }>
-  provides?: Array<{ id: string; version: string }>
+  variants?: Array<{ loader: LoaderName; mcRange: string; loaderRange?: string; requirements?: ModRequirement[] }>;
+  provides?: Array<{ id: string; version: string }>;
   /** 图标 dataURL（jar 内嵌图标） */
-  iconDataUrl?: string
+  iconDataUrl?: string;
   /** 解析失败原因（非 MOD/损坏时存在） */
-  error?: string
+  error?: string;
 }
 
 export interface ModInstallResult {
-  fileName: string
-  ok: boolean
-  message: string
+  fileName: string;
+  ok: boolean;
+  message: string;
 }
 
 /** 单版本重复 MOD 组（同 mod id 多文件共存） */
 export interface ModDuplicateGroup {
-  modId: string
-  name: string
-  files: Array<{ fileName: string; version: string; /** 排序后的最新版（默认保留） */ latest: boolean }>
+  modId: string;
+  name: string;
+  files: Array<{ fileName: string; version: string; /** 排序后的最新版（默认保留） */ latest: boolean }>;
 }
 
 /** 跨版本重复：同一 mod id 同时存在于多个版本 */
 export interface ModCrossDuplicate {
-  modId: string
-  name: string
+  modId: string;
+  name: string;
   /** 出现该 MOD 的版本列表（版本 id + 文件名） */
-  presentIn: Array<{ versionId: string; fileName: string }>
+  presentIn: Array<{ versionId: string; fileName: string }>;
 }
 
 /** MOD 更新检测：单个已安装 MOD 的检测结果 */
 export interface ModUpdateEntry {
-  fileName: string
-  name: string
-  modId: string
-  currentVersion: string
-  sha1: string
+  fileName: string;
+  name: string;
+  modId: string;
+  currentVersion: string;
+  sha1: string;
   /** null = 未在 Modrinth 匹配到来源（可能来自 CurseForge 或手动安装） */
-  source: 'modrinth' | null
-  alreadyLatest: boolean
+  source: 'modrinth' | null;
+  alreadyLatest: boolean;
   update: null | {
-    projectId: string
-    versionId: string
-    versionNumber: string
-    fileName: string
-    url: string
-    sha1?: string
-    size?: number
-  }
+    projectId: string;
+    versionId: string;
+    versionNumber: string;
+    fileName: string;
+    url: string;
+    sha1?: string;
+    size?: number;
+  };
 }
 
 export interface ModUpdateReport {
-  mcVersion: string
-  loader: string
-  entries: ModUpdateEntry[]
+  mcVersion: string;
+  loader: string;
+  entries: ModUpdateEntry[];
 }
 
 /** 应用更新的单项：旧文件 + 新文件下载信息 */
 export interface ModUpdateTarget {
-  oldSha1?: string
-  fileName: string
-  url: string
-  targetName: string
-  sha1?: string
-  size?: number
+  oldSha1?: string;
+  fileName: string;
+  url: string;
+  targetName: string;
+  sha1?: string;
+  size?: number;
 }
 
 /** 插件信息（plugin.json 元数据 + 启用状态） */
 export interface PluginInfo {
-  id: string
-  name: string
-  version: string
-  author: string
-  description: string
-  enabled: boolean
-  hasCode: boolean
+  id: string;
+  name: string;
+  version: string;
+  author: string;
+  description: string;
+  enabled: boolean;
+  hasCode: boolean;
 }
 
 /** 桥接 MOD 连接状态 */
 export interface BridgeStatus {
-  connected: boolean
-  reason?: string
-  modVersion?: string
-  protocol?: number
+  connected: boolean;
+  reason?: string;
+  modVersion?: string;
+  protocol?: number;
 }
 
 /** 桥接 MOD 参数定义（MOD 声明元数据，面板自动生成控件） */
 export interface BridgeParam {
-  id: string
-  modId: string
-  label: string
-  description: string
-  group: string
-  kind: 'SWITCH' | 'SLIDER' | 'TEXT' | 'SELECT'
-  apply: 'INSTANT' | 'RELOAD_RESOURCES' | 'REJOIN_WORLD' | 'RESTART_GAME'
-  scope: 'CLIENT' | 'SERVER'
-  defaultValue: unknown
-  value: unknown
-  min?: number
-  max?: number
-  step?: number
-  options?: string[]
-  visible: boolean
+  id: string;
+  modId: string;
+  label: string;
+  description: string;
+  group: string;
+  kind: 'SWITCH' | 'SLIDER' | 'TEXT' | 'SELECT';
+  apply: 'INSTANT' | 'RELOAD_RESOURCES' | 'REJOIN_WORLD' | 'RESTART_GAME';
+  scope: 'CLIENT' | 'SERVER';
+  defaultValue: unknown;
+  value: unknown;
+  min?: number;
+  max?: number;
+  step?: number;
+  options?: string[];
+  visible: boolean;
 }
 
 export interface ServerPingResult {
-  online: boolean
+  online: boolean;
   /** 在线/上限，如 "12/100" */
-  players: string
+  players: string;
   /** MOTD 纯文本（去格式化码） */
-  motd: string
-  version: string
-  latencyMs: number
+  motd: string;
+  version: string;
+  latencyMs: number;
 }
 
 export interface SystemInfo extends Partial<import('./platform').PlatformInfo> {
-  credentialStorage?: { persistent: boolean; sessionOnly: boolean; message: string }
+  credentialStorage?: { persistent: boolean; sessionOnly: boolean; message: string };
   /** macOS 系统辅助功能“降低透明度”；仅用于说明，不修改系统偏好。 */
-  reducedTransparency?: boolean
+  reducedTransparency?: boolean;
   /** 物理内存总量（MB，向下取整） */
-  totalMemMB: number
+  totalMemMB: number;
   /** 当前空闲物理内存（MB，向下取整；随系统实时波动） */
-  freeMemMB: number
+  freeMemMB: number;
 }

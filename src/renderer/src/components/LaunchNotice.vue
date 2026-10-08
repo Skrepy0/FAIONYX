@@ -1,36 +1,36 @@
 <script setup lang="ts">
-import { onUnmounted, ref, watch } from 'vue'
-import { store } from '../store'
+import { onUnmounted, ref, watch } from 'vue';
+import { store } from '../store';
 
-const visible = ref(false)
-let timer: ReturnType<typeof setTimeout> | undefined
+const visible = ref(false);
+let timer: ReturnType<typeof setTimeout> | undefined;
 function cancelTimer() {
-  clearTimeout(timer)
-  timer = undefined
+  clearTimeout(timer);
+  timer = undefined;
 }
 function dismiss() {
-  cancelTimer()
-  visible.value = false
+  cancelTimer();
+  visible.value = false;
 }
 watch(
   () => store.launchState,
   (state) => {
-    cancelTimer()
+    cancelTimer();
     // Only a real JVM spawn event produces running; never triggered by a button click.
     // Single-direction writes only: never flip false->true within one tick, or the
     // Transition state machine wedges (enter-from/leave-active stuck, element lingers).
     if (state?.status === 'running') {
-      if (!visible.value) visible.value = true
+      if (!visible.value) visible.value = true;
       timer = setTimeout(() => {
-        visible.value = false
-        timer = undefined
-      }, 3200)
+        visible.value = false;
+        timer = undefined;
+      }, 3200);
     } else {
-      visible.value = false
+      visible.value = false;
     }
   }
-)
-onUnmounted(dismiss)
+);
+onUnmounted(dismiss);
 </script>
 
 <template>

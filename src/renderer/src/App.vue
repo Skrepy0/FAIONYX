@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import SupplementalModsResult from './components/SupplementalModsResult.vue'
-import { shouldReportGameCrash, signedExitCode } from '@shared/gameExit'
-const isMac = window.faionyx.platform === 'darwin'
-import LaunchNotice from './components/LaunchNotice.vue'
-import { pollTickets } from './voxlinkTickets'
-import CreatorMotto from './components/CreatorMotto.vue'
-import ModpackSupplement from './components/ModpackSupplement.vue'
-import { instanceCenter, openInstanceCenter } from './instanceCenter'
-import { loadExitNotices, clearNotices } from './store'
-import { useNavigationBubble } from './composables/useNavigationBubble'
-import { usePlatformUpdate } from './composables/usePlatformUpdate'
-const { updateReadyMessage } = usePlatformUpdate()
-import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, provide, reactive, ref, watch } from 'vue'
-import type { Component } from 'vue'
-import { backgroundImageEffect } from '@shared/appearancePolicy'
-import { taskProgressPercent } from '@shared/taskProgress'
+import SupplementalModsResult from './components/SupplementalModsResult.vue';
+import { shouldReportGameCrash, signedExitCode } from '@shared/gameExit';
+const isMac = window.faionyx.platform === 'darwin';
+import LaunchNotice from './components/LaunchNotice.vue';
+import { pollTickets } from './voxlinkTickets';
+import CreatorMotto from './components/CreatorMotto.vue';
+import ModpackSupplement from './components/ModpackSupplement.vue';
+import { instanceCenter, openInstanceCenter } from './instanceCenter';
+import { loadExitNotices, clearNotices } from './store';
+import { useNavigationBubble } from './composables/useNavigationBubble';
+import { usePlatformUpdate } from './composables/usePlatformUpdate';
+const { updateReadyMessage } = usePlatformUpdate();
+import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, provide, reactive, ref, watch } from 'vue';
+import type { Component } from 'vue';
+import { backgroundImageEffect } from '@shared/appearancePolicy';
+import { taskProgressPercent } from '@shared/taskProgress';
 import {
   applyUpdate,
   cancelTask,
@@ -41,10 +41,10 @@ import {
   selectFile,
   skipUpdateVersion,
   startUpdateDownload,
-} from './api'
-import type { ReleaseInfo } from '@shared/types'
-import { QQ_GROUP_NUMBER } from '@shared/branding'
-import UpdateModal from './components/UpdateModal.vue'
+} from './api';
+import type { ReleaseInfo } from '@shared/types';
+import { QQ_GROUP_NUMBER } from '@shared/branding';
+import UpdateModal from './components/UpdateModal.vue';
 import {
   applyLaunchState,
   dismissTask,
@@ -60,42 +60,42 @@ import {
   store,
   toast,
   upsertTaskProgress,
-} from './store'
-import type { ViewName } from './store'
-import type { CustomTheme, ModpackInfo, ThemeName, WorldImportInfo, YggdrasilProviderInput } from '@shared/types'
-import { DEFAULT_CUSTOM_THEME, THEME_PRESETS } from '@shared/types'
-import { readableCustomColors } from '@shared/themeContrast'
-import { managedImageUrl } from './managedAssets'
-import Toasts from './components/Toasts.vue'
-import { installVisualDesign, appearancePreview, designStageReady } from './visualDesign'
-import EditPanel from './components/EditPanel.vue'
-import { waitForBootTasks, sealBootTasks } from './bootTasks'
-import { acceptsImportDrag, showsImportOverlay } from '@shared/dropIntent'
-import { updateNotes, latestUpdateNote } from '@shared/updateNotes'
-import HomeView from './views/HomeView.vue'
+} from './store';
+import type { ViewName } from './store';
+import type { CustomTheme, ModpackInfo, ThemeName, WorldImportInfo, YggdrasilProviderInput } from '@shared/types';
+import { DEFAULT_CUSTOM_THEME, THEME_PRESETS } from '@shared/types';
+import { readableCustomColors } from '@shared/themeContrast';
+import { managedImageUrl } from './managedAssets';
+import Toasts from './components/Toasts.vue';
+import { installVisualDesign, appearancePreview, designStageReady } from './visualDesign';
+import EditPanel from './components/EditPanel.vue';
+import { waitForBootTasks, sealBootTasks } from './bootTasks';
+import { acceptsImportDrag, showsImportOverlay } from '@shared/dropIntent';
+import { updateNotes, latestUpdateNote } from '@shared/updateNotes';
+import HomeView from './views/HomeView.vue';
 // 非首屏视图全部懒加载：首屏只打包/挂载 HomeView，其余视图拆独立 chunk 按需拉取
 // （渲染层常驻内存大头之一；配合 memTrim/idleTrim 的静默瘦身）。
-const InstanceCenter = defineAsyncComponent(() => import('./components/InstanceCenter.vue'))
-const GameView = defineAsyncComponent(() => import('./views/GameView.vue'))
-const ModsView = defineAsyncComponent(() => import('./views/ModsView.vue'))
-const RecordingsView = defineAsyncComponent(() => import('./views/RecordingsView.vue'))
-const ProjectionsView = defineAsyncComponent(() => import('./views/ProjectionsView.vue'))
-const PacksView = defineAsyncComponent(() => import('./views/PacksView.vue'))
-const ShadersView = defineAsyncComponent(() => import('./views/ShadersView.vue'))
-const KeysView = defineAsyncComponent(() => import('./views/KeysView.vue'))
-const BridgeView = defineAsyncComponent(() => import('./views/BridgeView.vue'))
-const SkinsView = defineAsyncComponent(() => import('./views/SkinsView.vue'))
-const CommunityView = defineAsyncComponent(() => import('./views/CommunityView.vue'))
-const ServersView = defineAsyncComponent(() => import('./views/ServersView.vue'))
-const FriendConnectView = defineAsyncComponent(() => import('./views/FriendConnectView.vue'))
-const SettingsView = defineAsyncComponent(() => import('./views/SettingsView.vue'))
-const AccountsView = defineAsyncComponent(() => import('./views/AccountsView.vue'))
-import icon from './assets/icon.png'
+const InstanceCenter = defineAsyncComponent(() => import('./components/InstanceCenter.vue'));
+const GameView = defineAsyncComponent(() => import('./views/GameView.vue'));
+const ModsView = defineAsyncComponent(() => import('./views/ModsView.vue'));
+const RecordingsView = defineAsyncComponent(() => import('./views/RecordingsView.vue'));
+const ProjectionsView = defineAsyncComponent(() => import('./views/ProjectionsView.vue'));
+const PacksView = defineAsyncComponent(() => import('./views/PacksView.vue'));
+const ShadersView = defineAsyncComponent(() => import('./views/ShadersView.vue'));
+const KeysView = defineAsyncComponent(() => import('./views/KeysView.vue'));
+const BridgeView = defineAsyncComponent(() => import('./views/BridgeView.vue'));
+const SkinsView = defineAsyncComponent(() => import('./views/SkinsView.vue'));
+const CommunityView = defineAsyncComponent(() => import('./views/CommunityView.vue'));
+const ServersView = defineAsyncComponent(() => import('./views/ServersView.vue'));
+const FriendConnectView = defineAsyncComponent(() => import('./views/FriendConnectView.vue'));
+const SettingsView = defineAsyncComponent(() => import('./views/SettingsView.vue'));
+const AccountsView = defineAsyncComponent(() => import('./views/AccountsView.vue'));
+import icon from './assets/icon.png';
 
 // Vite 的全局 define 在 script 中解析；模板直接访问会被 Vue 当作组件实例字段。
-const appVersion = __APP_VERSION__
-import ModDropModal from './components/ModDropModal.vue'
-import WorldImportModal from './components/WorldImportModal.vue'
+const appVersion = __APP_VERSION__;
+import ModDropModal from './components/ModDropModal.vue';
+import WorldImportModal from './components/WorldImportModal.vue';
 
 const viewMap: Record<ViewName, Component> = {
   home: HomeView,
@@ -113,9 +113,9 @@ const viewMap: Record<ViewName, Component> = {
   friends: FriendConnectView,
   settings: SettingsView,
   accounts: AccountsView,
-}
+};
 
-const currentComponent = computed(() => viewMap[store.currentView])
+const currentComponent = computed(() => viewMap[store.currentView]);
 
 const navItems: Array<{ key: ViewName; label: string; icon: string }> = [
   {
@@ -153,16 +153,16 @@ const navItems: Array<{ key: ViewName; label: string; icon: string }> = [
     label: '设置',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06-.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>',
   },
-]
+];
 
 /** 功能禁用判定 */
-const isFeatureOff = (key: string): boolean => (store.settings?.disabledFeatures ?? []).includes(key)
+const isFeatureOff = (key: string): boolean => (store.settings?.disabledFeatures ?? []).includes(key);
 
 /** 过滤禁用功能后的主导航 */
-const visibleNavItems = computed(() => navItems.filter((n) => !isFeatureOff(n.key)))
+const visibleNavItems = computed(() => navItems.filter((n) => !isFeatureOff(n.key)));
 
 /** 过滤禁用功能后的资源管理子项 */
-const visibleResourceSubItems = computed(() => resourceSubItems.filter((s) => !isFeatureOff(s.key)))
+const visibleResourceSubItems = computed(() => resourceSubItems.filter((s) => !isFeatureOff(s.key)));
 
 /** 资源管理子级菜单（模组/资源包/光影包），按游戏版本管理对应目录 */
 const resourceSubItems: Array<{ key: ViewName; label: string; icon: string }> = [
@@ -202,33 +202,33 @@ const resourceSubItems: Array<{ key: ViewName; label: string; icon: string }> = 
     label: '服务器',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>',
   },
-]
+];
 
 /** 资源管理组是否展开（默认折叠；当前在其中任一子页时强制展开高亮） */
-const resourceExpanded = ref(localStorage.getItem('faionyx.resourceExpanded') === 'true')
-watch(resourceExpanded, (value) => localStorage.setItem('faionyx.resourceExpanded', String(value)))
+const resourceExpanded = ref(localStorage.getItem('faionyx.resourceExpanded') === 'true');
+watch(resourceExpanded, (value) => localStorage.setItem('faionyx.resourceExpanded', String(value)));
 const inResourceGroup = computed(() =>
   ['mods', 'packs', 'shaders', 'bridge', 'servers', 'recordings', 'projections'].includes(store.currentView)
-)
+);
 
 // Route timings also respect the OS preference when Vue uses explicit timeout fallback.
-const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-const systemMotion = ref(motionQuery.matches)
-const reducedMotion = computed(() => systemMotion.value || store.settings?.reduceMotion === true)
+const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+const systemMotion = ref(motionQuery.matches);
+const reducedMotion = computed(() => systemMotion.value || store.settings?.reduceMotion === true);
 watch(
   reducedMotion,
   (value) => {
-    document.documentElement.dataset.motion = value ? 'reduced' : 'full'
+    document.documentElement.dataset.motion = value ? 'reduced' : 'full';
   },
   { immediate: true }
-)
+);
 document.addEventListener('visibilitychange', () => {
-  document.documentElement.dataset.visibility = document.hidden ? 'hidden' : 'visible'
-})
+  document.documentElement.dataset.visibility = document.hidden ? 'hidden' : 'visible';
+});
 const onMotionChange = () => {
-  systemMotion.value = motionQuery.matches
-}
-const routeDuration = computed(() => (reducedMotion.value ? 0 : { enter: 180, leave: 80 }))
+  systemMotion.value = motionQuery.matches;
+};
+const routeDuration = computed(() => (reducedMotion.value ? 0 : { enter: 180, leave: 80 }));
 const {
   navEl,
   bubbleStyle,
@@ -240,28 +240,28 @@ const {
 } = useNavigationBubble(
   computed(() => store.currentView),
   computed(() => [resourceExpanded.value, inResourceGroup.value, visibleNavItems.value, visibleResourceSubItems.value])
-)
+);
 
 /** 关闭启动器不影响游戏：游戏在跑时点关闭先提示一次，再真正关闭 */
-let closeHintShown = false
+let closeHintShown = false;
 const win = async (action: 'minimize' | 'maximize' | 'close') => {
   if (action === 'close' && store.launchState?.status === 'running' && !closeHintShown) {
-    closeHintShown = true
-    toast('关闭启动器不影响游戏，游戏继续运行', 'info')
-    setTimeout(() => window.faionyx.send('window:close'), 1300)
-    return
+    closeHintShown = true;
+    toast('关闭启动器不影响游戏，游戏继续运行', 'info');
+    setTimeout(() => window.faionyx.send('window:close'), 1300);
+    return;
   }
-  window.faionyx.send(`window:${action}`)
-}
+  window.faionyx.send(`window:${action}`);
+};
 
 // ---------------- 启动器自更新弹窗 ----------------
 const updateModal = reactive<{
-  open: boolean
-  release: ReleaseInfo | null
-  state: 'found' | 'downloading' | 'done'
-  taskId: string
-  slowHint: boolean
-  rollback: boolean
+  open: boolean;
+  release: ReleaseInfo | null;
+  state: 'found' | 'downloading' | 'done';
+  taskId: string;
+  slowHint: boolean;
+  rollback: boolean;
 }>({
   open: false,
   release: null,
@@ -269,311 +269,311 @@ const updateModal = reactive<{
   taskId: '',
   slowHint: false,
   rollback: false,
-})
+});
 
 /** 内测群号：设置覆盖优先，默认 shared/branding 常量 */
-const qqGroup = computed(() => store.settings?.qqGroupNumber?.trim() || QQ_GROUP_NUMBER)
+const qqGroup = computed(() => store.settings?.qqGroupNumber?.trim() || QQ_GROUP_NUMBER);
 
 /** 更新下载任务进度（从下载中心任务列表取，含速度） */
-const updateTask = computed(() => store.tasks.find((t) => t.id === updateModal.taskId))
-const updatePercent = computed(() => updateTask.value?.progress ?? 0)
-const updateSpeedText = computed(() => (updateTask.value?.speed ? formatSpeed(updateTask.value.speed) : ''))
+const updateTask = computed(() => store.tasks.find((t) => t.id === updateModal.taskId));
+const updatePercent = computed(() => updateTask.value?.progress ?? 0);
+const updateSpeedText = computed(() => (updateTask.value?.speed ? formatSpeed(updateTask.value.speed) : ''));
 
 function openUpdateModal(release: ReleaseInfo, rollback = false) {
-  updateModal.release = release
-  updateModal.state = 'found'
-  updateModal.taskId = ''
-  updateModal.slowHint = false
-  updateModal.rollback = rollback
-  updateModal.open = true
+  updateModal.release = release;
+  updateModal.state = 'found';
+  updateModal.taskId = '';
+  updateModal.slowHint = false;
+  updateModal.rollback = rollback;
+  updateModal.open = true;
 }
 // 设置页手动检查/任意页面写入 store.updatePrompt → 统一在此打开弹窗
 watch(
   () => store.updatePrompt,
   (req) => {
     if (req) {
-      openUpdateModal(req.release, req.rollback)
-      store.updatePrompt = null
+      openUpdateModal(req.release, req.rollback);
+      store.updatePrompt = null;
     }
   }
-)
+);
 
 async function onUpdateNow() {
-  const release = updateModal.release
-  if (!release) return
+  const release = updateModal.release;
+  if (!release) return;
   try {
-    const { taskId } = await startUpdateDownload(release, updateModal.rollback ? 'rollback' : 'upgrade')
-    updateModal.taskId = taskId
-    updateModal.state = 'downloading'
+    const { taskId } = await startUpdateDownload(release, updateModal.rollback ? 'rollback' : 'upgrade');
+    updateModal.taskId = taskId;
+    updateModal.state = 'downloading';
   } catch (e) {
-    toast('启动更新下载失败：' + errText(e), 'error')
-    updateModal.open = false
+    toast('启动更新下载失败：' + errText(e), 'error');
+    updateModal.open = false;
   }
 }
 function onUpdateLater() {
-  updateModal.open = false
+  updateModal.open = false;
 }
 async function onUpdateSkip() {
-  const release = updateModal.release
-  updateModal.open = false
-  if (!release) return
+  const release = updateModal.release;
+  updateModal.open = false;
+  if (!release) return;
   try {
-    await skipUpdateVersion(release.version)
-    store.settings = { ...store.settings!, skipUpdateVersion: release.version }
-    toast(`已跳过 v${release.version}，下个版本再提醒`, 'info')
+    await skipUpdateVersion(release.version);
+    store.settings = { ...store.settings!, skipUpdateVersion: release.version };
+    toast(`已跳过 v${release.version}，下个版本再提醒`, 'info');
   } catch (e) {
-    toast('保存失败：' + errText(e), 'error')
+    toast('保存失败：' + errText(e), 'error');
   }
 }
 async function onUpdateCancelDownload() {
-  if (updateModal.taskId) await cancelTask(updateModal.taskId)
-  updateModal.open = false
+  if (updateModal.taskId) await cancelTask(updateModal.taskId);
+  updateModal.open = false;
 }
 async function onUpdateInstallNow() {
-  const release = updateModal.release
-  if (!release) return
+  const release = updateModal.release;
+  if (!release) return;
   try {
-    await applyUpdate(release)
-    updateModal.open = false
-    toast(updateReadyMessage(), 'success')
+    await applyUpdate(release);
+    updateModal.open = false;
+    toast(updateReadyMessage(), 'success');
   } catch (e) {
-    toast('安装更新失败：' + errText(e), 'error')
-    updateModal.open = false
+    toast('安装更新失败：' + errText(e), 'error');
+    updateModal.open = false;
   }
 }
 
 // 配置文件版本不兼容（回退后旧版读到新版配置）：继续尝试 / 重置设置
-const configMismatch = ref(false)
+const configMismatch = ref(false);
 async function checkConfigStatus() {
   try {
-    const s = await getConfigStatus()
-    if (s.mismatch === 'newer') configMismatch.value = true
+    const s = await getConfigStatus();
+    if (s.mismatch === 'newer') configMismatch.value = true;
   } catch {
     /* 检查失败不打扰 */
   }
 }
 async function onConfigReset() {
   try {
-    await resetSettingsToDefaults()
-    configMismatch.value = false
-    toast('设置已重置为默认值（原配置已备份）', 'success')
-    setTimeout(() => location.reload(), 800)
+    await resetSettingsToDefaults();
+    configMismatch.value = false;
+    toast('设置已重置为默认值（原配置已备份）', 'success');
+    setTimeout(() => location.reload(), 800);
   } catch (e) {
-    toast('重置失败：' + errText(e), 'error')
+    toast('重置失败：' + errText(e), 'error');
   }
 }
 
 // 自绘标题栏中的返回按钮使用真实视图历史；不伪造“返回”入口。
-const viewHistory = ref<ViewName[]>([])
-let navigatingBack = false
+const viewHistory = ref<ViewName[]>([]);
+let navigatingBack = false;
 watch(
   () => store.currentView,
   (next, previous) => {
     if (navigatingBack) {
-      navigatingBack = false
-      return
+      navigatingBack = false;
+      return;
     }
     if (previous && previous !== next) {
-      viewHistory.value = [...viewHistory.value.slice(-19), previous]
+      viewHistory.value = [...viewHistory.value.slice(-19), previous];
     }
   },
   { flush: 'sync' }
-)
-const canGoBack = computed(() => viewHistory.value.length > 0)
+);
+const canGoBack = computed(() => viewHistory.value.length > 0);
 function goBack() {
-  const target = viewHistory.value.at(-1)
-  if (!target) return
-  viewHistory.value = viewHistory.value.slice(0, -1)
-  navigatingBack = true
-  store.currentView = target
+  const target = viewHistory.value.at(-1);
+  if (!target) return;
+  viewHistory.value = viewHistory.value.slice(0, -1);
+  navigatingBack = true;
+  store.currentView = target;
 }
 
 // ---------------- 全局拖拽导入整合包 ----------------
-const dragActive = ref(false)
+const dragActive = ref(false);
 /** 进入/离开子元素会成对触发 dragenter/dragleave，用计数器避免遮罩闪烁 */
-let dragDepth = 0
-let internalDrag = false
+let dragDepth = 0;
+let internalDrag = false;
 /** 最近一次 dragover 时间戳：浏览器对拖出窗口/异常手势会停发事件，超时兜底防覆盖层残留 */
-let lastDragoverAt = 0
-let dragWatchdog: ReturnType<typeof setInterval> | null = null
+let lastDragoverAt = 0;
+let dragWatchdog: ReturnType<typeof setInterval> | null = null;
 function endDrag() {
-  internalDrag = false
-  dragDepth = 0
-  dragActive.value = false
+  internalDrag = false;
+  dragDepth = 0;
+  dragActive.value = false;
 }
 
 /** 覆盖层激活期间启动看门狗：1.5s 没有任何拖拽事件即强制复位 */
 function startDragWatchdog() {
-  stopDragWatchdog()
-  lastDragoverAt = Date.now()
+  stopDragWatchdog();
+  lastDragoverAt = Date.now();
   dragWatchdog = setInterval(() => {
-    if (dragActive.value && Date.now() - lastDragoverAt > 1500) endDrag()
-  }, 400)
+    if (dragActive.value && Date.now() - lastDragoverAt > 1500) endDrag();
+  }, 400);
 }
 function stopDragWatchdog() {
   if (dragWatchdog) {
-    clearInterval(dragWatchdog)
-    dragWatchdog = null
+    clearInterval(dragWatchdog);
+    dragWatchdog = null;
   }
 }
-watch(dragActive, (active) => (active ? startDragWatchdog() : stopDragWatchdog()))
+watch(dragActive, (active) => (active ? startDragWatchdog() : stopDragWatchdog()));
 
-const dragHasFiles = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes('Files')
+const dragHasFiles = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes('Files');
 const dragHasProviderText = (e: DragEvent) => {
-  const types = Array.from(e.dataTransfer?.types ?? [])
-  return types.includes('text/plain') || types.includes('text/uri-list')
-}
-const dragHasSupportedData = (e: DragEvent) => acceptsImportDrag(Array.from(e.dataTransfer?.types ?? []), internalDrag)
+  const types = Array.from(e.dataTransfer?.types ?? []);
+  return types.includes('text/plain') || types.includes('text/uri-list');
+};
+const dragHasSupportedData = (e: DragEvent) => acceptsImportDrag(Array.from(e.dataTransfer?.types ?? []), internalDrag);
 const looksLikeYggdrasilProvider = (value: string): boolean => {
-  const text = value.trim()
+  const text = value.trim();
   return (
     /^authlib-injector:yggdrasil-server:/i.test(text) ||
     /^https?:\/\//i.test(text) ||
     /^\{[\s\S]*\}$/i.test(text) ||
     /(?:api\s*root|yggdrasil(?:\s*server)?)\s*[:=]/i.test(text) ||
     /^[\w.-]+\.[a-z]{2,}(?:[/:][^\s]*)?$/i.test(text)
-  )
-}
+  );
+};
 
-const resourceDropPage = () => ['keys', 'mods', 'packs', 'shaders'].includes(store.currentView)
+const resourceDropPage = () => ['keys', 'mods', 'packs', 'shaders'].includes(store.currentView);
 function onDragEnter(e: DragEvent) {
   if (store.editMode) {
-    e.preventDefault()
-    e.stopImmediatePropagation()
-    endDrag()
-    return
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    endDrag();
+    return;
   }
   if (resourceDropPage()) {
-    if (dragHasFiles(e)) e.preventDefault()
-    endDrag()
-    return
+    if (dragHasFiles(e)) e.preventDefault();
+    endDrag();
+    return;
   }
-  if (!dragHasSupportedData(e)) return
-  e.preventDefault()
-  dragDepth++
-  dragActive.value = showsImportOverlay(Array.from(e.dataTransfer?.types ?? []), internalDrag)
+  if (!dragHasSupportedData(e)) return;
+  e.preventDefault();
+  dragDepth++;
+  dragActive.value = showsImportOverlay(Array.from(e.dataTransfer?.types ?? []), internalDrag);
   if (dragActive.value) {
-    dlOpen.value = false
-    noticeOpen.value = false
+    dlOpen.value = false;
+    noticeOpen.value = false;
   }
 }
 
 function onDragOver(e: DragEvent) {
   if (store.editMode) {
-    e.preventDefault()
-    e.stopImmediatePropagation()
-    endDrag()
-    return
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    endDrag();
+    return;
   }
   if (resourceDropPage()) {
-    if (dragHasFiles(e)) e.preventDefault()
-    endDrag()
-    return
+    if (dragHasFiles(e)) e.preventDefault();
+    endDrag();
+    return;
   }
-  if (!dragHasSupportedData(e)) return
-  e.preventDefault() // 必须 preventDefault 才允许 drop
-  lastDragoverAt = Date.now()
-  if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
-  dragActive.value = showsImportOverlay(Array.from(e.dataTransfer?.types ?? []), internalDrag)
+  if (!dragHasSupportedData(e)) return;
+  e.preventDefault(); // 必须 preventDefault 才允许 drop
+  lastDragoverAt = Date.now();
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+  dragActive.value = showsImportOverlay(Array.from(e.dataTransfer?.types ?? []), internalDrag);
 }
 
 function onDragLeave(e: DragEvent) {
-  if (!dragHasSupportedData(e)) return
-  dragDepth = Math.max(0, dragDepth - 1)
-  if (dragDepth === 0) dragActive.value = false
+  if (!dragHasSupportedData(e)) return;
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (dragDepth === 0) dragActive.value = false;
 }
 
 function onDrop(e: DragEvent) {
   if (store.editMode) {
-    e.preventDefault()
-    e.stopImmediatePropagation()
-    endDrag()
-    return
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    endDrag();
+    return;
   }
   // MRPACK is unambiguously a whole pack, even on a local resource page.
   // Ordinary ZIP/JAR drops retain that page's existing batch import behavior.
-  const mrpackDrop = dragHasFiles(e) && Array.from(e.dataTransfer?.files ?? []).some((file) => /\.mrpack$/i.test(file.name))
-  if (mrpackDrop) e.stopPropagation()
+  const mrpackDrop = dragHasFiles(e) && Array.from(e.dataTransfer?.files ?? []).some((file) => /\.mrpack$/i.test(file.name));
+  if (mrpackDrop) e.stopPropagation();
   if (resourceDropPage() && !mrpackDrop) {
-    endDrag()
-    e.preventDefault()
-    e.stopPropagation()
+    endDrag();
+    e.preventDefault();
+    e.stopPropagation();
     if (dragHasFiles(e)) {
-      if (store.resourceDropHandler) store.resourceDropHandler(e)
-      else toast('页面正在加载，请稍后再拖入', 'info')
+      if (store.resourceDropHandler) store.resourceDropHandler(e);
+      else toast('页面正在加载，请稍后再拖入', 'info');
     }
-    return
+    return;
   }
   // 覆盖层复位先于一切判定：任何 drop 发生都意味着拖拽手势已结束
-  dragDepth = 0
-  dragActive.value = false
-  if (!dragHasSupportedData(e)) return
-  e.preventDefault()
-  dlOpen.value = false
-  noticeOpen.value = false
-  const dropped = Array.from(e.dataTransfer?.files ?? [])
+  dragDepth = 0;
+  dragActive.value = false;
+  if (!dragHasSupportedData(e)) return;
+  e.preventDefault();
+  dlOpen.value = false;
+  noticeOpen.value = false;
+  const dropped = Array.from(e.dataTransfer?.files ?? []);
   if (!dropped.length) {
-    const text = e.dataTransfer?.getData('text/plain') || e.dataTransfer?.getData('text/uri-list') || ''
+    const text = e.dataTransfer?.getData('text/plain') || e.dataTransfer?.getData('text/uri-list') || '';
     if (looksLikeYggdrasilProvider(text)) {
-      routeYggdrasilImport({ kind: 'text', value: text })
+      routeYggdrasilImport({ kind: 'text', value: text });
     }
-    return
+    return;
   }
-  const paths = dropped.map((f) => window.faionyx.getFilePath(f))
-  const names = dropped.map((f) => f.name.toLowerCase())
+  const paths = dropped.map((f) => window.faionyx.getFilePath(f));
+  const names = dropped.map((f) => f.name.toLowerCase());
 
   if (names.length === 1 && /\.(json|txt|url|yggdrasil)$/.test(names[0])) {
-    routeYggdrasilImport({ kind: 'file', value: paths[0] })
-    return
+    routeYggdrasilImport({ kind: 'file', value: paths[0] });
+    return;
   }
 
   // 单项拖入先按内容识别：.mrpack 始终优先，ZIP/文件夹可能是世界存档。
   if (names.length === 1) {
-    void routeSingleImport(paths[0], names[0])
-    return
+    void routeSingleImport(paths[0], names[0]);
+    return;
   }
   // 全部为非压缩包扩展（.jar 或文件夹）→ MOD 拖入即装流程
   if (names.every((n) => !/\.(mrpack|zip)$/.test(n))) {
-    modDrop.files = paths
-    modDrop.open = true
-    return
+    modDrop.files = paths;
+    modDrop.open = true;
+    return;
   }
-  toast('压缩包请一次导入一个文件；混合文件请分开拖入', 'error')
+  toast('压缩包请一次导入一个文件；混合文件请分开拖入', 'error');
 }
 
 function routeYggdrasilImport(input: YggdrasilProviderInput) {
-  store.pendingYggdrasilImport = input
-  store.currentView = 'accounts'
+  store.pendingYggdrasilImport = input;
+  store.currentView = 'accounts';
   void nextTick(() => {
-    const pending = store.pendingYggdrasilImport
+    const pending = store.pendingYggdrasilImport;
     if (pending && store.yggdrasilImportHandler) {
-      store.pendingYggdrasilImport = null
-      store.yggdrasilImportHandler(pending)
+      store.pendingYggdrasilImport = null;
+      store.yggdrasilImportHandler(pending);
     }
-  })
+  });
 }
 
 // ---------------- MOD 拖入即装 ----------------
-const modDrop = reactive({ open: false, files: [] as string[] })
+const modDrop = reactive({ open: false, files: [] as string[] });
 
 const worldModal = reactive({
   open: false,
   filePath: '',
   info: null as WorldImportInfo | null,
-})
+});
 
-let importProbeRevision = 0
+let importProbeRevision = 0;
 async function routeSingleImport(filePath: string, _displayName: string) {
-  const revision = ++importProbeRevision
+  const revision = ++importProbeRevision;
   try {
-    const result = await probeImport(filePath)
-    if (revision !== importProbeRevision) return
-    if (result.kind === 'modpack') await openModpackImport(filePath, result.info)
-    else if (result.kind === 'world') Object.assign(worldModal, { filePath, info: result.info, open: true })
-    else if (result.kind === 'mod') Object.assign(modDrop, { files: [filePath], open: true })
-    else toast(result.message, 'error')
+    const result = await probeImport(filePath);
+    if (revision !== importProbeRevision) return;
+    if (result.kind === 'modpack') await openModpackImport(filePath, result.info);
+    else if (result.kind === 'world') Object.assign(worldModal, { filePath, info: result.info, open: true });
+    else if (result.kind === 'mod') Object.assign(modDrop, { files: [filePath], open: true });
+    else toast(result.message, 'error');
   } catch (e) {
-    if (revision === importProbeRevision) toast('导入识别失败：' + errText(e), 'error')
+    if (revision === importProbeRevision) toast('导入识别失败：' + errText(e), 'error');
   }
 }
 
@@ -582,26 +582,26 @@ const FORMAT_LABEL: Record<ModpackInfo['format'], string> = {
   mrpack: 'Modrinth (.mrpack)',
   curseforge: 'CurseForge',
   fullpack: '完整客户端包',
-}
+};
 const FORMAT_TAG_CLASS: Record<ModpackInfo['format'], string> = {
   mrpack: 'tag-success',
   curseforge: 'tag-gold',
   fullpack: 'tag-cyan',
-}
+};
 
 interface ModpackModal {
-  open: boolean
-  probing: boolean
-  error: string
-  filePath: string
-  info: ModpackInfo | null
-  nameSource: 'file' | 'inner'
-  customName: string
-  targetFolder: string
-  conflictAction: 'rename' | 'new' | 'update' | 'overwrite'
-  existingId: string
-  confirmReplace: boolean
-  keySyncOverride: boolean
+  open: boolean;
+  probing: boolean;
+  error: string;
+  filePath: string;
+  info: ModpackInfo | null;
+  nameSource: 'file' | 'inner';
+  customName: string;
+  targetFolder: string;
+  conflictAction: 'rename' | 'new' | 'update' | 'overwrite';
+  existingId: string;
+  confirmReplace: boolean;
+  keySyncOverride: boolean;
 }
 
 const mpModal = reactive<ModpackModal>({
@@ -617,56 +617,56 @@ const mpModal = reactive<ModpackModal>({
   existingId: '',
   confirmReplace: false,
   keySyncOverride: false,
-})
+});
 
-const mpFormatLabel = computed(() => (mpModal.info ? FORMAT_LABEL[mpModal.info.format] : ''))
-const mpFormatTagClass = computed(() => (mpModal.info ? FORMAT_TAG_CLASS[mpModal.info.format] : ''))
-const normalizeMpName = (value: string) => value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-US')
-const mpExistingInFolder = computed(() => (mpModal.info?.existingInstances ?? []).filter((item) => item.folder === mpModal.targetFolder))
+const mpFormatLabel = computed(() => (mpModal.info ? FORMAT_LABEL[mpModal.info.format] : ''));
+const mpFormatTagClass = computed(() => (mpModal.info ? FORMAT_TAG_CLASS[mpModal.info.format] : ''));
+const normalizeMpName = (value: string) => value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-US');
+const mpExistingInFolder = computed(() => (mpModal.info?.existingInstances ?? []).filter((item) => item.folder === mpModal.targetFolder));
 const mpNameConflict = computed(() =>
   mpExistingInFolder.value.find((item) => normalizeMpName(item.id) === normalizeMpName(mpModal.customName))
-)
+);
 const mpRelatedExisting = computed(() => {
   const result = mpExistingInFolder.value.filter(
     (item) => item.samePackVersion || normalizeMpName(item.id) === normalizeMpName(mpModal.customName)
-  )
-  return [...new Map(result.map((item) => [item.id, item])).values()]
-})
-const mpNeedsReplaceConfirm = computed(() => mpModal.conflictAction === 'update' || mpModal.conflictAction === 'overwrite')
+  );
+  return [...new Map(result.map((item) => [item.id, item])).values()];
+});
+const mpNeedsReplaceConfirm = computed(() => mpModal.conflictAction === 'update' || mpModal.conflictAction === 'overwrite');
 
 function fmtPackBytes(bytes: number): string {
-  if (!bytes) return '大小未知'
-  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`
-  if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MB`
-  return `${(bytes / 1024 ** 3).toFixed(2)} GB`
+  if (!bytes) return '大小未知';
+  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+  return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
 }
 
 function setMpNameSource(source: 'file' | 'inner') {
-  mpModal.nameSource = source
-  if (mpModal.info) mpModal.customName = source === 'inner' ? mpModal.info.innerName : mpModal.info.fileName
-  mpModal.confirmReplace = false
+  mpModal.nameSource = source;
+  if (mpModal.info) mpModal.customName = source === 'inner' ? mpModal.info.innerName : mpModal.info.fileName;
+  mpModal.confirmReplace = false;
 }
 
 function onMpTargetFolderChange() {
-  const related = mpRelatedExisting.value[0]
-  mpModal.existingId = related?.id ?? ''
-  mpModal.conflictAction = related ? 'new' : 'rename'
-  mpModal.confirmReplace = false
-  mpModal.error = ''
+  const related = mpRelatedExisting.value[0];
+  mpModal.existingId = related?.id ?? '';
+  mpModal.conflictAction = related ? 'new' : 'rename';
+  mpModal.confirmReplace = false;
+  mpModal.error = '';
 }
 
 function onMpConflictActionChange() {
-  mpModal.confirmReplace = false
-  mpModal.error = ''
+  mpModal.confirmReplace = false;
+  mpModal.error = '';
   if (mpNeedsReplaceConfirm.value) {
-    const valid = mpExistingInFolder.value.some((item) => item.id === mpModal.existingId)
-    if (!valid) mpModal.existingId = mpRelatedExisting.value[0]?.id ?? mpExistingInFolder.value[0]?.id ?? ''
+    const valid = mpExistingInFolder.value.some((item) => item.id === mpModal.existingId);
+    if (!valid) mpModal.existingId = mpRelatedExisting.value[0]?.id ?? mpExistingInFolder.value[0]?.id ?? '';
   }
 }
 
 /** 拿到文件路径后先 probe 解析，弹确认框；解析失败在框内展示错误 */
 async function openModpackImport(filePath: string, knownInfo?: ModpackInfo) {
-  if (!filePath) return
+  if (!filePath) return;
   Object.assign(mpModal, {
     open: true,
     probing: true,
@@ -680,49 +680,49 @@ async function openModpackImport(filePath: string, knownInfo?: ModpackInfo) {
     conflictAction: 'rename' as const,
     existingId: '',
     confirmReplace: false,
-  })
+  });
   try {
-    const info = knownInfo ?? (await probeModpack(filePath))
+    const info = knownInfo ?? (await probeModpack(filePath));
     // 防止解析期间用户又发起了另一次导入，旧结果覆盖新弹窗
     if (mpModal.filePath === filePath) {
-      mpModal.info = info
-      mpModal.customName = info.fileName
+      mpModal.info = info;
+      mpModal.customName = info.fileName;
       const relevant = info.existingInstances.find(
         (item) => item.folder === mpModal.targetFolder && (item.sameNormalizedName || item.samePackVersion)
-      )
-      mpModal.existingId = relevant?.id ?? ''
-      mpModal.conflictAction = relevant ? 'new' : 'rename'
+      );
+      mpModal.existingId = relevant?.id ?? '';
+      mpModal.conflictAction = relevant ? 'new' : 'rename';
     }
   } catch (e) {
-    if (mpModal.filePath === filePath) mpModal.error = errText(e)
+    if (mpModal.filePath === filePath) mpModal.error = errText(e);
   } finally {
-    if (mpModal.filePath === filePath) mpModal.probing = false
+    if (mpModal.filePath === filePath) mpModal.probing = false;
   }
 }
 
 function closeModpackImport() {
-  mpModal.open = false
+  mpModal.open = false;
 }
 
 /** 确认导入：主进程后台异步执行，完成/失败由 installDone 订阅统一提示 */
 function confirmModpackImport() {
-  if (!mpModal.info) return
+  if (!mpModal.info) return;
   if (!mpModal.customName.trim()) {
-    mpModal.error = '实例名称不能为空'
-    return
+    mpModal.error = '实例名称不能为空';
+    return;
   }
   if (mpModal.conflictAction === 'rename' && mpNameConflict.value) {
-    mpModal.error = `实例名称已存在：${mpNameConflict.value.id}，请改名或选择其他处理方式`
-    return
+    mpModal.error = `实例名称已存在：${mpNameConflict.value.id}，请改名或选择其他处理方式`;
+    return;
   }
   if (mpNeedsReplaceConfirm.value && (!mpModal.existingId || !mpModal.confirmReplace)) {
-    mpModal.error = '请选择现有实例并勾选影响范围确认'
-    return
+    mpModal.error = '请选择现有实例并勾选影响范围确认';
+    return;
   }
-  const filePath = mpModal.filePath
-  const nameSource = mpModal.nameSource
-  mpModal.open = false
-  toast('开始解析并安装整合包…', 'info')
+  const filePath = mpModal.filePath;
+  const nameSource = mpModal.nameSource;
+  mpModal.open = false;
+  toast('开始解析并安装整合包…', 'info');
   void installModpack(filePath, {
     nameSource,
     instanceName: mpModal.customName.trim(),
@@ -732,26 +732,26 @@ function confirmModpackImport() {
     confirmReplace: mpNeedsReplaceConfirm.value && mpModal.confirmReplace,
     keySyncOverride: mpModal.keySyncOverride,
   }).catch((e) => {
-    toast('整合包安装失败：' + errText(e), 'error')
-  })
+    toast('整合包安装失败：' + errText(e), 'error');
+  });
 }
 
 /** 顶栏「导入」与拖入文件共用内容识别。 */
 async function onImportClick() {
   try {
-    const p = await selectFile()
-    if (p) void routeSingleImport(p, p.split(/[\\/]/).pop() ?? p)
+    const p = await selectFile();
+    if (p) void routeSingleImport(p, p.split(/[\\/]/).pop() ?? p);
   } catch (e) {
-    toast('导入失败：' + errText(e), 'error')
+    toast('导入失败：' + errText(e), 'error');
   }
 }
 
 // ---------------- 通知中心 ----------------
-const noticeOpen = ref(false)
+const noticeOpen = ref(false);
 
 function toggleNotices() {
-  noticeOpen.value = !noticeOpen.value
-  if (noticeOpen.value) markNoticesRead()
+  noticeOpen.value = !noticeOpen.value;
+  if (noticeOpen.value) markNoticesRead();
 }
 
 // ---------------- 启动失败日志导出 ----------------
@@ -760,201 +760,201 @@ const launchFail = reactive({
   title: '',
   text: '',
   exporting: false,
-})
+});
 
 async function onExportLogs() {
-  if (launchFail.exporting) return
-  launchFail.exporting = true
+  if (launchFail.exporting) return;
+  launchFail.exporting = true;
   try {
-    const p = await exportLaunchLogs(store.launchingVersionId, store.launchingFolder)
+    const p = await exportLaunchLogs(store.launchingVersionId, store.launchingFolder);
     if (p) {
-      toast(`错误日志已导出：${p}`, 'success')
-      launchFail.open = false
+      toast(`错误日志已导出：${p}`, 'success');
+      launchFail.open = false;
     }
   } catch (e) {
-    toast('导出失败：' + errText(e), 'error')
+    toast('导出失败：' + errText(e), 'error');
   } finally {
-    launchFail.exporting = false
+    launchFail.exporting = false;
   }
 }
 
 // ---------------- 下载中心 ----------------
-const dlOpen = ref(false)
-const notesOpen = ref(false)
+const dlOpen = ref(false);
+const notesOpen = ref(false);
 
 /** 顶栏空白处点击关闭已展开的下拉面板（顶栏是 -webkit-app-region:drag 拖拽区，点击不会落到下拉遮罩上） */
 function onTopbarPointerDown(event: PointerEvent) {
-  const target = event.target as HTMLElement
-  if (!target.closest('button, input, select, textarea, a, [role="button"]')) closeTopDropdowns()
+  const target = event.target as HTMLElement;
+  if (!target.closest('button, input, select, textarea, a, [role="button"]')) closeTopDropdowns();
 }
 function closeTopDropdowns() {
-  noticeOpen.value = false
-  dlOpen.value = false
-  notesOpen.value = false
+  noticeOpen.value = false;
+  dlOpen.value = false;
+  notesOpen.value = false;
 }
 /** 操作习惯：下拉打开后点击面板与触发按钮之外的任意位置即关闭（全屏遮罩之外的兜底） */
 function onGlobalPointerDown(event: PointerEvent) {
-  if (!noticeOpen.value && !dlOpen.value && !notesOpen.value) return
-  const target = event.target as HTMLElement | null
-  if (target?.closest?.('.notice-panel, .dl-toggle, [title="通知"]')) return
-  closeTopDropdowns()
+  if (!noticeOpen.value && !dlOpen.value && !notesOpen.value) return;
+  const target = event.target as HTMLElement | null;
+  if (target?.closest?.('.notice-panel, .dl-toggle, [title="通知"]')) return;
+  closeTopDropdowns();
 }
 const activeTaskCount = computed(
   () => store.tasks.filter((t) => t.status === 'running' || t.status === 'paused' || t.status === 'cancelling').length
-)
+);
 const launcherHealth = computed(() => {
   if (store.launchState?.status === 'error') {
-    return { tone: 'error', text: '最近启动出现异常' }
+    return { tone: 'error', text: '最近启动出现异常' };
   }
   if (activeTaskCount.value) {
-    return { tone: 'busy', text: `${activeTaskCount.value} 项后台任务进行中` }
+    return { tone: 'busy', text: `${activeTaskCount.value} 项后台任务进行中` };
   }
-  return { tone: 'ok', text: '系统无异常' }
-})
+  return { tone: 'ok', text: '系统无异常' };
+});
 
 async function onPauseTask(id: string) {
-  const task = store.tasks.find((t) => t.id === id)
-  if (!task || task.status !== 'running') return
+  const task = store.tasks.find((t) => t.id === id);
+  if (!task || task.status !== 'running') return;
   try {
-    if (await pauseTask(id)) task.status = 'paused'
+    if (await pauseTask(id)) task.status = 'paused';
   } catch (e) {
-    toast('暂停失败：' + errText(e), 'error')
+    toast('暂停失败：' + errText(e), 'error');
   }
 }
 
 async function onResumeTask(id: string) {
-  const task = store.tasks.find((t) => t.id === id)
-  if (!task || task.status !== 'paused') return
+  const task = store.tasks.find((t) => t.id === id);
+  if (!task || task.status !== 'paused') return;
   try {
-    if (await resumeTask(id)) task.status = 'running'
+    if (await resumeTask(id)) task.status = 'running';
   } catch (e) {
-    toast('恢复失败：' + errText(e), 'error')
+    toast('恢复失败：' + errText(e), 'error');
   }
 }
 
 async function onCancelTask(id: string) {
-  const task = store.tasks.find((t) => t.id === id)
-  if (!task || (task.status !== 'running' && task.status !== 'paused')) return
-  task.status = 'cancelling'
+  const task = store.tasks.find((t) => t.id === id);
+  if (!task || (task.status !== 'running' && task.status !== 'paused')) return;
+  task.status = 'cancelling';
   try {
-    const found = await cancelTask(id)
+    const found = await cancelTask(id);
     if (!found) {
       finalizeTask({
         taskId: id,
         ok: false,
         cancelled: true,
         error: '任务已结束',
-      })
-      toast('任务已结束或不存在', 'info')
+      });
+      toast('任务已结束或不存在', 'info');
     }
   } catch (e) {
-    toast('取消失败：' + errText(e), 'error')
+    toast('取消失败：' + errText(e), 'error');
   }
 }
 
 /** 任务副标题：阶段标签与进度文本重复时只显示一次 */
 function taskSubText(t: { stage: string; text: string }): string {
-  if (t.stage === 'parallel') return ''
-  const label = stageLabel(t.stage)
-  return t.text.startsWith(label) ? t.text : `${label} · ${t.text}`
+  if (t.stage === 'parallel') return '';
+  const label = stageLabel(t.stage);
+  return t.text.startsWith(label) ? t.text : `${label} · ${t.text}`;
 }
 
 function taskEtaText(seconds?: number): string {
-  if (seconds == null || !Number.isFinite(seconds) || seconds <= 3) return ''
-  if (seconds >= 3600) return ` · 本阶段约剩 ${Math.ceil(seconds / 3600)}h`
-  if (seconds >= 60) return ` · 本阶段约剩 ${Math.ceil(seconds / 60)}min`
-  return ` · 本阶段约剩 ${Math.round(seconds)}s`
+  if (seconds == null || !Number.isFinite(seconds) || seconds <= 3) return '';
+  if (seconds >= 3600) return ` · 本阶段约剩 ${Math.ceil(seconds / 3600)}h`;
+  if (seconds >= 60) return ` · 本阶段约剩 ${Math.ceil(seconds / 60)}min`;
+  return ` · 本阶段约剩 ${Math.round(seconds)}s`;
 }
 
 function fmtNoticeTime(ts: number): string {
-  const d = new Date(ts)
-  const hm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-  const today = new Date().toDateString() === d.toDateString()
-  return today ? hm : `${d.getMonth() + 1}/${d.getDate()} ${hm}`
+  const d = new Date(ts);
+  const hm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const today = new Date().toDateString() === d.toDateString();
+  return today ? hm : `${d.getMonth() + 1}/${d.getDate()} ${hm}`;
 }
 
-const failedBackground = ref('')
+const failedBackground = ref('');
 
 /** 背景图列表：多图自动切换用 images；否则回退单张 image */
 const bgImages = computed(() => {
-  const bg = appearancePreview.value?.background
-  if (!bg || bg.mode !== 'image') return [] as string[]
-  return bg.images?.length ? bg.images : bg.image ? [bg.image] : []
-})
-const BG_INDEX_KEY = 'faionyx:bg-last-index'
-const currentBgIndex = ref(0)
-const currentBgImage = computed(() => bgImages.value[currentBgIndex.value % Math.max(1, bgImages.value.length)] ?? '')
+  const bg = appearancePreview.value?.background;
+  if (!bg || bg.mode !== 'image') return [] as string[];
+  return bg.images?.length ? bg.images : bg.image ? [bg.image] : [];
+});
+const BG_INDEX_KEY = 'faionyx:bg-last-index';
+const currentBgIndex = ref(0);
+const currentBgImage = computed(() => bgImages.value[currentBgIndex.value % Math.max(1, bgImages.value.length)] ?? '');
 
 /** 切换到下一张背景图（按顺序/随机）；off 模式不切换 */
 function switchBackground() {
-  const list = bgImages.value
-  const mode = appearancePreview.value?.background.switchMode ?? 'off'
-  if (mode === 'off' || list.length < 2) return
+  const list = bgImages.value;
+  const mode = appearancePreview.value?.background.switchMode ?? 'off';
+  if (mode === 'off' || list.length < 2) return;
   if (mode === 'random') {
-    let next = currentBgIndex.value
-    while (next === currentBgIndex.value) next = Math.floor(Math.random() * list.length)
-    currentBgIndex.value = next
+    let next = currentBgIndex.value;
+    while (next === currentBgIndex.value) next = Math.floor(Math.random() * list.length);
+    currentBgIndex.value = next;
   } else {
-    currentBgIndex.value = (currentBgIndex.value + 1) % list.length
+    currentBgIndex.value = (currentBgIndex.value + 1) % list.length;
   }
-  localStorage.setItem(BG_INDEX_KEY, String(currentBgIndex.value))
+  localStorage.setItem(BG_INDEX_KEY, String(currentBgIndex.value));
 }
 
-let bgSwitchTimer: ReturnType<typeof setInterval> | undefined
+let bgSwitchTimer: ReturnType<typeof setInterval> | undefined;
 function armBgSwitchTimer() {
-  clearInterval(bgSwitchTimer)
-  bgSwitchTimer = undefined
-  const bg = appearancePreview.value?.background
-  const mode = bg?.switchMode ?? 'off'
-  if (bg?.mode !== 'image' || mode === 'off' || bgImages.value.length < 2) return
-  const sec = Math.max(30, bg?.switchIntervalSec ?? 300)
+  clearInterval(bgSwitchTimer);
+  bgSwitchTimer = undefined;
+  const bg = appearancePreview.value?.background;
+  const mode = bg?.switchMode ?? 'off';
+  if (bg?.mode !== 'image' || mode === 'off' || bgImages.value.length < 2) return;
+  const sec = Math.max(30, bg?.switchIntervalSec ?? 300);
   // document.hidden 时跳过切换：页面不可见即暂停轮换，回到前台后下一拍继续
   bgSwitchTimer = setInterval(() => {
-    if (document.hidden) return
-    switchBackground()
-  }, sec * 1000)
+    if (document.hidden) return;
+    switchBackground();
+  }, sec * 1000);
 }
 
 watch(
   () => [appearancePreview.value?.background.mode, currentBgImage.value] as const,
   ([mode, imagePath]) => {
-    failedBackground.value = ''
-    if (mode !== 'image' || !imagePath) return
-    const probe = new Image()
+    failedBackground.value = '';
+    if (mode !== 'image' || !imagePath) return;
+    const probe = new Image();
     probe.onload = () => {
-      if (currentBgImage.value === imagePath) failedBackground.value = ''
-    }
+      if (currentBgImage.value === imagePath) failedBackground.value = '';
+    };
     probe.onerror = () => {
-      if (currentBgImage.value !== imagePath) return
-      failedBackground.value = imagePath
-      toast('自定义背景不可用，已回退到主题默认背景', 'error')
-    }
-    probe.src = managedImageUrl(imagePath)
+      if (currentBgImage.value !== imagePath) return;
+      failedBackground.value = imagePath;
+      toast('自定义背景不可用，已回退到主题默认背景', 'error');
+    };
+    probe.src = managedImageUrl(imagePath);
   },
   { immediate: true }
-)
+);
 
 // 切换策略/图片列表变化时重排定时器；图片被删除导致越界时收敛索引
 watch([() => appearancePreview.value?.background.switchMode, () => appearancePreview.value?.background.switchIntervalSec, bgImages], () => {
-  if (currentBgIndex.value >= bgImages.value.length) currentBgIndex.value = 0
-  armBgSwitchTimer()
-})
+  if (currentBgIndex.value >= bgImages.value.length) currentBgIndex.value = 0;
+  armBgSwitchTimer();
+});
 
 /**
  * 用户显式选择的个性化背景层。默认不生成内部壁纸：桌面透视由透明
  * BrowserWindow + Windows DWM Acrylic 提供。
  */
 const bgStyle = computed(() => {
-  const bg = appearancePreview.value?.background
-  if (!bg || bg.mode === 'none') return null
+  const bg = appearancePreview.value?.background;
+  if (!bg || bg.mode === 'none') return null;
   if (bg.mode === 'color') {
     return {
       background: bg.color,
       opacity: String(bg.opacity),
-    }
+    };
   }
   if (bg.mode === 'image' && currentBgImage.value && failedBackground.value !== currentBgImage.value) {
-    const size = bg.fit === 'fill' ? '100% 100%' : bg.fit === 'fit' ? 'contain' : 'cover'
+    const size = bg.fit === 'fill' ? '100% 100%' : bg.fit === 'fit' ? 'contain' : 'cover';
     return {
       inset: bg.blur > 0 ? `${-Math.ceil(bg.blur * 1.5)}px` : '0',
       backgroundColor: bg.color,
@@ -963,10 +963,10 @@ const bgStyle = computed(() => {
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
       ...backgroundImageEffect(bg),
-    }
+    };
   }
-  return null
-})
+  return null;
+});
 
 // ---------------- 主题应用（亮 / 暗 / 自定义） ----------------
 /** 自定义主题写入的全部 inline CSS 变量（切回亮/暗时需统一清除） */
@@ -1005,86 +1005,86 @@ const CUSTOM_VARS = [
   '--sidebar-w',
   '--banner-h',
   '--radius',
-]
+];
 
 /** 解析 #rrggbb 并计算相对亮度（0-1），非法输入按暗色处理 */
 function hexLuminance(hex: string): number {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim())
-  if (!m) return 0
-  const n = parseInt(m[1], 16)
-  const r = (n >> 16) & 255
-  const g = (n >> 8) & 255
-  const b = n & 255
-  return (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return 0;
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 }
 
 function clearCustomVars() {
-  const st = document.documentElement.style
-  CUSTOM_VARS.forEach((v) => st.removeProperty(v))
+  const st = document.documentElement.style;
+  CUSTOM_VARS.forEach((v) => st.removeProperty(v));
 }
 
 /** 把 settings.custom 映射为 documentElement 上的 inline CSS 变量覆盖 */
 function applyCustomVars(custom: CustomTheme, theme: ThemeName) {
-  const st = document.documentElement.style
-  const colors = theme === 'custom' ? readableCustomColors(custom.colors) : custom.colors
-  const accent = colors.accent
-  const dark = hexLuminance(colors.bg) < 0.46
-  const cardOpacity = dark ? 88 : 94
-  const raisedOpacity = dark ? 82 : 91
-  const sideOpacity = dark ? 26 : 38
-  const accent2 = `color-mix(in srgb, ${accent} ${dark ? 72 : 84}%, ${dark ? 'white' : 'black'})`
-  const accentDeep = `color-mix(in srgb, ${accent} 78%, black)`
-  st.setProperty('--accent', accent)
-  st.setProperty('--accent-2', accent2)
-  st.setProperty('--accent-deep', accentDeep)
-  st.setProperty('--accent-grad', `linear-gradient(135deg, ${accent2} 0%, ${accent} 55%, ${accentDeep} 100%)`)
-  st.setProperty('--accent-soft', `color-mix(in srgb, ${accent} 14%, transparent)`)
-  st.setProperty('--on-accent', hexLuminance(accent) > 0.6 ? '#1a1208' : '#ffffff')
-  st.setProperty('--bg', colors.bg)
-  st.setProperty('--card', `color-mix(in srgb, ${colors.card} ${cardOpacity}%, transparent)`)
-  st.setProperty('--card-solid', colors.card)
-  st.setProperty('--card-2', `color-mix(in srgb, ${colors.card} ${raisedOpacity}%, transparent)`)
-  st.setProperty('--text', colors.text)
-  st.setProperty('--text-dim', colors.textDim)
-  st.setProperty('--border', colors.border)
-  st.setProperty('--bg-2', `color-mix(in srgb, ${colors.sidebarBg} ${sideOpacity}%, transparent)`)
-  st.setProperty('--sidebar-text', colors.sidebarText)
-  st.setProperty('--bn-text', colors.bannerText)
-  st.setProperty('--border-strong', `color-mix(in srgb, ${colors.border} 65%, ${colors.text})`)
-  st.setProperty('--scroll', `color-mix(in srgb, ${colors.textDim} 32%, transparent)`)
-  st.setProperty('--hover', `color-mix(in srgb, ${colors.text} ${dark ? 7 : 5}%, transparent)`)
-  st.setProperty('--mask', dark ? 'rgba(2, 5, 6, 0.72)' : 'rgba(27, 36, 55, 0.42)')
-  st.setProperty('--danger', dark ? '#ff6b73' : '#dc2626')
-  st.setProperty('--danger-soft', dark ? 'rgba(255, 107, 115, 0.13)' : 'rgba(220, 38, 38, 0.08)')
-  st.setProperty('--danger-border', dark ? 'rgba(255, 107, 115, 0.34)' : 'rgba(220, 38, 38, 0.3)')
-  st.setProperty('--ok', dark ? '#68dc88' : '#168a42')
-  st.setProperty('--ok-soft', dark ? 'rgba(104, 220, 136, 0.13)' : 'rgba(22, 138, 66, 0.1)')
-  st.setProperty('--cyan', dark ? '#9ed7e9' : '#0e7490')
-  st.setProperty('--cyan-soft', dark ? 'rgba(158, 215, 233, 0.13)' : 'rgba(14, 116, 144, 0.1)')
-  st.setProperty('--shadow', dark ? '0 2px 8px rgba(0, 0, 0, 0.16)' : '0 2px 8px rgba(31, 50, 85, 0.045)')
-  st.setProperty('--shadow-lg', dark ? '0 20px 55px rgba(0, 0, 0, 0.42)' : '0 20px 55px rgba(31, 50, 85, 0.18)')
-  st.setProperty('--shell-surface', `color-mix(in srgb, ${colors.bg} ${dark ? 30 : 42}%, transparent)`)
-  st.setProperty('--glass-blur', '28px')
+  const st = document.documentElement.style;
+  const colors = theme === 'custom' ? readableCustomColors(custom.colors) : custom.colors;
+  const accent = colors.accent;
+  const dark = hexLuminance(colors.bg) < 0.46;
+  const cardOpacity = dark ? 88 : 94;
+  const raisedOpacity = dark ? 82 : 91;
+  const sideOpacity = dark ? 26 : 38;
+  const accent2 = `color-mix(in srgb, ${accent} ${dark ? 72 : 84}%, ${dark ? 'white' : 'black'})`;
+  const accentDeep = `color-mix(in srgb, ${accent} 78%, black)`;
+  st.setProperty('--accent', accent);
+  st.setProperty('--accent-2', accent2);
+  st.setProperty('--accent-deep', accentDeep);
+  st.setProperty('--accent-grad', `linear-gradient(135deg, ${accent2} 0%, ${accent} 55%, ${accentDeep} 100%)`);
+  st.setProperty('--accent-soft', `color-mix(in srgb, ${accent} 14%, transparent)`);
+  st.setProperty('--on-accent', hexLuminance(accent) > 0.6 ? '#1a1208' : '#ffffff');
+  st.setProperty('--bg', colors.bg);
+  st.setProperty('--card', `color-mix(in srgb, ${colors.card} ${cardOpacity}%, transparent)`);
+  st.setProperty('--card-solid', colors.card);
+  st.setProperty('--card-2', `color-mix(in srgb, ${colors.card} ${raisedOpacity}%, transparent)`);
+  st.setProperty('--text', colors.text);
+  st.setProperty('--text-dim', colors.textDim);
+  st.setProperty('--border', colors.border);
+  st.setProperty('--bg-2', `color-mix(in srgb, ${colors.sidebarBg} ${sideOpacity}%, transparent)`);
+  st.setProperty('--sidebar-text', colors.sidebarText);
+  st.setProperty('--bn-text', colors.bannerText);
+  st.setProperty('--border-strong', `color-mix(in srgb, ${colors.border} 65%, ${colors.text})`);
+  st.setProperty('--scroll', `color-mix(in srgb, ${colors.textDim} 32%, transparent)`);
+  st.setProperty('--hover', `color-mix(in srgb, ${colors.text} ${dark ? 7 : 5}%, transparent)`);
+  st.setProperty('--mask', dark ? 'rgba(2, 5, 6, 0.72)' : 'rgba(27, 36, 55, 0.42)');
+  st.setProperty('--danger', dark ? '#ff6b73' : '#dc2626');
+  st.setProperty('--danger-soft', dark ? 'rgba(255, 107, 115, 0.13)' : 'rgba(220, 38, 38, 0.08)');
+  st.setProperty('--danger-border', dark ? 'rgba(255, 107, 115, 0.34)' : 'rgba(220, 38, 38, 0.3)');
+  st.setProperty('--ok', dark ? '#68dc88' : '#168a42');
+  st.setProperty('--ok-soft', dark ? 'rgba(104, 220, 136, 0.13)' : 'rgba(22, 138, 66, 0.1)');
+  st.setProperty('--cyan', dark ? '#9ed7e9' : '#0e7490');
+  st.setProperty('--cyan-soft', dark ? 'rgba(158, 215, 233, 0.13)' : 'rgba(14, 116, 144, 0.1)');
+  st.setProperty('--shadow', dark ? '0 2px 8px rgba(0, 0, 0, 0.16)' : '0 2px 8px rgba(31, 50, 85, 0.045)');
+  st.setProperty('--shadow-lg', dark ? '0 20px 55px rgba(0, 0, 0, 0.42)' : '0 20px 55px rgba(31, 50, 85, 0.18)');
+  st.setProperty('--shell-surface', `color-mix(in srgb, ${colors.bg} ${dark ? 30 : 42}%, transparent)`);
+  st.setProperty('--glass-blur', '28px');
   // 图一布局是全部主题共享的固定骨架；旧 layout 字段只保留兼容，不再改变结构。
-  st.setProperty('--sidebar-w', '208px')
-  st.setProperty('--banner-h', '430px')
-  st.setProperty('--radius', '14px')
+  st.setProperty('--sidebar-w', '208px');
+  st.setProperty('--banner-h', '430px');
+  st.setProperty('--radius', '14px');
 }
 
 /**
  * 所有正式主题共用玻璃变量与布局；个性化只替换用户色板。
  */
 function applyTheme(theme?: ThemeName, custom?: CustomTheme) {
-  const root = document.documentElement
-  const selected = theme ?? 'transparent'
-  clearCustomVars()
-  root.dataset.theme = selected
+  const root = document.documentElement;
+  const selected = theme ?? 'transparent';
+  clearCustomVars();
+  root.dataset.theme = selected;
   if (selected === 'custom') {
-    applyCustomVars(custom ?? DEFAULT_CUSTOM_THEME, selected)
-    return
+    applyCustomVars(custom ?? DEFAULT_CUSTOM_THEME, selected);
+    return;
   }
-  const preset = THEME_PRESETS[selected] ?? THEME_PRESETS.transparent
-  applyCustomVars({ colors: preset.colors, layout: DEFAULT_CUSTOM_THEME.layout }, selected)
+  const preset = THEME_PRESETS[selected] ?? THEME_PRESETS.transparent;
+  applyCustomVars({ colors: preset.colors, layout: DEFAULT_CUSTOM_THEME.layout }, selected);
 }
 
 // settings 未加载时按亮色应用；加载完成 / 修改后 watch 触发立即生效
@@ -1093,42 +1093,42 @@ watch(
   () => [appearancePreview.value?.theme, appearancePreview.value?.custom] as const,
   ([t, c]) => applyTheme(t, c),
   { immediate: true, deep: true }
-)
+);
 
 // ---------------- 个性化点选编辑模式 ----------------
 function onEditKeydown(e: KeyboardEvent) {
   if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'e') {
-    e.preventDefault()
-    void enterEditMode()
+    e.preventDefault();
+    void enterEditMode();
   }
 }
 
 // ---------------- 初始化与事件订阅 ----------------
-const offs: Array<() => void> = []
+const offs: Array<() => void> = [];
 
 onMounted(async () => {
-  void pollTickets()
-  offs.push(installVisualDesign())
-  void loadExitNotices()
-  applyTheme(store.settings?.theme, store.settings?.custom)
-  motionQuery.addEventListener('change', onMotionChange)
+  void pollTickets();
+  offs.push(installVisualDesign());
+  void loadExitNotices();
+  applyTheme(store.settings?.theme, store.settings?.custom);
+  motionQuery.addEventListener('change', onMotionChange);
   // 每次上线自动切换一张背景图（按顺序/随机）；off 模式固定第一张
   {
-    const mode = appearancePreview.value?.background.switchMode ?? 'off'
+    const mode = appearancePreview.value?.background.switchMode ?? 'off';
     if (appearancePreview.value?.background.mode === 'image' && mode !== 'off' && bgImages.value.length > 1) {
-      const last = Number(localStorage.getItem(BG_INDEX_KEY) ?? -1)
-      currentBgIndex.value = Number.isInteger(last) && last >= 0 && last < bgImages.value.length ? last : 0
-      switchBackground()
+      const last = Number(localStorage.getItem(BG_INDEX_KEY) ?? -1);
+      currentBgIndex.value = Number.isInteger(last) && last >= 0 && last < bgImages.value.length ? last : 0;
+      switchBackground();
     }
-    armBgSwitchTimer()
+    armBgSwitchTimer();
   }
-  void import('./plugins').then((m) => m.loadEnabledPlugins())
-  window.addEventListener('keydown', onEditKeydown)
+  void import('./plugins').then((m) => m.loadEnabledPlugins());
+  window.addEventListener('keydown', onEditKeydown);
   // Teleports are outside .shell; capture above their masks without accepting
   // internal text/image drags or invoking the import handler twice.
   const dragStart = () => {
-    internalDrag = true
-  }
+    internalDrag = true;
+  };
   const dragEvents = {
     dragenter: onDragEnter,
     dragover: onDragOver,
@@ -1136,171 +1136,171 @@ onMounted(async () => {
     drop: onDrop,
     dragstart: dragStart,
     dragend: endDrag,
-  }
+  };
   for (const [type, listener] of Object.entries(dragEvents)) {
-    window.addEventListener(type, listener as EventListener, true)
-    offs.push(() => window.removeEventListener(type, listener as EventListener, true))
+    window.addEventListener(type, listener as EventListener, true);
+    offs.push(() => window.removeEventListener(type, listener as EventListener, true));
   }
   // 所有通用导入入口使用同一内容分类，避免整合包内的存档抢占流程。
-  store.importHandler = (filePath: string) => void routeSingleImport(filePath, filePath.split(/[\\/]/).pop() ?? filePath)
-  window.addEventListener('pointerdown', onGlobalPointerDown, true)
-  offs.push(() => window.removeEventListener('pointerdown', onGlobalPointerDown, true))
+  store.importHandler = (filePath: string) => void routeSingleImport(filePath, filePath.split(/[\\/]/).pop() ?? filePath);
+  window.addEventListener('pointerdown', onGlobalPointerDown, true);
+  offs.push(() => window.removeEventListener('pointerdown', onGlobalPointerDown, true));
   offs.push(
     window.faionyx.on('window:caption-pointerdown', closeTopDropdowns),
     window.faionyx.on('files:dragError', (error) => toast('无法拖出文件：' + String(error), 'error')),
     onProgress((e) => {
-      if (e.manualFiles && !store.tasks.some((t) => t.manualFiles?.token === e.manualFiles?.token)) dlOpen.value = true
-      store.progress = e
-      if (e.versionId) store.installProgress[e.versionId] = e
-      upsertTaskProgress(e)
+      if (e.manualFiles && !store.tasks.some((t) => t.manualFiles?.token === e.manualFiles?.token)) dlOpen.value = true;
+      store.progress = e;
+      if (e.versionId) store.installProgress[e.versionId] = e;
+      upsertTaskProgress(e);
     }),
     onTaskDone((r) => {
-      finalizeTask(r)
-      resetProgressMono(r.taskId)
+      finalizeTask(r);
+      resetProgressMono(r.taskId);
       // 更新下载完成 → 弹窗切到「下载完成」待安装态
       if (updateModal.open && updateModal.taskId && r.taskId === updateModal.taskId) {
         if (r.ok) {
-          updateModal.state = 'done'
+          updateModal.state = 'done';
         } else {
-          updateModal.open = false
-          if (!r.cancelled) toast('更新下载失败：' + (r.error || '未知错误'), 'error')
+          updateModal.open = false;
+          if (!r.cancelled) toast('更新下载失败：' + (r.error || '未知错误'), 'error');
         }
       }
-      if (r.cancelled) toast('任务已取消', 'info')
+      if (r.cancelled) toast('任务已取消', 'info');
     }),
     onUpdatePrompt((payload) => {
       // 回滚通知（更新失败自动还原后备份）
       if ((payload as { rollbackNotice?: boolean }).rollbackNotice) {
-        toast('上次更新未完成，已停止自动重试。可在设置中重新下载或选择备份恢复。', 'error')
-        return
+        toast('上次更新未完成，已停止自动重试。可在设置中重新下载或选择备份恢复。', 'error');
+        return;
       }
-      store.updatePrompt = { release: payload, rollback: false }
+      store.updatePrompt = { release: payload, rollback: false };
     }),
     onUpdateSlowHint((r) => {
-      if (updateModal.open && r.taskId === updateModal.taskId) updateModal.slowHint = true
+      if (updateModal.open && r.taskId === updateModal.taskId) updateModal.slowHint = true;
     }),
     onUpdateReady((r) => {
-      toast(updateReadyMessage(`新版本 v${r.version} 已下载完成`), 'success')
+      toast(updateReadyMessage(`新版本 v${r.version} 已下载完成`), 'success');
     }),
     onInstallDone((r) => {
-      store.installing.delete(r.versionId)
-      delete store.installProgress[r.versionId]
-      if (store.progress?.taskId === r.taskId) store.progress = null
-      finalizeTask(r)
-      resetProgressMono(r.taskId)
+      store.installing.delete(r.versionId);
+      delete store.installProgress[r.versionId];
+      if (store.progress?.taskId === r.taskId) store.progress = null;
+      finalizeTask(r);
+      resetProgressMono(r.taskId);
       if (r.ok) {
-        store.failedInstalls.delete(r.versionId)
-        const favorites = r.favoriteModsResult
+        store.failedInstalls.delete(r.versionId);
+        const favorites = r.favoriteModsResult;
         toast(
           favorites
             ? `版本 ${r.versionId} 安装完成；${favorites.baseOnly ? '已按确认不安装收藏模组' : `已安装 ${favorites.installed} 项收藏模组及 ${favorites.dependencies} 项必要前置，跳过 ${favorites.skipped.length} 项`}。模组目录：${favorites.modsDirectory}`
             : `版本 ${r.versionId} 安装完成`,
           'success'
-        )
-        void refreshInstalled()
+        );
+        void refreshInstalled();
       } else if (r.cancelled) {
         // 用户主动取消：不记失败、不弹错误（taskDone 已提示）
-        void refreshInstalled()
+        void refreshInstalled();
       } else {
-        store.failedInstalls.add(r.versionId)
-        toast(`安装失败${r.stage ? `（${stageLabel(r.stage)}）` : ''}：` + (r.error ?? '未知错误'), 'error')
+        store.failedInstalls.add(r.versionId);
+        toast(`安装失败${r.stage ? `（${stageLabel(r.stage)}）` : ''}：` + (r.error ?? '未知错误'), 'error');
       }
     }),
     // 游戏目录迁移完成：立即全局刷新（版本列表/最近游戏/资源管理），全程无需重启
     onGameDirDone((r) => {
-      store.progress = null
-      resetProgressMono()
+      store.progress = null;
+      resetProgressMono();
       if (r.ok) {
         void refreshInstalled().then(() => {
-          store.fsRefreshTick++
-        })
+          store.fsRefreshTick++;
+        });
       }
     }),
     onLaunchLog((line) => {
-      store.logs.push(line)
-      if (store.logs.length > 1000) store.logs.splice(0, store.logs.length - 1000)
+      store.logs.push(line);
+      if (store.logs.length > 1000) store.logs.splice(0, store.logs.length - 1000);
     }),
     onLaunchState((s) => {
-      const focused = applyLaunchState(s)
+      const focused = applyLaunchState(s);
       // 启动成功（进入 running）时记录该版本的最近游玩时间
       if (s.status === 'running' && store.launchingVersionId) {
-        recordLastPlayed(s.versionId || store.launchingVersionId)
+        recordLastPlayed(s.versionId || store.launchingVersionId);
       }
-      if (focused && (s.status === 'exited' || s.status === 'error')) store.progress = null
+      if (focused && (s.status === 'exited' || s.status === 'error')) store.progress = null;
       if (s.status === 'error') {
         // 启动失败：弹窗提示并提供「导出错误日志」
-        launchFail.open = true
-        launchFail.title = '游戏启动失败'
-        launchFail.text = s.text
+        launchFail.open = true;
+        launchFail.title = '游戏启动失败';
+        launchFail.text = s.text;
       } else if (s.status === 'exited') {
         if (
           s.savedWindowSize?.scope === 'global' &&
           store.settings &&
           JSON.stringify(store.settings.resolution) === JSON.stringify(s.savedWindowSize.previous)
         ) {
-          store.settings.resolution = { ...s.savedWindowSize.resolution }
+          store.settings.resolution = { ...s.savedWindowSize.resolution };
         }
-        if (s.savedWindowSize?.scope === 'instance') void refreshInstalled().catch(() => undefined)
+        if (s.savedWindowSize?.scope === 'instance') void refreshInstalled().catch(() => undefined);
         if (shouldReportGameCrash(s)) {
-          launchFail.open = true
-          launchFail.title = `游戏异常退出（代码 ${signedExitCode(s.code ?? null) ?? '未知'}）`
-          launchFail.text = '游戏进程崩溃或被异常终止。可导出错误日志（含 crash-report 与 latest.log）用于排查。'
+          launchFail.open = true;
+          launchFail.title = `游戏异常退出（代码 ${signedExitCode(s.code ?? null) ?? '未知'}）`;
+          launchFail.text = '游戏进程崩溃或被异常终止。可导出错误日志（含 crash-report 与 latest.log）用于排查。';
         } else {
-          toast(s.exitKind === 'shutdown-timeout' ? s.text : '游戏已退出', 'info')
+          toast(s.exitKind === 'shutdown-timeout' ? s.text : '游戏已退出', 'info');
         }
         // 游戏退出后只扫描刚运行的实例，避免共享 servers.dat 被错误关联到其他版本。
-        const exitedVersionId = s.versionId || store.launchingVersionId
-        const exitedFolder = s.folder || store.launchingFolder || (store.settings?.activeFolder ?? store.settings?.gameDir)
+        const exitedVersionId = s.versionId || store.launchingVersionId;
+        const exitedFolder = s.folder || store.launchingFolder || (store.settings?.activeFolder ?? store.settings?.gameDir);
         void import('./api').then(({ syncServersFromDat }) =>
           syncServersFromDat(exitedVersionId || undefined, exitedFolder).catch(() => undefined)
-        )
+        );
       }
     })
-  )
+  );
 
   try {
-    store.settings = await getSettings()
-    window.faionyx.send('boot:stage', 'settings')
-    void checkConfigStatus()
+    store.settings = await getSettings();
+    window.faionyx.send('boot:stage', 'settings');
+    void checkConfigStatus();
     await Promise.all([
       refreshAccounts().then(() => window.faionyx.send('boot:stage', 'accounts')),
       refreshInstalled().then(() => window.faionyx.send('boot:stage', 'instances')),
-    ])
+    ]);
     // 启动自检：发现上次下载未完成的残缺版本，提示去已安装页处理
-    const broken = store.installed.filter((v) => v.incomplete)
+    const broken = store.installed.filter((v) => v.incomplete);
     if (broken.length) {
       toast(
         `检测到 ${broken.length} 个版本下载未完成（${broken.map((b) => b.id).join('、')}），可在「游戏版本 → 已安装」继续下载或删除残留`,
         'info'
-      )
+      );
     }
   } catch (e) {
-    toast('初始化失败：' + errText(e), 'error')
+    toast('初始化失败：' + errText(e), 'error');
   } finally {
-    store.initialized = true
-    await nextTick()
-    await waitForBootTasks()
-    await nextTick()
-    await document.fonts.ready
+    store.initialized = true;
+    await nextTick();
+    await waitForBootTasks();
+    await nextTick();
+    await document.fonts.ready;
     // Decode rendered assets after async account/skin/thumbnail bindings have settled.
-    await Promise.all([...document.images].map((img) => img.decode().catch(() => undefined)))
-    await nextTick()
-    await waitForBootTasks()
-    sealBootTasks()
-    window.faionyx.send('boot:stage', 'assets')
-    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
-    window.faionyx.send('boot:stage', 'paint')
-    window.faionyx.send('boot:renderer-ready')
+    await Promise.all([...document.images].map((img) => img.decode().catch(() => undefined)));
+    await nextTick();
+    await waitForBootTasks();
+    sealBootTasks();
+    window.faionyx.send('boot:stage', 'assets');
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    window.faionyx.send('boot:stage', 'paint');
+    window.faionyx.send('boot:renderer-ready');
   }
-})
+});
 
 onUnmounted(() => {
-  motionQuery.removeEventListener('change', onMotionChange)
-  stopDragWatchdog()
-  clearInterval(bgSwitchTimer)
-  window.removeEventListener('keydown', onEditKeydown)
-  offs.forEach((off) => off())
-})
+  motionQuery.removeEventListener('change', onMotionChange);
+  stopDragWatchdog();
+  clearInterval(bgSwitchTimer);
+  window.removeEventListener('keydown', onEditKeydown);
+  offs.forEach((off) => off());
+});
 </script>
 
 <template>
@@ -1557,8 +1557,8 @@ onUnmounted(() => {
                       v-if="n.exitTarget"
                       class="btn btn-sm"
                       @click="
-                        openInstanceCenter(n.exitTarget, 'diagnostics')
-                        noticeOpen = false
+                        openInstanceCenter(n.exitTarget, 'diagnostics');
+                        noticeOpen = false;
                       "
                     >
                       查看原因
@@ -1604,8 +1604,8 @@ onUnmounted(() => {
                   data-ui="App:93f5c2a356cd"
                   class="btn btn-ghost btn-sm"
                   @click="
-                    dlOpen = false
-                    store.currentView = 'game'
+                    dlOpen = false;
+                    store.currentView = 'game';
                   "
                 >
                   去版本下载
@@ -1802,8 +1802,8 @@ onUnmounted(() => {
           <button
             class="btn btn-ghost"
             @click="
-              openInstanceCenter({ id: store.launchingVersionId, folder: store.launchingFolder }, 'diagnostics')
-              launchFail.open = false
+              openInstanceCenter({ id: store.launchingVersionId, folder: store.launchingFolder }, 'diagnostics');
+              launchFail.open = false;
             "
           >
             查看原因
@@ -1904,8 +1904,8 @@ onUnmounted(() => {
             maxlength="120"
             placeholder="自定义实例名称"
             @input="
-              mpModal.confirmReplace = false
-              mpModal.error = ''
+              mpModal.confirmReplace = false;
+              mpModal.error = '';
             "
           />
 

@@ -4,208 +4,208 @@
  * MOD 声明参数元数据（名称/说明/分组/类型/默认值/范围/生效方式），
  * 这里自动生成开关、滑块、输入框或下拉选项；以 MOD 返回的实际结果为准。
  */
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { bridgeInstall, bridgeInstalled, bridgeManifest, bridgeReset, bridgeSet, bridgeStatus, errText } from '../api'
-import { refreshInstalled, store, toast, selectedInstance, displayVersionName as versionLabel } from '../store'
-import SelectMenu from '../components/SelectMenu.vue'
-import type { BridgeParam, BridgeStatus } from '@shared/types'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { bridgeInstall, bridgeInstalled, bridgeManifest, bridgeReset, bridgeSet, bridgeStatus, errText } from '../api';
+import { refreshInstalled, store, toast, selectedInstance, displayVersionName as versionLabel } from '../store';
+import SelectMenu from '../components/SelectMenu.vue';
+import type { BridgeParam, BridgeStatus } from '@shared/types';
 
 /** 面板面向正在运行的实例（游戏在哪台实例上跑就配置哪台）；未运行时跟随首页选中实例 */
-const currentVersion = selectedInstance
+const currentVersion = selectedInstance;
 
-const status = ref<BridgeStatus | null>(null)
-const params = ref<BridgeParam[]>([])
-const loadingManifest = ref(false)
-const search = ref('')
-const itemError = ref<Record<string, string>>({})
-const noticeShown = ref<Record<string, string>>({})
-let pollTimer: ReturnType<typeof setInterval> | undefined
+const status = ref<BridgeStatus | null>(null);
+const params = ref<BridgeParam[]>([]);
+const loadingManifest = ref(false);
+const search = ref('');
+const itemError = ref<Record<string, string>>({});
+const noticeShown = ref<Record<string, string>>({});
+let pollTimer: ReturnType<typeof setInterval> | undefined;
 
 /** 实例 mods 目录是否已有桥接 MOD（决定显示"安装桥接 MOD"按钮） */
-const bridgePresent = ref<boolean | null>(null)
-const presenceError = ref('')
+const bridgePresent = ref<boolean | null>(null);
+const presenceError = ref('');
 let presenceRequest = 0,
   statusRequest = 0,
   manifestRequest = 0,
-  disposed = false
-const installingBridge = ref(false)
+  disposed = false;
+const installingBridge = ref(false);
 
 async function refreshBridgePresent() {
   const request = ++presenceRequest,
-    v = currentVersion.value
-  bridgePresent.value = null
-  presenceError.value = ''
-  if (!v) return
+    v = currentVersion.value;
+  bridgePresent.value = null;
+  presenceError.value = '';
+  if (!v) return;
   try {
-    const result = await bridgeInstalled(v.id)
-    if (request === presenceRequest) bridgePresent.value = result
+    const result = await bridgeInstalled(v.id);
+    if (request === presenceRequest) bridgePresent.value = result;
   } catch (e) {
-    if (request === presenceRequest) presenceError.value = '无法确认桥接 MOD 是否已安装：' + errText(e)
+    if (request === presenceRequest) presenceError.value = '无法确认桥接 MOD 是否已安装：' + errText(e);
   }
 }
 
 async function onInstallBridge() {
-  const v = currentVersion.value
-  if (!v || installingBridge.value) return
-  installingBridge.value = true
+  const v = currentVersion.value;
+  if (!v || installingBridge.value) return;
+  installingBridge.value = true;
   try {
-    const result = await bridgeInstall(v.id)
+    const result = await bridgeInstall(v.id);
     if (result.ok) {
-      if (currentVersion.value === v && !disposed) bridgePresent.value = true
-      toast(result.already ? '桥接 MOD 已在实例中' : '桥接 MOD 已装入实例，启动游戏后自动接入', 'success')
+      if (currentVersion.value === v && !disposed) bridgePresent.value = true;
+      toast(result.already ? '桥接 MOD 已在实例中' : '桥接 MOD 已装入实例，启动游戏后自动接入', 'success');
     } else {
-      toast('安装失败：' + (result.error ?? ''), 'error')
+      toast('安装失败：' + (result.error ?? ''), 'error');
     }
   } catch (e) {
-    toast('安装失败：' + errText(e), 'error')
+    toast('安装失败：' + errText(e), 'error');
   } finally {
-    installingBridge.value = false
+    installingBridge.value = false;
   }
 }
 
-const gameRunning = computed(() => store.launchState?.status === 'running')
+const gameRunning = computed(() => store.launchState?.status === 'running');
 
 async function refreshStatus() {
   const request = ++statusRequest,
-    v = currentVersion.value
+    v = currentVersion.value;
   if (!v) {
-    status.value = { connected: false, reason: '未选择实例' }
-    return
+    status.value = { connected: false, reason: '未选择实例' };
+    return;
   }
   try {
-    const next = await bridgeStatus(v.id)
-    if (request === statusRequest) status.value = next
+    const next = await bridgeStatus(v.id);
+    if (request === statusRequest) status.value = next;
   } catch {
-    if (request === statusRequest) status.value = { connected: false, reason: '桥接状态检查失败' }
+    if (request === statusRequest) status.value = { connected: false, reason: '桥接状态检查失败' };
   }
 }
 
 async function loadManifest() {
-  const v = currentVersion.value
-  if (!v || loadingManifest.value || disposed) return
-  const request = ++manifestRequest
-  loadingManifest.value = true
+  const v = currentVersion.value;
+  if (!v || loadingManifest.value || disposed) return;
+  const request = ++manifestRequest;
+  loadingManifest.value = true;
   try {
-    const manifest = await bridgeManifest(v.id)
-    if (request === manifestRequest && !disposed) params.value = manifest.params
+    const manifest = await bridgeManifest(v.id);
+    if (request === manifestRequest && !disposed) params.value = manifest.params;
   } catch (e) {
-    if (request !== manifestRequest || disposed) return
-    params.value = []
-    if (status.value?.connected) toast('读取参数清单失败：' + errText(e), 'error')
+    if (request !== manifestRequest || disposed) return;
+    params.value = [];
+    if (status.value?.connected) toast('读取参数清单失败：' + errText(e), 'error');
   } finally {
-    if (request === manifestRequest) loadingManifest.value = false
+    if (request === manifestRequest) loadingManifest.value = false;
   }
 }
 
 async function poll() {
   // 页面隐藏时暂停轮询，回到页面后下一轮自动恢复，避免后台空转
-  if (document.hidden || disposed) return
-  const wasConnected = status.value?.connected === true
-  await refreshStatus()
-  if (status.value?.connected && !wasConnected) await loadManifest()
-  if (status.value?.connected && !params.value.length && !loadingManifest.value) await loadManifest()
+  if (document.hidden || disposed) return;
+  const wasConnected = status.value?.connected === true;
+  await refreshStatus();
+  if (status.value?.connected && !wasConnected) await loadManifest();
+  if (status.value?.connected && !params.value.length && !loadingManifest.value) await loadManifest();
 }
 
 watch(currentVersion, () => {
-  ++statusRequest
-  ++manifestRequest
-  status.value = null
-  loadingManifest.value = false
-  itemError.value = {}
-  noticeShown.value = {}
-  params.value = []
-  void refreshBridgePresent()
-  void poll()
-})
+  ++statusRequest;
+  ++manifestRequest;
+  status.value = null;
+  loadingManifest.value = false;
+  itemError.value = {};
+  noticeShown.value = {};
+  params.value = [];
+  void refreshBridgePresent();
+  void poll();
+});
 
 onMounted(async () => {
-  if (!store.installed.length) await refreshInstalled()
-  if (disposed) return
-  await refreshBridgePresent()
-  await poll()
-  if (disposed) return
-  pollTimer = setInterval(() => void poll(), 3000)
-})
+  if (!store.installed.length) await refreshInstalled();
+  if (disposed) return;
+  await refreshBridgePresent();
+  await poll();
+  if (disposed) return;
+  pollTimer = setInterval(() => void poll(), 3000);
+});
 onUnmounted(() => {
-  disposed = true
-  ++presenceRequest
-  ++statusRequest
-  ++manifestRequest
-  clearInterval(pollTimer)
-})
+  disposed = true;
+  ++presenceRequest;
+  ++statusRequest;
+  ++manifestRequest;
+  clearInterval(pollTimer);
+});
 
 /** 按 MOD → 分组聚合参数；搜索即时过滤（名称/说明/分组） */
 const groupedParams = computed(() => {
-  const kw = search.value.trim().toLowerCase()
+  const kw = search.value.trim().toLowerCase();
   const match = (p: BridgeParam) =>
     !kw ||
     p.label.toLowerCase().includes(kw) ||
     p.description.toLowerCase().includes(kw) ||
     p.group.toLowerCase().includes(kw) ||
-    p.modId.toLowerCase().includes(kw)
-  const byMod = new Map<string, Map<string, BridgeParam[]>>()
+    p.modId.toLowerCase().includes(kw);
+  const byMod = new Map<string, Map<string, BridgeParam[]>>();
   for (const p of params.value.filter(match)) {
-    if (!byMod.has(p.modId)) byMod.set(p.modId, new Map())
-    const groups = byMod.get(p.modId)!
-    if (!groups.has(p.group)) groups.set(p.group, [])
-    groups.get(p.group)!.push(p)
+    if (!byMod.has(p.modId)) byMod.set(p.modId, new Map());
+    const groups = byMod.get(p.modId)!;
+    if (!groups.has(p.group)) groups.set(p.group, []);
+    groups.get(p.group)!.push(p);
   }
   return [...byMod.entries()].map(([modId, groups]) => ({
     modId,
     groups: [...groups.entries()].map(([group, items]) => ({ group, items })),
-  }))
-})
+  }));
+});
 
 const APPLY_HINT: Record<BridgeParam['apply'], string> = {
   INSTANT: '',
   RELOAD_RESOURCES: '需重载资源',
   REJOIN_WORLD: '需重进世界',
   RESTART_GAME: '需重启游戏',
-}
+};
 
 async function applyParam(p: BridgeParam, value: unknown) {
-  const v = currentVersion.value
-  if (!v) return
-  delete itemError.value[p.id]
-  const result = await bridgeSet(v.id, p.id, value)
+  const v = currentVersion.value;
+  if (!v) return;
+  delete itemError.value[p.id];
+  const result = await bridgeSet(v.id, p.id, value);
   if (result.ok) {
-    p.value = result.value
+    p.value = result.value;
     if (result.notice) {
-      noticeShown.value[p.id] = result.notice
-      toast(result.notice, 'info')
+      noticeShown.value[p.id] = result.notice;
+      toast(result.notice, 'info');
     }
   } else {
-    itemError.value[p.id] = result.error ?? '修改失败'
+    itemError.value[p.id] = result.error ?? '修改失败';
   }
 }
 
 async function resetParam(p: BridgeParam) {
-  const v = currentVersion.value
-  if (!v) return
-  const result = await bridgeReset(v.id, p.id)
+  const v = currentVersion.value;
+  if (!v) return;
+  const result = await bridgeReset(v.id, p.id);
   if (result.ok) {
-    p.value = p.defaultValue
-    delete itemError.value[p.id]
-    toast(`「${p.label}」已恢复默认`, 'success')
+    p.value = p.defaultValue;
+    delete itemError.value[p.id];
+    toast(`「${p.label}」已恢复默认`, 'success');
   } else {
-    itemError.value[p.id] = result.error ?? '恢复失败'
+    itemError.value[p.id] = result.error ?? '恢复失败';
   }
 }
 
 async function resetAll() {
-  const v = currentVersion.value
-  if (!v) return
-  const result = await bridgeReset(v.id)
+  const v = currentVersion.value;
+  if (!v) return;
+  const result = await bridgeReset(v.id);
   if (result.ok) {
-    await loadManifest()
-    toast('已恢复全部默认配置', 'success')
+    await loadManifest();
+    toast('已恢复全部默认配置', 'success');
   } else {
-    toast('恢复失败：' + (result.error ?? ''), 'error')
+    toast('恢复失败：' + (result.error ?? ''), 'error');
   }
 }
 
 function isModified(p: BridgeParam): boolean {
-  return JSON.stringify(p.value) !== JSON.stringify(p.defaultValue)
+  return JSON.stringify(p.value) !== JSON.stringify(p.defaultValue);
 }
 </script>
 
@@ -223,8 +223,8 @@ function isModified(p: BridgeParam): boolean {
           class="btn btn-ghost btn-sm"
           :disabled="installingBridge"
           @click="
-            refreshBridgePresent()
-            poll()
+            refreshBridgePresent();
+            poll();
           "
         >
           刷新状态

@@ -1,9 +1,9 @@
 /** 内置更新日志：下拉面板数据源（无网络依赖） */
 export interface UpdateNote {
-  version: string
+  version: string;
   /** 发布时间：YYYY-MM-DD HH:mm（24 小时制） */
-  date: string
-  changes: string[]
+  date: string;
+  changes: string[];
 }
 
 /** 按版本倒序；latest 为当前版本 */
@@ -1284,6 +1284,6 @@ export const updateNotes: UpdateNote[] = [
       '启动稳定性加固：启动日志提前到模块加载期，崩溃 minidump 就地取证，渲染进程崩溃/无响应全链路留痕',
     ],
   },
-]
+];
 
-export const latestUpdateNote = (): UpdateNote => updateNotes[0]
+export const latestUpdateNote = (): UpdateNote => updateNotes[0];

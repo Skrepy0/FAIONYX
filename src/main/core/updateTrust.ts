@@ -1,23 +1,23 @@
-import { app } from 'electron'
-import { GITHUB_REPO } from '../../shared/branding'
-import type { ReleaseInfo } from '../../shared/types'
-import { updateArtifactName, type InstallationKind } from '../../shared/platform'
-import { installationKind } from '../platform'
+import { app } from 'electron';
+import { GITHUB_REPO } from '../../shared/branding';
+import type { ReleaseInfo } from '../../shared/types';
+import { updateArtifactName, type InstallationKind } from '../../shared/platform';
+import { installationKind } from '../platform';
 
 /** 测试覆盖只能用于开发进程，且必须同时指定独立数据目录和模拟 API。 */
 export function isolatedUpdateTest(): boolean {
-  return app?.isPackaged !== true && !!process.env.FAIONYX_USERDATA_DIR && !!process.env.FAIONYX_UPDATE_API_BASE
+  return app?.isPackaged !== true && !!process.env.FAIONYX_USERDATA_DIR && !!process.env.FAIONYX_UPDATE_API_BASE;
 }
 
 export function trustedUpdateRelease(release: ReleaseInfo | undefined): boolean {
-  if (!release || !/^\d+\.\d+\.\d+$/.test(release.version)) return false
-  if (isolatedUpdateTest()) return true
-  const name = updateAssetName(release.version)
+  if (!release || !/^\d+\.\d+\.\d+$/.test(release.version)) return false;
+  if (isolatedUpdateTest()) return true;
+  const name = updateAssetName(release.version);
   return (
     release.assetName === name &&
     release.assetSize > 0 &&
     release.assetUrl === `https://github.com/${GITHUB_REPO}/releases/download/v${release.version}/${name}`
-  )
+  );
 }
 
 export function updateAssetName(
@@ -26,5 +26,5 @@ export function updateAssetName(
   arch: string = process.arch,
   installation: InstallationKind = installationKind()
 ): string {
-  return updateArtifactName(version, platform, arch, installation)
+  return updateArtifactName(version, platform, arch, installation);
 }

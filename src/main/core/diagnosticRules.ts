@@ -1,12 +1,12 @@
-import type { DiagnosticFinding } from '../../shared/instanceCenter'
-import { redactDiagnosticText } from './diagnostics'
+import type { DiagnosticFinding } from '../../shared/instanceCenter';
+import { redactDiagnosticText } from './diagnostics';
 const RULES: Array<{
-  rule: string
-  title: string
-  pattern: RegExp
-  advice: string
-  action?: DiagnosticFinding['action']
-  confidence: DiagnosticFinding['confidence']
+  rule: string;
+  title: string;
+  pattern: RegExp;
+  advice: string;
+  action?: DiagnosticFinding['action'];
+  confidence: DiagnosticFinding['confidence'];
 }> = [
   {
     rule: 'java-version',
@@ -92,18 +92,18 @@ const RULES: Array<{
     action: 'java',
     confidence: 'possible',
   },
-]
+];
 export function analyzeDiagnosticText(text: string): DiagnosticFinding[] {
   const lines = redactDiagnosticText(text).split(/\r?\n/),
-    result: DiagnosticFinding[] = []
+    result: DiagnosticFinding[] = [];
   for (const rule of RULES) {
-    const index = lines.findIndex((line) => rule.pattern.test(line))
-    if (index < 0) continue
+    const index = lines.findIndex((line) => rule.pattern.test(line));
+    if (index < 0) continue;
     const evidence = lines
       .slice(Math.max(0, index - 1), Math.min(lines.length, index + 4))
       .join('\n')
-      .slice(0, 2000)
-    result.push({ rule: rule.rule, title: rule.title, confidence: rule.confidence, evidence, advice: rule.advice, action: rule.action })
+      .slice(0, 2000);
+    result.push({ rule: rule.rule, title: rule.title, confidence: rule.confidence, evidence, advice: rule.advice, action: rule.action });
   }
   if (!result.length && text.trim())
     result.push({
@@ -112,6 +112,6 @@ export function analyzeDiagnosticText(text: string): DiagnosticFinding[] {
       confidence: 'unknown',
       evidence: '未发现首批诊断规则可确认的错误。',
       advice: '导出诊断日志进一步检查；不会据此禁用或删除模组。',
-    })
-  return result
+    });
+  return result;
 }

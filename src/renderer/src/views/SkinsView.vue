@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import {
   applyOfflineSkin,
   changeCape,
@@ -11,476 +11,476 @@ import {
   resetOfflineSkin,
   uploadSkin,
   uploadSkinFromHistory,
-} from '../api'
-import { store, toast } from '../store'
-import { renderCape, renderSkinFront } from '../skin-render'
-import SkinViewer3D from '../components/SkinViewer3D.vue'
-import SkinEditor from '../components/SkinEditor.vue'
-import type { SkinPreviewAnimation } from '../skinModel'
-import { resolveSkinPreview } from '../skinPreviewSelection'
-import { createFallbackSkin } from '../fallbackSkin'
-const editorOpen = ref(false)
-import type { CapeInfo, ProfileSkins, SkinHistoryEntry, SkinVariant } from '@shared/types'
+} from '../api';
+import { store, toast } from '../store';
+import { renderCape, renderSkinFront } from '../skin-render';
+import SkinViewer3D from '../components/SkinViewer3D.vue';
+import SkinEditor from '../components/SkinEditor.vue';
+import type { SkinPreviewAnimation } from '../skinModel';
+import { resolveSkinPreview } from '../skinPreviewSelection';
+import { createFallbackSkin } from '../fallbackSkin';
+const editorOpen = ref(false);
+import type { CapeInfo, ProfileSkins, SkinHistoryEntry, SkinVariant } from '@shared/types';
 
 /** 仅微软正版账号可用 */
-const isMs = computed(() => store.selectedAccount?.type === 'microsoft')
-const isExternal = computed(() => store.selectedAccount?.type === 'yggdrasil')
-const isOffline = computed(() => store.selectedAccount?.type === 'offline')
-const defaultSkin = computed(() => (isOffline.value ? createFallbackSkin().toDataURL('image/png') : ''))
-const canApplySkin = computed(() => isMs.value || isOffline.value)
-const canViewProfile = computed(() => canApplySkin.value || isExternal.value)
-const historyAccountId = () => (isOffline.value ? store.selectedAccount?.id : undefined)
+const isMs = computed(() => store.selectedAccount?.type === 'microsoft');
+const isExternal = computed(() => store.selectedAccount?.type === 'yggdrasil');
+const isOffline = computed(() => store.selectedAccount?.type === 'offline');
+const defaultSkin = computed(() => (isOffline.value ? createFallbackSkin().toDataURL('image/png') : ''));
+const canApplySkin = computed(() => isMs.value || isOffline.value);
+const canViewProfile = computed(() => canApplySkin.value || isExternal.value);
+const historyAccountId = () => (isOffline.value ? store.selectedAccount?.id : undefined);
 
 /** 历史皮肤重命名输入框自动聚焦 */
-const vFocus = { mounted: (el: HTMLElement) => el.focus() }
+const vFocus = { mounted: (el: HTMLElement) => el.focus() };
 
 // ---------------- 档案 ----------------
-const profile = ref<ProfileSkins | null>(null)
-const loadingProfile = ref(false)
+const profile = ref<ProfileSkins | null>(null);
+const loadingProfile = ref(false);
 
-const currentSkin = computed(() => profile.value?.skins[0] ?? null)
-const currentVariant = computed<SkinVariant>(() => (currentSkin.value?.variant === 'slim' ? 'slim' : 'classic'))
-const capes = computed(() => profile.value?.capes ?? [])
+const currentSkin = computed(() => profile.value?.skins[0] ?? null);
+const currentVariant = computed<SkinVariant>(() => (currentSkin.value?.variant === 'slim' ? 'slim' : 'classic'));
+const capes = computed(() => profile.value?.capes ?? []);
 /** 使用中的披风直接传给 3D 人偶渲染 */
-const activeCape = computed(() => capes.value.find((c) => c.active)?.dataUrl ?? '')
-const capeViewerError = ref('')
+const activeCape = computed(() => capes.value.find((c) => c.active)?.dataUrl ?? '');
+const capeViewerError = ref('');
 watch(activeCape, () => {
-  capeViewerError.value = ''
-})
+  capeViewerError.value = '';
+});
 
 let profileRequest = 0,
-  historyRequest = 0
+  historyRequest = 0;
 const profileError = ref(''),
-  historyError = ref('')
+  historyError = ref('');
 onUnmounted(() => {
-  profileRequest++
-  historyRequest++
-})
+  profileRequest++;
+  historyRequest++;
+});
 async function loadProfile(refresh = false) {
-  const request = ++profileRequest
-  profileError.value = ''
-  loadingProfile.value = true
+  const request = ++profileRequest;
+  profileError.value = '';
+  loadingProfile.value = true;
   try {
-    const next = await getSkinProfile(refresh, store.selectedAccount?.id)
-    if (request !== profileRequest) return
-    profile.value = next
+    const next = await getSkinProfile(refresh, store.selectedAccount?.id);
+    if (request !== profileRequest) return;
+    profile.value = next;
   } catch (e) {
-    if (request === profileRequest) profileError.value = errText(e)
+    if (request === profileRequest) profileError.value = errText(e);
   } finally {
-    if (request === profileRequest) loadingProfile.value = false
+    if (request === profileRequest) loadingProfile.value = false;
   }
 }
 
 // ---------------- 3D 预览控制 ----------------
-const viewerRef = ref<InstanceType<typeof SkinViewer3D> | null>(null)
+const viewerRef = ref<InstanceType<typeof SkinViewer3D> | null>(null);
 /** 预览姿势只改变本地模型，不上传或更换账号皮肤。 */
-const previewAnim = ref<SkinPreviewAnimation>('walk')
+const previewAnim = ref<SkinPreviewAnimation>('walk');
 const previewModes: { key: SkinPreviewAnimation; name: string; title: string }[] = [
   { key: 'walk', name: '行走', title: '行走姿势' },
   { key: 'idle', name: '待机', title: '待机姿势' },
   { key: 'crouch', name: '蹲下', title: '蹲下姿势' },
   { key: 'fly', name: '飞行', title: '鞘翅飞行姿势' },
-]
+];
 
 /** 行走/待机分段控件滑动块（与导航水滴/游戏 Tab 同款弹簧动效） */
-const animSeg = ref<HTMLElement | null>(null)
-const animSegBlob = reactive({ left: 0, width: 0, on: false })
+const animSeg = ref<HTMLElement | null>(null);
+const animSegBlob = reactive({ left: 0, width: 0, on: false });
 function updateAnimSegBlob() {
-  const root = animSeg.value
-  if (!root) return
-  const active = root.querySelector<HTMLElement>(`.seg-btn[data-seg="${previewAnim.value}"]`)
-  if (!active) return
-  animSegBlob.left = active.offsetLeft
-  animSegBlob.width = active.offsetWidth
-  animSegBlob.on = true
+  const root = animSeg.value;
+  if (!root) return;
+  const active = root.querySelector<HTMLElement>(`.seg-btn[data-seg="${previewAnim.value}"]`);
+  if (!active) return;
+  animSegBlob.left = active.offsetLeft;
+  animSegBlob.width = active.offsetWidth;
+  animSegBlob.on = true;
 }
-watch(previewAnim, () => nextTick(updateAnimSegBlob))
-let animSegObserver: ResizeObserver | null = null
+watch(previewAnim, () => nextTick(updateAnimSegBlob));
+let animSegObserver: ResizeObserver | null = null;
 watch(
   animSeg,
   (element) => {
-    animSegObserver?.disconnect()
-    animSegBlob.on = false
-    if (!element) return
-    if (!animSegObserver) animSegObserver = new ResizeObserver(updateAnimSegBlob)
-    animSegObserver.observe(element)
-    void nextTick(updateAnimSegBlob)
+    animSegObserver?.disconnect();
+    animSegBlob.on = false;
+    if (!element) return;
+    if (!animSegObserver) animSegObserver = new ResizeObserver(updateAnimSegBlob);
+    animSegObserver.observe(element);
+    void nextTick(updateAnimSegBlob);
   },
   { flush: 'post' }
-)
+);
 watch(
   () => store.settings?.theme,
   () => nextTick(updateAnimSegBlob)
-)
-onUnmounted(() => animSegObserver?.disconnect())
+);
+onUnmounted(() => animSegObserver?.disconnect());
 const animSegBlobStyle = computed(() => ({
   left: animSegBlob.left + 'px',
   width: animSegBlob.width + 'px',
   opacity: animSegBlob.on ? 1 : 0,
-}))
+}));
 
 // ---------------- 披风 ----------------
-const capeRenders = ref<Record<string, string>>({})
-const capeErrors = ref<Record<string, string>>({})
-const capeBusy = ref<string | null>(null)
-let capeRenderRequest = 0
+const capeRenders = ref<Record<string, string>>({});
+const capeErrors = ref<Record<string, string>>({});
+const capeBusy = ref<string | null>(null);
+let capeRenderRequest = 0;
 onUnmounted(() => {
-  capeRenderRequest++
-})
+  capeRenderRequest++;
+});
 
 async function renderCapes() {
   const request = ++capeRenderRequest,
-    profileToken = profileRequest
+    profileToken = profileRequest;
   const map: Record<string, string> = {},
-    errors: Record<string, string> = {}
+    errors: Record<string, string> = {};
   for (const c of [...capes.value]) {
     if (c.dataUrl) {
-      const rendered = await renderCape(c.dataUrl, 100, 160)
+      const rendered = await renderCape(c.dataUrl, 100, 160);
       if (rendered) {
-        map[c.id] = rendered
-        if (c.textureError) errors[c.id] = c.textureError
-      } else errors[c.id] = '披风材质无法加载或尺寸不受支持，请刷新重试'
-    } else errors[c.id] = c.textureError || '披风材质尚未下载，请刷新重试'
+        map[c.id] = rendered;
+        if (c.textureError) errors[c.id] = c.textureError;
+      } else errors[c.id] = '披风材质无法加载或尺寸不受支持，请刷新重试';
+    } else errors[c.id] = c.textureError || '披风材质尚未下载，请刷新重试';
   }
   if (request === capeRenderRequest && profileToken === profileRequest) {
-    capeRenders.value = map
-    capeErrors.value = errors
+    capeRenders.value = map;
+    capeErrors.value = errors;
   }
 }
 watch(
   () => profile.value?.capes,
   () => {
-    void renderCapes()
+    void renderCapes();
   }
-)
+);
 
 /** 点击披风：使用中 → 卸下；其他 → 激活 */
 async function onCapeClick(c: CapeInfo) {
-  if (!isMs.value) return
-  if (capeBusy.value) return
-  const request = profileRequest
-  capeBusy.value = c.id
+  if (!isMs.value) return;
+  if (capeBusy.value) return;
+  const request = profileRequest;
+  capeBusy.value = c.id;
   try {
-    const next = await changeCape(c.active ? null : c.id)
-    if (request !== profileRequest) return
-    profile.value = next
-    toast(c.active ? '已卸下披风' : `已换上披风「${c.alias}」`, 'success')
+    const next = await changeCape(c.active ? null : c.id);
+    if (request !== profileRequest) return;
+    profile.value = next;
+    toast(c.active ? '已卸下披风' : `已换上披风「${c.alias}」`, 'success');
   } catch (e) {
-    if (request === profileRequest) toast('披风更换失败：' + errText(e), 'error')
+    if (request === profileRequest) toast('披风更换失败：' + errText(e), 'error');
   } finally {
-    if (request === profileRequest) capeBusy.value = null
+    if (request === profileRequest) capeBusy.value = null;
   }
 }
 
 // ---------------- 历史皮肤 ----------------
-const historyList = ref<SkinHistoryEntry[]>([])
-const historyRenders = ref<Record<string, string>>({})
-const loadingHistory = ref(false)
-const historyBusy = ref<string | null>(null)
-const previewHistoryId = ref('')
-const previewSelection = computed(() => resolveSkinPreview(currentSkin.value, historyList.value, previewHistoryId.value, activeCape.value))
-const previewHistory = computed(() => previewSelection.value.history)
-const previewSource = computed(() => previewSelection.value.source || defaultSkin.value)
-const previewVariant = computed(() => previewSelection.value.variant)
-const previewReady = computed(() => !!previewSource.value && (!!previewHistory.value || !loadingProfile.value))
+const historyList = ref<SkinHistoryEntry[]>([]);
+const historyRenders = ref<Record<string, string>>({});
+const loadingHistory = ref(false);
+const historyBusy = ref<string | null>(null);
+const previewHistoryId = ref('');
+const previewSelection = computed(() => resolveSkinPreview(currentSkin.value, historyList.value, previewHistoryId.value, activeCape.value));
+const previewHistory = computed(() => previewSelection.value.history);
+const previewSource = computed(() => previewSelection.value.source || defaultSkin.value);
+const previewVariant = computed(() => previewSelection.value.variant);
+const previewReady = computed(() => !!previewSource.value && (!!previewHistory.value || !loadingProfile.value));
 function previewSavedSkin(item: SkinHistoryEntry) {
-  previewHistoryId.value = item.id
-  void nextTick(() => viewerRef.value?.$el?.scrollIntoView({ block: 'nearest', behavior: 'auto' }))
+  previewHistoryId.value = item.id;
+  void nextTick(() => viewerRef.value?.$el?.scrollIntoView({ block: 'nearest', behavior: 'auto' }));
 }
 
 /** 历史皮肤搜索（即时过滤：按显示名或记录 id） */
-const historySearch = ref('')
+const historySearch = ref('');
 const filteredHistory = computed(() => {
-  const kw = historySearch.value.trim().toLowerCase()
-  if (!kw) return historyList.value
-  return historyList.value.filter((item) => (item.name || '').toLowerCase().includes(kw) || item.id.toLowerCase().includes(kw))
-})
+  const kw = historySearch.value.trim().toLowerCase();
+  if (!kw) return historyList.value;
+  return historyList.value.filter((item) => (item.name || '').toLowerCase().includes(kw) || item.id.toLowerCase().includes(kw));
+});
 
 /** 历史皮肤重命名（点击文件名进入编辑，回车/失焦保存，Esc 取消） */
-const historyRenaming = ref('')
-const historyRenameText = ref('')
+const historyRenaming = ref('');
+const historyRenameText = ref('');
 
 function startHistoryRename(item: SkinHistoryEntry) {
-  historyRenaming.value = item.id
-  historyRenameText.value = item.name || ''
+  historyRenaming.value = item.id;
+  historyRenameText.value = item.name || '';
 }
 function cancelHistoryRename() {
-  historyRenaming.value = ''
-  historyRenameText.value = ''
+  historyRenaming.value = '';
+  historyRenameText.value = '';
 }
 async function commitHistoryRename(item: SkinHistoryEntry) {
   // Enter 会卸载输入框并触发 blur；同一次编辑只能提交一次，Esc 后也不能再保存。
-  if (historyRenaming.value !== item.id) return
-  const name = historyRenameText.value.trim()
-  const old = item.name || ''
-  cancelHistoryRename()
-  if (name === old) return
+  if (historyRenaming.value !== item.id) return;
+  const name = historyRenameText.value.trim();
+  const old = item.name || '';
+  cancelHistoryRename();
+  if (name === old) return;
   const request = historyRequest,
     accountId = store.selectedAccount?.id,
-    scopeId = historyAccountId()
+    scopeId = historyAccountId();
   try {
-    const next = await renameSkinHistory(item.id, name, scopeId)
-    if (request !== historyRequest || accountId !== store.selectedAccount?.id) return
-    historyList.value = next
-    toast(name ? `已重命名为「${name}」` : '已恢复默认名称', 'success')
+    const next = await renameSkinHistory(item.id, name, scopeId);
+    if (request !== historyRequest || accountId !== store.selectedAccount?.id) return;
+    historyList.value = next;
+    toast(name ? `已重命名为「${name}」` : '已恢复默认名称', 'success');
   } catch (e) {
-    toast('重命名失败：' + errText(e), 'error')
+    toast('重命名失败：' + errText(e), 'error');
   }
 }
 
 /** 历史记录的显示名：优先自定义名/源文件名，回退记录 id */
 function historyDisplayName(item: SkinHistoryEntry): string {
-  return item.name || `${item.id}.png`
+  return item.name || `${item.id}.png`;
 }
 
 async function loadHistory() {
-  const request = ++historyRequest
-  historyError.value = ''
-  loadingHistory.value = true
+  const request = ++historyRequest;
+  historyError.value = '';
+  loadingHistory.value = true;
   try {
-    const next = await getSkinHistory(historyAccountId())
-    if (request !== historyRequest) return
-    historyList.value = next
-    const map: Record<string, string> = {}
+    const next = await getSkinHistory(historyAccountId());
+    if (request !== historyRequest) return;
+    historyList.value = next;
+    const map: Record<string, string> = {};
     for (const item of historyList.value) {
-      map[item.id] = await renderSkinFront(item.dataUrl, 6)
+      map[item.id] = await renderSkinFront(item.dataUrl, 6);
     }
-    if (request === historyRequest) historyRenders.value = map
+    if (request === historyRequest) historyRenders.value = map;
   } catch (e) {
-    if (request === historyRequest) historyError.value = errText(e)
+    if (request === historyRequest) historyError.value = errText(e);
   } finally {
-    if (request === historyRequest) loadingHistory.value = false
+    if (request === historyRequest) loadingHistory.value = false;
   }
 }
 
 /** 换回历史皮肤：主进程走标准上传流程并返回最新档案 */
 async function onRestore(item: SkinHistoryEntry) {
-  if (!canApplySkin.value || historyBusy.value) return
+  if (!canApplySkin.value || historyBusy.value) return;
   const request = profileRequest,
-    accountId = store.selectedAccount?.id
-  const local = isOffline.value
+    accountId = store.selectedAccount?.id;
+  const local = isOffline.value;
   const accountName = store.selectedAccount?.username || '此前账号',
-    selectedPreview = previewHistoryId.value
-  historyBusy.value = item.id
+    selectedPreview = previewHistoryId.value;
+  historyBusy.value = item.id;
   try {
-    const next = local ? await uploadSkinFromHistory(item.id, accountId) : await uploadSkinFromHistory(item.id)
+    const next = local ? await uploadSkinFromHistory(item.id, accountId) : await uploadSkinFromHistory(item.id);
     if (request !== profileRequest || accountId !== store.selectedAccount?.id) {
-      toast(`「${accountName}」已换回历史皮肤；当前预览保持不变`, 'success')
-      return
+      toast(`「${accountName}」已换回历史皮肤；当前预览保持不变`, 'success');
+      return;
     }
     // Invalidate an older profile read still in flight for this same account.
-    profileRequest++
-    loadingProfile.value = false
-    profileError.value = ''
-    profile.value = next
-    if (previewHistoryId.value === selectedPreview) previewHistoryId.value = ''
-    toast(local ? '已应用历史皮肤，下次启动游戏生效' : '已换回历史皮肤', 'success')
-    void loadHistory()
+    profileRequest++;
+    loadingProfile.value = false;
+    profileError.value = '';
+    profile.value = next;
+    if (previewHistoryId.value === selectedPreview) previewHistoryId.value = '';
+    toast(local ? '已应用历史皮肤，下次启动游戏生效' : '已换回历史皮肤', 'success');
+    void loadHistory();
   } catch (e) {
-    const context = accountId === store.selectedAccount?.id ? '' : `「${accountName}」`
-    toast(context + '换回皮肤失败：' + errText(e), 'error')
+    const context = accountId === store.selectedAccount?.id ? '' : `「${accountName}」`;
+    toast(context + '换回皮肤失败：' + errText(e), 'error');
   } finally {
-    historyBusy.value = null
+    historyBusy.value = null;
   }
 }
 
 async function onDeleteHistory(item: SkinHistoryEntry) {
-  if (historyBusy.value) return
+  if (historyBusy.value) return;
   const request = historyRequest,
     accountId = store.selectedAccount?.id,
     scopeId = historyAccountId(),
-    local = isOffline.value
-  historyBusy.value = item.id
+    local = isOffline.value;
+  historyBusy.value = item.id;
   try {
-    const next = await deleteSkinHistory(item.id, scopeId)
-    if (request !== historyRequest || accountId !== store.selectedAccount?.id) return
-    historyList.value = next
-    const map = { ...historyRenders.value }
-    delete map[item.id]
-    historyRenders.value = map
-    if (previewHistoryId.value === item.id) previewHistoryId.value = ''
-    toast(local ? '已删除本地历史记录，当前应用的皮肤保留' : '历史皮肤已移入回收站', 'success')
+    const next = await deleteSkinHistory(item.id, scopeId);
+    if (request !== historyRequest || accountId !== store.selectedAccount?.id) return;
+    historyList.value = next;
+    const map = { ...historyRenders.value };
+    delete map[item.id];
+    historyRenders.value = map;
+    if (previewHistoryId.value === item.id) previewHistoryId.value = '';
+    toast(local ? '已删除本地历史记录，当前应用的皮肤保留' : '历史皮肤已移入回收站', 'success');
   } catch (e) {
-    toast('删除失败：' + errText(e), 'error')
+    toast('删除失败：' + errText(e), 'error');
   } finally {
-    historyBusy.value = null
+    historyBusy.value = null;
   }
 }
 
 // ---------------- 待上传皮肤（选择 / 拖拽） ----------------
-const pending = ref<{ path: string; name: string } | null>(null)
-const pendingDataUrl = ref('')
-const variant = ref<SkinVariant>('classic')
-const uploading = ref(false)
-const fileInput = ref<HTMLInputElement | null>(null)
+const pending = ref<{ path: string; name: string } | null>(null);
+const pendingDataUrl = ref('');
+const variant = ref<SkinVariant>('classic');
+const uploading = ref(false);
+const fileInput = ref<HTMLInputElement | null>(null);
 
 function fileToDataUrl(f: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    const r = new FileReader()
-    r.onload = () => resolve(String(r.result))
-    r.onerror = () => reject(new Error('读取文件失败'))
-    r.readAsDataURL(f)
-  })
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(new Error('读取文件失败'));
+    r.readAsDataURL(f);
+  });
 }
 
 /** 统一入口：文件选择框与拖拽都来此 */
 async function pickFile(f: File | undefined | null) {
-  if (!canApplySkin.value) return
-  if (!f) return
+  if (!canApplySkin.value) return;
+  if (!f) return;
   if (!/\.png$/i.test(f.name)) {
-    toast('请选择 PNG 格式的皮肤文件', 'error')
-    return
+    toast('请选择 PNG 格式的皮肤文件', 'error');
+    return;
   }
-  const p = window.faionyx.getFilePath(f)
+  const p = window.faionyx.getFilePath(f);
   if (!p) {
-    toast('无法获取文件路径', 'error')
-    return
+    toast('无法获取文件路径', 'error');
+    return;
   }
-  pending.value = { path: p, name: f.name }
+  pending.value = { path: p, name: f.name };
   const selectedFile = pending.value,
-    accountId = store.selectedAccount?.id
+    accountId = store.selectedAccount?.id;
   try {
-    const dataUrl = await fileToDataUrl(f)
-    if (pending.value === selectedFile && accountId === store.selectedAccount?.id) pendingDataUrl.value = dataUrl
+    const dataUrl = await fileToDataUrl(f);
+    if (pending.value === selectedFile && accountId === store.selectedAccount?.id) pendingDataUrl.value = dataUrl;
   } catch {
-    if (pending.value === selectedFile && accountId === store.selectedAccount?.id) pendingDataUrl.value = ''
+    if (pending.value === selectedFile && accountId === store.selectedAccount?.id) pendingDataUrl.value = '';
   }
 }
 
 function onInputChange(e: Event) {
-  const input = e.target as HTMLInputElement
-  void pickFile(input.files?.[0])
-  input.value = '' // 允许再次选择同一文件
+  const input = e.target as HTMLInputElement;
+  void pickFile(input.files?.[0]);
+  input.value = ''; // 允许再次选择同一文件
 }
 
 function clearPending() {
-  pending.value = null
-  pendingDataUrl.value = ''
+  pending.value = null;
+  pendingDataUrl.value = '';
 }
 
 async function doUpload() {
-  if (!canApplySkin.value || !pending.value || uploading.value) return
+  if (!canApplySkin.value || !pending.value || uploading.value) return;
   const request = profileRequest,
-    accountId = store.selectedAccount?.id
+    accountId = store.selectedAccount?.id;
   const accountName = store.selectedAccount?.username || '此前账号',
-    selectedFile = pending.value
-  const local = isOffline.value
-  uploading.value = true
+    selectedFile = pending.value;
+  const local = isOffline.value;
+  uploading.value = true;
   try {
     const next = local
       ? await applyOfflineSkin(selectedFile.path, variant.value, accountId!)
-      : await uploadSkin(selectedFile.path, variant.value)
+      : await uploadSkin(selectedFile.path, variant.value);
     if (request !== profileRequest || accountId !== store.selectedAccount?.id) {
-      toast(`「${accountName}」的皮肤${local ? '已应用' : '上传成功'}；当前预览保持不变`, 'success')
-      return
+      toast(`「${accountName}」的皮肤${local ? '已应用' : '上传成功'}；当前预览保持不变`, 'success');
+      return;
     }
-    profileRequest++
-    loadingProfile.value = false
-    profileError.value = ''
-    profile.value = next
-    toast(local ? '已应用到离线账号，下次启动游戏生效' : '皮肤上传成功', 'success')
-    if (pending.value === selectedFile) clearPending()
-    void loadHistory()
+    profileRequest++;
+    loadingProfile.value = false;
+    profileError.value = '';
+    profile.value = next;
+    toast(local ? '已应用到离线账号，下次启动游戏生效' : '皮肤上传成功', 'success');
+    if (pending.value === selectedFile) clearPending();
+    void loadHistory();
   } catch (e) {
-    const context = accountId === store.selectedAccount?.id ? '' : `「${accountName}」`
-    toast(context + (local ? '本地皮肤应用失败：' : '皮肤上传失败：') + errText(e), 'error')
+    const context = accountId === store.selectedAccount?.id ? '' : `「${accountName}」`;
+    toast(context + (local ? '本地皮肤应用失败：' : '皮肤上传失败：') + errText(e), 'error');
   } finally {
-    uploading.value = false
+    uploading.value = false;
   }
 }
 
 // ---------------- 卡片拖拽（stop 防止冒泡到 App 的整合包导入） ----------------
-const dragOver = ref(false)
-let dragDepth = 0
-const hasFiles = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes('Files')
+const dragOver = ref(false);
+let dragDepth = 0;
+const hasFiles = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes('Files');
 
 function onCardDragEnter(e: DragEvent) {
-  if (!hasFiles(e)) return
-  dragDepth++
-  dragOver.value = true
+  if (!hasFiles(e)) return;
+  dragDepth++;
+  dragOver.value = true;
 }
 
 function onCardDragOver(e: DragEvent) {
-  if (!hasFiles(e)) return
-  if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
-  dragOver.value = true
+  if (!hasFiles(e)) return;
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+  dragOver.value = true;
 }
 
 function onCardDragLeave(e: DragEvent) {
-  if (!hasFiles(e)) return
-  dragDepth = Math.max(0, dragDepth - 1)
-  if (dragDepth === 0) dragOver.value = false
+  if (!hasFiles(e)) return;
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (dragDepth === 0) dragOver.value = false;
 }
 
 function onCardDrop(e: DragEvent) {
-  if (!hasFiles(e)) return
-  dragDepth = 0
-  dragOver.value = false
-  void pickFile(e.dataTransfer?.files?.[0])
+  if (!hasFiles(e)) return;
+  dragDepth = 0;
+  dragOver.value = false;
+  void pickFile(e.dataTransfer?.files?.[0]);
 }
 
 // ---------------- 工具 ----------------
 function fmtTime(t: number): string {
-  const d = new Date(t)
-  if (Number.isNaN(d.getTime())) return ''
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  const d = new Date(t);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 // ---------------- 生命周期 ----------------
 function loadAll() {
-  if (canViewProfile.value) void loadProfile()
-  void loadHistory()
+  if (canViewProfile.value) void loadProfile();
+  void loadHistory();
 }
 
 async function onResetOffline() {
-  const account = store.selectedAccount
-  if (account?.type !== 'offline' || uploading.value) return
-  const request = profileRequest
-  uploading.value = true
+  const account = store.selectedAccount;
+  if (account?.type !== 'offline' || uploading.value) return;
+  const request = profileRequest;
+  uploading.value = true;
   try {
-    const next = await resetOfflineSkin(account.id)
-    if (request !== profileRequest || account.id !== store.selectedAccount?.id) return
-    profileRequest++
-    loadingProfile.value = false
-    profileError.value = ''
-    profile.value = next
-    previewHistoryId.value = ''
-    toast('已恢复游戏默认皮肤，下次启动游戏生效', 'success')
+    const next = await resetOfflineSkin(account.id);
+    if (request !== profileRequest || account.id !== store.selectedAccount?.id) return;
+    profileRequest++;
+    loadingProfile.value = false;
+    profileError.value = '';
+    profile.value = next;
+    previewHistoryId.value = '';
+    toast('已恢复游戏默认皮肤，下次启动游戏生效', 'success');
   } catch (error) {
-    toast('恢复默认皮肤失败：' + errText(error), 'error')
+    toast('恢复默认皮肤失败：' + errText(error), 'error');
   } finally {
-    uploading.value = false
+    uploading.value = false;
   }
 }
 
 onMounted(() => {
-  loadAll()
-})
+  loadAll();
+});
 
 /** 切换账号后重置并重新加载 */
 watch(
   () => store.selectedAccount?.id,
   () => {
-    profileRequest++
-    historyRequest++
-    loadingProfile.value = false
-    loadingHistory.value = false
-    profileError.value = ''
-    historyError.value = ''
-    profile.value = null
-    historyList.value = []
-    historyRenders.value = {}
-    previewHistoryId.value = ''
-    capeRenders.value = {}
-    capeErrors.value = {}
-    capeViewerError.value = ''
-    capeBusy.value = null
-    cancelHistoryRename()
-    clearPending()
-    loadAll()
+    profileRequest++;
+    historyRequest++;
+    loadingProfile.value = false;
+    loadingHistory.value = false;
+    profileError.value = '';
+    historyError.value = '';
+    profile.value = null;
+    historyList.value = [];
+    historyRenders.value = {};
+    previewHistoryId.value = '';
+    capeRenders.value = {};
+    capeErrors.value = {};
+    capeViewerError.value = '';
+    capeBusy.value = null;
+    cancelHistoryRename();
+    clearPending();
+    loadAll();
   }
-)
+);
 </script>
 
 <template>

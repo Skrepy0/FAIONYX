@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import ContentSkeleton from '../components/ContentSkeleton.vue'
-import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { communityDownload, communityFiles, communitySearch, errText, getManifest, getModTargets } from '../api'
-import { store, toast, selectedInstance, selectInstance, displayVersionName as versionLabel } from '../store'
-import { instanceKey } from '@shared/modCompatibility'
-import { communityFileMatchesInstance, usesCommunityLoader } from '@shared/communityPolicy'
-import { mcmodSearchUrl } from '@shared/communityLinks'
-import SelectMenu from '../components/SelectMenu.vue'
-import CommunityVersionFilter from '../components/CommunityVersionFilter.vue'
-import { readCommunitySession, saveCommunitySession } from '../communitySession'
-const previousSession = readCommunitySession()
-import MarqueeText from '../components/MarqueeText.vue'
-import ModInstallDialog from '../components/ModInstallDialog.vue'
-import CommunityFavorites from '../components/CommunityFavorites.vue'
-import CommunityModDetails from '../components/CommunityModDetails.vue'
-import { favorites, favoriteBusy, loadFavorites, toggleProject } from '../modFavorites'
-onMounted(() => void loadFavorites())
-import type { CommunityFile, CommunityKind, CommunityProjectReference, CommunityResult, CommunitySource, LoaderName } from '@shared/types'
-import type { InstalledVersion } from '@shared/types'
+import ContentSkeleton from '../components/ContentSkeleton.vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { communityDownload, communityFiles, communitySearch, errText, getManifest, getModTargets } from '../api';
+import { store, toast, selectedInstance, selectInstance, displayVersionName as versionLabel } from '../store';
+import { instanceKey } from '@shared/modCompatibility';
+import { communityFileMatchesInstance, usesCommunityLoader } from '@shared/communityPolicy';
+import { mcmodSearchUrl } from '@shared/communityLinks';
+import SelectMenu from '../components/SelectMenu.vue';
+import CommunityVersionFilter from '../components/CommunityVersionFilter.vue';
+import { readCommunitySession, saveCommunitySession } from '../communitySession';
+const previousSession = readCommunitySession();
+import MarqueeText from '../components/MarqueeText.vue';
+import ModInstallDialog from '../components/ModInstallDialog.vue';
+import CommunityFavorites from '../components/CommunityFavorites.vue';
+import CommunityModDetails from '../components/CommunityModDetails.vue';
+import { favorites, favoriteBusy, loadFavorites, toggleProject } from '../modFavorites';
+onMounted(() => void loadFavorites());
+import type { CommunityFile, CommunityKind, CommunityProjectReference, CommunityResult, CommunitySource, LoaderName } from '@shared/types';
+import type { InstalledVersion } from '@shared/types';
 
 // ---------------- 资源外链（源页面 + MC 百科介绍） ----------------
 /** CurseForge 的 URL 分类段（按当前搜索分类推断） */
@@ -27,42 +27,42 @@ const CF_KIND_SEGMENT: Record<CommunityKind, string> = {
   resourcepack: 'texture-packs',
   shader: 'shaders',
   datapack: 'data-packs',
-}
+};
 
 /** 资源的源站网页链接（Modrinth/CurseForge） */
 function sourceUrl(r: CommunityProjectReference, kind: CommunityKind = query.kind): string {
-  if (r.source === 'modrinth') return `https://modrinth.com/project/${r.slug || r.projectId}`
-  return `https://www.curseforge.com/minecraft/${CF_KIND_SEGMENT[kind] ?? 'mc-mods'}/${r.slug || r.projectId}`
+  if (r.source === 'modrinth') return `https://modrinth.com/project/${r.slug || r.projectId}`;
+  return `https://www.curseforge.com/minecraft/${CF_KIND_SEGMENT[kind] ?? 'mc-mods'}/${r.slug || r.projectId}`;
 }
 
 function openMcmod(item: CommunityProjectReference) {
-  const url = mcmodSearchUrl({ ...item, slug: item.slug ?? '' })
-  if (url) openExternal(url)
-  else toast('该项目没有可用于检索的英文名称', 'error')
+  const url = mcmodSearchUrl({ ...item, slug: item.slug ?? '' });
+  if (url) openExternal(url);
+  else toast('该项目没有可用于检索的英文名称', 'error');
 }
 
 function openExternal(url: string) {
-  window.open(url, '_blank')
+  window.open(url, '_blank');
 }
-const currentInstance = selectedInstance
-const allTargets = ref<InstalledVersion[]>([])
-const modRequest = ref<{ target: InstalledVersion; input: { file: CommunityFile } } | null>(null)
-const detailProject = ref<CommunityProjectReference | null>(null)
-const communityTab = ref<'browse' | 'favorites'>(previousSession?.tab ?? 'browse')
-const favoriteSearch = ref(previousSession?.favoriteSearch ?? '')
+const currentInstance = selectedInstance;
+const allTargets = ref<InstalledVersion[]>([]);
+const modRequest = ref<{ target: InstalledVersion; input: { file: CommunityFile } } | null>(null);
+const detailProject = ref<CommunityProjectReference | null>(null);
+const communityTab = ref<'browse' | 'favorites'>(previousSession?.tab ?? 'browse');
+const favoriteSearch = ref(previousSession?.favoriteSearch ?? '');
 watch(communityTab, (tab) => {
-  if (tab === 'browse') void nextTick(updateKindBlob)
-})
+  if (tab === 'browse') void nextTick(updateKindBlob);
+});
 function sectionKeyboard(event: KeyboardEvent) {
-  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
-  event.preventDefault()
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+  event.preventDefault();
   communityTab.value =
-    event.key === 'Home' ? 'browse' : event.key === 'End' ? 'favorites' : communityTab.value === 'browse' ? 'favorites' : 'browse'
-  void nextTick(() => document.querySelector<HTMLElement>(`[data-ui="community:${communityTab.value}"]`)?.focus())
+    event.key === 'Home' ? 'browse' : event.key === 'End' ? 'favorites' : communityTab.value === 'browse' ? 'favorites' : 'browse';
+  void nextTick(() => document.querySelector<HTMLElement>(`[data-ui="community:${communityTab.value}"]`)?.focus());
 }
 
 // ---------------- 搜索条件 ----------------
-const PAGE_SIZE = 20
+const PAGE_SIZE = 20;
 
 const kindTabs: Array<{ value: CommunityKind; label: string }> = [
   { value: 'mod', label: 'Mod' },
@@ -70,56 +70,56 @@ const kindTabs: Array<{ value: CommunityKind; label: string }> = [
   { value: 'resourcepack', label: '资源包' },
   { value: 'shader', label: '光影包' },
   { value: 'datapack', label: '数据包' },
-]
+];
 
 /** 类型筛选胶囊滑动指示块（与导航水滴/游戏 Tab 同款弹簧动效） */
-const kindCapsules = ref<HTMLElement | null>(null)
-const kindBlob = reactive({ left: 0, top: 0, width: 0, height: 0, on: false })
+const kindCapsules = ref<HTMLElement | null>(null);
+const kindBlob = reactive({ left: 0, top: 0, width: 0, height: 0, on: false });
 function updateKindBlob() {
-  const root = kindCapsules.value
-  if (!root) return
-  const active = root.querySelector<HTMLElement>(`.capsule[data-kind="${query.kind}"]`)
-  if (!active) return
-  kindBlob.left = active.offsetLeft
-  kindBlob.top = active.offsetTop
-  kindBlob.width = active.offsetWidth
-  kindBlob.height = active.offsetHeight
-  kindBlob.on = true
+  const root = kindCapsules.value;
+  if (!root) return;
+  const active = root.querySelector<HTMLElement>(`.capsule[data-kind="${query.kind}"]`);
+  if (!active) return;
+  kindBlob.left = active.offsetLeft;
+  kindBlob.top = active.offsetTop;
+  kindBlob.width = active.offsetWidth;
+  kindBlob.height = active.offsetHeight;
+  kindBlob.on = true;
 }
 // 字体、主题及换行会改变胶囊尺寸，分类切换以外也需要重算。
-let kindBlobObserver: ResizeObserver | null = null
+let kindBlobObserver: ResizeObserver | null = null;
 onMounted(() => {
-  nextTick(updateKindBlob)
-  setTimeout(updateKindBlob, 200)
-  kindBlobObserver = new ResizeObserver(() => updateKindBlob())
+  nextTick(updateKindBlob);
+  setTimeout(updateKindBlob, 200);
+  kindBlobObserver = new ResizeObserver(() => updateKindBlob());
   watch(
     kindCapsules,
     (el) => {
-      kindBlobObserver?.disconnect()
-      if (el) kindBlobObserver?.observe(el)
+      kindBlobObserver?.disconnect();
+      if (el) kindBlobObserver?.observe(el);
     },
     { immediate: true }
-  )
+  );
   // 主题切换改变配色/字体度量 → 重算
   watch(
     () => store.settings?.theme,
     () => nextTick(() => setTimeout(updateKindBlob, 60))
-  )
-})
-onUnmounted(() => kindBlobObserver?.disconnect())
+  );
+});
+onUnmounted(() => kindBlobObserver?.disconnect());
 const kindBlobStyle = computed(() => ({
   left: kindBlob.left + 'px',
   top: kindBlob.top + 'px',
   width: kindBlob.width + 'px',
   height: kindBlob.height + 'px',
   opacity: kindBlob.on ? 1 : 0,
-}))
+}));
 
 const sourceOptions: Array<{ value: 'all' | CommunitySource; label: string }> = [
   { value: 'all', label: '全部来源' },
   { value: 'modrinth', label: 'Modrinth' },
   { value: 'curseforge', label: 'CurseForge' },
-]
+];
 
 const loaderOptions: Array<{ value: '' | LoaderName; label: string }> = [
   { value: '', label: '全部加载器' },
@@ -127,31 +127,31 @@ const loaderOptions: Array<{ value: '' | LoaderName; label: string }> = [
   { value: 'fabric', label: 'Fabric' },
   { value: 'quilt', label: 'Quilt' },
   { value: 'neoforge', label: 'NeoForge' },
-]
+];
 
 /** 完整 MC 版本列表（与游戏下载页同一数据源：远程版本清单，正式版为主） */
-const manifestVersions = ref<string[]>([])
-const manifestLoading = ref(false)
+const manifestVersions = ref<string[]>([]);
+const manifestLoading = ref(false);
 
 async function loadManifest() {
-  if (manifestVersions.value.length || manifestLoading.value) return
-  manifestLoading.value = true
+  if (manifestVersions.value.length || manifestLoading.value) return;
+  manifestLoading.value = true;
   try {
-    const list = await getManifest()
-    manifestVersions.value = list.filter((v) => v.type === 'release').map((v) => v.id)
+    const list = await getManifest();
+    manifestVersions.value = list.filter((v) => v.type === 'release').map((v) => v.id);
   } catch {
     /* 清单失败时回退到已安装版本 */
-    const set = new Set<string>()
-    for (const v of store.installed) if (v.mcVersion) set.add(v.mcVersion)
-    manifestVersions.value = [...set].sort().reverse()
+    const set = new Set<string>();
+    for (const v of store.installed) if (v.mcVersion) set.add(v.mcVersion);
+    manifestVersions.value = [...set].sort().reverse();
   } finally {
-    manifestLoading.value = false
+    manifestLoading.value = false;
   }
 }
 
-const versionInput = ref(previousSession?.versionInput ?? '')
+const versionInput = ref(previousSession?.versionInput ?? '');
 
-onMounted(() => void loadManifest())
+onMounted(() => void loadManifest());
 
 const query = reactive({
   keyword: '',
@@ -160,44 +160,44 @@ const query = reactive({
   mcVersion: currentInstance.value?.mcVersion === '未知' ? '' : (currentInstance.value?.mcVersion ?? ''),
   loader: currentInstance.value?.loader ?? ('' as '' | LoaderName),
   sort: 'relevance' as 'relevance' | 'downloads' | 'newest',
-})
-if (previousSession) Object.assign(query, previousSession.query)
+});
+if (previousSession) Object.assign(query, previousSession.query);
 // query 必须先初始化。过早运行 getter 会抛错，导致监听未订阅分类变化。
 watch(
   () => query.kind,
   () => nextTick(updateKindBlob),
   { flush: 'post' }
-)
-const supportsLoader = computed(() => usesCommunityLoader(query.kind))
-const usesPagination = computed(() => !supportsLoader.value)
+);
+const supportsLoader = computed(() => usesCommunityLoader(query.kind));
+const usesPagination = computed(() => !supportsLoader.value);
 
 /** 排序选项 */
 const sortOptions = [
   { value: 'relevance', label: '相关度' },
   { value: 'downloads', label: '最多下载' },
   { value: 'newest', label: '最新发布' },
-]
+];
 
 // ---------------- 搜索与列表 ----------------
-const results = ref<CommunityResult[]>(previousSession?.results ?? [])
-const loading = ref(false)
-const loadingMore = ref(false)
-const searched = ref(previousSession?.searched ?? false) // 是否已发起过搜索（区分初始空态）
-const loadError = ref(previousSession?.error ?? '')
-const offset = ref(previousSession?.offset ?? 0)
-const hasMore = ref(previousSession?.hasMore ?? false)
-const currentPage = ref(previousSession?.page ?? 1)
-const totalResults = ref(previousSession?.total ?? 0)
-const searchWarnings = ref<string[]>(previousSession?.warnings ?? [])
-const totalPages = computed(() => Math.max(1, Math.ceil(totalResults.value / PAGE_SIZE)))
+const results = ref<CommunityResult[]>(previousSession?.results ?? []);
+const loading = ref(false);
+const loadingMore = ref(false);
+const searched = ref(previousSession?.searched ?? false); // 是否已发起过搜索（区分初始空态）
+const loadError = ref(previousSession?.error ?? '');
+const offset = ref(previousSession?.offset ?? 0);
+const hasMore = ref(previousSession?.hasMore ?? false);
+const currentPage = ref(previousSession?.page ?? 1);
+const totalResults = ref(previousSession?.total ?? 0);
+const searchWarnings = ref<string[]>(previousSession?.warnings ?? []);
+const totalPages = computed(() => Math.max(1, Math.ceil(totalResults.value / PAGE_SIZE)));
 const visiblePages = computed(() => {
-  const start = Math.max(1, Math.min(currentPage.value - 2, totalPages.value - 4))
-  return Array.from({ length: Math.min(5, totalPages.value) }, (_, i) => start + i)
-})
-const listCard = ref<HTMLElement | null>(null)
+  const start = Math.max(1, Math.min(currentPage.value - 2, totalPages.value - 4));
+  return Array.from({ length: Math.min(5, totalPages.value) }, (_, i) => start + i);
+});
+const listCard = ref<HTMLElement | null>(null);
 
-let searchGeneration = 0
-let disposed = false
+let searchGeneration = 0;
+let disposed = false;
 onBeforeUnmount(() => {
   saveCommunitySession({
     query: { ...query },
@@ -215,30 +215,30 @@ onBeforeUnmount(() => {
     scrollTop: document.querySelector<HTMLElement>('.content')?.scrollTop ?? 0,
     topKeyword: store.searchKeyword,
     interrupted: loading.value || loadingMore.value,
-  })
-  disposed = true
-  searchGeneration++
-  fileGeneration++
-  openGeneration++
-})
+  });
+  disposed = true;
+  searchGeneration++;
+  fileGeneration++;
+  openGeneration++;
+});
 async function doSearch(reset: boolean, page = currentPage.value) {
-  if (disposed) return
-  if (!reset && (loading.value || loadingMore.value)) return
-  const generation = ++searchGeneration
+  if (disposed) return;
+  if (!reset && (loading.value || loadingMore.value)) return;
+  const generation = ++searchGeneration;
   if (reset) {
-    offset.value = 0
-    currentPage.value = 1
-    totalResults.value = 0
-    searchWarnings.value = []
+    offset.value = 0;
+    currentPage.value = 1;
+    totalResults.value = 0;
+    searchWarnings.value = [];
   }
-  const paged = usesPagination.value
-  if (paged && !reset) currentPage.value = page
-  const requestedOffset = paged ? (currentPage.value - 1) * PAGE_SIZE : offset.value
-  const first = reset || paged
-  if (first) loading.value = true
-  else loadingMore.value = true
-  loadError.value = ''
-  searched.value = true
+  const paged = usesPagination.value;
+  if (paged && !reset) currentPage.value = page;
+  const requestedOffset = paged ? (currentPage.value - 1) * PAGE_SIZE : offset.value;
+  const first = reset || paged;
+  if (first) loading.value = true;
+  else loadingMore.value = true;
+  loadError.value = '';
+  searched.value = true;
   try {
     const response = await communitySearch({
       keyword: query.keyword.trim(),
@@ -249,38 +249,38 @@ async function doSearch(reset: boolean, page = currentPage.value) {
       sort: query.sort,
       offset: requestedOffset,
       limit: PAGE_SIZE,
-    })
-    if (generation !== searchGeneration) return
-    const list = response.items
-    if (first) results.value = list
-    else results.value = [...results.value, ...list]
-    totalResults.value = response.total
-    searchWarnings.value = response.warnings ?? []
-    hasMore.value = requestedOffset + PAGE_SIZE < response.total
-    offset.value = requestedOffset + PAGE_SIZE
+    });
+    if (generation !== searchGeneration) return;
+    const list = response.items;
+    if (first) results.value = list;
+    else results.value = [...results.value, ...list];
+    totalResults.value = response.total;
+    searchWarnings.value = response.warnings ?? [];
+    hasMore.value = requestedOffset + PAGE_SIZE < response.total;
+    offset.value = requestedOffset + PAGE_SIZE;
   } catch (e) {
-    if (generation !== searchGeneration) return
-    loadError.value = errText(e)
-    if (!first) toast('加载失败：' + loadError.value, 'error')
+    if (generation !== searchGeneration) return;
+    loadError.value = errText(e);
+    if (!first) toast('加载失败：' + loadError.value, 'error');
   } finally {
     if (generation === searchGeneration) {
-      loading.value = false
-      loadingMore.value = false
+      loading.value = false;
+      loadingMore.value = false;
     }
   }
 }
 
-const onSearch = () => void doSearch(true)
-const onLoadMore = () => void doSearch(false)
+const onSearch = () => void doSearch(true);
+const onLoadMore = () => void doSearch(false);
 async function goToPage(page: number) {
-  if (loading.value || page < 1 || page > totalPages.value || page === currentPage.value) return
-  await doSearch(false, page)
-  listCard.value?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  if (loading.value || page < 1 || page > totalPages.value || page === currentPage.value) return;
+  await doSearch(false, page);
+  listCard.value?.scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
 
 // ---------------- 无限滚动：列表底部哨兵进入视口即自动加载（保留按钮作兜底） ----------------
-const moreSentinel = ref<HTMLElement | null>(null)
-let moreObserver: IntersectionObserver | null = null
+const moreSentinel = ref<HTMLElement | null>(null);
+let moreObserver: IntersectionObserver | null = null;
 onMounted(() => {
   moreObserver = new IntersectionObserver(
     (entries) => {
@@ -292,125 +292,125 @@ onMounted(() => {
         !loading.value &&
         !loadingMore.value
       ) {
-        onLoadMore()
+        onLoadMore();
       }
     },
     { root: null, rootMargin: '240px', threshold: 0 }
-  )
+  );
   watch(
     moreSentinel,
     (el) => {
-      moreObserver?.disconnect()
-      if (el) moreObserver?.observe(el)
+      moreObserver?.disconnect();
+      if (el) moreObserver?.observe(el);
     },
     { immediate: true }
-  )
-})
+  );
+});
 onUnmounted(() => {
-  moreObserver?.disconnect()
-  searchGeneration++
-  fileGeneration++
-  if (topSearchTimer) clearTimeout(topSearchTimer)
-})
+  moreObserver?.disconnect();
+  searchGeneration++;
+  fileGeneration++;
+  if (topSearchTimer) clearTimeout(topSearchTimer);
+});
 function useCurrentInstance() {
-  query.mcVersion = currentInstance.value?.mcVersion === '未知' ? '' : (currentInstance.value?.mcVersion ?? '')
-  query.loader = currentInstance.value?.loader ?? ''
-  versionInput.value = query.mcVersion
-  onFilterChange()
+  query.mcVersion = currentInstance.value?.mcVersion === '未知' ? '' : (currentInstance.value?.mcVersion ?? '');
+  query.loader = currentInstance.value?.loader ?? '';
+  versionInput.value = query.mcVersion;
+  onFilterChange();
 }
-versionInput.value = query.mcVersion
+versionInput.value = query.mcVersion;
 
 /** 按具体实例筛选：选中实例即带入其 MC 版本与 Loader */
 function useInstance(id: string) {
-  const v = store.installed.find((x) => instanceKey(x) === id)
-  if (!v) return
-  void selectInstance(v.id, v.folder)
-  query.mcVersion = v.mcVersion === '未知' ? '' : v.mcVersion
-  query.loader = v.loader ?? ''
-  versionInput.value = query.mcVersion
-  onFilterChange()
+  const v = store.installed.find((x) => instanceKey(x) === id);
+  if (!v) return;
+  void selectInstance(v.id, v.folder);
+  query.mcVersion = v.mcVersion === '未知' ? '' : v.mcVersion;
+  query.loader = v.loader ?? '';
+  versionInput.value = query.mcVersion;
+  onFilterChange();
 }
 
 /** 切换条件后自动重新搜索 */
 function onFilterChange() {
-  if (communityTab.value === 'browse') void doSearch(true)
+  if (communityTab.value === 'browse') void doSearch(true);
 }
 
 function onReset() {
-  query.keyword = ''
-  query.kind = 'mod'
-  query.source = 'all'
-  query.mcVersion = ''
-  query.loader = ''
-  query.sort = 'relevance'
-  versionInput.value = ''
-  void doSearch(true)
+  query.keyword = '';
+  query.kind = 'mod';
+  query.source = 'all';
+  query.mcVersion = '';
+  query.loader = '';
+  query.sort = 'relevance';
+  versionInput.value = '';
+  void doSearch(true);
 }
 
 onMounted(async () => {
   // A route-local snapshot keeps the query, loaded pages and scroll without retaining DOM.
-  const newKeyword = store.searchKeyword.trim()
+  const newKeyword = store.searchKeyword.trim();
   if (!previousSession || (newKeyword && newKeyword !== previousSession.topKeyword.trim())) {
-    query.keyword = newKeyword
-    void doSearch(true)
+    query.keyword = newKeyword;
+    void doSearch(true);
   } else {
-    await nextTick()
-    const content = document.querySelector<HTMLElement>('.content')
-    if (content) content.scrollTop = previousSession.scrollTop
-    if (previousSession.interrupted) loadError.value = '上次查询在离开页面时中断，已保留原结果；请重试。'
+    await nextTick();
+    const content = document.querySelector<HTMLElement>('.content');
+    if (content) content.scrollTop = previousSession.scrollTop;
+    if (previousSession.interrupted) loadError.value = '上次查询在离开页面时中断，已保留原结果；请重试。';
   }
-})
+});
 
 // ---------------- 顶栏搜索联动：顶栏输入防抖驱动社区搜索 ----------------
-let topSearchTimer: ReturnType<typeof setTimeout> | null = null
+let topSearchTimer: ReturnType<typeof setTimeout> | null = null;
 watch(
   () => store.searchKeyword,
   (kw) => {
-    if (topSearchTimer) clearTimeout(topSearchTimer)
+    if (topSearchTimer) clearTimeout(topSearchTimer);
     topSearchTimer = setTimeout(() => {
-      if (communityTab.value === 'favorites') favoriteSearch.value = kw.trim()
+      if (communityTab.value === 'favorites') favoriteSearch.value = kw.trim();
       else {
-        query.keyword = kw.trim()
-        void doSearch(true)
+        query.keyword = kw.trim();
+        void doSearch(true);
       }
-    }, 400)
+    }, 400);
   }
-)
+);
 
 // ---------------- 列表展示 ----------------
 /** 图标加载失败的项目（显示首字母占位） */
-const brokenIcons = ref(new Set<string>())
-const itemKey = (r: CommunityProjectReference) => `${r.source}:${r.projectId}`
+const brokenIcons = ref(new Set<string>());
+const itemKey = (r: CommunityProjectReference) => `${r.source}:${r.projectId}`;
 const onIconError = (r: CommunityResult) => {
-  brokenIcons.value = new Set([...brokenIcons.value, itemKey(r)])
-}
+  brokenIcons.value = new Set([...brokenIcons.value, itemKey(r)]);
+};
 
 const fmtDownloads = (n: number): string => {
-  if (n >= 1e8) return (n / 1e8).toFixed(1) + ' 亿'
-  if (n >= 1e4) return (n / 1e4).toFixed(1) + ' 万'
-  return String(n)
-}
+  if (n >= 1e8) return (n / 1e8).toFixed(1) + ' 亿';
+  if (n >= 1e4) return (n / 1e4).toFixed(1) + ' 万';
+  return String(n);
+};
 
 const fmtDate = (iso: string): string => {
-  if (!iso) return '—'
-  const d = new Date(iso)
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString('zh-CN')
-}
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString('zh-CN');
+};
 
 const fmtSize = (bytes: number): string => {
-  if (!bytes || bytes <= 0) return '—'
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`
-  return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`
-}
+  if (!bytes || bytes <= 0) return '—';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
+};
 
-const releaseTagClass = (t: CommunityFile['releaseType']) => (t === 'beta' ? 'tag-cyan' : t === 'alpha' ? 'tag-danger' : 'tag-gold')
+const releaseTagClass = (t: CommunityFile['releaseType']) => (t === 'beta' ? 'tag-cyan' : t === 'alpha' ? 'tag-danger' : 'tag-gold');
 const releaseText: Record<CommunityFile['releaseType'], string> = {
   release: '正式版',
   beta: 'Beta',
   alpha: 'Alpha',
-}
+};
 
 // ---------------- 下载模态框 ----------------
 const modal = reactive({
@@ -425,112 +425,112 @@ const modal = reactive({
   mcVersion: '',
   loader: '' as LoaderName | '',
   downloading: false,
-})
+});
 
-const isModpack = computed(() => modal.kind === 'modpack')
-const selectedFile = computed(() => modal.files.find((f) => f.fileId === modal.fileId) ?? null)
+const isModpack = computed(() => modal.kind === 'modpack');
+const selectedFile = computed(() => modal.files.find((f) => f.fileId === modal.fileId) ?? null);
 const targetOptions = computed(() =>
   modal.kind === 'mod'
     ? allTargets.value.filter((v) => selectedFile.value && communityFileMatchesInstance(selectedFile.value, v))
     : store.installed
-)
+);
 watch(targetOptions, (options) => {
   if (!options.some((v) => instanceKey(v) === modal.versionId)) {
-    const selected = options.find((v) => v.id === currentInstance.value?.id && v.folder === currentInstance.value?.folder) ?? options[0]
-    modal.versionId = selected ? instanceKey(selected) : ''
+    const selected = options.find((v) => v.id === currentInstance.value?.id && v.folder === currentInstance.value?.folder) ?? options[0];
+    modal.versionId = selected ? instanceKey(selected) : '';
   }
-})
+});
 let fileGeneration = 0,
-  openGeneration = 0
+  openGeneration = 0;
 async function loadFiles() {
-  if (!modal.item) return
+  if (!modal.item) return;
   const generation = ++fileGeneration,
-    item = modal.item
-  modal.loadingFiles = true
-  modal.filesError = ''
-  modal.files = []
-  modal.fileId = ''
+    item = modal.item;
+  modal.loadingFiles = true;
+  modal.filesError = '';
+  modal.files = [];
+  modal.fileId = '';
   try {
     const files = await communityFiles(item.source, item.projectId, {
       kind: modal.kind,
       mcVersion: modal.mcVersion || undefined,
       loader: usesCommunityLoader(modal.kind) ? modal.loader || undefined : undefined,
-    })
-    if (generation !== fileGeneration || !modal.open) return
-    modal.files = files
-    modal.fileId = (files.find((f) => f.releaseType === 'release') ?? files[0])?.fileId ?? ''
+    });
+    if (generation !== fileGeneration || !modal.open) return;
+    modal.files = files;
+    modal.fileId = (files.find((f) => f.releaseType === 'release') ?? files[0])?.fileId ?? '';
     if (!files.length)
       modal.filesError = usesCommunityLoader(modal.kind)
         ? '当前 Minecraft / Loader 条件下没有文件，可手动调整筛选。'
-        : '当前 Minecraft 版本下没有文件，可调整版本筛选。'
+        : '当前 Minecraft 版本下没有文件，可调整版本筛选。';
   } catch (e) {
-    if (generation === fileGeneration) modal.filesError = '获取文件列表失败：' + errText(e)
+    if (generation === fileGeneration) modal.filesError = '获取文件列表失败：' + errText(e);
   } finally {
-    if (generation === fileGeneration) modal.loadingFiles = false
+    if (generation === fileGeneration) modal.loadingFiles = false;
   }
 }
 
 async function openDownload(item: CommunityProjectReference, kind: CommunityKind = query.kind) {
-  const generation = ++openGeneration
-  fileGeneration++
-  modal.open = true
-  modal.item = item
-  modal.kind = kind
-  modal.files = []
-  modal.loadingFiles = true
-  modal.filesError = ''
-  modal.fileId = ''
-  modal.versionId = currentInstance.value ? instanceKey(currentInstance.value) : ''
-  modal.mcVersion = query.mcVersion
-  modal.loader = usesCommunityLoader(kind) ? query.loader : ''
-  modal.downloading = false
+  const generation = ++openGeneration;
+  fileGeneration++;
+  modal.open = true;
+  modal.item = item;
+  modal.kind = kind;
+  modal.files = [];
+  modal.loadingFiles = true;
+  modal.filesError = '';
+  modal.fileId = '';
+  modal.versionId = currentInstance.value ? instanceKey(currentInstance.value) : '';
+  modal.mcVersion = query.mcVersion;
+  modal.loader = usesCommunityLoader(kind) ? query.loader : '';
+  modal.downloading = false;
   try {
-    const scanned = await getModTargets()
-    if (disposed || generation !== openGeneration || !modal.open) return
-    allTargets.value = scanned.versions
-    if (scanned.errors.length) toast('部分目录扫描失败：' + scanned.errors.join('；'), 'error')
-    await loadFiles()
+    const scanned = await getModTargets();
+    if (disposed || generation !== openGeneration || !modal.open) return;
+    allTargets.value = scanned.versions;
+    if (scanned.errors.length) toast('部分目录扫描失败：' + scanned.errors.join('；'), 'error');
+    await loadFiles();
   } catch (e) {
-    if (!disposed && generation === openGeneration) modal.filesError = '获取文件列表失败：' + errText(e)
+    if (!disposed && generation === openGeneration) modal.filesError = '获取文件列表失败：' + errText(e);
   } finally {
-    if (generation === openGeneration) modal.loadingFiles = false
+    if (generation === openGeneration) modal.loadingFiles = false;
   }
 }
 
 const canConfirm = computed(
   () => !!selectedFile.value && !modal.loadingFiles && !modal.downloading && (isModpack.value || !!modal.versionId)
-)
+);
 
 async function confirmDownload() {
-  const file = selectedFile.value
-  if (!file || !canConfirm.value) return
-  const target = targetOptions.value.find((v) => instanceKey(v) === modal.versionId)
+  const file = selectedFile.value;
+  if (!file || !canConfirm.value) return;
+  const target = targetOptions.value.find((v) => instanceKey(v) === modal.versionId);
   if (modal.kind === 'mod') {
-    if (!target) return
-    modRequest.value = { target, input: { file } }
-    return
+    if (!target) return;
+    modRequest.value = { target, input: { file } };
+    return;
   }
-  modal.downloading = true
+  modal.downloading = true;
   try {
     const res = await communityDownload(file, {
       versionId: target?.id ?? '',
       kind: modal.kind,
-    })
-    modal.open = false
+    });
+    modal.open = false;
     if (modal.kind === 'modpack') {
-      toast(res || '已开始安装整合包', 'success')
+      toast(res || '已开始安装整合包', 'success');
     } else {
-      toast(`下载完成，已保存到：${res}`, 'success')
+      toast(`下载完成，已保存到：${res}`, 'success');
     }
   } catch (e) {
-    toast('下载失败：' + errText(e), 'error')
+    toast('下载失败：' + errText(e), 'error');
   } finally {
-    modal.downloading = false
+    modal.downloading = false;
   }
 }
 function selectDownloadInstance() {
-  const target = targetOptions.value.find((v) => instanceKey(v) === modal.versionId)
-  if (target) void selectInstance(target.id, target.folder)
+  const target = targetOptions.value.find((v) => instanceKey(v) === modal.versionId);
+  if (target) void selectInstance(target.id, target.folder);
 }
 </script>
 
@@ -593,9 +593,9 @@ function selectDownloadInstance() {
       @download="openDownload($event, 'mod')"
       @details="detailProject = $event"
       @browse="
-        communityTab = 'browse'
-        query.kind = 'mod'
-        onFilterChange()
+        communityTab = 'browse';
+        query.kind = 'mod';
+        onFilterChange();
       "
     />
     <template v-else>
@@ -611,8 +611,8 @@ function selectDownloadInstance() {
             :data-kind="t.value"
             :class="{ active: query.kind === t.value }"
             @click="
-              query.kind = t.value
-              onFilterChange()
+              query.kind = t.value;
+              onFilterChange();
             "
           >
             {{ t.label }}
@@ -661,8 +661,8 @@ function selectDownloadInstance() {
             :versions="manifestVersions"
             :loading="manifestLoading"
             @change="
-              versionInput = query.mcVersion
-              onFilterChange()
+              versionInput = query.mcVersion;
+              onFilterChange();
             "
           />
           <SelectMenu
@@ -995,8 +995,8 @@ function selectDownloadInstance() {
       :input="modRequest.input"
       @close="modRequest = null"
       @installed="
-        modRequest = null
-        modal.open = false
+        modRequest = null;
+        modal.open = false;
       "
     />
     <CommunityModDetails
@@ -1004,8 +1004,8 @@ function selectDownloadInstance() {
       :reference="detailProject"
       @close="detailProject = null"
       @download="
-        detailProject = null
-        openDownload($event, 'mod')
+        detailProject = null;
+        openDownload($event, 'mod');
       "
     />
   </div>

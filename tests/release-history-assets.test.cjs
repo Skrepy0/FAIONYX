@@ -2,17 +2,17 @@ const test = require('node:test'),
   assert = require('node:assert/strict'),
   fs = require('node:fs'),
   os = require('node:os'),
-  path = require('node:path')
+  path = require('node:path');
 const collect = require('../scripts/release-history-assets.cjs'),
-  emptySHA = require('node:crypto').createHash('sha256').update('').digest('hex')
+  emptySHA = require('node:crypto').createHash('sha256').update('').digest('hex');
 function fixture(names, run) {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'kamu-history-assets-'))
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'kamu-history-assets-'));
   try {
-    for (const name of names) fs.writeFileSync(path.join(directory, name), '')
-    run(directory)
+    for (const name of names) fs.writeFileSync(path.join(directory, name), '');
+    run(directory);
   } finally {
-    assert.equal(path.dirname(path.resolve(directory)), path.resolve(os.tmpdir()))
-    fs.rmSync(directory, { recursive: true, force: true })
+    assert.equal(path.dirname(path.resolve(directory)), path.resolve(os.tmpdir()));
+    fs.rmSync(directory, { recursive: true, force: true });
   }
 }
 test('release includes every contiguous historical ZIP part in order, excludes other versions and evidence', () => {
@@ -24,7 +24,7 @@ test('release includes every contiguous historical ZIP part in order, excludes o
       'private.zip',
     ],
     (directory) => {
-      writeIndex(directory, [1, 2])
+      writeIndex(directory, [1, 2]);
       assert.deepEqual(
         collect(directory, '1.1.9').map((file) => path.basename(file)),
         [
@@ -32,10 +32,10 @@ test('release includes every contiguous historical ZIP part in order, excludes o
           'FAIONYX-1.1.9-validation-history-part001.zip',
           'FAIONYX-1.1.9-validation-history-part002.zip',
         ]
-      )
+      );
     }
-  )
-})
+  );
+});
 test('release refuses missing historical parts, invalid part names and ambiguous single-plus-parts', () => {
   for (const names of [
     ['FAIONYX-1.1.9-validation-history-part002.zip'],
@@ -44,10 +44,10 @@ test('release refuses missing historical parts, invalid part names and ambiguous
     ['FAIONYX-1.1.9-validation-history.zip', 'FAIONYX-1.1.9-validation-history-part001.zip'],
   ])
     fixture(names, (directory) => {
-      writeIndex(directory, [1, 2, 3])
-      assert.throws(() => collect(directory, '1.1.9'))
-    })
-})
+      writeIndex(directory, [1, 2, 3]);
+      assert.throws(() => collect(directory, '1.1.9'));
+    });
+});
 function writeIndex(directory, numbers) {
   fs.writeFileSync(
     path.join(directory, 'FAIONYX-1.1.9-validation-history-index.json'),
@@ -60,26 +60,26 @@ function writeIndex(directory, numbers) {
         sha256: emptySHA,
       })),
     })
-  )
+  );
 }
 test('release rejects missing final part, absent index, corrupt payload and wrong version even when names look contiguous', () => {
   fixture(['FAIONYX-1.1.9-validation-history-part001.zip'], (directory) => {
-    assert.throws(() => collect(directory, '1.1.9'))
-    writeIndex(directory, [1, 2])
-    assert.throws(() => collect(directory, '1.1.9'))
-    writeIndex(directory, [1])
-    fs.writeFileSync(path.join(directory, 'FAIONYX-1.1.9-validation-history-part001.zip'), 'corrupt')
-    assert.throws(() => collect(directory, '1.1.9'))
-    fs.writeFileSync(path.join(directory, 'FAIONYX-1.1.9-validation-history-part001.zip'), '')
-    const index = JSON.parse(fs.readFileSync(path.join(directory, 'FAIONYX-1.1.9-validation-history-index.json'), 'utf8'))
-    index.version = '1.1.8'
-    fs.writeFileSync(path.join(directory, 'FAIONYX-1.1.9-validation-history-index.json'), JSON.stringify(index))
-    assert.throws(() => collect(directory, '1.1.9'))
-  })
-})
+    assert.throws(() => collect(directory, '1.1.9'));
+    writeIndex(directory, [1, 2]);
+    assert.throws(() => collect(directory, '1.1.9'));
+    writeIndex(directory, [1]);
+    fs.writeFileSync(path.join(directory, 'FAIONYX-1.1.9-validation-history-part001.zip'), 'corrupt');
+    assert.throws(() => collect(directory, '1.1.9'));
+    fs.writeFileSync(path.join(directory, 'FAIONYX-1.1.9-validation-history-part001.zip'), '');
+    const index = JSON.parse(fs.readFileSync(path.join(directory, 'FAIONYX-1.1.9-validation-history-index.json'), 'utf8'));
+    index.version = '1.1.8';
+    fs.writeFileSync(path.join(directory, 'FAIONYX-1.1.9-validation-history-index.json'), JSON.stringify(index));
+    assert.throws(() => collect(directory, '1.1.9'));
+  });
+});
 test('release retains the single historical archive convention and permits no optional history', () => {
   fixture(['FAIONYX-1.1.9-validation-history.zip'], (directory) =>
     assert.deepEqual(collect(directory, '1.1.9'), [path.join(directory, 'FAIONYX-1.1.9-validation-history.zip')])
-  )
-  fixture([], (directory) => assert.deepEqual(collect(directory, '1.1.9'), []))
-})
+  );
+  fixture([], (directory) => assert.deepEqual(collect(directory, '1.1.9'), []));
+});

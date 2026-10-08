@@ -1,9 +1,9 @@
 const fs = require('node:fs'),
   path = require('node:path'),
-  { execFileSync } = require('node:child_process')
-if (process.platform !== 'linux') throw Error('Linux helper must be built on Linux')
-const root = path.resolve(__dirname, '..')
-fs.mkdirSync(path.join(root, 'out/main'), { recursive: true })
+  { execFileSync } = require('node:child_process');
+if (process.platform !== 'linux') throw Error('Linux helper must be built on Linux');
+const root = path.resolve(__dirname, '..');
+fs.mkdirSync(path.join(root, 'out/main'), { recursive: true });
 execFileSync(
   'g++',
   [
@@ -17,5 +17,5 @@ execFileSync(
     path.join(root, 'out/main/LinuxGameWindow'),
   ],
   { stdio: 'inherit' }
-)
-fs.chmodSync(path.join(root, 'out/main/LinuxGameWindow'), 0o755)
+);
+fs.chmodSync(path.join(root, 'out/main/LinuxGameWindow'), 0o755);

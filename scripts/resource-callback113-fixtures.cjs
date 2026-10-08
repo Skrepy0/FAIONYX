@@ -16,7 +16,7 @@ function attachCallbackFixture(operation, token = 'synthetic-callback-ownership-
         receivedAtUnixMs: 1,
       },
     },
-    requests = Array.from({ length: frames.length + 1 }, (_, ordinal) => ({ ordinal, handle: 501 + ordinal * 17 }))
+    requests = Array.from({ length: frames.length + 1 }, (_, ordinal) => ({ ordinal, handle: 501 + ordinal * 17 }));
   frames.forEach((f, ordinal) =>
     Object.assign(f, {
       ordinal,
@@ -27,7 +27,7 @@ function attachCallbackFixture(operation, token = 'synthetic-callback-ownership-
       timeOrigin: w.timeOrigin,
       documentURL: url,
     })
-  )
+  );
   operation.callbackEvidence = {
     schema: 1,
     holdToken: token,
@@ -55,7 +55,7 @@ function attachCallbackFixture(operation, token = 'synthetic-callback-ownership-
       requests,
       consumptions: frames.map((f) => ({ ordinal: f.ordinal, requestHandle: f.requestHandle, now: f.now, deliveredAt: f.deliveredAt })),
     },
-  }
-  return operation
+  };
+  return operation;
 }
-module.exports = { attachCallbackFixture }
+module.exports = { attachCallbackFixture };

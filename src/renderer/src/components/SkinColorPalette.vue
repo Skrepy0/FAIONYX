@@ -1,119 +1,119 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
-import { hsvToRgb, parseSkinChannels, parseSkinHex, rgbToHsv, rgbToSkinHex, SKIN_COLOR_PRESETS, type HsvColor } from '@shared/skinColors'
+import { computed, reactive, ref, watch } from 'vue';
+import { hsvToRgb, parseSkinChannels, parseSkinHex, rgbToHsv, rgbToSkinHex, SKIN_COLOR_PRESETS, type HsvColor } from '@shared/skinColors';
 
-const props = defineProps<{ color: string; alpha: number; alphaEnabled: boolean; custom: string[]; recent: string[] }>()
-const emit = defineEmits<{ 'update:color': [string]; 'update:alpha': [number]; 'update:custom': [string[]] }>()
-const hsv = ref<HsvColor>(rgbToHsv(parseSkinHex(props.color)!))
-const focusedGroup = ref('')
-const drafts = reactive({ hex: props.color, rgb: ['', '', ''], hsv: ['', '', ''], alpha: '100' })
-const hueColor = computed(() => rgbToSkinHex(hsvToRgb({ h: hsv.value.h, s: 100, v: 100 })))
-const shownAlpha = computed(() => (props.alphaEnabled ? props.alpha : 1))
-const selectedCustom = computed(() => props.custom.includes(props.color))
-const rounded = (value: number) => String(Math.round(value * 10) / 10)
+const props = defineProps<{ color: string; alpha: number; alphaEnabled: boolean; custom: string[]; recent: string[] }>();
+const emit = defineEmits<{ 'update:color': [string]; 'update:alpha': [number]; 'update:custom': [string[]] }>();
+const hsv = ref<HsvColor>(rgbToHsv(parseSkinHex(props.color)!));
+const focusedGroup = ref('');
+const drafts = reactive({ hex: props.color, rgb: ['', '', ''], hsv: ['', '', ''], alpha: '100' });
+const hueColor = computed(() => rgbToSkinHex(hsvToRgb({ h: hsv.value.h, s: 100, v: 100 })));
+const shownAlpha = computed(() => (props.alphaEnabled ? props.alpha : 1));
+const selectedCustom = computed(() => props.custom.includes(props.color));
+const rounded = (value: number) => String(Math.round(value * 10) / 10);
 
 function syncDrafts() {
-  const rgb = parseSkinHex(props.color)!
-  if (focusedGroup.value !== 'hex') drafts.hex = props.color
-  if (focusedGroup.value !== 'rgb') drafts.rgb = [rgb.r, rgb.g, rgb.b].map(String)
-  if (focusedGroup.value !== 'hsv') drafts.hsv = [hsv.value.h, hsv.value.s, hsv.value.v].map(rounded)
-  if (focusedGroup.value !== 'alpha') drafts.alpha = rounded(shownAlpha.value * 100)
+  const rgb = parseSkinHex(props.color)!;
+  if (focusedGroup.value !== 'hex') drafts.hex = props.color;
+  if (focusedGroup.value !== 'rgb') drafts.rgb = [rgb.r, rgb.g, rgb.b].map(String);
+  if (focusedGroup.value !== 'hsv') drafts.hsv = [hsv.value.h, hsv.value.s, hsv.value.v].map(rounded);
+  if (focusedGroup.value !== 'alpha') drafts.alpha = rounded(shownAlpha.value * 100);
 }
 watch(
   () => props.color,
   (color) => {
-    const rgb = parseSkinHex(color)
-    if (!rgb) return
+    const rgb = parseSkinHex(color);
+    if (!rgb) return;
     // Preserve the selected hue at black/grey, and avoid snapping the SV marker to rounded RGB values.
     if (rgbToSkinHex(hsvToRgb(hsv.value)) !== color) {
-      const next = rgbToHsv(rgb)
-      hsv.value = { ...next, h: next.s === 0 ? hsv.value.h : next.h }
+      const next = rgbToHsv(rgb);
+      hsv.value = { ...next, h: next.s === 0 ? hsv.value.h : next.h };
     }
-    syncDrafts()
+    syncDrafts();
   },
   { immediate: true }
-)
-watch([() => props.alpha, () => props.alphaEnabled], syncDrafts)
-const hexValid = computed(() => !!parseSkinHex(drafts.hex))
-const rgbValid = computed(() => !!parseSkinChannels(drafts.rgb, [255, 255, 255], true))
-const hsvValid = computed(() => !!parseSkinChannels(drafts.hsv, [360, 100, 100]))
-const alphaValid = computed(() => !!parseSkinChannels([drafts.alpha], [100]))
+);
+watch([() => props.alpha, () => props.alphaEnabled], syncDrafts);
+const hexValid = computed(() => !!parseSkinHex(drafts.hex));
+const rgbValid = computed(() => !!parseSkinChannels(drafts.rgb, [255, 255, 255], true));
+const hsvValid = computed(() => !!parseSkinChannels(drafts.hsv, [360, 100, 100]));
+const alphaValid = computed(() => !!parseSkinChannels([drafts.alpha], [100]));
 
 function finishEditing() {
-  focusedGroup.value = ''
-  syncDrafts()
+  focusedGroup.value = '';
+  syncDrafts();
 }
 function choose(color: string) {
-  focusedGroup.value = ''
-  emit('update:color', color)
+  focusedGroup.value = '';
+  emit('update:color', color);
 }
 function editHex(event: Event) {
-  drafts.hex = (event.target as HTMLInputElement).value
-  const rgb = parseSkinHex(drafts.hex)
-  if (rgb) emit('update:color', rgbToSkinHex(rgb))
+  drafts.hex = (event.target as HTMLInputElement).value;
+  const rgb = parseSkinHex(drafts.hex);
+  if (rgb) emit('update:color', rgbToSkinHex(rgb));
 }
 function editChannels(group: 'rgb' | 'hsv', index: number, event: Event) {
-  drafts[group][index] = (event.target as HTMLInputElement).value
-  const values = parseSkinChannels(drafts[group], group === 'rgb' ? [255, 255, 255] : [360, 100, 100], group === 'rgb')
-  if (!values) return
-  if (group === 'rgb') emit('update:color', rgbToSkinHex({ r: values[0], g: values[1], b: values[2] }))
-  else applyHsv({ h: values[0], s: values[1], v: values[2] })
+  drafts[group][index] = (event.target as HTMLInputElement).value;
+  const values = parseSkinChannels(drafts[group], group === 'rgb' ? [255, 255, 255] : [360, 100, 100], group === 'rgb');
+  if (!values) return;
+  if (group === 'rgb') emit('update:color', rgbToSkinHex({ r: values[0], g: values[1], b: values[2] }));
+  else applyHsv({ h: values[0], s: values[1], v: values[2] });
 }
 function applyHsv(next: HsvColor) {
-  hsv.value = next
-  emit('update:color', rgbToSkinHex(hsvToRgb(next)))
-  syncDrafts()
+  hsv.value = next;
+  emit('update:color', rgbToSkinHex(hsvToRgb(next)));
+  syncDrafts();
 }
 function hue(event: Event) {
-  focusedGroup.value = ''
-  applyHsv({ ...hsv.value, h: Number((event.target as HTMLInputElement).value) })
+  focusedGroup.value = '';
+  applyHsv({ ...hsv.value, h: Number((event.target as HTMLInputElement).value) });
 }
 function alpha(event: Event) {
-  drafts.alpha = (event.target as HTMLInputElement).value
-  const values = parseSkinChannels([drafts.alpha], [100])
-  if (props.alphaEnabled && values) emit('update:alpha', values[0] / 100)
+  drafts.alpha = (event.target as HTMLInputElement).value;
+  const values = parseSkinChannels([drafts.alpha], [100]);
+  if (props.alphaEnabled && values) emit('update:alpha', values[0] / 100);
 }
 function alphaSlider(event: Event) {
-  focusedGroup.value = ''
-  if (props.alphaEnabled) emit('update:alpha', Number((event.target as HTMLInputElement).value) / 100)
+  focusedGroup.value = '';
+  if (props.alphaEnabled) emit('update:alpha', Number((event.target as HTMLInputElement).value) / 100);
 }
 function svAt(event: PointerEvent) {
   const area = event.currentTarget as HTMLElement,
-    bounds = area.getBoundingClientRect()
-  if (!bounds.width || !bounds.height) return
-  focusedGroup.value = ''
+    bounds = area.getBoundingClientRect();
+  if (!bounds.width || !bounds.height) return;
+  focusedGroup.value = '';
   applyHsv({
     h: hsv.value.h,
     s: Math.max(0, Math.min(100, ((event.clientX - bounds.left) / bounds.width) * 100)),
     v: Math.max(0, Math.min(100, 100 - ((event.clientY - bounds.top) / bounds.height) * 100)),
-  })
+  });
 }
 function svStart(event: PointerEvent) {
-  if (event.button !== 0) return
-  event.preventDefault()
-  ;(event.currentTarget as HTMLElement).focus()
-  ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
-  svAt(event)
+  if (event.button !== 0) return;
+  event.preventDefault();
+  (event.currentTarget as HTMLElement).focus();
+  (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+  svAt(event);
 }
 function svMove(event: PointerEvent) {
-  if ((event.currentTarget as HTMLElement).hasPointerCapture(event.pointerId)) svAt(event)
+  if ((event.currentTarget as HTMLElement).hasPointerCapture(event.pointerId)) svAt(event);
 }
 function svEnd(event: PointerEvent) {
-  const area = event.currentTarget as HTMLElement
-  if (area.hasPointerCapture(event.pointerId)) area.releasePointerCapture(event.pointerId)
+  const area = event.currentTarget as HTMLElement;
+  if (area.hasPointerCapture(event.pointerId)) area.releasePointerCapture(event.pointerId);
 }
 function svKeys(event: KeyboardEvent) {
-  if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return
-  event.preventDefault()
-  const amount = event.shiftKey ? 10 : 1
+  if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+  event.preventDefault();
+  const amount = event.shiftKey ? 10 : 1;
   applyHsv({
     ...hsv.value,
     s: Math.max(0, Math.min(100, hsv.value.s + (event.key === 'ArrowRight' ? amount : event.key === 'ArrowLeft' ? -amount : 0))),
     v: Math.max(0, Math.min(100, hsv.value.v + (event.key === 'ArrowUp' ? amount : event.key === 'ArrowDown' ? -amount : 0))),
-  })
+  });
 }
 function addCustom() {
-  if (!selectedCustom.value && props.custom.length < 256) emit('update:custom', [...props.custom, props.color])
+  if (!selectedCustom.value && props.custom.length < 256) emit('update:custom', [...props.custom, props.color]);
 }
 </script>
 

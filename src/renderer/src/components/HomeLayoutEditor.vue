@@ -1,33 +1,33 @@
 <script setup lang="ts">
 /** 图一固定布局下的个性化背景与启动卡图片管理。 */
-import { builtInLaunchImages } from '../launchImages'
-import ConfirmModal from './ConfirmModal.vue'
-import { computed, nextTick, ref, onMounted, onUnmounted } from 'vue'
-import { reorderGallery } from '@shared/galleryOrder'
-import { carouselImages, carouselKeys, activeCarouselKeys, carouselDuration, MAX_CAROUSEL_IMAGES } from '@shared/appearancePolicy'
-import { updateSettings } from '../settingsUpdates'
-import { errText, getSystemInfo, importBackground, importBackgroundMulti, importLaunchThumbnail, resetBackground } from '../api'
-import { store, toast } from '../store'
-import { managedImageUrl } from '../managedAssets'
-import type { BackgroundSettings, ImageFit, Settings } from '@shared/types'
+import { builtInLaunchImages } from '../launchImages';
+import ConfirmModal from './ConfirmModal.vue';
+import { computed, nextTick, ref, onMounted, onUnmounted } from 'vue';
+import { reorderGallery } from '@shared/galleryOrder';
+import { carouselImages, carouselKeys, activeCarouselKeys, carouselDuration, MAX_CAROUSEL_IMAGES } from '@shared/appearancePolicy';
+import { updateSettings } from '../settingsUpdates';
+import { errText, getSystemInfo, importBackground, importBackgroundMulti, importLaunchThumbnail, resetBackground } from '../api';
+import { store, toast } from '../store';
+import { managedImageUrl } from '../managedAssets';
+import type { BackgroundSettings, ImageFit, Settings } from '@shared/types';
 
-const reducedTransparency = ref(false)
+const reducedTransparency = ref(false);
 function refreshNativeMaterial() {
-  if (window.faionyx.platform !== 'darwin') return
+  if (window.faionyx.platform !== 'darwin') return;
   void getSystemInfo()
     .then((info) => {
-      reducedTransparency.value = info.reducedTransparency === true
+      reducedTransparency.value = info.reducedTransparency === true;
     })
-    .catch(() => {})
+    .catch(() => {});
 }
 onMounted(() => {
-  refreshNativeMaterial()
-  window.addEventListener('focus', refreshNativeMaterial)
-})
-onUnmounted(() => window.removeEventListener('focus', refreshNativeMaterial))
+  refreshNativeMaterial();
+  window.addEventListener('focus', refreshNativeMaterial);
+});
+onUnmounted(() => window.removeEventListener('focus', refreshNativeMaterial));
 
 function save(patch: Partial<Settings>) {
-  void updateSettings(patch).catch((e) => toast('保存失败：' + errText(e), 'error'))
+  void updateSettings(patch).catch((e) => toast('保存失败：' + errText(e), 'error'));
 }
 
 // ---------------- 背景 ----------------
@@ -35,84 +35,84 @@ const bgModes = [
   { value: 'none', label: '系统桌面' },
   { value: 'color', label: '纯色' },
   { value: 'image', label: '图片' },
-] as const
+] as const;
 const fitModes: Array<{ value: ImageFit; label: string }> = [
   { value: 'fill', label: '填充' },
   { value: 'fit', label: '适应' },
   { value: 'crop', label: '裁切' },
-]
-const importingBackground = ref(false)
-const importingThumbnail = ref(false)
-const backgroundPreviewFailed = ref(false)
-const images = computed(() => carouselImages(store.settings?.launchThumbnail))
+];
+const importingBackground = ref(false);
+const importingThumbnail = ref(false);
+const backgroundPreviewFailed = ref(false);
+const images = computed(() => carouselImages(store.settings?.launchThumbnail));
 const slides = computed(() =>
   carouselKeys(store.settings?.launchThumbnail).map((key) => {
-    const bundled = builtInLaunchImages.find((image) => image.key === key)
+    const bundled = builtInLaunchImages.find((image) => image.key === key);
     return {
       key,
       src: bundled?.src ?? managedImageUrl(key),
       title: bundled?.title ?? `自定义图片 ${images.value.indexOf(key) + 1}`,
       builtin: !!bundled,
-    }
+    };
   })
-)
-const activeSlides = computed(() => new Set(activeCarouselKeys(store.settings?.launchThumbnail)))
-const removeThumbnail = ref<string | null>(null)
-const removingThumbnail = ref(false)
-const brokenThumbnailPreviews = ref(new Set<string>())
-const draggingImage = ref('')
-const dropImage = ref('')
-const reorderAnnouncement = ref('')
+);
+const activeSlides = computed(() => new Set(activeCarouselKeys(store.settings?.launchThumbnail)));
+const removeThumbnail = ref<string | null>(null);
+const removingThumbnail = ref(false);
+const brokenThumbnailPreviews = ref(new Set<string>());
+const draggingImage = ref('');
+const dropImage = ref('');
+const reorderAnnouncement = ref('');
 function setSlidesEnabled(keys: string[], enabled: boolean) {
-  if (!store.settings) return
-  const disabled = new Set(store.settings.launchThumbnail.disabled ?? [])
-  for (const key of keys) enabled ? disabled.delete(key) : disabled.add(key)
-  save({ launchThumbnail: { ...store.settings.launchThumbnail, disabled: [...disabled] } })
+  if (!store.settings) return;
+  const disabled = new Set(store.settings.launchThumbnail.disabled ?? []);
+  for (const key of keys) enabled ? disabled.delete(key) : disabled.add(key);
+  save({ launchThumbnail: { ...store.settings.launchThumbnail, disabled: [...disabled] } });
 }
 async function deleteThumbnail() {
-  if (!store.settings || !removeThumbnail.value || removingThumbnail.value) return
-  removingThumbnail.value = true
-  const next = images.value.filter((image) => image !== removeThumbnail.value)
+  if (!store.settings || !removeThumbnail.value || removingThumbnail.value) return;
+  removingThumbnail.value = true;
+  const next = images.value.filter((image) => image !== removeThumbnail.value);
   try {
-    await updateSettings({ launchThumbnail: { ...store.settings.launchThumbnail, images: next, image: next[0] ?? '' } })
-    removeThumbnail.value = null
+    await updateSettings({ launchThumbnail: { ...store.settings.launchThumbnail, images: next, image: next[0] ?? '' } });
+    removeThumbnail.value = null;
   } catch (e) {
-    toast('移除图片失败：' + errText(e), 'error')
+    toast('移除图片失败：' + errText(e), 'error');
   } finally {
-    removingThumbnail.value = false
+    removingThumbnail.value = false;
   }
 }
 function moveImage(index: number, direction: number) {
-  if (!store.settings) return
-  const next = slides.value.map((image) => image.key)
-  const target = index + direction
-  if (target < 0 || target >= next.length) return
-  reorderImage(next[index], next[target])
+  if (!store.settings) return;
+  const next = slides.value.map((image) => image.key);
+  const target = index + direction;
+  if (target < 0 || target >= next.length) return;
+  reorderImage(next[index], next[target]);
 }
 function reorderImage(from: string, to: string) {
-  if (!store.settings || from === to) return
-  const keys = slides.value.map((image) => image.key)
-  if (!keys.includes(from) || !keys.includes(to)) return
-  const order = reorderGallery(keys, from, to)
-  save({ launchThumbnail: { ...store.settings.launchThumbnail, order } })
-  reorderAnnouncement.value = `${slides.value.find((image) => image.key === from)?.title}已移到第 ${order.indexOf(from) + 1} 位`
+  if (!store.settings || from === to) return;
+  const keys = slides.value.map((image) => image.key);
+  if (!keys.includes(from) || !keys.includes(to)) return;
+  const order = reorderGallery(keys, from, to);
+  save({ launchThumbnail: { ...store.settings.launchThumbnail, order } });
+  reorderAnnouncement.value = `${slides.value.find((image) => image.key === from)?.title}已移到第 ${order.indexOf(from) + 1} 位`;
 }
 function startImageDrag(event: DragEvent, key: string) {
-  draggingImage.value = key
+  draggingImage.value = key;
   if (event.dataTransfer) {
-    event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData('application/x-faionyx-gallery', key)
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('application/x-faionyx-gallery', key);
   }
 }
 function dropImageDrag(event: DragEvent, key: string) {
-  const from = draggingImage.value
-  if (from && event.dataTransfer?.getData('application/x-faionyx-gallery') === from) reorderImage(from, key)
-  draggingImage.value = ''
-  dropImage.value = ''
+  const from = draggingImage.value;
+  if (from && event.dataTransfer?.getData('application/x-faionyx-gallery') === from) reorderImage(from, key);
+  draggingImage.value = '';
+  dropImage.value = '';
 }
 function reorderImageKeyboard(event: KeyboardEvent, key: string) {
   const keys = slides.value.map((image) => image.key),
-    index = keys.indexOf(key)
+    index = keys.indexOf(key);
   const target =
     event.key === 'ArrowUp'
       ? index - 1
@@ -122,82 +122,82 @@ function reorderImageKeyboard(event: KeyboardEvent, key: string) {
           ? 0
           : event.key === 'End'
             ? keys.length - 1
-            : -1
-  if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return
-  event.preventDefault()
-  if (target < 0 || target >= keys.length) return
-  reorderImage(key, keys[target])
+            : -1;
+  if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+  event.preventDefault();
+  if (target < 0 || target >= keys.length) return;
+  reorderImage(key, keys[target]);
   void nextTick(() =>
     [...document.querySelectorAll<HTMLElement>('.carousel-drag-handle')].find((handle) => handle.dataset.key === key)?.focus()
-  )
+  );
 }
 function setDuration(value: string, image?: string) {
-  if (!store.settings) return
-  const current = store.settings.launchThumbnail
-  const seconds = carouselDuration(Number(value))
+  if (!store.settings) return;
+  const current = store.settings.launchThumbnail;
+  const seconds = carouselDuration(Number(value));
   save({
     launchThumbnail: image
       ? { ...current, durations: { ...current.durations, [image]: seconds } }
       : { ...current, intervalSeconds: seconds },
-  })
+  });
 }
 
 function fitCss(fit: ImageFit): 'fill' | 'contain' | 'cover' {
-  return fit === 'fill' ? 'fill' : fit === 'fit' ? 'contain' : 'cover'
+  return fit === 'fill' ? 'fill' : fit === 'fit' ? 'contain' : 'cover';
 }
 
 function setBg(patch: Partial<BackgroundSettings>) {
-  if (!store.settings) return
-  save({ background: { ...store.settings.background, ...patch } })
+  if (!store.settings) return;
+  save({ background: { ...store.settings.background, ...patch } });
 }
 
 async function pickImage() {
-  if (importingBackground.value) return
-  importingBackground.value = true
+  if (importingBackground.value) return;
+  importingBackground.value = true;
   try {
-    const settings = await importBackground()
+    const settings = await importBackground();
     if (settings) {
-      store.settings = settings
-      backgroundPreviewFailed.value = false
-      toast('背景已复制并优化到 FAIONYX 资源目录', 'success')
+      store.settings = settings;
+      backgroundPreviewFailed.value = false;
+      toast('背景已复制并优化到 FAIONYX 资源目录', 'success');
     }
   } catch (e) {
-    toast('导入背景失败：' + errText(e), 'error')
+    toast('导入背景失败：' + errText(e), 'error');
   } finally {
-    importingBackground.value = false
+    importingBackground.value = false;
   }
 }
 
 /** 多选导入背景图（自动切换用）：追加进 images 数组 */
-const importingBackgroundMulti = ref(false)
+const importingBackgroundMulti = ref(false);
 async function pickImageMulti() {
-  if (importingBackgroundMulti.value) return
-  importingBackgroundMulti.value = true
+  if (importingBackgroundMulti.value) return;
+  importingBackgroundMulti.value = true;
   try {
-    const settings = await importBackgroundMulti()
+    const settings = await importBackgroundMulti();
     if (settings) {
-      store.settings = settings
-      backgroundPreviewFailed.value = false
-      toast(`背景图已加入切换列表（共 ${settings.background.images?.length ?? 1} 张）`, 'success')
+      store.settings = settings;
+      backgroundPreviewFailed.value = false;
+      toast(`背景图已加入切换列表（共 ${settings.background.images?.length ?? 1} 张）`, 'success');
     }
   } catch (e) {
-    toast('导入背景失败：' + errText(e), 'error')
+    toast('导入背景失败：' + errText(e), 'error');
   } finally {
-    importingBackgroundMulti.value = false
+    importingBackgroundMulti.value = false;
   }
 }
 
 /** 背景图列表（多图切换用；空时回退单张 image） */
 const bgImageList = computed(() => {
-  const bg = store.settings?.background
-  if (!bg) return [] as string[]
-  return bg.images?.length ? bg.images : bg.image ? [bg.image] : []
-})
+  const bg = store.settings?.background;
+  if (!bg) return [] as string[];
+  return bg.images?.length ? bg.images : bg.image ? [bg.image] : [];
+});
 function removeBgImage(image: string) {
-  if (!store.settings) return
-  const next = bgImageList.value.filter((i) => i !== image)
-  backgroundPreviewFailed.value = false
-  save({ background: { ...store.settings.background, images: next, image: next[0] ?? '' } })
+  if (!store.settings) return;
+  const next = bgImageList.value.filter((i) => i !== image);
+  backgroundPreviewFailed.value = false;
+  save({ background: { ...store.settings.background, images: next, image: next[0] ?? '' } });
 }
 
 /** 切换策略 */
@@ -205,48 +205,48 @@ const switchModes = [
   { value: 'off', label: '固定' },
   { value: 'order', label: '按顺序' },
   { value: 'random', label: '随机' },
-] as const
+] as const;
 
 async function resetBg() {
   try {
-    store.settings = await resetBackground()
-    backgroundPreviewFailed.value = false
-    toast('背景已恢复默认', 'success')
+    store.settings = await resetBackground();
+    backgroundPreviewFailed.value = false;
+    toast('背景已恢复默认', 'success');
   } catch (error) {
-    toast('恢复背景失败：' + errText(error), 'error')
+    toast('恢复背景失败：' + errText(error), 'error');
   }
 }
 
 async function pickLaunchThumbnail() {
-  if (importingThumbnail.value) return
-  importingThumbnail.value = true
+  if (importingThumbnail.value) return;
+  importingThumbnail.value = true;
   try {
-    const settings = await importLaunchThumbnail()
+    const settings = await importLaunchThumbnail();
     if (settings) {
-      store.settings = settings
-      toast('图片已追加到启动卡轮播，原文件不受影响', 'success')
+      store.settings = settings;
+      toast('图片已追加到启动卡轮播，原文件不受影响', 'success');
     }
   } catch (error) {
-    toast('导入缩略图失败：' + errText(error), 'error')
+    toast('导入缩略图失败：' + errText(error), 'error');
   } finally {
-    importingThumbnail.value = false
+    importingThumbnail.value = false;
   }
 }
 
 function resetThumbnail() {
-  if (!store.settings) return
+  if (!store.settings) return;
   save({
     launchThumbnail: {
       ...store.settings.launchThumbnail,
       order: carouselKeys({ ...store.settings.launchThumbnail, order: [] }),
       disabled: [],
     },
-  })
+  });
 }
 
 function setLaunchFit(fit: ImageFit) {
-  if (!store.settings) return
-  save({ launchThumbnail: { ...store.settings.launchThumbnail, fit } })
+  if (!store.settings) return;
+  save({ launchThumbnail: { ...store.settings.launchThumbnail, fit } });
 }
 </script>
 
@@ -573,8 +573,8 @@ function setLaunchFit(fit: ImageFit) {
             title="拖动排序，或使用方向键"
             @dragstart="startImageDrag($event, image.key)"
             @dragend="
-              draggingImage = ''
-              dropImage = ''
+              draggingImage = '';
+              dropImage = '';
             "
             @keydown="reorderImageKeyboard($event, image.key)"
           >

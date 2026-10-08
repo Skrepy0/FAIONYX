@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useMotion } from '../motion'
-const names = ['Fly-Flown', 'Mahiru']
-const expanded = ref(false)
+import { ref } from 'vue';
+import { useMotion } from '../motion';
+const names = ['Fly-Flown', 'Mahiru'];
+const expanded = ref(false);
 const drift = names.map(() => ({
   x: (Math.random() * 12 - 6).toFixed(1) + 'px',
   y: (Math.random() * 8 - 4).toFixed(1) + 'px',
   duration: (3.8 + Math.random() * 3).toFixed(2) + 's',
-}))
-const { decorativeActive } = useMotion()
+}));
+const { decorativeActive } = useMotion();
 function onFocusOut(event: FocusEvent) {
-  if (!(event.currentTarget as HTMLElement).contains(event.relatedTarget as Node | null)) expanded.value = false
+  if (!(event.currentTarget as HTMLElement).contains(event.relatedTarget as Node | null)) expanded.value = false;
 }
 </script>
 <template>

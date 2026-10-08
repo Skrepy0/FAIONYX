@@ -6,13 +6,13 @@ const fs = require('node:fs'),
   assert = require('node:assert/strict'),
   crypto = require('node:crypto'),
   { execFileSync } = require('node:child_process'),
-  { pipeline } = require('node:stream/promises')
+  { pipeline } = require('node:stream/promises');
 const { prepare, groupProfile } = require('./resource-fixtures113.cjs'),
   { runSession } = require('./resource-baseline113.cjs'),
   { compileNative, startMacSampler, summarizeMac } = require('./resource-mac113-native.cjs'),
   { freezeNoise, comparePaired, analysisSources } = require('./resource-mac113-analysis.cjs'),
   { readMacPackageIdentity } = require('./mac-package-identity.cjs'),
-  provenance = require('./resource-provenance113.cjs')
+  provenance = require('./resource-provenance113.cjs');
 const BASELINE = Object.freeze({
   version: '1.1.12',
   arch: 'arm64',
@@ -22,103 +22,103 @@ const BASELINE = Object.freeze({
   url: 'https://github.com/Skrepy0/FAIONYX/releases/download/v1.1.12/FAIONYX-1.1.12-mac-arm64.zip',
   bytes: 127157251,
   sha256: '4afc952a773bfd8fae80fac5e765e6bb609bfce5866c78cf9bb8aa3d004c7172',
-})
-const resourceTheme = 'black-orange'
+});
+const resourceTheme = 'black-orange';
 function evidenceProvenance(platform, runFile) {
   const run = JSON.parse(fs.readFileSync(runFile)),
-    snapshot = run.analysisSourceSnapshot
-  assert(snapshot && snapshot.directory === 'tool-sources-analysis', 'Original analysis source byte snapshot is required')
-  provenance.assertFrozenBindings(snapshot.files, run.analysisSources)
-  const directory = path.join(path.dirname(path.resolve(runFile)), snapshot.directory)
-  provenance.verifySourceSnapshot(directory, snapshot.files)
-  provenance.assertFrozenBindings(snapshot.manifest, provenance.fileBinding(path.join(directory, 'source-bindings.json')))
+    snapshot = run.analysisSourceSnapshot;
+  assert(snapshot && snapshot.directory === 'tool-sources-analysis', 'Original analysis source byte snapshot is required');
+  provenance.assertFrozenBindings(snapshot.files, run.analysisSources);
+  const directory = path.join(path.dirname(path.resolve(runFile)), snapshot.directory);
+  provenance.verifySourceSnapshot(directory, snapshot.files);
+  provenance.assertFrozenBindings(snapshot.manifest, provenance.fileBinding(path.join(directory, 'source-bindings.json')));
   return {
     collector: provenance.collectorSources(platform),
     analysis: analysisSources(),
     analysisSourceSnapshot: snapshot,
     raw: provenance.rawEvidenceBindings(runFile),
-  }
+  };
 }
 function freezeBaselineSnapshot(runRoot, receipt) {
-  assert.equal(receipt.platform, 'darwin')
-  assert.equal(receipt.arch, 'arm64')
-  assert(receipt.n >= 10)
-  assert.equal(receipt.pairs.length, 0, 'Baseline must freeze before any pair')
-  assert.equal(receipt.groups.length, receipt.n)
+  assert.equal(receipt.platform, 'darwin');
+  assert.equal(receipt.arch, 'arm64');
+  assert(receipt.n >= 10);
+  assert.equal(receipt.pairs.length, 0, 'Baseline must freeze before any pair');
+  assert.equal(receipt.groups.length, receipt.n);
   assert(
     receipt.groups.every((g) => g.stage === 'baseline-noise' && g.kind === 'baseline' && g.complete === true),
     'Only original completed baseline groups can be frozen'
-  )
-  provenance.assertFrozenBindings(receipt.observerSources, provenance.collectorSources(receipt.platform))
-  provenance.assertFrozenBindings(receipt.analysisSources, analysisSources())
-  const file = path.join(runRoot, 'baseline-run-at-freeze.json')
+  );
+  provenance.assertFrozenBindings(receipt.observerSources, provenance.collectorSources(receipt.platform));
+  provenance.assertFrozenBindings(receipt.analysisSources, analysisSources());
+  const file = path.join(runRoot, 'baseline-run-at-freeze.json');
   fs.writeFileSync(
     file,
     JSON.stringify({ ...receipt, groups: [...receipt.groups], pairs: [], immutableBaselineSnapshot: true }, null, 2) + '\n',
     { flag: 'wx' }
-  )
-  return { file, ...provenance.fileBinding(file), provenance: evidenceProvenance(receipt.platform, file) }
+  );
+  return { file, ...provenance.fileBinding(file), provenance: evidenceProvenance(receipt.platform, file) };
 }
 async function sha(file) {
-  const hash = crypto.createHash('sha256')
-  for await (const chunk of fs.createReadStream(file)) hash.update(chunk)
-  return hash.digest('hex')
+  const hash = crypto.createHash('sha256');
+  for await (const chunk of fs.createReadStream(file)) hash.update(chunk);
+  return hash.digest('hex');
 }
 async function verifyAsset(file, expected) {
-  assert.equal(fs.statSync(file).size, expected.bytes, 'Original asset size mismatch')
-  assert.equal(await sha(file), expected.sha256, 'Original asset SHA256 mismatch')
-  return { file, bytes: expected.bytes, sha256: expected.sha256 }
+  assert.equal(fs.statSync(file).size, expected.bytes, 'Original asset size mismatch');
+  assert.equal(await sha(file), expected.sha256, 'Original asset SHA256 mismatch');
+  return { file, bytes: expected.bytes, sha256: expected.sha256 };
 }
 async function downloadBaseline(directory, { file } = {}) {
-  const receipt = { at: new Date().toISOString(), expected: BASELINE, complete: false }
-  const save = () => fs.writeFileSync(path.join(directory, 'baseline-download.json'), JSON.stringify(receipt, null, 2) + '\n')
-  save()
+  const receipt = { at: new Date().toISOString(), expected: BASELINE, complete: false };
+  const save = () => fs.writeFileSync(path.join(directory, 'baseline-download.json'), JSON.stringify(receipt, null, 2) + '\n');
+  save();
   try {
     if (file) {
-      receipt.reusedVerifiedFile = true
-      receipt.asset = await verifyAsset(path.resolve(file), BASELINE)
+      receipt.reusedVerifiedFile = true;
+      receipt.asset = await verifyAsset(path.resolve(file), BASELINE);
     } else {
-      file = path.join(directory, 'FAIONYX-1.1.12-mac-arm64.zip')
-      assert(!fs.existsSync(file), 'Refuse overwrite of any existing baseline archive')
-      const response = await fetch(BASELINE.url, { signal: AbortSignal.timeout(300000) })
-      receipt.http = { status: response.status, url: response.url, startedAt: new Date().toISOString() }
-      save()
-      assert(response.ok && response.body, 'Public baseline download failed')
-      if (response.headers.has('content-length')) assert.equal(Number(response.headers.get('content-length')), BASELINE.bytes)
-      await pipeline(response.body, fs.createWriteStream(file, { flags: 'wx' }))
-      receipt.asset = await verifyAsset(file, BASELINE)
+      file = path.join(directory, 'FAIONYX-1.1.12-mac-arm64.zip');
+      assert(!fs.existsSync(file), 'Refuse overwrite of any existing baseline archive');
+      const response = await fetch(BASELINE.url, { signal: AbortSignal.timeout(300000) });
+      receipt.http = { status: response.status, url: response.url, startedAt: new Date().toISOString() };
+      save();
+      assert(response.ok && response.body, 'Public baseline download failed');
+      if (response.headers.has('content-length')) assert.equal(Number(response.headers.get('content-length')), BASELINE.bytes);
+      await pipeline(response.body, fs.createWriteStream(file, { flags: 'wx' }));
+      receipt.asset = await verifyAsset(file, BASELINE);
     }
-    receipt.complete = true
-    receipt.finishedAt = new Date().toISOString()
-    save()
-    return receipt.asset
+    receipt.complete = true;
+    receipt.finishedAt = new Date().toISOString();
+    save();
+    return receipt.asset;
   } catch (error) {
-    receipt.failure = { name: error.name, message: error.message, at: new Date().toISOString() }
-    save()
-    throw error
+    receipt.failure = { name: error.name, message: error.message, at: new Date().toISOString() };
+    save();
+    throw error;
   }
 }
 async function extractVerified(file, directory, expected) {
-  fs.mkdirSync(directory)
-  execFileSync('ditto', ['-x', '-k', file, directory], { timeout: 120000 })
-  const app = path.join(directory, 'FAIONYX.app')
-  const identity = readMacPackageIdentity(app, expected)
-  const embedded = JSON.parse(require('asar').extractFile(path.join(app, 'Contents/Resources/app.asar'), 'package.json').toString())
-  assert.equal(embedded.version, expected.version)
-  return { app, exe: path.join(app, 'Contents/MacOS/FAIONYX'), ...identity }
+  fs.mkdirSync(directory);
+  execFileSync('ditto', ['-x', '-k', file, directory], { timeout: 120000 });
+  const app = path.join(directory, 'FAIONYX.app');
+  const identity = readMacPackageIdentity(app, expected);
+  const embedded = JSON.parse(require('asar').extractFile(path.join(app, 'Contents/Resources/app.asar'), 'package.json').toString());
+  assert.equal(embedded.version, expected.version);
+  return { app, exe: path.join(app, 'Contents/MacOS/FAIONYX'), ...identity };
 }
 async function candidatePackage(directory, { manifestFile = path.resolve('release/mac-package-arm64.json') } = {}) {
   const pkg = require('../package.json'),
     commit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
-    manifest = JSON.parse(fs.readFileSync(manifestFile))
-  assert.equal(manifest.version, pkg.version, 'Candidate uses current source version, not a fixed old-version assertion')
-  assert.equal(manifest.arch, 'arm64')
-  assert.equal(manifest.commit, commit)
-  if (process.env.GITHUB_SHA) assert.equal(commit, process.env.GITHUB_SHA)
-  assert.equal(manifest.runtimeVersion, pkg.devDependencies.electron)
-  assert.equal(manifest.packageIntegrity, true)
-  const zip = manifest.assets.find((asset) => asset.name === `FAIONYX-${pkg.version}-mac-arm64.zip`)
-  assert(zip && path.basename(zip.name) === zip.name)
+    manifest = JSON.parse(fs.readFileSync(manifestFile));
+  assert.equal(manifest.version, pkg.version, 'Candidate uses current source version, not a fixed old-version assertion');
+  assert.equal(manifest.arch, 'arm64');
+  assert.equal(manifest.commit, commit);
+  if (process.env.GITHUB_SHA) assert.equal(commit, process.env.GITHUB_SHA);
+  assert.equal(manifest.runtimeVersion, pkg.devDependencies.electron);
+  assert.equal(manifest.packageIntegrity, true);
+  const zip = manifest.assets.find((asset) => asset.name === `FAIONYX-${pkg.version}-mac-arm64.zip`);
+  assert(zip && path.basename(zip.name) === zip.name);
   const asset = await verifyAsset(path.join(path.dirname(manifestFile), zip.name), zip),
     expected = {
       version: pkg.version,
@@ -127,23 +127,23 @@ async function candidatePackage(directory, { manifestFile = path.resolve('releas
       runtimeVersion: pkg.devDependencies.electron,
       minimumSystemVersion: manifest.minimum,
     },
-    product = await extractVerified(asset.file, path.join(directory, 'candidate-app'), expected)
-  assert.deepEqual(product.identity, manifest.buildIdentity)
-  assert.equal(product.identitySHA256, manifest.buildIdentitySHA256)
-  assert.equal(product.identity.appAsarSHA256, manifest.appAsarSHA256)
-  return { ...product, asset, manifest, expected }
+    product = await extractVerified(asset.file, path.join(directory, 'candidate-app'), expected);
+  assert.deepEqual(product.identity, manifest.buildIdentity);
+  assert.equal(product.identitySHA256, manifest.buildIdentitySHA256);
+  assert.equal(product.identity.appAsarSHA256, manifest.appAsarSHA256);
+  return { ...product, asset, manifest, expected };
 }
 async function main(args = process.argv.slice(2)) {
-  assert.equal(process.platform, 'darwin', 'No cross-platform or emulated resource evidence')
-  assert.equal(process.arch, 'arm64', 'Native Mac ARM64 only')
-  const n = Number(args.find((a) => a.startsWith('--groups='))?.slice(9) || 10)
-  assert(Number.isInteger(n) && n >= 10, 'Full acceptance requires >=10 baseline groups and >=10 alternating pairs')
+  assert.equal(process.platform, 'darwin', 'No cross-platform or emulated resource evidence');
+  assert.equal(process.arch, 'arm64', 'Native Mac ARM64 only');
+  const n = Number(args.find((a) => a.startsWith('--groups='))?.slice(9) || 10);
+  assert(Number.isInteger(n) && n >= 10, 'Full acceptance requires >=10 baseline groups and >=10 alternating pairs');
   assert(
     args.every((a) => /^--(?:groups|baseline-zip|candidate-manifest)=/.test(a)),
     'Unknown resource runner argument'
-  )
-  const runRoot = path.resolve('out/resource113/mac-paired-' + Date.now() + '-' + crypto.randomBytes(4).toString('hex'))
-  fs.mkdirSync(runRoot, { recursive: true })
+  );
+  const runRoot = path.resolve('out/resource113/mac-paired-' + Date.now() + '-' + crypto.randomBytes(4).toString('hex'));
+  fs.mkdirSync(runRoot, { recursive: true });
   const receipt = {
     schema: 1,
     at: new Date().toISOString(),
@@ -170,31 +170,31 @@ async function main(args = process.argv.slice(2)) {
     complete: false,
     classification:
       'Same native runner, exact production APP packages, same black-orange resource viewport, own profiles and original native/RAF timestamps. Synthetic workloads; no claim of actual Game gameplay or universal performance equivalence.',
-  }
-  const save = () => fs.writeFileSync(path.join(runRoot, 'run.json'), JSON.stringify(receipt, null, 2) + '\n')
-  save()
+  };
+  const save = () => fs.writeFileSync(path.join(runRoot, 'run.json'), JSON.stringify(receipt, null, 2) + '\n');
+  save();
   fs.writeFileSync(
     path.join(runRoot, 'owner.json'),
     JSON.stringify({ kind: 'resource113 native Mac private measurement', pid: process.pid, at: new Date().toISOString() })
-  )
-  console.log('OWNED_MAC_RESOURCE_RUN ' + runRoot)
+  );
+  console.log('OWNED_MAC_RESOURCE_RUN ' + runRoot);
   try {
     receipt.analysisSourceSnapshot = {
       directory: 'tool-sources-analysis',
       ...provenance.recordSourceSnapshot(path.join(runRoot, 'tool-sources-analysis'), receipt.analysisSources),
-    }
-    save()
+    };
+    save();
     const native = compileNative({ directory: path.join(runRoot, 'native') }),
       baselineAsset = await downloadBaseline(runRoot, { file: args.find((a) => a.startsWith('--baseline-zip='))?.slice(15) }),
       baseline = await extractVerified(baselineAsset.file, path.join(runRoot, 'baseline-app'), BASELINE),
-      candidate = await candidatePackage(runRoot, { manifestFile: args.find((a) => a.startsWith('--candidate-manifest='))?.slice(21) })
-    receipt.baselinePackage = baseline
-    receipt.candidatePackage = candidate
-    save()
-    const bundle = await prepare({ root: path.join(runRoot, 'fixtures'), skipPortable: true })
-    receipt.fixtures = bundle.fixtures
-    receipt.fixtureSHA256 = await sha(path.join(bundle.fixtureRoot, 'fixtures.json'))
-    save()
+      candidate = await candidatePackage(runRoot, { manifestFile: args.find((a) => a.startsWith('--candidate-manifest='))?.slice(21) });
+    receipt.baselinePackage = baseline;
+    receipt.candidatePackage = candidate;
+    save();
+    const bundle = await prepare({ root: path.join(runRoot, 'fixtures'), skipPortable: true });
+    receipt.fixtures = bundle.fixtures;
+    receipt.fixtureSHA256 = await sha(path.join(bundle.fixtureRoot, 'fixtures.json'));
+    save();
     const invokeGroup = async (i, kind, stage) => {
       const product = kind === 'baseline' ? baseline : candidate,
         group = groupProfile(bundle, path.join(runRoot, stage + '-' + i + '-' + kind)),
@@ -206,10 +206,10 @@ async function main(args = process.argv.slice(2)) {
           profile: group.profile,
           startedAt: new Date().toISOString(),
           complete: false,
-        }
-      receipt.groups.push(record)
-      save()
-      console.log('MAC_GROUP ' + stage + ' ' + i + ' ' + kind)
+        };
+      receipt.groups.push(record);
+      save();
+      console.log('MAC_GROUP ' + stage + ' ' + i + ' ' + kind);
       try {
         const shared = {
             bundle,
@@ -221,44 +221,44 @@ async function main(args = process.argv.slice(2)) {
             startSampler: (onRecord) => startMacSampler(onRecord, native),
             summarizeRecords: summarizeMac,
           },
-          cold = await runSession({ ...shared, label: 'cold', cold: true })
-        record.cold = cold.output
-        save()
+          cold = await runSession({ ...shared, label: 'cold', cold: true });
+        record.cold = cold.output;
+        save();
         assert.equal(
           cold.proof.viewportContract?.renderer?.reduceMotion,
           false,
           'Actual macOS full-motion condition must be confirmed before the warm workload; defaults write alone is not proof'
-        )
-        const warm = await runSession({ ...shared, label: 'warm', cold: false })
+        );
+        const warm = await runSession({ ...shared, label: 'warm', cold: false });
         for (const session of [cold, warm]) {
-          const viewport = { ...session.proof.viewportContract, displayScale: session.proof.identity.display.scaleFactor }
-          assert(viewport.renderer && viewport.native, 'Common harness must expose actual native/renderer scale and viewport')
+          const viewport = { ...session.proof.viewportContract, displayScale: session.proof.identity.display.scaleFactor };
+          assert(viewport.renderer && viewport.native, 'Common harness must expose actual native/renderer scale and viewport');
           assert.equal(
             viewport.renderer.reduceMotion,
             false,
             'Actual native renderer full motion must match every baseline/candidate session'
-          )
-          receipt.viewportContract ??= viewport
+          );
+          receipt.viewportContract ??= viewport;
           assert.deepEqual(
             viewport,
             receipt.viewportContract,
             'The actual resource viewport, zoom and device scale must match every baseline/candidate session'
-          )
+          );
         }
-        record.warm = warm.output
-        record.complete = true
-        record.finishedAt = new Date().toISOString()
-        save()
-        return { ...record, cold: cold.proof, warm: warm.proof }
+        record.warm = warm.output;
+        record.complete = true;
+        record.finishedAt = new Date().toISOString();
+        save();
+        return { ...record, cold: cold.proof, warm: warm.proof };
       } catch (error) {
-        record.failure = { name: error.name, message: error.message, at: new Date().toISOString() }
-        record.finishedAt = new Date().toISOString()
-        save()
-        throw error
+        record.failure = { name: error.name, message: error.message, at: new Date().toISOString() };
+        record.finishedAt = new Date().toISOString();
+        save();
+        throw error;
       }
-    }
-    const old = []
-    for (let i = 0; i < n; i++) old.push(await invokeGroup(i, 'baseline', 'baseline-noise'))
+    };
+    const old = [];
+    for (let i = 0; i < n; i++) old.push(await invokeGroup(i, 'baseline', 'baseline-noise'));
     const baselineSnapshot = freezeBaselineSnapshot(runRoot, receipt),
       frozen = freezeNoise(old, {
         runner: receipt.runner,
@@ -267,40 +267,40 @@ async function main(args = process.argv.slice(2)) {
         originalRun: { file: baselineSnapshot.file, sha256: baselineSnapshot.sha256 },
         provenance: baselineSnapshot.provenance,
       }),
-      noiseFile = path.join(runRoot, 'frozen-baseline-noise.json')
-    fs.writeFileSync(noiseFile, JSON.stringify(frozen, null, 2) + '\n', { flag: 'wx' })
+      noiseFile = path.join(runRoot, 'frozen-baseline-noise.json');
+    fs.writeFileSync(noiseFile, JSON.stringify(frozen, null, 2) + '\n', { flag: 'wx' });
     receipt.frozenNoise = {
       file: noiseFile,
       sha256: await sha(noiseFile),
       contentSHA256: frozen.sha256,
       originalRun: frozen.originalRun,
       frozenBeforeCandidateLaunchAt: new Date().toISOString(),
-    }
-    save()
-    provenance.assertFrozenBindings(frozen.provenance, evidenceProvenance(receipt.platform, baselineSnapshot.file))
-    console.log('MAC_BASELINE_NOISE_FROZEN ' + frozen.sha256)
-    const pairs = []
+    };
+    save();
+    provenance.assertFrozenBindings(frozen.provenance, evidenceProvenance(receipt.platform, baselineSnapshot.file));
+    console.log('MAC_BASELINE_NOISE_FROZEN ' + frozen.sha256);
+    const pairs = [];
     for (let i = 0; i < n; i++) {
       const order = i % 2 ? ['candidate', 'baseline'] : ['baseline', 'candidate'],
-        pair = { i, order }
-      for (const kind of order) pair[kind] = await invokeGroup(i, kind, 'paired')
-      pairs.push(pair)
-      receipt.pairs.push({ i, order, complete: true })
-      save()
+        pair = { i, order };
+      for (const kind of order) pair[kind] = await invokeGroup(i, kind, 'paired');
+      pairs.push(pair);
+      receipt.pairs.push({ i, order, complete: true });
+      save();
     }
-    assert.equal(await sha(noiseFile), receipt.frozenNoise.sha256, 'Frozen noise bytes must remain unchanged')
-    assert.equal(await sha(path.join(baseline.app, 'Contents/Resources/app.asar')), baseline.identity.appAsarSHA256)
-    assert.equal(await sha(path.join(candidate.app, 'Contents/Resources/app.asar')), candidate.identity.appAsarSHA256)
-    provenance.assertFrozenBindings(frozen.provenance, evidenceProvenance(receipt.platform, baselineSnapshot.file))
-    provenance.assertFrozenBindings(receipt.analysisSources, analysisSources())
-    const comparison = comparePaired(pairs, frozen)
-    receipt.complete = true
-    receipt.pass = comparison.pass
-    receipt.failures = comparison.failures
-    receipt.finishedAt = new Date().toISOString()
-    save()
-    const comparisonSnapshot = path.join(runRoot, 'paired-run-at-compare.json')
-    fs.writeFileSync(comparisonSnapshot, JSON.stringify(receipt, null, 2) + '\n', { flag: 'wx' })
+    assert.equal(await sha(noiseFile), receipt.frozenNoise.sha256, 'Frozen noise bytes must remain unchanged');
+    assert.equal(await sha(path.join(baseline.app, 'Contents/Resources/app.asar')), baseline.identity.appAsarSHA256);
+    assert.equal(await sha(path.join(candidate.app, 'Contents/Resources/app.asar')), candidate.identity.appAsarSHA256);
+    provenance.assertFrozenBindings(frozen.provenance, evidenceProvenance(receipt.platform, baselineSnapshot.file));
+    provenance.assertFrozenBindings(receipt.analysisSources, analysisSources());
+    const comparison = comparePaired(pairs, frozen);
+    receipt.complete = true;
+    receipt.pass = comparison.pass;
+    receipt.failures = comparison.failures;
+    receipt.finishedAt = new Date().toISOString();
+    save();
+    const comparisonSnapshot = path.join(runRoot, 'paired-run-at-compare.json');
+    fs.writeFileSync(comparisonSnapshot, JSON.stringify(receipt, null, 2) + '\n', { flag: 'wx' });
     fs.writeFileSync(
       path.join(runRoot, 'comparison.json'),
       JSON.stringify(
@@ -313,18 +313,18 @@ async function main(args = process.argv.slice(2)) {
         2
       ) + '\n',
       { flag: 'wx' }
-    )
+    );
     console.log(
       JSON.stringify({ runRoot, complete: true, pass: comparison.pass, baselineGroups: n, pairedGroups: n, failures: comparison.failures })
-    )
-    assert.equal(comparison.pass, true, 'Native paired evidence detected regression; original evidence is retained')
+    );
+    assert.equal(comparison.pass, true, 'Native paired evidence detected regression; original evidence is retained');
   } catch (error) {
-    receipt.failure = { name: error.name, message: error.message, stack: error.stack, at: new Date().toISOString() }
-    receipt.finishedAt = new Date().toISOString()
-    save()
-    throw error
+    receipt.failure = { name: error.name, message: error.message, stack: error.stack, at: new Date().toISOString() };
+    receipt.finishedAt = new Date().toISOString();
+    save();
+    throw error;
   }
-  return receipt
+  return receipt;
 }
 module.exports = {
   BASELINE,
@@ -335,9 +335,9 @@ module.exports = {
   evidenceProvenance,
   freezeBaselineSnapshot,
   main,
-}
+};
 if (require.main === module)
   main().catch((error) => {
-    console.error(error)
-    process.exitCode = 1
-  })
+    console.error(error);
+    process.exitCode = 1;
+  });

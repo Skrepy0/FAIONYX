@@ -4,58 +4,58 @@
 const fs = require('node:fs'),
   path = require('node:path'),
   assert = require('node:assert/strict'),
-  Module = require('node:module')
+  Module = require('node:module');
 const { prepare, groupProfile, sha } = require('./resource-fixtures113.cjs'),
   { assertCounterAvailability } = require('./resource-win113-counter-guards.cjs'),
   { assertCompletedVisibility } = require('./resource-visibility113.cjs'),
-  { frameStats } = require('./resource-frames113.cjs')
+  { frameStats } = require('./resource-frames113.cjs');
 function deriveDriver() {
   const file = path.resolve(__dirname, 'resource-baseline113.cjs'),
-    original = fs.readFileSync(file, 'utf8')
-  let source = original
+    original = fs.readFileSync(file, 'utf8');
+  let source = original;
   const start = source.indexOf("   const beforeOrigin=await evaluate('performance.timeOrigin')"),
-    end = source.indexOf("   await route('home');phase('hidden-transition')", start)
-  assert(start > 0 && end > start, 'Exact current resource workload boundaries are required')
+    end = source.indexOf("   await route('home');phase('hidden-transition')", start);
+  assert(start > 0 && end > start, 'Exact current resource workload boundaries are required');
   source =
     source.slice(0, start) +
     "   proof.classification+='; twenty native restores, not performance comparison';proof.restoreCycles=[];await hold('initial-native-walking',3000);const initial=proof.operations.at(-1).poseObservations.map(x=>JSON.parse(x.skinPose));assert(initial.at(-1).seconds>initial[0].seconds);assert(Math.max(...initial.map(x=>x.arm))-Math.min(...initial.map(x=>x.arm))>.1);\n" +
-    source.slice(end)
-  const subscription = '   await evaluate(`(()=>{window.__resource113VisibilityEvents=[];'
-  assert.equal(source.split(subscription).length, 2)
-  source = source.replace(subscription, '   for(let restoreCycle=0;restoreCycle<20;restoreCycle++){\n' + subscription)
-  const completed = 'visibilityProof.assertCompletedVisibility(proof)'
-  assert.equal(source.split(completed).length, 2)
+    source.slice(end);
+  const subscription = '   await evaluate(`(()=>{window.__resource113VisibilityEvents=[];';
+  assert.equal(source.split(subscription).length, 2);
+  source = source.replace(subscription, '   for(let restoreCycle=0;restoreCycle<20;restoreCycle++){\n' + subscription);
+  const completed = 'visibilityProof.assertCompletedVisibility(proof)';
+  assert.equal(source.split(completed).length, 2);
   source = source.replace(
     completed,
     "visibilityProof.assertCompletedVisibility({...proof,operations:[proof.operations.findLast(o=>o.name==='resource-hold restored')]})"
-  )
-  const finish = '  }\n  proof.collectionComplete=true;'
-  assert.equal(source.split(finish).length, 2)
+  );
+  const finish = '  }\n  proof.collectionComplete=true;';
+  assert.equal(source.split(finish).length, 2);
   source = source.replace(
     finish,
     "   const operation=proof.operations.findLast(o=>o.name==='resource-hold restored');proof.restoreCycles.push(structuredClone({i:restoreCycle,identity:proof.identity,hiddenWindowIdentity:proof.hiddenWindowIdentity,hiddenObservations:proof.hiddenObservations,hiddenPause:proof.hiddenPause,restoredVisibility:proof.restoredVisibility,afterRestoredVisibility:proof.afterRestoredVisibility,nativeVisibilityEvents:proof.nativeVisibilityEvents,operations:[operation],restoreForegroundSamples:proof.restoreForegroundSamples,restoreEnvironment:proof.restoreEnvironment,completedVisibility:proof.completedVisibility}));save(true)\n   }\n" +
       finish
-  )
-  const compiled = new Module(file, module)
-  compiled.filename = file
-  compiled.paths = Module._nodeModulePaths(path.dirname(file))
-  compiled._compile(source, file)
-  return { runSession: compiled.exports.runSession, originalFile: file, original, derived: source }
+  );
+  const compiled = new Module(file, module);
+  compiled.filename = file;
+  compiled.paths = Module._nodeModulePaths(path.dirname(file));
+  compiled._compile(source, file);
+  return { runSession: compiled.exports.runSession, originalFile: file, original, derived: source };
 }
 async function main(exe = process.argv[2]) {
-  assert.equal(process.platform, 'win32')
-  assert(exe && fs.statSync(exe).isFile())
+  assert.equal(process.platform, 'win32');
+  assert(exe && fs.statSync(exe).isFile());
   const bundle = await prepare(),
     directory = path.join(bundle.root, 'candidate-native-restores-' + Date.now()),
     group = groupProfile(bundle, directory),
-    portable = path.join(directory, 'portable')
-  fs.mkdirSync(portable)
-  const copy = path.join(portable, path.basename(exe))
-  fs.copyFileSync(exe, copy, fs.constants.COPYFILE_EXCL)
-  const driver = deriveDriver()
-  fs.writeFileSync(path.join(directory, 'original-driver.cjs'), driver.original, { flag: 'wx' })
-  fs.writeFileSync(path.join(directory, 'derived-driver.cjs'), driver.derived, { flag: 'wx' })
-  console.log('OWNED_NATIVE_RESTORE_QUALIFICATION ' + directory)
+    portable = path.join(directory, 'portable');
+  fs.mkdirSync(portable);
+  const copy = path.join(portable, path.basename(exe));
+  fs.copyFileSync(exe, copy, fs.constants.COPYFILE_EXCL);
+  const driver = deriveDriver();
+  fs.writeFileSync(path.join(directory, 'original-driver.cjs'), driver.original, { flag: 'wx' });
+  fs.writeFileSync(path.join(directory, 'derived-driver.cjs'), driver.derived, { flag: 'wx' });
+  console.log('OWNED_NATIVE_RESTORE_QUALIFICATION ' + directory);
   const result = await driver.runSession({
     bundle,
     group,
@@ -65,24 +65,24 @@ async function main(exe = process.argv[2]) {
     cold: false,
     theme: 'black-orange',
     allowLegacyRestore112: false,
-  })
-  assert.equal(result.proof.collectionComplete, true)
-  assert.equal(result.proof.functionalPass, true)
-  assert.equal(result.proof.complete, true)
-  assert.equal(result.proof.restoreCycles.length, 20)
+  });
+  assert.equal(result.proof.collectionComplete, true);
+  assert.equal(result.proof.functionalPass, true);
+  assert.equal(result.proof.complete, true);
+  assert.equal(result.proof.restoreCycles.length, 20);
   const records = fs.readFileSync(path.join(result.output, 'native.jsonl'), 'utf8').trim().split(/\r?\n/).map(JSON.parse),
-    availability = assertCounterAvailability({ ...result.proof, originalNativeRecords: records })
+    availability = assertCounterAvailability({ ...result.proof, originalNativeRecords: records });
   const cycles = result.proof.restoreCycles.map((p) => ({
     i: p.i,
     visibility: assertCompletedVisibility(p),
     originalCallbackDelivery: frameStats(p.operations[0]),
     policy: p.afterRestoredVisibility.native.window.backgroundThrottling,
     originalDocumentHiddenValues: [...new Set(p.operations[0].poseObservations.map((o) => o.hidden))],
-  }))
+  }));
   assert(
     cycles.every((c) => c.policy === true),
     'Original background policy must remain true after every actual restore'
-  )
+  );
   const report = {
     complete: true,
     scope:
@@ -107,15 +107,15 @@ async function main(exe = process.argv[2]) {
       'Physical audio listening',
       'Resource savings are measured separately by ten original groups and ten alternating pairs',
     ],
-  }
-  const file = path.join(directory, 'twenty-restores.json')
-  fs.writeFileSync(file, JSON.stringify(report, null, 2) + '\n', { flag: 'wx' })
-  console.log(JSON.stringify({ complete: true, directory, report: file, sha256: sha(file) }))
-  return report
+  };
+  const file = path.join(directory, 'twenty-restores.json');
+  fs.writeFileSync(file, JSON.stringify(report, null, 2) + '\n', { flag: 'wx' });
+  console.log(JSON.stringify({ complete: true, directory, report: file, sha256: sha(file) }));
+  return report;
 }
-module.exports = { main, deriveDriver }
+module.exports = { main, deriveDriver };
 if (require.main === module)
   main().catch((e) => {
-    console.error(e)
-    process.exitCode = 1
-  })
+    console.error(e);
+    process.exitCode = 1;
+  });

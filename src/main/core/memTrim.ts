@@ -8,26 +8,26 @@
  *   低频周期整理（间隔常量见下，恢复窗口不做处理——工作集自然回涨）。
  * - 可观测：每 5 分钟汇总各进程 workingSetSize 写日志，trim 前后各记一条。
  */
-import type { BrowserWindow } from 'electron'
+import type { BrowserWindow } from 'electron';
 
 // ---------------- 常量（可观测节奏与瘦身开关） ----------------
 /** 内存指标日志频率：5 分钟一次，低频不刷屏 */
-export const METRICS_LOG_INTERVAL_MS = 5 * 60_000
+export const METRICS_LOG_INTERVAL_MS = 5 * 60_000;
 /** 窗口静默多少分钟后开始低频工作集整理 */
-export const IDLE_TRIM_FIRST_MS = 10 * 60_000
+export const IDLE_TRIM_FIRST_MS = 10 * 60_000;
 /** 静默期间低频整理的间隔（比指标日志更低频，整理本身只是换出冷页，代价极小） */
-export const IDLE_TRIM_INTERVAL_MS = 15 * 60_000
+export const IDLE_TRIM_INTERVAL_MS = 15 * 60_000;
 /** trim 后等待内核回收/统计稳定再读一次指标的间隔 */
-export const TRIM_SETTLE_MS = 800
+export const TRIM_SETTLE_MS = 800;
 /** 主进程 → 渲染层瘦身广播通道（shared/types.ts 归他人维护，此处用局部常量） */
-export const MEM_TRIM_CHANNEL = 'faionyx:mem-trim'
+export const MEM_TRIM_CHANNEL = 'faionyx:mem-trim';
 
 // ---------------- 纯函数（可测） ----------------
 
 export interface MemoryMetricsLike {
-  type: string
-  pid: number
-  memory: { workingSetSize: number }
+  type: string;
+  pid: number;
+  memory: { workingSetSize: number };
 }
 
 /**
@@ -35,47 +35,47 @@ export interface MemoryMetricsLike {
  * 游戏进程不可能出现在该清单里——它不是 Electron 的子进程成员。
  */
 export function selectElectronProcessPids(metrics: MemoryMetricsLike[], selfPid: number): number[] {
-  return metrics.map((m) => m.pid).filter((pid) => Number.isFinite(pid) && pid !== selfPid)
+  return metrics.map((m) => m.pid).filter((pid) => Number.isFinite(pid) && pid !== selfPid);
 }
 
 /** 按进程类型汇总工作集（KB）：renderer/browser/gpu/utility 分列 + 总量 */
 export function sumWorkingSetByType(metrics: MemoryMetricsLike[]): { byType: Record<string, number>; total: number } {
-  const byType: Record<string, number> = {}
-  let total = 0
+  const byType: Record<string, number> = {};
+  let total = 0;
   for (const m of metrics) {
-    const kb = m.memory?.workingSetSize ?? 0
-    byType[m.type] = (byType[m.type] ?? 0) + kb
-    total += kb
+    const kb = m.memory?.workingSetSize ?? 0;
+    byType[m.type] = (byType[m.type] ?? 0) + kb;
+    total += kb;
   }
-  return { byType, total }
+  return { byType, total };
 }
 
 /** 指标日志行：`内存指标: browser=120MB, renderer=210MB (共 420MB)` */
 export function formatMemoryLine(byType: Record<string, number>, total: number): string {
-  const parts = Object.entries(byType).map(([type, kb]) => `${type}=${mb(kb)}`)
-  return `内存指标: ${parts.join(', ') || '无进程'} (共 ${mb(total)})`
+  const parts = Object.entries(byType).map(([type, kb]) => `${type}=${mb(kb)}`);
+  return `内存指标: ${parts.join(', ') || '无进程'} (共 ${mb(total)})`;
 }
 
 function mb(kb: number): string {
-  return `${Math.round(kb / 1024)}MB`
+  return `${Math.round(kb / 1024)}MB`;
 }
 
 // ---------------- koffi 直调层（惰性加载，失败回落 PowerShell 兜底） ----------------
 
 interface Kernel32TrimApi {
-  emptyWorkingSet(handle: number): boolean
-  openProcess(pid: number): number
-  currentProcess(): number
-  close(handle: number): void
+  emptyWorkingSet(handle: number): boolean;
+  openProcess(pid: number): number;
+  currentProcess(): number;
+  close(handle: number): void;
 }
 
-let kernel32Promise: Promise<Kernel32TrimApi | null> | null = null
+let kernel32Promise: Promise<Kernel32TrimApi | null> | null = null;
 
 function asKoffi(
   mod: unknown
 ): { load(name: string): { func(name: string, ret: string, args: unknown[]): (...args: unknown[]) => unknown } } & Record<string, unknown> {
-  const withDefault = mod as { default?: unknown }
-  return (withDefault.default ?? mod) as never
+  const withDefault = mod as { default?: unknown };
+  return (withDefault.default ?? mod) as never;
 }
 
 function loadKernel32Trim(): Promise<Kernel32TrimApi | null> {
@@ -83,36 +83,36 @@ function loadKernel32Trim(): Promise<Kernel32TrimApi | null> {
     try {
       const koffi = asKoffi(await import('koffi')) as never as {
         load(name: string): {
-          func(name: string, ret: string, args: unknown[]): (...args: unknown[]) => unknown
-        }
-        struct(name: string, members: Record<string, string>): unknown
-        sizeof(type: unknown): number
-      }
-      const k32 = koffi.load('kernel32.dll')
-      const currentProcess = k32.func('GetCurrentProcess', 'uintptr', [])
-      const openProcess = k32.func('OpenProcess', 'uintptr', ['uint32', 'bool', 'uint32'])
-      const emptyWorkingSet = k32.func('K32EmptyWorkingSet', 'bool', ['uintptr'])
-      const closeHandle = k32.func('CloseHandle', 'bool', ['uintptr'])
-      const PROCESS_SET_QUOTA = 0x0100
-      const PROCESS_QUERY_INFORMATION = 0x0400
+          func(name: string, ret: string, args: unknown[]): (...args: unknown[]) => unknown;
+        };
+        struct(name: string, members: Record<string, string>): unknown;
+        sizeof(type: unknown): number;
+      };
+      const k32 = koffi.load('kernel32.dll');
+      const currentProcess = k32.func('GetCurrentProcess', 'uintptr', []);
+      const openProcess = k32.func('OpenProcess', 'uintptr', ['uint32', 'bool', 'uint32']);
+      const emptyWorkingSet = k32.func('K32EmptyWorkingSet', 'bool', ['uintptr']);
+      const closeHandle = k32.func('CloseHandle', 'bool', ['uintptr']);
+      const PROCESS_SET_QUOTA = 0x0100;
+      const PROCESS_QUERY_INFORMATION = 0x0400;
       return {
         emptyWorkingSet: (handle) => emptyWorkingSet(handle) === true,
         openProcess: (pid) => Number(openProcess(PROCESS_SET_QUOTA | PROCESS_QUERY_INFORMATION, false, pid)),
         currentProcess: () => Number(currentProcess()),
         close: (handle) => {
-          if (handle) closeHandle(handle)
+          if (handle) closeHandle(handle);
         },
-      }
+      };
     } catch {
-      return null // koffi 不可用：trimOnce 会走 PowerShell 兜底
+      return null; // koffi 不可用：trimOnce 会走 PowerShell 兜底
     }
-  })()
-  return kernel32Promise
+  })();
+  return kernel32Promise;
 }
 
 /** PowerShell 兜底：单次 P/Invoke EmptyWorkingSet 整理自身（约几百 ms，只在 koffi 缺失时触发） */
 export function trimSelfPowerShellScript(selfPid: number): string {
-  if (!Number.isSafeInteger(selfPid) || selfPid <= 0) throw new Error('无效的启动器进程')
+  if (!Number.isSafeInteger(selfPid) || selfPid <= 0) throw new Error('无效的启动器进程');
   // GetCurrentProcess inside PowerShell targets PowerShell itself. Open only the
   // supplied launcher PID and always close the handle, even on native failure.
   return (
@@ -122,79 +122,79 @@ export function trimSelfPowerShellScript(selfPid: number): string {
     'Add-Type -MemberDefinition $s -Name FaionyxTrim -Namespace Win32 | Out-Null;' +
     `$h=[Win32.FaionyxTrim]::OpenProcess(1280,$false,${selfPid});` +
     'if($h -eq [IntPtr]::Zero){exit 1};try{if(-not [Win32.FaionyxTrim]::EmptyWorkingSet($h)){exit 1}}finally{[Win32.FaionyxTrim]::CloseHandle($h)|Out-Null}'
-  )
+  );
 }
 
 async function trimSelfViaPowerShell(selfPid: number): Promise<boolean> {
-  const { execFile } = await import('node:child_process')
-  const script = trimSelfPowerShellScript(selfPid)
+  const { execFile } = await import('node:child_process');
+  const script = trimSelfPowerShellScript(selfPid);
   return new Promise((resolve) => {
     execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { windowsHide: true, timeout: 10_000 }, (error) =>
       resolve(!error)
-    )
-  })
+    );
+  });
 }
 
 // ---------------- 控制器 ----------------
 
 export interface MemoryTrimController {
   /** 窗口最小化/隐藏：立即整理 + 广播渲染层瘦身 + 启动静默低频周期 */
-  noteHidden(): void
+  noteHidden(): void;
   /** 窗口恢复/显示：停止静默周期（不主动做任何事，工作集自然回涨） */
-  noteVisible(): void
+  noteVisible(): void;
   /** 立即整理一轮（诊断/手动触发用） */
-  trimNow(reason: string): Promise<void>
-  stop(): void
+  trimNow(reason: string): Promise<void>;
+  stop(): void;
 }
 
 export async function startMemoryTrim(
   getWindow: () => BrowserWindow | null,
   log: (message: string) => void
 ): Promise<MemoryTrimController> {
-  const { app } = await import('electron')
-  let hidden = false
-  let idleTimer: NodeJS.Timeout | undefined
-  let idleInterval: NodeJS.Timeout | undefined
+  const { app } = await import('electron');
+  let hidden = false;
+  let idleTimer: NodeJS.Timeout | undefined;
+  let idleInterval: NodeJS.Timeout | undefined;
   const metricsTimer = setInterval(() => {
-    const { byType, total } = sumWorkingSetByType(app.getAppMetrics() as unknown as MemoryMetricsLike[])
-    log(formatMemoryLine(byType, total))
-  }, METRICS_LOG_INTERVAL_MS)
-  metricsTimer.unref?.()
+    const { byType, total } = sumWorkingSetByType(app.getAppMetrics() as unknown as MemoryMetricsLike[]);
+    log(formatMemoryLine(byType, total));
+  }, METRICS_LOG_INTERVAL_MS);
+  metricsTimer.unref?.();
 
   async function trimOnce(reason: string): Promise<void> {
     if (process.platform !== 'win32') {
-      log(`工作集整理(${reason})：此平台不适用；渲染层空闲回收单独记录，不计作真实内存优化收益`)
-      return
+      log(`工作集整理(${reason})：此平台不适用；渲染层空闲回收单独记录，不计作真实内存优化收益`);
+      return;
     }
-    const metrics = app.getAppMetrics() as unknown as MemoryMetricsLike[]
-    const before = sumWorkingSetByType(metrics)
-    const selfPid = process.pid
-    const kernel32 = process.platform === 'win32' ? await loadKernel32Trim() : null
-    let handled = 0
+    const metrics = app.getAppMetrics() as unknown as MemoryMetricsLike[];
+    const before = sumWorkingSetByType(metrics);
+    const selfPid = process.pid;
+    const kernel32 = process.platform === 'win32' ? await loadKernel32Trim() : null;
+    let handled = 0;
     if (kernel32) {
-      if (kernel32.emptyWorkingSet(kernel32.currentProcess())) handled++
+      if (kernel32.emptyWorkingSet(kernel32.currentProcess())) handled++;
       for (const pid of selectElectronProcessPids(metrics, selfPid)) {
-        const handle = kernel32.openProcess(pid)
-        if (!handle) continue
-        if (kernel32.emptyWorkingSet(handle)) handled++
-        kernel32.close(handle)
+        const handle = kernel32.openProcess(pid);
+        if (!handle) continue;
+        if (kernel32.emptyWorkingSet(handle)) handled++;
+        kernel32.close(handle);
       }
     } else if (process.platform === 'win32') {
-      if (await trimSelfViaPowerShell(selfPid)) handled++
+      if (await trimSelfViaPowerShell(selfPid)) handled++;
     }
     // 等内核统计稳定后再读一次，给出 trim 前后对比
-    await new Promise((resolve) => setTimeout(resolve, TRIM_SETTLE_MS))
-    const after = sumWorkingSetByType(app.getAppMetrics() as unknown as MemoryMetricsLike[])
-    const delta = before.total - after.total
+    await new Promise((resolve) => setTimeout(resolve, TRIM_SETTLE_MS));
+    const after = sumWorkingSetByType(app.getAppMetrics() as unknown as MemoryMetricsLike[]);
+    const delta = before.total - after.total;
     log(
       `工作集整理(${reason})：${mb(before.total)} → ${mb(after.total)}（驻留页减少约 ${mb(Math.max(0, delta))}，不代表私有提交内存释放，` +
         `整理进程 ${handled} 个${kernel32 ? '' : '，PowerShell 兜底'}）`
-    )
+    );
   }
 
   function broadcastToRenderer(): void {
     try {
-      getWindow()?.webContents.send(MEM_TRIM_CHANNEL, { phase: 'hidden' })
+      getWindow()?.webContents.send(MEM_TRIM_CHANNEL, { phase: 'hidden' });
     } catch {
       /* 渲染层不可达时忽略 */
     }
@@ -202,30 +202,30 @@ export async function startMemoryTrim(
 
   const controller: MemoryTrimController = {
     noteHidden() {
-      if (hidden) return
-      hidden = true
-      broadcastToRenderer()
-      void trimOnce('窗口静默')
+      if (hidden) return;
+      hidden = true;
+      broadcastToRenderer();
+      void trimOnce('窗口静默');
       idleTimer = setTimeout(() => {
-        void trimOnce('静默低频整理')
-        idleInterval = setInterval(() => void trimOnce('静默低频整理'), IDLE_TRIM_INTERVAL_MS)
-        idleInterval.unref?.()
-      }, IDLE_TRIM_FIRST_MS)
-      idleTimer.unref?.()
+        void trimOnce('静默低频整理');
+        idleInterval = setInterval(() => void trimOnce('静默低频整理'), IDLE_TRIM_INTERVAL_MS);
+        idleInterval.unref?.();
+      }, IDLE_TRIM_FIRST_MS);
+      idleTimer.unref?.();
     },
     noteVisible() {
-      if (!hidden) return
-      hidden = false
-      if (idleTimer) clearTimeout(idleTimer)
-      if (idleInterval) clearInterval(idleInterval)
-      idleTimer = undefined
-      idleInterval = undefined
+      if (!hidden) return;
+      hidden = false;
+      if (idleTimer) clearTimeout(idleTimer);
+      if (idleInterval) clearInterval(idleInterval);
+      idleTimer = undefined;
+      idleInterval = undefined;
     },
     trimNow: (reason) => trimOnce(reason),
     stop() {
-      clearInterval(metricsTimer)
-      controller.noteVisible()
+      clearInterval(metricsTimer);
+      controller.noteVisible();
     },
-  }
-  return controller
+  };
+  return controller;
 }

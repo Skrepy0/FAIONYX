@@ -1,53 +1,53 @@
-import { app, screen, BrowserWindow, type Display } from 'electron'
-import { join } from 'node:path'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { app, screen, BrowserWindow, type Display } from 'electron';
+import { join } from 'node:path';
+import { readFileSync, writeFileSync } from 'node:fs';
 
 export interface WindowState {
-  width: number
-  height: number
-  x?: number
-  y?: number
-  maximized?: boolean
+  width: number;
+  height: number;
+  x?: number;
+  y?: number;
+  maximized?: boolean;
 }
 
 export interface NormalBounds {
-  x: number
-  y: number
-  width: number
-  height: number
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
-const stateFile = () => join(app.getPath('userData'), 'window-state.json')
+const stateFile = () => join(app.getPath('userData'), 'window-state.json');
 
 /** Windows 会把最小化窗口的还原位置移到幻影坐标（约 -32000），视为无效位置 */
-const PHANTOM_MIN = -30000
+const PHANTOM_MIN = -30000;
 
 export function isPhantomBounds(b: { x?: number; y?: number }): boolean {
-  return typeof b.x === 'number' && typeof b.y === 'number' && (b.x < PHANTOM_MIN || b.y < PHANTOM_MIN)
+  return typeof b.x === 'number' && typeof b.y === 'number' && (b.x < PHANTOM_MIN || b.y < PHANTOM_MIN);
 }
 
 /** 在全部显示器中找出与矩形相交面积最大的一块（无任何相交返回 null） */
 export function dominantDisplay(displays: Display[], b: NormalBounds): Display | null {
-  let best: Display | null = null
-  let bestArea = 0
+  let best: Display | null = null;
+  let bestArea = 0;
   for (const d of displays) {
-    const wa = d.workArea
-    const ix = Math.max(0, Math.min(b.x + b.width, wa.x + wa.width) - Math.max(b.x, wa.x))
-    const iy = Math.max(0, Math.min(b.y + b.height, wa.y + wa.height) - Math.max(b.y, wa.y))
-    const area = ix * iy
+    const wa = d.workArea;
+    const ix = Math.max(0, Math.min(b.x + b.width, wa.x + wa.width) - Math.max(b.x, wa.x));
+    const iy = Math.max(0, Math.min(b.y + b.height, wa.y + wa.height) - Math.max(b.y, wa.y));
+    const area = ix * iy;
     if (area > bestArea) {
-      bestArea = area
-      best = d
+      bestArea = area;
+      best = d;
     }
   }
-  return best
+  return best;
 }
 
 /** 把窗口位置夹进指定显示器工作区，保证完整可见（窗口比工作区还大时对齐左上角） */
 export function clampToWorkArea(b: NormalBounds, wa: { x: number; y: number; width: number; height: number }): { x: number; y: number } {
-  const x = b.width >= wa.width ? wa.x : Math.min(Math.max(b.x, wa.x), wa.x + wa.width - b.width)
-  const y = b.height >= wa.height ? wa.y : Math.min(Math.max(b.y, wa.y), wa.y + wa.height - b.height)
-  return { x, y }
+  const x = b.width >= wa.width ? wa.x : Math.min(Math.max(b.x, wa.x), wa.x + wa.width - b.width);
+  const y = b.height >= wa.height ? wa.y : Math.min(Math.max(b.y, wa.y), wa.y + wa.height - b.height);
+  return { x, y };
 }
 
 /**
@@ -59,97 +59,97 @@ export function clampToWorkArea(b: NormalBounds, wa: { x: number; y: number; wid
  */
 export function loadWindowState(): WindowState | null {
   try {
-    const raw = readFileSync(stateFile(), 'utf-8')
-    const s = JSON.parse(raw) as WindowState
-    if (typeof s?.width !== 'number' || typeof s?.height !== 'number') return null
-    const fallback: WindowState = { width: s.width, height: s.height, maximized: s.maximized }
-    if (typeof s.x !== 'number' || typeof s.y !== 'number' || isPhantomBounds(s)) return fallback
-    const d = dominantDisplay(screen.getAllDisplays(), s as NormalBounds)
-    if (!d) return fallback
-    return { ...s, ...clampToWorkArea(s as NormalBounds, d.workArea) }
+    const raw = readFileSync(stateFile(), 'utf-8');
+    const s = JSON.parse(raw) as WindowState;
+    if (typeof s?.width !== 'number' || typeof s?.height !== 'number') return null;
+    const fallback: WindowState = { width: s.width, height: s.height, maximized: s.maximized };
+    if (typeof s.x !== 'number' || typeof s.y !== 'number' || isPhantomBounds(s)) return fallback;
+    const d = dominantDisplay(screen.getAllDisplays(), s as NormalBounds);
+    if (!d) return fallback;
+    return { ...s, ...clampToWorkArea(s as NormalBounds, d.workArea) };
   } catch {
-    return null
+    return null;
   }
 }
 
 /** 防抖持久化窗口 bounds（resize/move/最大化变化），关闭时立即写一次 */
 export function trackWindowState(win: BrowserWindow): void {
-  let timer: ReturnType<typeof setTimeout> | null = null
+  let timer: ReturnType<typeof setTimeout> | null = null;
   /** 最后一次有效（非最小化、非幻影坐标）的正常位置；最小化中关闭时用它兜底 */
-  let lastGood: NormalBounds | null = null
+  let lastGood: NormalBounds | null = null;
   const capture = (): NormalBounds | null => {
-    if (win.isDestroyed() || win.isMinimized()) return lastGood
-    const b = win.getNormalBounds()
-    if (isPhantomBounds(b)) return lastGood
-    lastGood = b
-    return b
-  }
+    if (win.isDestroyed() || win.isMinimized()) return lastGood;
+    const b = win.getNormalBounds();
+    if (isPhantomBounds(b)) return lastGood;
+    lastGood = b;
+    return b;
+  };
   const save = () => {
-    if (win.isDestroyed()) return
+    if (win.isDestroyed()) return;
     try {
-      const b = capture()
+      const b = capture();
       const payload = b
         ? { ...b, maximized: isEffectivelyMaximized(win) }
         : {
             width: win.getBounds().width,
             height: win.getBounds().height,
             maximized: isEffectivelyMaximized(win),
-          }
-      writeFileSync(stateFile(), JSON.stringify(payload))
+          };
+      writeFileSync(stateFile(), JSON.stringify(payload));
     } catch {
       /* 用户数据目录不可写时忽略 */
     }
-  }
+  };
   const debounce = () => {
-    if (timer) clearTimeout(timer)
+    if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
-      timer = null
-      save()
-    }, 500)
-  }
-  win.on('resize', debounce)
-  win.on('move', debounce)
-  win.on('maximize', debounce)
-  win.on('unmaximize', debounce)
-  win.on('close', save)
+      timer = null;
+      save();
+    }, 500);
+  };
+  win.on('resize', debounce);
+  win.on('move', debounce);
+  win.on('maximize', debounce);
+  win.on('unmaximize', debounce);
+  win.on('close', save);
   win.once('closed', () => {
-    if (timer) clearTimeout(timer)
-    timer = null
-  })
+    if (timer) clearTimeout(timer);
+    timer = null;
+  });
 }
 
 /** Restore once before showing/maximizing. Fractional DPI can round Electron's
  * logical-to-native border conversion outwards; measure that small error rather
  * than accumulating it across launches. Never run this from resize events. */
 export function restoreWindowBounds(win: BrowserWindow, saved: WindowState): void {
-  if (win.isDestroyed() || win.isMaximized()) return
+  if (win.isDestroyed() || win.isMaximized()) return;
   const current = win.getBounds(),
-    [minWidth, minHeight] = win.getMinimumSize()
+    [minWidth, minHeight] = win.getMinimumSize();
   const target = {
     x: saved.x ?? current.x,
     y: saved.y ?? current.y,
     width: Math.max(minWidth, saved.width),
     height: Math.max(minHeight, saved.height),
-  }
-  let request = { ...target }
+  };
+  let request = { ...target };
   for (let attempt = 0; attempt < 3; attempt++) {
-    win.setBounds(request)
-    const actual = win.getBounds()
+    win.setBounds(request);
+    const actual = win.getBounds();
     const delta = {
       x: actual.x - target.x,
       y: actual.y - target.y,
       width: actual.width - target.width,
       height: actual.height - target.height,
-    }
-    if (Object.values(delta).every((value) => value === 0)) break
+    };
+    if (Object.values(delta).every((value) => value === 0)) break;
     // Respect OS relocation/constraints; only correct small frame/DPI rounding.
-    if (Object.values(delta).some((value) => Math.abs(value) > 8)) break
+    if (Object.values(delta).some((value) => Math.abs(value) > 8)) break;
     request = {
       x: request.x - delta.x,
       y: request.y - delta.y,
       width: Math.max(minWidth, request.width - delta.width),
       height: Math.max(minHeight, request.height - delta.height),
-    }
+    };
   }
 }
 
@@ -157,15 +157,15 @@ export function restoreWindowBounds(win: BrowserWindow, saved: WindowState): voi
  * Win+Arrow, snap layouts and persisted normal bounds. Never unmaximize inside
  * a maximize event: that reverses the OS transition and loses restore geometry. */
 export function isEffectivelyMaximized(win: BrowserWindow): boolean {
-  return !win.isDestroyed() && win.isMaximized()
+  return !win.isDestroyed() && win.isMaximized();
 }
 
 export function toggleMaximize(win: BrowserWindow): void {
-  if (win.isDestroyed()) return
-  if (win.isMaximized()) win.unmaximize()
-  else win.maximize()
+  if (win.isDestroyed()) return;
+  if (win.isMaximized()) win.unmaximize();
+  else win.maximize();
 }
 
 export function applyMaximized(win: BrowserWindow): void {
-  if (!win.isDestroyed() && !win.isMaximized()) win.maximize()
+  if (!win.isDestroyed() && !win.isMaximized()) win.maximize();
 }

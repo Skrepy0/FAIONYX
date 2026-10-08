@@ -1,10 +1,10 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import crypto from 'node:crypto'
-import zlib from 'node:zlib'
-import AdmZip from 'adm-zip'
-import { NbtList, writeNbt } from './nbt'
-import { supportsQuickPlayMultiplayer } from './serverUtils'
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import zlib from 'node:zlib';
+import AdmZip from 'adm-zip';
+import { NbtList, writeNbt } from './nbt';
+import { supportsQuickPlayMultiplayer } from './serverUtils';
 
 function worldGeneration(seed: bigint, splitFormat: boolean) {
   const noise = (dimension: string, biome: string) => ({
@@ -14,7 +14,7 @@ function worldGeneration(seed: bigint, splitFormat: boolean) {
       settings: `minecraft:${biome}`,
       biome_source: biome === 'end' ? { type: 'minecraft:the_end' } : { type: 'minecraft:multi_noise', preset: `minecraft:${biome}` },
     },
-  })
+  });
   return {
     seed,
     [splitFormat ? 'generate_structures' : 'generate_features']: 1,
@@ -24,7 +24,7 @@ function worldGeneration(seed: bigint, splitFormat: boolean) {
       'minecraft:the_nether': noise('the_nether', 'nether'),
       'minecraft:the_end': noise('the_end', 'end'),
     },
-  }
+  };
 }
 
 export function buildCommandWorldData(
@@ -62,39 +62,39 @@ export function buildCommandWorldData(
             }),
       },
     })
-  )
+  );
 }
 
 /** Creates ONLY a new world. The game generates terrain and applies the instance's mods.
  * No source save is cloned and no global options are modified. */
 export function createCommandWorld(gameDirectory: string, clientJar: string): { id: string; path: string } {
-  const zip = new AdmZip(clientJar)
-  const version = JSON.parse(zip.readAsText('version.json')) as { id: string; world_version: number; stable?: boolean; series_id?: string }
+  const zip = new AdmZip(clientJar);
+  const version = JSON.parse(zip.readAsText('version.json')) as { id: string; world_version: number; stable?: boolean; series_id?: string };
   if (!supportsQuickPlayMultiplayer(version.id))
-    throw new Error('此 Minecraft 版本不支持官方单人 Quick Play（需要 1.20+）；请在游戏内新建世界并开启命令')
-  if (!Number.isInteger(version.world_version) || version.world_version < 0) throw new Error('客户端缺少真实世界数据版本，未创建存档')
-  const id = `FAIONYX-Test-${new Date().toISOString().replace(/[:.]/g, '-')}-${crypto.randomBytes(3).toString('hex')}`
-  const destination = path.join(gameDirectory, 'saves', id)
-  fs.mkdirSync(path.dirname(destination), { recursive: true })
-  fs.mkdirSync(destination) // exclusive, never reuses an existing world
-  const seed = crypto.randomBytes(8).readBigInt64BE()
+    throw new Error('此 Minecraft 版本不支持官方单人 Quick Play（需要 1.20+）；请在游戏内新建世界并开启命令');
+  if (!Number.isInteger(version.world_version) || version.world_version < 0) throw new Error('客户端缺少真实世界数据版本，未创建存档');
+  const id = `FAIONYX-Test-${new Date().toISOString().replace(/[:.]/g, '-')}-${crypto.randomBytes(3).toString('hex')}`;
+  const destination = path.join(gameDirectory, 'saves', id);
+  fs.mkdirSync(path.dirname(destination), { recursive: true });
+  fs.mkdirSync(destination); // exclusive, never reuses an existing world
+  const seed = crypto.randomBytes(8).readBigInt64BE();
   // 26.1 snapshot 6+ moves world generation into namespaced SavedData. Detect the
   // actual client codec capability, including snapshots, instead of a display ID.
-  const worldGenClass = zip.readFile('net/minecraft/world/level/levelgen/WorldGenSettings.class')
-  const splitFormat = !!worldGenClass?.includes(Buffer.from('SavedDataType'))
+  const worldGenClass = zip.readFile('net/minecraft/world/level/levelgen/WorldGenSettings.class');
+  const splitFormat = !!worldGenClass?.includes(Buffer.from('SavedDataType'));
   fs.writeFileSync(
     path.join(destination, 'level.dat'),
     buildCommandWorldData(version, `命令测试 ${new Date().toLocaleString('zh-CN')}`, seed, splitFormat),
     { flag: 'wx' }
-  )
+  );
   if (splitFormat) {
-    const data = path.join(destination, 'data', 'minecraft')
-    fs.mkdirSync(data, { recursive: true })
+    const data = path.join(destination, 'data', 'minecraft');
+    fs.mkdirSync(data, { recursive: true });
     fs.writeFileSync(
       path.join(data, 'world_gen_settings.dat'),
       zlib.gzipSync(writeNbt({ DataVersion: version.world_version, data: worldGeneration(seed, true) })),
       { flag: 'wx' }
-    )
+    );
   }
-  return { id, path: destination }
+  return { id, path: destination };
 }

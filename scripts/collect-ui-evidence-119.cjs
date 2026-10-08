@@ -2,27 +2,27 @@
 const fs = require('node:fs'),
   path = require('node:path'),
   assert = require('node:assert/strict'),
-  crypto = require('node:crypto')
+  crypto = require('node:crypto');
 const [theme, sinceText] = process.argv.slice(2),
-  since = Date.parse(sinceText)
+  since = Date.parse(sinceText);
 assert(
   ['transparent', 'black-orange', 'blue-white', 'custom'].includes(theme) && Number.isFinite(since),
   'theme and ISO start time required'
-)
+);
 const version = require('../package.json').version,
-  exe = path.resolve(`release/FAIONYX-${version}.exe`)
-assert(require('./ui-capabilities.cjs').singleLogo, 'current single-character product evidence required')
+  exe = path.resolve(`release/FAIONYX-${version}.exe`);
+assert(require('./ui-capabilities.cjs').singleLogo, 'current single-character product evidence required');
 const sha = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex'),
-  fresh = (file) => fs.existsSync(file) && fs.statSync(file).mtimeMs >= since
-const label = process.env.FAIONYX_EVIDENCE_LABEL || 'Final-Windows'
-assert(/^[A-Za-z0-9-]+$/.test(label), 'evidence label must be a single directory component')
-const destination = path.resolve(`release/validation-${version}/${label}-${theme}`)
-assert(!fs.existsSync(destination), 'Final evidence must not overwrite an earlier run')
-fs.mkdirSync(destination, { recursive: true })
+  fresh = (file) => fs.existsSync(file) && fs.statSync(file).mtimeMs >= since;
+const label = process.env.FAIONYX_EVIDENCE_LABEL || 'Final-Windows';
+assert(/^[A-Za-z0-9-]+$/.test(label), 'evidence label must be a single directory component');
+const destination = path.resolve(`release/validation-${version}/${label}-${theme}`);
+assert(!fs.existsSync(destination), 'Final evidence must not overwrite an earlier run');
+fs.mkdirSync(destination, { recursive: true });
 function copy(file, target = path.basename(file)) {
-  assert(fresh(file), 'Missing current evidence: ' + file)
-  fs.mkdirSync(path.dirname(path.join(destination, target)), { recursive: true })
-  fs.copyFileSync(file, path.join(destination, target))
+  assert(fresh(file), 'Missing current evidence: ' + file);
+  fs.mkdirSync(path.dirname(path.join(destination, target)), { recursive: true });
+  fs.copyFileSync(file, path.join(destination, target));
 }
 const required = [
   `ui-refinement-${theme}.json`,
@@ -35,15 +35,15 @@ const required = [
   `import-routing-119-ui-${theme}.json`,
   `selection-ui-119-${theme}.json`,
   `kamu-motion-diagnostic-119-after-header-${theme}.json`,
-]
+];
 for (const name of required) {
-  const file = path.join('out', name)
-  assert(fresh(file))
-  const proof = JSON.parse(fs.readFileSync(file))
-  assert.equal(proof.version, version)
-  if ('complete' in proof) assert.equal(proof.complete, true)
-  if (name.startsWith('ui-refinement-')) assert.equal(proof.exeSHA256, sha(fs.readFileSync(exe)))
-  copy(file)
+  const file = path.join('out', name);
+  assert(fresh(file));
+  const proof = JSON.parse(fs.readFileSync(file));
+  assert.equal(proof.version, version);
+  if ('complete' in proof) assert.equal(proof.complete, true);
+  if (name.startsWith('ui-refinement-')) assert.equal(proof.exeSHA256, sha(fs.readFileSync(exe)));
+  copy(file);
 }
 for (const directory of [
   `mascot-119-logo-intro-${theme}`,
@@ -56,15 +56,15 @@ for (const directory of [
 ]) {
   const source = path.join('out', directory),
     manifest = directory.includes('-frames-') ? 'frames.json' : 'recording.json',
-    file = path.join(source, manifest)
-  assert(fresh(file))
-  const proof = JSON.parse(fs.readFileSync(file))
-  assert.equal(proof.version, version)
-  copy(file, directory + '/' + manifest)
+    file = path.join(source, manifest);
+  assert(fresh(file));
+  const proof = JSON.parse(fs.readFileSync(file));
+  assert.equal(proof.version, version);
+  copy(file, directory + '/' + manifest);
   for (const item of proof.frames) {
-    const name = typeof item === 'string' ? item : item.file || item.name
-    assert(/^(frame-\d+\.(jpg|png))$/.test(name))
-    copy(path.join(source, name), directory + '/' + name)
+    const name = typeof item === 'string' ? item : item.file || item.name;
+    assert(/^(frame-\d+\.(jpg|png))$/.test(name));
+    copy(path.join(source, name), directory + '/' + name);
   }
 }
 for (const name of [
@@ -75,25 +75,25 @@ for (const name of [
   'skin-palette-ready-live.json',
   'skin-palette-preference-live.json',
 ])
-  if (fresh(path.join('out', name))) copy(path.join('out', name))
-const shots = `release/ui-refinement-${theme}`
+  if (fresh(path.join('out', name))) copy(path.join('out', name));
+const shots = `release/ui-refinement-${theme}`;
 for (const name of fs.readdirSync(shots))
-  if (name.endsWith('.png') && fresh(path.join(shots, name))) copy(path.join(shots, name), 'screenshots/' + name)
-copy(`out/ui-119-final-${theme}.log`, 'run.log')
-const files = []
+  if (name.endsWith('.png') && fresh(path.join(shots, name))) copy(path.join(shots, name), 'screenshots/' + name);
+copy(`out/ui-119-final-${theme}.log`, 'run.log');
+const files = [];
 function visit(dir) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const file = path.join(dir, entry.name)
-    if (entry.isDirectory()) visit(file)
+    const file = path.join(dir, entry.name);
+    if (entry.isDirectory()) visit(file);
     else
       files.push({
         path: path.relative(destination, file).replaceAll('\\', '/'),
         size: fs.statSync(file).size,
         sha256: sha(fs.readFileSync(file)),
-      })
+      });
   }
 }
-visit(destination)
+visit(destination);
 fs.writeFileSync(
   path.join(destination, 'evidence.json'),
   JSON.stringify(
@@ -109,5 +109,5 @@ fs.writeFileSync(
     null,
     2
   )
-)
-console.log(JSON.stringify({ destination, files: files.length, exeSHA256: sha(fs.readFileSync(exe)) }))
+);
+console.log(JSON.stringify({ destination, files: files.length, exeSHA256: sha(fs.readFileSync(exe)) }));

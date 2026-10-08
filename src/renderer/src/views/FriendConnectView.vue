@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref } from 'vue'
-import ConnectionStatus from '../components/connection/ConnectionStatus.vue'
-import '../components/connection/connection.css'
+import { computed, defineAsyncComponent, ref } from 'vue';
+import ConnectionStatus from '../components/connection/ConnectionStatus.vue';
+import '../components/connection/connection.css';
 
-const FrpPanel = defineAsyncComponent(() => import('../components/connection/FrpPanel.vue'))
-const VoxLinkPanel = defineAsyncComponent(() => import('../components/connection/VoxLinkPanel.vue'))
-const TerracottaPanel = defineAsyncComponent(() => import('../components/connection/TerracottaPanel.vue'))
+const FrpPanel = defineAsyncComponent(() => import('../components/connection/FrpPanel.vue'));
+const VoxLinkPanel = defineAsyncComponent(() => import('../components/connection/VoxLinkPanel.vue'));
+const TerracottaPanel = defineAsyncComponent(() => import('../components/connection/TerracottaPanel.vue'));
 
 /** 联机模块多页结构：landing=方式选择页，其余为各方式的独立页面 */
-type ConnectPage = 'choose' | 'frp' | 'voxlink' | 'terracotta'
-const page = ref<ConnectPage>('choose')
+type ConnectPage = 'choose' | 'frp' | 'voxlink' | 'terracotta';
+const page = ref<ConnectPage>('choose');
 
 /** 三种联机方式：一句准确介绍 + 适用场景标签 */
 const methodCards: Array<{ key: Exclude<ConnectPage, 'choose'>; name: string; tag: string; scene: string; desc: string; icon: string }> = [
@@ -37,11 +37,11 @@ const methodCards: Array<{ key: Exclude<ConnectPage, 'choose'>; name: string; ta
     desc: '独立开源联机项目（GitHub burningtnt/Terracotta，基于 EasyTier，AGPL-3.0）：手动下载官方工具并校验，创建/加入房间开箱即用，连接效果取决于双方网络。',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v10l8 4 8-4V7l-8-4Z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>',
   },
-]
+];
 
-const currentCard = computed(() => methodCards.find((c) => c.key === page.value))
+const currentCard = computed(() => methodCards.find((c) => c.key === page.value));
 function pick(key: ConnectPage) {
-  if (key !== 'choose') page.value = key
+  if (key !== 'choose') page.value = key;
 }
 </script>
 

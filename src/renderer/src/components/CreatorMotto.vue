@@ -1,75 +1,75 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 
-import { useMotion } from '../motion'
-const { decorativeActive } = useMotion()
-watch(decorativeActive, reset)
-const props = defineProps<{ disabled?: boolean }>()
-const sentence = 'Fly Can Fly'
-const host = ref<HTMLElement>()
+import { useMotion } from '../motion';
+const { decorativeActive } = useMotion();
+watch(decorativeActive, reset);
+const props = defineProps<{ disabled?: boolean }>();
+const sentence = 'Fly Can Fly';
+const host = ref<HTMLElement>();
 let slots: HTMLElement[] = [],
-  glyphs: HTMLElement[] = []
-let centers: Array<{ x: number; y: number }> = []
+  glyphs: HTMLElement[] = [];
+let centers: Array<{ x: number; y: number }> = [];
 let frame = 0,
-  pointer: { x: number; y: number } | undefined
-let observer: ResizeObserver | undefined
-let reduced: MediaQueryList | undefined
+  pointer: { x: number; y: number } | undefined;
+let observer: ResizeObserver | undefined;
+let reduced: MediaQueryList | undefined;
 
 function measure() {
   centers = slots.map((slot) => {
-    const r = slot.getBoundingClientRect()
-    return { x: r.x + r.width / 2, y: r.y + r.height / 2 }
-  })
+    const r = slot.getBoundingClientRect();
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+  });
 }
 function reset() {
-  cancelAnimationFrame(frame)
-  frame = 0
-  pointer = undefined
-  for (const glyph of glyphs) glyph.style.transform = ''
+  cancelAnimationFrame(frame);
+  frame = 0;
+  pointer = undefined;
+  for (const glyph of glyphs) glyph.style.transform = '';
 }
 function move(event: PointerEvent) {
-  if (props.disabled || !decorativeActive.value || reduced?.matches || event.pointerType === 'touch') return
-  pointer = { x: event.clientX, y: event.clientY }
-  if (frame) return
+  if (props.disabled || !decorativeActive.value || reduced?.matches || event.pointerType === 'touch') return;
+  pointer = { x: event.clientX, y: event.clientY };
+  if (frame) return;
   frame = requestAnimationFrame(() => {
-    frame = 0
-    if (!pointer) return
+    frame = 0;
+    if (!pointer) return;
     glyphs.forEach((glyph, i) => {
-      const c = centers[i]
-      if (!c) return
+      const c = centers[i];
+      if (!c) return;
       const dx = c.x - pointer!.x,
         dy = c.y - pointer!.y,
-        distance = Math.hypot(dx, dy)
-      const force = Math.max(0, 1 - distance / 54) ** 2 * 18
-      const x = distance > 0.1 ? (dx / distance) * force : 0
-      const y = distance > 0.1 ? (dy / distance) * force : -force
-      glyph.style.transform = force ? `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) rotate(${(x / 7).toFixed(2)}deg)` : ''
-    })
-  })
+        distance = Math.hypot(dx, dy);
+      const force = Math.max(0, 1 - distance / 54) ** 2 * 18;
+      const x = distance > 0.1 ? (dx / distance) * force : 0;
+      const y = distance > 0.1 ? (dy / distance) * force : -force;
+      glyph.style.transform = force ? `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) rotate(${(x / 7).toFixed(2)}deg)` : '';
+    });
+  });
 }
 function maximize() {
-  if (!props.disabled) window.faionyx.send('window:maximize')
+  if (!props.disabled) window.faionyx.send('window:maximize');
 }
-watch(() => props.disabled, reset)
+watch(() => props.disabled, reset);
 onMounted(() => {
-  slots = [...host.value!.querySelectorAll<HTMLElement>('.motto-slot')]
-  glyphs = [...host.value!.querySelectorAll<HTMLElement>('.motto-glyph')]
-  reduced = matchMedia('(prefers-reduced-motion: reduce)')
-  reduced.addEventListener('change', reset)
+  slots = [...host.value!.querySelectorAll<HTMLElement>('.motto-slot')];
+  glyphs = [...host.value!.querySelectorAll<HTMLElement>('.motto-glyph')];
+  reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  reduced.addEventListener('change', reset);
   observer = new ResizeObserver(() => {
-    reset()
-    measure()
-  })
-  observer.observe(host.value!)
-  document.addEventListener('visibilitychange', reset)
-  measure()
-})
+    reset();
+    measure();
+  });
+  observer.observe(host.value!);
+  document.addEventListener('visibilitychange', reset);
+  measure();
+});
 onUnmounted(() => {
-  reset()
-  observer?.disconnect()
-  reduced?.removeEventListener('change', reset)
-  document.removeEventListener('visibilitychange', reset)
-})
+  reset();
+  observer?.disconnect();
+  reduced?.removeEventListener('change', reset);
+  document.removeEventListener('visibilitychange', reset);
+});
 </script>
 
 <template>

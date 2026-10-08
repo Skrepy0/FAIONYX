@@ -1,36 +1,36 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import type { SupplementalFailure } from '@shared/supplementalMods'
-import { store, toast, refreshInstalled } from '../store'
-import { errText } from '../api'
-import UpdateDialogShell from './UpdateDialogShell.vue'
+import { ref, onMounted, onUnmounted } from 'vue';
+import type { SupplementalFailure } from '@shared/supplementalMods';
+import { store, toast, refreshInstalled } from '../store';
+import { errText } from '../api';
+import UpdateDialogShell from './UpdateDialogShell.vue';
 const pending = ref<SupplementalFailure[]>([]),
   busy = ref(false),
   error = ref(''),
-  hidden = ref(false)
+  hidden = ref(false);
 const off = window.faionyx.on('mods:supplementalPending', (list: SupplementalFailure[]) => {
-  pending.value = list
-  hidden.value = false
-})
+  pending.value = list;
+  hidden.value = false;
+});
 onMounted(async () => {
   try {
-    pending.value = await window.faionyx.invoke('mods:supplementalList')
+    pending.value = await window.faionyx.invoke('mods:supplementalList');
   } catch (e) {
-    toast(errText(e), 'error')
+    toast(errText(e), 'error');
   }
-})
-onUnmounted(off)
+});
+onUnmounted(off);
 async function act(retry: boolean) {
-  const entry = pending.value[0]
-  if (!entry || busy.value) return
-  busy.value = true
-  error.value = ''
+  const entry = pending.value[0];
+  if (!entry || busy.value) return;
+  busy.value = true;
+  error.value = '';
   try {
     const response = await window.faionyx.invoke(retry ? 'mods:supplementalRetry' : 'mods:supplementalKeep', entry.id, retry),
-      result = retry ? response.result : undefined
-    pending.value = retry ? response.pending : response
-    store.failedInstalls.delete(entry.versionId)
-    store.fsRefreshTick++
+      result = retry ? response.result : undefined;
+    pending.value = retry ? response.pending : response;
+    store.failedInstalls.delete(entry.versionId);
+    store.fsRefreshTick++;
     toast(
       result
         ? `已安装 ${result.installed} 项收藏模组及 ${result.dependencies} 项必要前置，跳过 ${result.skipped.length} 项。模组目录：${result.modsDirectory}`
@@ -38,16 +38,16 @@ async function act(retry: boolean) {
           ? '附加模组已安装完成'
           : '已保留基础实例，可正常启动',
       'success'
-    )
+    );
     try {
-      await refreshInstalled()
+      await refreshInstalled();
     } catch (e) {
-      toast('安装结果已保存，实例列表刷新失败，请刷新：' + errText(e), 'info')
+      toast('安装结果已保存，实例列表刷新失败，请刷新：' + errText(e), 'info');
     }
   } catch (e) {
-    error.value = errText(e)
+    error.value = errText(e);
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 </script>

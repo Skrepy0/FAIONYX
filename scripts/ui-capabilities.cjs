@@ -7,4 +7,4 @@ module.exports = Object.freeze({
   favoriteArtwork: true,
   skinMotionLifecycle: true,
   favoriteInstallIntent: true,
-})
+});

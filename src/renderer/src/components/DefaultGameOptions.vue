@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue';
 import {
   GAME_OPTIONS,
   GAME_OPTION_PAGES,
@@ -9,71 +9,71 @@ import {
   type DefaultGameOptions,
   type GameOptionDef,
   type GameOptionValue,
-} from '@shared/gameOptions'
-import { getDefaultGameOptions, setDefaultGameOptions, errText } from '../api'
-import { store, toast } from '../store'
-const emit = defineEmits<{ section: [value: 'keys' | 'packs'] }>()
-const state = ref<DefaultGameOptions>({ enabled: false, values: {} })
-const draft = ref<Record<string, GameOptionValue>>({})
+} from '@shared/gameOptions';
+import { getDefaultGameOptions, setDefaultGameOptions, errText } from '../api';
+import { store, toast } from '../store';
+const emit = defineEmits<{ section: [value: 'keys' | 'packs'] }>();
+const state = ref<DefaultGameOptions>({ enabled: false, values: {} });
+const draft = ref<Record<string, GameOptionValue>>({});
 const busy = ref(false),
   loading = ref(true),
   page = ref('root'),
-  version = ref('26.2')
+  version = ref('26.2');
 const versions = computed(() => [
   ...new Set(['26.2', ...store.installed.map((v) => v.mcVersion).filter(Boolean), '1.21.11', '1.20.1', '1.16.5', '1.12.2']),
-])
+]);
 const title = computed(() =>
   page.value === 'root' ? '选项' : page.value === 'mouse' ? '鼠标设置' : GAME_OPTION_PAGES.find((p) => p[0] === page.value)?.[1]
-)
+);
 const rows = computed(() => {
   const list = GAME_OPTIONS.filter((d) => d.page === page.value || (page.value === 'controls' && d.id === 'mouseSensitivity')).map((d) =>
     uniqueGameOptions.find((o) => o.id === d.id)!
-  )
-  return page.value === 'video' ? list.sort((a, b) => VIDEO_OPTION_ORDER.indexOf(a.id) - VIDEO_OPTION_ORDER.indexOf(b.id)) : list
-})
-const unavailable = computed(() => uniqueGameOptions.filter((d) => d.id in state.value.values && !supportedGameOption(d, version.value)))
-const value = (d: GameOptionDef) => draft.value[d.id] ?? state.value.values[d.id] ?? d.initial
+  );
+  return page.value === 'video' ? list.sort((a, b) => VIDEO_OPTION_ORDER.indexOf(a.id) - VIDEO_OPTION_ORDER.indexOf(b.id)) : list;
+});
+const unavailable = computed(() => uniqueGameOptions.filter((d) => d.id in state.value.values && !supportedGameOption(d, version.value)));
+const value = (d: GameOptionDef) => draft.value[d.id] ?? state.value.values[d.id] ?? d.initial;
 const label = (d: GameOptionDef) =>
   d.choices?.find((c) => c[0] === value(d))?.[1] ??
-  (typeof value(d) === 'boolean' ? (value(d) ? '开启' : '关闭') : String(value(d)) + (d.unit ?? ''))
+  (typeof value(d) === 'boolean' ? (value(d) ? '开启' : '关闭') : String(value(d)) + (d.unit ?? ''));
 async function save(change: Parameters<typeof setDefaultGameOptions>[0]) {
-  if (busy.value) return
-  busy.value = true
+  if (busy.value) return;
+  busy.value = true;
   try {
-    state.value = await setDefaultGameOptions(change)
-    draft.value = {}
+    state.value = await setDefaultGameOptions(change);
+    draft.value = {};
   } catch (e) {
-    draft.value = {}
-    toast('保存游戏选项失败：' + errText(e), 'error')
+    draft.value = {};
+    toast('保存游戏选项失败：' + errText(e), 'error');
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 function cycle(d: GameOptionDef) {
-  const choices = d.choices?.map((c) => c[0]) ?? [false, true]
-  void save({ id: d.id, value: choices[(choices.indexOf(value(d)) + 1) % choices.length] })
+  const choices = d.choices?.map((c) => c[0]) ?? [false, true];
+  void save({ id: d.id, value: choices[(choices.indexOf(value(d)) + 1) % choices.length] });
 }
 function numericChange(d: GameOptionDef, event: Event) {
-  const input = event.target as HTMLInputElement
+  const input = event.target as HTMLInputElement;
   if (!input.checkValidity() || input.value === '') {
-    input.value = String(value(d))
-    return
+    input.value = String(value(d));
+    return;
   }
-  void save({ id: d.id, value: Number(input.value) })
+  void save({ id: d.id, value: Number(input.value) });
 }
 function open(id: string) {
-  if (id === 'packs') emit('section', 'packs')
-  else page.value = id
+  if (id === 'packs') emit('section', 'packs');
+  else page.value = id;
 }
 onMounted(async () => {
   try {
-    state.value = await getDefaultGameOptions()
+    state.value = await getDefaultGameOptions();
   } catch (e) {
-    toast(errText(e), 'error')
+    toast(errText(e), 'error');
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-})
+});
 </script>
 
 <template>

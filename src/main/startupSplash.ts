@@ -1,27 +1,27 @@
-import { BrowserWindow, ipcMain, screen, dialog } from 'electron'
-import { join } from 'node:path'
-import { writeFileSync } from 'node:fs'
-import { BOOT_STAGES, StartupGate, type BootStage } from '../shared/startup'
-import { launcherLog } from './core/launcherLog'
-import { awaitNativeStartup, createNativeStartup, showStartupWindow } from './nativeStartup'
+import { BrowserWindow, ipcMain, screen, dialog } from 'electron';
+import { join } from 'node:path';
+import { writeFileSync } from 'node:fs';
+import { BOOT_STAGES, StartupGate, type BootStage } from '../shared/startup';
+import { launcherLog } from './core/launcherLog';
+import { awaitNativeStartup, createNativeStartup, showStartupWindow } from './nativeStartup';
 
 /** Startup-only window coordination. This does not own or terminate Minecraft processes. */
 export async function createStartupSplash() {
-  const signal = process.env.FAIONYX_BOOT_SIGNAL
+  const signal = process.env.FAIONYX_BOOT_SIGNAL;
   if (signal) {
-    const pid = await awaitNativeStartup(signal)
-    if (pid) return createNativeStartup(signal, pid)
+    const pid = await awaitNativeStartup(signal);
+    if (pid) return createNativeStartup(signal, pid);
     try {
-      writeFileSync(signal, 'fallback')
+      writeFileSync(signal, 'fallback');
     } catch {}
   }
-  return createElectronStartupSplash()
+  return createElectronStartupSplash();
 }
 
 function createElectronStartupSplash() {
-  const gate = new StartupGate()
-  const bounds = screen.getPrimaryDisplay().bounds
-  let main: BrowserWindow | null = null
+  const gate = new StartupGate();
+  const bounds = screen.getPrimaryDisplay().bounds;
+  let main: BrowserWindow | null = null;
   let splash: BrowserWindow | null = new BrowserWindow({
     ...bounds,
     show: false,
@@ -43,118 +43,118 @@ function createElectronStartupSplash() {
       nodeIntegration: false,
       backgroundThrottling: false,
     },
-  })
-  splash.setIgnoreMouseEvents(true)
-  splash.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+  });
+  splash.setIgnoreMouseEvents(true);
+  splash.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   let revealed = false,
     disposed = false,
-    fallback = false
+    fallback = false;
   // OS cursor coordinates keep the overlay non-activating and click-through.
   const pointerTimer = setInterval(() => {
-    if (!splash || splash.isDestroyed() || revealed) return
+    if (!splash || splash.isDestroyed() || revealed) return;
     const point = screen.getCursorScreenPoint(),
-      rect = splash.getBounds()
-    splash.webContents.send('boot:pointer', { x: point.x - rect.x, y: point.y - rect.y })
-  }, 32)
-  pointerTimer.unref()
-  const listeners: Array<[string, (event: Electron.IpcMainEvent, ...args: any[]) => void]> = []
+      rect = splash.getBounds();
+    splash.webContents.send('boot:pointer', { x: point.x - rect.x, y: point.y - rect.y });
+  }, 32);
+  pointerTimer.unref();
+  const listeners: Array<[string, (event: Electron.IpcMainEvent, ...args: any[]) => void]> = [];
   const listen = (channel: string, fn: (event: Electron.IpcMainEvent, ...args: any[]) => void) => {
-    listeners.push([channel, fn])
-    ipcMain.on(channel, fn)
-  }
+    listeners.push([channel, fn]);
+    ipcMain.on(channel, fn);
+  };
   const dispose = () => {
-    if (disposed) return
-    disposed = true
-    clearInterval(pointerTimer)
-    for (const [channel, listener] of listeners) ipcMain.removeListener(channel, listener)
-    if (splash && !splash.isDestroyed()) splash.destroy()
-    splash = null
-  }
+    if (disposed) return;
+    disposed = true;
+    clearInterval(pointerTimer);
+    for (const [channel, listener] of listeners) ipcMain.removeListener(channel, listener);
+    if (splash && !splash.isDestroyed()) splash.destroy();
+    splash = null;
+  };
   const publish = () => {
-    if (splash && !splash.isDestroyed()) splash.webContents.send('boot:state', gate.state)
-  }
+    if (splash && !splash.isDestroyed()) splash.webContents.send('boot:state', gate.state);
+  };
   const reveal = () => {
-    if (revealed || !main || main.isDestroyed() || !gate.state.ready || !(gate.assembled || fallback)) return
-    revealed = true
-    showStartupWindow(main)
-    launcherLog('Startup: main window revealed after renderer + compositor + avatar ready')
+    if (revealed || !main || main.isDestroyed() || !gate.state.ready || !(gate.assembled || fallback)) return;
+    revealed = true;
+    showStartupWindow(main);
+    launcherLog('Startup: main window revealed after renderer + compositor + avatar ready');
     if (splash && !splash.isDestroyed()) {
-      splash.webContents.send('boot:reveal')
+      splash.webContents.send('boot:reveal');
       // Only an overlay cleanup watchdog, never a timer that pretends initialization completed.
-      const cleanup = setTimeout(dispose, 1500)
-      cleanup.unref()
-    } else dispose()
-  }
+      const cleanup = setTimeout(dispose, 1500);
+      cleanup.unref();
+    } else dispose();
+  };
   const animationFailure = (message: string) => {
-    launcherLog(`Startup animation fallback: ${message}`)
-    fallback = true
-    clearInterval(pointerTimer)
-    if (splash && !splash.isDestroyed()) splash.destroy()
-    splash = null
-    reveal()
-  }
+    launcherLog(`Startup animation fallback: ${message}`);
+    fallback = true;
+    clearInterval(pointerTimer);
+    if (splash && !splash.isDestroyed()) splash.destroy();
+    splash = null;
+    reveal();
+  };
   listen('boot:splash-ready', (event) => {
-    if (event.sender !== splash?.webContents) return
-    splash.showInactive()
-    splash.setAlwaysOnTop(true, 'floating')
-    splash.moveTop()
-    publish()
-    launcherLog('Startup: floating desktop glass visible')
-  })
+    if (event.sender !== splash?.webContents) return;
+    splash.showInactive();
+    splash.setAlwaysOnTop(true, 'floating');
+    splash.moveTop();
+    publish();
+    launcherLog('Startup: floating desktop glass visible');
+  });
   listen('boot:stage', (event, stage: BootStage) => {
-    if (event.sender !== main?.webContents || !BOOT_STAGES.includes(stage)) return
-    gate.completed.add(stage)
-    publish()
-    launcherLog(`Startup: ${stage} complete`)
-  })
+    if (event.sender !== main?.webContents || !BOOT_STAGES.includes(stage)) return;
+    gate.completed.add(stage);
+    publish();
+    launcherLog(`Startup: ${stage} complete`);
+  });
   listen('boot:renderer-ready', (event) => {
-    if (event.sender !== main?.webContents) return
-    gate.rendererReady = true
-    publish()
-    reveal()
-    launcherLog('Startup: renderer resources settled')
-  })
+    if (event.sender !== main?.webContents) return;
+    gate.rendererReady = true;
+    publish();
+    reveal();
+    launcherLog('Startup: renderer resources settled');
+  });
   listen('boot:assembled', (event) => {
-    if (event.sender !== splash?.webContents || !gate.state.ready) return
-    gate.assembled = true
-    reveal()
-  })
+    if (event.sender !== splash?.webContents || !gate.state.ready) return;
+    gate.assembled = true;
+    reveal();
+  });
   listen('boot:finished', (event) => {
-    if (event.sender === splash?.webContents && revealed) dispose()
-  })
+    if (event.sender === splash?.webContents && revealed) dispose();
+  });
   listen('boot:splash-failed', (event) => {
-    if (event.sender === splash?.webContents) animationFailure('renderer failed')
-  })
-  splash.webContents.on('render-process-gone', () => animationFailure('renderer process exited'))
+    if (event.sender === splash?.webContents) animationFailure('renderer failed');
+  });
+  splash.webContents.on('render-process-gone', () => animationFailure('renderer process exited'));
   const load = process.env.ELECTRON_RENDERER_URL
     ? splash.loadURL(new URL('splash.html', process.env.ELECTRON_RENDERER_URL).toString())
-    : splash.loadFile(join(__dirname, '../renderer/splash.html'))
-  void load.catch((error) => animationFailure(String(error)))
+    : splash.loadFile(join(__dirname, '../renderer/splash.html'));
+  void load.catch((error) => animationFailure(String(error)));
   return {
     attach(window: BrowserWindow) {
-      main = window
+      main = window;
       window.once('ready-to-show', () => {
-        gate.painted = true
-        publish()
-        reveal()
-      })
-      window.once('closed', dispose)
+        gate.painted = true;
+        publish();
+        reveal();
+      });
+      window.once('closed', dispose);
       window.webContents.once('render-process-gone', (_event, details) => {
-        if (revealed) return
-        dispose()
+        if (revealed) return;
+        dispose();
         void dialog.showMessageBox({
           type: 'error',
           title: 'FAIONYX 初始化失败',
           message: `主界面进程退出：${details.reason}。请重新启动并查看启动器日志。`,
-        })
-        window.close()
-      })
+        });
+        window.close();
+      });
       window.webContents.once('did-fail-load', (_event, code, description, _url, isMainFrame) => {
-        if (!isMainFrame || code === -3 || revealed) return
-        dispose()
-        void dialog.showMessageBox({ type: 'error', title: 'FAIONYX 初始化失败', message: `无法加载主界面（${code}）：${description}` })
-        window.close()
-      })
+        if (!isMainFrame || code === -3 || revealed) return;
+        dispose();
+        void dialog.showMessageBox({ type: 'error', title: 'FAIONYX 初始化失败', message: `无法加载主界面（${code}）：${description}` });
+        window.close();
+      });
     },
-  }
+  };
 }

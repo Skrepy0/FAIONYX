@@ -40,10 +40,10 @@
  * 【缓存】结果缓存 10 分钟（≥ 任务要求的 10 分钟）；带 refresh 可强制刷新。
  *   失败时抛出真实错误（含 API 返回的 code/msg），绝不返回假数据。
  */
-import { httpFetch } from './httpClient'
+import { httpFetch } from './httpClient';
 
-const API_BASE = 'https://api.natfrp.com/v4'
-const CACHE_TTL_MS = 10 * 60 * 1000
+const API_BASE = 'https://api.natfrp.com/v4';
+const CACHE_TTL_MS = 10 * 60 * 1000;
 
 /** 节点 flag 位定义（对照上方注释）。 */
 export const NODE_FLAG = {
@@ -57,152 +57,152 @@ export const NODE_FLAG = {
   FORCE_AUTH: 1 << 8,
   OFFLINE: 1 << 9,
   BETA: 1 << 10,
-} as const
+} as const;
 
 /** 展示用节点信息（/nodes + /node/stats 合并结果）。 */
 export interface FrpNodeInfo {
   /** 节点 ID（/nodes 响应的键） */
-  id: number
+  id: number;
   /** 节点名称 */
-  name: string
+  name: string;
   /** 节点域名 */
-  host: string
+  host: string;
   /** 官方节点说明（地区/运营商等） */
-  description: string
+  description: string;
   /** VIP 等级：0 = 免费，>0 = 需专业版（VIP） */
-  vip: number
+  vip: number;
   /** 是否免费节点（vip === 0） */
-  free: boolean
+  free: boolean;
   /** 节点是否在线（stats.online >= 0；stats 缺失时回退 flag 离线位取反） */
-  online: boolean
+  online: boolean;
   /** 节点负载百分比（stats 缺失时为 null） */
-  load: number | null
+  load: number | null;
   /** 允许 UDP 流量 */
-  udp: boolean
+  udp: boolean;
   /** 内地节点 */
-  mainland: boolean
+  mainland: boolean;
   /** 当前是否允许创建隧道（满载为 false） */
-  canCreate: boolean
+  canCreate: boolean;
   /** 无 DDoS 防护节点 */
-  noProtect: boolean
+  noProtect: boolean;
   /** BETA 节点 */
-  beta: boolean
+  beta: boolean;
 }
 
 /** 用户隧道信息（/tunnels，仅展示所需字段）。 */
 export interface FrpTunnelInfo {
-  id: number
-  name: string
+  id: number;
+  name: string;
   /** 隧道类型 tcp/udp/http/https/... */
-  type: string
+  type: string;
   /** 所在节点 ID */
-  node: number
+  node: number;
   /** 所在节点名称（与节点列表合并后回填；查不到为 null） */
-  nodeName: string | null
+  nodeName: string | null;
   /** 隧道是否在线 */
-  online: boolean
+  online: boolean;
   /** 0 正常 / 2 封禁 */
-  status: number
-  localIp: string
-  localPort: number
+  status: number;
+  localIp: string;
+  localPort: number;
   /** 远程端口或绑定域名 */
-  remote: string
+  remote: string;
 }
 
 export interface FrpNodesResult {
   /** 拉取时间（ISO） */
-  fetchedAt: string
+  fetchedAt: string;
   /** 全部节点（已按 免费→专业版、在线优先、ID 升序 排序） */
-  nodes: FrpNodeInfo[]
+  nodes: FrpNodeInfo[];
   /** 当前用户隧道列表；accessKey 无法查询隧道时为 null（不显示该区块，禁止假数据） */
-  tunnels: FrpTunnelInfo[] | null
+  tunnels: FrpTunnelInfo[] | null;
 }
 
 interface CacheEntry {
-  accessKey: string
-  result: FrpNodesResult
-  expiresAt: number
+  accessKey: string;
+  result: FrpNodesResult;
+  expiresAt: number;
 }
 
-let cache: CacheEntry | null = null
+let cache: CacheEntry | null = null;
 
 /** 免费节点筛选（纯函数，供 UI 与测试共用同一规则）。 */
 export function filterFrpNodes(nodes: FrpNodeInfo[], onlyFree: boolean): FrpNodeInfo[] {
-  return onlyFree ? nodes.filter((n) => n.free) : nodes.slice()
+  return onlyFree ? nodes.filter((n) => n.free) : nodes.slice();
 }
 
 /** 统一错误：非 2xx 时 v4 API 返回 { code, msg }（HTTP 状态码可能是 500 但 body 里是真实错误码）。 */
 async function apiGet(path: string, accessKey: string, body?: Record<string, unknown>): Promise<unknown> {
-  let resp: Response
+  let resp: Response;
   try {
     resp = await httpFetch(`${API_BASE}${path}`, {
       headers: { Authorization: `Bearer ${accessKey}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
       method: body ? 'POST' : 'GET',
       body: body ? JSON.stringify(body) : undefined,
       signal: AbortSignal.timeout(20_000),
-    })
+    });
   } catch (e) {
-    throw new Error('无法连接樱花穿透，请检查网络后重试')
+    throw new Error('无法连接樱花穿透，请检查网络后重试');
   }
-  const text = await resp.text()
+  const text = await resp.text();
   if (!resp.ok) {
-    let detail = text.slice(0, 200)
+    let detail = text.slice(0, 200);
     try {
-      const body = JSON.parse(text) as { code?: number; msg?: string }
-      if (body && typeof body.msg === 'string') detail = `${body.code ?? resp.status}: ${body.msg}`
+      const body = JSON.parse(text) as { code?: number; msg?: string };
+      if (body && typeof body.msg === 'string') detail = `${body.code ?? resp.status}: ${body.msg}`;
     } catch {
       /* 保留原文 */
     }
-    throw new Error(`natfrp API ${path} 请求失败（HTTP ${resp.status}）：${detail.split(accessKey).join('***')}`)
+    throw new Error(`natfrp API ${path} 请求失败（HTTP ${resp.status}）：${detail.split(accessKey).join('***')}`);
   }
   try {
-    return JSON.parse(text) as unknown
+    return JSON.parse(text) as unknown;
   } catch {
-    throw new Error(`natfrp API ${path} 返回了无法解析的内容`)
+    throw new Error(`natfrp API ${path} 返回了无法解析的内容`);
   }
 }
 
 export interface FrpCreateTunnel {
-  name: string
-  node: number
-  localPort: number
-  remotePort?: number
+  name: string;
+  node: number;
+  localPort: number;
+  remotePort?: number;
 }
 /** Explicit, single-target deletion using the official /tunnel/delete contract.
  * A 200 response alone is insufficient; verify the account's uncached tunnel list. */
 export async function deleteFrpTunnel(accessKey: string, id: string): Promise<{ remoteDisconnectPending: boolean }> {
-  const key = String(accessKey ?? '').trim()
-  if (!key || !/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id))) throw new Error('隧道或账号无效，无法删除')
+  const key = String(accessKey ?? '').trim();
+  if (!key || !/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id))) throw new Error('隧道或账号无效，无法删除');
   const exists = async () => {
-    const rows = await apiGet('/tunnels', key)
-    if (!Array.isArray(rows) || rows.some((r) => !Number.isSafeInteger(r?.id))) throw new Error('无法确认远端隧道列表，请刷新后重试删除')
-    return rows.some((r) => r.id === Number(id))
-  }
-  cache = null
+    const rows = await apiGet('/tunnels', key);
+    if (!Array.isArray(rows) || rows.some((r) => !Number.isSafeInteger(r?.id))) throw new Error('无法确认远端隧道列表，请刷新后重试删除');
+    return rows.some((r) => r.id === Number(id));
+  };
+  cache = null;
   try {
-    if (!(await exists())) return { remoteDisconnectPending: false }
-    const result = (await apiGet('/tunnel/delete', key, { ids: id })) as { deleted?: number[]; failed?: number[] }
-    if (!Array.isArray(result?.deleted) || !Array.isArray(result.failed)) throw new Error('删除结果不完整，请重试确认远端状态')
+    if (!(await exists())) return { remoteDisconnectPending: false };
+    const result = (await apiGet('/tunnel/delete', key, { ids: id })) as { deleted?: number[]; failed?: number[] };
+    if (!Array.isArray(result?.deleted) || !Array.isArray(result.failed)) throw new Error('删除结果不完整，请重试确认远端状态');
     // Official `failed` means deleted but the online connection could not be kicked.
     if (!result.deleted.includes(Number(id)) && !result.failed.includes(Number(id)))
-      throw new Error('樱花穿透未确认删除该隧道，请检查隧道是否被锁定')
-    if (await exists()) throw new Error('远端仍存在该隧道，尚未确认删除成功，请稍后重试')
-    return { remoteDisconnectPending: result.failed.includes(Number(id)) }
+      throw new Error('樱花穿透未确认删除该隧道，请检查隧道是否被锁定');
+    if (await exists()) throw new Error('远端仍存在该隧道，尚未确认删除成功，请稍后重试');
+    return { remoteDisconnectPending: result.failed.includes(Number(id)) };
   } finally {
-    cache = null
+    cache = null;
   }
 }
 /** Explicit user action only; no retries of POSTs, which might otherwise create duplicate tunnels. */
 export async function createFrpTunnel(accessKey: string, input: FrpCreateTunnel): Promise<{ id: number; name: string }> {
-  const name = String(input?.name ?? '').trim()
-  if (!name || name.length > 64) throw new Error('请填写 1–64 字符的隧道名称')
+  const name = String(input?.name ?? '').trim();
+  if (!name || name.length > 64) throw new Error('请填写 1–64 字符的隧道名称');
   if (!Number.isInteger(input.localPort) || input.localPort < 1 || input.localPort > 65535)
-    throw new Error('请填写游戏中显示的局域网端口（1–65535）')
+    throw new Error('请填写游戏中显示的局域网端口（1–65535）');
   if (input.remotePort && (!Number.isInteger(input.remotePort) || input.remotePort < 1 || input.remotePort > 65535))
-    throw new Error('远程端口无效')
-  const result = await fetchFrpNodes(accessKey, { refresh: true })
-  const node = result.nodes.find((n) => n.id === input.node)
-  if (!node?.online || !node.canCreate) throw new Error('所选节点离线或已满，请选择其他节点')
+    throw new Error('远程端口无效');
+  const result = await fetchFrpNodes(accessKey, { refresh: true });
+  const node = result.nodes.find((n) => n.id === input.node);
+  if (!node?.online || !node.canCreate) throw new Error('所选节点离线或已满，请选择其他节点');
   const created = (await apiGet('/tunnels', accessKey.trim(), {
     name,
     type: 'tcp',
@@ -210,55 +210,55 @@ export async function createFrpTunnel(accessKey: string, input: FrpCreateTunnel)
     local_ip: '127.0.0.1',
     local_port: input.localPort,
     ...(input.remotePort ? { remote: String(input.remotePort) } : {}),
-  })) as { id: number; name: string }
-  cache = null
-  if (!Number.isSafeInteger(created?.id) || created.id <= 0) throw new Error('创建结果不完整，请刷新隧道列表确认，勿重复创建')
-  return created
+  })) as { id: number; name: string };
+  cache = null;
+  if (!Number.isSafeInteger(created?.id) || created.id <= 0) throw new Error('创建结果不完整，请刷新隧道列表确认，勿重复创建');
+  return created;
 }
 
 export async function getRunnableFrpTunnel(accessKey: string, id: string): Promise<FrpTunnelInfo> {
-  if (!/^\d+$/.test(id)) throw new Error('请先选择已创建的隧道')
-  const result = await fetchFrpNodes(accessKey, { refresh: true })
-  if (!result.tunnels) throw new Error('隧道列表获取失败，请检查访问密钥后重试')
-  const tunnel = result.tunnels.find((t) => String(t.id) === id)
-  if (!tunnel || tunnel.status !== 0) throw new Error('隧道不存在或不可用，请刷新列表重新选择')
-  if (tunnel.type !== 'tcp') throw new Error('Minecraft Java 版请选择 TCP 隧道')
-  if (!result.nodes.find((n) => n.id === tunnel.node)?.online) throw new Error('隧道所在节点已离线，请选择其他隧道')
-  return tunnel
+  if (!/^\d+$/.test(id)) throw new Error('请先选择已创建的隧道');
+  const result = await fetchFrpNodes(accessKey, { refresh: true });
+  if (!result.tunnels) throw new Error('隧道列表获取失败，请检查访问密钥后重试');
+  const tunnel = result.tunnels.find((t) => String(t.id) === id);
+  if (!tunnel || tunnel.status !== 0) throw new Error('隧道不存在或不可用，请刷新列表重新选择');
+  if (tunnel.type !== 'tcp') throw new Error('Minecraft Java 版请选择 TCP 隧道');
+  if (!result.nodes.find((n) => n.id === tunnel.node)?.online) throw new Error('隧道所在节点已离线，请选择其他隧道');
+  return tunnel;
 }
 
 interface RawNode {
-  name?: unknown
-  host?: unknown
-  description?: unknown
-  vip?: unknown
-  flag?: unknown
+  name?: unknown;
+  host?: unknown;
+  description?: unknown;
+  vip?: unknown;
+  flag?: unknown;
 }
 
 interface RawStat {
-  id?: unknown
-  online?: unknown
-  load?: unknown
+  id?: unknown;
+  online?: unknown;
+  load?: unknown;
 }
 
 interface RawTunnel {
-  id?: unknown
-  name?: unknown
-  type?: unknown
-  node?: unknown
-  online?: unknown
-  status?: unknown
-  local_ip?: unknown
-  local_port?: unknown
-  remote?: unknown
+  id?: unknown;
+  name?: unknown;
+  type?: unknown;
+  node?: unknown;
+  online?: unknown;
+  status?: unknown;
+  local_ip?: unknown;
+  local_port?: unknown;
+  remote?: unknown;
 }
 
 /** 拉取（或命中缓存）节点列表 + 节点状态 + 用户隧道。失败抛真实错误。 */
 export async function fetchFrpNodes(accessKey: string, opts: { refresh?: boolean } = {}): Promise<FrpNodesResult> {
-  const key = String(accessKey ?? '').trim()
-  if (!key) throw new Error('请先填写访问密钥，再查询节点列表')
+  const key = String(accessKey ?? '').trim();
+  if (!key) throw new Error('请先填写访问密钥，再查询节点列表');
   if (!opts.refresh && cache && cache.accessKey === key && Date.now() < cache.expiresAt) {
-    return cache.result
+    return cache.result;
   }
 
   // /tunnels 失败不影响节点展示（tunnels = null → UI 不显示隧道区块）
@@ -266,26 +266,26 @@ export async function fetchFrpNodes(accessKey: string, opts: { refresh?: boolean
     apiGet('/nodes', key),
     apiGet('/node/stats', key),
     apiGet('/tunnels', key),
-  ])
-  if (nodesRes.status === 'rejected') throw nodesRes.reason instanceof Error ? nodesRes.reason : new Error(String(nodesRes.reason))
+  ]);
+  if (nodesRes.status === 'rejected') throw nodesRes.reason instanceof Error ? nodesRes.reason : new Error(String(nodesRes.reason));
 
-  const rawNodes = (nodesRes.status === 'fulfilled' ? nodesRes.value : {}) as Record<string, RawNode>
-  const stats = (statsRes.status === 'fulfilled' ? (statsRes.value as { nodes?: RawStat[] }) : null)?.nodes ?? []
-  const statById = new Map<number, { online: boolean; load: number | null }>()
+  const rawNodes = (nodesRes.status === 'fulfilled' ? nodesRes.value : {}) as Record<string, RawNode>;
+  const stats = (statsRes.status === 'fulfilled' ? (statsRes.value as { nodes?: RawStat[] }) : null)?.nodes ?? [];
+  const statById = new Map<number, { online: boolean; load: number | null }>();
   for (const s of stats) {
-    const id = typeof s.id === 'number' ? s.id : Number.NaN
-    if (Number.isNaN(id)) continue
+    const id = typeof s.id === 'number' ? s.id : Number.NaN;
+    if (Number.isNaN(id)) continue;
     statById.set(id, {
       online: typeof s.online === 'number' ? s.online >= 0 : true,
       load: typeof s.load === 'number' ? s.load : null,
-    })
+    });
   }
 
   const nodes: FrpNodeInfo[] = Object.entries(rawNodes)
     .map(([idStr, raw]) => {
-      const id = Number.parseInt(idStr, 10)
-      const flag = typeof raw.flag === 'number' ? raw.flag : 0
-      const stat = statById.get(id)
+      const id = Number.parseInt(idStr, 10);
+      const flag = typeof raw.flag === 'number' ? raw.flag : 0;
+      const stat = statById.get(id);
       return {
         id,
         name: typeof raw.name === 'string' ? raw.name : `节点 ${idStr}`,
@@ -301,19 +301,19 @@ export async function fetchFrpNodes(accessKey: string, opts: { refresh?: boolean
         canCreate: (flag & NODE_FLAG.CAN_CREATE) !== 0,
         noProtect: (flag & NODE_FLAG.NO_PROTECT) !== 0,
         beta: (flag & NODE_FLAG.BETA) !== 0,
-      }
+      };
     })
     // 免费→专业版，在线优先，负载低优先，ID 升序兜底
     .sort((a, b) => {
-      if (a.free !== b.free) return a.free ? -1 : 1
-      if (a.online !== b.online) return a.online ? -1 : 1
-      if (a.load !== null && b.load !== null && a.load !== b.load) return a.load - b.load
-      return a.id - b.id
-    })
+      if (a.free !== b.free) return a.free ? -1 : 1;
+      if (a.online !== b.online) return a.online ? -1 : 1;
+      if (a.load !== null && b.load !== null && a.load !== b.load) return a.load - b.load;
+      return a.id - b.id;
+    });
 
-  let tunnels: FrpTunnelInfo[] | null = null
+  let tunnels: FrpTunnelInfo[] | null = null;
   if (tunnelsRes.status === 'fulfilled' && Array.isArray(tunnelsRes.value)) {
-    const nameById = new Map(nodes.map((n) => [n.id, n.name]))
+    const nameById = new Map(nodes.map((n) => [n.id, n.name]));
     tunnels = (tunnelsRes.value as RawTunnel[])
       .filter((t) => typeof t.id === 'number')
       .map((t) => ({
@@ -327,10 +327,10 @@ export async function fetchFrpNodes(accessKey: string, opts: { refresh?: boolean
         localIp: typeof t.local_ip === 'string' ? t.local_ip : '',
         localPort: typeof t.local_port === 'number' ? t.local_port : 0,
         remote: typeof t.remote === 'string' ? t.remote : '',
-      }))
+      }));
   }
 
-  const result: FrpNodesResult = { fetchedAt: new Date().toISOString(), nodes, tunnels }
-  cache = { accessKey: key, result, expiresAt: Date.now() + CACHE_TTL_MS }
-  return result
+  const result: FrpNodesResult = { fetchedAt: new Date().toISOString(), nodes, tunnels };
+  cache = { accessKey: key, result, expiresAt: Date.now() + CACHE_TTL_MS };
+  return result;
 }

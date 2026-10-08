@@ -3,9 +3,9 @@
  * 默认配置：启动器级默认按键。
  * 开启「按键设置同步」后，启动任何版本时自动把默认按键写入该实例 options.txt 的 key_* 项。
  */
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import DefaultGameOptions from '../components/DefaultGameOptions.vue'
-import SelectMenu from '../components/SelectMenu.vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import DefaultGameOptions from '../components/DefaultGameOptions.vue';
+import SelectMenu from '../components/SelectMenu.vue';
 import {
   errText,
   getDefaultKeys,
@@ -18,178 +18,178 @@ import {
   moveDefaultResourcePack,
   setDefaultResourcePackEnabled,
   reapplyDefaultResourcePacks,
-} from '../api'
-import type { DefaultResourcePack } from '@shared/types'
-import { activeInstalled, selectedInstance, displayVersionName, store, toast } from '../store'
-import { updateSettings } from '../settingsUpdates'
-import { KEYBIND_CATEGORIES, VANILLA_KEYBINDS, codeToMcKey, mcKeyLabel, mouseButtonToMcKey } from '@shared/keybindings'
+} from '../api';
+import type { DefaultResourcePack } from '@shared/types';
+import { activeInstalled, selectedInstance, displayVersionName, store, toast } from '../store';
+import { updateSettings } from '../settingsUpdates';
+import { KEYBIND_CATEGORIES, VANILLA_KEYBINDS, codeToMcKey, mcKeyLabel, mouseButtonToMcKey } from '@shared/keybindings';
 
-const keys = ref<Record<string, string>>({})
-const section = ref<'game' | 'keys' | 'packs'>('game')
+const keys = ref<Record<string, string>>({});
+const section = ref<'game' | 'keys' | 'packs'>('game');
 function selectSection(value: 'game' | 'keys' | 'packs') {
-  stopCapture()
-  section.value = value
+  stopCapture();
+  section.value = value;
 }
-const loading = ref(true)
-const keySearch = ref('')
-const capturing = ref('')
-const resourcePacks = ref<DefaultResourcePack[]>([])
-const packsBusy = ref(false)
-const reapplying = ref(false)
+const loading = ref(true);
+const keySearch = ref('');
+const capturing = ref('');
+const resourcePacks = ref<DefaultResourcePack[]>([]);
+const packsBusy = ref(false);
+const reapplying = ref(false);
 const packTargets = computed(() =>
   activeInstalled.value.map((v) => ({
     value: v.id,
     label: displayVersionName(v),
     description: `${v.mcVersion}${v.isolated ? ' · 独立游戏目录' : ' · 共享游戏目录'}`,
   }))
-)
+);
 async function reapplyPacks() {
-  const target = selectedInstance.value
-  if (packsBusy.value || !target) return
-  const folder = target.folder || store.settings?.activeFolder || store.settings?.gameDir || ''
-  packsBusy.value = true
-  reapplying.value = true
+  const target = selectedInstance.value;
+  if (packsBusy.value || !target) return;
+  const folder = target.folder || store.settings?.activeFolder || store.settings?.gameDir || '';
+  packsBusy.value = true;
+  reapplying.value = true;
   try {
-    const result = await reapplyDefaultResourcePacks(folder, target.id)
-    toast(`已重新应用 ${result.count} 个默认材质包${result.shared ? '（共享游戏目录）' : ''}`, 'success')
+    const result = await reapplyDefaultResourcePacks(folder, target.id);
+    toast(`已重新应用 ${result.count} 个默认材质包${result.shared ? '（共享游戏目录）' : ''}`, 'success');
   } catch (e) {
-    toast('重新应用失败：' + errText(e), 'error')
+    toast('重新应用失败：' + errText(e), 'error');
   } finally {
-    packsBusy.value = false
-    reapplying.value = false
+    packsBusy.value = false;
+    reapplying.value = false;
   }
 }
-const dragActive = ref(false)
+const dragActive = ref(false);
 async function togglePackSync(on: boolean) {
   try {
-    await updateSettings({ resourcePackSync: on })
+    await updateSettings({ resourcePackSync: on });
   } catch (e) {
-    toast('保存失败：' + errText(e), 'error')
+    toast('保存失败：' + errText(e), 'error');
   }
 }
 async function editPacks(action: () => Promise<DefaultResourcePack[]>, enable = false) {
-  if (packsBusy.value) return
-  packsBusy.value = true
+  if (packsBusy.value) return;
+  packsBusy.value = true;
   try {
-    resourcePacks.value = await action()
-    if (enable && resourcePacks.value.length) await togglePackSync(true)
+    resourcePacks.value = await action();
+    if (enable && resourcePacks.value.length) await togglePackSync(true);
   } catch (e) {
-    toast('材质包配置失败：' + errText(e), 'error')
+    toast('材质包配置失败：' + errText(e), 'error');
   } finally {
-    packsBusy.value = false
+    packsBusy.value = false;
   }
 }
 async function dropPacks(event: DragEvent) {
-  selectSection('packs')
-  dragActive.value = false
-  const files = Array.from(event.dataTransfer?.files ?? [])
-  await editPacks(() => importDefaultResourcePacks(files.map((file) => window.faionyx.getFilePath(file)).filter(Boolean)), true)
+  selectSection('packs');
+  dragActive.value = false;
+  const files = Array.from(event.dataTransfer?.files ?? []);
+  await editPacks(() => importDefaultResourcePacks(files.map((file) => window.faionyx.getFilePath(file)).filter(Boolean)), true);
 }
 
 onMounted(() => {
-  store.resourceDropHandler = dropPacks
-})
+  store.resourceDropHandler = dropPacks;
+});
 onUnmounted(() => {
-  if (store.resourceDropHandler === dropPacks) store.resourceDropHandler = null
-})
+  if (store.resourceDropHandler === dropPacks) store.resourceDropHandler = null;
+});
 
-const keySync = computed(() => store.settings?.keySync === true)
+const keySync = computed(() => store.settings?.keySync === true);
 
 async function toggleKeySync(on: boolean) {
   try {
-    await updateSettings({ keySync: on })
-    store.settings = { ...store.settings!, keySync: on }
-    toast(on ? '已开启按键设置同步' : '已关闭按键设置同步', 'success')
+    await updateSettings({ keySync: on });
+    store.settings = { ...store.settings!, keySync: on };
+    toast(on ? '已开启按键设置同步' : '已关闭按键设置同步', 'success');
   } catch (e) {
-    toast('保存失败：' + errText(e), 'error')
+    toast('保存失败：' + errText(e), 'error');
   }
 }
 
 const keyGrouped = computed(() => {
-  const kw = keySearch.value.trim().toLowerCase()
+  const kw = keySearch.value.trim().toLowerCase();
   const match = (id: string, label: string, bind: string) =>
-    !kw || label.toLowerCase().includes(kw) || id.toLowerCase().includes(kw) || mcKeyLabel(bind).toLowerCase().includes(kw)
+    !kw || label.toLowerCase().includes(kw) || id.toLowerCase().includes(kw) || mcKeyLabel(bind).toLowerCase().includes(kw);
   return KEYBIND_CATEGORIES.map((cat) => ({
     category: cat,
     items: VANILLA_KEYBINDS.filter((d) => d.category === cat && match(d.id, d.label, keys.value[d.id] ?? d.defaultBind)),
-  })).filter((g) => g.items.length)
-})
-const keyModifiedCount = computed(() => VANILLA_KEYBINDS.filter((d) => (keys.value[d.id] ?? d.defaultBind) !== d.defaultBind).length)
+  })).filter((g) => g.items.length);
+});
+const keyModifiedCount = computed(() => VANILLA_KEYBINDS.filter((d) => (keys.value[d.id] ?? d.defaultBind) !== d.defaultBind).length);
 
 function startCapture(id: string) {
-  capturing.value = id
-  addEventListener('keydown', onCaptureKey, true)
-  addEventListener('mousedown', onCaptureMouse, true)
+  capturing.value = id;
+  addEventListener('keydown', onCaptureKey, true);
+  addEventListener('mousedown', onCaptureMouse, true);
 }
 function stopCapture() {
-  capturing.value = ''
-  removeEventListener('keydown', onCaptureKey, true)
-  removeEventListener('mousedown', onCaptureMouse, true)
+  capturing.value = '';
+  removeEventListener('keydown', onCaptureKey, true);
+  removeEventListener('mousedown', onCaptureMouse, true);
 }
 async function onCaptureKey(e: KeyboardEvent) {
-  e.preventDefault()
-  e.stopPropagation()
+  e.preventDefault();
+  e.stopPropagation();
   if (e.key === 'Escape') {
-    stopCapture()
-    return
+    stopCapture();
+    return;
   }
-  const bind = codeToMcKey(e.code)
-  if (!bind) return
-  const id = capturing.value
-  stopCapture()
-  await applyKey(id, bind)
+  const bind = codeToMcKey(e.code);
+  if (!bind) return;
+  const id = capturing.value;
+  stopCapture();
+  await applyKey(id, bind);
 }
 async function onCaptureMouse(e: MouseEvent) {
-  if ((e.target as Element)?.closest('[data-key-clear]')) return
-  e.preventDefault()
-  e.stopPropagation()
-  const bind = mouseButtonToMcKey(e.button)
-  if (!bind) return
-  const id = capturing.value
-  stopCapture()
-  await applyKey(id, bind)
+  if ((e.target as Element)?.closest('[data-key-clear]')) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const bind = mouseButtonToMcKey(e.button);
+  if (!bind) return;
+  const id = capturing.value;
+  stopCapture();
+  await applyKey(id, bind);
 }
 async function applyKey(id: string, bind: string) {
   try {
-    keys.value = await setDefaultKey(id, bind)
-    toast('已更新默认按键', 'success')
+    keys.value = await setDefaultKey(id, bind);
+    toast('已更新默认按键', 'success');
   } catch (e) {
-    toast('设置失败：' + errText(e), 'error')
+    toast('设置失败：' + errText(e), 'error');
   }
 }
 async function resetOneKey(id: string) {
-  const def = VANILLA_KEYBINDS.find((d) => d.id === id)
-  if (!def) return
-  await applyKey(id, def.defaultBind)
+  const def = VANILLA_KEYBINDS.find((d) => d.id === id);
+  if (!def) return;
+  await applyKey(id, def.defaultBind);
 }
 /** 捕获时通过独立 X 按钮清空，不把这次点击录为鼠标左键。 */
 async function clearCapturedKey() {
-  const id = capturing.value
-  stopCapture()
-  if (!id) return
-  await applyKey(id, 'key.keyboard.unknown')
-  toast('已将该按键设置为空', 'success')
+  const id = capturing.value;
+  stopCapture();
+  if (!id) return;
+  await applyKey(id, 'key.keyboard.unknown');
+  toast('已将该按键设置为空', 'success');
 }
 async function resetAllKeys() {
   try {
-    keys.value = await resetDefaultKeys()
-    toast('按键已全部恢复为 MC 原版默认', 'success')
+    keys.value = await resetDefaultKeys();
+    toast('按键已全部恢复为 MC 原版默认', 'success');
   } catch (e) {
-    toast('重置失败：' + errText(e), 'error')
+    toast('重置失败：' + errText(e), 'error');
   }
 }
 
 onMounted(async () => {
   try {
-    keys.value = await getDefaultKeys()
-    resourcePacks.value = await getDefaultResourcePacks()
+    keys.value = await getDefaultKeys();
+    resourcePacks.value = await getDefaultResourcePacks();
   } catch (e) {
-    toast('读取默认按键失败：' + errText(e), 'error')
+    toast('读取默认按键失败：' + errText(e), 'error');
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-})
-onUnmounted(stopCapture)
+});
+onUnmounted(stopCapture);
 </script>
 
 <template>

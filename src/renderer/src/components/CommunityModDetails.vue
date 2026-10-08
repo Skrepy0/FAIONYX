@@ -1,44 +1,44 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { communityProject, errText } from '../api'
-import type { CommunityModProject, CommunityProjectReference } from '@shared/types'
+import { ref, watch } from 'vue';
+import { communityProject, errText } from '../api';
+import type { CommunityModProject, CommunityProjectReference } from '@shared/types';
 
-const props = withDefaults(defineProps<{ reference: CommunityProjectReference; allowDownload?: boolean }>(), { allowDownload: true })
-const emit = defineEmits<{ (event: 'close'): void; (event: 'download', project: CommunityProjectReference): void }>()
+const props = withDefaults(defineProps<{ reference: CommunityProjectReference; allowDownload?: boolean }>(), { allowDownload: true });
+const emit = defineEmits<{ (event: 'close'): void; (event: 'download', project: CommunityProjectReference): void }>();
 const project = ref<CommunityModProject>(),
   loading = ref(false),
   error = ref(''),
-  retry = ref(0)
+  retry = ref(0);
 watch(
   [() => props.reference.source, () => props.reference.projectId, retry],
   async (_next, _old, cleanup) => {
-    let stale = false
+    let stale = false;
     cleanup(() => {
-      stale = true
-    })
-    loading.value = true
-    error.value = ''
-    project.value = undefined
+      stale = true;
+    });
+    loading.value = true;
+    error.value = '';
+    project.value = undefined;
     try {
-      const result = await communityProject(props.reference.source, props.reference.projectId)
-      if (!stale) project.value = result
+      const result = await communityProject(props.reference.source, props.reference.projectId);
+      if (!stale) project.value = result;
     } catch (reason) {
-      if (!stale) error.value = errText(reason)
+      if (!stale) error.value = errText(reason);
     } finally {
-      if (!stale) loading.value = false
+      if (!stale) loading.value = false;
     }
   },
   { immediate: true }
-)
+);
 const date = (value: string) => {
-  const parsed = new Date(value)
-  return Number.isNaN(parsed.getTime()) ? '' : parsed.toLocaleDateString('zh-CN')
-}
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? '' : parsed.toLocaleDateString('zh-CN');
+};
 function openSource() {
-  if (project.value?.webpage) window.open(project.value.webpage, '_blank')
+  if (project.value?.webpage) window.open(project.value.webpage, '_blank');
 }
 function download() {
-  if (project.value) emit('download', project.value)
+  if (project.value) emit('download', project.value);
 }
 </script>
 

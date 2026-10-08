@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
-import { store, exitEditMode, toast, type ViewName } from '../store'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { store, exitEditMode, toast, type ViewName } from '../store';
 import {
   beginDesign,
   finishDesign,
@@ -26,10 +26,10 @@ import {
   designFuture,
   reorderComponent,
   type DesignTarget,
-} from '../visualDesign'
-import { snapped, type ComponentDesign } from '@shared/visualDesign'
-import { DEFAULT_CUSTOM_THEME, DEFAULT_HOME_LAYOUT, DEFAULT_BACKGROUND, DEFAULT_LAUNCH_THUMBNAIL } from '@shared/types'
-import { copyText } from '../api'
+} from '../visualDesign';
+import { snapped, type ComponentDesign } from '@shared/visualDesign';
+import { DEFAULT_CUSTOM_THEME, DEFAULT_HOME_LAYOUT, DEFAULT_BACKGROUND, DEFAULT_LAUNCH_THUMBNAIL } from '@shared/types';
+import { copyText } from '../api';
 const pages: { value: ViewName; label: string }[] = [
   { value: 'home', label: '首页' },
   { value: 'game', label: '游戏版本' },
@@ -44,7 +44,7 @@ const pages: { value: ViewName; label: string }[] = [
   { value: 'settings', label: '设置' },
   { value: 'accounts', label: '账户' },
   { value: 'bridge', label: 'MOD 面板' },
-]
+];
 const filter = ref(''),
   folded = ref(new Set<string>()),
   tab = ref('layout'),
@@ -57,7 +57,7 @@ const filter = ref(''),
   exitOpen = ref(false),
   busy = ref(false),
   themeOpen = ref(false),
-  code = ref('')
+  code = ref('');
 const logical = reactive({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -65,30 +65,30 @@ const logical = reactive({
   box = ref({ x: 0, y: 0, width: 0, height: 0 }),
   insertion = ref<{ x: number; y: number; width: number; height: number }>(),
   guideX = ref<number>(),
-  guideY = ref<number>()
-const baseLayers = computed(() => designTargets.value.filter((t) => !t.decoration))
+  guideY = ref<number>();
+const baseLayers = computed(() => designTargets.value.filter((t) => !t.decoration));
 const layers = computed(() =>
   baseLayers.value.filter((t) => {
-    if (filter.value) return t.label.toLowerCase().includes(filter.value.toLowerCase())
-    let p = t.parentKey
+    if (filter.value) return t.label.toLowerCase().includes(filter.value.toLowerCase());
+    let p = t.parentKey;
     while (p) {
-      if (folded.value.has(p)) return false
-      p = designTargets.value.find((x) => x.key === p)?.parentKey
+      if (folded.value.has(p)) return false;
+      p = designTargets.value.find((x) => x.key === p)?.parentKey;
     }
-    return true
+    return true;
   })
-)
-const parent = computed(() => designTargets.value.find((t) => t.key === designSelected.value?.parentKey))
+);
+const parent = computed(() => designTargets.value.find((t) => t.key === designSelected.value?.parentKey));
 const ancestors = computed(() => {
-  const out: DesignTarget[] = []
-  let p = parent.value
+  const out: DesignTarget[] = [];
+  let p = parent.value;
   while (p) {
-    out.unshift(p)
-    p = designTargets.value.find((t) => t.key === p!.parentKey)
+    out.unshift(p);
+    p = designTargets.value.find((t) => t.key === p!.parentKey);
   }
-  return out.slice(-3)
-})
-const free = computed(() => selectedDesign.value.mode === 'free')
+  return out.slice(-3);
+});
+const free = computed(() => selectedDesign.value.mode === 'free');
 const fields = computed(() =>
   tab.value === 'layout'
     ? [
@@ -135,26 +135,26 @@ const fields = computed(() =>
           { key: 'fontSize', label: '字号', unit: 'px', min: 6, max: 200 },
           { key: 'fontWeight', label: '字重', unit: '', min: 100, max: 900 },
         ]
-)
+);
 function rgba(key: 'color' | 'background') {
   const el = designSelected.value?.element,
-    raw = selectedDesign.value[key] || (el ? getComputedStyle(el)[key === 'color' ? 'color' : 'backgroundColor'] : '')
+    raw = selectedDesign.value[key] || (el ? getComputedStyle(el)[key === 'color' ? 'color' : 'backgroundColor'] : '');
   if (raw.startsWith('#')) {
-    let hex = raw.slice(1)
+    let hex = raw.slice(1);
     if (hex.length === 3 || hex.length === 4)
       hex = hex
         .split('')
         .map((x) => x + x)
-        .join('')
+        .join('');
     return [
       parseInt(hex.slice(0, 2), 16),
       parseInt(hex.slice(2, 4), 16),
       parseInt(hex.slice(4, 6), 16),
       hex.length === 8 ? parseInt(hex.slice(6), 16) / 255 : 1,
-    ]
+    ];
   }
-  const nums = raw.match(/[\d.]+/g)?.map(Number)
-  return nums?.length ? [...nums.slice(0, 3), nums[3] ?? 1] : [255, 255, 255, raw === 'transparent' ? 0 : 1]
+  const nums = raw.match(/[\d.]+/g)?.map(Number);
+  return nums?.length ? [...nums.slice(0, 3), nums[3] ?? 1] : [255, 255, 255, raw === 'transparent' ? 0 : 1];
 }
 function colorHex(key: 'color' | 'background') {
   return (
@@ -163,10 +163,10 @@ function colorHex(key: 'color' | 'background') {
       .slice(0, 3)
       .map((x) => Math.round(x).toString(16).padStart(2, '0'))
       .join('')
-  )
+  );
 }
 function setColor(key: 'color' | 'background', value: string) {
-  const alpha = rgba(key)[3]
+  const alpha = rgba(key)[3];
   changeComponent(
     {
       [key]:
@@ -176,54 +176,54 @@ function setColor(key: 'color' | 'background', value: string) {
           .padStart(2, '0'),
     },
     false
-  )
+  );
 }
 function setAlpha(key: 'color' | 'background', value: string) {
-  const [r, g, b] = rgba(key)
-  changeComponent({ [key]: 'rgba(' + [r, g, b, Number(value) / 100].join(',') + ')' }, false)
+  const [r, g, b] = rgba(key);
+  changeComponent({ [key]: 'rgba(' + [r, g, b, Number(value) / 100].join(',') + ')' }, false);
 }
 function value(key: string) {
-  const n = selectedDesign.value[key as keyof ComponentDesign]
-  return typeof n === 'number' ? Math.round(n * (key === 'opacity' ? 100 : 1) * 100) / 100 : ''
+  const n = selectedDesign.value[key as keyof ComponentDesign];
+  return typeof n === 'number' ? Math.round(n * (key === 'opacity' ? 100 : 1) * 100) / 100 : '';
 }
 function numeric(key: string, e: Event) {
-  const raw = (e.target as HTMLInputElement).value
+  const raw = (e.target as HTMLInputElement).value;
   changeComponent({
     [key]: raw === '' ? undefined : Number(raw) / (key === 'opacity' ? 100 : 1),
-  })
+  });
 }
 function select(t: DesignTarget) {
-  designSelection.value = t.scope + '|' + t.key
-  mobileTab.value = 'properties'
+  designSelection.value = t.scope + '|' + t.key;
+  mobileTab.value = 'properties';
 }
 function fold(t: DesignTarget) {
-  const s = new Set(folded.value)
-  s.has(t.key) ? s.delete(t.key) : s.add(t.key)
-  folded.value = s
+  const s = new Set(folded.value);
+  s.has(t.key) ? s.delete(t.key) : s.add(t.key);
+  folded.value = s;
 }
 function style(t: DesignTarget) {
-  return currentDesign.value.pages[t.scope]?.components[t.key] || {}
+  return currentDesign.value.pages[t.scope]?.components[t.key] || {};
 }
 function locked(t: DesignTarget) {
-  let p: DesignTarget | undefined = t
+  let p: DesignTarget | undefined = t;
   while (p) {
-    if (style(p).locked) return true
-    p = designTargets.value.find((x) => x.key === p!.parentKey)
+    if (style(p).locked) return true;
+    p = designTargets.value.find((x) => x.key === p!.parentKey);
   }
-  return false
+  return false;
 }
 function layer(action: string) {
-  const n = selectedDesign.value.layer || 0
+  const n = selectedDesign.value.layer || 0;
   changeComponent({
     layer: action === 'top' ? 99 : action === 'bottom' ? 0 : Math.max(0, Math.min(99, n + (action === 'up' ? 1 : -1))),
-  })
+  });
 }
 function align(axis: 'x' | 'y', edge: number) {
   const el = designSelected.value?.element,
-    p = el?.parentElement
-  if (!el || !p) return
+    p = el?.parentElement;
+  if (!el || !p) return;
   const r = el.getBoundingClientRect(),
-    b = p.getBoundingClientRect()
+    b = p.getBoundingClientRect();
   changeComponent(
     axis === 'x'
       ? {
@@ -232,42 +232,42 @@ function align(axis: 'x' | 'y', edge: number) {
       : {
           y: (selectedDesign.value.y || 0) + (b.top + (b.height - r.height) * edge - r.top) / scale.value,
         }
-  )
+  );
 }
 async function close(action: 'apply' | 'keep' | 'discard') {
-  busy.value = true
+  busy.value = true;
   try {
-    await finishDesign(action)
-    designStageReady.value = false
-    exitEditMode()
+    await finishDesign(action);
+    designStageReady.value = false;
+    exitEditMode();
   } catch (e) {
-    toast('保存失败，草稿已保留：' + String(e), 'error')
+    toast('保存失败，草稿已保留：' + String(e), 'error');
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 function requestClose() {
-  if (designDirty.value) exitOpen.value = true
-  else void close('discard')
+  if (designDirty.value) exitOpen.value = true;
+  else void close('discard');
 }
 async function exportTheme() {
   try {
-    await flushDesign()
-    const result = await window.faionyx.invoke('appearance:exportTheme', designDraft.value)
-    await copyText(String(result))
-    toast('完整主题码已复制', 'success')
+    await flushDesign();
+    const result = await window.faionyx.invoke('appearance:exportTheme', designDraft.value);
+    await copyText(String(result));
+    toast('完整主题码已复制', 'success');
   } catch (e) {
-    toast(String(e), 'error')
+    toast(String(e), 'error');
   }
 }
 async function importTheme() {
   try {
-    previewAppearance((await window.faionyx.invoke('appearance:importTheme', code.value, true)) as any)
-    themeOpen.value = false
-    code.value = ''
-    toast('主题已载入草稿，应用后生效', 'success')
+    previewAppearance((await window.faionyx.invoke('appearance:importTheme', code.value, true)) as any);
+    themeOpen.value = false;
+    code.value = '';
+    toast('主题已载入草稿，应用后生效', 'success');
   } catch (e) {
-    toast(String(e), 'error')
+    toast(String(e), 'error');
   }
 }
 function defaults() {
@@ -279,73 +279,73 @@ function defaults() {
       background: structuredClone(DEFAULT_BACKGROUND),
       launchThumbnail: structuredClone(DEFAULT_LAUNCH_THUMBNAIL),
       visualDesign: { version: 1, pages: {} },
-    })
+    });
 }
 let raf = 0,
-  observer: ResizeObserver | undefined
+  observer: ResizeObserver | undefined;
 function measure() {
-  const r = designSelected.value?.element.getBoundingClientRect()
-  if (r) box.value = { x: r.x, y: r.y, width: r.width, height: r.height }
-  raf = requestAnimationFrame(measure)
+  const r = designSelected.value?.element.getBoundingClientRect();
+  if (r) box.value = { x: r.x, y: r.y, width: r.width, height: r.height };
+  raf = requestAnimationFrame(measure);
 }
 function resizeWindow() {
-  logical.width = window.innerWidth
-  logical.height = window.innerHeight
-  fit()
+  logical.width = window.innerWidth;
+  logical.height = window.innerHeight;
+  fit();
 }
 function fit() {
-  const r = viewport.value?.getBoundingClientRect()
-  if (!r) return
-  scale.value = zoom.value === '100' ? 1 : Math.min(1, (r.width - 40) / logical.width, (r.height - 40) / logical.height)
+  const r = viewport.value?.getBoundingClientRect();
+  if (!r) return;
+  scale.value = zoom.value === '100' ? 1 : Math.min(1, (r.width - 40) / logical.width, (r.height - 40) / logical.height);
 }
 function isTools(e: Event) {
-  return !!(e.target as Element)?.closest?.('[data-design-tools]')
+  return !!(e.target as Element)?.closest?.('[data-design-tools]');
 }
 function navigation(e: Event) {
-  return !!(e.target as Element)?.closest?.('.nav-item,.nav-sub-item,.cfg-tabs button,.seg-tabs button,.tabs button,[data-design-nav]')
+  return !!(e.target as Element)?.closest?.('.nav-item,.nav-sub-item,.cfg-tabs button,.seg-tabs button,.tabs button,[data-design-nav]');
 }
 let drag: null | {
-    x: number
-    y: number
-    ox: number
-    oy: number
-    width: number
-    height: number
-    resize: boolean
-    left: number
-    top: number
-    changed: boolean
-    target: DesignTarget
+    x: number;
+    y: number;
+    ox: number;
+    oy: number;
+    width: number;
+    height: number;
+    resize: boolean;
+    left: number;
+    top: number;
+    changed: boolean;
+    target: DesignTarget;
   } = null,
   drop: DesignTarget | undefined,
-  dropBefore = true
+  dropBefore = true;
 function hit(e: MouseEvent | PointerEvent, deep = false) {
-  let el = (e.target as Element).closest<HTMLElement>('[data-ui]')
+  let el = (e.target as Element).closest<HTMLElement>('[data-ui]');
   if (!deep) {
-    el = (e.target as Element).closest<HTMLElement>('button,label,.card,article,section,h1,h2,h3,h4,p') || el
+    el = (e.target as Element).closest<HTMLElement>('button,label,.card,article,section,h1,h2,h3,h4,p') || el;
   }
-  return designTargets.value.find((t) => t.element === el && !t.decoration)
+  return designTargets.value.find((t) => t.element === el && !t.decoration);
 }
 function down(e: PointerEvent, resize = false) {
-  if (e.button !== 0 || (!resize && isTools(e))) return
+  if (e.button !== 0 || (!resize && isTools(e))) return;
   if (browse.value) {
     if (!navigation(e)) {
-      e.preventDefault()
-      e.stopImmediatePropagation()
+      e.preventDefault();
+      e.stopImmediatePropagation();
     }
-    return
+    return;
   }
   if (!resize) {
-    const t = hit(e)
-    if (!t) return
-    select(t)
+    const t = hit(e);
+    if (!t) return;
+    select(t);
   }
-  const target = designSelected.value
-  if (!target) return
-  e.preventDefault()
-  e.stopImmediatePropagation()
-  if (locked(target)) return
-  const r = target.element.getBoundingClientRect()
+  const target = designSelected.value;
+  if (!target) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  if (locked(target)) return;
+  const r = target.element.getBoundingClientRect();
   drag = {
     x: e.clientX,
     y: e.clientY,
@@ -358,25 +358,25 @@ function down(e: PointerEvent, resize = false) {
     top: r.top,
     changed: false,
     target,
-  }
+  };
 }
 function move(e: PointerEvent) {
-  if (!drag) return
+  if (!drag) return;
   const dx = (e.clientX - drag.x) / scale.value,
-    dy = (e.clientY - drag.y) / scale.value
-  if (!drag.changed && Math.abs(dx) + Math.abs(dy) < 4) return
+    dy = (e.clientY - drag.y) / scale.value;
+  if (!drag.changed && Math.abs(dx) + Math.abs(dy) < 4) return;
   if (!drag.resize && !free.value) {
     const candidates = designTargets.value.filter(
       (t) => t !== drag!.target && t.element.parentElement === drag!.target.element.parentElement && !t.decoration
-    )
+    );
     drop = candidates.find((t) => {
-      const r = t.element.getBoundingClientRect()
-      return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom
-    })
+      const r = t.element.getBoundingClientRect();
+      return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+    });
     if (drop) {
       const r = drop.element.getBoundingClientRect(),
-        horizontal = getComputedStyle(drop.element.parentElement!).flexDirection === 'row'
-      dropBefore = horizontal ? e.clientX < r.left + r.width / 2 : e.clientY < r.top + r.height / 2
+        horizontal = getComputedStyle(drop.element.parentElement!).flexDirection === 'row';
+      dropBefore = horizontal ? e.clientX < r.left + r.width / 2 : e.clientY < r.top + r.height / 2;
       insertion.value = horizontal
         ? {
             x: dropBefore ? r.left : r.right,
@@ -389,92 +389,92 @@ function move(e: PointerEvent) {
             y: dropBefore ? r.top : r.bottom,
             width: r.width,
             height: 3,
-          }
-    } else insertion.value = undefined
-    drag.changed = true
-    return
+          };
+    } else insertion.value = undefined;
+    drag.changed = true;
+    return;
   }
   if (!drag.changed) {
-    checkpoint()
-    drag.changed = true
+    checkpoint();
+    drag.changed = true;
   }
   const p = drag.target.element.parentElement!.getBoundingClientRect(),
-    s = scale.value
+    s = scale.value;
   if (drag.resize) {
     const w = snapped(drag.width + dx, [], snap.value && !e.altKey),
-      h = snapped(drag.height + dy, [], snap.value && !e.altKey)
+      h = snapped(drag.height + dy, [], snap.value && !e.altKey);
     changeComponent(
       {
         width: Math.max(8, Math.min(p.width / s, w.value)),
         height: Math.max(8, h.value),
       },
       false
-    )
+    );
   } else {
     const targets = designTargets.value
       .filter((t) => t.element.parentElement === drag!.target.element.parentElement && t !== drag!.target)
-      .map((t) => t.element.getBoundingClientRect())
+      .map((t) => t.element.getBoundingClientRect());
     const xs = [p.left, p.right - drag.width * s, ...targets.map((r) => r.left)].map((x) => x / s),
-      ys = [p.top, p.bottom - drag.height * s, ...targets.map((r) => r.top)].map((y) => y / s)
+      ys = [p.top, p.bottom - drag.height * s, ...targets.map((r) => r.top)].map((y) => y / s);
     const x = snapped(drag.left / s + dx, xs, snap.value && !e.altKey),
-      y = snapped(drag.top / s + dy, ys, snap.value && !e.altKey)
-    guideX.value = x.guide === undefined ? undefined : x.guide * s
-    guideY.value = y.guide === undefined ? undefined : y.guide * s
+      y = snapped(drag.top / s + dy, ys, snap.value && !e.altKey);
+    guideX.value = x.guide === undefined ? undefined : x.guide * s;
+    guideY.value = y.guide === undefined ? undefined : y.guide * s;
     changeComponent(
       {
         x: drag.ox + (Math.max(p.left / s, Math.min((p.right - drag.width * s) / s, x.value)) - drag.left / s),
         y: drag.oy + (Math.max(p.top / s, Math.min((p.bottom - drag.height * s) / s, y.value)) - drag.top / s),
       },
       false
-    )
+    );
   }
 }
 function up() {
-  if (drag?.changed && !drag.resize && !free.value && drop) reorderComponent(drop, dropBefore)
-  drag = null
-  drop = undefined
-  insertion.value = undefined
-  guideX.value = undefined
-  guideY.value = undefined
+  if (drag?.changed && !drag.resize && !free.value && drop) reorderComponent(drop, dropBefore);
+  drag = null;
+  drop = undefined;
+  insertion.value = undefined;
+  guideX.value = undefined;
+  guideY.value = undefined;
 }
 function click(e: MouseEvent) {
   if (!isTools(e) && !(browse.value && navigation(e))) {
-    e.preventDefault()
-    e.stopImmediatePropagation()
+    e.preventDefault();
+    e.stopImmediatePropagation();
   }
 }
 function deepSelect(e: MouseEvent) {
-  if (isTools(e) || browse.value) return
-  const t = hit(e, true)
+  if (isTools(e) || browse.value) return;
+  const t = hit(e, true);
   if (t) {
-    select(t)
-    e.preventDefault()
-    e.stopImmediatePropagation()
+    select(t);
+    e.preventDefault();
+    e.stopImmediatePropagation();
   }
 }
 function keys(e: KeyboardEvent) {
   if (e.key === 'Escape') {
-    e.preventDefault()
-    e.stopImmediatePropagation()
+    e.preventDefault();
+    e.stopImmediatePropagation();
     if (exitOpen.value) {
-      exitOpen.value = false
-      return
+      exitOpen.value = false;
+      return;
     }
     if (themeOpen.value) {
-      themeOpen.value = false
-      return
+      themeOpen.value = false;
+      return;
     }
     if (designSelected.value && parent.value) {
-      select(parent.value)
-      return
+      select(parent.value);
+      return;
     }
-    requestClose()
-    return
+    requestClose();
+    return;
   }
-  if (isTools(e)) return
+  if (isTools(e)) return;
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-    e.preventDefault()
-    undoDesign(e.shiftKey)
+    e.preventDefault();
+    undoDesign(e.shiftKey);
   }
   if (
     free.value &&
@@ -482,42 +482,42 @@ function keys(e: KeyboardEvent) {
     !locked(designSelected.value) &&
     ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)
   ) {
-    e.preventDefault()
-    const n = e.shiftKey ? 10 : 1
+    e.preventDefault();
+    const n = e.shiftKey ? 10 : 1;
     changeComponent({
       x: (selectedDesign.value.x || 0) + (e.key === 'ArrowLeft' ? -n : e.key === 'ArrowRight' ? n : 0),
       y: (selectedDesign.value.y || 0) + (e.key === 'ArrowUp' ? -n : e.key === 'ArrowDown' ? n : 0),
-    })
+    });
   }
 }
 onMounted(async () => {
-  await beginDesign()
-  await nextTick()
-  designStageReady.value = true
-  window.addEventListener('resize', resizeWindow)
-  observer = new ResizeObserver(fit)
-  if (viewport.value) observer.observe(viewport.value)
-  fit()
-  raf = requestAnimationFrame(measure)
-  document.addEventListener('pointerdown', down, true)
-  document.addEventListener('pointermove', move, true)
-  document.addEventListener('pointerup', up, true)
-  document.addEventListener('click', click, true)
-  document.addEventListener('dblclick', deepSelect, true)
-  document.addEventListener('keydown', keys, true)
-})
+  await beginDesign();
+  await nextTick();
+  designStageReady.value = true;
+  window.addEventListener('resize', resizeWindow);
+  observer = new ResizeObserver(fit);
+  if (viewport.value) observer.observe(viewport.value);
+  fit();
+  raf = requestAnimationFrame(measure);
+  document.addEventListener('pointerdown', down, true);
+  document.addEventListener('pointermove', move, true);
+  document.addEventListener('pointerup', up, true);
+  document.addEventListener('click', click, true);
+  document.addEventListener('dblclick', deepSelect, true);
+  document.addEventListener('keydown', keys, true);
+});
 onUnmounted(() => {
-  designStageReady.value = false
-  window.removeEventListener('resize', resizeWindow)
-  observer?.disconnect()
-  cancelAnimationFrame(raf)
-  document.removeEventListener('pointerdown', down, true)
-  document.removeEventListener('pointermove', move, true)
-  document.removeEventListener('pointerup', up, true)
-  document.removeEventListener('click', click, true)
-  document.removeEventListener('dblclick', deepSelect, true)
-  document.removeEventListener('keydown', keys, true)
-})
+  designStageReady.value = false;
+  window.removeEventListener('resize', resizeWindow);
+  observer?.disconnect();
+  cancelAnimationFrame(raf);
+  document.removeEventListener('pointerdown', down, true);
+  document.removeEventListener('pointermove', move, true);
+  document.removeEventListener('pointerup', up, true);
+  document.removeEventListener('click', click, true);
+  document.removeEventListener('dblclick', deepSelect, true);
+  document.removeEventListener('keydown', keys, true);
+});
 </script>
 <template>
   <Teleport to="body"

@@ -6,93 +6,93 @@ const fs = require('node:fs'),
   net = require('node:net'),
   http = require('node:http'),
   assert = require('node:assert/strict'),
-  crypto = require('node:crypto')
+  crypto = require('node:crypto');
 const { spawn, execFileSync } = require('node:child_process'),
   Zip = require('adm-zip'),
-  owned = require('./qa-owned-process-119.cjs')
+  owned = require('./qa-owned-process-119.cjs');
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-  digest = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex')
+  digest = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
 const THEMES = ['black-orange', 'blue-white', 'transparent', 'custom'],
   LAYOUTS = [
     [960, 620, 1],
     [1280, 900, 1.25],
     [960, 620, 1.25],
-  ]
+  ];
 async function freePort() {
-  const server = net.createServer()
+  const server = net.createServer();
   await new Promise((resolve, reject) => {
-    server.once('error', reject)
-    server.listen(0, '127.0.0.1', resolve)
-  })
-  const port = server.address().port
-  await new Promise((resolve) => server.close(resolve))
-  return port
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+  const port = server.address().port;
+  await new Promise((resolve) => server.close(resolve));
+  return port;
 }
 async function protocol(url) {
-  const socket = new WebSocket(url)
+  const socket = new WebSocket(url);
   await new Promise((resolve, reject) => {
-    socket.addEventListener('open', resolve, { once: true })
-    socket.addEventListener('error', reject, { once: true })
-  })
-  let next = 0
-  const pending = new Map()
+    socket.addEventListener('open', resolve, { once: true });
+    socket.addEventListener('error', reject, { once: true });
+  });
+  let next = 0;
+  const pending = new Map();
   socket.addEventListener('message', (event) => {
-    const message = JSON.parse(event.data)
-    pending.get(message.id)?.(message)
-  })
+    const message = JSON.parse(event.data);
+    pending.get(message.id)?.(message);
+  });
   return {
     socket,
     call(method, params = {}, maximumMs = 30000) {
       return new Promise((resolve, reject) => {
         const id = ++next,
           timer = setTimeout(() => {
-            pending.delete(id)
-            reject(Error(method + ' timed out'))
-          }, maximumMs)
+            pending.delete(id);
+            reject(Error(method + ' timed out'));
+          }, maximumMs);
         pending.set(id, (message) => {
-          clearTimeout(timer)
-          pending.delete(id)
-          message.error ? reject(Error(JSON.stringify(message.error))) : resolve(message.result)
-        })
-        socket.send(JSON.stringify({ id, method, params }))
-      })
+          clearTimeout(timer);
+          pending.delete(id);
+          message.error ? reject(Error(JSON.stringify(message.error))) : resolve(message.result);
+        });
+        socket.send(JSON.stringify({ id, method, params }));
+      });
     },
-  }
+  };
 }
 function assertDownloadRoot(settings, expected) {
-  assert.equal(path.resolve(settings.gameDir), expected)
-  assert.equal(path.resolve(settings.activeFolder), expected)
-  const defaults = settings.folders.filter((folder) => folder.isDefault)
-  assert.equal(defaults.length, 1)
-  assert.equal(path.resolve(defaults[0].path), expected)
+  assert.equal(path.resolve(settings.gameDir), expected);
+  assert.equal(path.resolve(settings.activeFolder), expected);
+  const defaults = settings.folders.filter((folder) => folder.isDefault);
+  assert.equal(defaults.length, 1);
+  assert.equal(path.resolve(defaults[0].path), expected);
 }
 function snapshotFiles(root) {
-  const result = []
-  if (!fs.existsSync(root)) return result
+  const result = [];
+  if (!fs.existsSync(root)) return result;
   const visit = (dir) => {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const file = path.join(dir, entry.name)
-      assert(!entry.isSymbolicLink(), 'no linked QA file')
-      if (entry.isDirectory()) visit(file)
+      const file = path.join(dir, entry.name);
+      assert(!entry.isSymbolicLink(), 'no linked QA file');
+      if (entry.isDirectory()) visit(file);
       else if (entry.isFile())
         result.push({
           path: path.relative(root, file).split(path.sep).join('/'),
           bytes: fs.statSync(file).size,
           sha256: digest(fs.readFileSync(file)),
-        })
+        });
     }
-  }
-  visit(root)
-  return result.sort((a, b) => a.path.localeCompare(b.path))
+  };
+  visit(root);
+  return result.sort((a, b) => a.path.localeCompare(b.path));
 }
 function fixturePack() {
   const zip = new Zip(),
-    id = '112-合成安装-§'
+    id = '112-合成安装-§';
   zip.addFile(
     `.minecraft/versions/${id}/${id}.json`,
     Buffer.from(JSON.stringify({ id, mainClass: 'net.minecraft.client.main.Main', libraries: [], _mcVersion: '1.20.1' }))
-  )
-  zip.addFile(`.minecraft/versions/${id}/${id}.jar`, Buffer.from('synthetic runtime; never launched'))
+  );
+  zip.addFile(`.minecraft/versions/${id}/${id}.jar`, Buffer.from('synthetic runtime; never launched'));
   for (const [rel, text] of [
     ['mods/§ 中文模组.jar', 'synthetic mod'],
     ['resourcepacks/中文 材质.zip', 'synthetic resource pack'],
@@ -100,36 +100,36 @@ function fixturePack() {
     ['config/设置.txt', 'fixture settings'],
     ['saves/合成世界/level.dat', 'synthetic world; never launched'],
   ])
-    zip.addFile('.minecraft/' + rel, Buffer.from(text))
-  return zip.toBuffer()
+    zip.addFile('.minecraft/' + rel, Buffer.from(text));
+  return zip.toBuffer();
 }
 function assertActualLayout(row) {
-  assert.equal(row.theme, row.expectedTheme)
-  assert.equal(row.native.visible, true)
-  assert.equal(row.native.focused, true)
-  assert.equal(row.renderer.focused, true)
-  assert.equal(row.renderer.hidden, false)
-  assert.equal(row.layout.horizontalOverflow, false)
-  assert.equal(row.path.readOnly, true)
-  assert.equal(row.path.value, row.expectedPath)
+  assert.equal(row.theme, row.expectedTheme);
+  assert.equal(row.native.visible, true);
+  assert.equal(row.native.focused, true);
+  assert.equal(row.renderer.focused, true);
+  assert.equal(row.renderer.hidden, false);
+  assert.equal(row.layout.horizontalOverflow, false);
+  assert.equal(row.path.readOnly, true);
+  assert.equal(row.path.value, row.expectedPath);
   for (const point of Object.values(row.controls))
-    assert(point.hit, 'actual control outside viewport or obscured: ' + JSON.stringify(point))
-  assert(row.body.includes('默认下载位置'))
-  assert(/旧|已有|已安装/.test(row.body))
-  assert(row.screenshot.bytes > 0)
-  assert.match(row.screenshot.sha256, /^[a-f0-9]{64}$/)
+    assert(point.hit, 'actual control outside viewport or obscured: ' + JSON.stringify(point));
+  assert(row.body.includes('默认下载位置'));
+  assert(/旧|已有|已安装/.test(row.body));
+  assert(row.screenshot.bytes > 0);
+  assert.match(row.screenshot.sha256, /^[a-f0-9]{64}$/);
 }
 async function run() {
   const [appArgument, arch, stage = 'portable'] = process.argv.slice(2),
-    pkg = require('../package.json')
-  assert(appArgument, 'native executable/app required')
-  assert.match(pkg.version, /^\d+\.\d+\.\d+$/)
-  assert.equal(process.arch, arch)
-  assert(['win32', 'darwin'].includes(process.platform))
-  assert(process.platform === 'darwin' ? ['app', 'dmg'].includes(stage) : stage === 'portable')
+    pkg = require('../package.json');
+  assert(appArgument, 'native executable/app required');
+  assert.match(pkg.version, /^\d+\.\d+\.\d+$/);
+  assert.equal(process.arch, arch);
+  assert(['win32', 'darwin'].includes(process.platform));
+  assert(process.platform === 'darwin' ? ['app', 'dmg'].includes(stage) : stage === 'portable');
   const appPath = path.resolve(appArgument),
-    exe = process.platform === 'darwin' ? path.join(appPath, 'Contents/MacOS/FAIONYX') : appPath
-  assert(fs.statSync(exe).isFile())
+    exe = process.platform === 'darwin' ? path.join(appPath, 'Contents/MacOS/FAIONYX') : appPath;
+  assert(fs.statSync(exe).isFile());
   const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
     token = crypto.randomBytes(16).toString('hex'),
     root = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX download112 中文 '))),
@@ -139,28 +139,28 @@ async function run() {
       process.platform === 'win32' && fs.existsSync('D:\\')
         ? path.join('D:\\', 'FAIONYX 独立验收 ' + token)
         : path.join(root, '新下载目录 §'),
-    output = path.resolve(`release/download-location-proof-${pkg.version}-${arch}-${stage}`)
-  assert(!fs.existsSync(output), 'refuse to overwrite a prior focused native attempt')
-  fs.mkdirSync(output, { recursive: true })
-  fs.mkdirSync(profile)
-  fs.mkdirSync(old)
-  assert(!fs.existsSync(target))
-  fs.mkdirSync(target, { recursive: true })
+    output = path.resolve(`release/download-location-proof-${pkg.version}-${arch}-${stage}`);
+  assert(!fs.existsSync(output), 'refuse to overwrite a prior focused native attempt');
+  fs.mkdirSync(output, { recursive: true });
+  fs.mkdirSync(profile);
+  fs.mkdirSync(old);
+  assert(!fs.existsSync(target));
+  fs.mkdirSync(target, { recursive: true });
   const canonicalTarget = fs.realpathSync.native(target),
-    canonicalOld = fs.realpathSync.native(old)
+    canonicalOld = fs.realpathSync.native(old);
   fs.writeFileSync(
     path.join(root, 'owner.json'),
     JSON.stringify({ token, root, target: canonicalTarget, classification: 'new disposable QA roots; no player files' }),
     { flag: 'wx' }
-  )
-  const oldInstance = path.join(old, 'versions', '旧实例 保留§')
-  fs.mkdirSync(oldInstance, { recursive: true })
+  );
+  const oldInstance = path.join(old, 'versions', '旧实例 保留§');
+  fs.mkdirSync(oldInstance, { recursive: true });
   fs.writeFileSync(
     path.join(oldInstance, '旧实例 保留§.json'),
     JSON.stringify({ id: '旧实例 保留§', _mcVersion: '1.20.1', mainClass: 'net.minecraft.client.main.Main', libraries: [], _gameDir: true })
-  )
-  fs.writeFileSync(path.join(oldInstance, '旧实例 保留§.jar'), 'synthetic old runtime; never launched')
-  const oldBaseline = snapshotFiles(oldInstance)
+  );
+  fs.writeFileSync(path.join(oldInstance, '旧实例 保留§.jar'), 'synthetic old runtime; never launched');
+  const oldBaseline = snapshotFiles(oldInstance);
   fs.writeFileSync(
     path.join(profile, 'settings.json'),
     JSON.stringify({
@@ -173,7 +173,7 @@ async function run() {
       mirror: 'official',
       closeToTray: false,
     })
-  )
+  );
   const proof = {
     schemaVersion: 1,
     version: pkg.version,
@@ -209,73 +209,73 @@ async function run() {
       'physical audio listening',
       'actual public modpack installation and Minecraft game launch',
     ],
-  }
-  const save = () => fs.writeFileSync(path.join(output, 'summary.json'), JSON.stringify(proof, null, 2))
-  save()
-  let server, heldResponse, requestResolve
+  };
+  const save = () => fs.writeFileSync(path.join(output, 'summary.json'), JSON.stringify(proof, null, 2));
+  save();
+  let server, heldResponse, requestResolve;
   const packBytes = fixturePack(),
-    requests = []
-  const startedRequest = new Promise((resolve) => (requestResolve = resolve))
+    requests = [];
+  const startedRequest = new Promise((resolve) => (requestResolve = resolve));
   server = http.createServer((request, response) => {
-    const row = { at: Date.now(), url: request.url, method: request.method }
-    requests.push(row)
+    const row = { at: Date.now(), url: request.url, method: request.method };
+    requests.push(row);
     if (request.url === '/colon-pack.zip') {
-      response.writeHead(200, { 'Content-Length': packBytes.length })
-      heldResponse = response
-      requestResolve()
-      return
+      response.writeHead(200, { 'Content-Length': packBytes.length });
+      heldResponse = response;
+      requestResolve();
+      return;
     }
     if (request.url === '/hash-failure.zip') {
-      response.writeHead(200, { 'Content-Length': packBytes.length })
-      response.end(packBytes)
-      return
+      response.writeHead(200, { 'Content-Length': packBytes.length });
+      response.end(packBytes);
+      return;
     }
-    response.writeHead(404)
-    response.end()
-  })
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
-  const base = `http://127.0.0.1:${server.address().port}`
-  let originalError
+    response.writeHead(404);
+    response.end();
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  let originalError;
   try {
     for (const phase of ['first', 'restart']) {
       const port = await freePort(),
         mainPort = await freePort(),
         log = fs.openSync(path.join(output, phase + '-process.log'), 'wx'),
-        env = { ...process.env, TEMP: root, TMP: root }
-      delete env.ELECTRON_RUN_AS_NODE
+        env = { ...process.env, TEMP: root, TMP: root };
+      delete env.ELECTRON_RUN_AS_NODE;
       const child = spawn(exe, [`--inspect=127.0.0.1:${mainPort}`, `--user-data-dir=${profile}`, `--remote-debugging-port=${port}`], {
           env,
           stdio: ['ignore', log, log],
         }),
-        track = owned.trackOwnedChild(child, 'download112-' + phase)
-      let renderer, main, phaseError
-      const row = { phase, startedAt: new Date().toISOString(), complete: false, child: track.ledger }
-      proof.phases.push(row)
-      save()
+        track = owned.trackOwnedChild(child, 'download112-' + phase);
+      let renderer, main, phaseError;
+      const row = { phase, startedAt: new Date().toISOString(), complete: false, child: track.ledger };
+      proof.phases.push(row);
+      save();
       try {
         const until = async (label, read, accept, maxMs = 30000) => {
           const samples = [],
-            start = performance.now()
+            start = performance.now();
           do {
-            assert(child.exitCode === null, 'owned native process exited during ' + label)
-            let value
+            assert(child.exitCode === null, 'owned native process exited during ' + label);
+            let value;
             try {
-              value = await read()
+              value = await read();
             } catch (error) {
-              value = { observationError: error.message }
+              value = { observationError: error.message };
             }
-            samples.push({ at: performance.now(), value })
+            samples.push({ at: performance.now(), value });
             if (accept(value)) {
-              proof.operations.push({ phase, label, maximumMs: maxMs, samples })
-              save()
-              return value
+              proof.operations.push({ phase, label, maximumMs: maxMs, samples });
+              save();
+              return value;
             }
-            await wait(100)
-          } while (performance.now() - start < maxMs)
-          proof.failure = { phase, label, maximumMs: maxMs, samples }
-          save()
-          throw Error('required actual state not reached: ' + label)
-        }
+            await wait(100);
+          } while (performance.now() - start < maxMs);
+          proof.failure = { phase, label, maximumMs: maxMs, samples };
+          save();
+          throw Error('required actual state not reached: ' + label);
+        };
         const endpoint = await until(
           'owned renderer endpoint',
           async () => await (await fetch(`http://127.0.0.1:${port}/json`, { signal: AbortSignal.timeout(2000) })).json(),
@@ -283,34 +283,34 @@ async function run() {
             Array.isArray(value) &&
             value.filter((item) => item.type === 'page' && /\/renderer\/index\.html(?:$|[?#])/.test(item.url)).length === 1,
           90000
-        )
-        const page = endpoint.filter((item) => item.type === 'page' && /\/renderer\/index\.html(?:$|[?#])/.test(item.url))[0]
-        assert(new URL(page.webSocketDebuggerUrl).hostname === '127.0.0.1')
-        renderer = await protocol(page.webSocketDebuggerUrl)
-        await renderer.call('Runtime.enable')
-        await renderer.call('Page.enable')
+        );
+        const page = endpoint.filter((item) => item.type === 'page' && /\/renderer\/index\.html(?:$|[?#])/.test(item.url))[0];
+        assert(new URL(page.webSocketDebuggerUrl).hostname === '127.0.0.1');
+        renderer = await protocol(page.webSocketDebuggerUrl);
+        await renderer.call('Runtime.enable');
+        await renderer.call('Page.enable');
         const mainEndpoints = await until(
           'owned main endpoint',
           async () => await (await fetch(`http://127.0.0.1:${mainPort}/json`, { signal: AbortSignal.timeout(2000) })).json(),
           (value) => Array.isArray(value) && value.length === 1
-        )
-        assert(new URL(mainEndpoints[0].webSocketDebuggerUrl).hostname === '127.0.0.1')
-        main = await protocol(mainEndpoints[0].webSocketDebuggerUrl)
+        );
+        assert(new URL(mainEndpoints[0].webSocketDebuggerUrl).hostname === '127.0.0.1');
+        main = await protocol(mainEndpoints[0].webSocketDebuggerUrl);
         const evaluate = async (expression) => {
-            const result = await renderer.call('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })
-            if (result.exceptionDetails) throw Error(JSON.stringify(result.exceptionDetails))
-            return result.result.value
+            const result = await renderer.call('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
+            if (result.exceptionDetails) throw Error(JSON.stringify(result.exceptionDetails));
+            return result.result.value;
           },
           inspect = async (expression) => {
-            const result = await main.call('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })
-            if (result.exceptionDetails) throw Error(JSON.stringify(result.exceptionDetails))
-            return result.result.value
-          }
+            const result = await main.call('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
+            if (result.exceptionDetails) throw Error(JSON.stringify(result.exceptionDetails));
+            return result.result.value;
+          };
         // Page.reload acknowledges navigation before the outgoing document vanishes.
         // Same-theme DOM from that document must never satisfy a readiness gate.
         const reloadMounted = async (label, expectedTheme) => {
-          const previousOrigin = await evaluate('performance.timeOrigin')
-          await renderer.call('Page.reload')
+          const previousOrigin = await evaluate('performance.timeOrigin');
+          await renderer.call('Page.reload');
           return until(
             'actual new document ' + label,
             () =>
@@ -322,30 +322,30 @@ async function run() {
               value.readyState === 'complete' &&
               value.mounted &&
               (!expectedTheme || value.theme === expectedTheme)
-          )
-        }
+          );
+        };
         const native = () =>
           inspect(
             `(()=>{const e=process.mainModule.require('electron'),w=e.BrowserWindow.getAllWindows().find(w=>w.webContents.getURL().includes('/renderer/index.html'));return{pid:process.pid,ppid:process.ppid,version:e.app.getVersion(),runtime:process.versions.electron,platform:process.platform,arch:process.arch,actualUserData:e.app.getPath('userData'),executable:process.execPath,focused:w?.isFocused(),visible:w?.isVisible(),zoom:w?.webContents.getZoomFactor(),url:w?.webContents.getURL()}})()`
-          )
-        const identity = await native()
+          );
+        const identity = await native();
         assert(
           identity.pid === child.pid || identity.ppid === child.pid,
           'debugger must belong to owned spawned process or direct portable child'
-        )
-        assert.equal(identity.actualUserData, profile)
-        assert.equal(identity.arch, arch)
-        assert.equal(identity.platform, process.platform)
-        assert.equal(identity.version, pkg.version)
-        assert.equal(identity.runtime, pkg.devDependencies.electron)
-        assert.equal(identity.url, page.url)
-        row.identity = identity
-        proof.identity.push(identity)
-        save()
+        );
+        assert.equal(identity.actualUserData, profile);
+        assert.equal(identity.arch, arch);
+        assert.equal(identity.platform, process.platform);
+        assert.equal(identity.version, pkg.version);
+        assert.equal(identity.runtime, pkg.devDependencies.electron);
+        assert.equal(identity.url, page.url);
+        row.identity = identity;
+        proof.identity.push(identity);
+        save();
         await inspect(
           `(()=>{const e=process.mainModule.require('electron'),w=e.BrowserWindow.getAllWindows().find(w=>w.webContents.getURL().includes('/renderer/index.html'));if(process.platform==='darwin')e.app.focus({steal:true});w.show();w.focus()})()`
-        )
-        await renderer.call('Page.bringToFront')
+        );
+        await renderer.call('Page.bringToFront');
         await until(
           'actual mounted native page',
           () =>
@@ -353,9 +353,9 @@ async function run() {
               `({ready:!!document.querySelector('[data-nav=settings]')&&!!window.faionyx,focus:document.hasFocus(),hidden:document.hidden})`
             ),
           (v) => v.ready && v.focus && !v.hidden
-        )
+        );
         const point = async (selector) => {
-          await evaluate(`document.querySelector(${JSON.stringify(selector)})?.scrollIntoView({block:'center',behavior:'instant'})`)
+          await evaluate(`document.querySelector(${JSON.stringify(selector)})?.scrollIntoView({block:'center',behavior:'instant'})`);
           return until(
             'visible coordinate ' + selector,
             () =>
@@ -363,10 +363,10 @@ async function run() {
                 `(()=>{const e=document.querySelector(${JSON.stringify(selector)});if(!e)return{hit:false};const r=e.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;return{hit:!!r.width&&!!r.height&&r.x>=0&&r.y>=0&&r.right<=innerWidth&&r.bottom<=innerHeight&&!e.disabled&&!e.closest('[inert]')&&e.contains(document.elementFromPoint(x,y)),x,y,bounds:r.toJSON(),label:e.getAttribute('aria-label')||e.textContent.trim()}})()`
               ),
             (v) => v.hit
-          )
-        }
+          );
+        };
         const click = async (selector) => {
-          const p = await point(selector)
+          const p = await point(selector);
           for (const [type, buttons] of [
             ['mouseMoved', 0],
             ['mousePressed', 1],
@@ -379,12 +379,12 @@ async function run() {
               button: type === 'mouseMoved' ? 'none' : 'left',
               buttons,
               clickCount: type === 'mouseMoved' ? 0 : 1,
-            }
-            proof.inputEvents.push({ phase, at: performance.now(), method: 'Input.dispatchMouseEvent', params: input })
-            await renderer.call('Input.dispatchMouseEvent', input)
+            };
+            proof.inputEvents.push({ phase, at: performance.now(), method: 'Input.dispatchMouseEvent', params: input });
+            await renderer.call('Input.dispatchMouseEvent', input);
           }
-          return p
-        }
+          return p;
+        };
         const textClick = async (scope, label) => {
           // Navigation can report its selected route before Vue has mounted the new
           // view. Observe the real exact control and transition state, not a delay.
@@ -402,16 +402,16 @@ async function run() {
               !v.matches[0].inert &&
               v.matches[0].ancestors.every((a) => a.opacity >= 0.999 && a.visibility === 'visible' && a.display !== 'none') &&
               v.matches[0].routeTransitions.length === 0
-          )
+          );
           const selector = await evaluate(
             `(()=>{const rows=[...document.querySelectorAll(${JSON.stringify(scope + ' button')})].filter(e=>e.textContent.trim()===${JSON.stringify(label)}&&e.getClientRects().length);if(rows.length!==1)throw Error('expected one visible exact button '+${JSON.stringify(label)});const attr='data-download112-coordinate';rows[0].setAttribute(attr,'chosen');return '['+attr+'="chosen"]'})()`
-          )
+          );
           try {
-            return await click(selector)
+            return await click(selector);
           } finally {
-            await evaluate(`document.querySelector(${JSON.stringify(selector)})?.removeAttribute('data-download112-coordinate')`)
+            await evaluate(`document.querySelector(${JSON.stringify(selector)})?.removeAttribute('data-download112-coordinate')`);
           }
-        }
+        };
         const settledCard = () =>
           until(
             'actual download card transition settled',
@@ -423,7 +423,7 @@ async function run() {
               v.ready &&
               v.ancestors.every((a) => a.opacity >= 0.999 && a.visibility === 'visible' && a.display !== 'none') &&
               v.animations.length === 0
-          )
+          );
         const screenshot = async (name) => {
           await until(
             'actual static screenshot settled ' + name,
@@ -432,83 +432,83 @@ async function run() {
                 `({animations:document.getAnimations().filter(a=>a.playState==='running'&&Number.isFinite(a.effect?.getTiming().iterations)).map(a=>({playState:a.playState,currentTime:a.currentTime,target:a.effect?.target?.tagName,classes:a.effect?.target?.className}))})`
               ),
             (value) => value.animations?.length === 0
-          )
+          );
           const bytes = Buffer.from((await renderer.call('Page.captureScreenshot', { format: 'png' })).data, 'base64'),
-            file = name + '.png'
-          fs.writeFileSync(path.join(output, file), bytes, { flag: 'wx' })
-          const image = { file, bytes: bytes.length, sha256: digest(bytes) }
-          proof.screenshots.push(image)
-          save()
-          return image
-        }
+            file = name + '.png';
+          fs.writeFileSync(path.join(output, file), bytes, { flag: 'wx' });
+          const image = { file, bytes: bytes.length, sha256: digest(bytes) };
+          proof.screenshots.push(image);
+          save();
+          return image;
+        };
         const settings = () => evaluate(`window.faionyx.invoke('settings:get')`),
           selectSettings = async () => {
-            await click('[data-nav=settings]')
+            await click('[data-nav=settings]');
             await until(
               'actual settings route',
               () => evaluate(`document.querySelector('[data-nav=settings]')?.getAttribute('aria-current')`),
               (v) => v === 'page'
-            )
-            await textClick('.settings-scopes', '启动器设置')
-            await textClick('.settings-categories', '下载')
+            );
+            await textClick('.settings-scopes', '启动器设置');
+            await textClick('.settings-categories', '下载');
             await until(
               'new default download card',
               () => evaluate(`!!document.querySelector('[data-ui="download-location:settings"]')?.getClientRects().length`),
               (v) => v === true
-            )
-          }
+            );
+          };
         if (phase === 'restart') {
-          const actual = await settings()
-          assertDownloadRoot(actual, canonicalTarget)
-          assert.notEqual(identity.pid, proof.identity[0].pid)
-          assert.deepEqual(snapshotFiles(oldInstance), oldBaseline)
-          await selectSettings()
-          assert.equal(await evaluate(`document.querySelector('[data-ui="download-location:path"]').value`), canonicalTarget)
-          row.settingsPersisted = true
-          row.oldInstanceUnchanged = true
-          row.screenshot = await screenshot('restart-default-location')
+          const actual = await settings();
+          assertDownloadRoot(actual, canonicalTarget);
+          assert.notEqual(identity.pid, proof.identity[0].pid);
+          assert.deepEqual(snapshotFiles(oldInstance), oldBaseline);
+          await selectSettings();
+          assert.equal(await evaluate(`document.querySelector('[data-ui="download-location:path"]').value`), canonicalTarget);
+          row.settingsPersisted = true;
+          row.oldInstanceUnchanged = true;
+          row.screenshot = await screenshot('restart-default-location');
         } else {
-          assertDownloadRoot(await settings(), canonicalOld)
-          const beforeDisk = JSON.parse(fs.readFileSync(path.join(profile, 'settings.json'), 'utf8'))
-          const result = await evaluate(`window.faionyx.invoke('folders:setDownload',${JSON.stringify(canonicalTarget)})`)
-          assert(Array.isArray(result))
-          const after = await settings()
-          assertDownloadRoot(after, canonicalTarget)
-          assertDownloadRoot(JSON.parse(fs.readFileSync(path.join(profile, 'settings.json'), 'utf8')), canonicalTarget)
+          assertDownloadRoot(await settings(), canonicalOld);
+          const beforeDisk = JSON.parse(fs.readFileSync(path.join(profile, 'settings.json'), 'utf8'));
+          const result = await evaluate(`window.faionyx.invoke('folders:setDownload',${JSON.stringify(canonicalTarget)})`);
+          assert(Array.isArray(result));
+          const after = await settings();
+          assertDownloadRoot(after, canonicalTarget);
+          assertDownloadRoot(JSON.parse(fs.readFileSync(path.join(profile, 'settings.json'), 'utf8')), canonicalTarget);
           assert(
             after.folders.some((folder) => folder.path === canonicalOld),
             'old folder registration must remain'
-          )
-          assert.deepEqual(snapshotFiles(oldInstance), oldBaseline)
+          );
+          assert.deepEqual(snapshotFiles(oldInstance), oldBaseline);
           proof.changedLocation = {
             classification: 'unchanged real product IPC, selected private path; not native picker automation',
             before: beforeDisk,
             after,
-          }
-          save()
-          const invalid = path.join(root, '不是文件夹.txt')
-          fs.writeFileSync(invalid, 'synthetic invalid target', { flag: 'wx' })
+          };
+          save();
+          const invalid = path.join(root, '不是文件夹.txt');
+          fs.writeFileSync(invalid, 'synthetic invalid target', { flag: 'wx' });
           const unchanged = JSON.stringify(await settings()),
             bad = await evaluate(
               `window.faionyx.invoke('folders:setDownload',${JSON.stringify(invalid)}).then(()=>({ok:true}),e=>({ok:false,message:e.message}))`
-            )
-          assert.equal(bad.ok, false)
-          assert.equal(JSON.stringify(await settings()), unchanged)
-          proof.rejectedTarget = { ...bad, settingsUnchanged: true }
-          save()
+            );
+          assert.equal(bad.ok, false);
+          assert.equal(JSON.stringify(await settings()), unchanged);
+          proof.rejectedTarget = { ...bad, settingsUnchanged: true };
+          save();
           // Real SelectMenu coordinate operations exercise the production asynchronous
           // UI path. The failure is a removed owned empty directory, not a stubbed IPC.
-          const removed = path.join(root, '验收 已断开的目录')
-          fs.mkdirSync(removed)
-          await evaluate(`window.faionyx.invoke('folders:add',${JSON.stringify(removed)})`)
-          assert.equal(fs.realpathSync.native(removed), removed)
-          assert.deepEqual(fs.readdirSync(removed), [])
-          fs.rmdirSync(removed)
-          await reloadMounted('directory fixture')
-          await selectSettings()
-          await click('.settings-search input')
-          assert.equal(await evaluate(`document.activeElement?.getAttribute('aria-label')`), '搜索设置')
-          await renderer.call('Input.insertText', { text: '安装目录' })
+          const removed = path.join(root, '验收 已断开的目录');
+          fs.mkdirSync(removed);
+          await evaluate(`window.faionyx.invoke('folders:add',${JSON.stringify(removed)})`);
+          assert.equal(fs.realpathSync.native(removed), removed);
+          assert.deepEqual(fs.readdirSync(removed), []);
+          fs.rmdirSync(removed);
+          await reloadMounted('directory fixture');
+          await selectSettings();
+          await click('.settings-search input');
+          assert.equal(await evaluate(`document.activeElement?.getAttribute('aria-label')`), '搜索设置');
+          await renderer.call('Input.insertText', { text: '安装目录' });
           const search = await until(
             'legacy installation-directory search discovers new default location',
             () =>
@@ -516,12 +516,12 @@ async function run() {
                 `(()=>{const rows=[...document.querySelectorAll('.settings-search-results button')].filter(button=>button.querySelector('strong')?.textContent.trim()==='默认下载位置');return{query:document.querySelector('.settings-search input')?.value,matches:rows.map(button=>button.innerText)}})()`
               ),
             (value) => value.query === '安装目录' && value.matches?.length === 1
-          )
-          proof.locationDiscovery = { ...search, screenshot: await screenshot('settings-legacy-search-location') }
+          );
+          proof.locationDiscovery = { ...search, screenshot: await screenshot('settings-legacy-search-location') };
           await evaluate(
             `(()=>{const rows=[...document.querySelectorAll('.settings-search-results button')].filter(button=>button.querySelector('strong')?.textContent.trim()==='默认下载位置');if(rows.length!==1)throw Error('actual unique download-location search result missing');rows[0].setAttribute('data-download112-search','result')})()`
-          )
-          await click('[data-download112-search="result"]')
+          );
+          await click('[data-download112-search="result"]');
           await until(
             'legacy search jumps into actual launcher Downloads category',
             () =>
@@ -529,11 +529,11 @@ async function run() {
                 `({scope:document.querySelector('.settings-scopes [aria-current=page]')?.textContent.trim(),category:document.querySelector('.settings-categories [aria-current=page]')?.textContent.trim(),path:document.querySelector('[data-ui="download-location:path"]')?.value})`
               ),
             (value) => value.scope === '启动器设置' && value.category === '下载' && value.path === canonicalTarget
-          )
-          save()
+          );
+          save();
           const changeRegistered = async (label, expected) => {
-            await click('.download-location-select')
-            await textClick('.select-menu-float', label)
+            await click('.download-location-select');
+            await textClick('.select-menu-float', label);
             await until(
               'registered download selection ' + label,
               () =>
@@ -541,14 +541,14 @@ async function run() {
                   `({path:document.querySelector('[data-ui="download-location:path"]')?.value,error:document.querySelector('[data-ui="download-location:error"]')?.textContent,busy:document.querySelector('[data-ui="download-location:change"]')?.disabled})`
                 ),
               (v) => v.path === expected && !v.error && !v.busy
-            )
-            assertDownloadRoot(await settings(), expected)
-            assertDownloadRoot(JSON.parse(fs.readFileSync(path.join(profile, 'settings.json'), 'utf8')), expected)
-          }
-          await changeRegistered('旧实例目录', canonicalOld)
-          await changeRegistered(path.basename(canonicalTarget), canonicalTarget)
-          await click('.download-location-select')
-          await textClick('.select-menu-float', path.basename(removed))
+            );
+            assertDownloadRoot(await settings(), expected);
+            assertDownloadRoot(JSON.parse(fs.readFileSync(path.join(profile, 'settings.json'), 'utf8')), expected);
+          };
+          await changeRegistered('旧实例目录', canonicalOld);
+          await changeRegistered(path.basename(canonicalTarget), canonicalTarget);
+          await click('.download-location-select');
+          await textClick('.select-menu-float', path.basename(removed));
           const uiFailure = await until(
             'real removed-directory UI failure restores busy state',
             () =>
@@ -556,27 +556,27 @@ async function run() {
                 `({path:document.querySelector('[data-ui="download-location:path"]')?.value,error:document.querySelector('[data-ui="download-location:error"]')?.textContent,role:document.querySelector('[data-ui="download-location:error"]')?.getAttribute('role'),busy:document.querySelector('[data-ui="download-location:change"]')?.disabled})`
               ),
             (v) => v.path === canonicalTarget && !!v.error && !v.busy
-          )
-          assert.equal(uiFailure.role, 'alert')
-          assertDownloadRoot(await settings(), canonicalTarget)
+          );
+          assert.equal(uiFailure.role, 'alert');
+          assertDownloadRoot(await settings(), canonicalTarget);
           proof.selectionFailure = {
             ...uiFailure,
             classification:
               'Actual coordinates choose an owned registered empty directory removed just before selection; unchanged production IPC rejects it, preserves default and re-enables UI.',
             screenshot: await screenshot('settings-real-directory-failure'),
-          }
-          await changeRegistered(path.basename(canonicalTarget) + '（默认）', canonicalTarget)
-          proof.selectionRecovery = { complete: true, oldThenNewCoordinateSelection: true, errorCleared: true }
-          save()
+          };
+          await changeRegistered(path.basename(canonicalTarget) + '（默认）', canonicalTarget);
+          proof.selectionRecovery = { complete: true, oldThenNewCoordinateSelection: true, errorCleared: true };
+          save();
           for (const theme of THEMES)
             for (const [width, height, zoom] of LAYOUTS) {
               await evaluate(
                 `window.faionyx.invoke('settings:set',${JSON.stringify({ theme, ...(theme === 'custom' ? { custom: { colors: { bg: '#171520', card: '#242232', accent: '#8759cd', text: '#f6f2ff', textDim: '#bcb7cc', border: '#4a455c', sidebarBg: '#201d2b', sidebarText: '#e5dff2', bannerText: '#ffffff' } } } : {}) })})`
-              )
-              await reloadMounted('theme ' + theme, theme)
+              );
+              await reloadMounted('theme ' + theme, theme);
               await inspect(
                 `(()=>{const e=process.mainModule.require('electron'),w=e.BrowserWindow.getAllWindows().find(w=>w.webContents.getURL().includes('/renderer/index.html'));w.unmaximize();w.setSize(${width},${height});w.webContents.setZoomFactor(${zoom});w.show();w.focus()})()`
-              )
+              );
               await until(
                 'actual renderer reflects native resize and zoom ' + width + ' ' + zoom,
                 async () => ({
@@ -589,9 +589,9 @@ async function run() {
                   v.native?.zoom === zoom &&
                   Math.abs(v.renderer.width - v.native.contentSize[0] / zoom) < 2 &&
                   Math.abs(v.renderer.height - v.native.contentSize[1] / zoom) < 2
-              )
-              await selectSettings()
-              await settledCard()
+              );
+              await selectSettings();
+              await settledCard();
               const controls = {
                   change: await point('[data-ui="download-location:change"]'),
                   manage: await point('[data-ui="download-location:manage"]'),
@@ -609,12 +609,12 @@ async function run() {
                   controls,
                   ...observed,
                   screenshot: await screenshot('settings-' + theme + '-' + width + '-' + String(zoom).replace('.', 'p')),
-                }
-              proof.scenes.push(scene)
-              save()
-              assertActualLayout(scene)
+                };
+              proof.scenes.push(scene);
+              save();
+              assertActualLayout(scene);
             }
-          await click('[data-ui="download-location:manage"]')
+          await click('[data-ui="download-location:manage"]');
           await until(
             'actual game management route',
             () =>
@@ -622,10 +622,10 @@ async function run() {
                 `({selected:document.querySelector('[data-nav=game]')?.getAttribute('aria-current'),path:document.querySelector('[data-ui="download-location:game-path"]')?.textContent.trim()})`
               ),
             (v) => v.selected === 'page' && v.path === canonicalTarget
-          )
-          proof.managementNavigation = { actual: true, screenshot: await screenshot('game-default-path') }
-          save()
-          await click('[data-tab=download]')
+          );
+          proof.managementNavigation = { actual: true, screenshot: await screenshot('game-default-path') };
+          save();
+          await click('[data-tab=download]');
           const release = await until(
             'actual public version catalogue in visible Game page',
             () =>
@@ -634,13 +634,13 @@ async function run() {
               ),
             (v) => !!v.version && v.button,
             60000
-          )
+          );
           const catalog = await evaluate(`window.faionyx.invoke('versions:catalog')`),
-            catalogVersion = catalog.versions.filter((version) => version.id === release.version)
-          assert.equal(catalogVersion.length, 1)
-          assert.equal(catalogVersion[0].type, 'release')
-          assert.match(catalogVersion[0].url, /^https:\/\//)
-          await click('[data-ui="game.latest-release"] .btn-gold')
+            catalogVersion = catalog.versions.filter((version) => version.id === release.version);
+          assert.equal(catalogVersion.length, 1);
+          assert.equal(catalogVersion[0].type, 'release');
+          assert.match(catalogVersion[0].url, /^https:\/\//);
+          await click('[data-ui="game.latest-release"] .btn-gold');
           const modal = await until(
             'actual installation modal snapshots selected download root',
             () =>
@@ -648,18 +648,18 @@ async function run() {
                 `(()=>{const e=document.querySelector('.game-install-modal'),p=e?.querySelector('[data-ui="download-location:install-target"] span');return{open:!!e,path:p?.textContent.trim(),title:e?.querySelector('.modal-title')?.textContent.trim()}})()`
               ),
             (v) => v.open && v.path === canonicalTarget
-          )
-          assert(modal.title.includes(release.version))
+          );
+          assert(modal.title.includes(release.version));
           const modalControls = {
             cancel: await point('.game-install-modal .install-footer .btn-ghost'),
             confirm: await point('.game-install-modal .install-footer .btn-gold'),
-          }
-          await evaluate(`window.faionyx.invoke('folders:setDownload',${JSON.stringify(canonicalOld)})`)
-          assertDownloadRoot(await settings(), canonicalOld)
+          };
+          await evaluate(`window.faionyx.invoke('folders:setDownload',${JSON.stringify(canonicalOld)})`);
+          assertDownloadRoot(await settings(), canonicalOld);
           assert.equal(
             await evaluate(`document.querySelector('[data-ui="download-location:install-target"] span')?.textContent.trim()`),
             canonicalTarget
-          )
+          );
           proof.installTargetPreview = {
             classification:
               'Actual visible public version catalogue and trusted pointer-opened vanilla installation modal. The original backend path IPC changes default while modal is mounted; its accepted target remains the snapshot. No Minecraft install/start is claimed.',
@@ -670,20 +670,20 @@ async function run() {
             changedDefault: canonicalOld,
             frozenTarget: canonicalTarget,
             screenshot: await screenshot('install-modal-target-frozen'),
-          }
-          await click('.game-install-modal .install-footer .btn-ghost')
+          };
+          await click('.game-install-modal .install-footer .btn-ghost');
           await until(
             'original cancel closes installation modal',
             () => evaluate(`!!document.querySelector('.game-install-modal')`),
             (v) => v === false
-          )
-          await evaluate(`window.faionyx.invoke('folders:setDownload',${JSON.stringify(canonicalTarget)})`)
-          assertDownloadRoot(await settings(), canonicalTarget)
-          save()
+          );
+          await evaluate(`window.faionyx.invoke('folders:setDownload',${JSON.stringify(canonicalTarget)})`);
+          assertDownloadRoot(await settings(), canonicalTarget);
+          save();
           // Observe original events through the public preload bridge, forwarding nothing.
           await evaluate(
             `(()=>{window.__download112={events:[],progress:[]};window.__download112.unsubscribe=[window.faionyx.on('event:installDone',v=>window.__download112.events.push(v)),window.faionyx.on('event:progress',v=>window.__download112.progress.push(v))]})()`
-          )
+          );
           const file = {
             fileId: 'synthetic-colon-112',
             fileName: 'Yet Another Bingo: Ultimate-2.14.0.zip',
@@ -695,44 +695,44 @@ async function run() {
             sha1: crypto.createHash('sha1').update(packBytes).digest('hex'),
             mcVersions: ['1.20.1'],
             loaders: [],
-          }
+          };
           await evaluate(
             `(()=>{window.__download112.request=window.faionyx.invoke('community:download',${JSON.stringify(file)},{versionId:'',kind:'modpack'}).then(value=>{window.__download112.result={ok:true,value}},error=>{window.__download112.result={ok:false,error:error.message}});return true})()`
-          )
+          );
           await Promise.race([
             startedRequest,
             wait(30000).then(() => {
-              throw Error('loopback download was not requested')
+              throw Error('loopback download was not requested');
             }),
-          ])
-          assert(heldResponse, 'original download must reach real loopback socket')
-          await evaluate(`window.faionyx.invoke('folders:setDownload',${JSON.stringify(canonicalOld)})`)
-          assertDownloadRoot(await settings(), canonicalOld)
-          heldResponse.end(packBytes)
+          ]);
+          assert(heldResponse, 'original download must reach real loopback socket');
+          await evaluate(`window.faionyx.invoke('folders:setDownload',${JSON.stringify(canonicalOld)})`);
+          assertDownloadRoot(await settings(), canonicalOld);
+          heldResponse.end(packBytes);
           const finished = await until(
             'original colon pack download and installation',
             () =>
               evaluate(`({result:window.__download112.result,events:window.__download112.events,progress:window.__download112.progress})`),
             (v) => v.result?.ok === false || (v.result?.ok === true && v.events?.some((e) => e.ok === true || e.ok === false)),
             60000
-          )
-          assert.equal(finished.result?.ok, true, JSON.stringify(finished))
-          const install = finished.events.find((e) => e.ok === true)
-          assert(install, 'actual synthetic installation failed: ' + JSON.stringify(finished.events))
-          assert(install.versionId)
-          const instance = path.join(canonicalTarget, 'versions', install.versionId)
-          assert(fs.existsSync(path.join(instance, 'mods', '§ 中文模组.jar')))
-          assert(fs.existsSync(path.join(instance, 'resourcepacks', '中文 材质.zip')))
-          assert(fs.existsSync(path.join(instance, 'shaderpacks', '§ 光影.zip')))
-          assert(!fs.existsSync(path.join(canonicalOld, 'versions', install.versionId)))
-          assert.deepEqual(snapshotFiles(oldInstance), oldBaseline)
-          const installed = await evaluate(`window.faionyx.invoke('versions:installed',true)`)
+          );
+          assert.equal(finished.result?.ok, true, JSON.stringify(finished));
+          const install = finished.events.find((e) => e.ok === true);
+          assert(install, 'actual synthetic installation failed: ' + JSON.stringify(finished.events));
+          assert(install.versionId);
+          const instance = path.join(canonicalTarget, 'versions', install.versionId);
+          assert(fs.existsSync(path.join(instance, 'mods', '§ 中文模组.jar')));
+          assert(fs.existsSync(path.join(instance, 'resourcepacks', '中文 材质.zip')));
+          assert(fs.existsSync(path.join(instance, 'shaderpacks', '§ 光影.zip')));
+          assert(!fs.existsSync(path.join(canonicalOld, 'versions', install.versionId)));
+          assert.deepEqual(snapshotFiles(oldInstance), oldBaseline);
+          const installed = await evaluate(`window.faionyx.invoke('versions:installed',true)`);
           assert(
             installed.some((v) => v.id === install.versionId && fs.realpathSync.native(v.folder) === canonicalTarget),
             'actual scanner must bind new instance to the accepted target'
-          )
-          const latestSettings = await settings()
-          assertDownloadRoot(latestSettings, canonicalOld)
+          );
+          const latestSettings = await settings();
+          assertDownloadRoot(latestSettings, canonicalOld);
           proof.syntheticPack = {
             originalFile: file,
             requests,
@@ -745,47 +745,47 @@ async function run() {
             oldInstanceUnchanged: true,
             classification:
               'Synthetic fullpack and loopback HTTP; actual product download/sha1/final rename/import/routing without stubs. Synthetic files are not a Minecraft game or real Modrinth project.',
-          }
-          save()
+          };
+          save();
           // Hash failure must reject and preserve the settings and old instance.
-          await evaluate(`window.faionyx.invoke('folders:setDownload',${JSON.stringify(canonicalTarget)})`)
-          const failedFile = { ...file, fileId: 'synthetic-hash-112', url: base + '/hash-failure.zip', sha1: '0'.repeat(40) }
+          await evaluate(`window.faionyx.invoke('folders:setDownload',${JSON.stringify(canonicalTarget)})`);
+          const failedFile = { ...file, fileId: 'synthetic-hash-112', url: base + '/hash-failure.zip', sha1: '0'.repeat(40) };
           const failed = await evaluate(
             `window.faionyx.invoke('community:download',${JSON.stringify(failedFile)},{versionId:'',kind:'modpack'}).then(value=>({ok:true,value}),error=>({ok:false,error:error.message}))`
-          )
-          assert.equal(failed.ok, false)
-          assert(/校验|hash|sha|完整/i.test(failed.error), failed.error)
-          assert.deepEqual(snapshotFiles(oldInstance), oldBaseline)
-          assertDownloadRoot(await settings(), canonicalTarget)
+          );
+          assert.equal(failed.ok, false);
+          assert(/校验|hash|sha|完整/i.test(failed.error), failed.error);
+          assert.deepEqual(snapshotFiles(oldInstance), oldBaseline);
+          assertDownloadRoot(await settings(), canonicalTarget);
           proof.hashFailure = {
             ...failed,
             oldInstanceUnchanged: true,
             settingsUnchanged: true,
             classification: 'Local deterministic hash fault through real product download, not public-service failure',
-          }
-          await evaluate(`window.__download112.unsubscribe.forEach(stop=>stop())`)
-          save()
+          };
+          await evaluate(`window.__download112.unsubscribe.forEach(stop=>stop())`);
+          save();
         }
-        row.complete = true
-        save()
-        await inspect(`(()=>{const e=process.mainModule.require('electron');setTimeout(()=>e.app.quit(),100);return true})()`)
-        renderer.socket.close()
-        main.socket.close()
-        row.debuggerDetachedBeforeOwnedExit = true
-        await owned.finishOwnedChild(track, { timeoutMs: 15000 })
-        assert.equal(track.ledger.code, 0)
-        assert.equal(track.ledger.signal, null)
+        row.complete = true;
+        save();
+        await inspect(`(()=>{const e=process.mainModule.require('electron');setTimeout(()=>e.app.quit(),100);return true})()`);
+        renderer.socket.close();
+        main.socket.close();
+        row.debuggerDetachedBeforeOwnedExit = true;
+        await owned.finishOwnedChild(track, { timeoutMs: 15000 });
+        assert.equal(track.ledger.code, 0);
+        assert.equal(track.ledger.signal, null);
       } catch (error) {
-        phaseError = error
-        row.error = { name: error.name, message: error.message }
+        phaseError = error;
+        row.error = { name: error.name, message: error.message };
         try {
           if (renderer) {
-            const bytes = Buffer.from((await renderer.call('Page.captureScreenshot', { format: 'png' })).data, 'base64')
-            fs.writeFileSync(path.join(output, phase + '-failure.png'), bytes, { flag: 'wx' })
-            proof.screenshots.push({ file: phase + '-failure.png', bytes: bytes.length, sha256: digest(bytes) })
+            const bytes = Buffer.from((await renderer.call('Page.captureScreenshot', { format: 'png' })).data, 'base64');
+            fs.writeFileSync(path.join(output, phase + '-failure.png'), bytes, { flag: 'wx' });
+            proof.screenshots.push({ file: phase + '-failure.png', bytes: bytes.length, sha256: digest(bytes) });
           }
         } catch {}
-        throw error
+        throw error;
       } finally {
         // On failure request shutdown through the already identity-verified owned
         // main session before considering a signal to our own wrapper. A portable
@@ -795,48 +795,48 @@ async function run() {
             await main.call('Runtime.evaluate', {
               expression: `(()=>{const e=process.mainModule.require('electron');setTimeout(()=>e.app.quit(),50);return true})()`,
               returnByValue: true,
-            })
-            renderer?.socket.close()
-            main.socket.close()
-            row.cleanupDebuggerDetached = true
-            await owned.finishOwnedChild(track, { timeoutMs: 5000 })
-            row.cleanupRequestedOwnedQuit = true
+            });
+            renderer?.socket.close();
+            main.socket.close();
+            row.cleanupDebuggerDetached = true;
+            await owned.finishOwnedChild(track, { timeoutMs: 5000 });
+            row.cleanupRequestedOwnedQuit = true;
           } catch (error) {
-            row.ownedQuitError = error.message
+            row.ownedQuitError = error.message;
           }
         }
-        renderer?.socket.close()
-        main?.socket.close()
+        renderer?.socket.close();
+        main?.socket.close();
         if (!track.ledger.closed)
           await owned.finishOwnedChild(track, { terminate: true, timeoutMs: 7000 }).catch((error) => {
-            row.cleanupError = error.message
-            if (!phaseError) throw error
-          })
-        fs.closeSync(log)
-        row.finishedAt = new Date().toISOString()
-        save()
+            row.cleanupError = error.message;
+            if (!phaseError) throw error;
+          });
+        fs.closeSync(log);
+        row.finishedAt = new Date().toISOString();
+        save();
       }
     }
-    assert.equal(proof.scenes.length, THEMES.length * LAYOUTS.length)
-    assert(proof.phases.every((row) => row.complete && row.child.code === 0 && row.child.signal === null))
-    proof.complete = true
+    assert.equal(proof.scenes.length, THEMES.length * LAYOUTS.length);
+    assert(proof.phases.every((row) => row.complete && row.child.code === 0 && row.child.signal === null));
+    proof.complete = true;
   } catch (error) {
-    originalError = error
-    proof.error = { name: error.name, message: error.message }
-    throw error
+    originalError = error;
+    proof.error = { name: error.name, message: error.message };
+    throw error;
   } finally {
-    heldResponse?.end()
-    server.closeAllConnections()
-    await new Promise((resolve) => server.close(resolve))
-    proof.finishedAt = new Date().toISOString()
+    heldResponse?.end();
+    server.closeAllConnections();
+    await new Promise((resolve) => server.close(resolve));
+    proof.finishedAt = new Date().toISOString();
     proof.files = fs
       .readdirSync(output)
       .filter((file) => file !== 'summary.json')
       .map((file) => {
-        const bytes = fs.readFileSync(path.join(output, file))
-        return { file, bytes: bytes.length, sha256: digest(bytes) }
-      })
-    save()
+        const bytes = fs.readFileSync(path.join(output, file));
+        return { file, bytes: bytes.length, sha256: digest(bytes) };
+      });
+    save();
     if (!originalError)
       console.log(
         JSON.stringify({
@@ -848,12 +848,12 @@ async function run() {
           scenes: proof.scenes.length,
           sourceCommit,
         })
-      )
+      );
   }
 }
-module.exports = { THEMES, LAYOUTS, assertDownloadRoot, snapshotFiles, fixturePack, assertActualLayout }
+module.exports = { THEMES, LAYOUTS, assertDownloadRoot, snapshotFiles, fixturePack, assertActualLayout };
 if (require.main === module)
   run().catch((error) => {
-    console.error(error)
-    process.exitCode = 1
-  })
+    console.error(error);
+    process.exitCode = 1;
+  });

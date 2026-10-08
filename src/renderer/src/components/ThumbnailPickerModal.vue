@@ -1,88 +1,88 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { errText, resetVersionThumbnail, setVersionThumbnailFit, uploadVersionThumbnail } from '../api'
-import { refreshInstalled, toast } from '../store'
-import { managedImageUrl } from '../managedAssets'
-import type { ImageFit } from '@shared/types'
+import { ref, watch } from 'vue';
+import { errText, resetVersionThumbnail, setVersionThumbnailFit, uploadVersionThumbnail } from '../api';
+import { refreshInstalled, toast } from '../store';
+import { managedImageUrl } from '../managedAssets';
+import type { ImageFit } from '@shared/types';
 
 const props = defineProps<{
-  open: boolean
-  folder?: string
-  versionId: string
-  currentPath: string
-  currentFit: ImageFit
-}>()
-const emit = defineEmits<{ close: [] }>()
+  open: boolean;
+  folder?: string;
+  versionId: string;
+  currentPath: string;
+  currentFit: ImageFit;
+}>();
+const emit = defineEmits<{ close: [] }>();
 
-const imagePath = ref('')
-const fit = ref<ImageFit>('crop')
-const busy = ref(false)
-const previewFailed = ref(false)
+const imagePath = ref('');
+const fit = ref<ImageFit>('crop');
+const busy = ref(false);
+const previewFailed = ref(false);
 const fitOptions: Array<{ value: ImageFit; label: string }> = [
   { value: 'fill', label: '填充' },
   { value: 'fit', label: '适应' },
   { value: 'crop', label: '裁切' },
-]
+];
 
 watch(
   () => [props.open, props.currentPath, props.currentFit] as const,
   ([open, currentPath, currentFit]) => {
-    if (!open) return
-    imagePath.value = currentPath
-    fit.value = currentFit
-    previewFailed.value = false
+    if (!open) return;
+    imagePath.value = currentPath;
+    fit.value = currentFit;
+    previewFailed.value = false;
   },
   { immediate: true }
-)
+);
 
 function objectFit(value: ImageFit): 'fill' | 'contain' | 'cover' {
-  return value === 'fill' ? 'fill' : value === 'fit' ? 'contain' : 'cover'
+  return value === 'fill' ? 'fill' : value === 'fit' ? 'contain' : 'cover';
 }
 
 async function importImage() {
-  if (busy.value) return
-  busy.value = true
+  if (busy.value) return;
+  busy.value = true;
   try {
-    const imported = await uploadVersionThumbnail(props.versionId, props.folder)
-    if (!imported) return
-    imagePath.value = imported
-    previewFailed.value = false
-    await refreshInstalled()
-    toast('实例启动卡缩略图已更新', 'success')
+    const imported = await uploadVersionThumbnail(props.versionId, props.folder);
+    if (!imported) return;
+    imagePath.value = imported;
+    previewFailed.value = false;
+    await refreshInstalled();
+    toast('实例启动卡缩略图已更新', 'success');
   } catch (error) {
-    toast('导入缩略图失败：' + errText(error), 'error')
+    toast('导入缩略图失败：' + errText(error), 'error');
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 
 async function chooseFit(value: ImageFit) {
-  if (!imagePath.value || busy.value) return
-  busy.value = true
+  if (!imagePath.value || busy.value) return;
+  busy.value = true;
   try {
-    await setVersionThumbnailFit(props.versionId, value, props.folder)
-    fit.value = value
-    await refreshInstalled()
+    await setVersionThumbnailFit(props.versionId, value, props.folder);
+    fit.value = value;
+    await refreshInstalled();
   } catch (error) {
-    toast('保存显示方式失败：' + errText(error), 'error')
+    toast('保存显示方式失败：' + errText(error), 'error');
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 
 async function resetImage() {
-  if (busy.value) return
-  busy.value = true
+  if (busy.value) return;
+  busy.value = true;
   try {
-    await resetVersionThumbnail(props.versionId, props.folder)
-    imagePath.value = ''
-    previewFailed.value = false
-    await refreshInstalled()
-    toast('已恢复全局启动卡图片', 'success')
+    await resetVersionThumbnail(props.versionId, props.folder);
+    imagePath.value = '';
+    previewFailed.value = false;
+    await refreshInstalled();
+    toast('已恢复全局启动卡图片', 'success');
   } catch (error) {
-    toast('恢复失败：' + errText(error), 'error')
+    toast('恢复失败：' + errText(error), 'error');
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 </script>

@@ -1,44 +1,44 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import { randomUUID, createHash } from 'node:crypto'
-import type { ReleaseInfo } from '../../shared/types'
+import fs from 'node:fs';
+import path from 'node:path';
+import { randomUUID, createHash } from 'node:crypto';
+import type { ReleaseInfo } from '../../shared/types';
 
 export interface UpdateTransaction {
-  schema: 1
-  id: string
-  target: string
-  file: string
-  sha256: string
-  size: number
-  from: string
-  release: ReleaseInfo
-  mode: 'upgrade' | 'rollback' | 'local'
-  helperPid?: number
+  schema: 1;
+  id: string;
+  target: string;
+  file: string;
+  sha256: string;
+  size: number;
+  from: string;
+  release: ReleaseInfo;
+  mode: 'upgrade' | 'rollback' | 'local';
+  helperPid?: number;
 }
 
-export const updateMarker = (exe: string): string => path.join(path.dirname(exe), '.faionyxupdate')
+export const updateMarker = (exe: string): string => path.join(path.dirname(exe), '.faionyxupdate');
 export function atomicUpdateJson(file: string, data: unknown): void {
-  fs.mkdirSync(path.dirname(file), { recursive: true })
-  const tmp = file + '.' + randomUUID() + '.tmp'
-  const fd = fs.openSync(tmp, 'wx')
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const tmp = file + '.' + randomUUID() + '.tmp';
+  const fd = fs.openSync(tmp, 'wx');
   try {
-    fs.writeFileSync(fd, JSON.stringify(data, null, 2))
-    fs.fsyncSync(fd)
+    fs.writeFileSync(fd, JSON.stringify(data, null, 2));
+    fs.fsyncSync(fd);
   } finally {
-    fs.closeSync(fd)
+    fs.closeSync(fd);
   }
   try {
-    fs.renameSync(tmp, file)
+    fs.renameSync(tmp, file);
   } finally {
-    fs.rmSync(tmp, { force: true })
+    fs.rmSync(tmp, { force: true });
   }
 }
 
 export function readUpdateTransaction(file: string, target: string): UpdateTransaction | null {
   try {
-    const t = JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, '')) as UpdateTransaction
-    const rel = path.relative(path.join(path.dirname(target), 'FAIONYX-update'), t.file)
-    const key = (p: string) => (process.platform === 'win32' ? path.resolve(p).toLowerCase() : path.resolve(p))
+    const t = JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, '')) as UpdateTransaction;
+    const rel = path.relative(path.join(path.dirname(target), 'FAIONYX-update'), t.file);
+    const key = (p: string) => (process.platform === 'win32' ? path.resolve(p).toLowerCase() : path.resolve(p));
     if (
       t.schema !== 1 ||
       !/^[a-f\d-]{36}$/i.test(t.id) ||
@@ -52,38 +52,38 @@ export function readUpdateTransaction(file: string, target: string): UpdateTrans
       !/^\d+\.\d+\.\d+$/.test(t.release?.version) ||
       !['upgrade', 'rollback', 'local'].includes(t.mode)
     )
-      return null
-    return t
+      return null;
+    return t;
   } catch {
-    return null
+    return null;
   }
 }
 
 export async function validateUpdatePayload(t: UpdateTransaction): Promise<void> {
-  const stat = await fs.promises.lstat(t.file)
-  if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== t.size) throw new Error('更新包大小或文件类型已变化，请重新下载')
-  const hash = createHash('sha256')
-  for await (const chunk of fs.createReadStream(t.file)) hash.update(chunk)
-  if (hash.digest('hex') !== t.sha256) throw new Error('更新包 SHA256 已变化，请重新下载')
+  const stat = await fs.promises.lstat(t.file);
+  if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== t.size) throw new Error('更新包大小或文件类型已变化，请重新下载');
+  const hash = createHash('sha256');
+  for await (const chunk of fs.createReadStream(t.file)) hash.update(chunk);
+  if (hash.digest('hex') !== t.sha256) throw new Error('更新包 SHA256 已变化，请重新下载');
 }
 
 export interface UpdaterScriptSpec {
-  oldExe: string
-  newExe: string
-  backupDir: string
-  mainPid: number
-  wrapperPid?: number
-  stateDir: string
-  transaction: UpdateTransaction
-  oldSha256: string
-  launchArguments?: string
+  oldExe: string;
+  newExe: string;
+  backupDir: string;
+  mainPid: number;
+  wrapperPid?: number;
+  stateDir: string;
+  transaction: UpdateTransaction;
+  oldSha256: string;
+  launchArguments?: string;
 }
 
 /** One claimed job, one replacement, one launch. A missing receipt never triggers a rollback/restart loop. */
 export function buildUpdaterScript(spec: UpdaterScriptSpec): string {
-  const q = (s: string) => `'${s.replace(/'/g, "''")}'`
-  const t = spec.transaction
-  const claim = updateMarker(spec.oldExe) + '.applying'
+  const q = (s: string) => `'${s.replace(/'/g, "''")}'`;
+  const t = spec.transaction;
+  const claim = updateMarker(spec.oldExe) + '.applying';
   return `$ErrorActionPreference = 'Stop'
 $env:PSModulePath = (Join-Path $PSHOME 'Modules') + [IO.Path]::PathSeparator + $env:PSModulePath
 $oldExe = ${q(spec.oldExe)}
@@ -163,5 +163,5 @@ try {
   Remove-Item -LiteralPath $swap -Force -ErrorAction SilentlyContinue
   Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force -ErrorAction SilentlyContinue
 }
-`
+`;
 }

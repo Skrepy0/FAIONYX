@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import type { ProjectionCatalog, ProjectionEntry, ProjectionRequest, ProjectionResult } from '@shared/projections'
-import { errText } from '../api'
-import { store, toast } from '../store'
-import ContentSkeleton from '../components/ContentSkeleton.vue'
-import SelectMenu from '../components/SelectMenu.vue'
-import ConfirmModal from '../components/ConfirmModal.vue'
-import ProjectionConvert from '../components/ProjectionConvert.vue'
-const converting = ref<ProjectionEntry>()
-const data = ref<ProjectionCatalog>({ entries: [], warnings: [], library: '', instances: [] })
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import type { ProjectionCatalog, ProjectionEntry, ProjectionRequest, ProjectionResult } from '@shared/projections';
+import { errText } from '../api';
+import { store, toast } from '../store';
+import ContentSkeleton from '../components/ContentSkeleton.vue';
+import SelectMenu from '../components/SelectMenu.vue';
+import ConfirmModal from '../components/ConfirmModal.vue';
+import ProjectionConvert from '../components/ProjectionConvert.vue';
+const converting = ref<ProjectionEntry>();
+const data = ref<ProjectionCatalog>({ entries: [], warnings: [], library: '', instances: [] });
 const loading = ref(false),
   busy = ref(false),
   error = ref(''),
@@ -18,33 +18,33 @@ const loading = ref(false),
   page = ref(1),
   selected = ref<string[]>([]),
   target = ref(''),
-  confirm = ref<'trash' | 'dispatch' | ''>('')
-const results = ref<ProjectionResult[]>([])
+  confirm = ref<'trash' | 'dispatch' | ''>('');
+const results = ref<ProjectionResult[]>([]);
 let generation = 0,
-  disposed = false
-let refreshTimer: ReturnType<typeof setInterval> | undefined
-const activeFolder = computed(() => store.settings?.activeFolder || store.settings?.gameDir || '')
-const folderFilter = ref('')
+  disposed = false;
+let refreshTimer: ReturnType<typeof setInterval> | undefined;
+const activeFolder = computed(() => store.settings?.activeFolder || store.settings?.gameDir || '');
+const folderFilter = ref('');
 const folderOptions = computed(() => [
   { value: '', label: '全部已绑定文件夹' },
   ...(store.settings?.folders ?? []).map((f) => ({ value: f.path, label: f.name + ' · ' + f.path })),
-])
+]);
 watch(
   () => JSON.stringify([activeFolder.value, store.settings?.folders]),
   () => {
-    void refresh(true)
+    void refresh(true);
   }
-)
+);
 watch(folderOptions, (options) => {
-  if (!options.some((o) => o.value === folderFilter.value)) folderFilter.value = ''
-})
+  if (!options.some((o) => o.value === folderFilter.value)) folderFilter.value = '';
+});
 watch(
   () => store.fsRefreshTick,
   () => {
-    if (!busy.value) void refresh()
+    if (!busy.value) void refresh();
   }
-)
-const invoke = <T,>(channel: string, ...args: unknown[]) => window.faionyx.invoke(channel, ...args) as Promise<T>
+);
+const invoke = <T,>(channel: string, ...args: unknown[]) => window.faionyx.invoke(channel, ...args) as Promise<T>;
 const filtered = computed(() =>
   data.value.entries.filter(
     (e) =>
@@ -53,98 +53,99 @@ const filtered = computed(() =>
       (source.value === 'all' || (source.value === 'library' ? e.library : !e.library)) &&
       `${e.name} ${e.source} ${e.directory}`.toLowerCase().includes(query.value.trim().toLowerCase())
   )
-)
-const pages = computed(() => Math.max(1, Math.ceil(filtered.value.length / 40)))
-const rows = computed(() => filtered.value.slice((page.value - 1) * 40, page.value * 40))
-const targets = computed(() => data.value.instances.map((i) => ({ value: JSON.stringify([i.folder, i.id]), label: i.name })))
-const size = (n: number) => (n < 1024 * 1024 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`)
+);
+const pages = computed(() => Math.max(1, Math.ceil(filtered.value.length / 40)));
+const rows = computed(() => filtered.value.slice((page.value - 1) * 40, page.value * 40));
+const targets = computed(() => data.value.instances.map((i) => ({ value: JSON.stringify([i.folder, i.id]), label: i.name })));
+const size = (n: number) => (n < 1024 * 1024 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`);
 watch([query, kind, source, folderFilter], () => {
-  page.value = 1
-  selected.value = []
-})
+  page.value = 1;
+  selected.value = [];
+});
 async function refresh(silent = false) {
-  const id = ++generation
-  if (!silent) loading.value = true
-  error.value = ''
+  const id = ++generation;
+  if (!silent) loading.value = true;
+  error.value = '';
   try {
-    const next = await invoke<ProjectionCatalog>('projections:list')
-    if (disposed || id !== generation) return
-    data.value = next
-    if (!targets.value.some((t) => t.value === target.value)) target.value = ''
-    selected.value = selected.value.filter((id) => next.entries.some((e) => e.id === id))
-    page.value = Math.min(page.value, pages.value)
-    if (!silent) target.value = ''
+    const next = await invoke<ProjectionCatalog>('projections:list');
+    if (disposed || id !== generation) return;
+    data.value = next;
+    if (!targets.value.some((t) => t.value === target.value)) target.value = '';
+    selected.value = selected.value.filter((id) => next.entries.some((e) => e.id === id));
+    page.value = Math.min(page.value, pages.value);
+    if (!silent) target.value = '';
   } catch (e) {
-    if (!disposed && id === generation) error.value = errText(e)
+    if (!disposed && id === generation) error.value = errText(e);
   } finally {
-    if (!disposed && id === generation) loading.value = false
+    if (!disposed && id === generation) loading.value = false;
   }
 }
 function drag(event: DragEvent, entry: ProjectionEntry) {
-  event.preventDefault()
-  event.stopPropagation()
-  if (busy.value || loading.value || store.editMode) return
-  window.faionyx.send('projections:drag', selected.value.includes(entry.id) ? [...selected.value] : [entry.id])
+  event.preventDefault();
+  event.stopPropagation();
+  if (busy.value || loading.value || store.editMode) return;
+  window.faionyx.send('projections:drag', selected.value.includes(entry.id) ? [...selected.value] : [entry.id]);
 }
 function autoRefresh() {
-  if (!busy.value && !loading.value && !selected.value.length && !target.value && document.visibilityState === 'visible') void refresh(true)
+  if (!busy.value && !loading.value && !selected.value.length && !target.value && document.visibilityState === 'visible')
+    void refresh(true);
 }
 function selectPage() {
-  const ids = rows.value.map((e) => e.id)
+  const ids = rows.value.map((e) => e.id);
   selected.value = ids.every((id) => selected.value.includes(id))
     ? selected.value.filter((id) => !ids.includes(id))
-    : [...new Set([...selected.value, ...ids])]
+    : [...new Set([...selected.value, ...ids])];
 }
 async function open(entry?: ProjectionEntry) {
   try {
-    await invoke('projections:open', entry?.id)
+    await invoke('projections:open', entry?.id);
   } catch (e) {
-    toast(errText(e), 'error')
+    toast(errText(e), 'error');
   }
 }
 async function execute(action: ProjectionRequest['action'] | 'import') {
-  if (busy.value) return
+  if (busy.value) return;
   const ids = [...selected.value],
-    destination = target.value === '' ? undefined : data.value.instances.find((i) => JSON.stringify([i.folder, i.id]) === target.value)
-  confirm.value = ''
-  busy.value = true
+    destination = target.value === '' ? undefined : data.value.instances.find((i) => JSON.stringify([i.folder, i.id]) === target.value);
+  confirm.value = '';
+  busy.value = true;
   try {
     const result =
       action === 'import'
         ? await invoke<ProjectionResult[] | null>('projections:import')
-        : await invoke<ProjectionResult[] | null>('projections:operate', { action, ids, target: destination })
+        : await invoke<ProjectionResult[] | null>('projections:operate', { action, ids, target: destination });
     if (result) {
-      results.value = result
-      const failed = result.filter((r) => !r.ok)
-      selected.value = failed.map((r) => r.id)
+      results.value = result;
+      const failed = result.filter((r) => !r.ok);
+      selected.value = failed.map((r) => r.id);
       toast(
         `已完成 ${result.length - failed.length} 项${failed.length ? `，${failed.length} 项未完成` : ''}`,
         failed.length ? 'error' : 'success'
-      )
-      await refresh()
+      );
+      await refresh();
     }
   } catch (e) {
-    toast(errText(e), 'error')
+    toast(errText(e), 'error');
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 function escape(e: KeyboardEvent) {
-  if (e.key === 'Escape') confirm.value = ''
+  if (e.key === 'Escape') confirm.value = '';
 }
 onMounted(() => {
-  void refresh()
-  window.addEventListener('keydown', escape)
-  window.addEventListener('focus', autoRefresh)
-  refreshTimer = setInterval(autoRefresh, 15000)
-})
+  void refresh();
+  window.addEventListener('keydown', escape);
+  window.addEventListener('focus', autoRefresh);
+  refreshTimer = setInterval(autoRefresh, 15000);
+});
 onUnmounted(() => {
-  disposed = true
-  generation++
-  clearInterval(refreshTimer)
-  window.removeEventListener('keydown', escape)
-  window.removeEventListener('focus', autoRefresh)
-})
+  disposed = true;
+  generation++;
+  clearInterval(refreshTimer);
+  window.removeEventListener('keydown', escape);
+  window.removeEventListener('focus', autoRefresh);
+});
 </script>
 
 <template>
@@ -263,10 +264,10 @@ onUnmounted(() => {
           v-if="data.entries.length"
           class="btn btn-ghost"
           @click="
-            query = ''
-            kind = 'all'
-            source = 'all'
-            folderFilter = ''
+            query = '';
+            kind = 'all';
+            source = 'all';
+            folderFilter = '';
           "
         >
           清除筛选

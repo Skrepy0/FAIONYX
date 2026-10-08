@@ -4,13 +4,13 @@ const fs = require('fs'),
   os = require('os'),
   net = require('net'),
   assert = require('assert/strict'),
-  { spawn } = require('child_process')
+  { spawn } = require('child_process');
 const version = require('../package.json').version,
   root = fs.mkdtempSync(path.join(os.tmpdir(), 'FAIONYX EXE GUI 中文 ')),
   profile = path.join(root, 'profile'),
-  games = path.join(root, 'games')
-fs.mkdirSync(profile)
-fs.mkdirSync(games)
+  games = path.join(root, 'games');
+fs.mkdirSync(profile);
+fs.mkdirSync(games);
 fs.writeFileSync(
   path.join(profile, 'settings.json'),
   JSON.stringify({
@@ -20,9 +20,9 @@ fs.writeFileSync(
     autoUpdate: false,
     theme: process.env.FAIONYX_TEST_THEME || 'black-orange',
   })
-)
-const fixtureDir = path.join(games, 'versions', '联机验证实例')
-fs.mkdirSync(fixtureDir, { recursive: true })
+);
+const fixtureDir = path.join(games, 'versions', '联机验证实例');
+fs.mkdirSync(fixtureDir, { recursive: true });
 fs.writeFileSync(
   path.join(fixtureDir, '联机验证实例.json'),
   JSON.stringify({
@@ -33,20 +33,20 @@ fs.writeFileSync(
     mainClass: 'net.fabricmc.loader.impl.launch.knot.KnotClient',
     libraries: [],
   })
-)
-fs.writeFileSync(path.join(fixtureDir, '联机验证实例.jar'), 'fixture-only-no-launch')
+);
+fs.writeFileSync(path.join(fixtureDir, '联机验证实例.jar'), 'fixture-only-no-launch');
 fs.writeFileSync(
   path.join(profile, 'servers.json'),
   JSON.stringify([
     { id: 'one', name: '普通服务器', address: '127.0.0.1:9', versionId: '联机验证实例', folder: games },
     { id: 'two', name: '我收藏的服务器', address: '127.0.0.1:10', versionId: '联机验证实例', folder: games },
   ])
-)
-const other = path.join(root, 'second-games')
-fs.mkdirSync(other)
-const settings = JSON.parse(fs.readFileSync(path.join(profile, 'settings.json')))
-settings.folders.push({ path: other, name: '整合包收藏', isDefault: false })
-fs.writeFileSync(path.join(profile, 'settings.json'), JSON.stringify(settings))
+);
+const other = path.join(root, 'second-games');
+fs.mkdirSync(other);
+const settings = JSON.parse(fs.readFileSync(path.join(profile, 'settings.json')));
+settings.folders.push({ path: other, name: '整合包收藏', isDefault: false });
+fs.writeFileSync(path.join(profile, 'settings.json'), JSON.stringify(settings));
 for (const [i, name] of [
   '26.3 Fabric 生存世界',
   'Mecha Craftaleon 客户端 v10 — 超长名称完整显示测试与更多文字',
@@ -56,8 +56,8 @@ for (const [i, name] of [
   '旧版测试实例',
 ].entries()) {
   const folder = i < 3 ? games : other,
-    dir = path.join(folder, 'versions', name)
-  fs.mkdirSync(dir, { recursive: true })
+    dir = path.join(folder, 'versions', name);
+  fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(
     path.join(dir, name + '.json'),
     JSON.stringify({
@@ -68,24 +68,24 @@ for (const [i, name] of [
       mainClass: 'net.minecraft.client.main.Main',
       libraries: [],
     })
-  )
-  fs.writeFileSync(path.join(dir, name + '.jar'), 'fixture-not-launched')
+  );
+  fs.writeFileSync(path.join(dir, name + '.jar'), 'fixture-not-launched');
 }
-const exe = path.join(root, `FAIONYX-${version}.exe`)
-if (!process.env.FAIONYX_GUI_DEV) fs.copyFileSync(`release/FAIONYX-${version}.exe`, exe)
-const wait = (ms) => new Promise((r) => setTimeout(r, ms))
-;(async () => {
-  const server = net.createServer()
-  await new Promise((r) => server.listen(0, '127.0.0.1', r))
-  const port = server.address().port
-  await new Promise((r) => server.close(r))
-  const mainServer = net.createServer()
-  await new Promise((r) => mainServer.listen(0, '127.0.0.1', r))
-  const mainPort = mainServer.address().port
-  await new Promise((r) => mainServer.close(r))
-  const env = { ...process.env }
-  delete env.ELECTRON_RUN_AS_NODE
-  const log = fs.openSync(path.join(root, 'process.log'), 'w')
+const exe = path.join(root, `FAIONYX-${version}.exe`);
+if (!process.env.FAIONYX_GUI_DEV) fs.copyFileSync(`release/FAIONYX-${version}.exe`, exe);
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+(async () => {
+  const server = net.createServer();
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  const port = server.address().port;
+  await new Promise((r) => server.close(r));
+  const mainServer = net.createServer();
+  await new Promise((r) => mainServer.listen(0, '127.0.0.1', r));
+  const mainPort = mainServer.address().port;
+  await new Promise((r) => mainServer.close(r));
+  const env = { ...process.env };
+  delete env.ELECTRON_RUN_AS_NODE;
+  const log = fs.openSync(path.join(root, 'process.log'), 'w');
   const child = spawn(
     process.env.FAIONYX_GUI_DEV ? path.resolve('node_modules/electron/dist/electron.exe') : exe,
     [
@@ -98,213 +98,213 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms))
       `--remote-debugging-port=${port}`,
     ],
     { env, stdio: ['ignore', log, log] }
-  )
-  let ws, mainWs
+  );
+  let ws, mainWs;
   try {
-    let page
+    let page;
     for (let i = 0; i < 90; i++) {
-      assert(child.exitCode === null, 'portable exited before UI')
+      assert(child.exitCode === null, 'portable exited before UI');
       try {
-        page = (await (await fetch(`http://127.0.0.1:${port}/json`)).json()).find((p) => p.url.includes('/renderer/index.html'))
-        if (page) break
+        page = (await (await fetch(`http://127.0.0.1:${port}/json`)).json()).find((p) => p.url.includes('/renderer/index.html'));
+        if (page) break;
       } catch {}
-      await wait(1000)
+      await wait(1000);
     }
-    assert(page, 'renderer unavailable')
-    ws = new WebSocket(page.webSocketDebuggerUrl)
+    assert(page, 'renderer unavailable');
+    ws = new WebSocket(page.webSocketDebuggerUrl);
     await new Promise((r, j) => {
-      ws.addEventListener('open', r, { once: true })
-      ws.addEventListener('error', j, { once: true })
-    })
-    let id = 0
-    const pending = new Map()
+      ws.addEventListener('open', r, { once: true });
+      ws.addEventListener('error', j, { once: true });
+    });
+    let id = 0;
+    const pending = new Map();
     ws.addEventListener('message', (e) => {
-      const m = JSON.parse(e.data)
-      pending.get(m.id)?.(m)
-    })
+      const m = JSON.parse(e.data);
+      pending.get(m.id)?.(m);
+    });
     const call = (method, params = {}) =>
       new Promise((resolve, reject) => {
         const n = ++id,
           t = setTimeout(() => {
-            pending.delete(n)
-            reject(Error(method + ' timed out'))
-          }, 12000)
+            pending.delete(n);
+            reject(Error(method + ' timed out'));
+          }, 12000);
         pending.set(n, (m) => {
-          clearTimeout(t)
-          pending.delete(n)
-          m.error ? reject(Error(JSON.stringify(m.error))) : resolve(m.result)
-        })
-        ws.send(JSON.stringify({ id: n, method, params }))
-      })
+          clearTimeout(t);
+          pending.delete(n);
+          m.error ? reject(Error(JSON.stringify(m.error))) : resolve(m.result);
+        });
+        ws.send(JSON.stringify({ id: n, method, params }));
+      });
     const evaluate = async (expression) => {
-      const r = await call('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })
-      if (r.exceptionDetails) throw Error(JSON.stringify(r.exceptionDetails))
-      return r.result.value
-    }
-    await call('Emulation.setFocusEmulationEnabled', { enabled: true })
-    await call('Page.bringToFront')
-    let text = ''
+      const r = await call('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
+      if (r.exceptionDetails) throw Error(JSON.stringify(r.exceptionDetails));
+      return r.result.value;
+    };
+    await call('Emulation.setFocusEmulationEnabled', { enabled: true });
+    await call('Page.bringToFront');
+    let text = '';
     for (let i = 0; i < 30; i++) {
-      text = await evaluate("document.body?.innerText || ''")
-      if (text?.includes(version) && text.includes('开始游戏') && (await evaluate("!!document.querySelector('.viewer3d canvas')"))) break
-      await wait(1000)
+      text = await evaluate("document.body?.innerText || ''");
+      if (text?.includes(version) && text.includes('开始游戏') && (await evaluate("!!document.querySelector('.viewer3d canvas')"))) break;
+      await wait(1000);
     }
-    assert(text.includes(version) && text.includes('开始游戏'))
-    assert(await evaluate("!!document.querySelector('.viewer3d canvas')"), 'skin canvas missing')
-    await wait(6500)
+    assert(text.includes(version) && text.includes('开始游戏'));
+    assert(await evaluate("!!document.querySelector('.viewer3d canvas')"), 'skin canvas missing');
+    await wait(6500);
 
-    const mainPage = (await (await fetch(`http://127.0.0.1:${mainPort}/json`)).json())[0]
-    assert(mainPage, 'main inspector unavailable')
-    mainWs = new WebSocket(mainPage.webSocketDebuggerUrl)
-    await new Promise((r) => mainWs.addEventListener('open', r, { once: true }))
-    let mid = 0
-    const mp = new Map()
+    const mainPage = (await (await fetch(`http://127.0.0.1:${mainPort}/json`)).json())[0];
+    assert(mainPage, 'main inspector unavailable');
+    mainWs = new WebSocket(mainPage.webSocketDebuggerUrl);
+    await new Promise((r) => mainWs.addEventListener('open', r, { once: true }));
+    let mid = 0;
+    const mp = new Map();
     mainWs.addEventListener('message', (e) => {
-      const m = JSON.parse(e.data)
-      mp.get(m.id)?.(m)
-    })
+      const m = JSON.parse(e.data);
+      mp.get(m.id)?.(m);
+    });
     const main = (expression) =>
       new Promise((resolve, reject) => {
         const n = ++mid,
-          t = setTimeout(() => reject(Error('Main inspection timeout')), 10000)
+          t = setTimeout(() => reject(Error('Main inspection timeout')), 10000);
         mp.set(n, (m) => {
-          clearTimeout(t)
-          mp.delete(n)
-          m.result?.exceptionDetails ? reject(Error(JSON.stringify(m.result.exceptionDetails))) : resolve(m.result?.result?.value)
-        })
-        mainWs.send(JSON.stringify({ id: n, method: 'Runtime.evaluate', params: { expression, returnByValue: true, awaitPromise: true } }))
-      })
-    assert.equal(await evaluate("document.querySelectorAll('.hero-image').length"), 4)
-    assert(await evaluate("[...document.querySelectorAll('.hero-image')].every(i=>i.complete&&i.naturalWidth>0)"))
+          clearTimeout(t);
+          mp.delete(n);
+          m.result?.exceptionDetails ? reject(Error(JSON.stringify(m.result.exceptionDetails))) : resolve(m.result?.result?.value);
+        });
+        mainWs.send(JSON.stringify({ id: n, method: 'Runtime.evaluate', params: { expression, returnByValue: true, awaitPromise: true } }));
+      });
+    assert.equal(await evaluate("document.querySelectorAll('.hero-image').length"), 4);
+    assert(await evaluate("[...document.querySelectorAll('.hero-image')].every(i=>i.complete&&i.naturalWidth>0)"));
     await main(
       `globalThis.testElectron=process.mainModule.require('electron');testElectron.BrowserWindow.getAllWindows()[0].setSize(1598,1094)`
-    )
-    await evaluate("document.querySelector('[data-nav=game]').click()")
-    await wait(1200)
-    await evaluate("document.querySelector('[data-tab=installed]').click()")
-    await wait(600)
+    );
+    await evaluate("document.querySelector('[data-nav=game]').click()");
+    await wait(1200);
+    await evaluate("document.querySelector('[data-tab=installed]').click()");
+    await wait(600);
     const screenshot = async (name) =>
       fs.writeFileSync(
         path.join(root, name + '.png'),
         Buffer.from((await call('Page.captureScreenshot', { format: 'png' })).data, 'base64')
-      )
-    await screenshot('games-initial')
-    assert.equal(await evaluate("document.querySelectorAll('.installed-list>.installed-row').length"), 7)
+      );
+    await screenshot('games-initial');
+    assert.equal(await evaluate("document.querySelectorAll('.installed-list>.installed-row').length"), 7);
     const target = await evaluate(
       "document.querySelector('.folder-select .select-menu-label')?.textContent || document.querySelector('.folder-select-wrap .select-menu-label').textContent"
-    )
-    assert(await evaluate("document.querySelector('.folder-manager').getBoundingClientRect().height<130"))
-    assert.equal(await evaluate("document.querySelectorAll('.installed-row>.row-actions>.btn-danger').length"), 0)
-    await screenshot('games-wide')
-    await evaluate("document.querySelector('[data-tab=download]').click()")
-    await wait(400)
-    assert(await evaluate("!!document.querySelector('.game-controls .toolbar')"))
-    await screenshot('games-download')
-    await evaluate("document.querySelector('[data-tab=installed]').click()")
-    await wait(100)
-    await evaluate("document.querySelector('.installed-scope .select-menu-btn').click()")
-    await wait(100)
-    await evaluate("[...document.querySelectorAll('.select-menu-option')].find(e=>e.textContent.includes('整合包收藏')).click()")
-    await wait(200)
-    assert.equal(await evaluate("document.querySelectorAll('.installed-list>.installed-row').length"), 3)
-    assert.equal(await evaluate("document.querySelector('.folder-select-wrap .select-menu-label').textContent"), target)
-    await evaluate("document.querySelector('.installed-scope .select-menu-btn').click()")
-    await wait(80)
-    await evaluate("[...document.querySelectorAll('.select-menu-option')].find(e=>e.textContent.includes('全部文件夹')).click()")
-    await wait(100)
-    await evaluate("document.querySelector('.instance-more').click()")
-    await wait(300)
-    assert((await evaluate("document.querySelector('.instance-more-menu').innerText")).includes('实例 ID'))
-    assert(await evaluate("document.querySelector('.instance-more-menu').getBoundingClientRect().bottom<=innerHeight"))
-    await screenshot('games-menu')
-    await evaluate("[...document.querySelectorAll('.menu-danger-zone button')].find(e=>e.textContent==='删除实例').click()")
-    await wait(100)
-    assert((await evaluate('document.body.innerText')).includes('确认删除'))
-    await screenshot('games-delete')
-    await evaluate("[...document.querySelectorAll('.modal-mask button')].find(e=>e.textContent.trim()==='取消').click()")
-    await evaluate("document.querySelector('.folder-tools-trigger').click()")
-    await wait(100)
-    assert((await evaluate("document.querySelector('.folder-manager-actions').innerText")).includes('解除绑定'))
-    await evaluate("document.querySelector('.folder-tools-trigger').click()")
+    );
+    assert(await evaluate("document.querySelector('.folder-manager').getBoundingClientRect().height<130"));
+    assert.equal(await evaluate("document.querySelectorAll('.installed-row>.row-actions>.btn-danger').length"), 0);
+    await screenshot('games-wide');
+    await evaluate("document.querySelector('[data-tab=download]').click()");
+    await wait(400);
+    assert(await evaluate("!!document.querySelector('.game-controls .toolbar')"));
+    await screenshot('games-download');
+    await evaluate("document.querySelector('[data-tab=installed]').click()");
+    await wait(100);
+    await evaluate("document.querySelector('.installed-scope .select-menu-btn').click()");
+    await wait(100);
+    await evaluate("[...document.querySelectorAll('.select-menu-option')].find(e=>e.textContent.includes('整合包收藏')).click()");
+    await wait(200);
+    assert.equal(await evaluate("document.querySelectorAll('.installed-list>.installed-row').length"), 3);
+    assert.equal(await evaluate("document.querySelector('.folder-select-wrap .select-menu-label').textContent"), target);
+    await evaluate("document.querySelector('.installed-scope .select-menu-btn').click()");
+    await wait(80);
+    await evaluate("[...document.querySelectorAll('.select-menu-option')].find(e=>e.textContent.includes('全部文件夹')).click()");
+    await wait(100);
+    await evaluate("document.querySelector('.instance-more').click()");
+    await wait(300);
+    assert((await evaluate("document.querySelector('.instance-more-menu').innerText")).includes('实例 ID'));
+    assert(await evaluate("document.querySelector('.instance-more-menu').getBoundingClientRect().bottom<=innerHeight"));
+    await screenshot('games-menu');
+    await evaluate("[...document.querySelectorAll('.menu-danger-zone button')].find(e=>e.textContent==='删除实例').click()");
+    await wait(100);
+    assert((await evaluate('document.body.innerText')).includes('确认删除'));
+    await screenshot('games-delete');
+    await evaluate("[...document.querySelectorAll('.modal-mask button')].find(e=>e.textContent.trim()==='取消').click()");
+    await evaluate("document.querySelector('.folder-tools-trigger').click()");
+    await wait(100);
+    assert((await evaluate("document.querySelector('.folder-manager-actions').innerText")).includes('解除绑定'));
+    await evaluate("document.querySelector('.folder-tools-trigger').click()");
     for (const scale of [1, 1.25, 1.5]) {
-      await main(`testElectron.BrowserWindow.getAllWindows()[0].webContents.setZoomFactor(${scale})`)
-      await wait(200)
-      assert(await evaluate('document.documentElement.scrollWidth<=innerWidth'), 'page horizontal overflow')
-      await screenshot('games-scale-' + scale)
+      await main(`testElectron.BrowserWindow.getAllWindows()[0].webContents.setZoomFactor(${scale})`);
+      await wait(200);
+      assert(await evaluate('document.documentElement.scrollWidth<=innerWidth'), 'page horizontal overflow');
+      await screenshot('games-scale-' + scale);
     }
     await main(
       `testElectron.BrowserWindow.getAllWindows()[0].webContents.setZoomFactor(1);testElectron.BrowserWindow.getAllWindows()[0].setSize(980,720)`
-    )
-    await wait(200)
-    await screenshot('games-narrow')
-    assert(await evaluate('document.documentElement.scrollWidth<=innerWidth'))
-    await main(`testElectron.BrowserWindow.getAllWindows()[0].webContents.setZoomFactor(1.5)`)
-    await wait(200)
-    await screenshot('games-narrow-150')
-    assert(await evaluate('document.documentElement.scrollWidth<=innerWidth'))
+    );
+    await wait(200);
+    await screenshot('games-narrow');
+    assert(await evaluate('document.documentElement.scrollWidth<=innerWidth'));
+    await main(`testElectron.BrowserWindow.getAllWindows()[0].webContents.setZoomFactor(1.5)`);
+    await wait(200);
+    await screenshot('games-narrow-150');
+    assert(await evaluate('document.documentElement.scrollWidth<=innerWidth'));
     await evaluate(
       "(()=>{const e=document.querySelector('.installed-search input');e.value='Mecha';e.dispatchEvent(new Event('input',{bubbles:true}))})()"
-    )
-    await wait(100)
-    assert.equal(await evaluate("document.querySelectorAll('.installed-list>.installed-row').length"), 1)
-    await evaluate("document.querySelector('.installed-list>.installed-row').scrollIntoView({block:'center'})")
-    await wait(150)
-    await screenshot('games-long-name')
-    await evaluate("document.querySelector('.instance-name').focus()")
-    await wait(100)
-    await screenshot('games-long-name-focus')
+    );
+    await wait(100);
+    assert.equal(await evaluate("document.querySelectorAll('.installed-list>.installed-row').length"), 1);
+    await evaluate("document.querySelector('.installed-list>.installed-row').scrollIntoView({block:'center'})");
+    await wait(150);
+    await screenshot('games-long-name');
+    await evaluate("document.querySelector('.instance-name').focus()");
+    await wait(100);
+    await screenshot('games-long-name-focus');
     await evaluate(
       "(()=>{const e=document.querySelector('.installed-search input');e.value='';e.dispatchEvent(new Event('input',{bubbles:true}))})()"
-    )
+    );
     await main(
       `testElectron.BrowserWindow.getAllWindows()[0].webContents.setZoomFactor(1);testElectron.BrowserWindow.getAllWindows()[0].setSize(1598,1094)`
-    )
-    await evaluate("document.querySelector('[data-nav=resources]').click()")
-    await wait(200)
-    await evaluate("document.querySelector('[data-nav=servers]').click()")
-    await wait(800)
-    await screenshot('servers')
+    );
+    await evaluate("document.querySelector('[data-nav=resources]').click()");
+    await wait(200);
+    await evaluate("document.querySelector('[data-nav=servers]').click()");
+    await wait(800);
+    await screenshot('servers');
     assert(
       await evaluate(
         "(()=>{const b=document.querySelector('.server-favorite').getBoundingClientRect(),r=document.querySelector('.server-list-item').getBoundingClientRect();return b.left-r.left>=10&&b.top>r.top&&b.bottom<r.bottom})()"
       )
-    )
-    await evaluate("document.querySelector('.server-favorite').click()")
-    await wait(200)
-    assert(await evaluate("document.querySelector('.server-favorite').getAttribute('aria-pressed')==='true'"))
-    await evaluate("document.querySelector('[data-nav=game]').click()")
-    await wait(400)
-    await evaluate("document.querySelector('.instance-commands .row-actions button').click()")
-    await wait(500)
-    assert(await evaluate("!!document.querySelector('.ic')"))
-    await evaluate('document.querySelector(\'[aria-label="关闭实例管理"]\').click()')
-    await wait(100)
-    const real = await evaluate("window.faionyx.invoke('versions:installed',true)")
+    );
+    await evaluate("document.querySelector('.server-favorite').click()");
+    await wait(200);
+    assert(await evaluate("document.querySelector('.server-favorite').getAttribute('aria-pressed')==='true'"));
+    await evaluate("document.querySelector('[data-nav=game]').click()");
+    await wait(400);
+    await evaluate("document.querySelector('.instance-commands .row-actions button').click()");
+    await wait(500);
+    assert(await evaluate("!!document.querySelector('.ic')"));
+    await evaluate('document.querySelector(\'[aria-label="关闭实例管理"]\').click()');
+    await wait(100);
+    const real = await evaluate("window.faionyx.invoke('versions:installed',true)");
     await main(
       `globalThis.uiFixtures=${JSON.stringify(real)};testElectron.ipcMain.removeHandler('versions:installed');testElectron.ipcMain.handle('versions:installed',()=>uiFixtures);`
-    )
+    );
     const refresh = async () => {
-      await evaluate("[...document.querySelectorAll('.installed-scope button')].find(e=>e.textContent.includes('刷新列表')).click()")
-      await wait(160)
-    }
+      await evaluate("[...document.querySelectorAll('.installed-scope button')].find(e=>e.textContent.includes('刷新列表')).click()");
+      await wait(160);
+    };
     await main(
       `uiFixtures=uiFixtures.map((v,i)=>({...v,incomplete:i===0,failed:i===1,...(i===2?{loader:'Unknown Loader',mcVersion:'版本未知'}:{})}));testElectron.BrowserWindow.getAllWindows().forEach(w=>w.webContents.send('event:launchState',{status:'launching',versionId:uiFixtures[3].id,folder:uiFixtures[3].folder,launchId:'ui-test'}))`
-    )
-    await refresh()
-    await screenshot('games-states')
-    assert((await evaluate('document.body.innerText')).includes('启动中…'))
-    assert((await evaluate('document.body.innerText')).includes('下载未完成'))
-    assert((await evaluate('document.body.innerText')).includes('安装失败'))
-    await main('uiFixtures=[]')
-    await refresh()
-    assert(await evaluate("!!document.querySelector('.installed-empty')"))
-    await screenshot('games-empty')
+    );
+    await refresh();
+    await screenshot('games-states');
+    assert((await evaluate('document.body.innerText')).includes('启动中…'));
+    assert((await evaluate('document.body.innerText')).includes('下载未完成'));
+    assert((await evaluate('document.body.innerText')).includes('安装失败'));
+    await main('uiFixtures=[]');
+    await refresh();
+    assert(await evaluate("!!document.querySelector('.installed-empty')"));
+    await screenshot('games-empty');
     await main(
       `testElectron.ipcMain.removeHandler('versions:installed');testElectron.ipcMain.handle('versions:installed',()=>{throw Error('测试：目录不可用')})`
-    )
-    await refresh()
-    assert((await evaluate('document.body.innerText')).includes('目录不可用'))
-    await screenshot('games-scan-error')
+    );
+    await refresh();
+    assert((await evaluate('document.body.innerText')).includes('目录不可用'));
+    await screenshot('games-scan-error');
     const result = {
       version,
       root,
@@ -324,24 +324,24 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms))
       narrow: true,
       serverFavorite: true,
       exeSHA256: process.env.FAIONYX_GUI_DEV ? null : require('crypto').createHash('sha256').update(fs.readFileSync(exe)).digest('hex'),
-    }
-    fs.writeFileSync('out/games-gui-1095-' + result.theme + '.json', JSON.stringify(result, null, 2))
-    console.log(JSON.stringify(result))
-    mainWs.close()
-    await wait(100)
-    await evaluate("window.faionyx.send('window:close')")
-    for (let i = 0; i < 50 && child.exitCode === null; i++) await wait(100)
-    assert.equal(child.exitCode, 0)
+    };
+    fs.writeFileSync('out/games-gui-1095-' + result.theme + '.json', JSON.stringify(result, null, 2));
+    console.log(JSON.stringify(result));
+    mainWs.close();
+    await wait(100);
+    await evaluate("window.faionyx.send('window:close')");
+    for (let i = 0; i < 50 && child.exitCode === null; i++) await wait(100);
+    assert.equal(child.exitCode, 0);
   } finally {
-    if (mainWs?.readyState === WebSocket.OPEN) mainWs.close()
+    if (mainWs?.readyState === WebSocket.OPEN) mainWs.close();
     if (ws?.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ id: 999999, method: 'Browser.close' }))
-      await wait(1000)
-      ws.close()
+      ws.send(JSON.stringify({ id: 999999, method: 'Browser.close' }));
+      await wait(1000);
+      ws.close();
     }
-    fs.closeSync(log)
+    fs.closeSync(log);
   }
 })().catch((e) => {
-  console.error(e)
-  process.exitCode = 1
-})
+  console.error(e);
+  process.exitCode = 1;
+});

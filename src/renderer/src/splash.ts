@@ -1,4 +1,4 @@
-import iconUrl from './assets/icon.png'
+import iconUrl from './assets/icon.png';
 import {
   makeBootGlass,
   advanceBootGlass,
@@ -10,221 +10,221 @@ import {
   BOOT_FRAME_MS,
   type BootState,
   type GlassPoint,
-} from '@shared/startup'
-import './splash.css'
+} from '@shared/startup';
+import './splash.css';
 
-const bridge = window.faionyxSplash
-const root = document.documentElement
-const canvas = document.querySelector<HTMLCanvasElement>('#glass')!
-const ctx = canvas.getContext('2d', { alpha: true })!
-const caption = document.querySelector<HTMLSpanElement>('#stage')!
-const icon = new Image()
+const bridge = window.faionyxSplash;
+const root = document.documentElement;
+const canvas = document.querySelector<HTMLCanvasElement>('#glass')!;
+const ctx = canvas.getContext('2d', { alpha: true })!;
+const caption = document.querySelector<HTMLSpanElement>('#stage')!;
+const icon = new Image();
 let state: BootState = { completed: [], ready: false },
-  pointer: GlassPoint | null = null
-let view = { w: 1, h: 1, dpr: 1 }
-let geometry = makeBootGlass(1, 1)
+  pointer: GlassPoint | null = null;
+let view = { w: 1, h: 1, dpr: 1 };
+let geometry = makeBootGlass(1, 1);
 let start = 0,
   convergence: number | null = null,
   raf = 0,
   assembled = false,
-  lastFrame = 0
-let nextFrame = 0
+  lastFrame = 0;
+let nextFrame = 0;
 let finishTimer = 0,
-  finished = false
-const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
-const labels = ['读取配置', '加载账户', '扫描游戏实例', '加载首页图片、Java 与皮肤', '准备首帧']
+  finished = false;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const labels = ['读取配置', '加载账户', '扫描游戏实例', '加载首页图片、Java 与皮肤', '准备首帧'];
 
 /* ---------------- 滚动锁定 ---------------- */
 
 // 立即上锁：模块执行早于首帧绘制，避免滚动条闪一下再消失
-let scrollLocked = false
+let scrollLocked = false;
 function lockScroll() {
-  if (scrollLocked) return
-  scrollLocked = true
-  root.classList.add('splash-active')
+  if (scrollLocked) return;
+  scrollLocked = true;
+  root.classList.add('splash-active');
 }
 function unlockScroll() {
-  if (!scrollLocked) return
-  scrollLocked = false
-  root.classList.remove('splash-active')
+  if (!scrollLocked) return;
+  scrollLocked = false;
+  root.classList.remove('splash-active');
 }
-lockScroll()
+lockScroll();
 
 /* ---------------- 视口 / 分辨率 ---------------- */
 
 function readViewport() {
-  const w = Math.max(1, Math.round(root.clientWidth || window.innerWidth))
-  const h = Math.max(1, Math.round(root.clientHeight || window.innerHeight))
-  const dpr = Math.min(Math.max(window.devicePixelRatio || 1, 1), 2)
-  return { w, h, dpr }
+  const w = Math.max(1, Math.round(root.clientWidth || window.innerWidth));
+  const h = Math.max(1, Math.round(root.clientHeight || window.innerHeight));
+  const dpr = Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);
+  return { w, h, dpr };
 }
 
 function resize() {
-  const next = readViewport()
-  const unchanged = next.w === view.w && next.h === view.h && next.dpr === view.dpr
-  view = next
-  if (unchanged) return
+  const next = readViewport();
+  const unchanged = next.w === view.w && next.h === view.h && next.dpr === view.dpr;
+  view = next;
+  if (unchanged) return;
 
-  const pixelW = Math.round(next.w * next.dpr)
-  const pixelH = Math.round(next.h * next.dpr)
+  const pixelW = Math.round(next.w * next.dpr);
+  const pixelH = Math.round(next.h * next.dpr);
   if (canvas.width !== pixelW || canvas.height !== pixelH) {
-    canvas.width = pixelW
-    canvas.height = pixelH
+    canvas.width = pixelW;
+    canvas.height = pixelH;
   }
-  canvas.style.width = `${next.w}px`
-  canvas.style.height = `${next.h}px`
+  canvas.style.width = `${next.w}px`;
+  canvas.style.height = `${next.h}px`;
 
-  ctx.setTransform(next.dpr, 0, 0, next.dpr, 0, 0)
-  ctx.imageSmoothingEnabled = false
-  geometry = makeBootGlass(next.w, next.h)
-  if (assembled) paint(performance.now())
+  ctx.setTransform(next.dpr, 0, 0, next.dpr, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  geometry = makeBootGlass(next.w, next.h);
+  if (assembled) paint(performance.now());
 }
 
-let resizeQueued = 0
+let resizeQueued = 0;
 function scheduleResize() {
-  if (resizeQueued) return
+  if (resizeQueued) return;
   resizeQueued = requestAnimationFrame(() => {
-    resizeQueued = 0
-    resize()
-  })
+    resizeQueued = 0;
+    resize();
+  });
 }
 
-let dprQuery: MediaQueryList | undefined
+let dprQuery: MediaQueryList | undefined;
 function onDprChange() {
-  watchDpr()
-  scheduleResize()
+  watchDpr();
+  scheduleResize();
 }
 function watchDpr() {
-  dprQuery?.removeEventListener('change', onDprChange)
-  dprQuery = matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`)
-  dprQuery.addEventListener('change', onDprChange)
+  dprQuery?.removeEventListener('change', onDprChange);
+  dprQuery = matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+  dprQuery.addEventListener('change', onDprChange);
 }
 
 /* ---------------- 渲染 ---------------- */
 
 function paint(now: number) {
-  const elapsed = now - start
-  ctx.clearRect(0, 0, view.w, view.h)
-  const complete = reduced || (convergence !== null && elapsed - convergence >= CONVERGE_DURATION)
+  const elapsed = now - start;
+  ctx.clearRect(0, 0, view.w, view.h);
+  const complete = reduced || (convergence !== null && elapsed - convergence >= CONVERGE_DURATION);
   if (complete) {
-    ctx.drawImage(icon, geometry.left, geometry.top, geometry.board, geometry.board)
-    return
+    ctx.drawImage(icon, geometry.left, geometry.top, geometry.board, geometry.board);
+    return;
   }
   for (const shard of geometry.shards) {
     const p = glassPosition(shard, elapsed, convergence),
-      glass = 1 - p.progress
-    ctx.save()
-    ctx.translate(p.x, p.y)
-    ctx.rotate(p.rotation)
-    ctx.scale(p.scale, p.scale)
-    const polygon = new Path2D()
-    shard.vertices.forEach((v, i) => (i ? polygon.lineTo(v.x, v.y) : polygon.moveTo(v.x, v.y)))
-    polygon.closePath()
-    ctx.save()
-    ctx.clip(polygon)
-    ctx.globalAlpha = 0.12 + 0.88 * p.progress
-    ctx.drawImage(icon, -shard.sourceX, -shard.sourceY, geometry.board, geometry.board)
-    ctx.restore()
-    ctx.globalAlpha = glass
-    const tint = ctx.createLinearGradient(-28, -30, 32, 35)
-    tint.addColorStop(0, '#effaff80')
-    tint.addColorStop(0.4, '#badfff20')
-    tint.addColorStop(0.52, '#ffffff58')
-    tint.addColorStop(1, '#bcb0fa28')
-    ctx.fillStyle = tint
-    ctx.fill(polygon)
-    ctx.strokeStyle = '#25334945'
-    ctx.lineWidth = 2.4
-    ctx.stroke(polygon)
-    ctx.strokeStyle = '#eaf7ffb8'
-    ctx.lineWidth = 0.85
-    ctx.stroke(polygon)
-    const [a, b] = shard.vertices
-    ctx.beginPath()
-    ctx.moveTo(a.x, a.y)
-    ctx.lineTo(b.x, b.y)
-    ctx.strokeStyle = `rgba(255,255,255,${0.55 + Math.sin(elapsed / 1100 + shard.phase) * 0.25})`
-    ctx.lineWidth = 1.4
-    ctx.stroke()
-    ctx.restore()
+      glass = 1 - p.progress;
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rotation);
+    ctx.scale(p.scale, p.scale);
+    const polygon = new Path2D();
+    shard.vertices.forEach((v, i) => (i ? polygon.lineTo(v.x, v.y) : polygon.moveTo(v.x, v.y)));
+    polygon.closePath();
+    ctx.save();
+    ctx.clip(polygon);
+    ctx.globalAlpha = 0.12 + 0.88 * p.progress;
+    ctx.drawImage(icon, -shard.sourceX, -shard.sourceY, geometry.board, geometry.board);
+    ctx.restore();
+    ctx.globalAlpha = glass;
+    const tint = ctx.createLinearGradient(-28, -30, 32, 35);
+    tint.addColorStop(0, '#effaff80');
+    tint.addColorStop(0.4, '#badfff20');
+    tint.addColorStop(0.52, '#ffffff58');
+    tint.addColorStop(1, '#bcb0fa28');
+    ctx.fillStyle = tint;
+    ctx.fill(polygon);
+    ctx.strokeStyle = '#25334945';
+    ctx.lineWidth = 2.4;
+    ctx.stroke(polygon);
+    ctx.strokeStyle = '#eaf7ffb8';
+    ctx.lineWidth = 0.85;
+    ctx.stroke(polygon);
+    const [a, b] = shard.vertices;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.strokeStyle = `rgba(255,255,255,${0.55 + Math.sin(elapsed / 1100 + shard.phase) * 0.25})`;
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+    ctx.restore();
   }
 }
 
 /* ---------------- 主循环 ---------------- */
 
 const offPointer = bridge.onPointer((next) => {
-  pointer = next
-})
+  pointer = next;
+});
 const offState = bridge.onState((next) => {
-  state = next
-  caption.textContent = state.ready ? '准备就绪' : `${labels[Math.min(4, state.completed.length)]}…`
-})
+  state = next;
+  caption.textContent = state.ready ? '准备就绪' : `${labels[Math.min(4, state.completed.length)]}…`;
+});
 const offReveal = bridge.onReveal(() => {
-  document.body.classList.add('leaving')
+  document.body.classList.add('leaving');
   const done = () => {
-    if (finished) return
-    finished = true
-    window.clearTimeout(finishTimer)
-    unlockScroll()
-    bridge.finished()
-  }
-  document.body.addEventListener('transitionend', done, { once: true })
+    if (finished) return;
+    finished = true;
+    window.clearTimeout(finishTimer);
+    unlockScroll();
+    bridge.finished();
+  };
+  document.body.addEventListener('transitionend', done, { once: true });
   // 兜底：prefers-reduced-motion 或无过渡时 transitionend 不会触发，会永久锁住滚动
-  finishTimer = window.setTimeout(done, 700)
-})
+  finishTimer = window.setTimeout(done, 700);
+});
 
 function frame(now: number) {
   if (now + 0.5 < nextFrame) {
-    raf = requestAnimationFrame(frame)
-    return
+    raf = requestAnimationFrame(frame);
+    return;
   }
-  if (!nextFrame) nextFrame = now
-  nextFrame += BOOT_FRAME_MS
-  if (nextFrame <= now) nextFrame = now + BOOT_FRAME_MS
-  if (!start) start = now
+  if (!nextFrame) nextFrame = now;
+  nextFrame += BOOT_FRAME_MS;
+  if (nextFrame <= now) nextFrame = now + BOOT_FRAME_MS;
+  if (!start) start = now;
   const elapsed = now - start,
-    delta = lastFrame ? now - lastFrame : BOOT_FRAME_MS
-  lastFrame = now
-  if (canAssembleBoot(state) && convergence === null && (reduced || elapsed >= GLASS_FLOAT_MIN_MS)) convergence = elapsed
-  if (convergence === null && !reduced) advanceBootGlass(geometry.shards, elapsed, delta, pointer)
-  paint(now)
+    delta = lastFrame ? now - lastFrame : BOOT_FRAME_MS;
+  lastFrame = now;
+  if (canAssembleBoot(state) && convergence === null && (reduced || elapsed >= GLASS_FLOAT_MIN_MS)) convergence = elapsed;
+  if (convergence === null && !reduced) advanceBootGlass(geometry.shards, elapsed, delta, pointer);
+  paint(now);
   if (!assembled && state.ready && convergence !== null && (reduced || elapsed - convergence >= CONVERGE_DURATION + ASSEMBLED_HOLD_MS)) {
-    assembled = true
-    raf = requestAnimationFrame(() => bridge.assembled())
-  } else if (!assembled) raf = requestAnimationFrame(frame)
+    assembled = true;
+    raf = requestAnimationFrame(() => bridge.assembled());
+  } else if (!assembled) raf = requestAnimationFrame(frame);
 }
 
 /* ---------------- 启动 & 清理 ---------------- */
 
 icon.onload = () => {
-  document.body.dataset.motion = reduced ? 'system-reduced' : 'full'
-  watchDpr()
-  resize()
-  raf = requestAnimationFrame(frame)
-  bridge.ready()
-}
+  document.body.dataset.motion = reduced ? 'system-reduced' : 'full';
+  watchDpr();
+  resize();
+  raf = requestAnimationFrame(frame);
+  bridge.ready();
+};
 icon.onerror = () => {
-  unlockScroll()
-  bridge.failed('Icon资源无法加载')
-}
-icon.src = iconUrl
+  unlockScroll();
+  bridge.failed('Icon资源无法加载');
+};
+icon.src = iconUrl;
 
-window.addEventListener('resize', scheduleResize)
-window.addEventListener('orientationchange', scheduleResize)
-window.addEventListener('load', scheduleResize, { once: true })
+window.addEventListener('resize', scheduleResize);
+window.addEventListener('orientationchange', scheduleResize);
+window.addEventListener('load', scheduleResize, { once: true });
 window.addEventListener('error', () => {
-  unlockScroll()
-  bridge.failed('启动动画渲染失败')
-})
+  unlockScroll();
+  bridge.failed('启动动画渲染失败');
+});
 window.addEventListener('unload', () => {
-  cancelAnimationFrame(raf)
-  if (resizeQueued) cancelAnimationFrame(resizeQueued)
-  window.clearTimeout(finishTimer)
-  offPointer()
-  offState()
-  offReveal()
-  dprQuery?.removeEventListener('change', onDprChange)
-  window.removeEventListener('resize', scheduleResize)
-  window.removeEventListener('orientationchange', scheduleResize)
-  window.removeEventListener('load', scheduleResize)
-})
+  cancelAnimationFrame(raf);
+  if (resizeQueued) cancelAnimationFrame(resizeQueued);
+  window.clearTimeout(finishTimer);
+  offPointer();
+  offState();
+  offReveal();
+  dprQuery?.removeEventListener('change', onDprChange);
+  window.removeEventListener('resize', scheduleResize);
+  window.removeEventListener('orientationchange', scheduleResize);
+  window.removeEventListener('load', scheduleResize);
+});

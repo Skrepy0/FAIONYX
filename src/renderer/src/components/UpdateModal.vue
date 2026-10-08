@@ -3,47 +3,47 @@
  * 启动器更新弹窗：发现新版本 / 下载中 / 下载完成 三态。
  * 常驻内测群备用下载提示 + 复制群号；低速 30s 内嵌醒目提示一次。
  */
-import { computed, ref } from 'vue'
-import UpdateDialogShell from './UpdateDialogShell.vue'
-import type { ReleaseInfo } from '@shared/types'
-import { QQ_GROUP_HINT } from '@shared/branding'
-import { renderMarkdownLite } from '../markdownLite'
-import { usePlatformUpdate } from '../composables/usePlatformUpdate'
-const { systemInstaller, installAction, installExplanation } = usePlatformUpdate()
+import { computed, ref } from 'vue';
+import UpdateDialogShell from './UpdateDialogShell.vue';
+import type { ReleaseInfo } from '@shared/types';
+import { QQ_GROUP_HINT } from '@shared/branding';
+import { renderMarkdownLite } from '../markdownLite';
+import { usePlatformUpdate } from '../composables/usePlatformUpdate';
+const { systemInstaller, installAction, installExplanation } = usePlatformUpdate();
 
 const props = defineProps<{
-  release: ReleaseInfo
-  currentVersion: string
+  release: ReleaseInfo;
+  currentVersion: string;
   /** found=发现新版本；downloading=下载中；done=下载完成待安装 */
-  state: 'found' | 'downloading' | 'done'
+  state: 'found' | 'downloading' | 'done';
   /** 下载进度 0-1 与速度文本（downloading 态） */
-  percent?: number
-  speedText?: string
-  bytesText?: string
-  etaText?: string
+  percent?: number;
+  speedText?: string;
+  bytesText?: string;
+  etaText?: string;
   /** 低速提示（30s<100KB/s 出现一次） */
-  slowHint?: boolean
+  slowHint?: boolean;
   /** 内测群号（配置项，可覆盖） */
-  qqGroup: string
+  qqGroup: string;
   /** 回退模式（文案微调） */
-  rollback?: boolean
-}>()
+  rollback?: boolean;
+}>();
 
 const emit = defineEmits<{
-  (e: 'updateNow'): void
-  (e: 'later'): void
-  (e: 'skip'): void
-  (e: 'cancelDownload'): void
-  (e: 'installNow'): void
-  (e: 'close'): void
-}>()
+  (e: 'updateNow'): void;
+  (e: 'later'): void;
+  (e: 'skip'): void;
+  (e: 'cancelDownload'): void;
+  (e: 'installNow'): void;
+  (e: 'close'): void;
+}>();
 
-const copied = ref(false)
+const copied = ref(false);
 async function copyGroup() {
   try {
-    await navigator.clipboard.writeText(props.qqGroup)
-    copied.value = true
-    setTimeout(() => (copied.value = false), 1600)
+    await navigator.clipboard.writeText(props.qqGroup);
+    copied.value = true;
+    setTimeout(() => (copied.value = false), 1600);
   } catch {
     /* 剪贴板不可用时静默 */
   }
@@ -51,18 +51,18 @@ async function copyGroup() {
 
 const bodyHtml = computed(() =>
   renderMarkdownLite((props.release.body || '').replace(/^\s*(?:#{1,4}\s*)?FAIONYX\s+v?[\d.]+\s*(?:\r?\n|$)/i, '').trim() || '暂无更新说明')
-)
+);
 const dateText = computed(() => {
-  const d = new Date(props.release.publishedAt)
-  if (Number.isNaN(d.getTime())) return ''
-  const p = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
-})
+  const d = new Date(props.release.publishedAt);
+  if (Number.isNaN(d.getTime())) return '';
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+});
 const sizeText = computed(() => {
-  const s = props.release.assetSize
-  if (!s) return ''
-  return s >= 1048576 ? `${(s / 1048576).toFixed(1)} MB` : `${Math.round(s / 1024)} KB`
-})
+  const s = props.release.assetSize;
+  if (!s) return '';
+  return s >= 1048576 ? `${(s / 1048576).toFixed(1)} MB` : `${Math.round(s / 1024)} KB`;
+});
 </script>
 
 <template>

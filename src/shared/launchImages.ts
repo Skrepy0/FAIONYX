@@ -7,8 +7,8 @@ export const BUILTIN_LAUNCH_IMAGES = [
   { key: 'builtin:farmer', title: '像素农夫与肥料伙伴', file: 'farmer.webp' },
   { key: 'builtin:camp', title: '月夜篝火下的方块森林营地', file: 'camp.webp' },
   { key: 'builtin:sunset', title: '方块世界的日落奇遇', file: 'sunset.webp' },
-] as const
+] as const;
 
 export function isBuiltinLaunchImage(key: string): boolean {
-  return BUILTIN_LAUNCH_IMAGES.some((image) => image.key === key)
+  return BUILTIN_LAUNCH_IMAGES.some((image) => image.key === key);
 }

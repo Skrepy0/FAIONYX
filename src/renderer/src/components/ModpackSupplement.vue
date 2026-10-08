@@ -1,29 +1,29 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import type { ManualModpackRequest } from '@shared/types'
-import { supplyModpackFiles, openModpackFile, errText } from '../api'
-const props = defineProps<{ request: ManualModpackRequest; paused?: boolean }>()
+import { ref } from 'vue';
+import type { ManualModpackRequest } from '@shared/types';
+import { supplyModpackFiles, openModpackFile, errText } from '../api';
+const props = defineProps<{ request: ManualModpackRequest; paused?: boolean }>();
 const busy = ref(false),
-  message = ref('')
+  message = ref('');
 async function supply() {
-  busy.value = true
-  message.value = ''
+  busy.value = true;
+  message.value = '';
   try {
-    const result = await supplyModpackFiles(props.request.token)
+    const result = await supplyModpackFiles(props.request.token);
     message.value = result.rejected.length
       ? `已补充 ${result.accepted} 个；以下文件与所需版本不匹配：${result.rejected.join('、')}`
-      : `已补充 ${result.accepted} 个，剩余 ${result.remaining} 个`
+      : `已补充 ${result.accepted} 个，剩余 ${result.remaining} 个`;
   } catch (error) {
-    message.value = errText(error)
+    message.value = errText(error);
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 async function open(fileID: number) {
   try {
-    await openModpackFile(props.request.token, fileID)
+    await openModpackFile(props.request.token, fileID);
   } catch (error) {
-    message.value = errText(error)
+    message.value = errText(error);
   }
 }
 </script>

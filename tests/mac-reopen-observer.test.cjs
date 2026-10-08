@@ -1,7 +1,7 @@
 const test = require('node:test'),
-  assert = require('node:assert/strict')
-const { dockReopenReady, observeDockReopen } = require('../scripts/mac-reopen-observer.cjs')
-const expected = { pid: 123, versionId: 'fabric-native' }
+  assert = require('node:assert/strict');
+const { dockReopenReady, observeDockReopen } = require('../scripts/mac-reopen-observer.cjs');
+const expected = { pid: 123, versionId: 'fabric-native' };
 function ready() {
   return {
     gameAlive: true,
@@ -14,77 +14,77 @@ function ready() {
       ],
     },
     renderer: { documentReady: 'complete', visible: true, runningText: '游戏运行中', bounds: { width: 120, height: 40 } },
-  }
+  };
 }
 test('Dock observer waits for actual delayed boot/replay and painted running status', async () => {
-  let clock = 0
-  const records = []
+  let clock = 0;
+  const records = [];
   const proof = await observeDockReopen({
     expected,
     now: () => clock,
     sleep: async (ms) => {
-      clock += ms
+      clock += ms;
     },
     record: (p) => records.push(p.ready),
     snapshot: async () => {
-      const p = ready()
+      const p = ready();
       if (clock < 3400) {
-        p.main.events = []
-        p.renderer.runningText = '就绪'
+        p.main.events = [];
+        p.renderer.runningText = '就绪';
       }
-      return p
+      return p;
     },
-  })
-  assert.equal(proof.ready, true)
-  assert.equal(proof.elapsedMs, 3400)
-  assert(records.includes(false))
-})
+  });
+  assert.equal(proof.ready, true);
+  assert.equal(proof.elapsedMs, 3400);
+  assert(records.includes(false));
+});
 test('Dock observer rejects stale text without current-window replay or visible running UI', () => {
   for (const change of [
     (p) => {
-      p.main.events[1].sender = 8
+      p.main.events[1].sender = 8;
     },
     (p) => {
-      p.main.events[1].state.versionId = 'another'
+      p.main.events[1].state.versionId = 'another';
     },
     (p) => {
-      p.main.events[0].sender = 8
+      p.main.events[0].sender = 8;
     },
     (p) => {
-      p.renderer.visible = false
+      p.renderer.visible = false;
     },
     (p) => {
-      p.main.runningRecord = { ...expected, pid: 999 }
+      p.main.runningRecord = { ...expected, pid: 999 };
     },
     (p) => {
-      p.renderer.runningText = '游戏运行中（旧）'
+      p.renderer.runningText = '游戏运行中（旧）';
     },
   ]) {
-    const p = ready()
-    change(p)
-    assert.equal(dockReopenReady(p, expected), false)
+    const p = ready();
+    change(p);
+    assert.equal(dockReopenReady(p, expected), false);
   }
-})
+});
 test('Dock observer preserves failure when running state never returns, or owned process exits', async () => {
-  let clock = 0
+  let clock = 0;
   const proof = await observeDockReopen({
     expected,
     timeoutMs: 1000,
     now: () => clock,
     sleep: async (ms) => {
-      clock += ms
+      clock += ms;
     },
     record() {},
     snapshot: async () => {
-      const p = ready()
-      p.main.events = []
-      return p
+      const p = ready();
+      p.main.events = [];
+      return p;
     },
-  })
-  assert.equal(proof.ready, false)
-  assert.equal(proof.timedOut, true)
-  assert.equal(proof.elapsedMs, 1000)
-  const dead = await observeDockReopen({ expected, record() {}, snapshot: async () => ({ ...ready(), gameAlive: false }) })
-  assert.equal(dead.ready, false)
-  assert.equal(dead.samples.length, 1)
-})
+  });
+  assert.equal(proof.ready, false);
+  assert.equal(proof.timedOut, true);
+  assert.equal(proof.elapsedMs, 1000);
+  const dead = await observeDockReopen({ expected, record() {}, snapshot: async () => ({ ...ready(), gameAlive: false }) });
+  assert.equal(dead.ready, false);
+  assert.equal(dead.samples.length, 1);
+});

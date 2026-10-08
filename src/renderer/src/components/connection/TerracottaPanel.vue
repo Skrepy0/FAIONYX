@@ -1,53 +1,53 @@
 <script setup lang="ts">
-import { terracottaRole } from '@shared/uiPresentation'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import ConnectionPanel from './ConnectionPanel.vue'
-import ConnectionStatus from './ConnectionStatus.vue'
-import { toast } from '../../store'
-import { copyText } from '../../api'
+import { terracottaRole } from '@shared/uiPresentation';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import ConnectionPanel from './ConnectionPanel.vue';
+import ConnectionStatus from './ConnectionStatus.vue';
+import { toast } from '../../store';
+import { copyText } from '../../api';
 
 interface TcStatus {
-  phase: 'idle' | 'downloading' | 'starting' | 'hosting' | 'joining' | 'ready'
-  room?: string
-  url?: string
-  stateRaw?: string
-  error?: string
-  downloaded?: number
-  total?: number
-  binaryReady: boolean
-  running: boolean
-  toolVersion?: string
-  binaryPath?: string
+  phase: 'idle' | 'downloading' | 'starting' | 'hosting' | 'joining' | 'ready';
+  room?: string;
+  url?: string;
+  stateRaw?: string;
+  error?: string;
+  downloaded?: number;
+  total?: number;
+  binaryReady: boolean;
+  running: boolean;
+  toolVersion?: string;
+  binaryPath?: string;
 }
 
-const status = ref<TcStatus | null>(null)
-const busy = ref(false)
-const error = ref('')
-const logs = ref<Array<{ ts: string; text: string }>>([])
-const mode = ref<'host' | 'join'>('host')
-const roomCode = ref('')
-const playerName = ref('')
+const status = ref<TcStatus | null>(null);
+const busy = ref(false);
+const error = ref('');
+const logs = ref<Array<{ ts: string; text: string }>>([]);
+const mode = ref<'host' | 'join'>('host');
+const roomCode = ref('');
+const playerName = ref('');
 
 /** 官方房间码格式：U/ 前缀 + 四段各 4 位（burningtnt/Terracotta） */
-const ROOM_CODE_RE = /^U\/[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/
-const joinCodeValid = computed(() => ROOM_CODE_RE.test(roomCode.value.trim().toUpperCase()))
+const ROOM_CODE_RE = /^U\/[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/;
+const joinCodeValid = computed(() => ROOM_CODE_RE.test(roomCode.value.trim().toUpperCase()));
 /** 只有 ready 且拿到本地地址才算「已连接」；joining/hosting 只是进行中 */
-const connected = computed(() => !!status.value && status.value.phase === 'ready' && !!status.value.url)
-const busyPhase = computed(() => !!status.value && ['downloading', 'starting', 'hosting', 'joining'].includes(status.value.phase))
-const hosting = computed(() => terracottaRole(status.value) === 'host')
-const toolDetails = ref(false)
+const connected = computed(() => !!status.value && status.value.phase === 'ready' && !!status.value.url);
+const busyPhase = computed(() => !!status.value && ['downloading', 'starting', 'hosting', 'joining'].includes(status.value.phase));
+const hosting = computed(() => terracottaRole(status.value) === 'host');
+const toolDetails = ref(false);
 
 interface Step {
-  label: string
-  state: 'done' | 'active' | 'pending'
-  detail?: string
+  label: string;
+  state: 'done' | 'active' | 'pending';
+  detail?: string;
 }
 /** 阶段条：由 tc:status 的真实 phase / stateRaw 驱动 */
 const steps = computed<Step[]>(() => {
-  const s = status.value
-  if (!s || (s.phase === 'idle' && !s.running)) return []
-  const phase = s.phase
-  const stepState = (active: boolean, done: boolean): 'done' | 'active' | 'pending' => (done ? 'done' : active ? 'active' : 'pending')
+  const s = status.value;
+  if (!s || (s.phase === 'idle' && !s.running)) return [];
+  const phase = s.phase;
+  const stepState = (active: boolean, done: boolean): 'done' | 'active' | 'pending' => (done ? 'done' : active ? 'active' : 'pending');
   return [
     {
       label: '准备官方工具',
@@ -65,33 +65,33 @@ const steps = computed<Step[]>(() => {
       state: stepState(false, phase === 'ready'),
       detail: phase === 'ready' ? (hosting.value ? '房间码已生成' : '本地地址已生成') : undefined,
     },
-  ]
-})
+  ];
+});
 
 /** 消敏：远程地址不进日志（本地 127.0.0.1:端口 除外） */
 function sanitizeLog(text: string): string {
   return text
     .replace(/(\d{1,3}\.){3}\d{1,3}:\d+/g, (m) => (m.startsWith('127.0.0.1') ? m : '***:***'))
-    .replace(/(\d{1,3}\.){3}\d{1,3}/g, (m) => (m === '127.0.0.1' ? m : '***'))
+    .replace(/(\d{1,3}\.){3}\d{1,3}/g, (m) => (m === '127.0.0.1' ? m : '***'));
 }
 
-const logViewport = ref<HTMLElement | null>(null)
+const logViewport = ref<HTMLElement | null>(null);
 function pushLog(text: string): void {
-  const d = new Date()
-  const ts = [d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, '0')).join(':')
-  logs.value.push({ ts, text: sanitizeLog(text) })
-  if (logs.value.length > 300) logs.value.shift()
+  const d = new Date();
+  const ts = [d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, '0')).join(':');
+  logs.value.push({ ts, text: sanitizeLog(text) });
+  if (logs.value.length > 300) logs.value.shift();
   requestAnimationFrame(() => {
-    const el = logViewport.value
-    if (el) el.scrollTop = el.scrollHeight
-  })
+    const el = logViewport.value;
+    if (el) el.scrollTop = el.scrollHeight;
+  });
 }
 async function copyLogs(): Promise<void> {
-  const text = logs.value.map((l) => `[${l.ts}] ${l.text}`).join('\n')
-  toast((await copyText(text)) ? '日志已复制' : '复制失败', 'info')
+  const text = logs.value.map((l) => `[${l.ts}] ${l.text}`).join('\n');
+  toast((await copyText(text)) ? '日志已复制' : '复制失败', 'info');
 }
 
-let offEvent: (() => void) | undefined
+let offEvent: (() => void) | undefined;
 
 function onEvent(payload: { type: string; data: unknown }): void {
   if (payload.type === 'status') {
@@ -101,93 +101,93 @@ function onEvent(payload: { type: string; data: unknown }): void {
       binaryReady: status.value?.binaryReady ?? false,
       running: status.value?.running ?? false,
       ...(payload.data as TcStatus),
-    }
-    return
+    };
+    return;
   }
   if (payload.type === 'log') {
-    const d = payload.data as { level: string; msg: string }
-    if (d?.msg) pushLog(`[${d.level}] ${d.msg}`)
+    const d = payload.data as { level: string; msg: string };
+    if (d?.msg) pushLog(`[${d.level}] ${d.msg}`);
   } else if (payload.type === 'error') {
-    error.value = String(payload.data)
+    error.value = String(payload.data);
   } else if (payload.type === 'stopped') {
-    void refresh()
+    void refresh();
   } else if (payload.type === 'ready') {
-    void refresh()
+    void refresh();
   }
 }
 
 async function refresh(): Promise<void> {
   try {
-    status.value = await window.faionyx.invoke('tc:status')
-    if (status.value?.error) error.value = status.value.error
-    const role = terracottaRole(status.value)
-    if (role !== 'none') mode.value = role === 'host' ? 'host' : 'join'
+    status.value = await window.faionyx.invoke('tc:status');
+    if (status.value?.error) error.value = status.value.error;
+    const role = terracottaRole(status.value);
+    if (role !== 'none') mode.value = role === 'host' ? 'host' : 'join';
   } catch {
     /* 窗口关闭 */
   }
 }
 
 async function install(): Promise<void> {
-  busy.value = true
-  error.value = ''
+  busy.value = true;
+  error.value = '';
   try {
-    await window.faionyx.invoke('tc:install')
-    toast('陶瓦工具已下载并通过校验', 'success')
+    await window.faionyx.invoke('tc:install');
+    toast('陶瓦工具已下载并通过校验', 'success');
   } catch (e) {
-    error.value = (e as Error).message.replace(/^Error invoking remote method '[^']*': (Error: )?/, '')
+    error.value = (e as Error).message.replace(/^Error invoking remote method '[^']*': (Error: )?/, '');
   } finally {
-    busy.value = false
-    await refresh()
+    busy.value = false;
+    await refresh();
   }
 }
 async function cancelInstall() {
-  await window.faionyx.invoke('tc:cancel-install')
+  await window.faionyx.invoke('tc:cancel-install');
 }
 async function start(): Promise<void> {
-  if (!status.value?.binaryReady) return
-  busy.value = true
-  error.value = ''
+  if (!status.value?.binaryReady) return;
+  busy.value = true;
+  error.value = '';
   try {
     const result = await window.faionyx.invoke<TcStatus>('tc:start', {
       mode: mode.value,
       code: roomCode.value.trim().toUpperCase(),
       playerName: playerName.value || undefined,
-    })
-    status.value = result
+    });
+    status.value = result;
   } catch (e) {
-    error.value = (e as Error).message?.replace(/^Error invoking remote method '[^']*': (Error: )?/, '') ?? '操作失败'
+    error.value = (e as Error).message?.replace(/^Error invoking remote method '[^']*': (Error: )?/, '') ?? '操作失败';
   } finally {
-    busy.value = false
-    void refresh()
+    busy.value = false;
+    void refresh();
   }
 }
 async function stop(): Promise<void> {
-  busy.value = true
+  busy.value = true;
   try {
-    await window.faionyx.invoke('tc:stop')
+    await window.faionyx.invoke('tc:stop');
   } catch {
     /* 忽略 */
   } finally {
-    busy.value = false
-    void refresh()
+    busy.value = false;
+    void refresh();
   }
 }
 function joinNow(): void {
-  if (!joinCodeValid.value || busy.value || status.value?.running) return
-  mode.value = 'join'
-  void start()
+  if (!joinCodeValid.value || busy.value || status.value?.running) return;
+  mode.value = 'join';
+  void start();
 }
 async function copy(value?: string | null): Promise<void> {
-  if (value) toast((await copyText(value)) ? '已复制' : '复制失败', 'info')
+  if (value) toast((await copyText(value)) ? '已复制' : '复制失败', 'info');
 }
 
 onMounted(() => {
-  offEvent = window.faionyx.on('tc:event', onEvent)
-  void refresh()
-})
+  offEvent = window.faionyx.on('tc:event', onEvent);
+  void refresh();
+});
 onUnmounted(() => {
-  offEvent?.()
-})
+  offEvent?.();
+});
 </script>
 
 <template>
@@ -367,8 +367,8 @@ onUnmounted(() => {
               class="btn btn-gold main-btn"
               :disabled="busy || status?.running || !status?.binaryReady"
               @click="
-                mode = 'host'
-                start()
+                mode = 'host';
+                start();
               "
             >
               {{ busy && mode === 'host' ? '处理中…' : '创建陶瓦房间' }}

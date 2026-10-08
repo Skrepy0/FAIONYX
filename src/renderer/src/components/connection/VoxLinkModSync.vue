@@ -1,102 +1,102 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import type { InstanceTarget } from '@shared/instanceCenter'
-import type { ModSyncPlan, ModSyncScope, ModSyncGate, ModSyncGateResult } from '@shared/voxlinkMods'
-import UpdateDialogShell from '../UpdateDialogShell.vue'
-const props = defineProps<{ code: string; target?: InstanceTarget }>()
-const emit = defineEmits<{ join: [gate: ModSyncGate]; dismiss: [] }>()
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import type { InstanceTarget } from '@shared/instanceCenter';
+import type { ModSyncPlan, ModSyncScope, ModSyncGate, ModSyncGateResult } from '@shared/voxlinkMods';
+import UpdateDialogShell from '../UpdateDialogShell.vue';
+const props = defineProps<{ code: string; target?: InstanceTarget }>();
+const emit = defineEmits<{ join: [gate: ModSyncGate]; dismiss: [] }>();
 const scope = ref<ModSyncScope>('required'),
-  plan = ref<ModSyncPlan | null>(null)
+  plan = ref<ModSyncPlan | null>(null);
 const busy = ref(false),
   message = ref(''),
   done = ref(false),
-  selected = ref<string[]>([])
-const missing = computed(() => plan.value?.rows.filter((r) => r.status === 'missing') || [])
-const progress = ref('')
-let offProgress: (() => void) | undefined
+  selected = ref<string[]>([]);
+const missing = computed(() => plan.value?.rows.filter((r) => r.status === 'missing') || []);
+const progress = ref('');
+let offProgress: (() => void) | undefined;
 let operation = '',
-  epoch = 0
+  epoch = 0;
 onMounted(() => {
   offProgress = window.faionyx.on('voxlink:mods:progress', (value) => {
-    const p = value as { operation: string; installed: number; total: number; file: string; bytes: number; fileSize: number }
+    const p = value as { operation: string; installed: number; total: number; file: string; bytes: number; fileSize: number };
     if (p.operation === operation)
-      progress.value = `${p.installed}/${p.total} · ${p.file} · ${(p.bytes / 1048576).toFixed(1)}/${(p.fileSize / 1048576).toFixed(1)} MB`
-  })
-})
+      progress.value = `${p.installed}/${p.total} · ${p.file} · ${(p.bytes / 1048576).toFixed(1)}/${(p.fileSize / 1048576).toFixed(1)} MB`;
+  });
+});
 function cancel() {
-  ++epoch
-  if (operation) void window.faionyx.invoke('voxlink:mods:cancel', operation)
-  operation = ''
-  busy.value = false
+  ++epoch;
+  if (operation) void window.faionyx.invoke('voxlink:mods:cancel', operation);
+  operation = '';
+  busy.value = false;
 }
 function dismiss() {
-  cancel()
-  emit('dismiss')
+  cancel();
+  emit('dismiss');
 }
 function cancelDownload() {
-  if (operation) void window.faionyx.invoke('voxlink:mods:cancel', operation)
-  message.value = '正在取消下载…'
+  if (operation) void window.faionyx.invoke('voxlink:mods:cancel', operation);
+  message.value = '正在取消下载…';
 }
 function join(gate: ModSyncGate = 'BYPASSED') {
-  cancel()
-  if (gate === 'BYPASSED') void window.faionyx.invoke('voxlink:mods:bypass', props.code)
-  emit('join', gate)
+  cancel();
+  if (gate === 'BYPASSED') void window.faionyx.invoke('voxlink:mods:bypass', props.code);
+  emit('join', gate);
 }
 async function check() {
-  if (!props.target || busy.value) return
-  const current = ++epoch
-  operation = crypto.randomUUID()
-  busy.value = true
-  message.value = ''
-  plan.value = null
+  if (!props.target || busy.value) return;
+  const current = ++epoch;
+  operation = crypto.randomUUID();
+  busy.value = true;
+  message.value = '';
+  plan.value = null;
   try {
     const result = (await window.faionyx.invoke('voxlink:mods:check', {
       operation,
       code: props.code,
       scope: scope.value,
       target: props.target,
-    })) as ModSyncPlan | ModSyncGateResult
-    if (current !== epoch) return
+    })) as ModSyncPlan | ModSyncGateResult;
+    if (current !== epoch) return;
     if (result.gate && result.gate !== 'MANIFEST') {
-      join(result.gate)
-      return
+      join(result.gate);
+      return;
     }
-    const manifest = result as ModSyncPlan
+    const manifest = result as ModSyncPlan;
     if (!manifest.unknownMods.length && manifest.rows.every((r) => r.status === 'installed')) {
-      join('MANIFEST')
-      return
+      join('MANIFEST');
+      return;
     }
-    plan.value = manifest
-    selected.value = missing.value.map((r) => r.entry.sha1)
+    plan.value = manifest;
+    selected.value = missing.value.map((r) => r.entry.sha1);
   } catch (error) {
-    if (current === epoch) message.value = (error as Error).message
+    if (current === epoch) message.value = (error as Error).message;
   } finally {
-    if (current === epoch) busy.value = false
+    if (current === epoch) busy.value = false;
   }
 }
 async function download() {
-  if (!plan.value || busy.value) return
-  const current = ++epoch
-  operation = crypto.randomUUID()
-  busy.value = true
-  message.value = ''
+  if (!plan.value || busy.value) return;
+  const current = ++epoch;
+  operation = crypto.randomUUID();
+  busy.value = true;
+  message.value = '';
   try {
     const result = (await window.faionyx.invoke('voxlink:mods:download', { operation, plan: plan.value.id, selected: selected.value })) as {
-      message: string
-    }
-    if (current !== epoch) return
-    done.value = true
-    message.value = result.message
+      message: string;
+    };
+    if (current !== epoch) return;
+    done.value = true;
+    message.value = result.message;
   } catch (error) {
-    if (current === epoch) message.value = (error as Error).message
+    if (current === epoch) message.value = (error as Error).message;
   } finally {
-    if (current === epoch) busy.value = false
+    if (current === epoch) busy.value = false;
   }
 }
 onUnmounted(() => {
-  cancel()
-  offProgress?.()
-})
+  cancel();
+  offProgress?.();
+});
 </script>
 <template>
   <UpdateDialogShell label="加入房间前检查模组" @dismiss="dismiss">

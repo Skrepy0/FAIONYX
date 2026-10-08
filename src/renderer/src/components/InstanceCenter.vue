@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { IPC, type JavaInfo, type WorldImportInfo } from '@shared/types'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { IPC, type JavaInfo, type WorldImportInfo } from '@shared/types';
 import type {
   BackupManifest,
   DiagnosticFinding,
@@ -8,173 +8,173 @@ import type {
   InstanceOverview,
   InstanceScreenshot,
   InstanceWorld,
-} from '@shared/instanceCenter'
-import type { ModChangePlan } from '@shared/modManagement'
-import { instanceCenter } from '../instanceCenter'
-import { store, refreshInstalled, toast, openSettings } from '../store'
-import { errText, setVersionJava, exportLaunchLogs, selectFile, probeWorld, importWorld } from '../api'
-import SelectMenu from './SelectMenu.vue'
-const previousFocus = document.activeElement as HTMLElement | null
-const target = structuredClone({ ...instanceCenter.target! })
+} from '@shared/instanceCenter';
+import type { ModChangePlan } from '@shared/modManagement';
+import { instanceCenter } from '../instanceCenter';
+import { store, refreshInstalled, toast, openSettings } from '../store';
+import { errText, setVersionJava, exportLaunchLogs, selectFile, probeWorld, importWorld } from '../api';
+import SelectMenu from './SelectMenu.vue';
+const previousFocus = document.activeElement as HTMLElement | null;
+const target = structuredClone({ ...instanceCenter.target! });
 const tab = ref(instanceCenter.tab),
   busy = ref(false),
   loading = ref(true),
   error = ref(''),
-  overview = ref<InstanceOverview>()
+  overview = ref<InstanceOverview>();
 const worlds = ref<InstanceWorld[]>([]),
   backups = ref<BackupManifest[]>([]),
   shots = ref<InstanceScreenshot[]>([]),
   shotTotal = ref(0),
   page = ref(0),
   search = ref(''),
-  lightbox = ref(-1)
+  lightbox = ref(-1);
 const findings = ref<DiagnosticFinding[]>([]),
   java = ref<JavaInfo[]>([]),
   javaPath = ref(''),
   planId = ref(''),
-  session = ref('')
+  session = ref('');
 const form = ref<'' | 'clone' | 'restore' | 'import' | 'disable' | 'dependencies'>(''),
   name = ref(''),
   destination = ref(target.folder),
   includeSaves = ref(true),
   includeShots = ref(false),
   restore = ref<BackupManifest>(),
-  overwrite = ref(false)
-const dependencies = ref<ModChangePlan>()
-const selectedMods = ref<string[]>([])
+  overwrite = ref(false);
+const dependencies = ref<ModChangePlan>();
+const selectedMods = ref<string[]>([]);
 const worldInput = ref(''),
   worldInfo = ref<WorldImportInfo>(),
   candidate = ref(''),
-  mismatch = ref(false)
+  mismatch = ref(false);
 const sections = [
   ['overview', '概览'],
   ['worlds', '存档'],
   ['screenshots', '截图'],
   ['backups', '备份'],
   ['diagnostics', '诊断'],
-]
-const folders = computed(() => (store.settings?.folders || []).map((f) => ({ value: f.path, label: f.name })))
-const filtered = computed(() => worlds.value.filter((w) => w.name.toLowerCase().includes(search.value.toLowerCase())))
-const image = computed(() => shots.value[lightbox.value])
-const fullImage = ref('')
+];
+const folders = computed(() => (store.settings?.folders || []).map((f) => ({ value: f.path, label: f.name })));
+const filtered = computed(() => worlds.value.filter((w) => w.name.toLowerCase().includes(search.value.toLowerCase())));
+const image = computed(() => shots.value[lightbox.value]);
+const fullImage = ref('');
 watch(image, async (selected) => {
-  fullImage.value = ''
-  if (!selected) return
+  fullImage.value = '';
+  if (!selected) return;
   try {
-    const data = await invoke<string>(IPC.centerFile, target, 'preview', selected.id)
-    if (image.value?.id === selected.id) fullImage.value = data
+    const data = await invoke<string>(IPC.centerFile, target, 'preview', selected.id);
+    if (image.value?.id === selected.id) fullImage.value = data;
   } catch (e) {
-    error.value = errText(e)
+    error.value = errText(e);
   }
-})
-const invoke = <T,>(channel: string, ...args: unknown[]) => window.faionyx.invoke(channel, ...args) as Promise<T>
-const formatDate = (v: string | number | undefined) => (v ? new Date(v).toLocaleString() : '未知')
-const size = (bytes: number) => (bytes >= 1024 ** 3 ? (bytes / 1024 ** 3).toFixed(1) + ' GB' : (bytes / 1024 ** 2).toFixed(1) + ' MB')
+});
+const invoke = <T,>(channel: string, ...args: unknown[]) => window.faionyx.invoke(channel, ...args) as Promise<T>;
+const formatDate = (v: string | number | undefined) => (v ? new Date(v).toLocaleString() : '未知');
+const size = (bytes: number) => (bytes >= 1024 ** 3 ? (bytes / 1024 ** 3).toFixed(1) + ' GB' : (bytes / 1024 ** 2).toFixed(1) + ' MB');
 async function refresh() {
-  loading.value = true
-  error.value = ''
+  loading.value = true;
+  error.value = '';
   try {
-    overview.value = await invoke(IPC.centerOverview, target)
-    if (tab.value === 'worlds') worlds.value = await invoke(IPC.centerWorlds, target)
-    if (tab.value === 'backups') backups.value = await invoke(IPC.centerBackups, target)
+    overview.value = await invoke(IPC.centerOverview, target);
+    if (tab.value === 'worlds') worlds.value = await invoke(IPC.centerWorlds, target);
+    if (tab.value === 'backups') backups.value = await invoke(IPC.centerBackups, target);
     if (tab.value === 'screenshots') {
-      const r = await invoke<{ total: number; items: InstanceScreenshot[] }>(IPC.centerScreenshots, target, page.value)
-      shots.value = r.items
-      shotTotal.value = r.total
+      const r = await invoke<{ total: number; items: InstanceScreenshot[] }>(IPC.centerScreenshots, target, page.value);
+      shots.value = r.items;
+      shotTotal.value = r.total;
     }
   } catch (e) {
-    error.value = errText(e)
+    error.value = errText(e);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 async function chooseTab(value: string) {
-  tab.value = value
-  form.value = ''
-  await refresh()
+  tab.value = value;
+  form.value = '';
+  await refresh();
 }
 async function perform(action: () => Promise<unknown>) {
-  busy.value = true
-  error.value = ''
+  busy.value = true;
+  error.value = '';
   try {
-    await action()
-    toast('操作完成', 'success')
-    form.value = ''
-    await refreshInstalled()
-    await refresh()
+    await action();
+    toast('操作完成', 'success');
+    form.value = '';
+    await refreshInstalled();
+    await refresh();
   } catch (e) {
-    error.value = errText(e)
+    error.value = errText(e);
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
-const op = (operation: Omit<InstanceOperation, 'target'> & { planId?: string }) => invoke(IPC.centerOperation, { ...operation, target })
+const op = (operation: Omit<InstanceOperation, 'target'> & { planId?: string }) => invoke(IPC.centerOperation, { ...operation, target });
 function navigate(view: 'mods' | 'packs' | 'shaders' | 'game') {
-  instanceCenter.target = null
-  store.currentView = view
+  instanceCenter.target = null;
+  store.currentView = view;
 }
 function close() {
-  instanceCenter.target = null
+  instanceCenter.target = null;
 }
 function key(e: KeyboardEvent) {
-  if (document.querySelector('.select-menu-float')) return
+  if (document.querySelector('.select-menu-float')) return;
   if (e.key === 'Tab') {
-    const root = document.querySelector('.ic-lightbox') || document.querySelector('.ic-dialog') || document.querySelector('.ic')
+    const root = document.querySelector('.ic-lightbox') || document.querySelector('.ic-dialog') || document.querySelector('.ic');
     const elements = [...(root?.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),[tabindex="0"]') || [])].filter(
       (n) => n.getClientRects().length
-    )
+    );
     if (elements.length) {
-      const index = elements.indexOf(document.activeElement as HTMLElement)
+      const index = elements.indexOf(document.activeElement as HTMLElement);
       if ((e.shiftKey && index <= 0) || (!e.shiftKey && (index === elements.length - 1 || index === -1))) {
-        e.preventDefault()
-        elements[e.shiftKey ? elements.length - 1 : 0].focus()
+        e.preventDefault();
+        elements[e.shiftKey ? elements.length - 1 : 0].focus();
       }
     }
   }
   if (e.key === 'Escape') {
-    e.stopImmediatePropagation()
-    if (lightbox.value >= 0) lightbox.value = -1
-    else if (form.value) form.value = ''
-    else close()
+    e.stopImmediatePropagation();
+    if (lightbox.value >= 0) lightbox.value = -1;
+    else if (form.value) form.value = '';
+    else close();
   }
-  if (lightbox.value >= 0 && e.key === 'ArrowRight') lightbox.value = Math.min(shots.value.length - 1, lightbox.value + 1)
-  if (lightbox.value >= 0 && e.key === 'ArrowLeft') lightbox.value = Math.max(0, lightbox.value - 1)
+  if (lightbox.value >= 0 && e.key === 'ArrowRight') lightbox.value = Math.min(shots.value.length - 1, lightbox.value + 1);
+  if (lightbox.value >= 0 && e.key === 'ArrowLeft') lightbox.value = Math.max(0, lightbox.value - 1);
 }
 async function diagnose() {
-  busy.value = true
-  error.value = ''
+  busy.value = true;
+  error.value = '';
   try {
-    const r = await invoke<{ id: string; findings: DiagnosticFinding[]; java: JavaInfo[]; session?: string }>(IPC.centerDiagnose, target)
-    findings.value = r.findings
-    java.value = r.java
-    javaPath.value = r.java[0]?.path || ''
-    planId.value = r.id
-    session.value = r.session || ''
+    const r = await invoke<{ id: string; findings: DiagnosticFinding[]; java: JavaInfo[]; session?: string }>(IPC.centerDiagnose, target);
+    findings.value = r.findings;
+    java.value = r.java;
+    javaPath.value = r.java[0]?.path || '';
+    planId.value = r.id;
+    session.value = r.session || '';
   } catch (e) {
-    error.value = errText(e)
+    error.value = errText(e);
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 function openRestore(b: BackupManifest) {
-  restore.value = b
-  name.value = (b.metadata?.type === 'world' ? String(b.metadata.world) : target.id) + '-恢复'
-  overwrite.value = false
-  form.value = 'restore'
+  restore.value = b;
+  name.value = (b.metadata?.type === 'world' ? String(b.metadata.world) : target.id) + '-恢复';
+  overwrite.value = false;
+  form.value = 'restore';
 }
 async function prepareImport() {
   try {
-    const f = await selectFile()
-    if (!f) return
-    const info = await probeWorld(f)
-    if (!info?.candidates.length) throw new Error('未发现有效存档')
-    worldInput.value = f
-    worldInfo.value = info
-    candidate.value = info.candidates[0].id
-    name.value = info.candidates[0].worldName
-    form.value = 'import'
+    const f = await selectFile();
+    if (!f) return;
+    const info = await probeWorld(f);
+    if (!info?.candidates.length) throw new Error('未发现有效存档');
+    worldInput.value = f;
+    worldInfo.value = info;
+    candidate.value = info.candidates[0].id;
+    name.value = info.candidates[0].worldName;
+    form.value = 'import';
   } catch (e) {
-    error.value = errText(e)
+    error.value = errText(e);
   }
 }
 async function disableSelected() {
@@ -184,39 +184,39 @@ async function disableSelected() {
     target.folder,
     [...selectedMods.value],
     false
-  )
-  selectedMods.value = results.filter((r) => !r.ok).map((r) => r.fileName)
+  );
+  selectedMods.value = results.filter((r) => !r.ok).map((r) => r.fileName);
   if (selectedMods.value.length)
     throw new Error(
       results
         .filter((r) => !r.ok)
         .map((r) => r.fileName + '：' + r.error)
         .join('\n')
-    )
-  await diagnose()
+    );
+  await diagnose();
 }
 async function checkDependencies(fileName: string) {
-  busy.value = true
-  error.value = ''
+  busy.value = true;
+  error.value = '';
   try {
-    dependencies.value = await invoke('center:dependencyPlan', target, fileName)
-    form.value = 'dependencies'
+    dependencies.value = await invoke('center:dependencyPlan', target, fileName);
+    form.value = 'dependencies';
   } catch (e) {
-    error.value = errText(e)
+    error.value = errText(e);
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 onMounted(async () => {
-  document.addEventListener('keydown', key, true)
-  await refresh()
-  document.querySelector<HTMLElement>('[aria-label="关闭实例管理"]')?.focus()
-  if (tab.value === 'diagnostics') await diagnose()
-})
+  document.addEventListener('keydown', key, true);
+  await refresh();
+  document.querySelector<HTMLElement>('[aria-label="关闭实例管理"]')?.focus();
+  if (tab.value === 'diagnostics') await diagnose();
+});
 onUnmounted(() => {
-  document.removeEventListener('keydown', key, true)
-  previousFocus?.focus()
-})
+  document.removeEventListener('keydown', key, true);
+  previousFocus?.focus();
+});
 </script>
 <template>
   <Teleport to="body">
@@ -265,8 +265,8 @@ onUnmounted(() => {
                 class="btn btn-gold"
                 :disabled="busy || overview?.running"
                 @click="
-                  name = target.id + '-副本'
-                  form = 'clone'
+                  name = target.id + '-副本';
+                  form = 'clone';
                 "
               >
                 复制实例
@@ -323,8 +323,8 @@ onUnmounted(() => {
                 class="btn btn-sm"
                 :disabled="page === 0 || loading"
                 @click="
-                  page--
-                  refresh()
+                  page--;
+                  refresh();
                 "
               >
                 上一页</button
@@ -333,8 +333,8 @@ onUnmounted(() => {
                 class="btn btn-sm"
                 :disabled="(page + 1) * 24 >= shotTotal || loading"
                 @click="
-                  page++
-                  refresh()
+                  page++;
+                  refresh();
                 "
               >
                 下一页
@@ -447,8 +447,8 @@ onUnmounted(() => {
                 ><button
                   class="btn btn-ghost"
                   @click="
-                    close()
-                    openSettings('java')
+                    close();
+                    openSettings('java');
                   "
                 >
                   管理 Java

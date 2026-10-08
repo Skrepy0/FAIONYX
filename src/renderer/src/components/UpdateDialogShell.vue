@@ -1,44 +1,44 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
-defineProps<{ label: string }>()
-const emit = defineEmits<{ dismiss: [] }>()
-const panel = ref<HTMLElement | null>(null)
-let previous: HTMLElement | null = null
+import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+defineProps<{ label: string }>();
+const emit = defineEmits<{ dismiss: [] }>();
+const panel = ref<HTMLElement | null>(null);
+let previous: HTMLElement | null = null;
 function keys(event: KeyboardEvent) {
   if (event.key === 'Escape') {
-    event.preventDefault()
-    event.stopPropagation()
-    emit('dismiss')
+    event.preventDefault();
+    event.stopPropagation();
+    emit('dismiss');
   }
-  if (event.key !== 'Tab' || !panel.value) return
+  if (event.key !== 'Tab' || !panel.value) return;
   const items = Array.from(
     panel.value.querySelectorAll<HTMLElement>(
       'button:not(:disabled), input:not(:disabled), select:not(:disabled), summary, a[href], [tabindex="0"]'
     )
-  ).filter((e) => e.getClientRects().length)
+  ).filter((e) => e.getClientRects().length);
   const first = items[0],
-    last = items.at(-1)
+    last = items.at(-1);
   if (!first) {
-    event.preventDefault()
-    panel.value.focus()
-    return
+    event.preventDefault();
+    panel.value.focus();
+    return;
   }
   if (event.shiftKey && (document.activeElement === first || document.activeElement === panel.value)) {
-    event.preventDefault()
-    last!.focus()
+    event.preventDefault();
+    last!.focus();
   } else if (!event.shiftKey && (document.activeElement === last || document.activeElement === panel.value)) {
-    event.preventDefault()
-    first.focus()
+    event.preventDefault();
+    first.focus();
   }
 }
 onMounted(async () => {
-  previous = document.activeElement as HTMLElement | null
-  await nextTick()
-  panel.value?.focus()
-})
+  previous = document.activeElement as HTMLElement | null;
+  await nextTick();
+  panel.value?.focus();
+});
 onUnmounted(() => {
-  if (previous?.isConnected) previous.focus({ preventScroll: true })
-})
+  if (previous?.isConnected) previous.focus({ preventScroll: true });
+});
 </script>
 
 <template>

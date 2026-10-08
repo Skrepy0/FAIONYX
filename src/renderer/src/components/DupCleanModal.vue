@@ -2,72 +2,72 @@
 /**
  * 重复 MOD 清理：单版本查重（默认保留最新版，可改选）+ 跨版本查重对比
  */
-import { computed, onMounted, reactive, ref } from 'vue'
-import { errText, findModCrossDuplicates, findModDuplicates, removeFs } from '../api'
-import { store, toast } from '../store'
-import type { ModCrossDuplicate, ModDuplicateGroup } from '@shared/types'
+import { computed, onMounted, reactive, ref } from 'vue';
+import { errText, findModCrossDuplicates, findModDuplicates, removeFs } from '../api';
+import { store, toast } from '../store';
+import type { ModCrossDuplicate, ModDuplicateGroup } from '@shared/types';
 
 const props = defineProps<{
-  open: boolean
+  open: boolean;
   /** 当前管理版本 id */
-  versionId: string
+  versionId: string;
   /** 当前版本 mods 相对目录（用于删除文件） */
-  rel: string
-  folder: string
-}>()
-const emit = defineEmits<{ (e: 'close'): void; (e: 'deleted'): void }>()
+  rel: string;
+  folder: string;
+}>();
+const emit = defineEmits<{ (e: 'close'): void; (e: 'deleted'): void }>();
 
-const tab = ref<'single' | 'cross'>('single')
+const tab = ref<'single' | 'cross'>('single');
 
 // ---------------- 单版本查重 ----------------
-const loading = ref(false)
-const groups = ref<ModDuplicateGroup[]>([])
+const loading = ref(false);
+const groups = ref<ModDuplicateGroup[]>([]);
 /** 每组选中的保留文件名（默认最新版） */
-const keepMap = reactive<Record<string, string>>({})
+const keepMap = reactive<Record<string, string>>({});
 
 /** 将删除的文件清单 */
 const deleteList = computed(() => {
-  const out: Array<{ group: string; fileName: string }> = []
+  const out: Array<{ group: string; fileName: string }> = [];
   for (const g of groups.value) {
-    const keep = keepMap[g.modId] ?? g.files[0]?.fileName
+    const keep = keepMap[g.modId] ?? g.files[0]?.fileName;
     for (const f of g.files) {
-      if (f.fileName !== keep) out.push({ group: g.name, fileName: f.fileName })
+      if (f.fileName !== keep) out.push({ group: g.name, fileName: f.fileName });
     }
   }
-  return out
-})
+  return out;
+});
 
 async function scanSingle() {
   if (!props.versionId) {
-    toast('请先安装或选择一个游戏版本', 'info')
-    return
+    toast('请先安装或选择一个游戏版本', 'info');
+    return;
   }
-  loading.value = true
-  groups.value = []
+  loading.value = true;
+  groups.value = [];
   try {
-    const list = await findModDuplicates(props.versionId, props.folder)
-    groups.value = list
+    const list = await findModDuplicates(props.versionId, props.folder);
+    groups.value = list;
     for (const g of list) {
-      keepMap[g.modId] = g.files.find((f) => f.latest)?.fileName ?? g.files[0]?.fileName ?? ''
+      keepMap[g.modId] = g.files.find((f) => f.latest)?.fileName ?? g.files[0]?.fileName ?? '';
     }
   } catch (e) {
-    toast('扫描失败：' + errText(e), 'error')
+    toast('扫描失败：' + errText(e), 'error');
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
-const deleting = ref(false)
+const deleting = ref(false);
 async function onConfirmDelete() {
-  if (deleting.value || !deleteList.value.length) return
-  deleting.value = true
-  let ok = 0
-  const failed: string[] = []
+  if (deleting.value || !deleteList.value.length) return;
+  deleting.value = true;
+  let ok = 0;
+  const failed: string[] = [];
   try {
     for (const item of deleteList.value) {
       try {
-        await removeFs(props.rel, item.fileName, props.folder)
-        ok++
+        await removeFs(props.rel, item.fileName, props.folder);
+        ok++;
       } catch {
         /* 单文件失败继续 */
       }
@@ -75,46 +75,46 @@ async function onConfirmDelete() {
     toast(
       `已移入回收站 ${ok} 个重复 MOD 文件` + (failed.length ? `；${failed.length} 个失败：${failed.join('；')}` : ''),
       failed.length ? 'error' : 'success'
-    )
-    emit('deleted')
-    if (failed.length) await scanSingle()
-    else emit('close')
+    );
+    emit('deleted');
+    if (failed.length) await scanSingle();
+    else emit('close');
   } finally {
-    deleting.value = false
+    deleting.value = false;
   }
 }
 
 // ---------------- 跨版本查重 ----------------
-const crossSel = ref<string[]>([])
-const crossLoading = ref(false)
-const crossResults = ref<ModCrossDuplicate[] | null>(null)
+const crossSel = ref<string[]>([]);
+const crossLoading = ref(false);
+const crossResults = ref<ModCrossDuplicate[] | null>(null);
 
 async function scanCross() {
   if (!crossSel.value.length) {
-    toast('请先勾选要对比的版本', 'info')
-    return
+    toast('请先勾选要对比的版本', 'info');
+    return;
   }
-  crossLoading.value = true
-  crossResults.value = null
+  crossLoading.value = true;
+  crossResults.value = null;
   try {
-    crossResults.value = await findModCrossDuplicates(crossSel.value, props.folder)
+    crossResults.value = await findModCrossDuplicates(crossSel.value, props.folder);
   } catch (e) {
-    toast('对比失败：' + errText(e), 'error')
+    toast('对比失败：' + errText(e), 'error');
   } finally {
-    crossLoading.value = false
+    crossLoading.value = false;
   }
 }
 
 function toggleCross(id: string) {
-  const i = crossSel.value.indexOf(id)
-  if (i >= 0) crossSel.value.splice(i, 1)
-  else crossSel.value.push(id)
+  const i = crossSel.value.indexOf(id);
+  if (i >= 0) crossSel.value.splice(i, 1);
+  else crossSel.value.push(id);
 }
 
 onMounted(() => {
-  crossSel.value = props.versionId ? [props.versionId] : []
-  void scanSingle()
-})
+  crossSel.value = props.versionId ? [props.versionId] : [];
+  void scanSingle();
+});
 </script>
 
 <template>

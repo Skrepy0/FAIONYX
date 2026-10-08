@@ -1,7 +1,7 @@
 // Pure observer-fault injection, not launcher/native performance evidence.
 const test = require('node:test'),
-  assert = require('node:assert/strict')
-const { assertCounterAvailability } = require('./resource-win113-counter-guards.cjs')
+  assert = require('node:assert/strict');
+const { assertCounterAvailability } = require('./resource-win113-counter-guards.cjs');
 function proof(kind = 'absent') {
   const counter = {
     pid: 42,
@@ -9,7 +9,7 @@ function proof(kind = 'absent') {
     error: 'OpenProcess 87',
     openedHandle: false,
     identityAfter: { pid: 42, snapshotComplete: true, exists: false, error: null, startedAtUnixMs: 115, finishedAtUnixMs: 119 },
-  }
+  };
   const e = {
     pid: 42,
     stage: 'descendant',
@@ -19,7 +19,7 @@ function proof(kind = 'absent') {
     identityBefore: { pid: 42, creationUnixMs: 50 },
     classification: 'confirmed-prior-owned-pid-absent',
     rawCounter: counter,
-  }
+  };
   if (kind === 'handle') {
     Object.assign(counter, {
       openedHandle: true,
@@ -29,9 +29,9 @@ function proof(kind = 'absent') {
       exitCode: 0,
       handleStatusError: null,
       handleStatusAtUnixMs: 119,
-    })
-    e.error = counter.error
-    e.classification = 'confirmed-owned-handle-exit'
+    });
+    e.error = counter.error;
+    e.classification = 'confirmed-owned-handle-exit';
   }
   const sample = {
     event: 'sample',
@@ -42,22 +42,22 @@ function proof(kind = 'absent') {
     partialRows: [counter],
     wholeTreeCountersComplete: false,
     wholeTreeCounterTotals: { privateCommitBytes: null, workingSetBytes: null, cpu100ns: null, readBytes: null, writeBytes: null },
-  }
+  };
   return {
     nativeCounterErrors: [e],
     originalNativeRecords: [{ event: 'sample', atUnixMs: 100, counterErrors: [], rows: [{ pid: 42, creationUnixMs: 50 }] }, sample],
-  }
+  };
 }
 test('An originally bound PID with a new complete absent snapshot preserves its error/partial sample and never invents memory or CPU zero', () => {
   const p = proof(),
-    s = assertCounterAvailability(p)
-  assert.equal(s.partialSamples, 1)
-  assert.equal(s.confirmedExitErrors[0].wholeTreeCounters, null)
-  assert.equal(p.nativeCounterErrors[0].error, 'OpenProcess 87')
-})
+    s = assertCounterAvailability(p);
+  assert.equal(s.partialSamples, 1);
+  assert.equal(s.confirmedExitErrors[0].wholeTreeCounters, null);
+  assert.equal(p.nativeCounterErrors[0].error, 'OpenProcess 87');
+});
 test('An opened original handle with actual signaled exit can retain missing final I/O as unavailable', () => {
-  assert.equal(assertCounterAvailability(proof('handle')).confirmedExitErrors[0].classification, 'confirmed-owned-handle-exit')
-})
+  assert.equal(assertCounterAvailability(proof('handle')).confirmedExitErrors[0].classification, 'confirmed-owned-handle-exit');
+});
 test('No prior identity, unknown creation, live handle, reused PID or failed native snapshot remains a hard failure', () => {
   for (const mutate of [
     (p) => (p.nativeCounterErrors[0].identityBefore = null),
@@ -68,20 +68,20 @@ test('No prior identity, unknown creation, live handle, reused PID or failed nat
     (p) => (p.nativeCounterErrors[0].classification = 'owned-identity-invalidated'),
     (p) => (p.nativeCounterErrors[0].rawCounter.identityAfter.finishedAtUnixMs = 999),
   ]) {
-    const p = proof()
-    mutate(p)
-    assert.throws(() => assertCounterAvailability(p))
+    const p = proof();
+    mutate(p);
+    assert.throws(() => assertCounterAvailability(p));
   }
   for (const mutate of [
     (p) => (p.nativeCounterErrors[0].rawCounter.creationUnixMs = 51),
     (p) => (p.nativeCounterErrors[0].rawCounter.exitWaitResult = 258),
     (p) => (p.nativeCounterErrors[0].rawCounter.handleStatusError = 'GetExitCodeProcess 5'),
   ]) {
-    const p = proof('handle')
-    mutate(p)
-    assert.throws(() => assertCounterAvailability(p))
+    const p = proof('handle');
+    mutate(p);
+    assert.throws(() => assertCounterAvailability(p));
   }
-})
+});
 test('Original partial rows and null whole-tree counters are mandatory; next-sample disappearance cannot retroactively classify old errors', () => {
   for (const mutate of [
     (p) => (p.originalNativeRecords[1].rows = [{ pid: 42 }]),
@@ -91,15 +91,15 @@ test('Original partial rows and null whole-tree counters are mandatory; next-sam
     (p) => delete p.nativeCounterErrors[0].rawCounter.identityAfter,
     (p) => (p.nativeCounterErrors = []),
   ]) {
-    const p = proof()
-    mutate(p)
-    assert.throws(() => assertCounterAvailability(p))
+    const p = proof();
+    mutate(p);
+    assert.throws(() => assertCounterAvailability(p));
   }
-})
+});
 test('Partial or invalidated empty samples never prove all owned processes exited; historical complete Mac samples still qualify', () => {
   const { isCompleteEmptyNativeSample: check } = require('./resource-sample113.cjs'),
-    full = { event: 'sample', rows: [], counterErrors: [] }
-  assert.equal(check(full), true)
+    full = { event: 'sample', rows: [], counterErrors: [] };
+  assert.equal(check(full), true);
   for (const fields of [
     { partialRows: [{ pid: 42 }] },
     { invalidatedRows: [{ pid: 42 }] },
@@ -110,12 +110,12 @@ test('Partial or invalidated empty samples never prove all owned processes exite
     { rows: null },
     { optionalCounterErrors: [{ pid: 42 }] },
   ])
-    assert.equal(check({ ...full, ...fields }), false)
-})
+    assert.equal(check({ ...full, ...fields }), false);
+});
 function reused() {
   const p = proof(),
     e = p.nativeCounterErrors[0],
-    r = e.rawCounter
+    r = e.rawCounter;
   Object.assign(r, {
     ppid: 999,
     openedHandle: true,
@@ -131,14 +131,14 @@ function reused() {
     workingSetBytes: null,
     peakWorkingSetBytes: null,
     pageFaultCount: null,
-  })
-  e.error = r.error
-  e.classification = 'confirmed-prior-owned-pid-reused'
+  });
+  e.error = r.error;
+  e.classification = 'confirmed-prior-owned-pid-reused';
   e.ownershipAtObservation = {
     replacementParentPid: 999,
     potentialOwnedLineage: false,
     originalNonRetiredOwnedIdentities: [{ pid: 42, creationUnixMs: 50 }],
-  }
+  };
   e.retirement = {
     pid: 42,
     beforeCreationUnixMs: 50,
@@ -147,17 +147,17 @@ function reused() {
     replacementExcluded: true,
     seedRetired: true,
     roleRetired: true,
-  }
-  p.originalNativeRecords.push({ event: 'stopped', retiredIdentities: { 42: e.retirement } })
-  return p
+  };
+  p.originalNativeRecords.push({ event: 'stopped', retiredIdentities: { 42: e.retirement } });
+  return p;
 }
 test('Exact prior PID reuse is retired once using original creation-only reads, without measuring the external replacement or inventing CPU tail', () => {
-  const p = reused()
-  const a = assertCounterAvailability(p)
-  assert.equal(a.confirmedExitErrors[0].classification, 'confirmed-prior-owned-pid-reused')
-  assert.equal(a.partialSamples, 1)
-  assert.equal(a.confirmedExitErrors[0].wholeTreeCounters, null)
-})
+  const p = reused();
+  const a = assertCounterAvailability(p);
+  assert.equal(a.confirmedExitErrors[0].classification, 'confirmed-prior-owned-pid-reused');
+  assert.equal(a.partialSamples, 1);
+  assert.equal(a.confirmedExitErrors[0].wholeTreeCounters, null);
+});
 test('PID reuse without complete original identity/parent evidence, external-counter exclusion and lasting retirement is rejected', () => {
   for (const mutate of [
     (p) => (p.nativeCounterErrors[0].rawCounter.cpu100ns = 0),
@@ -174,29 +174,29 @@ test('PID reuse without complete original identity/parent evidence, external-cou
     (p) => p.originalNativeRecords.pop(),
     (p) => p.originalNativeRecords.splice(2, 0, { event: 'sample', rows: [{ pid: 42, creationUnixMs: 110 }], counterErrors: [] }),
   ]) {
-    const p = reused()
-    mutate(p)
-    assert.throws(() => assertCounterAvailability(p))
+    const p = reused();
+    mutate(p);
+    assert.throws(() => assertCounterAvailability(p));
   }
-})
+});
 test('Potential owned-parent replacement is never classified as external retirement, even when a valid new parent is observed later in the same snapshot', () => {
   const p = reused(),
-    e = p.nativeCounterErrors[0]
-  p.originalNativeRecords[1].partialRows.push({ pid: 999, creationUnixMs: 100, handleStatusAtUnixMs: 120 })
-  assert.throws(() => assertCounterAvailability(p))
-  e.classification = 'replacement-with-potential-owned-lineage-unmeasured'
-  assert.throws(() => assertCounterAvailability(p))
-})
+    e = p.nativeCounterErrors[0];
+  p.originalNativeRecords[1].partialRows.push({ pid: 999, creationUnixMs: 100, handleStatusAtUnixMs: 120 });
+  assert.throws(() => assertCounterAvailability(p));
+  e.classification = 'replacement-with-potential-owned-lineage-unmeasured';
+  assert.throws(() => assertCounterAvailability(p));
+});
 test('Retired seeds and roles cannot be reintroduced by replaying the control command history', () => {
-  const source = require('node:fs').readFileSync(require.resolve('./resource-native-win113.cjs'), 'utf8')
-  assert(source.includes('foreach($seed in $command.seeds){if(-not $retired.ContainsKey([string]$seed.pid))'))
-  assert(source.includes('foreach($role in $command.roles){if(-not $retired.ContainsKey([string]$role.pid))'))
-  assert(source.indexOf('row.error="OwnedIdentityCreationChanged"') < source.indexOf('row.cpu100ns=k.Value+u.Value'))
-})
+  const source = require('node:fs').readFileSync(require.resolve('./resource-native-win113.cjs'), 'utf8');
+  assert(source.includes('foreach($seed in $command.seeds){if(-not $retired.ContainsKey([string]$seed.pid))'));
+  assert(source.includes('foreach($role in $command.roles){if(-not $retired.ContainsKey([string]$role.pid))'));
+  assert(source.indexOf('row.error="OwnedIdentityCreationChanged"') < source.indexOf('row.cpu100ns=k.Value+u.Value'));
+});
 function retained() {
   const p = proof('handle'),
     e = p.nativeCounterErrors[0],
-    r = e.rawCounter
+    r = e.rawCounter;
   Object.assign(r, {
     error: 'OwnedHandleSignaledExit',
     retainedOwnedHandle: true,
@@ -209,8 +209,8 @@ function retained() {
     workingSetBytes: null,
     peakWorkingSetBytes: null,
     pageFaultCount: null,
-  })
-  e.error = r.error
+  });
+  e.error = r.error;
   e.ownershipAtObservation = {
     replacementParentPid: null,
     potentialOwnedLineage: false,
@@ -225,7 +225,7 @@ function retained() {
       creationUnixMs: null,
       error: null,
     },
-  }
+  };
   e.retirement = {
     pid: 42,
     kind: 'original-owned-handle-signaled-exit',
@@ -235,28 +235,28 @@ function retained() {
     replacementExcluded: true,
     seedRetired: true,
     roleRetired: true,
-  }
+  };
   p.originalNativeRecords.push({
     event: 'stopped',
     retiredIdentities: { 42: e.retirement },
     closedOwnedQueryHandles: ['42:50:actual-signaled-exit'],
-  })
-  return p
+  });
+  return p;
 }
 test('A retained original process object with actual signal proves its lifetime ended independently of later PID reuse', () => {
-  const p = retained()
-  assert.equal(assertCounterAvailability(p).confirmedExitErrors[0].classification, 'confirmed-owned-handle-exit')
-  const e = p.nativeCounterErrors[0]
+  const p = retained();
+  assert.equal(assertCounterAvailability(p).confirmedExitErrors[0].classification, 'confirmed-owned-handle-exit');
+  const e = p.nativeCounterErrors[0];
   Object.assign(e.ownershipAtObservation.afterOriginalExit, {
     exists: true,
     ppid: 999,
     creationUnixMs: null,
     error: 'identity OpenProcess 5',
-  })
-  e.ownershipAtObservation.replacementParentPid = 999
-  assert.doesNotThrow(() => assertCounterAvailability(p))
-  assert.equal(e.rawCounter.error, 'OwnedHandleSignaledExit', 'Access-denied replacement is never the evidence for original exit')
-})
+  });
+  e.ownershipAtObservation.replacementParentPid = 999;
+  assert.doesNotThrow(() => assertCounterAvailability(p));
+  assert.equal(e.rawCounter.error, 'OwnedHandleSignaledExit', 'Access-denied replacement is never the evidence for original exit');
+});
 test('Retained handle exits require original creation, real wait/status, complete fresh parent snapshot, retirement and closure; access denial alone never qualifies', () => {
   for (const mutate of [
     (p) => (p.nativeCounterErrors[0].rawCounter.retainedOwnedHandle = false),
@@ -272,42 +272,42 @@ test('Retained handle exits require original creation, real wait/status, complet
     (p) => (p.nativeCounterErrors[0].retirement.seedRetired = false),
     (p) => (p.nativeCounterErrors[0].retirement.roleRetired = false),
   ]) {
-    const p = retained()
-    mutate(p)
-    assert.throws(() => assertCounterAvailability(p))
+    const p = retained();
+    mutate(p);
+    assert.throws(() => assertCounterAvailability(p));
   }
   const p = retained(),
-    e = p.nativeCounterErrors[0]
-  Object.assign(e.ownershipAtObservation.afterOriginalExit, { exists: true, ppid: 42 })
-  e.ownershipAtObservation.replacementParentPid = 42
-  assert.throws(() => assertCounterAvailability(p))
-})
+    e = p.nativeCounterErrors[0];
+  Object.assign(e.ownershipAtObservation.afterOriginalExit, { exists: true, ppid: 42 });
+  e.ownershipAtObservation.replacementParentPid = 42;
+  assert.throws(() => assertCounterAvailability(p));
+});
 test('Successful original-object counters during an actual terminating read are retained only as partial data, never added to whole-tree totals', () => {
   const p = retained(),
-    e = p.nativeCounterErrors[0]
-  e.error = e.rawCounter.error = 'OwnedHandleExitedDuringCounterRead'
-  e.rawCounter.cpu100ns = 100
-  assert.doesNotThrow(() => assertCounterAvailability(p))
-  p.originalNativeRecords[1].wholeTreeCounterTotals.cpu100ns = 100
-  assert.throws(() => assertCounterAvailability(p))
-})
+    e = p.nativeCounterErrors[0];
+  e.error = e.rawCounter.error = 'OwnedHandleExitedDuringCounterRead';
+  e.rawCounter.cpu100ns = 100;
+  assert.doesNotThrow(() => assertCounterAvailability(p));
+  p.originalNativeRecords[1].wholeTreeCounterTotals.cpu100ns = 100;
+  assert.throws(() => assertCounterAvailability(p));
+});
 test('Two original handles ending in one snapshot retain their ordered retirement and exact partial data', () => {
   const p = retained(),
     first = p.nativeCounterErrors[0],
-    second = structuredClone(first)
-  first.ownershipAtObservation.originalNonRetiredOwnedIdentities.push({ pid: 43, creationUnixMs: 51 })
-  Object.assign(second, { pid: 43, identityBefore: { pid: 43, creationUnixMs: 51 } })
-  Object.assign(second.rawCounter, { pid: 43, creationUnixMs: 51, lifetimeHandleCreationUnixMs: 51 })
-  second.ownershipAtObservation.afterOriginalExit.pid = 43
-  second.ownershipAtObservation.originalNonRetiredOwnedIdentities = [{ pid: 43, creationUnixMs: 51 }]
-  Object.assign(second.retirement, { pid: 43, beforeCreationUnixMs: 51 })
-  p.originalNativeRecords[0].rows.push({ pid: 43, creationUnixMs: 51 })
-  p.nativeCounterErrors.push(second)
-  p.originalNativeRecords[1].counterErrors.push(second)
-  p.originalNativeRecords[1].partialRows.push(second.rawCounter)
-  p.originalNativeRecords.at(-1).retiredIdentities[43] = second.retirement
-  p.originalNativeRecords.at(-1).closedOwnedQueryHandles.push('43:51:actual-signaled-exit')
-  assert.equal(assertCounterAvailability(p).confirmedExitErrors.length, 2)
-  second.ownershipAtObservation.originalNonRetiredOwnedIdentities = []
-  assert.throws(() => assertCounterAvailability(p))
-})
+    second = structuredClone(first);
+  first.ownershipAtObservation.originalNonRetiredOwnedIdentities.push({ pid: 43, creationUnixMs: 51 });
+  Object.assign(second, { pid: 43, identityBefore: { pid: 43, creationUnixMs: 51 } });
+  Object.assign(second.rawCounter, { pid: 43, creationUnixMs: 51, lifetimeHandleCreationUnixMs: 51 });
+  second.ownershipAtObservation.afterOriginalExit.pid = 43;
+  second.ownershipAtObservation.originalNonRetiredOwnedIdentities = [{ pid: 43, creationUnixMs: 51 }];
+  Object.assign(second.retirement, { pid: 43, beforeCreationUnixMs: 51 });
+  p.originalNativeRecords[0].rows.push({ pid: 43, creationUnixMs: 51 });
+  p.nativeCounterErrors.push(second);
+  p.originalNativeRecords[1].counterErrors.push(second);
+  p.originalNativeRecords[1].partialRows.push(second.rawCounter);
+  p.originalNativeRecords.at(-1).retiredIdentities[43] = second.retirement;
+  p.originalNativeRecords.at(-1).closedOwnedQueryHandles.push('43:51:actual-signaled-exit');
+  assert.equal(assertCounterAvailability(p).confirmedExitErrors.length, 2);
+  second.ownershipAtObservation.originalNonRetiredOwnedIdentities = [];
+  assert.throws(() => assertCounterAvailability(p));
+});

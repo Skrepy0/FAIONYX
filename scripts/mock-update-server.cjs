@@ -17,30 +17,30 @@
  *   $env:FAIONYX_UPDATE_TARGET_EXE="C:\\Temp\\faionyx-update-test\\FAIONYX-1.0.0.exe"  # 沙盒副本
  *   electron .   # 仅开发模式；正式包忽略所有 mock 覆盖
  */
-const http = require('node:http')
-const fs = require('node:fs')
-const crypto = require('node:crypto')
+const http = require('node:http');
+const fs = require('node:fs');
+const crypto = require('node:crypto');
 
-const port = Number(process.argv[2] || 8310)
+const port = Number(process.argv[2] || 8310);
 
 // 测试资产：1MB 伪随机内容（每次启动固定，便于校验复现）；MOCK_ASSET_FILE 环境变量可指定真实文件做全链路实证
-const assets = new Map()
-const realAssetFile = process.env.MOCK_ASSET_FILE
+const assets = new Map();
+const realAssetFile = process.env.MOCK_ASSET_FILE;
 for (const ver of ['99.0.0', '1.0.0', '0.9.9']) {
-  const name = `FAIONYX-${ver}.exe`
+  const name = `FAIONYX-${ver}.exe`;
   const buf = crypto
     .createHash('sha256')
     .update('faionyx-mock-' + ver)
-    .digest()
-  const file = Buffer.alloc(1024 * 1024)
-  for (let i = 0; i < file.length; i += buf.length) buf.copy(file, i)
-  assets.set(name, file)
+    .digest();
+  const file = Buffer.alloc(1024 * 1024);
+  for (let i = 0; i < file.length; i += buf.length) buf.copy(file, i);
+  assets.set(name, file);
 }
 if (realAssetFile && fs.existsSync(realAssetFile)) {
-  assets.set('FAIONYX-99.0.0.exe', fs.readFileSync(realAssetFile))
+  assets.set('FAIONYX-99.0.0.exe', fs.readFileSync(realAssetFile));
 }
 const sumsText =
-  [...assets.entries()].map(([name, buf]) => `${crypto.createHash('sha256').update(buf).digest('hex')}  ${name}`).join('\n') + '\n'
+  [...assets.entries()].map(([name, buf]) => `${crypto.createHash('sha256').update(buf).digest('hex')}  ${name}`).join('\n') + '\n';
 
 const releases = ['99.0.0', '1.0.0', '0.9.9'].map((ver, i) => ({
   tag_name: `v${ver}`,
@@ -61,37 +61,37 @@ const releases = ['99.0.0', '1.0.0', '0.9.9'].map((ver, i) => ({
       size: sumsText.length,
     },
   ],
-}))
+}));
 
 const server = http.createServer((req, res) => {
-  const url = req.url || ''
+  const url = req.url || '';
   if (url.endsWith('/releases/latest')) {
-    res.writeHead(200, { 'content-type': 'application/json', etag: '"mock-etag-1"' })
-    res.end(JSON.stringify(releases[0]))
-    return
+    res.writeHead(200, { 'content-type': 'application/json', etag: '"mock-etag-1"' });
+    res.end(JSON.stringify(releases[0]));
+    return;
   }
   if (url.endsWith('/releases') || url.includes('/releases?')) {
-    res.writeHead(200, { 'content-type': 'application/json' })
-    res.end(JSON.stringify(releases))
-    return
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify(releases));
+    return;
   }
   if (url === '/SHA256SUMS.txt') {
-    res.writeHead(200, { 'content-type': 'text/plain' })
-    res.end(sumsText)
-    return
+    res.writeHead(200, { 'content-type': 'text/plain' });
+    res.end(sumsText);
+    return;
   }
-  const dl = /^\/download\/(.+)$/.exec(url)
+  const dl = /^\/download\/(.+)$/.exec(url);
   if (dl && assets.has(dl[1])) {
-    const buf = assets.get(dl[1])
-    res.writeHead(200, { 'content-type': 'application/octet-stream', 'content-length': buf.length })
-    res.end(buf)
-    return
+    const buf = assets.get(dl[1]);
+    res.writeHead(200, { 'content-type': 'application/octet-stream', 'content-length': buf.length });
+    res.end(buf);
+    return;
   }
-  res.writeHead(404)
-  res.end('not found')
-})
+  res.writeHead(404);
+  res.end('not found');
+});
 server.listen(port, '127.0.0.1', () => {
-  console.log(`mock update server: http://127.0.0.1:${port}`)
-  console.log('latest = v99.0.0；历史 = v99.0.0 / v1.0.0 / v0.9.9')
-  console.log('SHA256SUMS.txt 与测试资产一致')
-})
+  console.log(`mock update server: http://127.0.0.1:${port}`);
+  console.log('latest = v99.0.0；历史 = v99.0.0 / v1.0.0 / v0.9.9');
+  console.log('SHA256SUMS.txt 与测试资产一致');
+});

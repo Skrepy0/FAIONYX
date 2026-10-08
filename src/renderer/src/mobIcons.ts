@@ -1,7 +1,7 @@
 /** 内置 MC 生物头像清单（素材位于 public/mobs/<id>.png，源自 Minecraft Wiki 官方贴图） */
 export interface MobIcon {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export const MOB_ICONS: MobIcon[] = [
@@ -88,4 +88,4 @@ export const MOB_ICONS: MobIcon[] = [
   { id: 'skeleton_horse', name: '骷髅马' },
   { id: 'zombie_horse', name: '僵尸马' },
   { id: 'strider', name: '炽足兽' },
-]
+];

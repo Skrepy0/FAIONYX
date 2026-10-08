@@ -1,48 +1,48 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import type { CommunityFile, InstallOptions, LoaderName } from '@shared/types'
-import type { FavoriteInstallIntent, FavoriteInstallSkip, FavoriteSkipReason, ModFavorite } from '@shared/modFavorites'
-import SelectMenu from './SelectMenu.vue'
-import { cancelFavoriteVersions, errText, requestFavoriteVersions } from '../api'
-import { favorites, loadFavorites } from '../modFavorites'
+import { computed, ref, watch } from 'vue';
+import type { CommunityFile, InstallOptions, LoaderName } from '@shared/types';
+import type { FavoriteInstallIntent, FavoriteInstallSkip, FavoriteSkipReason, ModFavorite } from '@shared/modFavorites';
+import SelectMenu from './SelectMenu.vue';
+import { cancelFavoriteVersions, errText, requestFavoriteVersions } from '../api';
+import { favorites, loadFavorites } from '../modFavorites';
 
 const props = defineProps<{
-  mc: string
-  loader: '' | LoaderName
-  modelValue?: InstallOptions['favoriteMods']
-  intent?: FavoriteInstallIntent
-}>()
+  mc: string;
+  loader: '' | LoaderName;
+  modelValue?: InstallOptions['favoriteMods'];
+  intent?: FavoriteInstallIntent;
+}>();
 const emit = defineEmits<{
-  'update:modelValue': [InstallOptions['favoriteMods']]
-  'update:intent': [FavoriteInstallIntent | undefined]
-  ready: [boolean]
-}>()
-type Status = 'loading' | 'available' | 'incompatible' | 'unlinked' | 'unreliable' | 'query-error' | 'needs-loader'
+  'update:modelValue': [InstallOptions['favoriteMods']];
+  'update:intent': [FavoriteInstallIntent | undefined];
+  ready: [boolean];
+}>();
+type Status = 'loading' | 'available' | 'incompatible' | 'unlinked' | 'unreliable' | 'query-error' | 'needs-loader';
 interface Row {
-  favorite: ModFavorite
-  files: CommunityFile[]
-  selected: string
-  checked: boolean
-  approvedSkip: boolean
-  status: Status
-  message: string
+  favorite: ModFavorite;
+  files: CommunityFile[];
+  selected: string;
+  checked: boolean;
+  approvedSkip: boolean;
+  status: Status;
+  message: string;
 }
 const enabled = ref(false),
   rows = ref<Row[]>([]),
   loadingFavorites = ref(false),
   error = ref(''),
   retry = ref(0),
-  baseOnly = ref(false)
-const busy = computed(() => loadingFavorites.value || rows.value.some((row) => row.status === 'loading'))
+  baseOnly = ref(false);
+const busy = computed(() => loadingFavorites.value || rows.value.some((row) => row.status === 'loading'));
 const selectedCount = computed(() =>
   baseOnly.value ? 0 : rows.value.filter((row) => row.status === 'available' && row.checked && row.selected).length
-)
+);
 const skippedCount = computed(() =>
   baseOnly.value ? rows.value.length : rows.value.filter((row) => row.approvedSkip || (row.status === 'available' && !row.checked)).length
-)
-const pendingCount = computed(() => rows.value.length - selectedCount.value - skippedCount.value)
-let generation = 0
-const tickets = new Set<string>()
+);
+const pendingCount = computed(() => rows.value.length - selectedCount.value - skippedCount.value);
+let generation = 0;
+const tickets = new Set<string>();
 
 function skipReason(row: Row): FavoriteSkipReason {
   return row.status === 'available'
@@ -53,20 +53,20 @@ function skipReason(row: Row): FavoriteSkipReason {
         ? 'query-error'
         : row.status === 'unreliable'
           ? 'unreliable'
-          : 'incompatible'
+          : 'incompatible';
 }
 function update() {
   if (!enabled.value) {
-    emit('update:modelValue', undefined)
-    emit('update:intent', undefined)
-    emit('ready', true)
-    return
+    emit('update:modelValue', undefined);
+    emit('update:intent', undefined);
+    emit('ready', true);
+    return;
   }
   const selected = baseOnly.value
     ? []
     : rows.value
         .filter((row) => row.status === 'available' && row.checked && row.selected)
-        .map((row) => ({ source: row.favorite.source!, projectId: row.favorite.projectId!, fileId: row.selected }))
+        .map((row) => ({ source: row.favorite.source!, projectId: row.favorite.projectId!, fileId: row.selected }));
   const approvedSkips: FavoriteInstallSkip[] = rows.value
     .filter((row) => baseOnly.value || row.approvedSkip || (row.status === 'available' && !row.checked))
     .map((row) => ({
@@ -74,80 +74,80 @@ function update() {
       name: row.favorite.name,
       reason: baseOnly.value ? 'base-only' : skipReason(row),
       ...(row.message ? { message: row.message.slice(0, 1000) } : {}),
-    }))
-  emit('update:modelValue', selected)
+    }));
+  emit('update:modelValue', selected);
   emit('update:intent', {
     enabled: true,
     expected: rows.value.map((row) => ({ key: row.favorite.key, name: row.favorite.name })),
     approvedSkips,
     ...(baseOnly.value ? { baseOnly: true } : {}),
-  })
+  });
   emit(
     'ready',
     !busy.value &&
       !error.value &&
       (baseOnly.value || (!!props.loader && selected.length > 0 && selected.length <= 100 && pendingCount.value === 0))
-  )
+  );
 }
 function cancelQueries() {
-  for (const ticket of tickets) void cancelFavoriteVersions(ticket).catch(() => {})
-  tickets.clear()
+  for (const ticket of tickets) void cancelFavoriteVersions(ticket).catch(() => {});
+  tickets.clear();
 }
 async function queryRow(row: Row, current = generation) {
   const mc = props.mc,
-    loader = props.loader
-  if (!loader || !row.favorite.source || !row.favorite.projectId) return
-  row.status = 'loading'
-  row.approvedSkip = false
-  row.checked = true
-  row.selected = ''
-  row.files = []
-  row.message = ''
-  baseOnly.value = false
-  const ticket = crypto.randomUUID()
-  tickets.add(ticket)
-  update()
+    loader = props.loader;
+  if (!loader || !row.favorite.source || !row.favorite.projectId) return;
+  row.status = 'loading';
+  row.approvedSkip = false;
+  row.checked = true;
+  row.selected = '';
+  row.files = [];
+  row.message = '';
+  baseOnly.value = false;
+  const ticket = crypto.randomUUID();
+  tickets.add(ticket);
+  update();
   try {
     const result = await requestFavoriteVersions(row.favorite.source, row.favorite.projectId, mc, loader, ticket),
-      files = result.files
-    if (current !== generation) return
-    row.files = files
-    row.selected = files.find((file) => file.releaseType === 'release')?.fileId || files[0]?.fileId || ''
-    row.status = row.selected ? 'available' : result.status === 'unreliable' ? 'unreliable' : 'incompatible'
-    row.approvedSkip = row.status === 'incompatible'
-    row.checked = row.status === 'available'
+      files = result.files;
+    if (current !== generation) return;
+    row.files = files;
+    row.selected = files.find((file) => file.releaseType === 'release')?.fileId || files[0]?.fileId || '';
+    row.status = row.selected ? 'available' : result.status === 'unreliable' ? 'unreliable' : 'incompatible';
+    row.approvedSkip = row.status === 'incompatible';
+    row.checked = row.status === 'available';
     row.message = row.selected
       ? ''
       : row.status === 'unreliable'
         ? '存在兼容版本，但缺少可靠下载地址、文件名或哈希；请重试或明确跳过。'
-        : '该项目没有此 Minecraft 版本与加载器的兼容文件，本次跳过。'
+        : '该项目没有此 Minecraft 版本与加载器的兼容文件，本次跳过。';
   } catch (failure) {
-    if (current !== generation) return
-    row.status = 'query-error'
-    row.message = ('查询失败：' + errText(failure)).slice(0, 1000)
+    if (current !== generation) return;
+    row.status = 'query-error';
+    row.message = ('查询失败：' + errText(failure)).slice(0, 1000);
   } finally {
-    tickets.delete(ticket)
-    if (current === generation) update()
+    tickets.delete(ticket);
+    if (current === generation) update();
   }
 }
 function approveSkip(row: Row) {
-  row.approvedSkip = true
-  row.checked = false
-  baseOnly.value = false
-  update()
+  row.approvedSkip = true;
+  row.checked = false;
+  baseOnly.value = false;
+  update();
 }
 function changeChecked(row: Row) {
-  row.approvedSkip = !row.checked
-  baseOnly.value = false
-  update()
+  row.approvedSkip = !row.checked;
+  baseOnly.value = false;
+  update();
 }
 function continueWithoutFavorites() {
-  baseOnly.value = true
-  update()
+  baseOnly.value = true;
+  update();
 }
 function resumeSelection() {
-  baseOnly.value = false
-  update()
+  baseOnly.value = false;
+  update();
 }
 watch(
   [
@@ -158,20 +158,20 @@ watch(
     () => JSON.stringify(favorites.value.map((f) => [f.key, f.name, f.source, f.projectId])),
   ],
   async (_n, _o, cleanup) => {
-    const current = ++generation
+    const current = ++generation;
     cleanup(() => {
-      if (current === generation) generation++
-      cancelQueries()
-    })
-    rows.value = []
-    error.value = ''
-    baseOnly.value = false
-    loadingFavorites.value = enabled.value
-    update()
-    if (!enabled.value) return
+      if (current === generation) generation++;
+      cancelQueries();
+    });
+    rows.value = [];
+    error.value = '';
+    baseOnly.value = false;
+    loadingFavorites.value = enabled.value;
+    update();
+    if (!enabled.value) return;
     try {
-      await loadFavorites(true)
-      if (current !== generation) return
+      await loadFavorites(true);
+      if (current !== generation) return;
       rows.value = favorites.value.map((favorite) => ({
         favorite,
         files: [],
@@ -180,20 +180,20 @@ watch(
         approvedSkip: !favorite.source || !favorite.projectId,
         status: !favorite.source || !favorite.projectId ? 'unlinked' : props.loader ? 'loading' : 'needs-loader',
         message: !favorite.source || !favorite.projectId ? '来源项目尚未关联，不能自动安装，本次跳过。' : '',
-      }))
-      loadingFavorites.value = false
-      await Promise.all(rows.value.filter((row) => row.status === 'loading').map((row) => queryRow(row, current)))
+      }));
+      loadingFavorites.value = false;
+      await Promise.all(rows.value.filter((row) => row.status === 'loading').map((row) => queryRow(row, current)));
     } catch (failure) {
-      if (current === generation) error.value = '读取收藏失败：' + errText(failure)
+      if (current === generation) error.value = '读取收藏失败：' + errText(failure);
     } finally {
       if (current === generation) {
-        loadingFavorites.value = false
-        update()
+        loadingFavorites.value = false;
+        update();
       }
     }
   },
   { immediate: true }
-)
+);
 </script>
 
 <template>

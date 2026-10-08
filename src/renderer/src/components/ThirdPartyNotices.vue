@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import UpdateDialogShell from './UpdateDialogShell.vue'
-import notices from '../../../../THIRD_PARTY_NOTICES.md?raw'
-import { renderMarkdownLite } from '../markdownLite'
-const noticesHtml = renderMarkdownLite(notices)
-const emit = defineEmits<{ dismiss: [] }>()
-const files = import.meta.glob('../../../../licenses/*.txt', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
+import UpdateDialogShell from './UpdateDialogShell.vue';
+import notices from '../../../../THIRD_PARTY_NOTICES.md?raw';
+import { renderMarkdownLite } from '../markdownLite';
+const noticesHtml = renderMarkdownLite(notices);
+const emit = defineEmits<{ dismiss: [] }>();
+const files = import.meta.glob('../../../../licenses/*.txt', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
 </script>
 
 <template>

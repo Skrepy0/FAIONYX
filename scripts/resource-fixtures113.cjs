@@ -4,22 +4,22 @@ const fs = require('node:fs'),
   crypto = require('node:crypto'),
   assert = require('node:assert/strict'),
   Zip = require('adm-zip'),
-  asar = require('asar')
-const sha = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
+  asar = require('asar');
+const sha = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 function inventory(root) {
-  const rows = []
+  const rows = [];
   function walk(dir) {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      assert(!entry.isSymbolicLink(), 'no linked fixture/baseline paths')
-      const file = path.join(dir, entry.name)
-      if (entry.isDirectory()) walk(file)
+      assert(!entry.isSymbolicLink(), 'no linked fixture/baseline paths');
+      const file = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(file);
       else if (entry.isFile())
-        rows.push({ path: path.relative(root, file).replaceAll('\\', '/'), bytes: fs.statSync(file).size, sha256: sha(file) })
-      else assert.fail('not a regular baseline file')
+        rows.push({ path: path.relative(root, file).replaceAll('\\', '/'), bytes: fs.statSync(file).size, sha256: sha(file) });
+      else assert.fail('not a regular baseline file');
     }
   }
-  walk(root)
-  return rows.sort((a, b) => a.path.localeCompare(b.path))
+  walk(root);
+  return rows.sort((a, b) => a.path.localeCompare(b.path));
 }
 async function prepare({
   root = path.resolve('out/resource113'),
@@ -27,31 +27,31 @@ async function prepare({
   portable = path.resolve('release/FAIONYX-1.1.12.exe'),
   skipPortable = false,
 } = {}) {
-  fs.mkdirSync(root, { recursive: true })
+  fs.mkdirSync(root, { recursive: true });
   const baseline = path.join(root, 'baseline112-product'),
-    receiptFile = path.join(baseline, 'baseline.json')
-  let receipt
+    receiptFile = path.join(baseline, 'baseline.json');
+  let receipt;
   if (!skipPortable) {
     if (fs.existsSync(receiptFile)) {
-      receipt = JSON.parse(fs.readFileSync(receiptFile))
-      assert.equal(receipt.version, '1.1.12')
-      assert.equal(sha(path.join(baseline, 'portable/FAIONYX-1.1.12.exe')), receipt.portable.sha256)
-      assert.deepEqual(inventory(path.join(baseline, 'win-unpacked')), receipt.files)
+      receipt = JSON.parse(fs.readFileSync(receiptFile));
+      assert.equal(receipt.version, '1.1.12');
+      assert.equal(sha(path.join(baseline, 'portable/FAIONYX-1.1.12.exe')), receipt.portable.sha256);
+      assert.deepEqual(inventory(path.join(baseline, 'win-unpacked')), receipt.files);
     } else {
-      assert(!fs.existsSync(baseline), 'refuse incomplete or foreign baseline destination')
-      assert.equal(JSON.parse(asar.extractFile(path.join(source, 'resources/app.asar'), 'package.json')).version, '1.1.12')
-      fs.mkdirSync(baseline)
-      const token = crypto.randomBytes(16).toString('hex')
+      assert(!fs.existsSync(baseline), 'refuse incomplete or foreign baseline destination');
+      assert.equal(JSON.parse(asar.extractFile(path.join(source, 'resources/app.asar'), 'package.json')).version, '1.1.12');
+      fs.mkdirSync(baseline);
+      const token = crypto.randomBytes(16).toString('hex');
       fs.writeFileSync(
         path.join(baseline, 'owner.json'),
         JSON.stringify({ token, kind: 'immutable byte copy of public 1.1.12 only', source, portable, at: new Date().toISOString() }),
         { flag: 'wx' }
-      )
-      const files = inventory(source)
-      fs.cpSync(source, path.join(baseline, 'win-unpacked'), { recursive: true, errorOnExist: true })
-      fs.mkdirSync(path.join(baseline, 'portable'))
-      fs.copyFileSync(portable, path.join(baseline, 'portable/FAIONYX-1.1.12.exe'), fs.constants.COPYFILE_EXCL)
-      assert.deepEqual(inventory(path.join(baseline, 'win-unpacked')), files)
+      );
+      const files = inventory(source);
+      fs.cpSync(source, path.join(baseline, 'win-unpacked'), { recursive: true, errorOnExist: true });
+      fs.mkdirSync(path.join(baseline, 'portable'));
+      fs.copyFileSync(portable, path.join(baseline, 'portable/FAIONYX-1.1.12.exe'), fs.constants.COPYFILE_EXCL);
+      assert.deepEqual(inventory(path.join(baseline, 'win-unpacked')), files);
       receipt = {
         version: '1.1.12',
         runtime: '44.3.0',
@@ -59,45 +59,45 @@ async function prepare({
         files,
         portable: { bytes: fs.statSync(portable).size, sha256: sha(portable) },
         classification: 'Exact old public product; never overwrite original release or this baseline',
-      }
-      fs.writeFileSync(receiptFile, JSON.stringify(receipt, null, 2) + '\n', { flag: 'wx' })
+      };
+      fs.writeFileSync(receiptFile, JSON.stringify(receipt, null, 2) + '\n', { flag: 'wx' });
     }
   }
   const fixtureRoot = path.join(root, 'synthetic-workloads'),
-    fixtureReceipt = path.join(fixtureRoot, 'fixtures.json')
+    fixtureReceipt = path.join(fixtureRoot, 'fixtures.json');
   if (!fs.existsSync(fixtureReceipt)) {
-    assert(!fs.existsSync(fixtureRoot), 'refuse incomplete fixture directory')
-    fs.mkdirSync(fixtureRoot)
+    assert(!fs.existsSync(fixtureRoot), 'refuse incomplete fixture directory');
+    fs.mkdirSync(fixtureRoot);
     fs.writeFileSync(
       path.join(fixtureRoot, 'owner.json'),
       JSON.stringify({ kind: 'synthetic resources only; no player account, real world, game or user pack', at: new Date().toISOString() })
-    )
-    const images = path.join(fixtureRoot, 'images')
-    fs.mkdirSync(images)
+    );
+    const images = path.join(fixtureRoot, 'images');
+    fs.mkdirSync(images);
     const sharp = require('sharp'),
-      imageRows = []
+      imageRows = [];
     for (let i = 0; i < 20; i++) {
       const width = 1920,
         height = 1080,
-        data = Buffer.alloc(width * height * 3)
+        data = Buffer.alloc(width * height * 3);
       for (let y = 0; y < height; y++)
         for (let x = 0; x < width; x++) {
           const at = (y * width + x) * 3,
-            tile = ((x >> 5) ^ (y >> 5) ^ i) & 255
-          data[at] = (x + i * 29 + tile * 3) & 255
-          data[at + 1] = (y + i * 11 + tile * 5) & 255
-          data[at + 2] = (x + y + i * 17) & 255
+            tile = ((x >> 5) ^ (y >> 5) ^ i) & 255;
+          data[at] = (x + i * 29 + tile * 3) & 255;
+          data[at + 1] = (y + i * 11 + tile * 5) & 255;
+          data[at + 2] = (x + y + i * 17) & 255;
         }
-      const file = path.join(images, 'resource-' + i + '.png')
+      const file = path.join(images, 'resource-' + i + '.png');
       await sharp(data, { raw: { width, height, channels: 3 } })
         .png({ compressionLevel: 9 })
-        .toFile(file)
-      imageRows.push({ name: path.basename(file), width, height, bytes: fs.statSync(file).size, sha256: sha(file) })
+        .toFile(file);
+      imageRows.push({ name: path.basename(file), width, height, bytes: fs.statSync(file).size, sha256: sha(file) });
     }
-    const mods = path.join(fixtureRoot, 'mods')
-    fs.mkdirSync(mods)
+    const mods = path.join(fixtureRoot, 'mods');
+    fs.mkdirSync(mods);
     for (let i = 0; i < 1000; i++) {
-      const jar = new Zip()
+      const jar = new Zip();
       jar.addFile(
         'fabric.mod.json',
         Buffer.from(
@@ -111,21 +111,21 @@ async function prepare({
             depends: { minecraft: '1.20.1' },
           })
         )
-      )
-      jar.addFile('fixture/metadata.txt', Buffer.alloc(2048, 65 + (i % 26)))
-      jar.writeZip(path.join(mods, 'resource-' + String(i).padStart(4, '0') + '.jar'))
+      );
+      jar.addFile('fixture/metadata.txt', Buffer.alloc(2048, 65 + (i % 26)));
+      jar.writeZip(path.join(mods, 'resource-' + String(i).padStart(4, '0') + '.jar'));
     }
     const id = '113ResourcePack',
-      pack = new Zip()
+      pack = new Zip();
     pack.addFile(
       '.minecraft/versions/' + id + '/' + id + '.json',
       Buffer.from(JSON.stringify({ id, _mcVersion: '1.20.1', mainClass: 'net.minecraft.client.main.Main', libraries: [] }))
-    )
-    pack.addFile('.minecraft/versions/' + id + '/' + id + '.jar', Buffer.from('synthetic runtime; never launched'))
-    const payload = crypto.randomBytes(8 * 1024 * 1024)
-    for (let i = 0; i < 16; i++) pack.addFile('.minecraft/config/fixture-payload-' + i + '.bin', payload)
-    const bigPack = path.join(fixtureRoot, 'Resource synthetic 128MiB.zip')
-    pack.writeZip(bigPack)
+    );
+    pack.addFile('.minecraft/versions/' + id + '/' + id + '.jar', Buffer.from('synthetic runtime; never launched'));
+    const payload = crypto.randomBytes(8 * 1024 * 1024);
+    for (let i = 0; i < 16; i++) pack.addFile('.minecraft/config/fixture-payload-' + i + '.bin', payload);
+    const bigPack = path.join(fixtureRoot, 'Resource synthetic 128MiB.zip');
+    pack.writeZip(bigPack);
     fs.writeFileSync(
       fixtureReceipt,
       JSON.stringify(
@@ -147,7 +147,7 @@ async function prepare({
         null,
         2
       ) + '\n'
-    )
+    );
   }
   const fixtureData = JSON.parse(fs.readFileSync(fixtureReceipt)),
     payloadSha256 =
@@ -155,7 +155,7 @@ async function prepare({
       crypto
         .createHash('sha256')
         .update(new Zip(path.join(fixtureRoot, fixtureData.bigPack.file)).readFile('.minecraft/config/fixture-payload-0.bin'))
-        .digest('hex')
+        .digest('hex');
   return {
     payloadSha256,
     root,
@@ -165,33 +165,33 @@ async function prepare({
     fixtures: JSON.parse(fs.readFileSync(fixtureReceipt)),
     unpacked: skipPortable ? null : path.join(baseline, 'win-unpacked/FAIONYX.exe'),
     portable: skipPortable ? null : path.join(baseline, 'portable/FAIONYX-1.1.12.exe'),
-  }
+  };
 }
 function groupProfile(bundle, directory) {
-  assert(!fs.existsSync(directory))
-  fs.mkdirSync(directory, { recursive: true })
+  assert(!fs.existsSync(directory));
+  fs.mkdirSync(directory, { recursive: true });
   fs.writeFileSync(
     path.join(directory, 'owner.json'),
     JSON.stringify({ kind: 'resource113 owned private group', at: new Date().toISOString() })
-  )
+  );
   const profile = path.join(directory, 'profile'),
     game = path.join(directory, 'game'),
-    id = '113ResourceFixture'
-  fs.mkdirSync(path.join(profile, 'appearance/launch-thumbnails'), { recursive: true })
-  const images = []
+    id = '113ResourceFixture';
+  fs.mkdirSync(path.join(profile, 'appearance/launch-thumbnails'), { recursive: true });
+  const images = [];
   for (const row of bundle.fixtures.images) {
-    const file = path.join(profile, 'appearance/launch-thumbnails', row.name)
-    fs.copyFileSync(path.join(bundle.fixtureRoot, 'images', row.name), file)
-    images.push(file)
+    const file = path.join(profile, 'appearance/launch-thumbnails', row.name);
+    fs.copyFileSync(path.join(bundle.fixtureRoot, 'images', row.name), file);
+    images.push(file);
   }
-  const versionRoot = path.join(game, 'versions', id)
-  fs.mkdirSync(versionRoot, { recursive: true })
+  const versionRoot = path.join(game, 'versions', id);
+  fs.mkdirSync(versionRoot, { recursive: true });
   fs.writeFileSync(
     path.join(versionRoot, id + '.json'),
     JSON.stringify({ id, _mcVersion: '1.20.1', _gameDir: true, mainClass: 'net.minecraft.client.main.Main', libraries: [] })
-  )
-  fs.writeFileSync(path.join(versionRoot, id + '.jar'), 'synthetic runtime; never launched')
-  fs.cpSync(path.join(bundle.fixtureRoot, 'mods'), path.join(versionRoot, 'mods'), { recursive: true })
+  );
+  fs.writeFileSync(path.join(versionRoot, id + '.jar'), 'synthetic runtime; never launched');
+  fs.cpSync(path.join(bundle.fixtureRoot, 'mods'), path.join(versionRoot, 'mods'), { recursive: true });
   fs.writeFileSync(
     path.join(profile, 'settings.json'),
     JSON.stringify({
@@ -213,10 +213,10 @@ function groupProfile(bundle, directory) {
         fit: 'crop',
       },
     })
-  )
-  return { directory, profile, game, id, images }
+  );
+  return { directory, profile, game, id, images };
 }
-module.exports = { prepare, groupProfile, inventory, sha }
+module.exports = { prepare, groupProfile, inventory, sha };
 if (require.main === module)
   prepare()
     .then((b) =>
@@ -231,6 +231,6 @@ if (require.main === module)
       )
     )
     .catch((error) => {
-      console.error(error)
-      process.exitCode = 1
-    })
+      console.error(error);
+      process.exitCode = 1;
+    });

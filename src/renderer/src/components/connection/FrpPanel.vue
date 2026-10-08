@@ -1,70 +1,70 @@
 <script setup lang="ts">
-import ReferenceLinks from './ReferenceLinks.vue'
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import ConnectionPanel from './ConnectionPanel.vue'
-import ConfirmModal from '../ConfirmModal.vue'
-import ConnectionStatus from './ConnectionStatus.vue'
-import { copyText } from '../../api'
-import { toast } from '../../store'
-import type { ManagedTunnel } from '../../../../main/core/frpManager'
-import type { FrpNodesResult } from '../../../../main/core/frpNodes'
+import ReferenceLinks from './ReferenceLinks.vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import ConnectionPanel from './ConnectionPanel.vue';
+import ConfirmModal from '../ConfirmModal.vue';
+import ConnectionStatus from './ConnectionStatus.vue';
+import { copyText } from '../../api';
+import { toast } from '../../store';
+import type { ManagedTunnel } from '../../../../main/core/frpManager';
+import type { FrpNodesResult } from '../../../../main/core/frpNodes';
 
-const faionyx = window.faionyx
-const tunnels = ref<ManagedTunnel[]>([])
-const form = reactive({ accessKey: '' })
-const operations = reactive(new Set<string>())
-const stopping = reactive(new Set<string>())
-const errorMsg = ref('')
+const faionyx = window.faionyx;
+const tunnels = ref<ManagedTunnel[]>([]);
+const form = reactive({ accessKey: '' });
+const operations = reactive(new Set<string>());
+const stopping = reactive(new Set<string>());
+const errorMsg = ref('');
 const editingAccount = ref(false),
-  createOpen = ref(false)
-const accountReady = computed(() => !!nodesResult.value && !nodesError.value)
-const deleteTarget = ref<ManagedTunnel | null>(null)
-const deleting = ref(false)
-const deleteError = ref('')
+  createOpen = ref(false);
+const accountReady = computed(() => !!nodesResult.value && !nodesError.value);
+const deleteTarget = ref<ManagedTunnel | null>(null);
+const deleting = ref(false);
+const deleteError = ref('');
 function askDelete(t: ManagedTunnel) {
-  if (t.deleting) return
-  deleteError.value = ''
-  deleteTarget.value = t
+  if (t.deleting) return;
+  deleteError.value = '';
+  deleteTarget.value = t;
 }
 function cancelDelete() {
-  if (!deleting.value) deleteTarget.value = null
+  if (!deleting.value) deleteTarget.value = null;
 }
 async function confirmDelete() {
-  const target = deleteTarget.value
-  if (!target || deleting.value) return
-  deleting.value = true
-  deleteError.value = ''
+  const target = deleteTarget.value;
+  if (!target || deleting.value) return;
+  deleting.value = true;
+  deleteError.value = '';
   try {
-    const result = (await faionyx.invoke('frp:delete-tunnel', { id: target.id, confirmed: true })) as { remoteDisconnectPending: boolean }
-    tunnels.value = tunnels.value.filter((t) => t.id !== target.id)
-    nodesResult.value = null
-    deleteTarget.value = null
+    const result = (await faionyx.invoke('frp:delete-tunnel', { id: target.id, confirmed: true })) as { remoteDisconnectPending: boolean };
+    tunnels.value = tunnels.value.filter((t) => t.id !== target.id);
+    nodesResult.value = null;
+    deleteTarget.value = null;
     toast(
       result.remoteDisconnectPending ? '远端隧道已删除，本地连接已停止；其他设备连接可能尚未断开' : `已从樱花穿透删除「${target.name}」`,
       result.remoteDisconnectPending ? 'info' : 'success'
-    )
+    );
   } catch (e) {
-    deleteError.value = errText(e)
-    toast(deleteError.value, 'error')
+    deleteError.value = errText(e);
+    toast(deleteError.value, 'error');
   } finally {
-    deleting.value = false
-    await refreshStatus()
+    deleting.value = false;
+    await refreshStatus();
   }
 }
-const nodesResult = ref<FrpNodesResult | null>(null)
-const nodesLoading = ref(false)
-const nodesError = ref('')
-const onlyFree = ref(true)
-const creation = reactive({ name: 'Minecraft', node: '', localPort: '', remotePort: '' })
-const creating = ref(false)
+const nodesResult = ref<FrpNodesResult | null>(null);
+const nodesLoading = ref(false);
+const nodesError = ref('');
+const onlyFree = ref(true);
+const creation = reactive({ name: 'Minecraft', node: '', localPort: '', remotePort: '' });
+const creating = ref(false);
 const visibleNodes = computed(() =>
   onlyFree.value ? (nodesResult.value?.nodes || []).filter((n) => n.free) : nodesResult.value?.nodes || []
-)
-const creatableNodes = computed(() => visibleNodes.value.filter((n) => n.online && n.canCreate))
-const connected = computed(() => tunnels.value.filter((t) => t.status === 'running').length)
-const restoring = computed(() => tunnels.value.filter((t) => t.desired).length)
-const busy = computed(() => creating.value || nodesLoading.value)
-let disposed = false
+);
+const creatableNodes = computed(() => visibleNodes.value.filter((n) => n.online && n.canCreate));
+const connected = computed(() => tunnels.value.filter((t) => t.status === 'running').length);
+const restoring = computed(() => tunnels.value.filter((t) => t.desired).length);
+const busy = computed(() => creating.value || nodesLoading.value);
+let disposed = false;
 const statusLabel: Record<string, string> = {
   idle: '未启动',
   starting: '正在连接',
@@ -73,8 +73,8 @@ const statusLabel: Record<string, string> = {
   tunnel_offline: '隧道不可用',
   error: '连接失败',
   stopped: '已停止',
-}
-const active = (t: ManagedTunnel) => t.status === 'running' || t.status === 'starting'
+};
+const active = (t: ManagedTunnel) => t.status === 'running' || t.status === 'starting';
 const tone = (t: ManagedTunnel): 'neutral' | 'success' | 'danger' | 'pending' =>
   t.busy
     ? 'pending'
@@ -84,70 +84,70 @@ const tone = (t: ManagedTunnel): 'neutral' | 'success' | 'danger' | 'pending' =>
         ? 'pending'
         : ['auth_failed', 'tunnel_offline', 'error'].includes(t.status)
           ? 'danger'
-          : 'neutral'
+          : 'neutral';
 const errText = (e: unknown) =>
-  (e instanceof Error ? e.message : String(e)).replace(/^Error invoking remote method '[^']*': (Error: )?/, '')
+  (e instanceof Error ? e.message : String(e)).replace(/^Error invoking remote method '[^']*': (Error: )?/, '');
 watch(
   () => form.accessKey,
   () => {
-    nodesResult.value = null
+    nodesResult.value = null;
   }
-)
+);
 async function refreshStatus() {
   try {
-    const result = (await faionyx.invoke('frp:status')) as { accessKey: string; tunnels: ManagedTunnel[] }
-    if (disposed) return
-    tunnels.value = result.tunnels || []
-    if (!form.accessKey && result.accessKey) form.accessKey = result.accessKey
+    const result = (await faionyx.invoke('frp:status')) as { accessKey: string; tunnels: ManagedTunnel[] };
+    if (disposed) return;
+    tunnels.value = result.tunnels || [];
+    if (!form.accessKey && result.accessKey) form.accessKey = result.accessKey;
   } catch (e) {
-    errorMsg.value = errText(e)
+    errorMsg.value = errText(e);
   }
 }
 async function control(t: ManagedTunnel, stop: boolean) {
-  if (t.deleting || (stop ? stopping.has(t.id) : operations.has(t.id))) return
-  if (stop) stopping.add(t.id)
-  operations.add(t.id)
-  errorMsg.value = ''
+  if (t.deleting || (stop ? stopping.has(t.id) : operations.has(t.id))) return;
+  if (stop) stopping.add(t.id);
+  operations.add(t.id);
+  errorMsg.value = '';
   try {
-    await faionyx.invoke(stop ? 'frp:stop' : 'frp:start', { id: t.id })
-    if (stop) toast(`已停止「${t.name}」，下次启动不会自动恢复`, 'success')
+    await faionyx.invoke(stop ? 'frp:stop' : 'frp:start', { id: t.id });
+    if (stop) toast(`已停止「${t.name}」，下次启动不会自动恢复`, 'success');
   } catch (e) {
-    errorMsg.value = errText(e)
-    toast(errorMsg.value, 'error')
+    errorMsg.value = errText(e);
+    toast(errorMsg.value, 'error');
   } finally {
-    operations.delete(t.id)
-    stopping.delete(t.id)
-    await refreshStatus()
+    operations.delete(t.id);
+    stopping.delete(t.id);
+    await refreshStatus();
   }
 }
 async function loadNodes(refresh = false, notify = true): Promise<boolean> {
-  if (nodesLoading.value) return false
-  nodesLoading.value = true
-  nodesError.value = ''
+  if (nodesLoading.value) return false;
+  nodesLoading.value = true;
+  nodesError.value = '';
   try {
-    const result = (await faionyx.invoke('frp:nodes', { accessKey: form.accessKey.trim(), refresh })) as FrpNodesResult
-    if (!Array.isArray(result?.nodes)) throw new Error('节点列表查询失败，请重试')
-    if (!Array.isArray(result.tunnels)) throw new Error('隧道列表查询失败，请检查密钥权限后重试')
-    if (disposed) return false
-    nodesResult.value = result
-    editingAccount.value = false
-    await refreshStatus()
-    if (notify) toast(`已读取成功：${result.tunnels.length} 条隧道，${result.nodes.length} 个节点`, 'success')
-    return true
+    const result = (await faionyx.invoke('frp:nodes', { accessKey: form.accessKey.trim(), refresh })) as FrpNodesResult;
+    if (!Array.isArray(result?.nodes)) throw new Error('节点列表查询失败，请重试');
+    if (!Array.isArray(result.tunnels)) throw new Error('隧道列表查询失败，请检查密钥权限后重试');
+    if (disposed) return false;
+    nodesResult.value = result;
+    editingAccount.value = false;
+    await refreshStatus();
+    if (notify) toast(`已读取成功：${result.tunnels.length} 条隧道，${result.nodes.length} 个节点`, 'success');
+    return true;
   } catch (e) {
     if (!disposed) {
-      nodesError.value = errText(e)
-      toast(`读取失败：${nodesError.value}`, 'error')
+      nodesError.value = errText(e);
+      toast(`读取失败：${nodesError.value}`, 'error');
     }
-    return false
+    return false;
   } finally {
-    nodesLoading.value = false
+    nodesLoading.value = false;
   }
 }
 async function createTunnel() {
-  if (creating.value) return
-  creating.value = true
-  errorMsg.value = ''
+  if (creating.value) return;
+  creating.value = true;
+  errorMsg.value = '';
   try {
     await faionyx.invoke('frp:create-tunnel', {
       accessKey: form.accessKey.trim(),
@@ -157,40 +157,40 @@ async function createTunnel() {
         localPort: Number(creation.localPort),
         remotePort: Number(creation.remotePort) || undefined,
       },
-    })
-    const loaded = await loadNodes(true, false)
-    toast(loaded ? '隧道已创建，可在隧道卡片中启动' : '隧道已创建，请刷新列表后查看', loaded ? 'success' : 'info')
+    });
+    const loaded = await loadNodes(true, false);
+    toast(loaded ? '隧道已创建，可在隧道卡片中启动' : '隧道已创建，请刷新列表后查看', loaded ? 'success' : 'info');
   } catch (e) {
-    errorMsg.value = errText(e)
-    toast(errorMsg.value, 'error')
+    errorMsg.value = errText(e);
+    toast(errorMsg.value, 'error');
   } finally {
-    creating.value = false
+    creating.value = false;
   }
 }
 async function copyWebsite() {
-  toast((await copyText('https://www.natfrp.com/')) ? '已复制樱花穿透网址' : '复制失败', 'info')
+  toast((await copyText('https://www.natfrp.com/')) ? '已复制樱花穿透网址' : '复制失败', 'info');
 }
 async function copyRemote(address: string) {
-  toast((await copyText(address)) ? '已复制远程地址' : '复制失败', 'info')
+  toast((await copyText(address)) ? '已复制远程地址' : '复制失败', 'info');
 }
 function onReferenceToggle(event: Event) {
-  if ((event.target as HTMLDetailsElement).open && !nodesResult.value && !nodesLoading.value && form.accessKey.trim()) void loadNodes()
+  if ((event.target as HTMLDetailsElement).open && !nodesResult.value && !nodesLoading.value && form.accessKey.trim()) void loadNodes();
 }
-let unsubscribe: (() => void) | undefined
+let unsubscribe: (() => void) | undefined;
 onMounted(async () => {
   unsubscribe = faionyx.on('frp:event', (raw: unknown) => {
-    const t = (raw as { tunnel?: ManagedTunnel })?.tunnel
-    if (!t || disposed) return
-    const index = tunnels.value.findIndex((x) => x.id === t.id)
-    if (index >= 0) tunnels.value[index] = t
-    else tunnels.value.push(t)
-  })
-  await refreshStatus()
-})
+    const t = (raw as { tunnel?: ManagedTunnel })?.tunnel;
+    if (!t || disposed) return;
+    const index = tunnels.value.findIndex((x) => x.id === t.id);
+    if (index >= 0) tunnels.value[index] = t;
+    else tunnels.value.push(t);
+  });
+  await refreshStatus();
+});
 onBeforeUnmount(() => {
-  disposed = true
-  unsubscribe?.()
-})
+  disposed = true;
+  unsubscribe?.();
+});
 </script>
 
 <template>

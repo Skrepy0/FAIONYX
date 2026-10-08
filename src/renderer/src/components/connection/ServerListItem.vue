@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import type { ServerEntry, ServerPingResult } from '@shared/types'
-import { privateServerText } from '@shared/serverPrivacy'
-import ConnectionStatus from './ConnectionStatus.vue'
-import ServerAddress from './ServerAddress.vue'
+import type { ServerEntry, ServerPingResult } from '@shared/types';
+import { privateServerText } from '@shared/serverPrivacy';
+import ConnectionStatus from './ConnectionStatus.vue';
+import ServerAddress from './ServerAddress.vue';
 defineProps<{
-  server: ServerEntry
-  ping: ServerPingResult | null
-  pending: boolean
-  active: boolean
-  selectMode: boolean
-  checked: boolean
-  addressRevealed: boolean
-}>()
-defineEmits<{ select: []; toggle: []; connect: []; favorite: []; address: [] }>()
+  server: ServerEntry;
+  ping: ServerPingResult | null;
+  pending: boolean;
+  active: boolean;
+  selectMode: boolean;
+  checked: boolean;
+  addressRevealed: boolean;
+}>();
+defineEmits<{ select: []; toggle: []; connect: []; favorite: []; address: [] }>();
 </script>
 <template>
   <div class="server-list-item" :class="{ active, checked }">

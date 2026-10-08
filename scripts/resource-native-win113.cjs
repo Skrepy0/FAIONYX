@@ -5,7 +5,7 @@ const { spawn } = require('node:child_process'),
   assert = require('node:assert/strict'),
   fs = require('node:fs'),
   path = require('node:path'),
-  crypto = require('node:crypto')
+  crypto = require('node:crypto');
 const ps = String.raw`
 $ErrorActionPreference='Stop'
 $source=@'
@@ -117,72 +117,72 @@ while(-not $stop){
 [ResourceNative113]::Stop()
 @{event='stopped';ownedIdentities=$known;retiredIdentities=$retired;closedOwnedQueryHandles=@([ResourceNative113]::closedHandles);observerPid=$PID}|ConvertTo-Json -Depth 6 -Compress|ForEach-Object { [Console]::WriteLine($_) }
 }
-`
+`;
 function startWindowsSampler(onRecord) {
-  assert.equal(process.platform, 'win32')
+  assert.equal(process.platform, 'win32');
   const events = new EventEmitter(),
-    controlRoot = path.resolve('out/resource113/native-observer-' + Date.now() + '-' + crypto.randomBytes(4).toString('hex'))
-  fs.mkdirSync(controlRoot, { recursive: true })
+    controlRoot = path.resolve('out/resource113/native-observer-' + Date.now() + '-' + crypto.randomBytes(4).toString('hex'));
+  fs.mkdirSync(controlRoot, { recursive: true });
   const controlFile = path.join(controlRoot, 'control.json'),
-    control = { generation: 0, phase: 'observer-ready', seeds: [], roles: [], stop: false }
-  fs.writeFileSync(controlFile, JSON.stringify(control))
-  const observerFile = path.join(controlRoot, 'observer.ps1')
-  fs.writeFileSync(observerFile, ps)
+    control = { generation: 0, phase: 'observer-ready', seeds: [], roles: [], stop: false };
+  fs.writeFileSync(controlFile, JSON.stringify(control));
+  const observerFile = path.join(controlRoot, 'observer.ps1');
+  fs.writeFileSync(observerFile, ps);
   const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', observerFile], {
     stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true,
     env: { ...process.env, FAIONYX_RESOURCE_CONTROL: controlFile, FAIONYX_RESOURCE_OWNER: String(process.pid) },
-  })
+  });
   let carry = '',
     errorText = '',
-    settled = false
+    settled = false;
   const ready = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(Error('native sampler readiness timed out: ' + errorText)), 20000)
+    const timer = setTimeout(() => reject(Error('native sampler readiness timed out: ' + errorText)), 20000);
     child.stdout.on('data', (buf) => {
-      carry += buf.toString()
-      let at
+      carry += buf.toString();
+      let at;
       while ((at = carry.indexOf('\n')) >= 0) {
-        const line = carry.slice(0, at).trim()
-        carry = carry.slice(at + 1)
-        if (!line) continue
-        let row
+        const line = carry.slice(0, at).trim();
+        carry = carry.slice(at + 1);
+        if (!line) continue;
+        let row;
         try {
-          row = JSON.parse(line)
+          row = JSON.parse(line);
         } catch {
-          reject(Error('native sampler non-JSON output: ' + line))
-          continue
+          reject(Error('native sampler non-JSON output: ' + line));
+          continue;
         }
-        onRecord?.(row)
-        events.emit(row.event, row)
+        onRecord?.(row);
+        events.emit(row.event, row);
         if (row.event === 'ready') {
-          settled = true
-          clearTimeout(timer)
-          resolve(row)
+          settled = true;
+          clearTimeout(timer);
+          resolve(row);
         }
       }
-    })
+    });
     child.stderr.on('data', (buf) => {
-      errorText += buf.toString()
-    })
+      errorText += buf.toString();
+    });
     child.once('error', (error) => {
-      clearTimeout(timer)
-      reject(error)
-    })
+      clearTimeout(timer);
+      reject(error);
+    });
     child.once('exit', (code, signal) => {
-      clearTimeout(timer)
-      if (!settled) reject(Error('native sampler early exit ' + code + ': ' + errorText))
-      events.emit('exit', { code, signal, errorText })
-    })
-  })
+      clearTimeout(timer);
+      if (!settled) reject(Error('native sampler early exit ' + code + ': ' + errorText));
+      events.emit('exit', { code, signal, errorText });
+    });
+  });
   const send = (value) => {
-    if (value.op === 'seed') control.seeds.push(value)
-    if (value.op === 'role') control.roles.push(value)
-    if (value.op === 'mark') control.phase = value.phase
-    if (value.op === 'stop') control.stop = true
-    control.generation++
-    fs.writeFileSync(controlFile, JSON.stringify(control))
-    return true
-  }
+    if (value.op === 'seed') control.seeds.push(value);
+    if (value.op === 'role') control.roles.push(value);
+    if (value.op === 'mark') control.phase = value.phase;
+    if (value.op === 'stop') control.stop = true;
+    control.generation++;
+    fs.writeFileSync(controlFile, JSON.stringify(control));
+    return true;
+  };
   return {
     child,
     ready,
@@ -191,48 +191,48 @@ function startWindowsSampler(onRecord) {
     controlRoot,
     async stop() {
       const done = new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(Error('owned sampler exit timed out')), 10000)
+        const timer = setTimeout(() => reject(Error('owned sampler exit timed out')), 10000);
         child.once('close', (code, signal) => {
-          clearTimeout(timer)
-          code === 0 ? resolve({ code, signal, errorText }) : reject(Error('native sampler exit ' + code + ': ' + errorText))
-        })
-      })
-      send({ op: 'stop' })
-      return done
+          clearTimeout(timer);
+          code === 0 ? resolve({ code, signal, errorText }) : reject(Error('native sampler exit ' + code + ': ' + errorText));
+        });
+      });
+      send({ op: 'stop' });
+      return done;
     },
-  }
+  };
 }
-module.exports = { startWindowsSampler }
+module.exports = { startWindowsSampler };
 if (require.main === module) {
-  ;(async () => {
+  (async () => {
     const rows = [],
-      sampler = startWindowsSampler((row) => rows.push(row))
-    await sampler.ready
-    sampler.send({ op: 'seed', pid: process.pid, startedAt: Date.now() - 1000, role: 'owned-observer-selftest' })
-    await new Promise((resolve) => setTimeout(resolve, 1300))
-    const hold = Buffer.alloc(16 * 1024 * 1024, 3)
-    await new Promise((resolve) => setTimeout(resolve, 1300))
-    await sampler.stop()
-    const samples = rows.filter((r) => r.event === 'sample' && r.rows.length)
-    assert(samples.length >= 5)
-    const identities = new Map(samples.flatMap((s) => s.rows).map((r) => [r.pid, r]))
-    const linked = new Set([process.pid])
-    let expanded = true
+      sampler = startWindowsSampler((row) => rows.push(row));
+    await sampler.ready;
+    sampler.send({ op: 'seed', pid: process.pid, startedAt: Date.now() - 1000, role: 'owned-observer-selftest' });
+    await new Promise((resolve) => setTimeout(resolve, 1300));
+    const hold = Buffer.alloc(16 * 1024 * 1024, 3);
+    await new Promise((resolve) => setTimeout(resolve, 1300));
+    await sampler.stop();
+    const samples = rows.filter((r) => r.event === 'sample' && r.rows.length);
+    assert(samples.length >= 5);
+    const identities = new Map(samples.flatMap((s) => s.rows).map((r) => [r.pid, r]));
+    const linked = new Set([process.pid]);
+    let expanded = true;
     while (expanded) {
-      expanded = false
+      expanded = false;
       for (const row of identities.values())
         if (linked.has(row.ppid) && !linked.has(row.pid)) {
-          linked.add(row.pid)
-          expanded = true
+          linked.add(row.pid);
+          expanded = true;
         }
     }
     assert(
       [...identities.keys()].every((pid) => linked.has(pid)),
       JSON.stringify([...identities.values()])
-    )
-    assert(samples.at(-1).rows.find((r) => r.pid === process.pid).privateCommitBytes > 0)
-    assert(samples.at(-1).rows.find((r) => r.pid === process.pid).workingSetBytes > 0)
-    assert(hold[0] === 3)
+    );
+    assert(samples.at(-1).rows.find((r) => r.pid === process.pid).privateCommitBytes > 0);
+    assert(samples.at(-1).rows.find((r) => r.pid === process.pid).workingSetBytes > 0);
+    assert(hold[0] === 3);
     console.log(
       JSON.stringify({
         passed: true,
@@ -242,9 +242,9 @@ if (require.main === module) {
         last: samples.at(-1),
         gpu: rows.filter((r) => r.event === 'gpu').slice(-1),
       })
-    )
+    );
   })().catch((error) => {
-    console.error(error)
-    process.exitCode = 1
-  })
+    console.error(error);
+    process.exitCode = 1;
+  });
 }

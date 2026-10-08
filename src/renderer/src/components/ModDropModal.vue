@@ -3,68 +3,68 @@
  * MOD 拖入即装：解析结果确认 + 版本匹配 + 四分支处理
  * 流程：静默解析 → 匹配本地版本 → 有匹配（选版本装入）/ 无匹配（自动或自定义下载后装入）
  */
-import { computed, reactive, ref, watch } from 'vue'
-import ModInstallDialog from './ModInstallDialog.vue'
-import MarqueeText from './MarqueeText.vue'
-import { errText, installVersion, onInstallDone, parseMods, getModTargets } from '../api'
-import { selectInstance, selectedInstance, displayVersionName, refreshInstalled, store, toast } from '../store'
+import { computed, reactive, ref, watch } from 'vue';
+import ModInstallDialog from './ModInstallDialog.vue';
+import MarqueeText from './MarqueeText.vue';
+import { errText, installVersion, onInstallDone, parseMods, getModTargets } from '../api';
+import { selectInstance, selectedInstance, displayVersionName, refreshInstalled, store, toast } from '../store';
 import {
   matchesVersionRange as matchRange,
   modMatchesInstance as modMatchesVersion,
   instanceKey,
   modMismatchReasons,
-} from '@shared/modCompatibility'
-import type { InstalledVersion, LoaderName, ModInfo } from '@shared/types'
+} from '@shared/modCompatibility';
+import type { InstalledVersion, LoaderName, ModInfo } from '@shared/types';
 
 const props = defineProps<{
-  open: boolean
-  files: string[]
-}>()
-const emit = defineEmits<{ (e: 'close'): void }>()
+  open: boolean;
+  files: string[];
+}>();
+const emit = defineEmits<{ (e: 'close'): void }>();
 
 // ---------------- 状态 ----------------
-const parsing = ref(false)
-const allTargets = ref<InstalledVersion[]>([])
-const scanErrors = ref<string[]>([])
-let scanGeneration = 0
-const mods = ref<ModInfo[]>([])
-const selectedVersion = ref('')
+const parsing = ref(false);
+const allTargets = ref<InstalledVersion[]>([]);
+const scanErrors = ref<string[]>([]);
+let scanGeneration = 0;
+const mods = ref<ModInfo[]>([]);
+const selectedVersion = ref('');
 function syncDropSelection() {
-  const t = allTargets.value.find((v) => instanceKey(v) === selectedVersion.value)
-  if (t) void selectInstance(t.id, t.folder)
+  const t = allTargets.value.find((v) => instanceKey(v) === selectedVersion.value);
+  if (t) void selectInstance(t.id, t.folder);
 }
-const installing = ref(false)
-const modRequest = ref<{ target: InstalledVersion; input: { paths: string[] } } | null>(null)
+const installing = ref(false);
+const modRequest = ref<{ target: InstalledVersion; input: { paths: string[] } } | null>(null);
 
 /** 解析成功的有效 MOD */
-const validMods = computed(() => mods.value.filter((m) => !m.error))
+const validMods = computed(() => mods.value.filter((m) => !m.error));
 /** 解析失败（非 MOD/损坏） */
-const failedMods = computed(() => mods.value.filter((m) => !!m.error))
+const failedMods = computed(() => mods.value.filter((m) => !!m.error));
 const mismatchDetails = computed(() =>
   allTargets.value.map((v) => ({
     v,
     reasons: validMods.value.flatMap((m) => modMismatchReasons(m, v).map((reason) => `${m.name || m.id}：${reason}`)),
   }))
-)
+);
 
 /** 每个 MOD 匹配到的版本 id 集合 */
 const matchMap = computed(() => {
-  const map: Record<string, string[]> = {}
+  const map: Record<string, string[]> = {};
   for (const m of validMods.value) {
-    map[m.filePath] = allTargets.value.filter((v) => modMatchesVersion(m, v)).map(instanceKey)
+    map[m.filePath] = allTargets.value.filter((v) => modMatchesVersion(m, v)).map(instanceKey);
   }
-  return map
-})
+  return map;
+});
 
 /** 所有有效 MOD 的版本交集（可同时装入全部 MOD 的版本） */
 const commonVersions = computed(() => {
-  if (!validMods.value.length) return []
-  return allTargets.value.filter((v) => validMods.value.every((m) => modMatchesVersion(m, v)))
-})
+  if (!validMods.value.length) return [];
+  return allTargets.value.filter((v) => validMods.value.every((m) => modMatchesVersion(m, v)));
+});
 
 /** 无交集时退而求其次：能装最多 MOD 的版本（含兼容状态标记） */
 const bestEffortVersions = computed(() => {
-  if (commonVersions.value.length) return []
+  if (commonVersions.value.length) return [];
   const scored = allTargets.value
     .map((v) => ({
       v,
@@ -72,166 +72,166 @@ const bestEffortVersions = computed(() => {
       bad: validMods.value.filter((m) => !modMatchesVersion(m, v)),
     }))
     .filter((x) => x.ok.length > 0)
-    .sort((a, b) => b.ok.length - a.ok.length)
-  return scored
-})
+    .sort((a, b) => b.ok.length - a.ok.length);
+  return scored;
+});
 
-type Branch = 'parse' | 'matched' | 'partial' | 'none'
+type Branch = 'parse' | 'matched' | 'partial' | 'none';
 const branch = computed<Branch>(() => {
-  if (parsing.value) return 'parse'
-  if (!validMods.value.length) return 'none'
-  if (commonVersions.value.length) return 'matched'
-  if (bestEffortVersions.value.length) return 'partial'
-  return 'none'
-})
+  if (parsing.value) return 'parse';
+  if (!validMods.value.length) return 'none';
+  if (commonVersions.value.length) return 'matched';
+  if (bestEffortVersions.value.length) return 'partial';
+  return 'none';
+});
 
 const LOADER_TAG: Record<LoaderName, string> = {
   forge: 'Forge',
   neoforge: 'NeoForge',
   fabric: 'Fabric',
   quilt: 'Quilt',
-}
+};
 
 // ---------------- 打开时解析 ----------------
 watch(
   () => props.open,
   async (open) => {
-    const generation = ++scanGeneration
-    if (!open) return
-    mods.value = []
-    parsing.value = true
+    const generation = ++scanGeneration;
+    if (!open) return;
+    mods.value = [];
+    parsing.value = true;
     try {
-      const [parsed, scanned] = await Promise.all([parseMods(props.files), getModTargets()])
-      if (generation !== scanGeneration) return
-      mods.value = parsed
-      allTargets.value = scanned.versions
-      scanErrors.value = scanned.errors
+      const [parsed, scanned] = await Promise.all([parseMods(props.files), getModTargets()]);
+      if (generation !== scanGeneration) return;
+      mods.value = parsed;
+      allTargets.value = scanned.versions;
+      scanErrors.value = scanned.errors;
       // 默认选中交集第一个
       const first =
         commonVersions.value.find((v) => selectedInstance.value && instanceKey(v) === instanceKey(selectedInstance.value)) ??
         commonVersions.value[0] ??
-        bestEffortVersions.value[0]?.v
-      selectedVersion.value = first ? instanceKey(first) : ''
+        bestEffortVersions.value[0]?.v;
+      selectedVersion.value = first ? instanceKey(first) : '';
     } catch (e) {
-      toast('MOD 识别失败：' + errText(e), 'error')
-      emit('close')
+      toast('MOD 识别失败：' + errText(e), 'error');
+      emit('close');
     } finally {
-      if (generation === scanGeneration) parsing.value = false
+      if (generation === scanGeneration) parsing.value = false;
     }
   }
-)
+);
 
 // ---------------- 分支动作 ----------------
 async function onInstallSelected() {
-  const selected = allTargets.value.find((v) => instanceKey(v) === selectedVersion.value)
-  if (!selected || installing.value) return
-  const vid = selected.id
+  const selected = allTargets.value.find((v) => instanceKey(v) === selectedVersion.value);
+  if (!selected || installing.value) return;
+  const vid = selected.id;
   // 部分匹配分支下只装入兼容的 MOD
   const targets = validMods.value.filter((m) =>
     branch.value === 'matched' ? true : bestEffortVersions.value.find((x) => instanceKey(x.v) === selectedVersion.value)?.ok.includes(m)
-  )
+  );
   if (!targets.length) {
-    toast('所选版本与全部 MOD 均不兼容', 'error')
-    return
+    toast('所选版本与全部 MOD 均不兼容', 'error');
+    return;
   }
-  modRequest.value = { target: selected, input: { paths: targets.map((m) => m.filePath) } }
+  modRequest.value = { target: selected, input: { paths: targets.map((m) => m.filePath) } };
 }
 
 /** 「下载新版本」：跳游戏版本页，提示装完后再装入 */
 function onDownloadNew() {
-  emit('close')
-  store.currentView = 'game'
-  toast('请在游戏版本页选择兼容的版本安装，完成后重新拖入 MOD 即可装入', 'info')
+  emit('close');
+  store.currentView = 'game';
+  toast('请在游戏版本页选择兼容的版本安装，完成后重新拖入 MOD 即可装入', 'info');
 }
 
 /** 「自动下载最新兼容版本」：取 MOD 支持的最高 release + 多数派加载器，走现有下载链路；
  *  下载完成后自动把本次 MOD 装入新版本，用户只剩按下启动 */
-const autoState = reactive({ busy: false })
+const autoState = reactive({ busy: false });
 async function onAutoDownload() {
-  if (autoState.busy) return
-  autoState.busy = true
+  if (autoState.busy) return;
+  autoState.busy = true;
   try {
     // 多数派加载器
-    const loaderCount = new Map<LoaderName, number>()
+    const loaderCount = new Map<LoaderName, number>();
     for (const m of validMods.value) {
-      if (m.loader) loaderCount.set(m.loader, (loaderCount.get(m.loader) ?? 0) + 1)
+      if (m.loader) loaderCount.set(m.loader, (loaderCount.get(m.loader) ?? 0) + 1);
     }
-    const loader = [...loaderCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]
-    if (validMods.value.some((m) => m.loader !== loader)) throw new Error('不同加载器的 MOD 不能装入同一实例，请分批导入')
-    if (!loader) throw new Error('没有可识别的加载器类型')
+    const loader = [...loaderCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+    if (validMods.value.some((m) => m.loader !== loader)) throw new Error('不同加载器的 MOD 不能装入同一实例，请分批导入');
+    if (!loader) throw new Error('没有可识别的加载器类型');
     // 取发布清单中满足所有该 loader MOD 范围的最高 release
-    const { getManifest } = await import('../api')
-    const manifest = await getManifest()
-    const releases = manifest.filter((v) => v.type === 'release')
-    const target = releases.find((v) => validMods.value.every((m) => !m.loader || matchRange(m.mcRange, v.id)))
-    if (!target) throw new Error('没有找到兼容的正式版 MC')
+    const { getManifest } = await import('../api');
+    const manifest = await getManifest();
+    const releases = manifest.filter((v) => v.type === 'release');
+    const target = releases.find((v) => validMods.value.every((m) => !m.loader || matchRange(m.mcRange, v.id)));
+    if (!target) throw new Error('没有找到兼容的正式版 MC');
     // 加载器版本维度：取该加载器适配该 MC 的最新版本，且满足 MOD 声明的 loader 版本范围
-    const { listLoaders } = await import('../api')
-    const loaderVersions = await listLoaders(loader, target.id)
-    if (!loaderVersions.length) throw new Error(`${LOADER_TAG[loader]} 没有适配 ${target.id} 的版本`)
-    const loaderVersion = loaderVersions.find((lv) => validMods.value.every((m) => !m.loaderRange || matchRange(m.loaderRange, lv)))
-    if (!loaderVersion) throw new Error('没有同时满足全部 MOD 区间要求的加载器版本')
+    const { listLoaders } = await import('../api');
+    const loaderVersions = await listLoaders(loader, target.id);
+    if (!loaderVersions.length) throw new Error(`${LOADER_TAG[loader]} 没有适配 ${target.id} 的版本`);
+    const loaderVersion = loaderVersions.find((lv) => validMods.value.every((m) => !m.loaderRange || matchRange(m.loaderRange, lv)));
+    if (!loaderVersion) throw new Error('没有同时满足全部 MOD 区间要求的加载器版本');
     // Fabric 模组自动携带最新 Fabric API（绝大多数 Fabric MOD 需要）
-    let fabricApi: string | undefined
+    let fabricApi: string | undefined;
     if (loader === 'fabric') {
       try {
-        const { listFabricApi } = await import('../api')
-        const apiList = await listFabricApi(target.id)
-        fabricApi = apiList[0]?.version
+        const { listFabricApi } = await import('../api');
+        const apiList = await listFabricApi(target.id);
+        fabricApi = apiList[0]?.version;
       } catch {
         /* API 获取失败不阻断，安装时仍可手动补装 */
       }
     }
-    const filePaths = validMods.value.map((m) => m.filePath)
+    const filePaths = validMods.value.map((m) => m.filePath);
     const destinationFolder =
-      store.settings?.folders.find((folder) => folder.isDefault)?.path || store.settings?.activeFolder || store.settings?.gameDir || ''
-    emit('close')
+      store.settings?.folders.find((folder) => folder.isDefault)?.path || store.settings?.activeFolder || store.settings?.gameDir || '';
+    emit('close');
     toast(
       `开始自动下载 ${target.id} + ${LOADER_TAG[loader]} ${loaderVersion}${fabricApi ? ' + Fabric API' : ''}，完成后将自动装入 ${filePaths.length} 个 MOD`,
       'info'
-    )
-    store.installing.add(target.id)
+    );
+    store.installing.add(target.id);
     // 一次性监听：该版本装好后自动装入 MOD（按请求的 versionId 匹配，避免响应其他安装任务）
     const off = onInstallDone((r) => {
-      if (r.versionId !== target.id) return
-      off()
+      if (r.versionId !== target.id) return;
+      off();
       if (!r.ok) {
-        toast('版本安装失败，MOD 未能自动装入，可重新拖入', 'error')
-        return
+        toast('版本安装失败，MOD 未能自动装入，可重新拖入', 'error');
+        return;
       }
-      void autoInstallMods(filePaths, r.installedId, destinationFolder)
-    })
+      void autoInstallMods(filePaths, r.installedId, destinationFolder);
+    });
     try {
-      await installVersion(target.id, { loader, loaderVersion, fabricApi }, destinationFolder)
+      await installVersion(target.id, { loader, loaderVersion, fabricApi }, destinationFolder);
     } catch (e) {
-      off()
-      throw e
+      off();
+      throw e;
     }
   } catch (e) {
-    toast('自动下载失败：' + errText(e), 'error')
+    toast('自动下载失败：' + errText(e), 'error');
   } finally {
-    autoState.busy = false
+    autoState.busy = false;
   }
 }
 
 /** 版本下载完成后自动装入 MOD：installedId 优先，缺失时按 MC 版本 + 加载器兜底定位实例 */
 async function autoInstallMods(filePaths: string[], installedId: string | undefined, folder: string) {
   try {
-    await refreshInstalled()
-    const scanned = await getModTargets()
-    const v = scanned.versions.find((v) => v.id === installedId && v.folder === folder)
-    if (!v) throw new Error('未找到本次安装的确切实例，请重新拖入 MOD')
-    modRequest.value = { target: v, input: { paths: filePaths } }
+    await refreshInstalled();
+    const scanned = await getModTargets();
+    const v = scanned.versions.find((v) => v.id === installedId && v.folder === folder);
+    if (!v) throw new Error('未找到本次安装的确切实例，请重新拖入 MOD');
+    modRequest.value = { target: v, input: { paths: filePaths } };
   } catch (e) {
-    toast('MOD 自动装入失败，请重新拖入：' + errText(e), 'error')
+    toast('MOD 自动装入失败，请重新拖入：' + errText(e), 'error');
   }
 }
 
 function onCustomDownload() {
-  onDownloadNew()
+  onDownloadNew();
 }
 
-const modCompatOf = (m: ModInfo): string[] => matchMap.value[m.filePath] ?? []
+const modCompatOf = (m: ModInfo): string[] => matchMap.value[m.filePath] ?? [];
 </script>
 
 <template>
@@ -373,8 +373,8 @@ const modCompatOf = (m: ModInfo): string[] => matchMap.value[m.filePath] ?? []
     :input="modRequest.input"
     @close="modRequest = null"
     @installed="
-      modRequest = null
-      emit('close')
+      modRequest = null;
+      emit('close');
     "
   />
 </template>

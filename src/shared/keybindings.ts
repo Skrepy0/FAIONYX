@@ -5,13 +5,13 @@
 
 export interface KeybindDef {
   /** options.txt 键位项 id，如 key_key.forward */
-  id: string
+  id: string;
   /** 分类（UI 分组展示） */
-  category: '移动' | '游戏' | '物品栏' | '视角' | '界面' | '多人游戏' | '杂项'
+  category: '移动' | '游戏' | '物品栏' | '视角' | '界面' | '多人游戏' | '杂项';
   /** 中文显示名 */
-  label: string
+  label: string;
   /** MC 默认绑定（key.keyboard.* / key.mouse.* / key.keyboard.unknown） */
-  defaultBind: string
+  defaultBind: string;
 }
 
 /** MC Java 版 options.txt 中的全部原版键位 */
@@ -59,15 +59,15 @@ export const VANILLA_KEYBINDS: KeybindDef[] = [
   { id: 'key_key.saveToolbarActivator', category: '杂项', label: '保存快捷栏（创造模式工具）', defaultBind: 'key.keyboard.unknown' },
   { id: 'key_key.loadToolbarActivator', category: '杂项', label: '加载快捷栏（创造模式工具）', defaultBind: 'key.keyboard.unknown' },
   { id: 'key_key.spectatorOutlines', category: '杂项', label: '旁观者模式玩家轮廓', defaultBind: 'key.keyboard.unknown' },
-]
+];
 
-export const KEYBIND_CATEGORIES = ['移动', '游戏', '物品栏', '视角', '界面', '多人游戏', '杂项'] as const
+export const KEYBIND_CATEGORIES = ['移动', '游戏', '物品栏', '视角', '界面', '多人游戏', '杂项'] as const;
 
 /** DOM KeyboardEvent.code → MC 绑定值。无法识别的返回 null。 */
 const CODE_TO_MC: Record<string, string> = (() => {
-  const map: Record<string, string> = {}
-  for (const letter of 'abcdefghijklmnopqrstuvwxyz') map['Key' + letter.toUpperCase()] = 'key.keyboard.' + letter
-  for (const digit of '0123456789') map['Digit' + digit] = 'key.keyboard.' + digit
+  const map: Record<string, string> = {};
+  for (const letter of 'abcdefghijklmnopqrstuvwxyz') map['Key' + letter.toUpperCase()] = 'key.keyboard.' + letter;
+  for (const digit of '0123456789') map['Digit' + digit] = 'key.keyboard.' + digit;
   const named: Record<string, string> = {
     Space: 'key.keyboard.space',
     Tab: 'key.keyboard.tab',
@@ -106,10 +106,10 @@ const CODE_TO_MC: Record<string, string> = (() => {
     Slash: 'key.keyboard.slash',
     Backquote: 'key.keyboard.grave.accent',
     NumpadEnter: 'key.keyboard.keypad.enter',
-  }
-  Object.assign(map, named)
-  for (let i = 1; i <= 12; i++) map['F' + i] = 'key.keyboard.f' + i
-  for (let i = 0; i <= 9; i++) map['Numpad' + i] = 'key.keyboard.keypad.' + i
+  };
+  Object.assign(map, named);
+  for (let i = 1; i <= 12; i++) map['F' + i] = 'key.keyboard.f' + i;
+  for (let i = 0; i <= 9; i++) map['Numpad' + i] = 'key.keyboard.keypad.' + i;
   const numpadOps: Record<string, string> = {
     NumpadMultiply: 'key.keyboard.keypad.multiply',
     NumpadAdd: 'key.keyboard.keypad.add',
@@ -117,10 +117,10 @@ const CODE_TO_MC: Record<string, string> = (() => {
     NumpadDecimal: 'key.keyboard.keypad.decimal',
     NumpadDivide: 'key.keyboard.keypad.divide',
     NumpadEqual: 'key.keyboard.keypad.equal',
-  }
-  Object.assign(map, numpadOps)
-  return map
-})()
+  };
+  Object.assign(map, numpadOps);
+  return map;
+})();
 
 const MOUSE_TO_MC: Record<number, string> = {
   0: 'key.mouse.left',
@@ -128,18 +128,18 @@ const MOUSE_TO_MC: Record<number, string> = {
   2: 'key.mouse.right',
   3: 'key.mouse.4',
   4: 'key.mouse.5',
-}
+};
 
 export function codeToMcKey(code: string): string | null {
-  return CODE_TO_MC[code] ?? null
+  return CODE_TO_MC[code] ?? null;
 }
 export function mouseButtonToMcKey(button: number): string | null {
-  return MOUSE_TO_MC[button] ?? null
+  return MOUSE_TO_MC[button] ?? null;
 }
 
 /** MC 绑定值 → 简短显示（key.keyboard.left.shift → LShift，key.mouse.left → 鼠标左键） */
 export function mcKeyLabel(bind: string): string {
-  if (!bind || bind === 'key.keyboard.unknown') return '未指定'
+  if (!bind || bind === 'key.keyboard.unknown') return '未指定';
   if (bind.startsWith('key.mouse.')) {
     const names: Record<string, string> = {
       left: '鼠标左键',
@@ -147,10 +147,10 @@ export function mcKeyLabel(bind: string): string {
       right: '鼠标右键',
       4: '鼠标侧键4',
       5: '鼠标侧键5',
-    }
-    return names[bind.slice('key.mouse.'.length)] ?? bind
+    };
+    return names[bind.slice('key.mouse.'.length)] ?? bind;
   }
-  const key = bind.replace(/^key\.keyboard\./, '')
+  const key = bind.replace(/^key\.keyboard\./, '');
   const pretty: Record<string, string> = {
     space: '空格',
     tab: 'Tab',
@@ -188,15 +188,15 @@ export function mcKeyLabel(bind: string): string {
     home: 'Home',
     end: 'End',
     insert: 'Ins',
-  }
-  if (pretty[key]) return pretty[key]
-  if (key.startsWith('keypad.')) return '小键盘 ' + key.slice(7)
-  return key.length === 1 ? key.toUpperCase() : key
+  };
+  if (pretty[key]) return pretty[key];
+  if (key.startsWith('keypad.')) return '小键盘 ' + key.slice(7);
+  return key.length === 1 ? key.toUpperCase() : key;
 }
 
 export function parseSnapshotId(version: string): [number, number] | null {
-  const m = /^(\d{2})w(\d{1,2})[a-e]?$/i.exec(version.trim())
-  return m ? [Number(m[1]), Number(m[2])] : null
+  const m = /^(\d{2})w(\d{1,2})[a-e]?$/i.exec(version.trim());
+  return m ? [Number(m[1]), Number(m[2])] : null;
 }
 
 /**
@@ -210,44 +210,44 @@ export function parseSnapshotId(version: string): [number, number] | null {
  * 无法解析的非常规 id 按最新处理（与空版本一致的保守方向：宁写新字段不写错旧字段会由字段本身被忽略兜底）。
  */
 export function mcVersionFamily(version: string): number[] {
-  const v = String(version ?? '').trim()
-  const snap = parseSnapshotId(v)
+  const v = String(version ?? '').trim();
+  const snap = parseSnapshotId(v);
   if (snap) {
-    const [yy, ww] = snap
-    if (yy >= 26) return [26, 0]
-    if (yy === 25) return ww >= 41 ? [1, 21, 11] : [1, 21, 10]
-    if (yy === 24) return [1, 21, 4]
-    if (yy === 23) return [1, 20, 4]
-    if (yy === 22) return [1, 19, 3]
-    if (yy === 21) return [1, 18, 2]
-    if (yy === 20) return ww >= 6 ? [1, 16, 5] : [1, 15, 2]
-    if (yy === 19) return ww >= 41 ? [1, 15, 2] : [1, 14, 4]
-    if (yy === 18) return [1, 14, 4]
-    if (yy === 17) return ww >= 43 ? [1, 13] : [1, 12, 2]
-    if (yy === 16) return ww >= 20 ? [1, 10, 2] : [1, 9, 4]
-    if (yy === 15) return [1, 9]
-    return [1, 8]
+    const [yy, ww] = snap;
+    if (yy >= 26) return [26, 0];
+    if (yy === 25) return ww >= 41 ? [1, 21, 11] : [1, 21, 10];
+    if (yy === 24) return [1, 21, 4];
+    if (yy === 23) return [1, 20, 4];
+    if (yy === 22) return [1, 19, 3];
+    if (yy === 21) return [1, 18, 2];
+    if (yy === 20) return ww >= 6 ? [1, 16, 5] : [1, 15, 2];
+    if (yy === 19) return ww >= 41 ? [1, 15, 2] : [1, 14, 4];
+    if (yy === 18) return [1, 14, 4];
+    if (yy === 17) return ww >= 43 ? [1, 13] : [1, 12, 2];
+    if (yy === 16) return ww >= 20 ? [1, 10, 2] : [1, 9, 4];
+    if (yy === 15) return [1, 9];
+    return [1, 8];
   }
   // 正式版：剥离开发后缀（含 26.2-snapshot-1 / 1.21.11-pre1 / 1.14 Pre-Release 2 三种写法）
-  const base = v.split(/[\s-]/)[0]
-  const parts = base.split('.').map((p) => (/^\d+$/.test(p) ? Number(p) : NaN))
-  if (!parts.length || parts.some((p) => !Number.isFinite(p))) return [999]
-  return parts
+  const base = v.split(/[\s-]/)[0];
+  const parts = base.split('.').map((p) => (/^\d+$/.test(p) ? Number(p) : NaN));
+  if (!parts.length || parts.some((p) => !Number.isFinite(p))) return [999];
+  return parts;
 }
 
 /** 版本族元组比较：返回 -1/0/1。26.x > 全部 1.x；1.21.11 > 1.21.9（数字段比较，非字符串） */
 export function compareMcVersions(a: string, b: string): number {
-  const fa = mcVersionFamily(a)
-  const fb = mcVersionFamily(b)
+  const fa = mcVersionFamily(a);
+  const fb = mcVersionFamily(b);
   for (let i = 0; i < Math.max(fa.length, fb.length); i++) {
-    const d = (fa[i] ?? 0) - (fb[i] ?? 0)
-    if (d) return Math.sign(d)
+    const d = (fa[i] ?? 0) - (fb[i] ?? 0);
+    if (d) return Math.sign(d);
   }
-  return 0
+  return 0;
 }
 
 /** MC 版本是否 ≥ 目标版本。空版本按最新处理（未知实例不丢同步项）。 */
 export function mcVersionAtLeast(mcVersion: string, target: string): boolean {
-  if (!mcVersion) return true
-  return compareMcVersions(mcVersion, target) >= 0
+  if (!mcVersion) return true;
+  return compareMcVersions(mcVersion, target) >= 0;
 }

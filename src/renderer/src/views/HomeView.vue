@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { openInstanceCenter } from '../instanceCenter'
-import { appearancePreview } from '../visualDesign'
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { activeCarouselKeys, carouselDuration } from '@shared/appearancePolicy'
-import { useMotion } from '../motion'
-import { CarouselPlayback } from '@shared/carouselPlayback'
+import { openInstanceCenter } from '../instanceCenter';
+import { appearancePreview } from '../visualDesign';
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { activeCarouselKeys, carouselDuration } from '@shared/appearancePolicy';
+import { useMotion } from '../motion';
+import { CarouselPlayback } from '@shared/carouselPlayback';
 import {
   errText,
   exportLaunchLogs,
@@ -19,7 +19,7 @@ import {
   removeVersion,
   setActiveFolder,
   showFolderContextMenu,
-} from '../api'
+} from '../api';
 import {
   selectedInstance,
   activeInstalled,
@@ -36,48 +36,48 @@ import {
   toast,
   toggleFavorite,
   versionIconUrl,
-} from '../store'
-import Avatar from '../components/Avatar.vue'
-import ConfirmModal from '../components/ConfirmModal.vue'
-import SkinViewer3D from '../components/SkinViewer3D.vue'
-import CreatorCard from '../components/CreatorCard.vue'
-import type { ImageFit, InstalledVersion, JavaInfo, ProfileSkins, SkinVariant } from '@shared/types'
-import { trackBootTask } from '../bootTasks'
-import { managedImageUrl } from '../managedAssets'
-import { builtInLaunchImages } from '../launchImages'
+} from '../store';
+import Avatar from '../components/Avatar.vue';
+import ConfirmModal from '../components/ConfirmModal.vue';
+import SkinViewer3D from '../components/SkinViewer3D.vue';
+import CreatorCard from '../components/CreatorCard.vue';
+import type { ImageFit, InstalledVersion, JavaInfo, ProfileSkins, SkinVariant } from '@shared/types';
+import { trackBootTask } from '../bootTasks';
+import { managedImageUrl } from '../managedAssets';
+import { builtInLaunchImages } from '../launchImages';
 
-const LAST_VERSION_KEY = 'faionyx.lastVersion'
+const LAST_VERSION_KEY = 'faionyx.lastVersion';
 
 // ---------------- 当前实例与展示图 ----------------
 const selectedId = computed({
   get: () => store.resourceVersionId,
   set: (id) => {
-    store.resourceVersionId = id
+    store.resourceVersionId = id;
   },
-})
-const currentVersion = selectedInstance
-const versionLabel = (version: InstalledVersion) => displayVersionName(version)
-const cap = (value: string) => value.charAt(0).toUpperCase() + value.slice(1)
+});
+const currentVersion = selectedInstance;
+const versionLabel = (version: InstalledVersion) => displayVersionName(version);
+const cap = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
 const loaderText = (version: InstalledVersion) =>
-  version.loader ? `${version.loader === 'neoforge' ? 'NeoForge' : cap(version.loader)} ${version.loaderVersion ?? ''}`.trim() : '正式版'
+  version.loader ? `${version.loader === 'neoforge' ? 'NeoForge' : cap(version.loader)} ${version.loaderVersion ?? ''}`.trim() : '正式版';
 // 与下方实例卡片共用命名规则；技术版本只读真实元数据，不从名称推断。
-const heroName = computed(() => (currentVersion.value ? versionLabel(currentVersion.value) : '选择游戏实例'))
-const heroVersion = computed(() => currentVersion.value?.mcVersion || '版本未知')
+const heroName = computed(() => (currentVersion.value ? versionLabel(currentVersion.value) : '选择游戏实例'));
+const heroVersion = computed(() => currentVersion.value?.mcVersion || '版本未知');
 
 function fitCss(fit: ImageFit): 'fill' | 'contain' | 'cover' {
-  return fit === 'fill' ? 'fill' : fit === 'fit' ? 'contain' : 'cover'
+  return fit === 'fill' ? 'fill' : fit === 'fit' ? 'contain' : 'cover';
 }
 
-const failedBanners = ref(new Set<string>())
+const failedBanners = ref(new Set<string>());
 const globalBanners = computed(() => {
-  const global = appearancePreview.value?.launchThumbnail
+  const global = appearancePreview.value?.launchThumbnail;
   return activeCarouselKeys(global).map((path) => {
-    const bundled = builtInLaunchImages.find((image) => image.key === path)
-    return { path, src: bundled?.src ?? managedImageUrl(path), fit: fitCss(global?.fit ?? 'crop'), custom: !bundled }
-  })
-})
+    const bundled = builtInLaunchImages.find((image) => image.key === path);
+    return { path, src: bundled?.src ?? managedImageUrl(path), fit: fitCss(global?.fit ?? 'crop'), custom: !bundled };
+  });
+});
 const instanceBanners = computed(() => {
-  const version = currentVersion.value
+  const version = currentVersion.value;
   if (version?.thumbnail) {
     return [
       {
@@ -86,79 +86,79 @@ const instanceBanners = computed(() => {
         fit: fitCss(version.thumbnailFit ?? 'crop'),
         custom: true,
       },
-    ]
+    ];
   }
-  return []
-})
+  return [];
+});
 
 const banners = computed(() => {
-  const instance = instanceBanners.value.filter((item) => !failedBanners.value.has(item.path))
-  return instance.length ? instance : globalBanners.value.filter((item) => !failedBanners.value.has(item.path))
-})
-const { decorativeActive } = useMotion()
-watch(decorativeActive, (active) => (active ? startBannerTimer() : stopBannerTimer()))
-const bannerIndex = ref(0)
-const outgoingBanner = ref<number | null>(null)
-const upcomingBanner = ref(0)
+  const instance = instanceBanners.value.filter((item) => !failedBanners.value.has(item.path));
+  return instance.length ? instance : globalBanners.value.filter((item) => !failedBanners.value.has(item.path));
+});
+const { decorativeActive } = useMotion();
+watch(decorativeActive, (active) => (active ? startBannerTimer() : stopBannerTimer()));
+const bannerIndex = ref(0);
+const outgoingBanner = ref<number | null>(null);
+const upcomingBanner = ref(0);
 const bannerLayers = computed(() =>
   [...new Set([bannerIndex.value, upcomingBanner.value, outgoingBanner.value])]
     .filter((index): index is number => index !== null && !!banners.value[index])
     .sort((a, b) => a - b)
     .map((index) => ({ ...banners.value[index], index }))
-)
-let bannerTimer: ReturnType<typeof setInterval> | null = null
-let playback: CarouselPlayback | null = null
-let playbackKey = ''
+);
+let bannerTimer: ReturnType<typeof setInterval> | null = null;
+let playback: CarouselPlayback | null = null;
+let playbackKey = '';
 /** Only current/next/outgoing DOM images own decoded resources. */
-const readyBanners = new Set<string>()
+const readyBanners = new Set<string>();
 function syncBannerResources() {
-  upcomingBanner.value = playback?.upcomingIndex() ?? bannerIndex.value
-  const retained = new Set(bannerLayers.value.map((item) => item.src))
-  for (const src of readyBanners) if (!retained.has(src)) readyBanners.delete(src)
+  upcomingBanner.value = playback?.upcomingIndex() ?? bannerIndex.value;
+  const retained = new Set(bannerLayers.value.map((item) => item.src));
+  for (const src of readyBanners) if (!retained.has(src)) readyBanners.delete(src);
 }
 function finishBannerExit(index: number, event: TransitionEvent) {
   if (event.propertyName === 'opacity' && outgoingBanner.value === index && bannerIndex.value !== index) {
-    outgoingBanner.value = null
-    syncBannerResources()
+    outgoingBanner.value = null;
+    syncBannerResources();
   }
 }
 const bannerScope = computed(() =>
   instanceBanners.value.some((item) => !failedBanners.value.has(item.path))
     ? `instance:${currentVersion.value?.folder}:${currentVersion.value?.id}`
     : 'global'
-)
+);
 
 function stopBannerTimer() {
   if (playback && playbackKey) {
     try {
-      localStorage.setItem(playbackKey, JSON.stringify(playback.bookmark(Date.now())))
+      localStorage.setItem(playbackKey, JSON.stringify(playback.bookmark(Date.now())));
     } catch {
       /* read-only storage */
     }
   }
-  if (bannerTimer) clearInterval(bannerTimer)
-  bannerTimer = null
+  if (bannerTimer) clearInterval(bannerTimer);
+  bannerTimer = null;
 }
 
 function startBannerTimer() {
-  stopBannerTimer()
-  outgoingBanner.value = null
+  stopBannerTimer();
+  outgoingBanner.value = null;
   if (!banners.value.length) {
-    playback = null
-    playbackKey = ''
-    bannerIndex.value = 0
-    upcomingBanner.value = 0
-    readyBanners.clear()
-    return
+    playback = null;
+    playbackKey = '';
+    bannerIndex.value = 0;
+    upcomingBanner.value = 0;
+    readyBanners.clear();
+    return;
   }
-  playbackKey = 'faionyx.carousel.' + bannerScope.value + (appearancePreview.value?.launchThumbnail.randomPlayback ? '.random' : '')
-  let saved
+  playbackKey = 'faionyx.carousel.' + bannerScope.value + (appearancePreview.value?.launchThumbnail.randomPlayback ? '.random' : '');
+  let saved;
   try {
-    saved = JSON.parse(localStorage.getItem(playbackKey) ?? 'null')
+    saved = JSON.parse(localStorage.getItem(playbackKey) ?? 'null');
   } catch {
     /* invalid bookmark */
   }
-  const settings = appearancePreview.value?.launchThumbnail
+  const settings = appearancePreview.value?.launchThumbnail;
   playback = new CarouselPlayback(
     banners.value.map((item) => ({
       path: item.path,
@@ -167,21 +167,21 @@ function startBannerTimer() {
     Date.now(),
     saved,
     settings?.randomPlayback === true
-  )
-  bannerIndex.value = playback.index
-  syncBannerResources()
-  if (banners.value.length < 2 || !decorativeActive.value) return
+  );
+  bannerIndex.value = playback.index;
+  syncBannerResources();
+  if (banners.value.length < 2 || !decorativeActive.value) return;
   bannerTimer = setInterval(() => {
-    if (document.hidden || !playback) return
-    const nextIdx = playback.peekNext(Date.now())
-    if (nextIdx !== playback.index && !readyBanners.has(banners.value[nextIdx]?.src ?? '')) return // 下一张未就绪，下一拍再试
-    const index = playback.tick(Date.now())
+    if (document.hidden || !playback) return;
+    const nextIdx = playback.peekNext(Date.now());
+    if (nextIdx !== playback.index && !readyBanners.has(banners.value[nextIdx]?.src ?? '')) return; // 下一张未就绪，下一拍再试
+    const index = playback.tick(Date.now());
     if (index !== bannerIndex.value) {
-      outgoingBanner.value = bannerIndex.value
-      bannerIndex.value = index
-      syncBannerResources()
+      outgoingBanner.value = bannerIndex.value;
+      bannerIndex.value = index;
+      syncBannerResources();
     }
-  }, 100)
+  }, 100);
 }
 
 watch(
@@ -194,319 +194,319 @@ watch(
       appearancePreview.value?.launchThumbnail.randomPlayback,
     ]),
   () => {
-    failedBanners.value = new Set()
-    startBannerTimer()
+    failedBanners.value = new Set();
+    startBannerTimer();
   }
-)
+);
 
 function onBannerError(item: { custom: boolean; path: string }) {
-  if (failedBanners.value.has(item.path)) return
-  failedBanners.value = new Set([...failedBanners.value, item.path])
-  bannerIndex.value = 0
-  startBannerTimer()
-  toast('已跳过不可用的启动卡图片；仅显示已勾选且可用的图片', 'error')
+  if (failedBanners.value.has(item.path)) return;
+  failedBanners.value = new Set([...failedBanners.value, item.path]);
+  bannerIndex.value = 0;
+  startBannerTimer();
+  toast('已跳过不可用的启动卡图片；仅显示已勾选且可用的图片', 'error');
 }
 
 // ---------------- 启动、设置与日志 ----------------
-const launching = computed(() => store.launchState?.status === 'launching')
-const running = computed(() => store.launchState?.status === 'running')
+const launching = computed(() => store.launchState?.status === 'launching');
+const running = computed(() => store.launchState?.status === 'running');
 const launchFailed = computed(
   () => store.launchState?.status === 'error' || (store.launchState?.status === 'exited' && store.launchState.code !== 0)
-)
-const percent = computed(() => (store.progress ? Math.round(progressMono(store.progress) * 100) : 0))
+);
+const percent = computed(() => (store.progress ? Math.round(progressMono(store.progress) * 100) : 0));
 const launchText = computed(() => {
-  if (launching.value) return store.progress?.text || '正在启动…'
-  return running.value ? '再次启动' : launchFailed.value ? '重新启动' : '开始游戏'
-})
+  if (launching.value) return store.progress?.text || '正在启动…';
+  return running.value ? '再次启动' : launchFailed.value ? '重新启动' : '开始游戏';
+});
 // ---------------- 快捷行悬浮浮块（跟随指针在三格间平滑滑动） ----------------
-const runtimeHover = ref(-1)
-const runtimeStrip = ref<HTMLElement | null>(null)
-const runtimeBlob = reactive({ left: 0, width: 0 })
+const runtimeHover = ref(-1);
+const runtimeStrip = ref<HTMLElement | null>(null);
+const runtimeBlob = reactive({ left: 0, width: 0 });
 function updateRuntimeBlob() {
-  const strip = runtimeStrip.value
-  if (!strip || runtimeHover.value < 0) return
-  const items = strip.querySelectorAll<HTMLElement>('.runtime-item')
-  const target = items[runtimeHover.value]
-  if (!target) return
-  runtimeBlob.left = target.offsetLeft
-  runtimeBlob.width = target.offsetWidth
+  const strip = runtimeStrip.value;
+  if (!strip || runtimeHover.value < 0) return;
+  const items = strip.querySelectorAll<HTMLElement>('.runtime-item');
+  const target = items[runtimeHover.value];
+  if (!target) return;
+  runtimeBlob.left = target.offsetLeft;
+  runtimeBlob.width = target.offsetWidth;
 }
-watch(runtimeHover, () => nextTick(updateRuntimeBlob))
+watch(runtimeHover, () => nextTick(updateRuntimeBlob));
 const runtimeBlobStyle = computed(() => ({
   left: runtimeBlob.left + 'px',
   width: runtimeBlob.width + 'px',
-}))
+}));
 
 const heroStatus = computed(() => {
-  const version = currentVersion.value
-  if (!version) return { text: '等待选择', tone: 'idle' }
-  if (running.value) return { text: '游戏运行中', tone: 'running' }
-  if (launching.value) return { text: '正在准备', tone: 'running' }
+  const version = currentVersion.value;
+  if (!version) return { text: '等待选择', tone: 'idle' };
+  if (running.value) return { text: '游戏运行中', tone: 'running' };
+  if (launching.value) return { text: '正在准备', tone: 'running' };
   if (launchFailed.value || version.failed || version.incomplete) {
-    return { text: '需要检查', tone: 'error' }
+    return { text: '需要检查', tone: 'error' };
   }
-  return { text: '就绪', tone: 'ready' }
-})
+  return { text: '就绪', tone: 'ready' };
+});
 
 async function startVersion(id: string, createCommandWorld = false) {
-  if (!id) return
-  selectedId.value = id
+  if (!id) return;
+  selectedId.value = id;
   // 多开支持：仅「正在启动」的重复点击拦截；已有游戏运行中仍可再启动新实例
   if (launching.value) {
-    toast('正在启动中，请稍候', 'info')
-    return
+    toast('正在启动中，请稍候', 'info');
+    return;
   }
   if (!store.selectedAccount) {
-    toast('请先在账户页选择或添加账号', 'error')
-    store.currentView = 'accounts'
-    return
+    toast('请先在账户页选择或添加账号', 'error');
+    store.currentView = 'accounts';
+    return;
   }
-  store.launchingVersionId = id
-  store.launchingFolder = currentVersion.value?.folder ?? store.settings?.activeFolder ?? store.settings?.gameDir ?? ''
-  store.launchState = { status: 'launching', text: '正在准备启动…' }
+  store.launchingVersionId = id;
+  store.launchingFolder = currentVersion.value?.folder ?? store.settings?.activeFolder ?? store.settings?.gameDir ?? '';
+  store.launchState = { status: 'launching', text: '正在准备启动…' };
   try {
-    await launchGame(id, undefined, currentVersion.value?.folder, createCommandWorld)
+    await launchGame(id, undefined, currentVersion.value?.folder, createCommandWorld);
   } catch (error) {
-    store.launchState = { status: 'error', text: errText(error) }
-    toast('启动失败：' + errText(error), 'error')
+    store.launchState = { status: 'error', text: errText(error) };
+    toast('启动失败：' + errText(error), 'error');
   }
 }
 
-const restartBusy = ref(false)
-const restartConfirm = ref<{ id: string; folder: string; token: string } | null>(null)
+const restartBusy = ref(false);
+const restartConfirm = ref<{ id: string; folder: string; token: string } | null>(null);
 async function quickRestart(version: InstalledVersion, token?: string) {
-  if (restartBusy.value) return
-  restartBusy.value = true
-  cardMenu.id = ''
+  if (restartBusy.value) return;
+  restartBusy.value = true;
+  cardMenu.id = '';
   try {
-    const folder = version.folder ?? store.settings?.activeFolder ?? ''
-    const result = await restartGame(version.id, folder, token)
-    restartConfirm.value = result.requiresForce ? { id: version.id, folder, token: result.forceToken! } : null
-    if (!result.requiresForce) toast('已确认退出并重新启动同一实例', 'success')
+    const folder = version.folder ?? store.settings?.activeFolder ?? '';
+    const result = await restartGame(version.id, folder, token);
+    restartConfirm.value = result.requiresForce ? { id: version.id, folder, token: result.forceToken! } : null;
+    if (!result.requiresForce) toast('已确认退出并重新启动同一实例', 'success');
   } catch (e) {
-    toast('重启失败：' + errText(e), 'error')
-    restartConfirm.value = null
+    toast('重启失败：' + errText(e), 'error');
+    restartConfirm.value = null;
   } finally {
-    restartBusy.value = false
+    restartBusy.value = false;
   }
 }
 async function cancelRestartPrompt() {
-  await cancelGameRestart()
-  restartConfirm.value = null
+  await cancelGameRestart();
+  restartConfirm.value = null;
 }
 
 async function onLaunchClick() {
-  if (!launching.value) await startVersion(selectedId.value)
+  if (!launching.value) await startVersion(selectedId.value);
 }
 
 function openVersionSettings() {
-  if (selectedId.value) localStorage.setItem(LAST_VERSION_KEY, selectedId.value)
-  store.currentView = 'game'
+  if (selectedId.value) localStorage.setItem(LAST_VERSION_KEY, selectedId.value);
+  store.currentView = 'game';
 }
 
-const logOpen = ref(false)
-const logBody = ref<HTMLElement | null>(null)
-const exportingLogs = ref(false)
+const logOpen = ref(false);
+const logBody = ref<HTMLElement | null>(null);
+const exportingLogs = ref(false);
 
 watch(
   () => store.logs.length,
   async () => {
-    if (!logOpen.value) return
-    await nextTick()
-    if (logBody.value) logBody.value.scrollTop = logBody.value.scrollHeight
+    if (!logOpen.value) return;
+    await nextTick();
+    if (logBody.value) logBody.value.scrollTop = logBody.value.scrollHeight;
   }
-)
+);
 
 async function exportFailureLogs() {
-  if (exportingLogs.value) return
-  exportingLogs.value = true
+  if (exportingLogs.value) return;
+  exportingLogs.value = true;
   try {
-    const saved = await exportLaunchLogs(store.launchingVersionId || selectedId.value)
-    if (saved) toast(`错误日志已导出：${saved}`, 'success')
+    const saved = await exportLaunchLogs(store.launchingVersionId || selectedId.value);
+    if (saved) toast(`错误日志已导出：${saved}`, 'success');
   } catch (error) {
-    toast(`导出失败：${errText(error)}`, 'error')
+    toast(`导出失败：${errText(error)}`, 'error');
   } finally {
-    exportingLogs.value = false
+    exportingLogs.value = false;
   }
 }
 
 // ---------------- Java 与内存摘要 ----------------
-const javas = ref<JavaInfo[]>([])
-const javaChecked = ref(false)
+const javas = ref<JavaInfo[]>([]);
+const javaChecked = ref(false);
 const javaText = computed(() => {
-  if (currentVersion.value?.javaAuto) return '自动选择'
-  const versionJava = currentVersion.value?.javaPath || (!store.settings?.javaAuto ? store.settings?.javaPath : '')
+  if (currentVersion.value?.javaAuto) return '自动选择';
+  const versionJava = currentVersion.value?.javaPath || (!store.settings?.javaAuto ? store.settings?.javaPath : '');
   if (versionJava) {
-    const match = javas.value.find((java) => java.path === versionJava)
-    return match ? `Java ${match.version} (${match.architecture ?? (match.is64Bit ? '64-bit' : '32-bit')})` : versionJava
+    const match = javas.value.find((java) => java.path === versionJava);
+    return match ? `Java ${match.version} (${match.architecture ?? (match.is64Bit ? '64-bit' : '32-bit')})` : versionJava;
   }
-  return '自动选择'
-})
-const javaPicker = ref<{ id: string; folder?: string; name: string; choice: string } | null>(null)
-const javaSaving = ref(false)
+  return '自动选择';
+});
+const javaPicker = ref<{ id: string; folder?: string; name: string; choice: string } | null>(null);
+const javaSaving = ref(false);
 function openJavaPicker() {
-  const version = currentVersion.value
+  const version = currentVersion.value;
   if (!version) {
-    openSettings('java')
-    return
+    openSettings('java');
+    return;
   }
   javaPicker.value = {
     id: version.id,
     folder: version.folder,
     name: versionLabel(version),
     choice: version.javaAuto ? '@auto' : version.javaPath || '@inherit',
-  }
-  void loadJavaSummaryImpl()
+  };
+  void loadJavaSummaryImpl();
 }
 async function saveJavaChoice() {
-  const target = javaPicker.value
-  if (!target || javaSaving.value) return
-  javaSaving.value = true
+  const target = javaPicker.value;
+  if (!target || javaSaving.value) return;
+  javaSaving.value = true;
   try {
-    await setVersionJava(target.id, target.choice.startsWith('@') ? '' : target.choice, target.choice === '@auto', target.folder)
-    await refreshInstalled()
-    javaPicker.value = null
-    toast('已更新此实例的 Java 选择', 'success')
+    await setVersionJava(target.id, target.choice.startsWith('@') ? '' : target.choice, target.choice === '@auto', target.folder);
+    await refreshInstalled();
+    javaPicker.value = null;
+    toast('已更新此实例的 Java 选择', 'success');
   } catch (error) {
-    toast('保存失败：' + errText(error), 'error')
+    toast('保存失败：' + errText(error), 'error');
   } finally {
-    javaSaving.value = false
+    javaSaving.value = false;
   }
 }
 const memoryText = computed(() => {
   // 与设置实时同步：开启自动分配显示「自动」，关闭显示手动数值
-  if (store.settings?.memoryAuto === true) return '自动'
-  const mb = store.settings?.memoryMB ?? 0
-  if (!mb) return '—'
-  return mb % 1024 === 0 ? `${mb / 1024} GB` : `${(mb / 1024).toFixed(1)} GB`
-})
+  if (store.settings?.memoryAuto === true) return '自动';
+  const mb = store.settings?.memoryMB ?? 0;
+  if (!mb) return '—';
+  return mb % 1024 === 0 ? `${mb / 1024} GB` : `${(mb / 1024).toFixed(1)} GB`;
+});
 
 function loadJavaSummary() {
-  return trackBootTask(loadJavaSummaryImpl, 800)
+  return trackBootTask(loadJavaSummaryImpl, 800);
 }
 async function loadJavaSummaryImpl() {
   try {
-    javas.value = await listJava()
+    javas.value = await listJava();
   } catch {
-    javas.value = []
+    javas.value = [];
   } finally {
-    javaChecked.value = true
+    javaChecked.value = true;
   }
 }
 
 // ---------------- 账户与 3D 皮肤 ----------------
-const accountName = computed(() => store.selectedAccount?.username ?? '未登录')
+const accountName = computed(() => store.selectedAccount?.username ?? '未登录');
 const accountTypeLabel = computed(() => {
-  const account = store.selectedAccount
-  if (!account) return '添加账户后开始游戏'
-  if (account.type === 'microsoft') return 'Microsoft 正版账户'
-  if (account.type === 'yggdrasil') return account.providerName ?? '外置 Yggdrasil'
-  return '离线账户'
-})
+  const account = store.selectedAccount;
+  if (!account) return '添加账户后开始游戏';
+  if (account.type === 'microsoft') return 'Microsoft 正版账户';
+  if (account.type === 'yggdrasil') return account.providerName ?? '外置 Yggdrasil';
+  return '离线账户';
+});
 
-const skinProfile = ref<ProfileSkins | null>(null)
-const skinLoading = ref(false)
-const skinError = ref('')
-let skinRequestToken = 0
+const skinProfile = ref<ProfileSkins | null>(null);
+const skinLoading = ref(false);
+const skinError = ref('');
+let skinRequestToken = 0;
 
-const currentSkin = computed(() => skinProfile.value?.skins[0] ?? null)
-const skinSrc = computed(() => currentSkin.value?.dataUrl ?? '')
-const skinVariant = computed<SkinVariant>(() => (currentSkin.value?.variant === 'slim' ? 'slim' : 'classic'))
+const currentSkin = computed(() => skinProfile.value?.skins[0] ?? null);
+const skinSrc = computed(() => currentSkin.value?.dataUrl ?? '');
+const skinVariant = computed<SkinVariant>(() => (currentSkin.value?.variant === 'slim' ? 'slim' : 'classic'));
 /** 首页 3D 预览与皮肤页共用披风渲染：有披风则显示，无则不显示（无手动开关） */
-const activeCape = computed(() => skinProfile.value?.capes?.find((c) => c.active)?.dataUrl ?? '')
+const activeCape = computed(() => skinProfile.value?.capes?.find((c) => c.active)?.dataUrl ?? '');
 
 function reloadSkin(refresh = false) {
-  return trackBootTask(() => reloadSkinImpl(refresh), 800)
+  return trackBootTask(() => reloadSkinImpl(refresh), 800);
 }
 async function reloadSkinImpl(refresh = false) {
-  const request = ++skinRequestToken
-  skinError.value = ''
+  const request = ++skinRequestToken;
+  skinError.value = '';
   if (!store.selectedAccount) {
-    skinProfile.value = null
-    skinLoading.value = false
-    return
+    skinProfile.value = null;
+    skinLoading.value = false;
+    return;
   }
-  skinLoading.value = true
+  skinLoading.value = true;
   try {
-    const profile = await getSkinProfile(refresh)
-    if (request === skinRequestToken) skinProfile.value = profile
+    const profile = await getSkinProfile(refresh);
+    if (request === skinRequestToken) skinProfile.value = profile;
   } catch (error) {
-    if (request === skinRequestToken) skinError.value = errText(error)
+    if (request === skinRequestToken) skinError.value = errText(error);
   } finally {
-    if (request === skinRequestToken) skinLoading.value = false
+    if (request === skinRequestToken) skinLoading.value = false;
   }
 }
 
 watch(
   () => store.selectedAccount?.id,
   () => {
-    skinProfile.value = null
-    void reloadSkin()
+    skinProfile.value = null;
+    void reloadSkin();
   }
-)
+);
 
 // ---------------- 最近游戏与菜单 ----------------
 // 收藏优先 + 最近游玩排序；启动某实例后 recordLastPlayed 更新使其自然提前。
 // 选中实例不再直接置顶——只有启动过才排到第一个。
-const wideRecent = ref(window.innerWidth >= 1500)
+const wideRecent = ref(window.innerWidth >= 1500);
 const updateRecentWidth = () => {
-  wideRecent.value = window.innerWidth >= 1500
-}
-onMounted(() => window.addEventListener('resize', updateRecentWidth))
-onUnmounted(() => window.removeEventListener('resize', updateRecentWidth))
-const recent = computed(() => sortWithFavorite(activeInstalled.value).slice(0, wideRecent.value ? 8 : 4))
-const sortedInstalled = computed(() => sortWithFavorite(store.installed))
+  wideRecent.value = window.innerWidth >= 1500;
+};
+onMounted(() => window.addEventListener('resize', updateRecentWidth));
+onUnmounted(() => window.removeEventListener('resize', updateRecentWidth));
+const recent = computed(() => sortWithFavorite(activeInstalled.value).slice(0, wideRecent.value ? 8 : 4));
+const sortedInstalled = computed(() => sortWithFavorite(store.installed));
 
-const versionMenu = reactive({ open: false, top: 0, left: 0, width: 230 })
-const folderListOpen = ref(false)
-const folderSwitchBusy = ref(false)
+const versionMenu = reactive({ open: false, top: 0, left: 0, width: 230 });
+const folderListOpen = ref(false);
+const folderSwitchBusy = ref(false);
 async function chooseGameFolder(folder: string) {
-  if (folderSwitchBusy.value) return
-  folderSwitchBusy.value = true
+  if (folderSwitchBusy.value) return;
+  folderSwitchBusy.value = true;
   try {
-    await setActiveFolder(folder)
-    store.settings = await getSettings()
-    store.resourceVersionId = ''
-    await refreshInstalled()
-    folderListOpen.value = false
+    await setActiveFolder(folder);
+    store.settings = await getSettings();
+    store.resourceVersionId = '';
+    await refreshInstalled();
+    folderListOpen.value = false;
   } catch (error) {
-    toast(errText(error), 'error')
+    toast(errText(error), 'error');
   } finally {
-    folderSwitchBusy.value = false
+    folderSwitchBusy.value = false;
   }
 }
-const versionMenuButton = ref<HTMLElement | null>(null)
+const versionMenuButton = ref<HTMLElement | null>(null);
 
 function toggleVersionMenu() {
   if (!versionMenu.open && versionMenuButton.value) {
-    const bounds = versionMenuButton.value.getBoundingClientRect()
-    versionMenu.top = Math.min(window.innerHeight - 300, bounds.bottom + 8)
-    versionMenu.left = Math.max(8, Math.min(window.innerWidth - 250, bounds.right - 230))
+    const bounds = versionMenuButton.value.getBoundingClientRect();
+    versionMenu.top = Math.min(window.innerHeight - 300, bounds.bottom + 8);
+    versionMenu.left = Math.max(8, Math.min(window.innerWidth - 250, bounds.right - 230));
   }
-  versionMenu.open = !versionMenu.open
+  versionMenu.open = !versionMenu.open;
 }
 
 function chooseVersion(id: string) {
-  selectedId.value = id
-  versionMenu.open = false
+  selectedId.value = id;
+  versionMenu.open = false;
 }
 
-const cardMenu = reactive({ id: '', top: 0, left: 0 })
-const cardMenuVersion = computed(() => store.installed.find((version) => version.id === cardMenu.id))
+const cardMenu = reactive({ id: '', top: 0, left: 0 });
+const cardMenuVersion = computed(() => store.installed.find((version) => version.id === cardMenu.id));
 
 function openCardMenu(event: MouseEvent, id: string) {
-  const bounds = (event.currentTarget as HTMLElement).getBoundingClientRect()
-  cardMenu.id = cardMenu.id === id ? '' : id
-  cardMenu.top = Math.max(8, Math.min(window.innerHeight - 272, bounds.bottom + 6))
-  cardMenu.left = Math.max(8, Math.min(window.innerWidth - 244, bounds.right - 232))
+  const bounds = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  cardMenu.id = cardMenu.id === id ? '' : id;
+  cardMenu.top = Math.max(8, Math.min(window.innerHeight - 272, bounds.bottom + 6));
+  cardMenu.left = Math.max(8, Math.min(window.innerWidth - 244, bounds.right - 232));
 }
 
 async function openVersionFolder(id: string) {
-  cardMenu.id = ''
+  cardMenu.id = '';
   try {
-    await openDir(`versions/${id}`)
+    await openDir(`versions/${id}`);
   } catch (error) {
-    toast('打开文件夹失败：' + errText(error), 'error')
+    toast('打开文件夹失败：' + errText(error), 'error');
   }
 }
 
@@ -514,41 +514,41 @@ const removeModal = reactive({
   open: false,
   target: null as InstalledVersion | null,
   busy: false,
-})
+});
 
 function requestRemove(version: InstalledVersion) {
-  cardMenu.id = ''
-  removeModal.target = version
-  removeModal.open = true
+  cardMenu.id = '';
+  removeModal.target = version;
+  removeModal.open = true;
 }
 
 async function confirmRemove() {
-  const version = removeModal.target
-  if (!version || removeModal.busy) return
-  removeModal.busy = true
+  const version = removeModal.target;
+  if (!version || removeModal.busy) return;
+  removeModal.busy = true;
   try {
-    await removeVersion(version.id, version.folder)
-    await refreshInstalled()
-    removeModal.open = false
-    toast(`已删除 ${version.id}`, 'success')
+    await removeVersion(version.id, version.folder);
+    await refreshInstalled();
+    removeModal.open = false;
+    toast(`已删除 ${version.id}`, 'success');
   } catch (error) {
-    toast('删除失败：' + errText(error), 'error')
+    toast('删除失败：' + errText(error), 'error');
   } finally {
-    removeModal.busy = false
+    removeModal.busy = false;
   }
 }
 
 onMounted(() => {
-  startBannerTimer()
-  void loadJavaSummary()
-  void reloadSkin()
-})
+  startBannerTimer();
+  void loadJavaSummary();
+  void reloadSkin();
+});
 
 onUnmounted(() => {
-  stopBannerTimer()
-  readyBanners.clear()
-  skinRequestToken++
-})
+  stopBannerTimer();
+  readyBanners.clear();
+  skinRequestToken++;
+});
 </script>
 
 <template>
@@ -981,8 +981,8 @@ onUnmounted(() => {
           data-ui="HomeView:3e8d19a019ab"
           class="menu-item"
           @click="
-            openInstanceCenter(cardMenuVersion)
-            cardMenu.id = ''
+            openInstanceCenter(cardMenuVersion);
+            cardMenu.id = '';
           "
         >
           管理实例
@@ -991,8 +991,8 @@ onUnmounted(() => {
           data-ui="HomeView:a0dd508b6e16"
           class="menu-item"
           @click="
-            startVersion(cardMenuVersion.id)
-            cardMenu.id = ''
+            startVersion(cardMenuVersion.id);
+            cardMenu.id = '';
           "
         >
           启动实例
@@ -1003,8 +1003,8 @@ onUnmounted(() => {
           title="新建允许命令的创造模式测试世界并自动进入（Minecraft 1.20+）"
           :disabled="running || launching || restartBusy"
           @click="
-            startVersion(cardMenuVersion.id, true)
-            cardMenu.id = ''
+            startVersion(cardMenuVersion.id, true);
+            cardMenu.id = '';
           "
         >
           启动并创建命令世界
@@ -1021,8 +1021,8 @@ onUnmounted(() => {
           data-ui="HomeView:a83bf9067bf3"
           class="menu-item"
           @click="
-            toggleFavorite(cardMenuVersion.id, cardMenuVersion.folder)
-            cardMenu.id = ''
+            toggleFavorite(cardMenuVersion.id, cardMenuVersion.folder);
+            cardMenu.id = '';
           "
         >
           {{ isFavorite(cardMenuVersion.id, cardMenuVersion.folder) ? '取消收藏' : '收藏实例' }}
@@ -1127,8 +1127,8 @@ onUnmounted(() => {
             class="btn btn-ghost"
             :disabled="javaSaving"
             @click="
-              javaPicker = null
-              openSettings('java')
+              javaPicker = null;
+              openSettings('java');
             "
           >
             管理 Java

@@ -10,6 +10,6 @@ function isCompleteEmptyNativeSample(sample) {
     ['counterErrors', 'partialRows', 'invalidatedRows', 'lifecycleInvalidations', 'identityInvalidations', 'optionalCounterErrors'].every(
       (key) => sample[key] === undefined || (Array.isArray(sample[key]) && sample[key].length === 0)
     )
-  )
+  );
 }
-module.exports = { isCompleteEmptyNativeSample }
+module.exports = { isCompleteEmptyNativeSample };

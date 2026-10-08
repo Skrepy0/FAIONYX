@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
-import type { InstalledVersion } from '@shared/types'
-import type { ModVersionChoices, ModChangePlan } from '@shared/modManagement'
-import { errText } from '../api'
+import { onMounted, onUnmounted, ref } from 'vue';
+import type { InstalledVersion } from '@shared/types';
+import type { ModVersionChoices, ModChangePlan } from '@shared/modManagement';
+import { errText } from '../api';
 const props = defineProps<{ source: InstalledVersion; fileName: string }>(),
-  emit = defineEmits<{ (e: 'close'): void; (e: 'done'): void }>()
+  emit = defineEmits<{ (e: 'close'): void; (e: 'done'): void }>();
 const choices = ref<ModVersionChoices>(),
   plan = ref<ModChangePlan>(),
   loading = ref(true),
@@ -12,77 +12,77 @@ const choices = ref<ModVersionChoices>(),
   applying = ref(false),
   error = ref(''),
   selected = ref(''),
-  confirmed = ref(false)
+  confirmed = ref(false);
 let generation = 0,
   loadGeneration = 0,
-  disposed = false
+  disposed = false;
 function discard(id?: string) {
-  if (id) void window.faionyx.invoke('mods:versionDiscard', id).catch(() => {})
+  if (id) void window.faionyx.invoke('mods:versionDiscard', id).catch(() => {});
 }
 onUnmounted(() => {
-  disposed = true
-  generation++
-  loadGeneration++
-  discard(plan.value?.id)
-  discard(choices.value?.id)
-})
+  disposed = true;
+  generation++;
+  loadGeneration++;
+  discard(plan.value?.id);
+  discard(choices.value?.id);
+});
 async function load() {
-  const g = ++loadGeneration
-  loading.value = true
-  error.value = ''
+  const g = ++loadGeneration;
+  loading.value = true;
+  error.value = '';
   try {
     const c = (await window.faionyx.invoke(
       'mods:versionChoices',
       props.source.id,
       props.source.folder,
       props.fileName
-    )) as ModVersionChoices
+    )) as ModVersionChoices;
     if (disposed || g !== loadGeneration) {
-      discard(c.id)
-      return
+      discard(c.id);
+      return;
     }
-    discard(choices.value?.id)
-    choices.value = c
+    discard(choices.value?.id);
+    choices.value = c;
   } catch (e) {
-    if (!disposed && g === loadGeneration) error.value = errText(e)
+    if (!disposed && g === loadGeneration) error.value = errText(e);
   } finally {
-    if (!disposed && g === loadGeneration) loading.value = false
+    if (!disposed && g === loadGeneration) loading.value = false;
   }
 }
 async function select(fileId: string) {
-  const g = ++generation
-  selected.value = fileId
-  discard(plan.value?.id)
-  plan.value = undefined
-  checking.value = true
-  confirmed.value = false
-  error.value = ''
+  const g = ++generation;
+  selected.value = fileId;
+  discard(plan.value?.id);
+  plan.value = undefined;
+  checking.value = true;
+  confirmed.value = false;
+  error.value = '';
   try {
-    const p = (await window.faionyx.invoke('mods:versionPlan', choices.value!.id, fileId)) as ModChangePlan
-    if (!disposed && g === generation) plan.value = p
-    else discard(p.id)
+    const p = (await window.faionyx.invoke('mods:versionPlan', choices.value!.id, fileId)) as ModChangePlan;
+    if (!disposed && g === generation) plan.value = p;
+    else discard(p.id);
   } catch (e) {
-    if (!disposed && g === generation) error.value = errText(e)
+    if (!disposed && g === generation) error.value = errText(e);
   } finally {
-    if (!disposed && g === generation) checking.value = false
+    if (!disposed && g === generation) checking.value = false;
   }
 }
 async function apply() {
-  if (!plan.value) return
-  applying.value = true
+  if (!plan.value) return;
+  applying.value = true;
   try {
-    await window.faionyx.invoke('mods:versionApply', plan.value.id, confirmed.value)
+    await window.faionyx.invoke('mods:versionApply', plan.value.id, confirmed.value);
     if (!disposed) {
-      emit('done')
-      emit('close')
+      emit('done');
+      emit('close');
     }
   } catch (e) {
-    if (!disposed) error.value = errText(e)
+    if (!disposed) error.value = errText(e);
   } finally {
-    if (!disposed) applying.value = false
+    if (!disposed) applying.value = false;
   }
 }
-onMounted(load)
+onMounted(load);
 </script>
 <template>
   <Teleport to="body"

@@ -1,12 +1,12 @@
 // Pure derivation from original samples. No frame insertion, outlier deletion,
 // percentage guess, forced GC, cache purge or working-set trim is permitted.
 const assert = require('node:assert/strict'),
-  crypto = require('node:crypto')
-const { stats, percentile } = require('./resource-mac113-native.cjs')
-const { assertCompletedVisibility, assertNativeRestored } = require('./resource-visibility113.cjs')
-const { frameStats } = require('./resource-frames113.cjs')
-const { isCompleteEmptyNativeSample } = require('./resource-sample113.cjs')
-const provenance = require('./resource-provenance113.cjs')
+  crypto = require('node:crypto');
+const { stats, percentile } = require('./resource-mac113-native.cjs');
+const { assertCompletedVisibility, assertNativeRestored } = require('./resource-visibility113.cjs');
+const { frameStats } = require('./resource-frames113.cjs');
+const { isCompleteEmptyNativeSample } = require('./resource-sample113.cjs');
+const provenance = require('./resource-provenance113.cjs');
 // Restore itself can complete between samples. Its actual endpoint latency is
 // measured separately; no artificial hold is inserted to manufacture samples.
 const phases = {
@@ -25,114 +25,114 @@ const phases = {
     'hidden',
     'restored',
   ],
-}
-const shaJSON = (value) => crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex')
+};
+const shaJSON = (value) => crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
 function signProbability(deltas) {
   const nonzero = deltas.filter((d) => d !== 0),
     n = nonzero.length,
-    k = nonzero.filter((d) => d > 0).length
+    k = nonzero.filter((d) => d > 0).length;
   let term = 2 ** -n,
-    p = 0
+    p = 0;
   for (let i = 0; i <= n; i++) {
-    if (i >= k) p += term
-    term *= (n - i) / (i + 1)
+    if (i >= k) p += term;
+    term *= (n - i) / (i + 1);
   }
   return {
     nonzeroPairs: n,
     regressingPairs: k,
     oneSidedExactProbability: n ? p : 1,
     scope: 'Exact one-sided paired sign test; no arbitrary allowed performance percentage',
-  }
+  };
 }
 // Cross-host review supplies an explicitly approved and byte-verified original
 // collector snapshot. Without it, the exact current host sources are mandatory.
 function measurements(group, { expectedCollectorSources } = {}) {
-  const values = {}
+  const values = {};
   for (const label of ['cold', 'warm']) {
-    const proof = group[label]
-    assert.equal(proof.platform, 'darwin')
-    provenance.assertCollectorSources(proof, expectedCollectorSources)
-    assert.equal(proof.complete, true)
-    assert.equal(proof.collectionComplete, true, 'Mac requires the complete original collection')
-    assert.equal(proof.functionalPass, true, 'Mac permits no historical restore failure exception')
-    assert.deepEqual(proof.functionalFailures, [])
-    assert.equal(proof.allowLegacyRestore112, false, 'A Windows legacy exception cannot be applied to Mac')
-    assert.equal(proof.protocol?.normalWorkloadBeforeNativeHide, true)
-    assert.equal(proof.arch, 'arm64')
+    const proof = group[label];
+    assert.equal(proof.platform, 'darwin');
+    provenance.assertCollectorSources(proof, expectedCollectorSources);
+    assert.equal(proof.complete, true);
+    assert.equal(proof.collectionComplete, true, 'Mac requires the complete original collection');
+    assert.equal(proof.functionalPass, true, 'Mac permits no historical restore failure exception');
+    assert.deepEqual(proof.functionalFailures, []);
+    assert.equal(proof.allowLegacyRestore112, false, 'A Windows legacy exception cannot be applied to Mac');
+    assert.equal(proof.protocol?.normalWorkloadBeforeNativeHide, true);
+    assert.equal(proof.arch, 'arm64');
     assert.equal(
       proof.viewportContract?.renderer?.reduceMotion,
       false,
       'Actual native renderer full-motion condition is required; OS reduced motion cannot silently pause resource workloads'
-    )
-    assert.equal(proof.nativeSamplerExit.code, 0)
-    assert.equal(proof.nativeCounterErrors.length, 0, 'Native primary counter failures invalidate acceptance, never erased')
-    const exitSamples = proof.nativeOwnedExit?.samples
+    );
+    assert.equal(proof.nativeSamplerExit.code, 0);
+    assert.equal(proof.nativeCounterErrors.length, 0, 'Native primary counter failures invalidate acceptance, never erased');
+    const exitSamples = proof.nativeOwnedExit?.samples;
     assert(
       proof.nativeOwnedExit?.complete &&
         Array.isArray(exitSamples) &&
         exitSamples.length >= 2 &&
         exitSamples.slice(-2).every(isCompleteEmptyNativeSample),
       'Native owned tree requires two original complete empty samples after normal app exit'
-    )
+    );
     assert(
       Number.isFinite(exitSamples.at(-2).atUnixMs) &&
         Number.isFinite(exitSamples.at(-1).atUnixMs) &&
         exitSamples.at(-1).atUnixMs > exitSamples.at(-2).atUnixMs,
       'Native exit observations must retain increasing original timestamps'
-    )
-    values[label + '/nativeStartupReadyMs'] = proof.nativeStartupReadyMs
-    values[label + '/interactiveMs'] = proof.interactiveMs
+    );
+    values[label + '/nativeStartupReadyMs'] = proof.nativeStartupReadyMs;
+    values[label + '/interactiveMs'] = proof.interactiveMs;
     for (const name of phases[label]) {
-      const phase = proof.nativeSummary[label + '/' + name]
-      assert(phase, 'Missing original phase ' + label + '/' + name)
-      assert(phase.validFullFootprintSamples >= 2, 'Insufficient complete native samples ' + label + '/' + name)
-      assert.equal(phase.counterErrors.length, 0)
-      assert.equal(phase.cpuUnitsQualified, true, 'Original Mach CPU ticks and actual native timebase are mandatory')
+      const phase = proof.nativeSummary[label + '/' + name];
+      assert(phase, 'Missing original phase ' + label + '/' + name);
+      assert(phase.validFullFootprintSamples >= 2, 'Insufficient complete native samples ' + label + '/' + name);
+      assert.equal(phase.counterErrors.length, 0);
+      assert.equal(phase.cpuUnitsQualified, true, 'Original Mach CPU ticks and actual native timebase are mandatory');
       for (const metric of ['physicalFootprintBytes', 'residentSizeBytes'])
-        for (const stat of ['median', 'p95', 'sampledPeak']) values[label + '/' + name + '/' + metric + '/' + stat] = phase[metric][stat]
-      values[label + '/' + name + '/cpuMs'] = phase.cpuMs
-      values[label + '/' + name + '/pageFaults'] = phase.pageFaults
-      values[label + '/' + name + '/readBytes'] = phase.readBytes
-      values[label + '/' + name + '/writeBytes'] = phase.writeBytes
+        for (const stat of ['median', 'p95', 'sampledPeak']) values[label + '/' + name + '/' + metric + '/' + stat] = phase[metric][stat];
+      values[label + '/' + name + '/cpuMs'] = phase.cpuMs;
+      values[label + '/' + name + '/pageFaults'] = phase.pageFaults;
+      values[label + '/' + name + '/readBytes'] = phase.readBytes;
+      values[label + '/' + name + '/writeBytes'] = phase.writeBytes;
     }
     for (const op of proof.operations.filter((r) => r.name.startsWith('resource-hold '))) {
-      assert(Array.isArray(op.frames) && op.frames.length >= 3, 'Original RAF records required')
+      assert(Array.isArray(op.frames) && op.frames.length >= 3, 'Original RAF records required');
       assert(
         op.frames.every((f) => f.hidden === false),
         'Visible phase must retain actual visible RAF records'
-      )
+      );
       assert(
         Number.isFinite(op.wallWindow?.startUnixMs) &&
           Number.isFinite(op.wallWindow?.endUnixMs) &&
           op.wallWindow.endUnixMs > op.wallWindow.startUnixMs,
         'Original full wall window required'
-      )
+      );
       const measured = frameStats(op),
-        key = label + '/' + op.name.slice('resource-hold '.length)
-      values[key + '/frameGapP95Ms'] = measured.gapP95Ms
-      values[key + '/frameGapMaxMs'] = measured.gapMaxMs
-      values[key + '/frameInitialGapMs'] = measured.initialGapMs
-      values[key + '/frameTailGapMs'] = measured.tailGapMs
-      values[key + '/callbackRatePerSecond'] = measured.callbackRatePerSecond
+        key = label + '/' + op.name.slice('resource-hold '.length);
+      values[key + '/frameGapP95Ms'] = measured.gapP95Ms;
+      values[key + '/frameGapMaxMs'] = measured.gapMaxMs;
+      values[key + '/frameInitialGapMs'] = measured.initialGapMs;
+      values[key + '/frameTailGapMs'] = measured.tailGapMs;
+      values[key + '/callbackRatePerSecond'] = measured.callbackRatePerSecond;
     }
   }
-  assertCompletedVisibility(group.warm)
-  assertNativeRestored(group.warm.afterRestoredVisibility, group.warm.hiddenWindowIdentity)
-  assert.equal(group.warm.editorCycles.length, 20)
-  assert.equal(group.warm.mascotContacts.contacts, 32, 'Exactly 32 original accepted contacts required')
-  assert.equal(group.warm.mascotContacts.sounds, 32, 'Exactly 32 original logical sound plays required; physical listening is separate')
-  assert.equal(group.warm.mascotContacts.phase, 'front', 'Mascot must return to original front state')
-  assert.equal(group.warm.mascotContacts.queue, 0, 'Original mascot queue must be empty')
-  assert.equal(group.warm.bigPack.terminal.ok, true)
-  values['warm/restoreMs'] = group.warm.restoreMs
-  values['warm/bigPackMs'] = group.warm.bigPack.elapsedMs
-  values['warm/editorCyclesTotalMs'] = group.warm.editorCycles.reduce((n, c) => n + c.elapsedMs, 0)
+  assertCompletedVisibility(group.warm);
+  assertNativeRestored(group.warm.afterRestoredVisibility, group.warm.hiddenWindowIdentity);
+  assert.equal(group.warm.editorCycles.length, 20);
+  assert.equal(group.warm.mascotContacts.contacts, 32, 'Exactly 32 original accepted contacts required');
+  assert.equal(group.warm.mascotContacts.sounds, 32, 'Exactly 32 original logical sound plays required; physical listening is separate');
+  assert.equal(group.warm.mascotContacts.phase, 'front', 'Mascot must return to original front state');
+  assert.equal(group.warm.mascotContacts.queue, 0, 'Original mascot queue must be empty');
+  assert.equal(group.warm.bigPack.terminal.ok, true);
+  values['warm/restoreMs'] = group.warm.restoreMs;
+  values['warm/bigPackMs'] = group.warm.bigPack.elapsedMs;
+  values['warm/editorCyclesTotalMs'] = group.warm.editorCycles.reduce((n, c) => n + c.elapsedMs, 0);
   values['warm/editorCycleP95Ms'] = percentile(
     group.warm.editorCycles.map((c) => c.elapsedMs),
     0.95
-  )
-  assert(Object.values(values).every(Number.isFinite), 'A missing metric cannot be treated as zero')
-  return values
+  );
+  assert(Object.values(values).every(Number.isFinite), 'A missing metric cannot be treated as zero');
+  return values;
 }
 function analysisSources() {
   return provenance.sourceBindings([
@@ -145,7 +145,7 @@ function analysisSources() {
     'resource-sample113.cjs',
     'resource-visibility113.cjs',
     'mac-package-identity.cjs',
-  ])
+  ]);
 }
 function callbackClockDiagnostics(groups) {
   return groups.flatMap((group) =>
@@ -163,23 +163,23 @@ function callbackClockDiagnostics(groups) {
           uniqueContextId: o.callbackEvidence.contextStart.uniqueContextId,
         }))
     )
-  )
+  );
 }
 function freezeNoise(groups, context = {}, options = {}) {
-  assert(groups.length >= 10, 'At least 10 complete baseline groups precede any candidate launch')
+  assert(groups.length >= 10, 'At least 10 complete baseline groups precede any candidate launch');
   const rows = groups.map((group) => measurements(group, options)),
-    metrics = {}
+    metrics = {};
   for (const key of Object.keys(rows[0])) {
-    const values = rows.map((r) => r[key])
-    assert(values.every(Number.isFinite))
-    const adjacent = values.slice(1).map((value, i) => Math.abs(value - values[i]))
+    const values = rows.map((r) => r[key]);
+    assert(values.every(Number.isFinite));
+    const adjacent = values.slice(1).map((value, i) => Math.abs(value - values[i]));
     metrics[key] = {
       ...stats(values),
       raw: values,
       adjacentAbsoluteDeltas: adjacent,
       frozenAbsoluteNoise: percentile(adjacent, 0.95),
       direction: key.endsWith('/callbackRatePerSecond') ? 'lower-is-regression' : 'higher-is-regression',
-    }
+    };
   }
   const frozen = {
     schema: 1,
@@ -190,35 +190,35 @@ function freezeNoise(groups, context = {}, options = {}) {
     method:
       'Original 10+ full groups. Freeze p95 absolute adjacent baseline difference separately for every metric before candidate launches; no guessed percent or post-hoc relaxation.',
     metrics,
-  }
-  return { ...frozen, sha256: shaJSON(frozen) }
+  };
+  return { ...frozen, sha256: shaJSON(frozen) };
 }
 function comparePaired(pairs, frozen, options = {}) {
-  assert(pairs.length >= 10, 'At least 10 full alternating pairs are required')
-  assert(frozen.baselineGroups >= 10)
-  const { sha256, ...body } = frozen
-  assert.equal(shaJSON(body), sha256, 'Frozen baseline/noise cannot be changed after candidate measurement')
+  assert(pairs.length >= 10, 'At least 10 full alternating pairs are required');
+  assert(frozen.baselineGroups >= 10);
+  const { sha256, ...body } = frozen;
+  assert.equal(shaJSON(body), sha256, 'Frozen baseline/noise cannot be changed after candidate measurement');
   const failures = [],
-    metrics = {}
+    metrics = {};
   for (let i = 0; i < pairs.length; i++) {
-    assert.equal(pairs[i].i, i)
-    assert.deepEqual(pairs[i].order, i % 2 ? ['candidate', 'baseline'] : ['baseline', 'candidate'])
+    assert.equal(pairs[i].i, i);
+    assert.deepEqual(pairs[i].order, i % 2 ? ['candidate', 'baseline'] : ['baseline', 'candidate']);
   }
-  const rows = pairs.map((pair) => ({ baseline: measurements(pair.baseline, options), candidate: measurements(pair.candidate, options) }))
+  const rows = pairs.map((pair) => ({ baseline: measurements(pair.baseline, options), candidate: measurements(pair.candidate, options) }));
   for (const [key, noise] of Object.entries(frozen.metrics)) {
     const baseline = rows.map((r) => r.baseline[key]),
       candidate = rows.map((r) => r.candidate[key]),
       deltas = rows.map((r) => r.candidate[key] - r.baseline[key]),
       regressions = deltas.map((delta) => (noise.direction === 'lower-is-regression' ? -delta : delta)),
       rawRegressions = stats(regressions),
-      threshold = noise.frozenAbsoluteNoise
-    assert(Number.isFinite(threshold) && threshold >= 0)
+      threshold = noise.frozenAbsoluteNoise;
+    assert(Number.isFinite(threshold) && threshold >= 0);
     // IO/faults are diagnostic: changed allocations may legitimately change these.
     const diagnostic = /\/(?:pageFaults|readBytes|writeBytes)$/.test(key),
       sign = signProbability(regressions),
       stableRegression = sign.oneSidedExactProbability <= 0.05 && rawRegressions.median > 0,
       aboveFrozenNoise = rawRegressions.median > threshold || rawRegressions.p95 > threshold,
-      pass = diagnostic ? null : !stableRegression && !aboveFrozenNoise
+      pass = diagnostic ? null : !stableRegression && !aboveFrozenNoise;
     metrics[key] = {
       baseline: stats(baseline),
       candidate: stats(candidate),
@@ -238,8 +238,8 @@ function comparePaired(pairs, frozen, options = {}) {
           ? 'regression detected'
           : 'No consistent regression detected; exact equivalence remains uncertain',
       pass,
-    }
-    if (pass === false) failures.push(key)
+    };
+    if (pass === false) failures.push(key);
   }
   return {
     schema: 1,
@@ -258,6 +258,6 @@ function comparePaired(pairs, frozen, options = {}) {
       'Sampled peaks cannot detect between-sample transient peaks',
       'Natural observed baseline noise is an empirical runner-specific bound, not proof of universal equivalence',
     ],
-  }
+  };
 }
-module.exports = { measurements, freezeNoise, comparePaired, shaJSON, phases, signProbability, analysisSources, callbackClockDiagnostics }
+module.exports = { measurements, freezeNoise, comparePaired, shaJSON, phases, signProbability, analysisSources, callbackClockDiagnostics };

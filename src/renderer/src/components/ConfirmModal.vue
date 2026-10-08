@@ -1,18 +1,18 @@
 <script setup lang="ts">
 /** 通用二次确认模态框（删除等危险操作） */
 defineProps<{
-  open: boolean
-  title: string
-  message: string
-  confirmText?: string
-  busy?: boolean
-  error?: string
-}>()
+  open: boolean;
+  title: string;
+  message: string;
+  confirmText?: string;
+  busy?: boolean;
+  error?: string;
+}>();
 
 const emit = defineEmits<{
-  (e: 'confirm'): void
-  (e: 'cancel'): void
-}>()
+  (e: 'confirm'): void;
+  (e: 'cancel'): void;
+}>();
 </script>
 
 <template>

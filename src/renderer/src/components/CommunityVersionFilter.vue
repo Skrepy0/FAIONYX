@@ -1,100 +1,100 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
-const props = defineProps<{ modelValue: string; versions: string[]; loading?: boolean }>()
-const emit = defineEmits<{ 'update:modelValue': [value: string]; change: [] }>()
+import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
+const props = defineProps<{ modelValue: string; versions: string[]; loading?: boolean }>();
+const emit = defineEmits<{ 'update:modelValue': [value: string]; change: [] }>();
 const input = ref<HTMLInputElement>(),
   menu = ref<HTMLElement>(),
   open = ref(false),
   active = ref(0),
-  keyboardSelection = ref(false)
-const text = ref(props.modelValue)
+  keyboardSelection = ref(false);
+const text = ref(props.modelValue);
 const options = computed(() => [
   '',
   ...props.versions.filter((v) => v.toLowerCase().includes(text.value.trim().toLowerCase())).slice(0, 60),
-])
-const position = ref<Record<string, string>>({})
+]);
+const position = ref<Record<string, string>>({});
 function close() {
-  open.value = false
-  removeEventListener('pointerdown', outside, true)
-  removeEventListener('scroll', onScroll, true)
-  removeEventListener('resize', close)
+  open.value = false;
+  removeEventListener('pointerdown', outside, true);
+  removeEventListener('scroll', onScroll, true);
+  removeEventListener('resize', close);
 }
 function show() {
-  const rect = input.value?.getBoundingClientRect()
-  if (!rect) return
+  const rect = input.value?.getBoundingClientRect();
+  if (!rect) return;
   const below = innerHeight - rect.bottom - 12,
-    above = rect.top - 12
-  const up = below < 180 && above > below
+    above = rect.top - 12;
+  const up = below < 180 && above > below;
   position.value = {
     left: Math.max(8, Math.min(rect.left, innerWidth - rect.width - 8)) + 'px',
     width: Math.min(rect.width, innerWidth - 16) + 'px',
     maxHeight: Math.min(280, Math.max(48, up ? above : below)) + 'px',
     ...(up ? { bottom: innerHeight - rect.top + 4 + 'px' } : { top: rect.bottom + 4 + 'px' }),
-  }
-  active.value = Math.max(0, options.value.indexOf(props.modelValue))
-  open.value = true
-  addEventListener('pointerdown', outside, true)
-  addEventListener('scroll', onScroll, true)
-  addEventListener('resize', close)
+  };
+  active.value = Math.max(0, options.value.indexOf(props.modelValue));
+  open.value = true;
+  addEventListener('pointerdown', outside, true);
+  addEventListener('scroll', onScroll, true);
+  addEventListener('resize', close);
 }
 function outside(event: PointerEvent) {
-  if (!input.value?.contains(event.target as Node) && !menu.value?.contains(event.target as Node)) close()
+  if (!input.value?.contains(event.target as Node) && !menu.value?.contains(event.target as Node)) close();
 }
 function onScroll(event: Event) {
-  if (!menu.value?.contains(event.target as Node)) close()
+  if (!menu.value?.contains(event.target as Node)) close();
 }
 function choose(value: string) {
-  text.value = value
-  emit('update:modelValue', value)
-  emit('change')
-  close()
-  input.value?.focus({ preventScroll: true })
-  close()
+  text.value = value;
+  emit('update:modelValue', value);
+  emit('change');
+  close();
+  input.value?.focus({ preventScroll: true });
+  close();
 }
 function typing() {
-  keyboardSelection.value = false
-  show()
+  keyboardSelection.value = false;
+  show();
 }
 function keyboard(event: KeyboardEvent) {
   if (event.key === 'Escape' && open.value) {
-    event.preventDefault()
-    event.stopPropagation()
-    text.value = props.modelValue
-    close()
-    return
+    event.preventDefault();
+    event.stopPropagation();
+    text.value = props.modelValue;
+    close();
+    return;
   }
   if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
-    event.preventDefault()
-    keyboardSelection.value = true
-    if (!open.value) show()
+    event.preventDefault();
+    keyboardSelection.value = true;
+    if (!open.value) show();
     else
       active.value =
         event.key === 'Home'
           ? 0
           : event.key === 'End'
             ? options.value.length - 1
-            : Math.max(0, Math.min(options.value.length - 1, active.value + (event.key === 'ArrowDown' ? 1 : -1)))
-    void nextTick(() => menu.value?.querySelector<HTMLElement>('[data-focused="true"]')?.scrollIntoView({ block: 'nearest' }))
+            : Math.max(0, Math.min(options.value.length - 1, active.value + (event.key === 'ArrowDown' ? 1 : -1)));
+    void nextTick(() => menu.value?.querySelector<HTMLElement>('[data-focused="true"]')?.scrollIntoView({ block: 'nearest' }));
   } else if (event.key === 'Enter') {
-    event.preventDefault()
-    choose(open.value && keyboardSelection.value ? (options.value[active.value] ?? text.value.trim()) : text.value.trim())
+    event.preventDefault();
+    choose(open.value && keyboardSelection.value ? (options.value[active.value] ?? text.value.trim()) : text.value.trim());
   } else if (event.key === 'Tab') {
     if (text.value.trim() !== props.modelValue) {
-      emit('update:modelValue', text.value.trim())
-      emit('change')
+      emit('update:modelValue', text.value.trim());
+      emit('change');
     }
-    close()
+    close();
   }
 }
 // An instance filter or reset can change the value while the text field is mounted.
-import { watch } from 'vue'
+import { watch } from 'vue';
 watch(
   () => props.modelValue,
   (value) => {
-    text.value = value
+    text.value = value;
   }
-)
-onBeforeUnmount(close)
+);
+onBeforeUnmount(close);
 </script>
 <template>
   <div class="community-version-filter">
@@ -111,12 +111,12 @@ onBeforeUnmount(close)
       :aria-activedescendant="open && keyboardSelection ? 'community-version-option-' + active : undefined"
       :placeholder="loading ? '加载版本列表…' : '全部版本'"
       @focus="
-        keyboardSelection = false
-        show()
+        keyboardSelection = false;
+        show();
       "
       @click="
-        keyboardSelection = false
-        show()
+        keyboardSelection = false;
+        show();
       "
       @input="typing"
       @keydown="keyboard"

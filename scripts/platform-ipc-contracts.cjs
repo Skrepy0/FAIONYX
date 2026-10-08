@@ -325,10 +325,10 @@ const groups = {
     visibility: '接收实际原生隐藏恢复并暂停相关资源',
   },
   world: { import: '实际导入普通存档到正确实例并核对完整性', probe: '探测真实存档结构且不抢占整合包分类' },
-}
+};
 module.exports = Object.entries(groups).flatMap(([prefix, actions]) =>
   Object.entries(actions).map(([action, criterion]) => ({
     name: prefix + ':' + action,
     criterion: prefix + ':' + action + '：' + criterion,
   }))
-)
+);

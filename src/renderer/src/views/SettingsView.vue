@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import UpdateDialogShell from '../components/UpdateDialogShell.vue'
-const ThirdPartyNotices = defineAsyncComponent(() => import('../components/ThirdPartyNotices.vue'))
+import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import UpdateDialogShell from '../components/UpdateDialogShell.vue';
+const ThirdPartyNotices = defineAsyncComponent(() => import('../components/ThirdPartyNotices.vue'));
 import {
   addCustomJava,
   applyLocalUpdate,
@@ -28,25 +28,25 @@ import {
   selectDir,
   setDownloadFolder,
   setPluginEnabled,
-} from '../api'
-import { enterEditMode, store, toast } from '../store'
-import { DEFAULT_CUSTOM_THEME, THEME_PRESETS } from '@shared/types'
-import { autoMemoryMB } from '@shared/memory'
-import MemoryOrganizer from '../components/MemoryOrganizer.vue'
-import type { LocalUpdateCheck, PluginInfo, ReleaseInfo, Settings, ThemeName, UpdateStateInfo } from '@shared/types'
-import { QQ_GROUP_NUMBER } from '@shared/branding'
-import { useMotion } from '../motion'
-const { systemReduced } = useMotion()
-import { usePlatformUpdate } from '../composables/usePlatformUpdate'
-const { systemInstaller, installAction, updateReadyMessage } = usePlatformUpdate()
+} from '../api';
+import { enterEditMode, store, toast } from '../store';
+import { DEFAULT_CUSTOM_THEME, THEME_PRESETS } from '@shared/types';
+import { autoMemoryMB } from '@shared/memory';
+import MemoryOrganizer from '../components/MemoryOrganizer.vue';
+import type { LocalUpdateCheck, PluginInfo, ReleaseInfo, Settings, ThemeName, UpdateStateInfo } from '@shared/types';
+import { QQ_GROUP_NUMBER } from '@shared/branding';
+import { useMotion } from '../motion';
+const { systemReduced } = useMotion();
+import { usePlatformUpdate } from '../composables/usePlatformUpdate';
+const { systemInstaller, installAction, updateReadyMessage } = usePlatformUpdate();
 const systemMotionHelp =
   window.faionyx.platform === 'darwin'
     ? '若需要动画，请在系统设置 → 辅助功能 → 显示中关闭“减少动态效果”。'
     : window.faionyx.platform === 'win32'
       ? '若需要动画，请在 Windows 设置 → 辅助功能 → 视觉效果开启动画效果。'
-      : '若需要动画，请检查本机桌面的辅助功能或动画设置。'
-import HomeLayoutEditor from '../components/HomeLayoutEditor.vue'
-import SelectMenu from '../components/SelectMenu.vue'
+      : '若需要动画，请检查本机桌面的辅助功能或动画设置。';
+import HomeLayoutEditor from '../components/HomeLayoutEditor.vue';
+import SelectMenu from '../components/SelectMenu.vue';
 import {
   settingsCatalog,
   settingsCategories,
@@ -55,188 +55,188 @@ import {
   searchSettings,
   type SettingsCategory,
   type SettingsScope,
-} from '@shared/settingsCatalog'
-import { updateSettings } from '../settingsUpdates'
-import { refreshInstalled } from '../store'
+} from '@shared/settingsCatalog';
+import { updateSettings } from '../settingsUpdates';
+import { refreshInstalled } from '../store';
 
-const page = ref<HTMLElement | null>(null)
+const page = ref<HTMLElement | null>(null);
 /** 精确输入框自动聚焦 */
-const vFocus = { mounted: (el: HTMLElement) => el.focus() }
-const settingsQuery = ref('')
-const searchMatches = computed(() => searchSettings(settingsQuery.value))
-const savedCategory = sessionStorage.getItem('faionyx.settings.category')
-const category = ref<SettingsCategory>(settingsCategories.find((c) => c.id === savedCategory)?.id ?? 'appearance')
-const scope = computed(() => scopeOfCategory(category.value))
-const visibleCategories = computed(() => settingsCategories.filter((c) => c.scope === scope.value))
-const lastCategories: Record<SettingsScope, SettingsCategory> = { launcher: 'appearance', game: 'game' }
-lastCategories[scope.value] = category.value
+const vFocus = { mounted: (el: HTMLElement) => el.focus() };
+const settingsQuery = ref('');
+const searchMatches = computed(() => searchSettings(settingsQuery.value));
+const savedCategory = sessionStorage.getItem('faionyx.settings.category');
+const category = ref<SettingsCategory>(settingsCategories.find((c) => c.id === savedCategory)?.id ?? 'appearance');
+const scope = computed(() => scopeOfCategory(category.value));
+const visibleCategories = computed(() => settingsCategories.filter((c) => c.scope === scope.value));
+const lastCategories: Record<SettingsScope, SettingsCategory> = { launcher: 'appearance', game: 'game' };
+lastCategories[scope.value] = category.value;
 function selectScope(id: SettingsScope) {
-  void selectCategory(lastCategories[id])
+  void selectCategory(lastCategories[id]);
 }
-const positions = new Map<string, number>()
-let navigation = 0
+const positions = new Map<string, number>();
+let navigation = 0;
 function scroller() {
-  return page.value?.querySelector<HTMLElement>('.settings-body')
+  return page.value?.querySelector<HTMLElement>('.settings-body');
 }
 async function selectCategory(id: SettingsCategory) {
-  const ticket = ++navigation
-  const scroll = scroller()
-  positions.set(category.value, scroll?.scrollTop ?? 0)
-  category.value = id
-  lastCategories[scopeOfCategory(id)] = id
-  settingsQuery.value = ''
-  sessionStorage.setItem('faionyx.settings.category', id)
-  await nextTick()
+  const ticket = ++navigation;
+  const scroll = scroller();
+  positions.set(category.value, scroll?.scrollTop ?? 0);
+  category.value = id;
+  lastCategories[scopeOfCategory(id)] = id;
+  settingsQuery.value = '';
+  sessionStorage.setItem('faionyx.settings.category', id);
+  await nextTick();
   if (ticket === navigation && scroll)
-    scroll.scrollTop = Math.min(positions.get(id) ?? 0, Math.max(0, scroll.scrollHeight - scroll.clientHeight))
+    scroll.scrollTop = Math.min(positions.get(id) ?? 0, Math.max(0, scroll.scrollHeight - scroll.clientHeight));
 }
 async function jumpSetting(id: string) {
-  const item = settingsCatalog.find((item) => item.id === id)
-  if (!item) return
-  await selectCategory(item.category)
-  const target = page.value?.querySelector<HTMLElement>('[data-section="' + id + '"]')
-  if (!target) return
-  if (target.tagName === 'DETAILS') (target as HTMLDetailsElement).open = true
+  const item = settingsCatalog.find((item) => item.id === id);
+  if (!item) return;
+  await selectCategory(item.category);
+  const target = page.value?.querySelector<HTMLElement>('[data-section="' + id + '"]');
+  if (!target) return;
+  if (target.tagName === 'DETAILS') (target as HTMLDetailsElement).open = true;
   // Reveal only the path to the result, never expand every advanced setting below it.
   for (let parent = target.parentElement; parent && parent !== scroller(); parent = parent.parentElement) {
-    if (parent.tagName === 'DETAILS') (parent as HTMLDetailsElement).open = true
+    if (parent.tagName === 'DETAILS') (parent as HTMLDetailsElement).open = true;
   }
-  await nextTick()
-  target.setAttribute('tabindex', '-1')
-  const body = scroller()
-  if (body) body.scrollTop += target.getBoundingClientRect().top - body.getBoundingClientRect().top - 12
-  target.focus({ preventScroll: true })
+  await nextTick();
+  target.setAttribute('tabindex', '-1');
+  const body = scroller();
+  if (body) body.scrollTop += target.getBoundingClientRect().top - body.getBoundingClientRect().top - 12;
+  target.focus({ preventScroll: true });
 }
 async function revealSection() {
-  if (!store.settings || !store.settingsSection) return
-  const id = store.settingsSection
-  store.settingsSection = ''
-  await jumpSetting(id)
+  if (!store.settings || !store.settingsSection) return;
+  const id = store.settingsSection;
+  store.settingsSection = '';
+  await jumpSetting(id);
 }
-onMounted(revealSection)
-watch([() => store.settingsSection, () => !!store.settings], revealSection, { flush: 'post' })
+onMounted(revealSection);
+watch([() => store.settingsSection, () => !!store.settings], revealSection, { flush: 'post' });
 
 // ---------------- 保存 ----------------
 async function save(patch: Partial<Settings>) {
   try {
-    await updateSettings(patch)
+    await updateSettings(patch);
   } catch (e) {
-    toast('保存设置失败：' + errText(e), 'error')
+    toast('保存设置失败：' + errText(e), 'error');
   }
 }
 
-const windowFitBusy = ref(false)
+const windowFitBusy = ref(false);
 async function changeWindowFit(event: Event) {
-  if (windowFitBusy.value) return
-  const input = event.target as HTMLInputElement
-  windowFitBusy.value = true
+  if (windowFitBusy.value) return;
+  const input = event.target as HTMLInputElement;
+  windowFitBusy.value = true;
   try {
-    await updateSettings({ uiWindowAutoFit: input.checked })
+    await updateSettings({ uiWindowAutoFit: input.checked });
   } catch (error) {
-    toast('保存窗口自适应失败：' + errText(error), 'error')
+    toast('保存窗口自适应失败：' + errText(error), 'error');
   } finally {
-    windowFitBusy.value = false
-    input.checked = store.settings?.uiWindowAutoFit === true
+    windowFitBusy.value = false;
+    input.checked = store.settings?.uiWindowAutoFit === true;
   }
 }
 
 const defaultDownloadFolder = computed(
   () => store.settings?.folders.find((folder) => folder.isDefault)?.path || store.settings?.activeFolder || store.settings?.gameDir || ''
-)
-const windowSizeBusy = ref(false)
-const canRememberWindow = window.faionyx.platform === 'win32'
+);
+const windowSizeBusy = ref(false);
+const canRememberWindow = window.faionyx.platform === 'win32';
 async function toggleWindowSize(event: Event) {
-  const input = event.target as HTMLInputElement
-  if (!store.settings || windowSizeBusy.value) return
-  windowSizeBusy.value = true
+  const input = event.target as HTMLInputElement;
+  if (!store.settings || windowSizeBusy.value) return;
+  windowSizeBusy.value = true;
   try {
-    await updateSettings({ rememberGameWindowSize: input.checked })
+    await updateSettings({ rememberGameWindowSize: input.checked });
   } catch (error) {
-    toast('保存窗口大小设置失败：' + errText(error), 'error')
+    toast('保存窗口大小设置失败：' + errText(error), 'error');
   } finally {
-    windowSizeBusy.value = false
-    input.checked = store.settings?.rememberGameWindowSize === true
+    windowSizeBusy.value = false;
+    input.checked = store.settings?.rememberGameWindowSize === true;
   }
 }
-const downloadFolderBusy = ref(false)
-const downloadFolderError = ref('')
+const downloadFolderBusy = ref(false);
+const downloadFolderError = ref('');
 async function applyDownloadFolder(folder: string) {
-  if (!folder || downloadFolderBusy.value) return
-  downloadFolderBusy.value = true
-  downloadFolderError.value = ''
-  let committed = false
+  if (!folder || downloadFolderBusy.value) return;
+  downloadFolderBusy.value = true;
+  downloadFolderError.value = '';
+  let committed = false;
   try {
-    const folders = await setDownloadFolder(folder)
-    committed = true
-    const selected = folders.find((item) => item.isDefault)!.path
-    if (store.settings) store.settings = { ...store.settings, folders, activeFolder: selected, gameDir: selected }
-    store.settings = await getSettings()
-    store.resourceVersionId = ''
-    await refreshInstalled()
-    toast('默认下载位置已更改；已有游戏目录和存档保留，正在下载的任务继续使用原位置', 'success')
+    const folders = await setDownloadFolder(folder);
+    committed = true;
+    const selected = folders.find((item) => item.isDefault)!.path;
+    if (store.settings) store.settings = { ...store.settings, folders, activeFolder: selected, gameDir: selected };
+    store.settings = await getSettings();
+    store.resourceVersionId = '';
+    await refreshInstalled();
+    toast('默认下载位置已更改；已有游戏目录和存档保留，正在下载的任务继续使用原位置', 'success');
   } catch (error) {
     downloadFolderError.value = committed
       ? '下载位置已保存，但列表暂未刷新。请重新打开页面重试：' + errText(error)
-      : '更改失败：' + errText(error)
+      : '更改失败：' + errText(error);
   } finally {
-    downloadFolderBusy.value = false
+    downloadFolderBusy.value = false;
   }
 }
 async function chooseNewDownloadFolder() {
-  if (downloadFolderBusy.value) return
-  downloadFolderBusy.value = true
-  downloadFolderError.value = ''
+  if (downloadFolderBusy.value) return;
+  downloadFolderBusy.value = true;
+  downloadFolderError.value = '';
   try {
-    const selected = await selectDir()
-    downloadFolderBusy.value = false
-    if (selected) await applyDownloadFolder(selected)
+    const selected = await selectDir();
+    downloadFolderBusy.value = false;
+    if (selected) await applyDownloadFolder(selected);
   } catch (error) {
-    downloadFolderError.value = '选择文件夹失败：' + errText(error)
+    downloadFolderError.value = '选择文件夹失败：' + errText(error);
   } finally {
-    downloadFolderBusy.value = false
+    downloadFolderBusy.value = false;
   }
 }
 
 // ---------------- 关于与更新 ----------------
-const appVersion = __APP_VERSION__
-const showLicenses = ref(false)
-const updateCheckState = ref<'idle' | 'checking' | 'latest' | 'failed'>('idle')
-let lastManualCheck = 0
+const appVersion = __APP_VERSION__;
+const showLicenses = ref(false);
+const updateCheckState = ref<'idle' | 'checking' | 'latest' | 'failed'>('idle');
+let lastManualCheck = 0;
 
 async function onCheckUpdate() {
-  const now = Date.now()
+  const now = Date.now();
   if (now - lastManualCheck < 5 * 60_000 && updateCheckState.value === 'latest') {
-    toast('5 分钟内已检查过，已是最新', 'info')
-    return
+    toast('5 分钟内已检查过，已是最新', 'info');
+    return;
   }
-  lastManualCheck = now
-  updateCheckState.value = 'checking'
+  lastManualCheck = now;
+  updateCheckState.value = 'checking';
   try {
-    const r = await checkUpdate(true)
+    const r = await checkUpdate(true);
     if (r.ok && r.hasUpdate && r.release) {
-      updateCheckState.value = 'idle'
+      updateCheckState.value = 'idle';
       // 更新弹窗已经给出结果，避免再叠加同内容通知。
-      store.updatePrompt = { release: r.release, rollback: false }
+      store.updatePrompt = { release: r.release, rollback: false };
     } else if (r.ok) {
-      updateCheckState.value = 'latest'
+      updateCheckState.value = 'latest';
       // Result remains visible beside the check button; no duplicate success toast.
     } else {
       // 仅真实失败（断网/更新源不可达）才走这里，已记日志
-      updateCheckState.value = 'failed'
-      toast('检查失败：断网或更新源不可达（已记日志）', 'error')
+      updateCheckState.value = 'failed';
+      toast('检查失败：断网或更新源不可达（已记日志）', 'error');
     }
   } catch {
-    updateCheckState.value = 'failed'
-    toast('检查失败：断网或更新源不可达（已记日志）', 'error')
+    updateCheckState.value = 'failed';
+    toast('检查失败：断网或更新源不可达（已记日志）', 'error');
   }
 }
 
-const updateSource = computed(() => store.settings?.updateSource ?? 'auto')
+const updateSource = computed(() => store.settings?.updateSource ?? 'auto');
 function onUpdateSourceChange(e: Event) {
-  void save({ updateSource: (e.target as HTMLSelectElement).value as Settings['updateSource'] })
+  void save({ updateSource: (e.target as HTMLSelectElement).value as Settings['updateSource'] });
 }
 function onUpdateMirrorChange(e: Event) {
-  void save({ updateMirrorUrl: (e.target as HTMLInputElement).value.trim() })
+  void save({ updateMirrorUrl: (e.target as HTMLInputElement).value.trim() });
 }
 
 // 版本回退
@@ -245,104 +245,104 @@ const rollback = ref<{ open: boolean; loading: boolean; list: ReleaseInfo[]; sel
   loading: false,
   list: [],
   selected: '',
-})
+});
 async function openRollback() {
-  rollback.value.open = true
-  rollback.value.loading = true
+  rollback.value.open = true;
+  rollback.value.loading = true;
   try {
-    rollback.value.list = (await listUpdateReleases()).filter((r) => r.version !== appVersion)
-    if (!rollback.value.list.length) toast('没有可回退的历史版本', 'info')
+    rollback.value.list = (await listUpdateReleases()).filter((r) => r.version !== appVersion);
+    if (!rollback.value.list.length) toast('没有可回退的历史版本', 'info');
   } catch (e) {
-    toast('获取历史版本失败：' + errText(e), 'error')
+    toast('获取历史版本失败：' + errText(e), 'error');
   } finally {
-    rollback.value.loading = false
+    rollback.value.loading = false;
   }
 }
 function confirmRollback() {
-  const release = rollback.value.list.find((r) => r.version === rollback.value.selected)
-  rollback.value.open = false
-  if (!release) return
-  store.updatePrompt = { release, rollback: true }
+  const release = rollback.value.list.find((r) => r.version === rollback.value.selected);
+  rollback.value.open = false;
+  if (!release) return;
+  store.updatePrompt = { release, rollback: true };
 }
 function releaseSummary(body: string): string {
   const first =
     (body || '')
       .split(/\r?\n/)
       .map((s) => s.replace(/^(?:#+|[-*])\s*/, '').trim())
-      .filter((s) => s && !/^FAIONYX\s+v?[\d.]+$/i.test(s))[0] ?? ''
-  return first.length > 60 ? first.slice(0, 60) + '…' : first
+      .filter((s) => s && !/^FAIONYX\s+v?[\d.]+$/i.test(s))[0] ?? '';
+  return first.length > 60 ? first.slice(0, 60) + '…' : first;
 }
 function releaseDate(value: string): string {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 // 还原到更新前的版本
-const updateState = ref<UpdateStateInfo | null>(null)
-const restoringBackup = ref(false)
+const updateState = ref<UpdateStateInfo | null>(null);
+const restoringBackup = ref(false);
 // 已就绪待安装的更新（下次启动时应用，也可立即安装）
-const pendingUpdate = ref<{ release: ReleaseInfo; file: string } | null>(null)
+const pendingUpdate = ref<{ release: ReleaseInfo; file: string } | null>(null);
 async function refreshUpdateState() {
   try {
-    updateState.value = await getUpdateState()
+    updateState.value = await getUpdateState();
   } catch {
-    updateState.value = null
+    updateState.value = null;
   }
   try {
-    pendingUpdate.value = await getPendingUpdate()
+    pendingUpdate.value = await getPendingUpdate();
   } catch {
-    pendingUpdate.value = null
+    pendingUpdate.value = null;
   }
 }
 async function onRestoreBackup() {
-  if (!updateState.value) return
-  restoringBackup.value = true
+  if (!updateState.value) return;
+  restoringBackup.value = true;
   try {
-    await restoreUpdateBackup()
-    restoringBackup.value = false
-    await refreshUpdateState()
-    toast('备份已准备，下次手动启动时恢复', 'success')
+    await restoreUpdateBackup();
+    restoringBackup.value = false;
+    await refreshUpdateState();
+    toast('备份已准备，下次手动启动时恢复', 'success');
   } catch (e) {
-    restoringBackup.value = false
-    toast('还原失败：' + errText(e), 'error')
+    restoringBackup.value = false;
+    toast('还原失败：' + errText(e), 'error');
   }
 }
 async function onApplyPending() {
   try {
-    await applyPendingUpdate()
-    toast(updateReadyMessage(), 'success')
+    await applyPendingUpdate();
+    toast(updateReadyMessage(), 'success');
   } catch (e) {
-    toast('安装失败：' + errText(e), 'error')
+    toast('安装失败：' + errText(e), 'error');
   }
 }
 
 // 从本地文件安装更新
-const localUpdate = ref<{ check: LocalUpdateCheck; confirming: boolean } | null>(null)
+const localUpdate = ref<{ check: LocalUpdateCheck; confirming: boolean } | null>(null);
 async function onPickLocalUpdate() {
   try {
-    const check = await pickLocalUpdateFile()
-    if (!check) return
-    localUpdate.value = { check, confirming: true }
+    const check = await pickLocalUpdateFile();
+    if (!check) return;
+    localUpdate.value = { check, confirming: true };
   } catch (e) {
-    toast('校验安装包失败：' + errText(e), 'error')
+    toast('校验安装包失败：' + errText(e), 'error');
   }
 }
 async function confirmLocalUpdate() {
-  const lu = localUpdate.value
-  if (!lu) return
-  localUpdate.value = null
+  const lu = localUpdate.value;
+  if (!lu) return;
+  localUpdate.value = null;
   try {
-    await applyLocalUpdate(lu.check)
-    await refreshUpdateState()
-    toast(updateReadyMessage('本地更新已准备'), 'success')
+    await applyLocalUpdate(lu.check);
+    await refreshUpdateState();
+    toast(updateReadyMessage('本地更新已准备'), 'success');
   } catch (e) {
-    toast('安装更新失败：' + errText(e), 'error')
+    toast('安装更新失败：' + errText(e), 'error');
   }
 }
 
-onMounted(refreshUpdateState)
+onMounted(refreshUpdateState);
 
 // ---------------- 功能管理 ----------------
 const featureToggles = [
@@ -356,18 +356,18 @@ const featureToggles = [
   { key: 'keys', label: '默认配置' },
   { key: 'skins', label: '皮肤与披风' },
   { key: 'community', label: '社区资源' },
-]
+];
 
 function onToggleFeature(key: string, enabled: boolean) {
-  const cur = store.settings?.disabledFeatures ?? []
-  const next = enabled ? cur.filter((k) => k !== key) : [...new Set([...cur, key])]
-  void save({ disabledFeatures: next })
+  const cur = store.settings?.disabledFeatures ?? [];
+  const next = enabled ? cur.filter((k) => k !== key) : [...new Set([...cur, key])];
+  void save({ disabledFeatures: next });
 }
 
 // ---------------- 主题 ----------------
 const themeOptions = computed(() => {
-  const customColors = store.settings?.custom.colors ?? DEFAULT_CUSTOM_THEME.colors
-  const named = (key: Exclude<ThemeName, 'custom'>) => ({ key, ...THEME_PRESETS[key] })
+  const customColors = store.settings?.custom.colors ?? DEFAULT_CUSTOM_THEME.colors;
+  const named = (key: Exclude<ThemeName, 'custom'>) => ({ key, ...THEME_PRESETS[key] });
   return [
     named('transparent'),
     named('blue-white'),
@@ -380,328 +380,328 @@ const themeOptions = computed(() => {
       description: '自定义配色与图片，沿用统一的图一布局',
       colors: customColors,
     },
-  ]
-})
+  ];
+});
 
 function chooseTheme(theme: ThemeName, _label: string) {
-  void save({ theme })
+  void save({ theme });
 }
 
 // ---------------- Java 列表 ----------------
-const javas = ref<Awaited<ReturnType<typeof listJava>>>([])
-const javaLoading = ref(true)
-const javaError = ref('')
-const javaRefreshing = ref(false)
-const javaCancelling = ref(false)
-const javaScanText = ref('')
-const javaScanProgress = ref(0)
-const javaAdding = ref(false)
-const javaCustomInput = ref('')
-const javaAddError = ref('')
+const javas = ref<Awaited<ReturnType<typeof listJava>>>([]);
+const javaLoading = ref(true);
+const javaError = ref('');
+const javaRefreshing = ref(false);
+const javaCancelling = ref(false);
+const javaScanText = ref('');
+const javaScanProgress = ref(0);
+const javaAdding = ref(false);
+const javaCustomInput = ref('');
+const javaAddError = ref('');
 
 async function onRefreshJava(refresh = true, announce = true) {
   if (javaRefreshing.value) {
-    javaCancelling.value = true
+    javaCancelling.value = true;
     try {
-      const cancelled = await cancelJavaScan()
-      if (!cancelled) toast('扫描任务已结束', 'info')
+      const cancelled = await cancelJavaScan();
+      if (!cancelled) toast('扫描任务已结束', 'info');
     } catch (e) {
-      toast('取消扫描失败：' + errText(e), 'error')
+      toast('取消扫描失败：' + errText(e), 'error');
     } finally {
-      javaCancelling.value = false
+      javaCancelling.value = false;
     }
-    return
+    return;
   }
-  javaRefreshing.value = true
-  javaScanText.value = '正在准备扫描全部本地固定磁盘…'
-  javaScanProgress.value = 0
+  javaRefreshing.value = true;
+  javaScanText.value = '正在准备扫描全部本地固定磁盘…';
+  javaScanProgress.value = 0;
   try {
-    javas.value = await refreshJava(refresh)
-    if (announce) toast('Java 扫描完成', 'success')
+    javas.value = await refreshJava(refresh);
+    if (announce) toast('Java 扫描完成', 'success');
   } catch (e) {
-    const message = errText(e)
-    const cancelled = /取消|abort/i.test(message)
-    toast(cancelled ? 'Java 扫描已取消' : '扫描失败：' + message, cancelled ? 'info' : 'error')
+    const message = errText(e);
+    const cancelled = /取消|abort/i.test(message);
+    toast(cancelled ? 'Java 扫描已取消' : '扫描失败：' + message, cancelled ? 'info' : 'error');
   } finally {
-    javaRefreshing.value = false
-    javaCancelling.value = false
+    javaRefreshing.value = false;
+    javaCancelling.value = false;
   }
 }
 
 async function onAddJava() {
-  if (javaAdding.value) return
-  javaAdding.value = true
-  javaAddError.value = ''
+  if (javaAdding.value) return;
+  javaAdding.value = true;
+  javaAddError.value = '';
   try {
-    const p = javaCustomInput.value.trim()
+    const p = javaCustomInput.value.trim();
     if (p) {
       // 备选路径：手动输入完整路径（仍走 -version 校验）
-      await addCustomJava(p)
-      javaCustomInput.value = ''
-      javas.value = await listJava()
+      await addCustomJava(p);
+      javaCustomInput.value = '';
+      javas.value = await listJava();
     } else {
       // 主路径：系统文件选择器定位 java.exe（空输入时点击「添加」即弹选择框）
-      const list = await pickAddJava()
-      if (!list) return // 用户取消选择
-      javas.value = list
+      const list = await pickAddJava();
+      if (!list) return; // 用户取消选择
+      javas.value = list;
     }
-    toast('已添加 Java', 'success')
+    toast('已添加 Java', 'success');
   } catch (e) {
-    javaAddError.value = errText(e)
+    javaAddError.value = errText(e);
   } finally {
-    javaAdding.value = false
+    javaAdding.value = false;
   }
 }
 
 async function onHideJava(p: string) {
   try {
-    await hideJava(p)
-    javas.value = await listJava()
+    await hideJava(p);
+    javas.value = await listJava();
   } catch (e) {
-    toast('操作失败：' + errText(e), 'error')
+    toast('操作失败：' + errText(e), 'error');
   }
 }
 
 onMounted(async () => {
   try {
-    javas.value = await listJava()
+    javas.value = await listJava();
   } catch (e) {
-    javaError.value = errText(e)
+    javaError.value = errText(e);
   } finally {
-    javaLoading.value = false
+    javaLoading.value = false;
   }
   // 先立即展示缓存/快速扫描结果，再在后台补齐固定磁盘扫描；有新鲜缓存时会立即返回。
-  void onRefreshJava(false, false)
-})
+  void onRefreshJava(false, false);
+});
 
 const stopJavaProgress = onProgress((event) => {
-  if (event.stage !== 'java-scan') return
-  javaScanText.value = event.text
-  javaScanProgress.value = Math.max(0, Math.min(1, event.overall ?? event.progress))
-})
-onUnmounted(stopJavaProgress)
+  if (event.stage !== 'java-scan') return;
+  javaScanText.value = event.text;
+  javaScanProgress.value = Math.max(0, Math.min(1, event.overall ?? event.progress));
+});
+onUnmounted(stopJavaProgress);
 
 const javaLabel = (j: { major: number; path: string; version: string; architecture?: string }) =>
-  `Java ${j.major}（${j.version} · ${j.architecture ?? '未知架构'}）· ${j.path}`
+  `Java ${j.major}（${j.version} · ${j.architecture ?? '未知架构'}）· ${j.path}`;
 
 // ---------------- 内存分配（自动/手动） ----------------
-const MEM_MIN = 1024
+const MEM_MIN = 1024;
 /** 滑块步长 512MB（0.5GB，粗调节）；精细调节用数值输入框（0.25GB 精度） */
-const MEM_STEP = 512
+const MEM_STEP = 512;
 /** 给系统预留的内存（手动上限 = 可用内存 - 预留） */
-const SYS_RESERVE_MB = 1024
+const SYS_RESERVE_MB = 1024;
 /** 上限 = 当前可用内存 - 系统预留，向下取 512MB 整（随可用内存浮动） */
-const memMax = ref(16384)
+const memMax = ref(16384);
 /** 物理内存总量（自动分配与信息展示用） */
-const memTotal = ref(0)
+const memTotal = ref(0);
 /** 当前可用内存（信息展示，可手动刷新） */
-const memFree = ref(0)
+const memFree = ref(0);
 /** 双单位显示：整 G 只显示 G（如 2G），非整 G 显示「MB（x.xxG）」 */
-const fmtMem = (mb: number) => (mb % 1024 === 0 ? `${mb / 1024}G` : `${mb}MB（${(mb / 1024).toFixed(2)}G）`)
+const fmtMem = (mb: number) => (mb % 1024 === 0 ? `${mb / 1024}G` : `${mb}MB（${(mb / 1024).toFixed(2)}G）`);
 
 async function refreshSystemInfo(): Promise<void> {
   try {
-    const info = await getSystemInfo()
-    memTotal.value = info.totalMemMB
-    memFree.value = info.freeMemMB
-    memMax.value = Math.max(MEM_MIN, Math.floor((info.freeMemMB - SYS_RESERVE_MB) / MEM_STEP) * MEM_STEP)
+    const info = await getSystemInfo();
+    memTotal.value = info.totalMemMB;
+    memFree.value = info.freeMemMB;
+    memMax.value = Math.max(MEM_MIN, Math.floor((info.freeMemMB - SYS_RESERVE_MB) / MEM_STEP) * MEM_STEP);
     // 手动值超出真实内存（换机/降配后）时夹回物理总量；显示范围随可用内存浮动
-    const s = store.settings
+    const s = store.settings;
     if (s && s.memoryMB > info.totalMemMB) {
-      s.memoryMB = info.totalMemMB
-      void save({ memoryMB: info.totalMemMB })
+      s.memoryMB = info.totalMemMB;
+      void save({ memoryMB: info.totalMemMB });
     }
   } catch {
     /* 读不到就保持保守上限 */
   }
 }
-onMounted(refreshSystemInfo)
+onMounted(refreshSystemInfo);
 
-const memoryAuto = computed(() => store.settings?.memoryAuto === true)
+const memoryAuto = computed(() => store.settings?.memoryAuto === true);
 function onMemoryAutoChange(on: boolean): void {
-  store.settings!.memoryAuto = on
-  void save({ memoryAuto: on })
+  store.settings!.memoryAuto = on;
+  void save({ memoryAuto: on });
 }
 /** 自动分配的当前计算值（展示用） */
-const autoMemMB = computed(() => autoMemoryMB(memTotal.value || 16384))
-const autoMemoryText = computed(() => (memTotal.value ? fmtMem(autoMemMB.value) : '…'))
+const autoMemMB = computed(() => autoMemoryMB(memTotal.value || 16384));
+const autoMemoryText = computed(() => (memTotal.value ? fmtMem(autoMemMB.value) : '…'));
 
 /** 手动值超过当前可用内存：红色警告（崩溃风险） */
 const memoryOverFree = computed(() => {
-  const mb = store.settings?.memoryMB ?? 0
-  return memFree.value > 0 && mb > memFree.value
-})
+  const mb = store.settings?.memoryMB ?? 0;
+  return memFree.value > 0 && mb > memFree.value;
+});
 
-const memoryMaxText = computed(() => fmtMem(memMax.value))
+const memoryMaxText = computed(() => fmtMem(memMax.value));
 const memoryText = computed(() => {
-  if (memoryAuto.value) return `自动（${fmtMem(autoMemMB.value)}）`
+  if (memoryAuto.value) return `自动（${fmtMem(autoMemMB.value)}）`;
   // 拖动中显示预览值（按 0.5GB 步进预览取整），松手后稳定为生效值
-  if (memPreview.value != null) return fmtMem(Math.round(memPreview.value / MEM_STEP) * MEM_STEP)
-  return fmtMem(store.settings?.memoryMB ?? 0)
-})
+  if (memPreview.value != null) return fmtMem(Math.round(memPreview.value / MEM_STEP) * MEM_STEP);
+  return fmtMem(store.settings?.memoryMB ?? 0);
+});
 const memoryInfoText = computed(() =>
   memTotal.value
     ? `已用 ${fmtMem(Math.max(0, memTotal.value - memFree.value))} · 可用 ${fmtMem(memFree.value)} · 总计 ${fmtMem(memTotal.value)}`
     : '正在读取本机内存信息…'
-)
+);
 
 // ---------------- 自定义内存滑块（拖动＝预览+比例基准冻结，松手＝生效+一次性重算校准） ----------------
-const memTrack = ref<HTMLElement | null>(null)
-const memDragging = ref(false)
+const memTrack = ref<HTMLElement | null>(null);
+const memDragging = ref(false);
 /** 拖动预览值（MB，无级原始值；拖动中只驱动它，生效值 store.settings.memoryMB 全程不动） */
-const memPreview = ref<number | null>(null)
+const memPreview = ref<number | null>(null);
 /**
  * 拖动开始时刻度基准快照：{ 上限 max }。
  * 整个拖动过程冻结——可用内存浮动、右侧数值宽度变化一律不得影响进度条总长度与比例映射。
  * （根因实证：拖动中上限随可用内存浮动/数值位数挤压轨道 → 同一位置映射比例前后不一致 = 来回抖动）
  */
-const memBaseline = ref<{ max: number; span: number } | null>(null)
+const memBaseline = ref<{ max: number; span: number } | null>(null);
 
 /** 当前刻度基准：拖动中用冻结快照，其余时候用实时值 */
-const memScaleMax = computed(() => memBaseline.value?.max ?? memMax.value)
-const memScaleSpan = computed(() => memBaseline.value?.span ?? Math.max(memMax.value, MEM_MIN + MEM_STEP) - MEM_MIN)
+const memScaleMax = computed(() => memBaseline.value?.max ?? memMax.value);
+const memScaleSpan = computed(() => memBaseline.value?.span ?? Math.max(memMax.value, MEM_MIN + MEM_STEP) - MEM_MIN);
 
 /** 指针位置 → 无级原始 MB（不取整不钳制，取整与钳制只在预览显示与最终提交时发生） */
 function memRawFromClientX(clientX: number): number {
-  const track = memTrack.value
-  if (!track) return store.settings?.memoryMB ?? MEM_MIN
-  const rect = track.getBoundingClientRect()
-  const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-  return MEM_MIN + ratio * memScaleSpan.value
+  const track = memTrack.value;
+  if (!track) return store.settings?.memoryMB ?? MEM_MIN;
+  const rect = track.getBoundingClientRect();
+  const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  return MEM_MIN + ratio * memScaleSpan.value;
 }
 
 function onMemThumbDown(e: PointerEvent) {
-  e.preventDefault()
-  e.stopPropagation()
-  memDragging.value = true
+  e.preventDefault();
+  e.stopPropagation();
+  memDragging.value = true;
   // 快照冻结刻度基准：整个拖动期间比例尺不许变
-  const max = memMax.value
-  memBaseline.value = { max, span: Math.max(max, MEM_MIN + MEM_STEP) - MEM_MIN }
-  memPreview.value = store.settings?.memoryMB ?? MEM_MIN
-  ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+  const max = memMax.value;
+  memBaseline.value = { max, span: Math.max(max, MEM_MIN + MEM_STEP) - MEM_MIN };
+  memPreview.value = store.settings?.memoryMB ?? MEM_MIN;
+  (e.target as HTMLElement).setPointerCapture(e.pointerId);
 }
 function onMemPointerMove(e: PointerEvent) {
-  if (!memDragging.value) return
-  memPreview.value = memRawFromClientX(e.clientX)
+  if (!memDragging.value) return;
+  memPreview.value = memRawFromClientX(e.clientX);
 }
 function onMemPointerUp() {
-  if (!memDragging.value) return
-  memDragging.value = false
+  if (!memDragging.value) return;
+  memDragging.value = false;
   // 松手一次性生效：按冻结基准取整（0.5GB 步进）+钳制 + 保存；随后清预览与快照
-  const raw = memPreview.value ?? store.settings?.memoryMB ?? MEM_MIN
-  const frozenMax = memBaseline.value?.max ?? memMax.value
-  memPreview.value = null
-  memBaseline.value = null
-  const v = Math.max(MEM_MIN, Math.min(Math.round(raw / MEM_STEP) * MEM_STEP, frozenMax))
+  const raw = memPreview.value ?? store.settings?.memoryMB ?? MEM_MIN;
+  const frozenMax = memBaseline.value?.max ?? memMax.value;
+  memPreview.value = null;
+  memBaseline.value = null;
+  const v = Math.max(MEM_MIN, Math.min(Math.round(raw / MEM_STEP) * MEM_STEP, frozenMax));
   if (store.settings) {
-    store.settings.memoryMB = v
-    void save({ memoryMB: v })
+    store.settings.memoryMB = v;
+    void save({ memoryMB: v });
   }
   // 松手后允许以最新可用内存重算刻度并一次性校准（此时两值一致，不产生二次跳动）
-  void refreshSystemInfo()
+  void refreshSystemInfo();
 }
 
 /** 数值输入（GB，支持 0.25 精度）；失焦/回车保存 */
-const memoryInputGB = ref('')
-const memoryEditing = ref(false)
+const memoryInputGB = ref('');
+const memoryEditing = ref(false);
 function startMemoryEdit() {
-  memoryInputGB.value = String(((store.settings?.memoryMB ?? MEM_MIN) / 1024).toFixed(2)).replace(/\.?0+$/, '')
-  memoryEditing.value = true
+  memoryInputGB.value = String(((store.settings?.memoryMB ?? MEM_MIN) / 1024).toFixed(2)).replace(/\.?0+$/, '');
+  memoryEditing.value = true;
 }
 function commitMemoryEdit() {
-  const gb = Number(memoryInputGB.value)
-  memoryEditing.value = false
-  if (!Number.isFinite(gb) || gb <= 0) return
-  const mb = Math.round(Math.max(MEM_MIN / 1024, Math.min(gb, memMax.value / 1024)) * 1024)
+  const gb = Number(memoryInputGB.value);
+  memoryEditing.value = false;
+  if (!Number.isFinite(gb) || gb <= 0) return;
+  const mb = Math.round(Math.max(MEM_MIN / 1024, Math.min(gb, memMax.value / 1024)) * 1024);
   if (store.settings) {
-    store.settings.memoryMB = mb
-    void save({ memoryMB: mb })
+    store.settings.memoryMB = mb;
+    void save({ memoryMB: mb });
   }
 }
 
 /* 已填充段宽度百分比：拖动中跟随预览值（无级）+ 冻结比例基准，松手后跟随生效值 */
 const memFillPct = computed(() => {
-  const mb = memPreview.value ?? store.settings?.memoryMB ?? MEM_MIN
-  return Math.max(0, Math.min(100, ((mb - MEM_MIN) / memScaleSpan.value) * 100))
-})
+  const mb = memPreview.value ?? store.settings?.memoryMB ?? MEM_MIN;
+  return Math.max(0, Math.min(100, ((mb - MEM_MIN) / memScaleSpan.value) * 100));
+});
 
 // ---------------- 分辨率 ----------------
-const resolutionError = ref('')
+const resolutionError = ref('');
 
 function saveResolution() {
-  const s = store.settings
-  if (!s) return
-  const width = Number(s.resolution.width)
-  const height = Number(s.resolution.height)
+  const s = store.settings;
+  if (!s) return;
+  const width = Number(s.resolution.width);
+  const height = Number(s.resolution.height);
   if (!Number.isInteger(width) || width < 854 || width > 7680) {
-    resolutionError.value = '窗口宽度必须是 854–7680 之间的整数'
-    return
+    resolutionError.value = '窗口宽度必须是 854–7680 之间的整数';
+    return;
   }
   if (!Number.isInteger(height) || height < 480 || height > 4320) {
-    resolutionError.value = '窗口高度必须是 480–4320 之间的整数'
-    return
+    resolutionError.value = '窗口高度必须是 480–4320 之间的整数';
+    return;
   }
-  resolutionError.value = ''
-  s.resolution.fullscreen = s.resolution.mode === 'fullscreen'
-  void save({ resolution: { ...s.resolution } })
+  resolutionError.value = '';
+  s.resolution.fullscreen = s.resolution.mode === 'fullscreen';
+  void save({ resolution: { ...s.resolution } });
 }
 
 // ---------------- 插件系统 ----------------
-const plugins = ref<PluginInfo[]>([])
-const pluginBusy = ref(false)
+const plugins = ref<PluginInfo[]>([]);
+const pluginBusy = ref(false);
 /** 有插件变更（启停/安装/删除）后需重载生效 */
-const pluginDirty = ref(false)
-const pluginConfirmRemove = ref('')
+const pluginDirty = ref(false);
+const pluginConfirmRemove = ref('');
 
 onMounted(async () => {
   try {
-    plugins.value = await listPlugins()
+    plugins.value = await listPlugins();
   } catch {
     /* 插件列表失败不阻塞设置页 */
   }
-})
+});
 
 async function onInstallPlugin() {
-  if (pluginBusy.value) return
-  pluginBusy.value = true
+  if (pluginBusy.value) return;
+  pluginBusy.value = true;
   try {
-    const before = plugins.value.length
-    plugins.value = await installPlugin()
+    const before = plugins.value.length;
+    plugins.value = await installPlugin();
     if (plugins.value.length > before) {
-      pluginDirty.value = true
-      toast('插件已安装，重载启动器后生效', 'success')
+      pluginDirty.value = true;
+      toast('插件已安装，重载启动器后生效', 'success');
     }
   } catch (e) {
-    toast('安装失败：' + errText(e), 'error')
+    toast('安装失败：' + errText(e), 'error');
   } finally {
-    pluginBusy.value = false
+    pluginBusy.value = false;
   }
 }
 
 async function onTogglePlugin(p: PluginInfo, enabled: boolean) {
   try {
-    plugins.value = await setPluginEnabled(p.id, enabled)
-    pluginDirty.value = true
+    plugins.value = await setPluginEnabled(p.id, enabled);
+    pluginDirty.value = true;
   } catch (e) {
-    toast('操作失败：' + errText(e), 'error')
+    toast('操作失败：' + errText(e), 'error');
   }
 }
 
 async function onRemovePlugin(p: PluginInfo) {
   if (pluginConfirmRemove.value !== p.id) {
-    pluginConfirmRemove.value = p.id
+    pluginConfirmRemove.value = p.id;
     setTimeout(() => {
-      if (pluginConfirmRemove.value === p.id) pluginConfirmRemove.value = ''
-    }, 3000)
-    return
+      if (pluginConfirmRemove.value === p.id) pluginConfirmRemove.value = '';
+    }, 3000);
+    return;
   }
-  pluginConfirmRemove.value = ''
+  pluginConfirmRemove.value = '';
   try {
-    plugins.value = await removePlugin(p.id)
-    pluginDirty.value = true
-    toast(`插件已移入回收站：${p.name}`, 'success')
+    plugins.value = await removePlugin(p.id);
+    pluginDirty.value = true;
+    toast(`插件已移入回收站：${p.name}`, 'success');
   } catch (e) {
-    toast('删除失败：' + errText(e), 'error')
+    toast('删除失败：' + errText(e), 'error');
   }
 }
 </script>
@@ -1616,8 +1616,8 @@ async function onRemovePlugin(p: PluginInfo) {
                 v-if="pluginDirty"
                 class="btn btn-gold btn-sm"
                 @click="
-                  ;($event.target as HTMLButtonElement).blur()
-                  location.reload()
+                  ($event.target as HTMLButtonElement).blur();
+                  location.reload();
                 "
               >
                 重载启动器生效

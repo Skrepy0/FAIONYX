@@ -3,7 +3,7 @@
  * 通用文件管理视图：模组 / 资源包 / 光影包共用。
  * 通过 IPC fs:list / fs:remove / app:openDir 管理游戏目录下的子目录。
  */
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import {
   getModIcons,
   importResources,
@@ -16,201 +16,201 @@ import {
   openDir,
   removeFs,
   toggleDisableFs,
-} from '../api'
-import { displayVersionName as versionLabel, activeInstalled, selectedInstance, refreshInstalled, store, toast } from '../store'
-import { resourceDisplayName, pageSelection } from '@shared/uiPresentation'
-import ContentSkeleton from './ContentSkeleton.vue'
-import ModMigrationModal from './ModMigrationModal.vue'
-import ModVersionModal from './ModVersionModal.vue'
-import type { ManagedMod, ModOperationResult } from '@shared/modManagement'
-import ConfirmModal from './ConfirmModal.vue'
-import DupCleanModal from './DupCleanModal.vue'
-import SelectMenu from './SelectMenu.vue'
-import type { FsEntry, ModUpdateReport } from '@shared/types'
+} from '../api';
+import { displayVersionName as versionLabel, activeInstalled, selectedInstance, refreshInstalled, store, toast } from '../store';
+import { resourceDisplayName, pageSelection } from '@shared/uiPresentation';
+import ContentSkeleton from './ContentSkeleton.vue';
+import ModMigrationModal from './ModMigrationModal.vue';
+import ModVersionModal from './ModVersionModal.vue';
+import type { ManagedMod, ModOperationResult } from '@shared/modManagement';
+import ConfirmModal from './ConfirmModal.vue';
+import DupCleanModal from './DupCleanModal.vue';
+import SelectMenu from './SelectMenu.vue';
+import type { FsEntry, ModUpdateReport } from '@shared/types';
 
 function dragResource(event: DragEvent, entry: FsEntry) {
-  event.preventDefault()
-  event.stopPropagation()
-  if (store.editMode || batchBusy.value || loading.value || !currentVersion.value) return
-  const names = selection.value.has(entry.name) ? [...selection.value] : [entry.name]
-  window.faionyx.send('fs:drag', effectiveRel.value, names, currentVersion.value.folder || activeFolder.value)
+  event.preventDefault();
+  event.stopPropagation();
+  if (store.editMode || batchBusy.value || loading.value || !currentVersion.value) return;
+  const names = selection.value.has(entry.name) ? [...selection.value] : [entry.name];
+  window.faionyx.send('fs:drag', effectiveRel.value, names, currentVersion.value.folder || activeFolder.value);
 }
 const props = defineProps<{
   /** 页面标题，如「模组」 */
-  title: string
+  title: string;
   /** 相对游戏目录的子目录：mods / resourcepacks / shaderpacks */
-  rel: string
+  rel: string;
   /** 打开目录按钮文字 */
-  openLabel: string
+  openLabel: string;
   /** 空状态文案 */
-  emptyText: string
+  emptyText: string;
   /** 标题旁与空状态的内联 SVG 图标 */
-  icon: string
-}>()
+  icon: string;
+}>();
 
-const page = ref(1)
-const PAGE_SIZE = 100
-const entries = ref<FsEntry[]>([])
-const loading = ref(true)
-const loadError = ref('')
-const resolvedPath = ref('')
-const opening = ref(false)
+const page = ref(1);
+const PAGE_SIZE = 100;
+const entries = ref<FsEntry[]>([]);
+const loading = ref(true);
+const loadError = ref('');
+const resolvedPath = ref('');
+const opening = ref(false);
 
 // ---------------- 版本上下文（模组/资源包/光影包按游戏版本管理） ----------------
 /** 当前选中版本（默认第一个已装版本；store.resourceVersionId 三页共享） */
-const activeFolder = computed(() => store.settings?.activeFolder || store.settings?.gameDir || '')
-const availableVersions = activeInstalled
+const activeFolder = computed(() => store.settings?.activeFolder || store.settings?.gameDir || '');
+const availableVersions = activeInstalled;
 const currentVersion = computed(() => {
-  const list = availableVersions.value
-  if (!list.length) return null
-  return list.find((v) => v.id === store.resourceVersionId) ?? list[0]
-})
+  const list = availableVersions.value;
+  if (!list.length) return null;
+  return list.find((v) => v.id === store.resourceVersionId) ?? list[0];
+});
 
 /** 实际管理的相对目录：隔离版本 → versions/<id>/<rel>；共享版本 → <rel> */
 const effectiveRel = computed(() => {
-  const v = currentVersion.value
-  return v ? `versions/${v.id}/${props.rel}` : ''
-})
+  const v = currentVersion.value;
+  return v ? `versions/${v.id}/${props.rel}` : '';
+});
 
 /** 目录不存在时视为空列表（隔离版本刚开启、尚未产生该子目录） */
-let loadedContext = ''
-let loadGeneration = 0
-let updateOperation = 0
+let loadedContext = '';
+let loadGeneration = 0;
+let updateOperation = 0;
 async function load() {
-  const generation = ++loadGeneration
-  const v = currentVersion.value
-  const context = JSON.stringify([effectiveRel.value, v?.folder || activeFolder.value])
+  const generation = ++loadGeneration;
+  const v = currentVersion.value;
+  const context = JSON.stringify([effectiveRel.value, v?.folder || activeFolder.value]);
   if (context !== loadedContext) {
-    entries.value = []
-    resolvedPath.value = ''
-    selection.value = new Set()
-    page.value = 1
+    entries.value = [];
+    resolvedPath.value = '';
+    selection.value = new Set();
+    page.value = 1;
   }
-  loadedContext = context
-  loadError.value = ''
-  resolvedPath.value = ''
+  loadedContext = context;
+  loadError.value = '';
+  resolvedPath.value = '';
   if (!v) {
-    loading.value = false
-    return
+    loading.value = false;
+    return;
   }
-  loading.value = true
+  loading.value = true;
   try {
     const folder = v.folder || activeFolder.value,
-      rel = effectiveRel.value
-    const [result, directory] = await Promise.all([listFs(rel, folder), fsPath(rel, folder)])
+      rel = effectiveRel.value;
+    const [result, directory] = await Promise.all([listFs(rel, folder), fsPath(rel, folder)]);
     if (generation === loadGeneration) {
-      entries.value = result
-      resolvedPath.value = directory
-      page.value = Math.min(page.value, pageCount.value)
-      selection.value = new Set([...selection.value].filter((name) => result.some((e) => e.name === name)))
-      void loadCatalog(generation)
+      entries.value = result;
+      resolvedPath.value = directory;
+      page.value = Math.min(page.value, pageCount.value);
+      selection.value = new Set([...selection.value].filter((name) => result.some((e) => e.name === name)));
+      void loadCatalog(generation);
     }
   } catch (e) {
-    if (generation === loadGeneration) loadError.value = errText(e)
+    if (generation === loadGeneration) loadError.value = errText(e);
   } finally {
-    if (generation === loadGeneration) loading.value = false
+    if (generation === loadGeneration) loading.value = false;
   }
 }
 
-const importing = ref(false)
+const importing = ref(false);
 async function dropResources(event: DragEvent) {
-  const v = currentVersion.value
+  const v = currentVersion.value;
   if (!v) {
-    toast('请先选择当前文件夹中的游戏版本', 'error')
-    return
+    toast('请先选择当前文件夹中的游戏版本', 'error');
+    return;
   }
-  if (importing.value) return
+  if (importing.value) return;
   const folder = v.folder || activeFolder.value,
-    kind = props.rel
+    kind = props.rel;
   const files = Array.from(event.dataTransfer?.files ?? [])
     .map((f) => window.faionyx.getFilePath(f))
-    .filter(Boolean)
-  importing.value = true
+    .filter(Boolean);
+  importing.value = true;
   try {
-    const count = await importResources(files, v.id, folder, kind)
-    toast('已导入 ' + count + ' 项到 ' + v.id + ' / ' + kind, 'success')
-    await load()
+    const count = await importResources(files, v.id, folder, kind);
+    toast('已导入 ' + count + ' 项到 ' + v.id + ' / ' + kind, 'success');
+    await load();
   } catch (e) {
-    toast('导入失败：' + errText(e), 'error')
+    toast('导入失败：' + errText(e), 'error');
   } finally {
-    importing.value = false
+    importing.value = false;
   }
 }
 onUnmounted(() => {
-  if (store.resourceDropHandler === dropResources) store.resourceDropHandler = null
-})
+  if (store.resourceDropHandler === dropResources) store.resourceDropHandler = null;
+});
 onMounted(async () => {
-  store.resourceDropHandler = dropResources
-  if (!store.installed.length) await refreshInstalled()
+  store.resourceDropHandler = dropResources;
+  if (!store.installed.length) await refreshInstalled();
   if (!store.resourceVersionId && store.installed.length) {
-    store.resourceVersionId = store.installed[0].id
+    store.resourceVersionId = store.installed[0].id;
   }
-  void load()
-})
+  void load();
+});
 
 watch([effectiveRel, activeFolder], () => {
-  updateOperation++
-  dupOpen.value = false
-  delModal.open = false
-  updatePanel.open = false
-  updatePanel.checking = false
-  updatePanel.applying = false
-  updatePanel.report = null
-  migrationOpen.value = false
-  void load()
-})
+  updateOperation++;
+  dupOpen.value = false;
+  delModal.open = false;
+  updatePanel.open = false;
+  updatePanel.checking = false;
+  updatePanel.applying = false;
+  updatePanel.report = null;
+  migrationOpen.value = false;
+  void load();
+});
 onUnmounted(() => {
-  loadGeneration++
-  updateOperation++
-})
+  loadGeneration++;
+  updateOperation++;
+});
 watch(
   () => store.fsRefreshTick,
   () => void load()
-)
+);
 
 // ---------------- 路径显示（超长中间省略 + 点击复制） ----------------
 /** 清理重复 MOD 弹窗 */
-const dupOpen = ref(false)
-const migrationOpen = ref(false)
-const updateIcons = ref<Record<string, string>>({})
+const dupOpen = ref(false);
+const migrationOpen = ref(false);
+const updateIcons = ref<Record<string, string>>({});
 
 /** 中间省略的路径：versions/neo…2.0.75/mods */
-const fullPath = computed(() => resolvedPath.value)
+const fullPath = computed(() => resolvedPath.value);
 const displayPath = computed(() =>
   fullPath.value.length > 80 ? fullPath.value.slice(0, 38) + '…' + fullPath.value.slice(-36) : fullPath.value
-)
-const pageMods = computed(() => visibleEntries.value.filter(isModEntry).map((e) => e.name))
-const pageChecked = computed(() => pageSelection(pageMods.value, selection.value))
+);
+const pageMods = computed(() => visibleEntries.value.filter(isModEntry).map((e) => e.name));
+const pageChecked = computed(() => pageSelection(pageMods.value, selection.value));
 function togglePageSelection() {
-  const next = new Set(selection.value)
-  for (const name of pageMods.value) pageChecked.value.all ? next.delete(name) : next.add(name)
-  selection.value = next
+  const next = new Set(selection.value);
+  for (const name of pageMods.value) pageChecked.value.all ? next.delete(name) : next.add(name);
+  selection.value = next;
 }
 const resourceCount = computed(() =>
   props.rel === 'mods' ? entries.value.filter(isModEntry).length : entries.value.filter((e) => e.isDir || /\.zip$/i.test(e.name)).length
-)
-const readableName = (e: FsEntry) => (props.rel === 'resourcepacks' ? resourceDisplayName(e.name) : e.name)
+);
+const readableName = (e: FsEntry) => (props.rel === 'resourcepacks' ? resourceDisplayName(e.name) : e.name);
 
 async function copyPath() {
   if (!fullPath.value) {
-    toast('目录尚未读取，请刷新后重试', 'info')
-    return
+    toast('目录尚未读取，请刷新后重试', 'info');
+    return;
   }
-  const ok = await copyText(fullPath.value)
-  toast(ok ? '已复制完整路径' : '复制失败', ok ? 'success' : 'error')
+  const ok = await copyText(fullPath.value);
+  toast(ok ? '已复制完整路径' : '复制失败', ok ? 'success' : 'error');
 }
 
 // ---------------- 顶栏搜索联动（过滤文件名） ----------------
 const batchResults = ref<ModOperationResult[]>([]),
-  catalogError = ref('')
+  catalogError = ref('');
 const localSearch = ref(''),
   modFilter = ref('all'),
   sortBy = ref('name'),
   catalog = ref<Record<string, ManagedMod>>({}),
   selection = ref(new Set<string>()),
   batchBusy = ref(false),
-  switchFile = ref('')
-const keyword = computed(() => (localSearch.value || store.searchKeyword).trim().toLowerCase())
+  switchFile = ref('');
+const keyword = computed(() => (localSearch.value || store.searchKeyword).trim().toLowerCase());
 const filtered = computed(() => {
   const rows = entries.value.filter(
     (e) =>
@@ -220,47 +220,47 @@ const filtered = computed(() => {
         (modFilter.value === 'enabled' && /\.jar$/i.test(e.name)) ||
         (modFilter.value === 'disabled' && /\.jar\.disabled$/i.test(e.name)) ||
         (modFilter.value === 'locked' && catalog.value[e.name]?.locked))
-  )
+  );
   return rows.sort((a, b) =>
     sortBy.value === 'date'
       ? b.mtime - a.mtime
       : sortBy.value === 'size'
         ? b.size - a.size
         : a.name.localeCompare(b.name, 'zh-CN', { numeric: true })
-  )
-})
+  );
+});
 async function loadCatalog(generation: number) {
-  if (props.rel !== 'mods') return
-  const v = currentVersion.value
-  if (!v) return
+  if (props.rel !== 'mods') return;
+  const v = currentVersion.value;
+  if (!v) return;
   try {
-    const list = (await window.faionyx.invoke('mods:catalog', v.id, v.folder || activeFolder.value)) as ManagedMod[]
+    const list = (await window.faionyx.invoke('mods:catalog', v.id, v.folder || activeFolder.value)) as ManagedMod[];
     if (generation === loadGeneration) {
-      catalog.value = Object.fromEntries(list.map((m) => [m.fileName, m]))
-      catalogError.value = ''
+      catalog.value = Object.fromEntries(list.map((m) => [m.fileName, m]));
+      catalogError.value = '';
     }
   } catch (e) {
     if (generation === loadGeneration) {
-      catalog.value = {}
-      catalogError.value = errText(e)
+      catalog.value = {};
+      catalogError.value = errText(e);
     }
   }
 }
 function selectMod(name: string, checked: boolean) {
-  const s = new Set(selection.value)
-  checked ? s.add(name) : s.delete(name)
-  selection.value = s
+  const s = new Set(selection.value);
+  checked ? s.add(name) : s.delete(name);
+  selection.value = s;
 }
 function selectAll(all = false) {
-  const s = new Set(selection.value)
-  for (const e of (all ? filtered.value : visibleEntries.value).filter(isModEntry)) s.add(e.name)
-  selection.value = s
+  const s = new Set(selection.value);
+  for (const e of (all ? filtered.value : visibleEntries.value).filter(isModEntry)) s.add(e.name);
+  selection.value = s;
 }
 async function batch(action: 'enable' | 'disable' | 'lock' | 'unlock', names = [...selection.value]) {
-  const v = currentVersion.value
-  if (!v || batchBusy.value || loading.value || loadError.value) return
-  const generation = loadGeneration
-  batchBusy.value = true
+  const v = currentVersion.value;
+  if (!v || batchBusy.value || loading.value || loadError.value) return;
+  const generation = loadGeneration;
+  batchBusy.value = true;
   try {
     const results = (await window.faionyx.invoke(
       action === 'lock' || action === 'unlock' ? 'mods:setLocked' : 'mods:setEnabled',
@@ -268,138 +268,138 @@ async function batch(action: 'enable' | 'disable' | 'lock' | 'unlock', names = [
       v.folder || activeFolder.value,
       names,
       action === 'lock' || action === 'enable'
-    )) as ModOperationResult[]
-    const failed = results.filter((r) => !r.ok)
+    )) as ModOperationResult[];
+    const failed = results.filter((r) => !r.ok);
     toast(
       '已处理 ' + (results.length - failed.length) + ' 项' + (failed.length ? '；' + failed.length + ' 项失败：' + failed[0].error : ''),
       failed.length ? 'error' : 'success'
-    )
+    );
     if (generation === loadGeneration) {
-      batchResults.value = results
-      const remaining = new Set(selection.value)
-      for (const r of results) r.ok ? remaining.delete(r.fileName) : remaining.add(r.fileName)
-      selection.value = remaining
-      await load()
+      batchResults.value = results;
+      const remaining = new Set(selection.value);
+      for (const r of results) r.ok ? remaining.delete(r.fileName) : remaining.add(r.fileName);
+      selection.value = remaining;
+      await load();
     }
   } catch (e) {
-    toast(errText(e), 'error')
+    toast(errText(e), 'error');
   } finally {
-    batchBusy.value = false
+    batchBusy.value = false;
   }
 }
 watch([effectiveRel, activeFolder], () => {
-  selection.value = new Set()
-  batchResults.value = []
-  catalog.value = {}
-  catalogError.value = ''
-  localSearch.value = ''
-  modFilter.value = 'all'
-  switchFile.value = ''
-})
-watch([localSearch, modFilter, sortBy], () => (page.value = 1))
+  selection.value = new Set();
+  batchResults.value = [];
+  catalog.value = {};
+  catalogError.value = '';
+  localSearch.value = '';
+  modFilter.value = 'all';
+  switchFile.value = '';
+});
+watch([localSearch, modFilter, sortBy], () => (page.value = 1));
 
-const pageCount = computed(() => Math.max(1, Math.ceil(filtered.value.length / PAGE_SIZE)))
-const visibleEntries = computed(() => filtered.value.slice((page.value - 1) * PAGE_SIZE, page.value * PAGE_SIZE))
-const modIcons = ref<Record<string, string>>({})
-let iconGeneration = 0
-let iconTimer: ReturnType<typeof setTimeout> | undefined
+const pageCount = computed(() => Math.max(1, Math.ceil(filtered.value.length / PAGE_SIZE)));
+const visibleEntries = computed(() => filtered.value.slice((page.value - 1) * PAGE_SIZE, page.value * PAGE_SIZE));
+const modIcons = ref<Record<string, string>>({});
+let iconGeneration = 0;
+let iconTimer: ReturnType<typeof setTimeout> | undefined;
 watch([visibleEntries, effectiveRel, activeFolder], () => {
-  const generation = ++iconGeneration
-  clearTimeout(iconTimer)
-  modIcons.value = {}
-  const version = currentVersion.value
-  if (!version) return
-  const names = visibleEntries.value.filter((e) => !e.isDir && /\.(?:jar(?:\.disabled)?|zip)$/i.test(e.name)).map((e) => e.name)
-  if (!names.length) return
-  const folder = version.folder || activeFolder.value
+  const generation = ++iconGeneration;
+  clearTimeout(iconTimer);
+  modIcons.value = {};
+  const version = currentVersion.value;
+  if (!version) return;
+  const names = visibleEntries.value.filter((e) => !e.isDir && /\.(?:jar(?:\.disabled)?|zip)$/i.test(e.name)).map((e) => e.name);
+  if (!names.length) return;
+  const folder = version.folder || activeFolder.value;
   iconTimer = setTimeout(() => {
     void getModIcons(version.id, names, folder, props.rel)
       .then((icons) => {
-        if (generation === iconGeneration) modIcons.value = icons
+        if (generation === iconGeneration) modIcons.value = icons;
       })
-      .catch(() => {})
-  }, 120)
-})
+      .catch(() => {});
+  }, 120);
+});
 onUnmounted(() => {
-  iconGeneration++
-  clearTimeout(iconTimer)
-})
+  iconGeneration++;
+  clearTimeout(iconTimer);
+});
 watch([keyword, pageCount], () => {
-  page.value = Math.min(page.value, pageCount.value)
-})
+  page.value = Math.min(page.value, pageCount.value);
+});
 
 async function onOpenDir() {
-  if (!currentVersion.value) return
-  opening.value = true
+  if (!currentVersion.value) return;
+  opening.value = true;
   try {
-    await openDir(effectiveRel.value, currentVersion.value?.folder || activeFolder.value)
+    await openDir(effectiveRel.value, currentVersion.value?.folder || activeFolder.value);
   } catch (e) {
-    toast('打开文件夹失败：' + errText(e), 'error')
+    toast('打开文件夹失败：' + errText(e), 'error');
   } finally {
-    opening.value = false
+    opening.value = false;
   }
 }
 
-const delModal = reactive({ open: false, target: null as FsEntry | null, busy: false })
+const delModal = reactive({ open: false, target: null as FsEntry | null, busy: false });
 
 function onRemove(entry: FsEntry) {
-  delModal.open = true
-  delModal.target = entry
+  delModal.open = true;
+  delModal.target = entry;
 }
 
 // ---------------- 模组禁用/启用（仅模组页；.jar ↔ .jar.disabled，运行中由主进程阻止） ----------------
-const isModEntry = (e: FsEntry) => props.rel === 'mods' && !e.isDir && /\.jar(\.disabled)?$/i.test(e.name)
-const isDisabledMod = (e: FsEntry) => /\.jar\.disabled$/i.test(e.name)
-const toggling = ref('')
+const isModEntry = (e: FsEntry) => props.rel === 'mods' && !e.isDir && /\.jar(\.disabled)?$/i.test(e.name);
+const isDisabledMod = (e: FsEntry) => /\.jar\.disabled$/i.test(e.name);
+const toggling = ref('');
 
 async function onToggleDisable(entry: FsEntry, event?: Event) {
-  if (event?.target) (event.target as HTMLInputElement).checked = !isDisabledMod(entry)
-  if (!currentVersion.value) return
-  if (toggling.value) return
-  toggling.value = entry.name
-  const generation = loadGeneration
+  if (event?.target) (event.target as HTMLInputElement).checked = !isDisabledMod(entry);
+  if (!currentVersion.value) return;
+  if (toggling.value) return;
+  toggling.value = entry.name;
+  const generation = loadGeneration;
   try {
-    const result = await toggleDisableFs(effectiveRel.value, entry.name, currentVersion.value?.folder || activeFolder.value)
-    if (generation !== loadGeneration) return
-    entries.value = result
-    toast(isDisabledMod(entry) ? `已启用 ${entry.name.replace(/\.disabled$/i, '')}` : `已禁用 ${entry.name}`, 'success')
+    const result = await toggleDisableFs(effectiveRel.value, entry.name, currentVersion.value?.folder || activeFolder.value);
+    if (generation !== loadGeneration) return;
+    entries.value = result;
+    toast(isDisabledMod(entry) ? `已启用 ${entry.name.replace(/\.disabled$/i, '')}` : `已禁用 ${entry.name}`, 'success');
   } catch (e) {
-    toast(errText(e), 'error')
+    toast(errText(e), 'error');
   } finally {
-    toggling.value = ''
+    toggling.value = '';
   }
 }
 
 async function onConfirmRemove() {
-  if (!currentVersion.value) return
-  const entry = delModal.target
-  if (!entry || delModal.busy) return
-  delModal.busy = true
-  const generation = loadGeneration
+  if (!currentVersion.value) return;
+  const entry = delModal.target;
+  if (!entry || delModal.busy) return;
+  delModal.busy = true;
+  const generation = loadGeneration;
   try {
-    const result = await removeFs(effectiveRel.value, entry.name, currentVersion.value?.folder || activeFolder.value)
-    if (generation !== loadGeneration) return
-    entries.value = result
-    delModal.open = false
-    toast(`已移入回收站：${entry.name}`, 'success')
+    const result = await removeFs(effectiveRel.value, entry.name, currentVersion.value?.folder || activeFolder.value);
+    if (generation !== loadGeneration) return;
+    entries.value = result;
+    delModal.open = false;
+    toast(`已移入回收站：${entry.name}`, 'success');
   } catch (e) {
-    toast('删除失败：' + errText(e), 'error')
+    toast('删除失败：' + errText(e), 'error');
   } finally {
-    delModal.busy = false
+    delModal.busy = false;
   }
 }
 
 function fmtSize(n: number): string {
-  if (n < 1024) return `${n} B`
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
-  if (n < 1024 * 1024 * 1024) return `${(n / 1024 / 1024).toFixed(1)} MB`
-  return `${(n / 1024 / 1024 / 1024).toFixed(2)} GB`
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  if (n < 1024 * 1024 * 1024) return `${(n / 1024 / 1024).toFixed(1)} MB`;
+  return `${(n / 1024 / 1024 / 1024).toFixed(2)} GB`;
 }
 
 const fmtDate = (ts: number) => {
-  const d = new Date(ts)
-  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('zh-CN')
-}
+  const d = new Date(ts);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('zh-CN');
+};
 
 // ---------------- MOD 更新检测（仅模组页；按 sha1 反查 Modrinth，内联面板不跳页） ----------------
 const updatePanel = reactive({
@@ -411,50 +411,50 @@ const updatePanel = reactive({
   applying: false,
   itemState: {} as Record<string, 'start' | 'ok' | 'error' | undefined>,
   itemError: {} as Record<string, string>,
-})
+});
 
 watch(catalog, () => {
-  updatePanel.selected = new Set([...updatePanel.selected].filter((name) => !catalog.value[name]?.locked))
-})
-const updatableEntries = computed(() => updatePanel.report?.entries.filter((e) => e.update) ?? [])
-const unmatchedCount = computed(() => updatePanel.report?.entries.filter((e) => !e.source).length ?? 0)
-const latestCount = computed(() => updatePanel.report?.entries.filter((e) => e.alreadyLatest || (e.source && !e.update)).length ?? 0)
+  updatePanel.selected = new Set([...updatePanel.selected].filter((name) => !catalog.value[name]?.locked));
+});
+const updatableEntries = computed(() => updatePanel.report?.entries.filter((e) => e.update) ?? []);
+const unmatchedCount = computed(() => updatePanel.report?.entries.filter((e) => !e.source).length ?? 0);
+const latestCount = computed(() => updatePanel.report?.entries.filter((e) => e.alreadyLatest || (e.source && !e.update)).length ?? 0);
 
 async function onCheckUpdates() {
-  const v = currentVersion.value
-  if (!v || updatePanel.checking || updatePanel.applying) return
-  updatePanel.checking = true
-  updatePanel.error = ''
-  updatePanel.report = null
-  updatePanel.open = true
-  updatePanel.itemState = {}
-  updatePanel.itemError = {}
-  const generation = loadGeneration
+  const v = currentVersion.value;
+  if (!v || updatePanel.checking || updatePanel.applying) return;
+  updatePanel.checking = true;
+  updatePanel.error = '';
+  updatePanel.report = null;
+  updatePanel.open = true;
+  updatePanel.itemState = {};
+  updatePanel.itemError = {};
+  const generation = loadGeneration;
   try {
-    const report = await checkModUpdates(v.id, v.folder)
-    if (generation !== loadGeneration) return
-    updatePanel.report = report
-    updateIcons.value = {}
-    const names = report.entries.filter((e) => e.update).map((e) => e.fileName)
+    const report = await checkModUpdates(v.id, v.folder);
+    if (generation !== loadGeneration) return;
+    updatePanel.report = report;
+    updateIcons.value = {};
+    const names = report.entries.filter((e) => e.update).map((e) => e.fileName);
     for (let i = 0; i < names.length; i += 100)
       void getModIcons(v.id, names.slice(i, i + 100), v.folder || activeFolder.value)
         .then((icons) => {
-          if (generation === loadGeneration) updateIcons.value = { ...updateIcons.value, ...icons }
+          if (generation === loadGeneration) updateIcons.value = { ...updateIcons.value, ...icons };
         })
-        .catch(() => {})
-    updatePanel.selected = new Set(report.entries.filter((e) => e.update && !catalog.value[e.fileName]?.locked).map((e) => e.fileName))
-    if (!report.entries.length) toast('该实例 mods 目录为空', 'info')
+        .catch(() => {});
+    updatePanel.selected = new Set(report.entries.filter((e) => e.update && !catalog.value[e.fileName]?.locked).map((e) => e.fileName));
+    if (!report.entries.length) toast('该实例 mods 目录为空', 'info');
   } catch (e) {
-    if (generation === loadGeneration) updatePanel.error = errText(e)
+    if (generation === loadGeneration) updatePanel.error = errText(e);
   } finally {
-    if (generation === loadGeneration) updatePanel.checking = false
+    if (generation === loadGeneration) updatePanel.checking = false;
   }
 }
 
 async function applyUpdates(fileNames: string[]) {
-  const v = currentVersion.value
-  const report = updatePanel.report
-  if (!v || !report || updatePanel.applying) return
+  const v = currentVersion.value;
+  const report = updatePanel.report;
+  if (!v || !report || updatePanel.applying) return;
   const targets = report.entries
     .filter((e) => e.update && fileNames.includes(e.fileName) && !catalog.value[e.fileName]?.locked)
     .map((e) => ({
@@ -464,55 +464,55 @@ async function applyUpdates(fileNames: string[]) {
       targetName: e.update!.fileName,
       sha1: e.update!.sha1,
       size: e.update!.size,
-    }))
-  if (!targets.length) return
-  updatePanel.applying = true
-  const operation = ++updateOperation
+    }));
+  if (!targets.length) return;
+  updatePanel.applying = true;
+  const operation = ++updateOperation;
   for (const target of targets) {
-    updatePanel.itemState[target.fileName] = 'start'
-    delete updatePanel.itemError[target.fileName]
+    updatePanel.itemState[target.fileName] = 'start';
+    delete updatePanel.itemError[target.fileName];
   }
   try {
-    const results = await applyModUpdates(v.id, targets, v.folder)
+    const results = await applyModUpdates(v.id, targets, v.folder);
     if (operation !== updateOperation) {
-      toast('原实例的模组更新已结束', 'info')
-      return
+      toast('原实例的模组更新已结束', 'info');
+      return;
     }
-    let okCount = 0
+    let okCount = 0;
     for (const r of results) {
-      updatePanel.itemState[r.fileName] = r.ok ? 'ok' : 'error'
-      if (r.ok) okCount++
-      else updatePanel.itemError[r.fileName] = r.error ?? '未知错误'
+      updatePanel.itemState[r.fileName] = r.ok ? 'ok' : 'error';
+      if (r.ok) okCount++;
+      else updatePanel.itemError[r.fileName] = r.error ?? '未知错误';
     }
     if (okCount) {
-      toast(`已更新 ${okCount} 个 MOD`, 'success')
+      toast(`已更新 ${okCount} 个 MOD`, 'success');
       updatePanel.report = {
         ...report,
         entries: report.entries.filter((e) => updatePanel.itemState[e.fileName] !== 'ok'),
-      }
-      updatePanel.selected = new Set([...updatePanel.selected].filter((f) => updatePanel.itemState[f] !== 'ok'))
-      void load()
+      };
+      updatePanel.selected = new Set([...updatePanel.selected].filter((f) => updatePanel.itemState[f] !== 'ok'));
+      void load();
     }
-    const failed = results.filter((r) => !r.ok)
-    if (failed.length) toast(`${failed.length} 个更新失败：${failed[0].error ?? ''}`, 'error')
-    if (updatePanel.report.entries.length === 0) updatePanel.open = false
+    const failed = results.filter((r) => !r.ok);
+    if (failed.length) toast(`${failed.length} 个更新失败：${failed[0].error ?? ''}`, 'error');
+    if (updatePanel.report.entries.length === 0) updatePanel.open = false;
   } catch (e) {
     if (operation === updateOperation)
       for (const target of targets) {
-        updatePanel.itemState[target.fileName] = 'error'
-        updatePanel.itemError[target.fileName] = errText(e)
+        updatePanel.itemState[target.fileName] = 'error';
+        updatePanel.itemError[target.fileName] = errText(e);
       }
-    toast('更新失败：' + errText(e), 'error')
+    toast('更新失败：' + errText(e), 'error');
   } finally {
-    if (operation === updateOperation) updatePanel.applying = false
+    if (operation === updateOperation) updatePanel.applying = false;
   }
 }
 
 function toggleUpdateSelect(fileName: string, checked: boolean) {
-  const next = new Set(updatePanel.selected)
-  if (checked) next.add(fileName)
-  else next.delete(fileName)
-  updatePanel.selected = next
+  const next = new Set(updatePanel.selected);
+  if (checked) next.add(fileName);
+  else next.delete(fileName);
+  updatePanel.selected = next;
 }
 </script>
 
@@ -914,8 +914,8 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
       :file-name="switchFile"
       @close="switchFile = ''"
       @done="
-        load()
-        toast('模组版本已切换', 'success')
+        load();
+        toast('模组版本已切换', 'success');
       "
     />
     <ModMigrationModal v-if="migrationOpen && currentVersion" :source="currentVersion" @close="migrationOpen = false" />

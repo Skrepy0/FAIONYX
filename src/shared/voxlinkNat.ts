@@ -11,14 +11,14 @@ export const NAT_RAW_LABELS: Record<string, string> = {
   open: '开放',
   moderate: '中等限制',
   strict: '严格限制',
-}
+};
 export const NAT_CLASS_LABELS: Record<string, string> = {
   CONE: '锥形 NAT',
   EASY_SYM: '易打洞对称 NAT',
   HARD_SYM: '困难对称 NAT',
   UNKNOWN: '未知',
-}
+};
 export const natLabel = (natClass: string | undefined, raw: unknown): string =>
   natClass && natClass !== 'UNKNOWN'
     ? (NAT_CLASS_LABELS[natClass] ?? '未知')
-    : (NAT_RAW_LABELS[typeof raw === 'string' ? raw.trim().toLowerCase() : 'unknown'] ?? '未知')
+    : (NAT_RAW_LABELS[typeof raw === 'string' ? raw.trim().toLowerCase() : 'unknown'] ?? '未知');

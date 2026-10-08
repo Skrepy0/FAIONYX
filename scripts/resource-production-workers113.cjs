@@ -8,43 +8,43 @@ const fs = require('node:fs'),
   v8 = require('node:v8'),
   { spawn } = require('node:child_process'),
   { Worker } = require('node:worker_threads'),
-  asar = require('asar')
+  asar = require('asar');
 const sha = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'),
-  sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+  sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const statistics = (values) => {
-  const a = [...values].sort((x, y) => x - y)
-  return { raw: values, median: a[Math.ceil(a.length * 0.5) - 1], p95: a[Math.ceil(a.length * 0.95) - 1], min: a[0], max: a.at(-1) }
-}
+  const a = [...values].sort((x, y) => x - y);
+  return { raw: values, median: a[Math.ceil(a.length * 0.5) - 1], p95: a[Math.ceil(a.length * 0.95) - 1], min: a[0], max: a.at(-1) };
+};
 function graphFiles(directory) {
   return fs
     .readdirSync(directory)
     .filter((f) => /\.(?:js|cjs)$/.test(f))
     .sort()
-    .map((name) => ({ name, bytes: fs.statSync(path.join(directory, name)).size, sha256: sha(path.join(directory, name)) }))
+    .map((name) => ({ name, bytes: fs.statSync(path.join(directory, name)).size, sha256: sha(path.join(directory, name)) }));
 }
 async function host(specFile) {
-  const spec = JSON.parse(fs.readFileSync(specFile))
-  assert.equal(process.versions.electron, spec.runtime, 'Actual locked production Electron runtime must be used')
-  const records = []
+  const spec = JSON.parse(fs.readFileSync(specFile));
+  assert.equal(process.versions.electron, spec.runtime, 'Actual locked production Electron runtime must be used');
+  const records = [];
   const run = async (label) => {
     const beforeCPU = process.cpuUsage(),
       begin = performance.now(),
       rows = [{ at: begin, memory: process.memoryUsage() }],
-      timer = setInterval(() => rows.push({ at: performance.now(), memory: process.memoryUsage() }), 10)
+      timer = setInterval(() => rows.push({ at: performance.now(), memory: process.memoryUsage() }), 10);
     let worker,
       online = null,
       resultAt = null,
       result,
       error,
       code,
-      signal
+      signal;
     try {
       await new Promise((resolve, reject) => {
-        worker = new Worker(spec.entry, { workerData: spec.workerData })
-        const limit = setTimeout(() => reject(Error('Production worker terminal timed out')), 30000)
+        worker = new Worker(spec.entry, { workerData: spec.workerData });
+        const limit = setTimeout(() => reject(Error('Production worker terminal timed out')), 30000);
         worker.once('online', () => {
-          online = performance.now()
-        })
+          online = performance.now();
+        });
         worker.on('message', (message) => {
           records.push({
             label,
@@ -53,29 +53,29 @@ async function host(specFile) {
               message.progress !== undefined
                 ? message
                 : { resultType: message.result instanceof Uint8Array ? 'bytes' : typeof message.result, error: message.error },
-          })
+          });
           if (Object.hasOwn(message, 'result')) {
-            result = message.result
-            resultAt = performance.now()
+            result = message.result;
+            resultAt = performance.now();
           }
-          if (message.error) error = message.error
-        })
+          if (message.error) error = message.error;
+        });
         worker.once('error', (e) => {
-          clearTimeout(limit)
-          reject(e)
-        })
+          clearTimeout(limit);
+          reject(e);
+        });
         worker.once('exit', (exit) => {
-          code = exit
-          clearTimeout(limit)
-          resolve()
-        })
-      })
-      assert.equal(code, 0)
-      assert(!error, error)
-      assert.notEqual(result, undefined, 'Worker must return its actual original terminal result')
+          code = exit;
+          clearTimeout(limit);
+          resolve();
+        });
+      });
+      assert.equal(code, 0);
+      assert(!error, error);
+      assert.notEqual(result, undefined, 'Worker must return its actual original terminal result');
       const elapsed = performance.now() - begin,
         cpu = process.cpuUsage(beforeCPU),
-        encoded = result instanceof Uint8Array ? Buffer.from(result) : v8.serialize(result)
+        encoded = result instanceof Uint8Array ? Buffer.from(result) : v8.serialize(result);
       return {
         label,
         atUnixMs: Date.now(),
@@ -93,18 +93,18 @@ async function host(specFile) {
         sampledPeakRSSBytes: Math.max(...rows.map((r) => r.memory.rss)),
         scope:
           '10ms read-only memoryUsage samples of owned host+worker; process cumulative CPU. Cold is first worker in new host, warm second worker in same host. No OS disk-cache purge or forced GC.',
-      }
+      };
     } finally {
-      clearInterval(timer)
+      clearInterval(timer);
       if (worker && code === undefined) {
-        error ??= 'Owned worker has not exited naturally'
-        records.push({ label, error }) /* Preserve failure; do not kill any process. */
+        error ??= 'Owned worker has not exited naturally';
+        records.push({ label, error }); /* Preserve failure; do not kill any process. */
       }
     }
-  }
+  };
   try {
     const cold = await run('cold'),
-      warm = await run('warm')
+      warm = await run('warm');
     fs.writeFileSync(
       spec.output,
       JSON.stringify(
@@ -121,8 +121,8 @@ async function host(specFile) {
         null,
         2
       ) + '\n'
-    )
-    console.log('PRODUCTION_WORKER_HOST_COMPLETE')
+    );
+    console.log('PRODUCTION_WORKER_HOST_COMPLETE');
   } catch (error) {
     fs.writeFileSync(
       spec.output,
@@ -131,22 +131,22 @@ async function host(specFile) {
         null,
         2
       ) + '\n'
-    )
-    throw error
+    );
+    throw error;
   }
 }
 async function main() {
-  assert.equal(process.platform, 'win32', 'This default driver uses the preserved public Windows production runtime')
+  assert.equal(process.platform, 'win32', 'This default driver uses the preserved public Windows production runtime');
   const args = process.argv.slice(2),
-    n = Number(args.find((a) => a.startsWith('--groups='))?.slice(9) || 10)
-  assert(Number.isInteger(n) && n >= 10)
+    n = Number(args.find((a) => a.startsWith('--groups='))?.slice(9) || 10);
+  assert(Number.isInteger(n) && n >= 10);
   const baselineASAR = path.resolve(
       args.find((a) => a.startsWith('--baseline='))?.slice(11) || 'out/resource113/baseline112-product/win-unpacked/resources/app.asar'
     ),
     candidateDirectory = path.resolve(args.find((a) => a.startsWith('--candidate='))?.slice(12) || 'out/main'),
-    runtime = path.resolve(args.find((a) => a.startsWith('--electron='))?.slice(11) || 'node_modules/electron/dist/electron.exe')
-  assert.equal(require('electron/package.json').version, '44.3.0')
-  assert.equal(JSON.parse(asar.extractFile(baselineASAR, 'package.json')).version, '1.1.12')
+    runtime = path.resolve(args.find((a) => a.startsWith('--electron='))?.slice(11) || 'node_modules/electron/dist/electron.exe');
+  assert.equal(require('electron/package.json').version, '44.3.0');
+  assert.equal(JSON.parse(asar.extractFile(baselineASAR, 'package.json')).version, '1.1.12');
   const directory = path.resolve('out/resource113/production-workers-' + Date.now()),
     candidate = path.join(directory, 'candidate'),
     receipt = {
@@ -160,30 +160,30 @@ async function main() {
       pairs: [],
       scope:
         'Actual public 1.1.12 ASAR workers vs exact current Rollup out/main worker/chunk bytes put into an isolated QA ASAR. No worker re-bundling. This qualifies actual ASAR graph/worker startup in locked Electron, not final package UI, App total memory or native Mac.',
-    }
-  fs.mkdirSync(directory, { recursive: true })
-  fs.mkdirSync(path.join(candidate, 'out/main'), { recursive: true })
-  const save = () => fs.writeFileSync(path.join(directory, 'summary.json'), JSON.stringify(receipt, null, 2) + '\n')
-  save()
+    };
+  fs.mkdirSync(directory, { recursive: true });
+  fs.mkdirSync(path.join(candidate, 'out/main'), { recursive: true });
+  const save = () => fs.writeFileSync(path.join(directory, 'summary.json'), JSON.stringify(receipt, null, 2) + '\n');
+  save();
   try {
-    receipt.candidateFiles = graphFiles(candidateDirectory)
-    assert(receipt.candidateFiles.some((f) => f.name === 'modScanWorker.cjs'))
-    assert(receipt.candidateFiles.some((f) => f.name === 'projectionWorker.cjs'))
+    receipt.candidateFiles = graphFiles(candidateDirectory);
+    assert(receipt.candidateFiles.some((f) => f.name === 'modScanWorker.cjs'));
+    assert(receipt.candidateFiles.some((f) => f.name === 'projectionWorker.cjs'));
     assert(
       receipt.candidateFiles.some((f) => /^projectionConversion-.*\.js$/.test(f.name)),
       'Actual shared production root chunk required'
-    )
+    );
     for (const file of receipt.candidateFiles)
-      fs.copyFileSync(path.join(candidateDirectory, file.name), path.join(candidate, 'out/main', file.name), fs.constants.COPYFILE_EXCL)
-    fs.writeFileSync(path.join(candidate, 'package.json'), JSON.stringify({ version: require('../package.json').version }))
-    const candidateASAR = path.join(directory, 'candidate-production-bytes.asar')
-    await asar.createPackage(candidate, candidateASAR)
+      fs.copyFileSync(path.join(candidateDirectory, file.name), path.join(candidate, 'out/main', file.name), fs.constants.COPYFILE_EXCL);
+    fs.writeFileSync(path.join(candidate, 'package.json'), JSON.stringify({ version: require('../package.json').version }));
+    const candidateASAR = path.join(directory, 'candidate-production-bytes.asar');
+    await asar.createPackage(candidate, candidateASAR);
     receipt.candidateASAR = {
       file: candidateASAR,
       bytes: fs.statSync(candidateASAR).size,
       sha256: sha(candidateASAR),
       classification: 'QA-only ASAR of copied actual production graph; not a rebuilt or replacement production package',
-    }
+    };
     for (const f of receipt.candidateFiles)
       assert.equal(
         crypto
@@ -191,20 +191,20 @@ async function main() {
           .update(asar.extractFile(candidateASAR, path.normalize('out/main/' + f.name)))
           .digest('hex'),
         f.sha256
-      )
+      );
     receipt.baselineFiles = ['modScanWorker.cjs', 'projectionWorker.cjs'].map((name) => {
-      const data = asar.extractFile(baselineASAR, path.normalize('out/main/' + name))
-      return { name, bytes: data.length, sha256: crypto.createHash('sha256').update(data).digest('hex') }
-    })
-    const fixtureRoot = path.join(directory, 'fixtures')
-    fs.mkdirSync(fixtureRoot)
+      const data = asar.extractFile(baselineASAR, path.normalize('out/main/' + name));
+      return { name, bytes: data.length, sha256: crypto.createHash('sha256').update(data).digest('hex') };
+    });
+    const fixtureRoot = path.join(directory, 'fixtures');
+    fs.mkdirSync(fixtureRoot);
     const empty = path.join(fixtureRoot, 'empty'),
-      mods = path.join(fixtureRoot, 'mods')
-    fs.mkdirSync(empty)
-    fs.mkdirSync(mods)
-    const Zip = require('adm-zip')
+      mods = path.join(fixtureRoot, 'mods');
+    fs.mkdirSync(empty);
+    fs.mkdirSync(mods);
+    const Zip = require('adm-zip');
     for (let i = 0; i < 128; i++) {
-      const zip = new Zip()
+      const zip = new Zip();
       zip.addFile(
         'fabric.mod.json',
         Buffer.from(
@@ -217,13 +217,13 @@ async function main() {
             depends: { minecraft: '1.20.1' },
           })
         )
-      )
-      zip.writeZip(path.join(mods, 'fixture-' + i + '.jar'))
+      );
+      zip.writeZip(path.join(mods, 'fixture-' + i + '.jar'));
     }
-    require('tsx/cjs')
+    require('tsx/cjs');
     const { tag, writeTypedNbt } = require('../src/main/core/typedNbt.ts'),
       vec = (v) => tag(10, { x: tag(3, v[0]), y: tag(3, v[1]), z: tag(3, v[2]) }),
-      file = path.join(fixtureRoot, 'production-fixture.litematic')
+      file = path.join(fixtureRoot, 'production-fixture.litematic');
     fs.writeFileSync(
       file,
       writeTypedNbt(
@@ -245,7 +245,7 @@ async function main() {
         }),
         'Production fixture'
       )
-    )
+    );
     const workloads = [
       { name: 'mod-worker-first-empty', worker: 'modScanWorker.cjs', workerData: { dir: empty, hash: false, purpose: 'analysis' } },
       { name: 'mod-worker-128-metadata', worker: 'modScanWorker.cjs', workerData: { dir: mods, hash: true, purpose: 'analysis' } },
@@ -264,9 +264,9 @@ async function main() {
         worker: 'projectionWorker.cjs',
         workerData: { file, sourceFormat: 'litematic', action: 'convert', format: 'litematic', version: '1.20.1', choices: {} },
       },
-    ]
-    receipt.fixture = { litematicSHA256: sha(file), modCount: 128 }
-    save()
+    ];
+    receipt.fixture = { litematicSHA256: sha(file), modCount: 128 };
+    save();
     const invoke = async (workload, i, kind, phase) => {
       const output = path.join(directory, phase + '-' + workload.name + '-' + i + '-' + kind + '.json'),
         specFile = output + '.spec.json',
@@ -275,66 +275,66 @@ async function main() {
           workerData: workload.workerData,
           output,
           runtime: '44.3.0',
-        }
-      fs.writeFileSync(specFile, JSON.stringify(spec))
+        };
+      fs.writeFileSync(specFile, JSON.stringify(spec));
       const at = new Date().toISOString(),
         log = fs.openSync(output + '.log', 'wx'),
         child = spawn(runtime, [__filename, '--worker-host', specFile], {
           env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
           stdio: ['ignore', log, log],
           windowsHide: true,
-        })
+        });
       try {
         const closed = await new Promise((resolve, reject) => {
-          child.once('error', reject)
-          child.once('close', (code, signal) => resolve({ code, signal }))
-        })
-        assert.equal(closed.code, 0, 'Actual worker host failed; original output/log retained ' + output)
-        const result = JSON.parse(fs.readFileSync(output))
-        assert.equal(result.complete, true)
-        return { at, i, kind, phase, workload: workload.name, output, closed, ...result }
+          child.once('error', reject);
+          child.once('close', (code, signal) => resolve({ code, signal }));
+        });
+        assert.equal(closed.code, 0, 'Actual worker host failed; original output/log retained ' + output);
+        const result = JSON.parse(fs.readFileSync(output));
+        assert.equal(result.complete, true);
+        return { at, i, kind, phase, workload: workload.name, output, closed, ...result };
       } finally {
-        fs.closeSync(log)
+        fs.closeSync(log);
       }
-    }
+    };
     for (const workload of workloads) {
-      const baseline = []
+      const baseline = [];
       for (let i = 0; i < n; i++) {
-        const row = await invoke(workload, i, 'baseline', 'baseline')
-        baseline.push(row)
-        receipt.baseline.push({ workload: workload.name, i, output: row.output })
-        save()
+        const row = await invoke(workload, i, 'baseline', 'baseline');
+        baseline.push(row);
+        receipt.baseline.push({ workload: workload.name, i, output: row.output });
+        save();
       }
-      const noise = {}
+      const noise = {};
       for (const label of ['cold', 'warm'])
         for (const key of ['onlineMs', 'resultMs', 'exitMs', 'cpuMs', 'sampledPeakRSSBytes']) {
           const raw = baseline.map((r) => r[label][key]),
-            deltas = raw.slice(1).map((v, i) => Math.abs(v - raw[i]))
-          noise[label + '/' + key] = { ...statistics(raw), frozenNoise: statistics(deltas).p95 }
+            deltas = raw.slice(1).map((v, i) => Math.abs(v - raw[i]));
+          noise[label + '/' + key] = { ...statistics(raw), frozenNoise: statistics(deltas).p95 };
         }
-      const freezeFile = path.join(directory, workload.name + '-baseline-frozen.json')
-      fs.writeFileSync(freezeFile, JSON.stringify({ at: new Date().toISOString(), n, noise }, null, 2) + '\n', { flag: 'wx' })
+      const freezeFile = path.join(directory, workload.name + '-baseline-frozen.json');
+      fs.writeFileSync(freezeFile, JSON.stringify({ at: new Date().toISOString(), n, noise }, null, 2) + '\n', { flag: 'wx' });
       const freezeSHA = sha(freezeFile),
-        pairs = []
+        pairs = [];
       for (let i = 0; i < n; i++) {
         const order = i % 2 ? ['candidate', 'baseline'] : ['baseline', 'candidate'],
-          pair = { i, order }
-        for (const kind of order) pair[kind] = await invoke(workload, i, kind, 'paired')
+          pair = { i, order };
+        for (const kind of order) pair[kind] = await invoke(workload, i, kind, 'paired');
         for (const label of ['cold', 'warm'])
           assert.equal(
             pair.candidate[label].resultSHA256,
             pair.baseline[label].resultSHA256,
             'Actual worker result bytes/metadata must match'
-          )
-        pairs.push(pair)
-        receipt.pairs.push({ workload: workload.name, i, order, baseline: pair.baseline.output, candidate: pair.candidate.output })
-        save()
+          );
+        pairs.push(pair);
+        receipt.pairs.push({ workload: workload.name, i, order, baseline: pair.baseline.output, candidate: pair.candidate.output });
+        save();
       }
-      assert.equal(sha(freezeFile), freezeSHA)
-      const comparison = { workload: workload.name, n, frozenBaselineSHA256: freezeSHA, metrics: {} }
+      assert.equal(sha(freezeFile), freezeSHA);
+      const comparison = { workload: workload.name, n, frozenBaselineSHA256: freezeSHA, metrics: {} };
       for (const label of ['cold', 'warm'])
         for (const key of ['onlineMs', 'resultMs', 'exitMs', 'cpuMs', 'sampledPeakRSSBytes']) {
-          const deltas = pairs.map((p) => p.candidate[label][key] - p.baseline[label][key])
+          const deltas = pairs.map((p) => p.candidate[label][key] - p.baseline[label][key]);
           comparison.metrics[label + '/' + key] = {
             baseline: statistics(pairs.map((p) => p.baseline[label][key])),
             candidate: statistics(pairs.map((p) => p.candidate[label][key])),
@@ -346,33 +346,33 @@ async function main() {
                 ? 'candidate lower'
                 : 'mixed or equal',
             scope: 'Raw measurement evidence for independent review; noise is not an allowed stable slowdown budget',
-          }
+          };
         }
-      fs.writeFileSync(path.join(directory, workload.name + '-comparison.json'), JSON.stringify(comparison, null, 2) + '\n')
-      console.log('PRODUCTION_WORKER_WORKLOAD_COMPLETE ' + workload.name)
+      fs.writeFileSync(path.join(directory, workload.name + '-comparison.json'), JSON.stringify(comparison, null, 2) + '\n');
+      console.log('PRODUCTION_WORKER_WORKLOAD_COMPLETE ' + workload.name);
     }
-    assert.equal(sha(baselineASAR), receipt.baselineASAR.sha256)
-    assert.deepEqual(graphFiles(candidateDirectory), receipt.candidateFiles, 'Actual production output changed during paired measurement')
-    receipt.complete = true
-    receipt.finishedAt = new Date().toISOString()
-    save()
-    console.log(JSON.stringify({ directory, complete: true, workloads: workloads.length, baselineGroups: n, alternatingPairs: n }))
+    assert.equal(sha(baselineASAR), receipt.baselineASAR.sha256);
+    assert.deepEqual(graphFiles(candidateDirectory), receipt.candidateFiles, 'Actual production output changed during paired measurement');
+    receipt.complete = true;
+    receipt.finishedAt = new Date().toISOString();
+    save();
+    console.log(JSON.stringify({ directory, complete: true, workloads: workloads.length, baselineGroups: n, alternatingPairs: n }));
   } catch (error) {
-    receipt.failure = { message: error.message, stack: error.stack, at: new Date().toISOString() }
-    save()
-    throw error
+    receipt.failure = { message: error.message, stack: error.stack, at: new Date().toISOString() };
+    save();
+    throw error;
   }
 }
 if (require.main === module) {
   if (process.argv[2] === '--worker-host')
     host(process.argv[3]).catch((error) => {
-      console.error(error)
-      process.exitCode = 1
-    })
+      console.error(error);
+      process.exitCode = 1;
+    });
   else
     main().catch((error) => {
-      console.error(error)
-      process.exitCode = 1
-    })
+      console.error(error);
+      process.exitCode = 1;
+    });
 }
-module.exports = { graphFiles, statistics }
+module.exports = { graphFiles, statistics };

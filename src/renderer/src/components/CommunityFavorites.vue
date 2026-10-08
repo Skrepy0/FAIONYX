@@ -1,150 +1,158 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import SelectMenu from './SelectMenu.vue'
-import ConfirmModal from './ConfirmModal.vue'
-import { favorites, favoriteBusy, favoriteErrors, clearFavoriteErrors, linkFavorite, loadFavorites, removeFavorites } from '../modFavorites'
-import { favoriteIconUrl, filterFavorites, type FavoriteFilter, type ModFavorite } from '@shared/modFavorites'
-import type { CommunityProjectReference, CommunitySource } from '@shared/types'
-import { communityProject, errText } from '../api'
+import { computed, onMounted, ref, watch } from 'vue';
+import SelectMenu from './SelectMenu.vue';
+import ConfirmModal from './ConfirmModal.vue';
+import {
+  favorites,
+  favoriteBusy,
+  favoriteErrors,
+  clearFavoriteErrors,
+  linkFavorite,
+  loadFavorites,
+  removeFavorites,
+} from '../modFavorites';
+import { favoriteIconUrl, filterFavorites, type FavoriteFilter, type ModFavorite } from '@shared/modFavorites';
+import type { CommunityProjectReference, CommunitySource } from '@shared/types';
+import { communityProject, errText } from '../api';
 
-const props = defineProps<{ keyword?: string }>()
+const props = defineProps<{ keyword?: string }>();
 const emit = defineEmits<{
-  (event: 'download', project: CommunityProjectReference): void
-  (event: 'details', project: CommunityProjectReference): void
-  (event: 'browse'): void
-}>()
+  (event: 'download', project: CommunityProjectReference): void;
+  (event: 'details', project: CommunityProjectReference): void;
+  (event: 'browse'): void;
+}>();
 const keyword = ref(props.keyword ?? ''),
   source = ref<FavoriteFilter['source']>('all'),
-  sort = ref<FavoriteFilter['sort']>('newest')
+  sort = ref<FavoriteFilter['sort']>('newest');
 watch(
   () => props.keyword,
   (value) => {
-    keyword.value = value ?? ''
+    keyword.value = value ?? '';
   }
-)
-const visible = computed(() => filterFavorites(favorites.value, { keyword: keyword.value, source: source.value, sort: sort.value }))
+);
+const visible = computed(() => filterFavorites(favorites.value, { keyword: keyword.value, source: source.value, sort: sort.value }));
 const selected = ref(new Set<string>()),
   pendingRemoval = ref<string[]>([]),
-  removing = ref(false)
+  removing = ref(false);
 const loading = ref(false),
-  loadError = ref('')
+  loadError = ref('');
 const projectIcons = ref(new Map<string, string>()),
   failedIcons = ref(new Set<string>()),
-  iconRevision = ref(0)
+  iconRevision = ref(0);
 function icon(record: ModFavorite) {
-  return favoriteIconUrl(record.iconUrl) || projectIcons.value.get(record.key)
+  return favoriteIconUrl(record.iconUrl) || projectIcons.value.get(record.key);
 }
 // Old favorites have no artwork field. Fetch their verified MOD metadata in a
 // bounded queue without delaying the list or writing over favorite mutations.
 watch(
   () => `${iconRevision.value}|` + favorites.value.map((record) => `${record.key}:${record.iconUrl || ''}`).join('|'),
   async (_value, _previous, cleanup) => {
-    let stale = false
+    let stale = false;
     cleanup(() => {
-      stale = true
-    })
-    const pending = favorites.value.filter((record) => record.source && record.projectId && !icon(record))
+      stale = true;
+    });
+    const pending = favorites.value.filter((record) => record.source && record.projectId && !icon(record));
     await Promise.all(
       Array.from({ length: Math.min(3, pending.length) }, async () => {
         while (!stale && pending.length) {
-          const record = pending.shift()!
+          const record = pending.shift()!;
           try {
-            const project = await communityProject(record.source!, record.projectId!)
-            const url = favoriteIconUrl(project.iconUrl)
-            if (!stale && url) projectIcons.value = new Map(projectIcons.value).set(record.key, url)
+            const project = await communityProject(record.source!, record.projectId!);
+            const url = favoriteIconUrl(project.iconUrl);
+            if (!stale && url) projectIcons.value = new Map(projectIcons.value).set(record.key, url);
           } catch {
             /* Artwork is optional; installation and favorite state stay usable offline. */
           }
         }
       })
-    )
+    );
   },
   { immediate: true }
-)
-const allSelected = computed(() => visible.value.length > 0 && visible.value.every((f) => selected.value.has(f.key)))
-const someSelected = computed(() => visible.value.some((f) => selected.value.has(f.key)))
-const selectionBusy = computed(() => [...selected.value].some((key) => favoriteBusy.value.has(key)))
+);
+const allSelected = computed(() => visible.value.length > 0 && visible.value.every((f) => selected.value.has(f.key)));
+const someSelected = computed(() => visible.value.some((f) => selected.value.has(f.key)));
+const selectionBusy = computed(() => [...selected.value].some((key) => favoriteBusy.value.has(key)));
 const removalError = computed(() =>
   [...new Set(pendingRemoval.value.map((key) => favoriteErrors.value.get(key)).filter(Boolean))].join('\n')
-)
+);
 function requestCancellation() {
-  const keys = [...selected.value]
-  clearFavoriteErrors(keys)
-  pendingRemoval.value = keys
+  const keys = [...selected.value];
+  clearFavoriteErrors(keys);
+  pendingRemoval.value = keys;
 }
 watch(favorites, (list) => {
-  const keys = new Set(list.map((f) => f.key))
-  selected.value = new Set([...selected.value].filter((key) => keys.has(key)))
-})
+  const keys = new Set(list.map((f) => f.key));
+  selected.value = new Set([...selected.value].filter((key) => keys.has(key)));
+});
 function select(key: string, enabled: boolean) {
-  const next = new Set(selected.value)
-  enabled ? next.add(key) : next.delete(key)
-  selected.value = next
+  const next = new Set(selected.value);
+  enabled ? next.add(key) : next.delete(key);
+  selected.value = next;
 }
 function selectVisible(enabled: boolean) {
-  const next = new Set(selected.value)
-  for (const f of visible.value) enabled ? next.add(f.key) : next.delete(f.key)
-  selected.value = next
+  const next = new Set(selected.value);
+  for (const f of visible.value) enabled ? next.add(f.key) : next.delete(f.key);
+  selected.value = next;
 }
 async function refresh() {
-  loading.value = true
-  loadError.value = ''
-  failedIcons.value = new Set()
+  loading.value = true;
+  loadError.value = '';
+  failedIcons.value = new Set();
   try {
-    await loadFavorites(true)
+    await loadFavorites(true);
   } catch (error) {
-    loadError.value = errText(error)
+    loadError.value = errText(error);
   } finally {
-    loading.value = false
-    iconRevision.value++
+    loading.value = false;
+    iconRevision.value++;
   }
 }
-onMounted(() => void refresh())
+onMounted(() => void refresh());
 async function cancelSelected() {
-  if (removing.value) return
-  removing.value = true
+  if (removing.value) return;
+  removing.value = true;
   try {
-    if (await removeFavorites(pendingRemoval.value)) pendingRemoval.value = []
+    if (await removeFavorites(pendingRemoval.value)) pendingRemoval.value = [];
   } finally {
-    removing.value = false
+    removing.value = false;
   }
 }
 const linkRecord = ref<ModFavorite | null>(null),
   linkSource = ref<CommunitySource>('modrinth'),
   projectId = ref(''),
   linking = ref(false),
-  linkError = ref('')
+  linkError = ref('');
 function openLink(record: ModFavorite) {
-  linkRecord.value = record
-  linkSource.value = 'modrinth'
-  projectId.value = ''
-  linkError.value = ''
+  linkRecord.value = record;
+  linkSource.value = 'modrinth';
+  projectId.value = '';
+  linkError.value = '';
 }
 async function confirmLink() {
-  if (!linkRecord.value || !projectId.value.trim() || linking.value) return
-  linking.value = true
-  linkError.value = ''
+  if (!linkRecord.value || !projectId.value.trim() || linking.value) return;
+  linking.value = true;
+  linkError.value = '';
   try {
-    if (await linkFavorite(linkRecord.value.key, linkSource.value, projectId.value.trim())) linkRecord.value = null
-    else linkError.value = favoriteErrors.value.get(linkRecord.value.key) || '该收藏正在保存，请稍后重试。'
+    if (await linkFavorite(linkRecord.value.key, linkSource.value, projectId.value.trim())) linkRecord.value = null;
+    else linkError.value = favoriteErrors.value.get(linkRecord.value.key) || '该收藏正在保存，请稍后重试。';
   } finally {
-    linking.value = false
+    linking.value = false;
   }
 }
 function project(record: ModFavorite): CommunityProjectReference {
-  return { source: record.source!, projectId: record.projectId!, title: record.name }
+  return { source: record.source!, projectId: record.projectId!, title: record.name };
 }
 const sourceOptions = [
   { value: 'all', label: '全部来源' },
   { value: 'modrinth', label: 'Modrinth' },
   { value: 'curseforge', label: 'CurseForge' },
   { value: 'unlinked', label: '来源未关联' },
-]
+];
 const sortOptions = [
   { value: 'newest', label: '最近收藏' },
   { value: 'oldest', label: '最早收藏' },
   { value: 'name', label: '名称排序' },
-]
+];
 </script>
 
 <template>
@@ -199,8 +207,8 @@ const sortOptions = [
       ><button
         class="btn btn-ghost"
         @click="
-          keyword = ''
-          source = 'all'
+          keyword = '';
+          source = 'all';
         "
       >
         清除筛选

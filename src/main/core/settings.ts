@@ -1,16 +1,16 @@
-import { cleanDesign } from '../../shared/visualDesign'
-import { normalizeVersionCategoryState } from '../../shared/versionCategories'
-import { defaultGameFolder, ensureDefaultGameFolder } from './defaultGameFolder'
+import { cleanDesign } from '../../shared/visualDesign';
+import { normalizeVersionCategoryState } from '../../shared/versionCategories';
+import { defaultGameFolder, ensureDefaultGameFolder } from './defaultGameFolder';
 /**
  * 设置持久化：userData/settings.json
  */
-import { app } from 'electron'
-import fs from 'node:fs'
-import path from 'node:path'
-import type { Settings } from '../../shared/types'
-import { carouselImages, carouselSelection, carouselTiming } from '../../shared/appearancePolicy'
-import { normalizeSkinPalettePreferences } from '../../shared/skinPalettePreferences'
-import { DEFAULT_DOWNLOAD_LIMITS, downloadLimiter, validateDownloadLimits } from './downloadLimits'
+import { app } from 'electron';
+import fs from 'node:fs';
+import path from 'node:path';
+import type { Settings } from '../../shared/types';
+import { carouselImages, carouselSelection, carouselTiming } from '../../shared/appearancePolicy';
+import { normalizeSkinPalettePreferences } from '../../shared/skinPalettePreferences';
+import { DEFAULT_DOWNLOAD_LIMITS, downloadLimiter, validateDownloadLimits } from './downloadLimits';
 import {
   DEFAULT_BACKGROUND,
   DEFAULT_CUSTOM_THEME,
@@ -18,18 +18,18 @@ import {
   DEFAULT_LAUNCH_THUMBNAIL,
   DEFAULT_MS_CLIENT_ID,
   normalizeThemeName,
-} from '../../shared/types'
-import { assertValidResolution, normalizeStoredResolution, resolutionValidationError } from './gameWindow'
-import { ensureGlobalImage, importGlobalImage, removeGlobalImage } from './appearanceAssets'
+} from '../../shared/types';
+import { assertValidResolution, normalizeStoredResolution, resolutionValidationError } from './gameWindow';
+import { ensureGlobalImage, importGlobalImage, removeGlobalImage } from './appearanceAssets';
 
-let cached: Settings | null = null
+let cached: Settings | null = null;
 
 function settingsFile(): string {
-  return path.join(app.getPath('userData'), 'settings.json')
+  return path.join(app.getPath('userData'), 'settings.json');
 }
 
 function defaults(): Settings {
-  const gameDir = defaultGameFolder(app.getPath('appData'))
+  const gameDir = defaultGameFolder(app.getPath('appData'));
   return {
     gameDir,
     folders: [{ path: gameDir, name: '默认文件夹', isDefault: true }],
@@ -61,33 +61,33 @@ function defaults(): Settings {
     skinEditorPalette: normalizeSkinPalettePreferences(undefined),
     closeAfterLaunch: false,
     configVersion: 1,
-  }
+  };
 }
 
 /** 配置不兼容时重置为默认（原文件先备份为 settings.backup-时间戳.json，可人工找回） */
 export function resetSettingsToDefaults(): void {
-  const file = settingsFile()
+  const file = settingsFile();
   try {
     if (fs.existsSync(file)) {
-      const stamp = new Date().toISOString().replace(/[:.]/g, '-')
-      fs.copyFileSync(file, file.replace(/\.json$/, `.backup-${stamp}.json`))
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      fs.copyFileSync(file, file.replace(/\.json$/, `.backup-${stamp}.json`));
     }
   } catch {
     /* 备份失败不阻断重置 */
   }
-  const def = defaults()
-  fs.mkdirSync(path.dirname(file), { recursive: true })
-  ensureDefaultGameFolder(app.getPath('appData'), def.folders)
-  fs.writeFileSync(file, JSON.stringify(def, null, 2), 'utf-8')
-  cached = def
+  const def = defaults();
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  ensureDefaultGameFolder(app.getPath('appData'), def.folders);
+  fs.writeFileSync(file, JSON.stringify(def, null, 2), 'utf-8');
+  cached = def;
 }
 
 /** 读取设置（带内存缓存），文件不存在/损坏时返回默认值 */
 export function getSettings(): Settings {
-  if (cached) return cached
-  const def = defaults()
+  if (cached) return cached;
+  const def = defaults();
   try {
-    const raw = JSON.parse(fs.readFileSync(settingsFile(), 'utf-8')) as Partial<Settings>
+    const raw = JSON.parse(fs.readFileSync(settingsFile(), 'utf-8')) as Partial<Settings>;
     cached = {
       ...def,
       ...raw,
@@ -115,75 +115,75 @@ export function getSettings(): Settings {
             ? [{ path: raw.gameDir, name: '默认文件夹', isDefault: true }]
             : def.folders,
       activeFolder: raw.activeFolder || raw.gameDir || def.activeFolder,
-    }
-    const c = cached
+    };
+    const c = cached;
     try {
-      validateDownloadLimits(c)
+      validateDownloadLimits(c);
     } catch {
-      Object.assign(c, DEFAULT_DOWNLOAD_LIMITS)
+      Object.assign(c, DEFAULT_DOWNLOAD_LIMITS);
     }
-    downloadLimiter.configure(c)
-    c.theme = normalizeThemeName(raw.theme)
-    c.background.fit = ['fill', 'fit', 'crop'].includes(c.background.fit) ? c.background.fit : 'crop'
-    c.launchThumbnail.fit = ['fill', 'fit', 'crop'].includes(c.launchThumbnail.fit) ? c.launchThumbnail.fit : 'crop'
-    const storedBackground = c.background.image
-    const storedThumbnail = c.launchThumbnail.image
-    c.background.image = ensureGlobalImage(storedBackground, 'background', true)
+    downloadLimiter.configure(c);
+    c.theme = normalizeThemeName(raw.theme);
+    c.background.fit = ['fill', 'fit', 'crop'].includes(c.background.fit) ? c.background.fit : 'crop';
+    c.launchThumbnail.fit = ['fill', 'fit', 'crop'].includes(c.launchThumbnail.fit) ? c.launchThumbnail.fit : 'crop';
+    const storedBackground = c.background.image;
+    const storedThumbnail = c.launchThumbnail.image;
+    c.background.image = ensureGlobalImage(storedBackground, 'background', true);
     c.launchThumbnail.images = carouselImages(c.launchThumbnail)
       .map((image) => ensureGlobalImage(image, 'launch-thumbnail', true))
-      .filter(Boolean)
-    c.launchThumbnail.image = c.launchThumbnail.images[0] ?? ''
-    Object.assign(c.launchThumbnail, carouselSelection(c.launchThumbnail), carouselTiming(c.launchThumbnail))
-    if (c.background.mode === 'image' && !c.background.image) c.background.mode = 'none'
-    const migratedResolution = normalizeStoredResolution(c.resolution, def.resolution)
-    c.resolution = resolutionValidationError(migratedResolution) ? def.resolution : migratedResolution
+      .filter(Boolean);
+    c.launchThumbnail.image = c.launchThumbnail.images[0] ?? '';
+    Object.assign(c.launchThumbnail, carouselSelection(c.launchThumbnail), carouselTiming(c.launchThumbnail));
+    if (c.background.mode === 'image' && !c.background.image) c.background.mode = 'none';
+    const migratedResolution = normalizeStoredResolution(c.resolution, def.resolution);
+    c.resolution = resolutionValidationError(migratedResolution) ? def.resolution : migratedResolution;
     // 迁移：旧版默认 client_id（Mojang legacy 应用，不支持 device code）→ 新默认
-    if (c.msClientId === '00000000402b5328') c.msClientId = def.msClientId
+    if (c.msClientId === '00000000402b5328') c.msClientId = def.msClientId;
     // 保证 activeFolder 指向已登记文件夹；gameDir 与 activeFolder 保持一致语义
     if (!c.folders.some((f) => f.path === c.activeFolder)) {
-      c.activeFolder = c.folders.find((f) => f.isDefault)?.path ?? c.folders[0].path
+      c.activeFolder = c.folders.find((f) => f.isDefault)?.path ?? c.folders[0].path;
     }
-    c.gameDir = c.activeFolder
-    cached = c
+    c.gameDir = c.activeFolder;
+    cached = c;
     // 将旧主题 key、旧外部背景路径和损坏资源回退一次性落盘，避免每次启动重复迁移。
     if (c.theme !== raw.theme || c.background.image !== storedBackground || c.launchThumbnail.image !== storedThumbnail) {
       try {
-        fs.mkdirSync(path.dirname(settingsFile()), { recursive: true })
-        fs.writeFileSync(settingsFile(), JSON.stringify(c, null, 2), 'utf-8')
+        fs.mkdirSync(path.dirname(settingsFile()), { recursive: true });
+        fs.writeFileSync(settingsFile(), JSON.stringify(c, null, 2), 'utf-8');
       } catch (error) {
-        console.error('[FAIONYX] 旧外观设置迁移写入失败:', error)
+        console.error('[FAIONYX] 旧外观设置迁移写入失败:', error);
       }
     }
   } catch {
-    cached = def
+    cached = def;
   }
   try {
-    ensureDefaultGameFolder(app.getPath('appData'), cached.folders)
+    ensureDefaultGameFolder(app.getPath('appData'), cached.folders);
   } catch (error) {
-    console.error('[FAIONYX] 默认游戏目录创建失败:', error)
+    console.error('[FAIONYX] 默认游戏目录创建失败:', error);
   }
-  return cached
+  return cached;
 }
 
 /** 合并 patch 并写盘，返回合并后的完整 Settings */
 export function saveSettings(patch: Partial<Settings>): Settings {
   if (Object.prototype.hasOwnProperty.call(patch, 'rememberGameWindowSize') && typeof patch.rememberGameWindowSize !== 'boolean')
-    throw new Error('保存游戏窗口大小必须为开启或关闭')
+    throw new Error('保存游戏窗口大小必须为开启或关闭');
   if (Object.prototype.hasOwnProperty.call(patch, 'uiWindowAutoFit') && typeof patch.uiWindowAutoFit !== 'boolean')
-    throw new Error('UI窗口自适应必须为开启或关闭')
-  const cur = getSettings()
-  validateDownloadLimits({ ...cur, ...patch })
+    throw new Error('UI窗口自适应必须为开启或关闭');
+  const cur = getSettings();
+  validateDownloadLimits({ ...cur, ...patch });
   if (patch.background?.fit !== undefined && !['fill', 'fit', 'crop'].includes(patch.background.fit)) {
-    throw new Error('非法的背景显示方式')
+    throw new Error('非法的背景显示方式');
   }
   if (patch.launchThumbnail?.fit !== undefined && !['fill', 'fit', 'crop'].includes(patch.launchThumbnail.fit)) {
-    throw new Error('非法的启动卡显示方式')
+    throw new Error('非法的启动卡显示方式');
   }
-  let nextResolution = cur.resolution
+  let nextResolution = cur.resolution;
   if (patch.resolution) {
-    const requested = { ...cur.resolution, ...patch.resolution }
-    assertValidResolution(requested)
-    nextResolution = normalizeStoredResolution(requested, cur.resolution)
+    const requested = { ...cur.resolution, ...patch.resolution };
+    assertValidResolution(requested);
+    nextResolution = normalizeStoredResolution(requested, cur.resolution);
   }
   const merged: Settings = {
     ...cur,
@@ -201,9 +201,9 @@ export function saveSettings(patch: Partial<Settings>): Settings {
     background: { ...cur.background, ...(patch.background ?? {}) },
     launchThumbnail: { ...cur.launchThumbnail, ...(patch.launchThumbnail ?? {}) },
     skinEditorPalette: normalizeSkinPalettePreferences(patch.skinEditorPalette ?? cur.skinEditorPalette),
-  }
+  };
   if (patch.background?.image !== undefined) {
-    merged.background.image = ensureGlobalImage(patch.background.image, 'background')
+    merged.background.image = ensureGlobalImage(patch.background.image, 'background');
   }
   if (patch.launchThumbnail) {
     const requested =
@@ -211,91 +211,91 @@ export function saveSettings(patch: Partial<Settings>): Settings {
         ? patch.launchThumbnail
         : patch.launchThumbnail.image !== undefined
           ? { image: patch.launchThumbnail.image }
-          : merged.launchThumbnail
+          : merged.launchThumbnail;
     merged.launchThumbnail.images = carouselImages(requested)
       .map((image) => ensureGlobalImage(image, 'launch-thumbnail'))
-      .filter(Boolean)
-    Object.assign(merged.launchThumbnail, carouselSelection(merged.launchThumbnail), carouselTiming(merged.launchThumbnail))
-    merged.launchThumbnail.image = merged.launchThumbnail.images[0] ?? ''
+      .filter(Boolean);
+    Object.assign(merged.launchThumbnail, carouselSelection(merged.launchThumbnail), carouselTiming(merged.launchThumbnail));
+    merged.launchThumbnail.image = merged.launchThumbnail.images[0] ?? '';
   }
   // activeFolder 与 gameDir 语义一致：改其一跟随另一个
   if (patch.activeFolder && merged.folders.some((f) => f.path === patch.activeFolder)) {
-    merged.gameDir = patch.activeFolder
+    merged.gameDir = patch.activeFolder;
   } else if (patch.gameDir) {
-    merged.activeFolder = patch.gameDir
+    merged.activeFolder = patch.gameDir;
     if (!merged.folders.some((f) => f.path === patch.gameDir)) {
-      merged.folders = [...merged.folders, { path: patch.gameDir, name: path.basename(patch.gameDir), isDefault: false }]
+      merged.folders = [...merged.folders, { path: patch.gameDir, name: path.basename(patch.gameDir), isDefault: false }];
     }
   }
   try {
-    fs.mkdirSync(path.dirname(settingsFile()), { recursive: true })
-    fs.writeFileSync(settingsFile() + '.tmp', JSON.stringify(merged, null, 2), 'utf-8')
-    fs.renameSync(settingsFile() + '.tmp', settingsFile())
+    fs.mkdirSync(path.dirname(settingsFile()), { recursive: true });
+    fs.writeFileSync(settingsFile() + '.tmp', JSON.stringify(merged, null, 2), 'utf-8');
+    fs.renameSync(settingsFile() + '.tmp', settingsFile());
   } catch (error) {
-    throw new Error(`设置写入失败：${error instanceof Error ? error.message : String(error)}`)
+    throw new Error(`设置写入失败：${error instanceof Error ? error.message : String(error)}`);
   }
-  cached = merged
-  if (patch.downloadThreads !== undefined || patch.downloadSpeedKBps !== undefined) downloadLimiter.configure(merged)
+  cached = merged;
+  if (patch.downloadThreads !== undefined || patch.downloadSpeedKBps !== undefined) downloadLimiter.configure(merged);
   if (patch.launchThumbnail) {
-    const retained = new Set(carouselImages(merged.launchThumbnail))
+    const retained = new Set(carouselImages(merged.launchThumbnail));
     for (const image of carouselImages(cur.launchThumbnail)) {
-      if (!retained.has(image)) removeGlobalImage(image, 'launch-thumbnail')
+      if (!retained.has(image)) removeGlobalImage(image, 'launch-thumbnail');
     }
   }
-  return merged
+  return merged;
 }
 
 /** 将旧版保存的外部图片复制到 FAIONYX 目录；原文件永不删除。 */
 export async function migrateLegacyAppearanceAssets(): Promise<void> {
-  const current = getSettings()
-  const imported: Array<{ path: string; purpose: 'background' | 'launch-thumbnail' }> = []
-  const background = { ...current.background }
-  const launchThumbnail = { ...current.launchThumbnail }
-  let changed = false
+  const current = getSettings();
+  const imported: Array<{ path: string; purpose: 'background' | 'launch-thumbnail' }> = [];
+  const background = { ...current.background };
+  const launchThumbnail = { ...current.launchThumbnail };
+  let changed = false;
 
   if (background.image && !ensureGlobalImage(background.image, 'background')) {
-    changed = true
+    changed = true;
     try {
-      const image = await importGlobalImage(background.image, 'background')
-      background.image = image.path
-      imported.push({ path: image.path, purpose: 'background' })
+      const image = await importGlobalImage(background.image, 'background');
+      background.image = image.path;
+      imported.push({ path: image.path, purpose: 'background' });
     } catch {
-      background.image = ''
-      background.mode = 'none'
+      background.image = '';
+      background.mode = 'none';
     }
   }
-  const migrated: string[] = []
-  const remapped = new Map<string, string>()
+  const migrated: string[] = [];
+  const remapped = new Map<string, string>();
   for (const source of carouselImages(launchThumbnail)) {
     if (ensureGlobalImage(source, 'launch-thumbnail')) {
-      migrated.push(source)
-      continue
+      migrated.push(source);
+      continue;
     }
-    changed = true
+    changed = true;
     try {
-      const image = await importGlobalImage(source, 'launch-thumbnail')
-      migrated.push(image.path)
-      remapped.set(source, image.path)
-      imported.push({ path: image.path, purpose: 'launch-thumbnail' })
+      const image = await importGlobalImage(source, 'launch-thumbnail');
+      migrated.push(image.path);
+      remapped.set(source, image.path);
+      imported.push({ path: image.path, purpose: 'launch-thumbnail' });
     } catch {
       /* omit damaged legacy image, retain other slides */
     }
   }
-  launchThumbnail.images = migrated
-  launchThumbnail.image = migrated[0] ?? ''
-  const key = (source: string) => remapped.get(source) ?? source
-  if (launchThumbnail.order) launchThumbnail.order = launchThumbnail.order.map(key)
-  if (launchThumbnail.disabled) launchThumbnail.disabled = launchThumbnail.disabled.map(key)
+  launchThumbnail.images = migrated;
+  launchThumbnail.image = migrated[0] ?? '';
+  const key = (source: string) => remapped.get(source) ?? source;
+  if (launchThumbnail.order) launchThumbnail.order = launchThumbnail.order.map(key);
+  if (launchThumbnail.disabled) launchThumbnail.disabled = launchThumbnail.disabled.map(key);
   if (launchThumbnail.durations)
     launchThumbnail.durations = Object.fromEntries(
       Object.entries(launchThumbnail.durations).map(([source, seconds]) => [key(source), seconds])
-    )
-  if (!changed) return
+    );
+  if (!changed) return;
 
   try {
-    saveSettings({ background, launchThumbnail })
+    saveSettings({ background, launchThumbnail });
   } catch (error) {
-    for (const image of imported) removeGlobalImage(image.path, image.purpose)
-    throw error
+    for (const image of imported) removeGlobalImage(image.path, image.purpose);
+    throw error;
   }
 }

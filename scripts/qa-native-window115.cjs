@@ -1,8 +1,8 @@
 // Read-only native evidence and explicit own-window foreground for disposable QA.
 // No window name matching, other-window inputs, global minimization or persisted desktop pixels.
 function observeOwned(binding, koffiPath) {
-  const w = testElectron.BrowserWindow.fromId(binding.windowId)
-  if (process.pid !== binding.pid || !w || w.webContents.id !== binding.webContentsId) throw Error('Cannot observe unowned native window')
+  const w = testElectron.BrowserWindow.fromId(binding.windowId);
+  if (process.pid !== binding.pid || !w || w.webContents.id !== binding.webContentsId) throw Error('Cannot observe unowned native window');
   const k = process.mainModule.require(koffiPath),
     u = k.load('user32.dll'),
     fg = u.func('uintptr __stdcall GetForegroundWindow()'),
@@ -14,11 +14,11 @@ function observeOwned(binding, koffiPath) {
     hwnd = Number(bytes.length === 8 ? bytes.readBigUInt64LE() : bytes.readUInt32LE()),
     foreground = fg(),
     owner = [0],
-    foregroundOwner = [0]
-  pid(hwnd, owner)
-  pid(foreground, foregroundOwner)
-  if (owner[0] !== binding.pid) throw Error('Observed own HWND/PID changed')
-  const threadContext = context()
+    foregroundOwner = [0];
+  pid(hwnd, owner);
+  pid(foreground, foregroundOwner);
+  if (owner[0] !== binding.pid) throw Error('Observed own HWND/PID changed');
+  const threadContext = context();
   return {
     hwnd,
     foreground,
@@ -33,11 +33,11 @@ function observeOwned(binding, koffiPath) {
     observedAt: Date.now(),
     classification:
       'Read-only actual GetForegroundWindow/HWND/PID for the exactly bound owned window. No focus, visibility or desktop changes; hidden and non-foreground states remain original.',
-  }
+  };
 }
 function focusOwned(binding, koffiPath) {
-  const w = testElectron.BrowserWindow.fromId(binding.windowId)
-  if (process.pid !== binding.pid || !w || w.webContents.id !== binding.webContentsId) throw Error('Cannot focus unowned window')
+  const w = testElectron.BrowserWindow.fromId(binding.windowId);
+  if (process.pid !== binding.pid || !w || w.webContents.id !== binding.webContentsId) throw Error('Cannot focus unowned window');
   const k = process.mainModule.require(koffiPath),
     u = k.load('user32.dll'),
     kernel = k.load('kernel32.dll'),
@@ -49,52 +49,52 @@ function focusOwned(binding, koffiPath) {
     thread = kernel.func('uint32 __stdcall GetCurrentThreadId()'),
     b = w.getNativeWindowHandle(),
     hwnd = Number(b.length === 8 ? b.readBigUInt64LE() : b.readUInt32LE()),
-    owner = [0]
-  pid(hwnd, owner)
-  if (owner[0] !== binding.pid) throw Error('Owned focus HWND/PID mismatch')
-  const proof = { hwnd, pid: binding.pid, before: fg(), simpleSet: null, attached: false, detached: null }
-  w.show()
-  w.focus()
-  proof.simpleSet = set(hwnd)
+    owner = [0];
+  pid(hwnd, owner);
+  if (owner[0] !== binding.pid) throw Error('Owned focus HWND/PID mismatch');
+  const proof = { hwnd, pid: binding.pid, before: fg(), simpleSet: null, attached: false, detached: null };
+  w.show();
+  w.focus();
+  proof.simpleSet = set(hwnd);
   if (fg() !== hwnd) {
     const current = thread(),
       otherOwner = [0],
-      other = pid(fg(), otherOwner)
-    proof.currentThread = current
-    proof.foregroundThread = other
+      other = pid(fg(), otherOwner);
+    proof.currentThread = current;
+    proof.foregroundThread = other;
     try {
       if (current !== other) {
-        proof.attached = attach(current, other, true)
-        if (!proof.attached) throw Error('Owned foreground thread attachment rejected')
+        proof.attached = attach(current, other, true);
+        if (!proof.attached) throw Error('Owned foreground thread attachment rejected');
       }
-      proof.bring = top(hwnd)
-      proof.set = set(hwnd)
+      proof.bring = top(hwnd);
+      proof.set = set(hwnd);
     } finally {
       if (proof.attached) {
-        proof.detached = attach(current, other, false)
-        if (!proof.detached) throw Error('Owned foreground temporary input queue detach failed')
+        proof.detached = attach(current, other, false);
+        if (!proof.detached) throw Error('Owned foreground temporary input queue detach failed');
       }
     }
   }
-  proof.after = fg()
-  if (proof.after !== hwnd) throw Error('Actual owned foreground request rejected: ' + JSON.stringify(proof))
-  return proof
+  proof.after = fg();
+  if (proof.after !== hwnd) throw Error('Actual owned foreground request rejected: ' + JSON.stringify(proof));
+  return proof;
 }
 function captureOwned(binding, sidebar, directory, label, koffiPath) {
   return (async () => {
     const e = testElectron,
-      w = e.BrowserWindow.fromId(binding.windowId)
-    if (process.pid !== binding.pid || !w || w.webContents.id !== binding.webContentsId) throw Error('Exact owned window missing')
+      w = e.BrowserWindow.fromId(binding.windowId);
+    if (process.pid !== binding.pid || !w || w.webContents.id !== binding.webContentsId) throw Error('Exact owned window missing');
     const req = process.mainModule.require.bind(process.mainModule),
       k = req(koffiPath),
       fs = req('node:fs'),
       path = req('node:path'),
-      crypto = req('node:crypto')
+      crypto = req('node:crypto');
     if (!globalThis.__sidebarWin115) {
       const u = k.load('user32.dll'),
         R = k.struct('SidebarPhysicalRect115', { left: 'int32', top: 'int32', right: 'int32', bottom: 'int32' }),
         P = k.struct('SidebarPhysicalPoint115', { x: 'int32', y: 'int32' }),
-        M = k.struct('SidebarPhysicalMonitor115', { cbSize: 'uint32', rcMonitor: R, rcWork: R, dwFlags: 'uint32' })
+        M = k.struct('SidebarPhysicalMonitor115', { cbSize: 'uint32', rcMonitor: R, rcWork: R, dwFlags: 'uint32' });
       globalThis.__sidebarWin115 = {
         fg: u.func('uintptr __stdcall GetForegroundWindow()'),
         pid: u.func('GetWindowThreadProcessId', 'uint32', ['uintptr', k.out(k.pointer('uint32'))]),
@@ -106,22 +106,22 @@ function captureOwned(binding, sidebar, directory, label, koffiPath) {
         thread: u.func('intptr __stdcall GetThreadDpiAwarenessContext()'),
         awareness: u.func('int __stdcall GetAwarenessFromDpiAwarenessContext(intptr)'),
         monitorSize: k.sizeof(M),
-      }
+      };
     }
     const api = globalThis.__sidebarWin115,
       b = w.getNativeWindowHandle(),
-      hwnd = Number(b.length === 8 ? b.readBigUInt64LE() : b.readUInt32LE())
+      hwnd = Number(b.length === 8 ? b.readBigUInt64LE() : b.readUInt32LE());
     const observe = () => {
       const foreground = api.fg(),
         p = [0],
         fp = [0],
         client = {},
         origin = { x: 0, y: 0 },
-        monitor = { cbSize: api.monitorSize, rcMonitor: {}, rcWork: {}, dwFlags: 0 }
-      api.pid(hwnd, p)
-      api.pid(foreground, fp)
+        monitor = { cbSize: api.monitorSize, rcMonitor: {}, rcWork: {}, dwFlags: 0 };
+      api.pid(hwnd, p);
+      api.pid(foreground, fp);
       if (!api.client(hwnd, client) || !api.screen(hwnd, origin) || !api.monitorInfo(api.monitor(hwnd, 2), monitor))
-        throw Error('Actual Win32 physical coordinate query failed')
+        throw Error('Actual Win32 physical coordinate query failed');
       const result = {
         hwnd,
         foreground,
@@ -136,31 +136,31 @@ function captureOwned(binding, sidebar, directory, label, koffiPath) {
         visible: w.isVisible(),
         minimized: w.isMinimized(),
         observedAt: Date.now(),
-      }
+      };
       if (foreground !== hwnd || p[0] !== binding.pid || fp[0] !== binding.pid || !result.visible || result.minimized)
-        throw Error('Actual Win32 foreground differs from owned HWND: ' + JSON.stringify(result))
-      if (result.dpiAwareness !== 2) throw Error('Main observer is not per-monitor DPI aware')
-      return result
-    }
+        throw Error('Actual Win32 foreground differs from owned HWND: ' + JSON.stringify(result));
+      if (result.dpiAwareness !== 2) throw Error('Main observer is not per-monitor DPI aware');
+      return result;
+    };
     const before = observe(),
       content = w.getContentBounds(),
       display = e.screen.getDisplayMatching(content),
       bounds = before.monitor.rcMonitor,
       physical = { width: bounds.right - bounds.left, height: bounds.bottom - bounds.top },
       sources = await e.desktopCapturer.getSources({ types: ['screen'], thumbnailSize: physical, fetchWindowIcons: false }),
-      source = sources.find((s) => s.display_id === String(display.id))
-    const afterSource = observe()
+      source = sources.find((s) => s.display_id === String(display.id));
+    const afterSource = observe();
     if (
       JSON.stringify(before.origin) !== JSON.stringify(afterSource.origin) ||
       JSON.stringify(before.client) !== JSON.stringify(afterSource.client)
     )
-      throw Error('Actual HWND moved during native capture')
-    if (!source || source.thumbnail.isEmpty()) throw Error('Matching real display thumbnail missing')
+      throw Error('Actual HWND moved during native capture');
+    if (!source || source.thumbnail.isEmpty()) throw Error('Matching real display thumbnail missing');
     const size = source.thumbnail.getSize(),
       sx = size.width / physical.width,
       sy = size.height / physical.height,
       zoom = w.webContents.getZoomFactor(),
-      scale = before.dpi / 96
+      scale = before.dpi / 96;
     const appCrop = {
         x: Math.round((before.origin.x - bounds.left) * sx),
         y: Math.round((before.origin.y - bounds.top) * sy),
@@ -172,19 +172,19 @@ function captureOwned(binding, sidebar, directory, label, koffiPath) {
         y: appCrop.y + Math.round(sidebar.y * zoom * scale * sy),
         width: Math.round(sidebar.width * zoom * scale * sx),
         height: Math.round(sidebar.height * zoom * scale * sy),
-      }
+      };
     for (const r of [appCrop, sidebarCrop])
       if (r.x < 0 || r.y < 0 || r.width <= 0 || r.height <= 0 || r.x + r.width > size.width || r.y + r.height > size.height)
-        throw Error('Owned crop outside physical screen')
-    const crops = []
+        throw Error('Owned crop outside physical screen');
+    const crops = [];
     for (const [suffix, r] of [
       ['application', appCrop],
       ['sidebar', sidebarCrop],
     ]) {
       const data = source.thumbnail.crop(r).toPNG(),
-        file = label + '-native-' + suffix + '.png'
-      fs.writeFileSync(path.join(directory, file), data, { flag: 'wx' })
-      crops.push({ file, bytes: data.length, sha256: crypto.createHash('sha256').update(data).digest('hex'), crop: r })
+        file = label + '-native-' + suffix + '.png';
+      fs.writeFileSync(path.join(directory, file), data, { flag: 'wx' });
+      crops.push({ file, bytes: data.length, sha256: crypto.createHash('sha256').update(data).digest('hex'), crop: r });
     }
     return {
       before,
@@ -198,7 +198,7 @@ function captureOwned(binding, sidebar, directory, label, koffiPath) {
       crops,
       classification:
         'Actual GetForegroundWindow/HWND/PID checked before, after source and after crop; per-monitor-aware Win32 client physical origin/rect, original native screen cropped in memory only',
-    }
-  })()
+    };
+  })();
 }
-module.exports = { focusOwned, captureOwned, observeOwned }
+module.exports = { focusOwned, captureOwned, observeOwned };

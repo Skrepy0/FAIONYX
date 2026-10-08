@@ -1,9 +1,9 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import { createRequire } from 'node:module'
-import { build } from 'esbuild'
+import fs from 'node:fs';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+import { build } from 'esbuild';
 
-let bundle: Promise<string> | undefined
+let bundle: Promise<string> | undefined;
 
 /** Run the real install orchestrator with private settings; only Electron and metadata transport are injected. */
 export async function versionInstallHarness(root: string, metadataFetch: typeof fetch = fetch, downloadUrl = (url: string) => url) {
@@ -25,10 +25,10 @@ export async function versionInstallHarness(root: string, metadataFetch: typeof 
     platform: 'node',
     packages: 'external',
     logLevel: 'silent',
-  }).then((result) => result.outputFiles[0].text)
-  const require = createRequire(path.resolve('package.json'))
-  const exported = { exports: {} as any }
-  fs.mkdirSync(path.join(root, 'userData'), { recursive: true })
+  }).then((result) => result.outputFiles[0].text);
+  const require = createRequire(path.resolve('package.json'));
+  const exported = { exports: {} as any };
+  fs.mkdirSync(path.join(root, 'userData'), { recursive: true });
   const electron = {
     app: {
       getPath: (name: string) => path.join(root, name),
@@ -36,7 +36,7 @@ export async function versionInstallHarness(root: string, metadataFetch: typeof 
       getName: () => 'FAIONYX-test',
       isPackaged: false,
     },
-  }
+  };
   new Function('require', 'module', 'exports', 'fetch', await bundle)(
     (name: string) =>
       name === 'electron'
@@ -47,23 +47,23 @@ export async function versionInstallHarness(root: string, metadataFetch: typeof 
     exported,
     exported.exports,
     metadataFetch
-  )
+  );
   return exported.exports as {
-    installVanilla: typeof import('../../src/main/core/versions').installVanilla
-    installVersion: typeof import('../../src/main/core/versions').installVersion
-    readVersionJson: typeof import('../../src/main/core/versions').readVersionJson
-    listInstalled: typeof import('../../src/main/core/versions').listInstalled
-    getSettings: typeof import('../../src/main/core/settings').getSettings
-    libraryTasks: typeof import('../../src/main/core/versions').libraryTasks
-    resolvedLibraries: typeof import('../../src/main/core/versions').resolvedLibraries
-    resolveVersionChain: typeof import('../../src/main/core/versions').resolveVersionChain
-    launchLibraryFiles: typeof import('../../src/main/core/versions').launchLibraryFiles
-    listFabricApiVersions: typeof import('../../src/main/core/loaders').listFabricApiVersions
-    communityDownload: typeof import('../../src/main/core/community').communityDownload
-    communitySearchPage: typeof import('../../src/main/core/community').communitySearchPage
-    communityFiles: typeof import('../../src/main/core/community').communityFiles
-    installModpack: typeof import('../../src/main/core/modpacks').installModpack
-    supplyModpackFiles: typeof import('../../src/main/core/modpackManualFiles').supplyModpackFiles
-    closeHttpClient: () => Promise<void>
-  }
+    installVanilla: typeof import('../../src/main/core/versions').installVanilla;
+    installVersion: typeof import('../../src/main/core/versions').installVersion;
+    readVersionJson: typeof import('../../src/main/core/versions').readVersionJson;
+    listInstalled: typeof import('../../src/main/core/versions').listInstalled;
+    getSettings: typeof import('../../src/main/core/settings').getSettings;
+    libraryTasks: typeof import('../../src/main/core/versions').libraryTasks;
+    resolvedLibraries: typeof import('../../src/main/core/versions').resolvedLibraries;
+    resolveVersionChain: typeof import('../../src/main/core/versions').resolveVersionChain;
+    launchLibraryFiles: typeof import('../../src/main/core/versions').launchLibraryFiles;
+    listFabricApiVersions: typeof import('../../src/main/core/loaders').listFabricApiVersions;
+    communityDownload: typeof import('../../src/main/core/community').communityDownload;
+    communitySearchPage: typeof import('../../src/main/core/community').communitySearchPage;
+    communityFiles: typeof import('../../src/main/core/community').communityFiles;
+    installModpack: typeof import('../../src/main/core/modpacks').installModpack;
+    supplyModpackFiles: typeof import('../../src/main/core/modpackManualFiles').supplyModpackFiles;
+    closeHttpClient: () => Promise<void>;
+  };
 }

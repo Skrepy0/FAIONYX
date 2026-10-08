@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ links: { label: string; url: string }[] }>()
+defineProps<{ links: { label: string; url: string }[] }>();
 </script>
 <template>
   <nav class="reference-links" aria-label="相关链接" data-ui="connection:reference-links">

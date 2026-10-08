@@ -4,72 +4,72 @@ const test = require('node:test'),
   fs = require('node:fs'),
   os = require('node:os'),
   path = require('node:path'),
-  vm = require('node:vm')
+  vm = require('node:vm');
 const qa = require('./qa-privacy-categories115.cjs'),
-  version = require('../package.json').version
+  version = require('../package.json').version;
 function temp(t) {
-  const root = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'privacy115-guard-')))
-  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
-  return root
+  const root = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'privacy115-guard-')));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  return root;
 }
 function marker(root, pid = 1234) {
   fs.writeFileSync(
     path.join(root, 'owned-privacy115.json'),
     JSON.stringify({ schema: 1, module: qa.MODULE, root, profile: path.join(root, 'profile'), driverPid: pid, version })
-  )
+  );
 }
 const environment = (root, phase = 'first') => ({
   FAIONYX_UI_MODULE: qa.MODULE,
   FAIONYX_PRIVACY115_ROOT: root,
   FAIONYX_PRIVACY115_PHASE: phase,
-})
+});
 test('Actual HWND foreground guards reject simulated Electron focus and foreign/hidden windows', () => {
   const owned = () => ({
     pid: 1234,
     focused: true,
     win32Foreground: { hwnd: 4567, foreground: 4567, ownerPid: 1234, foregroundPid: 1234, visible: true, minimized: false },
-  })
-  assert.equal(qa.assertOwnedForeground(owned()), true)
+  });
+  assert.equal(qa.assertOwnedForeground(owned()), true);
   for (const change of [
     (n) => delete n.win32Foreground,
     (n) => {
-      n.pid = 9999
+      n.pid = 9999;
     },
     (n) => {
-      n.win32Foreground.ownerPid = 9999
+      n.win32Foreground.ownerPid = 9999;
     },
     (n) => {
-      n.win32Foreground.foregroundPid = 9999
+      n.win32Foreground.foregroundPid = 9999;
     },
     (n) => {
-      n.win32Foreground.foreground = 8888
+      n.win32Foreground.foreground = 8888;
     },
     (n) => {
-      n.win32Foreground.visible = false
+      n.win32Foreground.visible = false;
     },
     (n) => {
-      n.win32Foreground.minimized = true
+      n.win32Foreground.minimized = true;
     },
   ]) {
-    const n = owned()
-    change(n)
-    assert.throws(() => qa.assertOwnedForeground(n))
+    const n = owned();
+    change(n);
+    assert.throws(() => qa.assertOwnedForeground(n));
   }
-})
+});
 test('Dedicated restart root requires actual own marker, parent identity and successful original first phase', (t) => {
-  const root = temp(t)
-  marker(root)
-  assert.equal(qa.ownedProfileConfiguration(environment(root), 1234).root, root)
-  assert.throws(() => qa.ownedProfileConfiguration(environment(root), 789), 'foreign driver must fail')
-  assert.throws(() => qa.ownedProfileConfiguration(environment(root, 'later'), 1234))
-  assert.throws(() => qa.ownedProfileConfiguration(environment(root, 'restart'), 1234))
-  fs.mkdirSync(path.join(root, 'first'))
-  fs.writeFileSync(path.join(root, 'first', 'summary.json'), JSON.stringify({ complete: false }))
-  assert.throws(() => qa.ownedProfileConfiguration(environment(root, 'restart'), 1234))
-  fs.writeFileSync(path.join(root, 'first', 'summary.json'), JSON.stringify({ complete: true }))
-  assert.equal(qa.ownedProfileConfiguration(environment(root, 'restart'), 1234).phase, 'restart')
-  assert.equal(qa.ownedProfileConfiguration({ FAIONYX_UI_MODULE: 'skin118', FAIONYX_PRIVACY115_ROOT: root }, 789), null)
-})
+  const root = temp(t);
+  marker(root);
+  assert.equal(qa.ownedProfileConfiguration(environment(root), 1234).root, root);
+  assert.throws(() => qa.ownedProfileConfiguration(environment(root), 789), 'foreign driver must fail');
+  assert.throws(() => qa.ownedProfileConfiguration(environment(root, 'later'), 1234));
+  assert.throws(() => qa.ownedProfileConfiguration(environment(root, 'restart'), 1234));
+  fs.mkdirSync(path.join(root, 'first'));
+  fs.writeFileSync(path.join(root, 'first', 'summary.json'), JSON.stringify({ complete: false }));
+  assert.throws(() => qa.ownedProfileConfiguration(environment(root, 'restart'), 1234));
+  fs.writeFileSync(path.join(root, 'first', 'summary.json'), JSON.stringify({ complete: true }));
+  assert.equal(qa.ownedProfileConfiguration(environment(root, 'restart'), 1234).phase, 'restart');
+  assert.equal(qa.ownedProfileConfiguration({ FAIONYX_UI_MODULE: 'skin118', FAIONYX_PRIVACY115_ROOT: root }, 789), null);
+});
 const hidden = () => ({
   rows: 2,
   text: '服务器 地址已隐藏',
@@ -78,9 +78,9 @@ const hidden = () => ({
   attributes: [],
   revealed: [],
   toggleLabels: [{ label: '显示服务器地址', pressed: 'false' }],
-})
+});
 test('Privacy assertions reject invisible title/aria/DOM/input and raw host leaks', () => {
-  assert.equal(qa.assertPrivacyState(hidden()), true)
+  assert.equal(qa.assertPrivacyState(hidden()), true);
   for (const change of [
     { text: '127.0.0.1:9' },
     { html: '<span hidden>127.0.0.1:10</span>' },
@@ -91,13 +91,13 @@ test('Privacy assertions reject invisible title/aria/DOM/input and raw host leak
     { html: '<button title="服务器IP为127.0.0.1欢迎加入"/>' },
     { fields: [{ value: 'IP127.0.0.1欢迎加入' }] },
   ])
-    assert.throws(() => qa.assertPrivacyState({ ...hidden(), ...change }))
-  assert.throws(() => qa.assertPrivacyState({ ...hidden(), rows: 0 }))
-  assert.throws(() => qa.assertPrivacyState({ ...hidden(), toggleLabels: [{ label: '地址', pressed: 'true' }] }))
-})
+    assert.throws(() => qa.assertPrivacyState({ ...hidden(), ...change }));
+  assert.throws(() => qa.assertPrivacyState({ ...hidden(), rows: 0 }));
+  assert.throws(() => qa.assertPrivacyState({ ...hidden(), toggleLabels: [{ label: '地址', pressed: 'true' }] }));
+});
 test('Adjacent-IP metadata acceptance requires actual nonpending MOTD and both original masked names', () => {
-  const state = { ...hidden(), rowNames: ['服务器IP为地址已隐藏欢迎加入', 'IP地址已隐藏欢迎加入'], descriptions: ['IP地址已隐藏欢迎加入'] }
-  assert.equal(qa.assertAdjacentMetadataState(state), true)
+  const state = { ...hidden(), rowNames: ['服务器IP为地址已隐藏欢迎加入', 'IP地址已隐藏欢迎加入'], descriptions: ['IP地址已隐藏欢迎加入'] };
+  assert.equal(qa.assertAdjacentMetadataState(state), true);
   for (const change of [
     { rowNames: ['普通服务器', '测试服务器'] },
     { descriptions: [] },
@@ -105,16 +105,16 @@ test('Adjacent-IP metadata acceptance requires actual nonpending MOTD and both o
     { descriptions: ['服务器IP为127.0.0.1欢迎加入'] },
     { text: 'IP127.0.0.1:9欢迎加入' },
   ])
-    assert.throws(() => qa.assertAdjacentMetadataState({ ...state, ...change }))
+    assert.throws(() => qa.assertAdjacentMetadataState({ ...state, ...change }));
   for (const address of ['127.0.0.1:9', '127.0.0.1:10']) {
-    const result = qa.serverPingFixture(address)
-    assert.equal(result.online, true)
-    assert(result.players.includes(address))
-    assert(result.version.includes(address))
-    assert(result.motd.includes('127.0.0.1'))
+    const result = qa.serverPingFixture(address);
+    assert.equal(result.online, true);
+    assert(result.players.includes(address));
+    assert(result.version.includes(address));
+    assert(result.motd.includes('127.0.0.1'));
   }
-  assert.throws(() => qa.serverPingFixture('real.example:25565'))
-})
+  assert.throws(() => qa.serverPingFixture('real.example:25565'));
+});
 test('Synthetic ping boundary preserves original handler, records original requests and refuses foreign replacement', () => {
   const original = () => ({ motd: 'original' }),
     handlers = new Map([['servers:ping', original]]),
@@ -122,31 +122,31 @@ test('Synthetic ping boundary preserves original handler, records original reque
       _invokeHandlers: handlers,
       removeHandler: (channel) => handlers.delete(channel),
       handle: (channel, handler) => {
-        assert(!handlers.has(channel))
-        handlers.set(channel, (...args) => handler(...args))
+        assert(!handlers.has(channel));
+        handlers.set(channel, (...args) => handler(...args));
       },
     },
-    context = vm.createContext({ testElectron: { ipcMain }, Date })
-  const install = () => vm.runInContext(`(${qa.installServerPingBoundary.toString()})(${qa.serverPingFixture.toString()})`, context)
-  const installed = install()
-  assert.equal(installed.complete, true)
-  assert.equal(installed.actualRegisteredWrapper, true)
-  assert.notEqual(handlers.get('servers:ping'), original)
-  assert.equal(handlers.get('servers:ping')({}, '127.0.0.1:9').motd, 'IP127.0.0.1:9欢迎加入')
-  assert.throws(() => install())
-  const result = context.__qaPrivacyPing115.restore()
-  assert.equal(result.complete, true)
-  assert.equal(result.originalHandlerIdentityRestored, true)
-  assert.equal(result.records.length, 1)
-  assert.equal(result.records[0].address, '127.0.0.1:9')
-  assert.equal(handlers.get('servers:ping'), original)
-  assert.equal(context.__qaPrivacyPing115, undefined)
-  install()
-  const foreign = () => ({})
-  handlers.set('servers:ping', foreign)
-  assert.throws(() => context.__qaPrivacyPing115.restore(), /identity changed/)
-  assert.equal(handlers.get('servers:ping'), foreign)
-})
+    context = vm.createContext({ testElectron: { ipcMain }, Date });
+  const install = () => vm.runInContext(`(${qa.installServerPingBoundary.toString()})(${qa.serverPingFixture.toString()})`, context);
+  const installed = install();
+  assert.equal(installed.complete, true);
+  assert.equal(installed.actualRegisteredWrapper, true);
+  assert.notEqual(handlers.get('servers:ping'), original);
+  assert.equal(handlers.get('servers:ping')({}, '127.0.0.1:9').motd, 'IP127.0.0.1:9欢迎加入');
+  assert.throws(() => install());
+  const result = context.__qaPrivacyPing115.restore();
+  assert.equal(result.complete, true);
+  assert.equal(result.originalHandlerIdentityRestored, true);
+  assert.equal(result.records.length, 1);
+  assert.equal(result.records[0].address, '127.0.0.1:9');
+  assert.equal(handlers.get('servers:ping'), original);
+  assert.equal(context.__qaPrivacyPing115, undefined);
+  install();
+  const foreign = () => ({});
+  handlers.set('servers:ping', foreign);
+  assert.throws(() => context.__qaPrivacyPing115.restore(), /identity changed/);
+  assert.equal(handlers.get('servers:ping'), foreign);
+});
 test('Explicit show is instance-scoped and cannot reveal another fixture', () => {
   const visible = {
     ...hidden(),
@@ -154,67 +154,67 @@ test('Explicit show is instance-scoped and cannot reveal another fixture', () =>
     html: '<span>127.0.0.1:9</span>',
     revealed: ['127.0.0.1:9'],
     toggleLabels: [{ label: '隐藏服务器地址', pressed: 'true' }],
-  }
-  assert.equal(qa.assertPrivacyState(visible, { revealed: '127.0.0.1:9' }), true)
-  assert.throws(() => qa.assertPrivacyState({ ...visible, html: '127.0.0.1:9 127.0.0.1:10' }, { revealed: '127.0.0.1:9' }))
-  assert.throws(() => qa.assertPrivacyState({ ...visible, revealed: ['127.0.0.1:10'] }, { revealed: '127.0.0.1:9' }))
-})
+  };
+  assert.equal(qa.assertPrivacyState(visible, { revealed: '127.0.0.1:9' }), true);
+  assert.throws(() => qa.assertPrivacyState({ ...visible, html: '127.0.0.1:9 127.0.0.1:10' }, { revealed: '127.0.0.1:9' }));
+  assert.throws(() => qa.assertPrivacyState({ ...visible, revealed: ['127.0.0.1:10'] }, { revealed: '127.0.0.1:9' }));
+});
 test('Legacy folder-specific false favorite cannot be inferred from the global favorite ID', () => {
-  const row = { selected: '@favorites', rows: [{ name: '联机验证实例', folderName: '独立验证目录', favorite: true }] }
-  assert.equal(qa.assertFavoriteRows(row), undefined)
-  assert.throws(() => qa.assertFavoriteRows({ ...row, rows: [...row.rows, { ...row.rows[0], folderName: '整合包收藏' }] }))
-  assert.throws(() => qa.assertFavoriteRows({ ...row, selected: '@all' }))
-  assert.throws(() => qa.assertFavoriteRows({ ...row, rows: [{ ...row.rows[0], favorite: false }] }))
-})
+  const row = { selected: '@favorites', rows: [{ name: '联机验证实例', folderName: '独立验证目录', favorite: true }] };
+  assert.equal(qa.assertFavoriteRows(row), undefined);
+  assert.throws(() => qa.assertFavoriteRows({ ...row, rows: [...row.rows, { ...row.rows[0], folderName: '整合包收藏' }] }));
+  assert.throws(() => qa.assertFavoriteRows({ ...row, selected: '@all' }));
+  assert.throws(() => qa.assertFavoriteRows({ ...row, rows: [{ ...row.rows[0], favorite: false }] }));
+});
 test('Filesystem fixture setup retains original instance bytes and seeds same-ID scoped favorite distinction', (t) => {
   const root = temp(t),
     profile = path.join(root, 'profile'),
     games = path.join(root, 'games'),
-    other = path.join(root, 'second-games')
-  for (const dir of [profile, games, other]) fs.mkdirSync(dir)
-  const original = path.join(games, 'versions', '联机验证实例')
-  fs.mkdirSync(original, { recursive: true })
-  fs.writeFileSync(path.join(original, '联机验证实例.json'), 'fixture-original')
-  fs.writeFileSync(path.join(original, '联机验证实例.jar'), 'never-launch')
+    other = path.join(root, 'second-games');
+  for (const dir of [profile, games, other]) fs.mkdirSync(dir);
+  const original = path.join(games, 'versions', '联机验证实例');
+  fs.mkdirSync(original, { recursive: true });
+  fs.writeFileSync(path.join(original, '联机验证实例.json'), 'fixture-original');
+  fs.writeFileSync(path.join(original, '联机验证实例.jar'), 'never-launch');
   fs.writeFileSync(
     path.join(profile, 'settings.json'),
     JSON.stringify({ folders: [{ path: games }, { path: other }], theme: 'black-orange' })
-  )
-  fs.writeFileSync(path.join(profile, 'servers.json'), JSON.stringify([{ id: 'one', name: 'A', address: '127.0.0.1:9' }]))
-  const before = fs.readFileSync(path.join(original, '联机验证实例.jar'))
-  qa.prepareFixtures(root)
-  assert.deepEqual(fs.readFileSync(path.join(original, '联机验证实例.jar')), before)
-  const settings = JSON.parse(fs.readFileSync(path.join(profile, 'settings.json')))
-  assert.deepEqual(Object.values(settings.favoriteInstanceOverrides).sort(), [false, true])
-  assert.deepEqual(settings.favoriteVersions, ['联机验证实例'])
-  const rows = qa.instanceFiles(root)
-  assert.equal(rows.length, 4)
-  assert.equal(rows.filter((row) => row.file.endsWith('.jar'))[0].sha256, rows.filter((row) => row.file.endsWith('.jar'))[1].sha256)
-})
+  );
+  fs.writeFileSync(path.join(profile, 'servers.json'), JSON.stringify([{ id: 'one', name: 'A', address: '127.0.0.1:9' }]));
+  const before = fs.readFileSync(path.join(original, '联机验证实例.jar'));
+  qa.prepareFixtures(root);
+  assert.deepEqual(fs.readFileSync(path.join(original, '联机验证实例.jar')), before);
+  const settings = JSON.parse(fs.readFileSync(path.join(profile, 'settings.json')));
+  assert.deepEqual(Object.values(settings.favoriteInstanceOverrides).sort(), [false, true]);
+  assert.deepEqual(settings.favoriteVersions, ['联机验证实例']);
+  const rows = qa.instanceFiles(root);
+  assert.equal(rows.length, 4);
+  assert.equal(rows.filter((row) => row.file.endsWith('.jar'))[0].sha256, rows.filter((row) => row.file.endsWith('.jar'))[1].sha256);
+});
 test('Clipboard boundary records only fixture copy calls, suppresses OS mutation, restores exact inherited function', async () => {
-  let actualWrites = 0
+  let actualWrites = 0;
   const original = async () => {
-      actualWrites++
+      actualWrites++;
     },
     prototype = { writeText: original },
     clipboard = Object.create(prototype),
-    window = {}
+    window = {};
   const context = vm.createContext({
     window,
     navigator: { clipboard },
     performance: { now: () => 123, timeOrigin: 100 },
     location: { href: 'file://owned/renderer/index.html' },
-  })
-  vm.runInContext(`(${qa.captureClipboardBoundary.toString()})()`, context)
-  await clipboard.writeText('127.0.0.1:9')
-  assert.equal(actualWrites, 0)
-  assert.equal(window.__qaPrivacyClipboard115.records[0].text, '127.0.0.1:9')
-  const receipt = window.__qaPrivacyClipboard115.restore()
-  assert.equal(receipt.complete, true)
-  assert.equal(clipboard.writeText, original)
-  assert.equal(Object.hasOwn(clipboard, 'writeText'), false)
-  assert.equal(window.__qaPrivacyClipboard115, undefined)
-})
+  });
+  vm.runInContext(`(${qa.captureClipboardBoundary.toString()})()`, context);
+  await clipboard.writeText('127.0.0.1:9');
+  assert.equal(actualWrites, 0);
+  assert.equal(window.__qaPrivacyClipboard115.records[0].text, '127.0.0.1:9');
+  const receipt = window.__qaPrivacyClipboard115.restore();
+  assert.equal(receipt.complete, true);
+  assert.equal(clipboard.writeText, original);
+  assert.equal(Object.hasOwn(clipboard, 'writeText'), false);
+  assert.equal(window.__qaPrivacyClipboard115, undefined);
+});
 test('Clipboard cleanup refuses foreign replacement instead of overwriting another owner', () => {
   const clipboard = { writeText: async () => {} },
     window = {},
@@ -223,19 +223,19 @@ test('Clipboard cleanup refuses foreign replacement instead of overwriting anoth
       navigator: { clipboard },
       performance: { now: () => 1, timeOrigin: 2 },
       location: { href: 'file://owned' },
-    })
-  vm.runInContext(`(${qa.captureClipboardBoundary.toString()})()`, context)
-  clipboard.writeText = async () => {}
-  assert.throws(() => window.__qaPrivacyClipboard115.restore(), /identity changed/)
-})
+    });
+  vm.runInContext(`(${qa.captureClipboardBoundary.toString()})()`, context);
+  clipboard.writeText = async () => {};
+  assert.throws(() => window.__qaPrivacyClipboard115.restore(), /identity changed/);
+});
 test('Harness registration retains cape and isolates explicit owned profile restart behavior', () => {
-  const source = fs.readFileSync(path.join(__dirname, 'verify-ui-refinement.cjs'), 'utf8')
-  assert(source.includes("['capes115','qa-capes115.cjs']"))
-  assert(source.includes("['privacy-categories115','qa-privacy-categories115.cjs']"))
-  assert(source.includes("privacyOwned?privacyOwned.phase==='first':!macParity||parityPhase==='first'"))
-  assert(source.includes('ws,reloadThemeReady}'))
-  assert(source.includes('requestedTheme=process.env.FAIONYX_TEST_THEME'))
-})
+  const source = fs.readFileSync(path.join(__dirname, 'verify-ui-refinement.cjs'), 'utf8');
+  assert(source.includes("['capes115','qa-capes115.cjs']"));
+  assert(source.includes("['privacy-categories115','qa-privacy-categories115.cjs']"));
+  assert(source.includes("privacyOwned?privacyOwned.phase==='first':!macParity||parityPhase==='first'"));
+  assert(source.includes('ws,reloadThemeReady}'));
+  assert(source.includes('requestedTheme=process.env.FAIONYX_TEST_THEME'));
+});
 test('Name/mask/status region uses measured geometry and rejects foreign hit or invisible child', () => {
   const rect = (x, y, width, height) => ({
       x,
@@ -247,7 +247,7 @@ test('Name/mask/status region uses measured geometry and rejects foreign hit or 
       width,
       height,
       toJSON() {
-        return { x, y, width, height }
+        return { x, y, width, height };
       },
     }),
     row = { parentElement: null, getAnimations: () => [] },
@@ -262,9 +262,9 @@ test('Name/mask/status region uses measured geometry and rejects foreign hit or 
       textContent: '',
       contains: (node) => node === target,
     },
-    region = { isConnected: true, parentElement: row, getBoundingClientRect: () => rect(70, 40, 100, 20), getAnimations: () => [] }
+    region = { isConnected: true, parentElement: row, getBoundingClientRect: () => rect(70, 40, 100, 20), getAnimations: () => [] };
   let point = target,
-    opacity = '1'
+    opacity = '1';
   const context = vm.createContext({
     innerWidth: 500,
     innerHeight: 400,
@@ -279,23 +279,23 @@ test('Name/mask/status region uses measured geometry and rejects foreign hit or 
       elementFromPoint: () => point,
     },
     getComputedStyle: (e) => ({ opacity: e === region ? opacity : '1', visibility: 'visible', display: 'block' }),
-  })
-  const read = () => vm.runInContext(qa.regionCoordinateExpression('#target', '#region'), context)
-  let original = read()
-  assert.equal(original.hit, true)
-  assert.equal(original.x, 120)
-  assert.equal(original.y, 50)
-  assert.equal(original.targetBounds.width, 300)
-  assert.equal(original.bounds.width, 100)
-  point = {}
-  assert.equal(read().hit, false)
-  point = target
-  opacity = '0'
-  assert.equal(read().ancestorsVisible, false)
-  opacity = '1'
-  target.disabled = true
-  assert.equal(read().hit, false)
-})
+  });
+  const read = () => vm.runInContext(qa.regionCoordinateExpression('#target', '#region'), context);
+  let original = read();
+  assert.equal(original.hit, true);
+  assert.equal(original.x, 120);
+  assert.equal(original.y, 50);
+  assert.equal(original.targetBounds.width, 300);
+  assert.equal(original.bounds.width, 100);
+  point = {};
+  assert.equal(read().hit, false);
+  point = target;
+  opacity = '0';
+  assert.equal(read().ancestorsVisible, false);
+  opacity = '1';
+  target.disabled = true;
+  assert.equal(read().hit, false);
+});
 test('Actual minimum is proven by two distinct smaller requests and unchanged actual geometry, not requested-size substitution', () => {
   const native = {
       pid: 4,
@@ -317,8 +317,8 @@ test('Actual minimum is proven by two distinct smaller requests and unchanged ac
       zoom: 1.25,
       first: { native, renderer },
       second: { native: structuredClone(native), renderer: structuredClone(renderer) },
-    }
-  qa.assertMinimumScene(scene)
+    };
+  qa.assertMinimumScene(scene);
   for (const mutate of [
     (s) => s.second.native.bounds.width++,
     (s) => (s.first.renderer.width = 768),
@@ -328,8 +328,8 @@ test('Actual minimum is proven by two distinct smaller requests and unchanged ac
     (s) => (s.first.native.bounds.width = 950),
     (s) => (s.requestedContent = { width: 960, height: 620 }),
   ]) {
-    const bad = structuredClone(scene)
-    mutate(bad)
-    assert.throws(() => qa.assertMinimumScene(bad))
+    const bad = structuredClone(scene);
+    mutate(bad);
+    assert.throws(() => qa.assertMinimumScene(bad));
   }
-})
+});

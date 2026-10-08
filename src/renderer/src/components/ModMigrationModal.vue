@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { IPC, type InstalledVersion, type LoaderName } from '@shared/types'
-import type { ModMigrationPlan } from '@shared/modMigration'
-import MinecraftVersionPicker from './MinecraftVersionPicker.vue'
-import SelectMenu from './SelectMenu.vue'
-import { getModIcons, errText } from '../api'
-import { store, toast } from '../store'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { IPC, type InstalledVersion, type LoaderName } from '@shared/types';
+import type { ModMigrationPlan } from '@shared/modMigration';
+import MinecraftVersionPicker from './MinecraftVersionPicker.vue';
+import SelectMenu from './SelectMenu.vue';
+import { getModIcons, errText } from '../api';
+import { store, toast } from '../store';
 const props = defineProps<{ source: InstalledVersion }>(),
-  emit = defineEmits<{ (e: 'close'): void }>()
+  emit = defineEmits<{ (e: 'close'): void }>();
 const mc = ref(''),
   loader = ref<LoaderName>(props.source.loader || 'fabric'),
   plan = ref<ModMigrationPlan>(),
@@ -15,34 +15,34 @@ const mc = ref(''),
   starting = ref(false),
   error = ref(''),
   confirmed = ref(false),
-  icons = ref<Record<string, string>>({})
-const folder = props.source.folder || store.settings!.activeFolder || store.settings!.gameDir
-const unavailable = computed(() => plan.value?.entries.filter((e) => e.status === 'unavailable') || [])
+  icons = ref<Record<string, string>>({});
+const folder = props.source.folder || store.settings!.activeFolder || store.settings!.gameDir;
+const unavailable = computed(() => plan.value?.entries.filter((e) => e.status === 'unavailable') || []);
 const attention = computed(() => unavailable.value.length + (plan.value?.warnings.length || 0)),
   query = ref(''),
-  onlyMissing = ref(false)
+  onlyMissing = ref(false);
 const rows = computed(
   () =>
     plan.value?.entries.filter(
       (e) => (!onlyMissing.value || e.status === 'unavailable') && (e.fileName + e.name).toLowerCase().includes(query.value.toLowerCase())
     ) || []
-)
-let generation = 0
+);
+let generation = 0;
 watch([mc, loader], () => {
-  generation++
-  checking.value = false
-  plan.value = undefined
-  confirmed.value = false
-  error.value = ''
-})
-onUnmounted(() => generation++)
+  generation++;
+  checking.value = false;
+  plan.value = undefined;
+  confirmed.value = false;
+  error.value = '';
+});
+onUnmounted(() => generation++);
 
 async function inspect() {
-  if (checking.value) return
-  const current = ++generation
-  checking.value = true
-  error.value = ''
-  confirmed.value = false
+  if (checking.value) return;
+  const current = ++generation;
+  checking.value = true;
+  error.value = '';
+  confirmed.value = false;
   try {
     const result = (await window.faionyx.invoke(
       IPC.modsMigrationPlan,
@@ -50,34 +50,34 @@ async function inspect() {
       folder,
       mc.value.trim(),
       loader.value
-    )) as ModMigrationPlan
-    if (current !== generation) return
-    plan.value = result
-    icons.value = {}
-    const names = result.entries.filter((e) => e.fileName).map((e) => e.fileName)
+    )) as ModMigrationPlan;
+    if (current !== generation) return;
+    plan.value = result;
+    icons.value = {};
+    const names = result.entries.filter((e) => e.fileName).map((e) => e.fileName);
     for (let i = 0; i < names.length; i += 100)
       void getModIcons(props.source.id, names.slice(i, i + 100), folder)
         .then((v) => {
-          if (current === generation) icons.value = { ...icons.value, ...v }
+          if (current === generation) icons.value = { ...icons.value, ...v };
         })
-        .catch(() => {})
+        .catch(() => {});
   } catch (e) {
-    if (current === generation) error.value = errText(e)
+    if (current === generation) error.value = errText(e);
   } finally {
-    if (current === generation) checking.value = false
+    if (current === generation) checking.value = false;
   }
 }
 async function start() {
-  if (!plan.value || starting.value || (attention.value && !confirmed.value)) return
-  starting.value = true
+  if (!plan.value || starting.value || (attention.value && !confirmed.value)) return;
+  starting.value = true;
   try {
-    await window.faionyx.invoke(IPC.modsMigrationApply, plan.value.id, confirmed.value)
-    toast('版本迁移已开始，可在下载中心查看进度或取消', 'success')
-    emit('close')
+    await window.faionyx.invoke(IPC.modsMigrationApply, plan.value.id, confirmed.value);
+    toast('版本迁移已开始，可在下载中心查看进度或取消', 'success');
+    emit('close');
   } catch (e) {
-    error.value = errText(e)
+    error.value = errText(e);
   } finally {
-    starting.value = false
+    starting.value = false;
   }
 }
 </script>

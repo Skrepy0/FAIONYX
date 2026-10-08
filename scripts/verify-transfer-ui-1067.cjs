@@ -2,14 +2,14 @@
 // Run after build: node_modules/electron/dist/electron.exe scripts/verify-design-ui.cjs
 const fs = require('node:fs'),
   path = require('node:path'),
-  assert = require('node:assert/strict')
-const { app, BrowserWindow, ipcMain, session } = require('electron')
-const { buildSync } = require('esbuild')
-const root = fs.mkdtempSync(path.resolve('out/network-ui-'))
-app.setPath('userData', path.join(root, 'userData'))
-app.commandLine.appendSwitch('enable-unsafe-swiftshader')
-buildSync({ entryPoints: ['src/shared/types.ts'], bundle: true, platform: 'node', format: 'cjs', outfile: path.join(root, 'types.cjs') })
-const types = require(path.join(root, 'types.cjs'))
+  assert = require('node:assert/strict');
+const { app, BrowserWindow, ipcMain, session } = require('electron');
+const { buildSync } = require('esbuild');
+const root = fs.mkdtempSync(path.resolve('out/network-ui-'));
+app.setPath('userData', path.join(root, 'userData'));
+app.commandLine.appendSwitch('enable-unsafe-swiftshader');
+buildSync({ entryPoints: ['src/shared/types.ts'], bundle: true, platform: 'node', format: 'cjs', outfile: path.join(root, 'types.cjs') });
+const types = require(path.join(root, 'types.cjs'));
 buildSync({
   entryPoints: ['src/main/core/defaultGameOptions.ts'],
   bundle: true,
@@ -17,19 +17,19 @@ buildSync({
   format: 'cjs',
   external: ['electron'],
   outfile: path.join(root, 'gameOptions.cjs'),
-})
-const gameOptions = require(path.join(root, 'gameOptions.cjs'))
+});
+const gameOptions = require(path.join(root, 'gameOptions.cjs'));
 buildSync({
   entryPoints: ['src/main/core/exitJournal.ts'],
   bundle: true,
   platform: 'node',
   format: 'cjs',
   outfile: path.join(root, 'exitJournal.cjs'),
-})
-const journal = new (require(path.join(root, 'exitJournal.cjs')).ExitJournal)(path.join(root, 'exit-history.json'))
-journal.fault('launcher', '上次启动器未正常关闭，已保留异常退出记录。')
-journal.fault('game', '游戏「测试实例」异常退出（代码 -1）。')
-const folder = 'C:/Design fixture/.minecraft'
+});
+const journal = new (require(path.join(root, 'exitJournal.cjs')).ExitJournal)(path.join(root, 'exit-history.json'));
+journal.fault('launcher', '上次启动器未正常关闭，已保留异常退出记录。');
+journal.fault('game', '游戏「测试实例」异常退出（代码 -1）。');
+const folder = 'C:/Design fixture/.minecraft';
 const versions = ['26.2-Fabric 0.19.5', '1.21.11-NeoForge Adventures', '1.21.10-Forge Survival', '26.2 Creative'].map((name, i) => ({
   id: name,
   name,
@@ -39,7 +39,7 @@ const versions = ['26.2-Fabric 0.19.5', '1.21.11-NeoForge Adventures', '1.21.10-
   folder,
   isolated: true,
   modpackName: i === 3 ? 'Creative 整合包' : undefined,
-}))
+}));
 let settings = {
   gameDir: folder,
   activeFolder: folder,
@@ -61,12 +61,12 @@ let settings = {
   background: types.DEFAULT_BACKGROUND,
   launchThumbnail: types.DEFAULT_LAUNCH_THUMBNAIL,
   configVersion: 1,
-}
-const account = { id: 'fixture', type: 'microsoft', username: 'KaMuaMua', uuid: '00000000000000000000000000000000' }
-const fixtureServer = { id: 'test-server', name: '测试服务器', address: 'example.invalid:25565', versionId: versions[0].id, folder }
-let stallPreparation = false
+};
+const account = { id: 'fixture', type: 'microsoft', username: 'KaMuaMua', uuid: '00000000000000000000000000000000' };
+const fixtureServer = { id: 'test-server', name: '测试服务器', address: 'example.invalid:25565', versionId: versions[0].id, folder };
+let stallPreparation = false;
 const calls = [],
-  errors = []
+  errors = [];
 const updateRelease = {
   version: '1.0.46',
   tag: 'v1.0.46',
@@ -74,7 +74,7 @@ const updateRelease = {
   assetSize: 67616046,
   body: 'FAIONYX v1.0.46\n\n- 修复：皮肤重命名后恢复默认名称的问题\n- 优化：默认配置的分组、数值输入和同步状态',
   assetUrl: 'https://example.invalid/test.exe',
-}
+};
 let vox = {
   joinedAt: Date.now() - 25000,
   state: 'in_room',
@@ -84,12 +84,12 @@ let vox = {
   settings: { allowRelay: true },
   connection: { phase: 'p2p', status: 'failed', detail: '打洞重试中' },
   stages: { punch: { key: 'punch', status: 'retry', detail: '打洞重试中', ts: Date.now() - 25000 } },
-}
-let tcReady = false
-const requests = []
+};
+let tcReady = false;
+const requests = [];
 ipcMain.handle('design:invoke', (_event, channel, ...args) => {
-  calls.push(channel)
-  requests.push({ channel, args })
+  calls.push(channel);
+  requests.push({ channel, args });
   switch (channel) {
     case 'fs:list':
       return Array.from({ length: 3000 }, (_, i) => ({
@@ -97,31 +97,31 @@ ipcMain.handle('design:invoke', (_event, channel, ...args) => {
         size: 100000,
         isDir: false,
         mtime: Date.now(),
-      }))
+      }));
     case 'tc:status':
-      return { phase: 'idle', binaryReady: tcReady, running: false }
+      return { phase: 'idle', binaryReady: tcReady, running: false };
     case 'tc:install':
-      tcReady = true
-      return null
+      tcReady = true;
+      return null;
     case 'voxlink:status':
-      return vox
+      return vox;
     case 'voxlink:stop':
-      vox = { ...vox, state: 'idle', session: { state: 'idle', code: '', isHost: false }, room: null, joinedAt: 0, stages: {} }
-      return vox
+      vox = { ...vox, state: 'idle', session: { state: 'idle', code: '', isHost: false }, room: null, joinedAt: 0, stages: {} };
+      return vox;
     case 'voxlink:useTurnRelay':
-      return { ok: true }
+      return { ok: true };
     case 'servers:syncFromDat':
-      return { list: [fixtureServer], targets: versions, added: 0, updated: 0 }
+      return { list: [fixtureServer], targets: versions, added: 0, updated: 0 };
     case 'servers:list':
-      return [fixtureServer]
+      return [fixtureServer];
     case 'servers:ping':
-      return { online: true, motd: '测试服务器', players: '1 / 20', latencyMs: 20, version: '26.2' }
+      return { online: true, motd: '测试服务器', players: '1 / 20', latencyMs: 20, version: '26.2' };
     case 'servers:prepareLaunch':
       return stallPreparation
         ? new Promise((r) =>
             setTimeout(() => r({ versionId: versions[0].id, folder, address: fixtureServer.address, directJoin: true }), 17000)
           )
-        : { versionId: versions[0].id, folder, address: fixtureServer.address, directJoin: true }
+        : { versionId: versions[0].id, folder, address: fixtureServer.address, directJoin: true };
     case 'game:launch':
       _event.sender.send('event:launchState', {
         status: 'running',
@@ -129,8 +129,8 @@ ipcMain.handle('design:invoke', (_event, channel, ...args) => {
         folder: args[2],
         launchId: 'fixture-launch',
         text: '游戏进程已启动',
-      })
-      return null
+      });
+      return null;
     case 'frp:status':
       return {
         accessKey: 'fixture',
@@ -148,7 +148,7 @@ ipcMain.handle('design:invoke', (_event, channel, ...args) => {
             logs: [],
           },
         ],
-      }
+      };
     case 'frp:nodes':
       return {
         nodes: [{ id: 7, name: '测试免费节点', free: true, online: true, canCreate: true, load: 12 }],
@@ -164,45 +164,45 @@ ipcMain.handle('design:invoke', (_event, channel, ...args) => {
             status: 0,
           },
         ],
-      }
+      };
     case 'frp:create-tunnel':
-      return { id: 123 }
+      return { id: 123 };
     case 'update:check':
-      return { ok: true, hasUpdate: true, release: updateRelease }
+      return { ok: true, hasUpdate: true, release: updateRelease };
     case 'update:start':
-      return { taskId: 'fixture-update' }
+      return { taskId: 'fixture-update' };
     case 'update:pickLocalFile':
-      return { fileName: 'FAIONYX-1.0.46.exe', fileSize: 67616046, version: '1.0.46', versionOk: true, sha256: 'match' }
+      return { fileName: 'FAIONYX-1.0.46.exe', fileSize: 67616046, version: '1.0.46', versionOk: true, sha256: 'match' };
     case 'update:listReleases':
       return Array.from({ length: 18 }, (_, i) => ({
         ...updateRelease,
         version: '1.0.' + (43 - i),
         body: 'FAIONYX v1.0.' + (43 - i) + '\n\n- 改善下载体验，修复界面显示问题',
-      }))
+      }));
     case 'gameOptions:get':
-      return gameOptions.getDefaultGameOptions()
+      return gameOptions.getDefaultGameOptions();
     case 'gameOptions:set':
-      return gameOptions.setDefaultGameOptions(args[0])
+      return gameOptions.setDefaultGameOptions(args[0]);
     case 'exitHistory:list':
-      return journal.list()
+      return journal.list();
     case 'exitHistory:ack':
-      return journal.acknowledge()
+      return journal.acknowledge();
     case 'exitHistory:clear':
-      return journal.clearHistory()
+      return journal.clearHistory();
     case 'settings:get':
-      return settings
+      return settings;
     case 'settings:set':
-      return (settings = { ...settings, ...args[0] })
+      return (settings = { ...settings, ...args[0] });
     case 'accounts:list':
-      return [account]
+      return [account];
     case 'accounts:selected':
-      return account
+      return account;
     case 'versions:installed':
-      return versions
+      return versions;
     case 'versions:manifest':
-      return [{ id: '26.2', type: 'release', releaseTime: '2026-09-10' }]
+      return [{ id: '26.2', type: 'release', releaseTime: '2026-09-10' }];
     case 'folders:list':
-      return { folders: settings.folders, active: folder }
+      return { folders: settings.folders, active: folder };
     case 'folders:scan':
       return {
         folder: settings.folders[0],
@@ -212,9 +212,9 @@ ipcMain.handle('design:invoke', (_event, channel, ...args) => {
         errors: [],
         durationMs: 12,
         scannedAt: '2026-09-10',
-      }
+      };
     case 'mods:targets':
-      return { versions, errors: [] }
+      return { versions, errors: [] };
     case 'skin:profile':
       return {
         skins: [
@@ -226,14 +226,14 @@ ipcMain.handle('design:invoke', (_event, channel, ...args) => {
           },
         ],
         capes: [],
-      }
+      };
     case 'skin:avatar':
-      return null
+      return null;
     case 'update:getPending':
     case 'update:getState':
-      return null
+      return null;
     case 'app:systemInfo':
-      return { totalMemoryMB: 32768, freeMemoryMB: 16384, platform: 'win32' }
+      return { totalMemoryMB: 32768, freeMemoryMB: 16384, platform: 'win32' };
     case 'community:search':
       return {
         total: 44,
@@ -251,7 +251,7 @@ ipcMain.handle('design:invoke', (_event, channel, ...args) => {
           categories: [],
           iconUrl: '',
         })),
-      }
+      };
     case 'community:files':
       return [
         {
@@ -263,97 +263,97 @@ ipcMain.handle('design:invoke', (_event, channel, ...args) => {
           date: '2026-09-10',
           size: 1024,
         },
-      ]
+      ];
     default:
-      return []
+      return [];
   }
-})
+});
 fs.writeFileSync(
   path.join(root, 'preload.cjs'),
   `const {contextBridge,ipcRenderer}=require('electron');contextBridge.exposeInMainWorld('faionyx',{invoke:(c,...a)=>ipcRenderer.invoke('design:invoke',c,...a),on:(c,fn)=>{const h=(_,p)=>fn(p);ipcRenderer.on(c,h);return ()=>ipcRenderer.removeListener(c,h)},send:()=>{},getFilePath:()=>'',platform:'win32'});`
-)
+);
 app
   .whenReady()
   .then(async () => {
-    session.defaultSession.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*'] }, (_d, cb) => cb({ cancel: true }))
+    session.defaultSession.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*'] }, (_d, cb) => cb({ cancel: true }));
     const win = new BrowserWindow({
       show: false,
       width: 1440,
       height: 1000,
       webPreferences: { preload: path.join(root, 'preload.cjs'), backgroundThrottling: false, offscreen: true },
-    })
+    });
     win.webContents.on('console-message', (_e, l, m) => {
-      if (l >= 3) errors.push(m)
-    })
+      if (l >= 3) errors.push(m);
+    });
     const run = (c) =>
         win.webContents.executeJavaScript(c).catch((e) => {
-          throw new Error(e.message + '\n' + c + '\n' + JSON.stringify(errors))
+          throw new Error(e.message + '\n' + c + '\n' + JSON.stringify(errors));
         }),
-      wait = (ms) => new Promise((r) => setTimeout(r, ms))
+      wait = (ms) => new Promise((r) => setTimeout(r, ms));
     const click = async (text) => {
       await run(
         `(()=>{const b=[...document.querySelectorAll('button')].find(x=>x.textContent.trim()===${JSON.stringify(text)});if(!b)throw Error('Missing '+${JSON.stringify(text)});if(b.disabled)throw Error('Disabled '+${JSON.stringify(text)});b.scrollIntoView({block:'center'});b.click()})()`
-      )
-      await wait(300)
-    }
+      );
+      await wait(300);
+    };
     const nav = async (key) => {
-      await run(`(()=>{if(!document.querySelector('[data-nav="${key}"]'))document.querySelector('[data-nav="resources"]').click()})()`)
-      await wait(180)
-      await run(`document.querySelector('[data-nav="${key}"]').click()`)
-      await wait(500)
-    }
+      await run(`(()=>{if(!document.querySelector('[data-nav="${key}"]'))document.querySelector('[data-nav="resources"]').click()})()`);
+      await wait(180);
+      await run(`document.querySelector('[data-nav="${key}"]').click()`);
+      await wait(500);
+    };
     const shot = async (name) => {
-      await run(`document.querySelector('.content').scrollTop=0`)
-      await wait(300)
-      const overflow = await run(`(()=>{const e=document.querySelector('.content');return e.scrollWidth-e.clientWidth})()`)
-      assert(overflow <= 1, name + ' overflow ' + overflow)
-      fs.writeFileSync(path.join(root, name + '.png'), (await win.webContents.capturePage()).toPNG())
-    }
-    await win.loadFile(path.resolve('out/renderer/index.html'))
-    await wait(1300)
+      await run(`document.querySelector('.content').scrollTop=0`);
+      await wait(300);
+      const overflow = await run(`(()=>{const e=document.querySelector('.content');return e.scrollWidth-e.clientWidth})()`);
+      assert(overflow <= 1, name + ' overflow ' + overflow);
+      fs.writeFileSync(path.join(root, name + '.png'), (await win.webContents.capturePage()).toPNG());
+    };
+    await win.loadFile(path.resolve('out/renderer/index.html'));
+    await wait(1300);
 
-    await nav('friends')
-    await run(`document.querySelectorAll('.pick-card')[1].click()`)
-    await wait(500)
-    assert.equal(await run(`document.querySelectorAll('.reference-links a').length`), 3)
-    await shot('voxlink-links')
-    await click('← 更换方式')
-    await run(`document.querySelectorAll('.pick-card')[0].click()`)
-    await wait(500)
+    await nav('friends');
+    await run(`document.querySelectorAll('.pick-card')[1].click()`);
+    await wait(500);
+    assert.equal(await run(`document.querySelectorAll('.reference-links a').length`), 3);
+    await shot('voxlink-links');
+    await click('← 更换方式');
+    await run(`document.querySelectorAll('.pick-card')[0].click()`);
+    await wait(500);
     for (const theme of ['blue-white', 'black-orange', 'pink-white']) {
-      settings.theme = theme
-      await win.reload()
-      await wait(1300)
-      await nav('friends')
-      await run(`document.querySelectorAll('.pick-card')[0]?.click()`)
-      await wait(300)
-      await shot('frp-' + theme)
+      settings.theme = theme;
+      await win.reload();
+      await wait(1300);
+      await nav('friends');
+      await run(`document.querySelectorAll('.pick-card')[0]?.click()`);
+      await wait(300);
+      await shot('frp-' + theme);
       const style = await run(
         `(()=>{const e=document.querySelector('.reference-links a');return {decoration:getComputedStyle(e).textDecorationLine,height:e.getBoundingClientRect().height}})()`
-      )
-      assert.equal(style.decoration, 'none')
-      assert(style.height >= 36)
+      );
+      assert.equal(style.decoration, 'none');
+      assert(style.height >= 36);
     }
-    win.setSize(920, 760)
-    await shot('frp-narrow')
-    win.setSize(1440, 1000)
-    await nav('servers')
-    await wait(500)
-    await run(`document.querySelector('.server-connect').click()`)
-    await wait(700)
-    assert(await run(`document.querySelector('.server-connect').textContent.includes('游戏已运行')`))
-    assert.equal(requests.find((r) => r.channel === 'game:launch').args[2], folder)
-    await shot('server-running')
-    win.webContents.send('event:launchState', { status: 'exited', code: 0, versionId: versions[0].id, folder, launchId: 'fixture-launch' })
-    await wait(300)
-    stallPreparation = true
-    const before = requests.filter((r) => r.channel === 'game:launch').length
-    await run(`document.querySelector('.server-connect').click()`)
-    await wait(15500)
-    assert(await run(`document.body.innerText.includes('服务器启动准备超时')`))
-    await wait(2200)
-    assert.equal(requests.filter((r) => r.channel === 'game:launch').length, before)
-    assert.deepEqual(errors, [])
+    win.setSize(920, 760);
+    await shot('frp-narrow');
+    win.setSize(1440, 1000);
+    await nav('servers');
+    await wait(500);
+    await run(`document.querySelector('.server-connect').click()`);
+    await wait(700);
+    assert(await run(`document.querySelector('.server-connect').textContent.includes('游戏已运行')`));
+    assert.equal(requests.find((r) => r.channel === 'game:launch').args[2], folder);
+    await shot('server-running');
+    win.webContents.send('event:launchState', { status: 'exited', code: 0, versionId: versions[0].id, folder, launchId: 'fixture-launch' });
+    await wait(300);
+    stallPreparation = true;
+    const before = requests.filter((r) => r.channel === 'game:launch').length;
+    await run(`document.querySelector('.server-connect').click()`);
+    await wait(15500);
+    assert(await run(`document.body.innerText.includes('服务器启动准备超时')`));
+    await wait(2200);
+    assert.equal(requests.filter((r) => r.channel === 'game:launch').length, before);
+    assert.deepEqual(errors, []);
     fs.writeFileSync(
       path.join(root, 'result.json'),
       JSON.stringify(
@@ -364,13 +364,13 @@ app
         null,
         2
       )
-    )
-    console.log('PASS 1067 production UI: ' + root)
-    win.destroy()
-    app.quit()
+    );
+    console.log('PASS 1067 production UI: ' + root);
+    win.destroy();
+    app.quit();
   })
   .catch((e) => {
-    console.error(e)
-    fs.writeFileSync(path.join(root, 'error.txt'), e.stack)
-    app.exit(1)
-  })
+    console.error(e);
+    fs.writeFileSync(path.join(root, 'error.txt'), e.stack);
+    app.exit(1);
+  });
