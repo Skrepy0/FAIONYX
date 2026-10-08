@@ -4,7 +4,7 @@
     "version": "3.4.2",
     "url": "https://raw.githubusercontent.com/bs-community/skinview3d/v3.4.2/src/model.ts",
     "file": "src/renderer/src/vendor/skinview3d/model.ts",
-    "normalizedSha256": "57592697929fad5dad47a2ab1a1bb7e220cabec342e51fe218f72bb1c45c84fc",
+    "normalizedSha256": "a6f93f4803eee16283601db0f8743bbf82722c6b8a80bc621dd2689d40f38420",
     "modifications": "Attribution header only"
   },
   "skinviewUtils": {
