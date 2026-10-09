@@ -620,32 +620,40 @@ function selectDownloadInstance() {
         </div>
 
         <div data-ui="CommunityView:d516b82f0eb8" class="search-row">
-          <input
-            data-ui="CommunityView:bc0450fd9c8f"
-            v-model="query.keyword"
-            class="input"
-            :placeholder="query.kind === 'mod' ? '输入 MOD 名称或 MC百科中文名，回车搜索…' : '输入资源名称，回车搜索…'"
-            @keyup.enter="onSearch"
-          />
-          <button data-ui="CommunityView:ce39174e4563" class="btn btn-gold search-btn" :disabled="loading" @click="onSearch">
-            <span data-ui="CommunityView:bb1887897e8c" v-if="loading" class="spin"></span>
-            <svg
-              v-else
-              viewBox="0 0 24 24"
-              width="14"
-              height="14"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+          <div class="search-input">
+            <input
+              data-ui="CommunityView:bc0450fd9c8f"
+              v-model="query.keyword"
+              class="input"
+              :placeholder="query.kind === 'mod' ? '输入 MOD 名称或 MC百科中文名，回车搜索…' : '输入资源名称，回车搜索…'"
+              @keyup.enter="onSearch"
+            />
+            <button
+              data-ui="CommunityView:ce39174e4563"
+              class="search-go"
+              :disabled="loading"
+              :aria-label="loading ? '搜索中' : '搜索'"
+              @click="onSearch"
             >
-              <circle cx="11" cy="11" r="7" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
-            搜索
-          </button>
-          <button data-ui="CommunityView:15aecd36844d" class="btn btn-ghost" :disabled="loading" @click="onReset">重置条件</button>
+              <span v-if="loading" class="spin"></span>
+              <svg
+                v-else
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+            </button>
+          </div>
+          <button data-ui="CommunityView:15aecd36844d" class="btn btn-ghost btn-sm" :disabled="loading" @click="onReset">重置</button>
         </div>
 
         <div class="filter-row">
@@ -1085,13 +1093,59 @@ function selectDownloadInstance() {
 .search-row {
   display: flex;
   gap: var(--space-3);
+  align-items: center;
 }
-.search-row .input {
+
+/* 输入框 + 内嵌搜索图标：整体是一个控件，视觉重量大幅下降 */
+.search-input {
+  position: relative;
+  display: flex;
   flex: 1;
   min-width: 0;
+  align-items: center;
 }
-.search-btn {
-  flex-shrink: 0;
+
+.search-input .input {
+  flex: 1;
+  min-width: 0;
+  /* 给右侧图标留出位置，避免文字压到图标上 */
+  padding-right: 40px;
+}
+
+.search-go {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: calc(var(--radius-sm, 6px) - 1px);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    color 140ms ease;
+}
+
+.search-go:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--text);
+}
+
+.search-go:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.search-go:disabled {
+  cursor: default;
+  color: var(--text-dim);
+  opacity: 0.7;
 }
 
 .kind-capsules {
@@ -1181,6 +1235,25 @@ function selectDownloadInstance() {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   gap: var(--space-3);
+}
+/* 结果列表在更新/失败时是 inert 的：给出明确的"正在刷新"视觉，
+   避免旧卡片看起来正常但点不动 */
+.result-list[inert] {
+  opacity: 0.45;
+  filter: saturate(0.55);
+  cursor: progress;
+  user-select: none;
+  transition:
+    opacity var(--motion-fast, 160ms) ease,
+    filter var(--motion-fast, 160ms) ease;
+  /* 保留网格位置，不产生跳动 */
+  pointer-events: none;
+}
+
+/* 卡片 hover 在 inert 期间不再抬边（避免和"刷新中"冲突） */
+.result-list[inert] .result-card:hover {
+  border-color: var(--border);
+  box-shadow: none;
 }
 .result-card {
   display: flex;
@@ -1585,5 +1658,41 @@ function selectDownloadInstance() {
   color: var(--text);
   background: var(--accent-soft);
   text-shadow: none;
+}
+.status-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px 14px;
+  margin-bottom: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card-2);
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+/* 更新中：左侧一条 2px 主题色进度脉冲 */
+.status-strip[role='status'] {
+  border-left: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--card-2));
+  color: var(--text);
+  animation: status-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    border-left-color: var(--accent);
+  }
+  50% {
+    border-left-color: transparent;
+  }
+}
+
+.status-strip .btn {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 </style>

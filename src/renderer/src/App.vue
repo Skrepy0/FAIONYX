@@ -1101,6 +1101,12 @@ function onEditKeydown(e: KeyboardEvent) {
 }
 
 // ---------------- 初始化与事件订阅 ----------------
+function closeOtherFileMores(e: PointerEvent) {
+  const target = e.target as Element | null;
+  for (const d of document.querySelectorAll<HTMLDetailsElement>('details.file-more[open]')) {
+    if (!target || !d.contains(target)) d.open = false;
+  }
+}
 const offs: Array<() => void> = [];
 
 onMounted(async () => {
@@ -1108,6 +1114,7 @@ onMounted(async () => {
   offs.push(installVisualDesign());
   void loadExitNotices();
   applyTheme(store.settings?.theme, store.settings?.custom);
+  document.addEventListener('pointerdown', closeOtherFileMores, true);
   motionQuery.addEventListener('change', onMotionChange);
   // 每次上线自动切换一张背景图（按顺序/随机）；off 模式固定第一张
   {
@@ -1293,6 +1300,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   motionQuery.removeEventListener('change', onMotionChange);
+  document.removeEventListener('pointerdown', closeOtherFileMores, true);
   stopDragWatchdog();
   clearInterval(bgSwitchTimer);
   window.removeEventListener('keydown', onEditKeydown);

@@ -43,7 +43,8 @@ function onFocusOut(event: FocusEvent) {
     </div>
     <div class="creator-message">
       <p data-ui="CreatorCard:5031cfb3dd7e" class="creator-intro">
-        感谢 <a href="https://github.com/kamubaba-i/KAMUCL">KAMUCL</a> 的开源, 由 <a href="https://github.com/Skrepy0">Skrepy</a> 二次修改
+        感谢 <a href="https://github.com/kamubaba-i/KAMUCL" target="_blank">KAMUCL</a> 的开源, 由
+        <a href="https://github.com/Skrepy0" target="_blank">Skrepy</a> 二次修改
       </p>
     </div>
     <div class="creator-reveal" :class="{ expanded }">

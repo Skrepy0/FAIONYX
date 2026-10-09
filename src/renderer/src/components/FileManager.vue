@@ -871,7 +871,13 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
           ></label>
           <span v-if="props.rel === 'mods' && !isModEntry(e)" aria-hidden="true"></span>
           <details class="file-more" @keydown.esc="($event.currentTarget as HTMLDetailsElement).open = false">
-            <summary data-ui="FileManager:859ab7a92cdd" class="btn btn-ghost btn-sm" :aria-label="'更多操作 ' + e.name">⋯</summary>
+            <summary data-ui="FileManager:859ab7a92cdd" class="btn btn-ghost btn-sm" :aria-label="'更多操作 ' + e.name">
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true">
+                <circle cx="3.2" cy="8" r="1.35" />
+                <circle cx="8" cy="8" r="1.35" />
+                <circle cx="12.8" cy="8" r="1.35" />
+              </svg>
+            </summary>
             <div class="file-more-actions" @click="($event.currentTarget as HTMLElement).closest('details')?.removeAttribute('open')">
               <button
                 data-ui="FileManager:40ebd7f85d68"
@@ -943,29 +949,61 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
 </template>
 
 <style scoped>
+.file-more > summary.btn {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+  line-height: 1;
+  font-size: 0; /* 干掉可能残留的字符宽度 */
+  list-style: none;
+  user-select: none;
+  color: var(--text-dim);
+}
+.file-more > summary::-webkit-details-marker {
+  display: none;
+}
+.file-more > summary::marker {
+  content: '';
+}
+.file-more > summary.btn svg {
+  display: block;
+}
+.file-more > summary.btn:hover {
+  color: var(--text);
+}
+
+.file-more[open] > summary.btn {
+  border-color: var(--accent);
+  color: var(--accent-2);
+}
+/* 保证菜单在同行其它 cell 之上，且不被相邻行的 hover 背景盖住 */
 .file-more {
   position: relative;
 }
-.file-more summary {
-  list-style: none;
-  font-size: 18px;
-  min-width: 36px;
-}
 .file-more[open] {
-  z-index: 5;
+  z-index: 30; /* 原 5 太小，被 hover 或其它 cell 压住时点不到 */
 }
 .file-more-actions {
   position: absolute;
   right: 0;
-  top: 100%;
+  top: calc(100% + 4px);
+  z-index: 40; /* 显式声明，别依赖父级继承 */
   display: grid;
-  gap: 8px;
-  padding: 10px;
+  gap: 6px;
+  padding: 8px;
   min-width: 150px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface-solid);
   box-shadow: var(--shadow);
+}
+
+.fm-card,
+.fm-list {
+  overflow: visible;
 }
 .file-more-actions .fm-remove {
   border-top: 1px solid var(--border);

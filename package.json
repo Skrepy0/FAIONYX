@@ -11,6 +11,7 @@
     "build": "electron-vite build",
     "test": "tsx --test tests/all.test.ts",
     "start": "electron-vite preview",
+    "visual-ids": "npx tsx scripts/visual-ids.ts",
     "dist": "npm run dist:win",
     "dist:win": "npm run build && electron-builder --win portable --x64 --publish never && node scripts/pack-windows-zip.cjs",
     "dist:mac": "node scripts/pack-mac.mjs",
