@@ -102,12 +102,49 @@ function watchDpr() {
 
 /* ---------------- 渲染 ---------------- */
 
+const GLOW_RAMP_MS = 900; // 柔光自聚合完成起的浮现时长
+
 function paint(now: number) {
   const elapsed = now - start;
   ctx.clearRect(0, 0, view.w, view.h);
   const complete = reduced || (convergence !== null && elapsed - convergence >= CONVERGE_DURATION);
+
   if (complete) {
-    ctx.drawImage(icon, geometry.left, geometry.top, geometry.board, geometry.board);
+    const cx = geometry.left + geometry.board / 2;
+    const cy = geometry.top + geometry.board / 2;
+
+    // 自聚合完成的那一刻起算的浮现进度：0 → 1
+    const baseElapsed = convergence !== null ? convergence + CONVERGE_DURATION : 0;
+    const rampMs = reduced ? 1 : GLOW_RAMP_MS;
+    const revealT = Math.min(1, Math.max(0, (elapsed - baseElapsed) / rampMs));
+    // smoothstep 缓出：起步慢，末尾稳，观感是"浮现"而非"弹出"
+    const revealEase = revealT * revealT * (3 - 2 * revealT);
+
+    if (revealEase > 0) {
+      // 呼吸相位也从同一基准起算，避免淡入期间相位乱跳
+      const phase = (elapsed - baseElapsed) / 1400;
+      const pulse = 0.5 + 0.5 * Math.sin(phase);
+
+      // 半径：先由 0.70×board 慢慢张开，再叠加脉动
+      const grow = 0.7 + 0.12 * revealEase;
+      const glowRadius = geometry.board * (grow + 0.2 * pulse * revealEase);
+
+      const glow = ctx.createRadialGradient(cx, cy, geometry.board * 0.2, cx, cy, glowRadius);
+      glow.addColorStop(0, `rgba(125, 211, 252, ${(0.3 + 0.16 * pulse) * revealEase})`);
+      glow.addColorStop(0.55, `rgba(167, 139, 250, ${(0.16 + 0.1 * pulse) * revealEase})`);
+      glow.addColorStop(1, 'rgba(125, 211, 252, 0)');
+
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(cx, cy, glowRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 浮动同步受 revealEase 抑制，图标不会在柔光还没起来时先晃
+    const floatPhase = (elapsed - baseElapsed) / 1800;
+    const float = Math.sin(floatPhase) * 1.2 * revealEase;
+
+    ctx.drawImage(icon, geometry.left, geometry.top + float, geometry.board, geometry.board);
     return;
   }
   for (const shard of geometry.shards) {
