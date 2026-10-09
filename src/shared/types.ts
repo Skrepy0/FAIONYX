@@ -199,7 +199,7 @@ export type ThemeName = 'blue-white' | 'black-orange' | 'white-pink' | 'black-pi
 
 export type BuiltinThemeName = Exclude<ThemeName, 'custom'>;
 
-export type GameWindowMode = 'windowed' | 'maximized' | 'fullscreen';
+export type GameWindowMode = 'windowed' | 'maximized' | 'fullscreen' | 'launcher';
 
 export interface GameResolution {
   width: number;
@@ -1006,7 +1006,7 @@ export interface CommunityResult {
 
 /** An identity can open download/metadata without inventing absent search metrics. */
 export type CommunityProjectReference = Pick<CommunityResult, 'source' | 'projectId' | 'title'> &
-  Partial<Pick<CommunityResult, 'slug' | 'originalTitle'>>;
+  Partial<Pick<CommunityResult, 'slug' | 'originalTitle' | 'iconUrl'>>;
 export interface CommunityModProject extends CommunityProjectReference {
   kind: 'mod';
   iconUrl?: string;

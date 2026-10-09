@@ -18,9 +18,9 @@ import { repairNeoRuntime } from './loaders';
 import { pathIdentity } from './folderPaths';
 import { GameSession } from './gameSession';
 import { upgradeInstalledBridge } from './bridgeUpgrade';
-import { app, screen } from 'electron';
+import { app, BrowserWindow, screen } from 'electron';
 import AdmZip from 'adm-zip';
-import type { GameResolution, LaunchState, ProgressEvent } from '../../shared/types';
+import type { GameResolution, GameWindowMode, LaunchState, ProgressEvent } from '../../shared/types';
 import { getSettings, saveSettings } from './settings';
 import { getValidAccount, selectedAccount } from './accounts';
 import { validateJavaRuntime } from './javaRuntimeHealth';
@@ -190,7 +190,7 @@ export interface LastLaunchInfo {
   exitCode?: number | null;
   endedAt?: string;
   spawnError?: string;
-  windowMode?: 'windowed' | 'maximized' | 'fullscreen';
+  windowMode?: GameWindowMode;
   windowWidth?: number;
   windowHeight?: number;
 }
@@ -869,6 +869,20 @@ async function launchOwned(
         workArea = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workAreaSize;
       } catch {
         /* 无显示器上下文时回退到配置宽高，仍保持窗口模式。 */
+      }
+    } else if (resolution.mode === 'launcher') {
+      try {
+        const win = BrowserWindow.getAllWindows().find((w) => !w.isDestroyed() && !w.isAlwaysOnTop() && w.isVisible());
+        if (win) {
+          const size = win.getContentSize();
+          // DIP → 物理像素：乘上窗口所在显示器的缩放系数
+          const scale = screen.getDisplayMatching(win.getBounds()).scaleFactor || 1;
+          const w = Math.round(size[0] * scale);
+          const h = Math.round(size[1] * scale);
+          if (w > 0 && h > 0) workArea = { width: w, height: h };
+        }
+      } catch {
+        /* 回退配置宽高 */
       }
     }
     const windowArgs = buildGameWindowArguments(gameArgs, resolution, workArea);

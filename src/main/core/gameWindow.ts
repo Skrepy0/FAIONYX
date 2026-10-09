@@ -5,7 +5,7 @@ export const GAME_WIDTH_MAX = 7680;
 export const GAME_HEIGHT_MIN = 480;
 export const GAME_HEIGHT_MAX = 4320;
 
-const MODES: readonly GameWindowMode[] = ['windowed', 'maximized', 'fullscreen'];
+const MODES: readonly GameWindowMode[] = ['windowed', 'maximized', 'fullscreen', 'launcher'];
 
 export interface WorkAreaSize {
   width: number;
@@ -97,7 +97,7 @@ export function buildGameWindowArguments(
   }
 
   const useWorkArea =
-    resolution.mode === 'maximized' &&
+    (resolution.mode === 'maximized' || resolution.mode === 'launcher') &&
     workArea &&
     Number.isFinite(workArea.width) &&
     Number.isFinite(workArea.height) &&

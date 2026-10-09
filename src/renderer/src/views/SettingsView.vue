@@ -196,7 +196,9 @@ async function chooseNewDownloadFolder() {
     downloadFolderBusy.value = false;
   }
 }
-
+function reloadLauncher() {
+  window.location.reload();
+}
 // ---------------- 关于与更新 ----------------
 const appVersion = __APP_VERSION__;
 const showLicenses = ref(false);
@@ -1409,10 +1411,13 @@ async function onRemovePlugin(p: PluginInfo) {
                 <option value="windowed">窗口化</option>
                 <option value="maximized">最大化</option>
                 <option value="fullscreen">全屏</option>
+                <option value="launcher">启动器</option>
               </select>
             </div>
             <p data-ui="SettingsView:2f107fd117d3" v-if="resolutionError" class="group-error">{{ resolutionError }}</p>
-            <p v-else class="muted group-hint">窗口化使用以上宽高；最大化使用启动时所在显示器的工作区；全屏不会修改显示器分辨率。</p>
+            <p v-else class="muted group-hint">
+              "窗口化"使用以上宽高；"最大化"使用启动时所在显示器的工作区；"全屏"不会修改显示器分辨率；"启动器"启动时使游戏窗口大小和启动器窗口大小保持一致。
+            </p>
             <div class="remember-window-row">
               <div>
                 <strong>退出游戏自动保存窗口化大小</strong>
@@ -1552,11 +1557,7 @@ async function onRemovePlugin(p: PluginInfo) {
                 </button>
               </div>
             </details>
-            <p class="muted group-hint">
-              更新包发布在 GitHub Releases；下载较慢时可到 FAIONYX 内测群（{{
-                store.settings.qqGroupNumber?.trim() || QQ_GROUP_NUMBER
-              }}）获取，群内文件与 GitHub 版本一致。
-            </p>
+            <p class="muted group-hint">更新包发布在 GitHub Releases；</p>
           </div>
         </details>
 
@@ -1617,7 +1618,7 @@ async function onRemovePlugin(p: PluginInfo) {
                 class="btn btn-gold btn-sm"
                 @click="
                   ($event.target as HTMLButtonElement).blur();
-                  location.reload();
+                  reloadLauncher();
                 "
               >
                 重载启动器生效
@@ -2871,7 +2872,7 @@ async function onRemovePlugin(p: PluginInfo) {
 .runtime-grid .java-auto-row,
 .runtime-grid .memory-auto-row {
   margin: 0 0 8px;
-  padding: 0 0 10px;
+  padding: 10 10 10px;
   gap: 12px;
 }
 .runtime-grid .java-auto-title {
