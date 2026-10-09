@@ -2,6 +2,7 @@
 import { openInstanceCenter } from '../instanceCenter';
 import { appearancePreview } from '../visualDesign';
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { t } from '@renderer/i18n';
 import { activeCarouselKeys, carouselDuration } from '@shared/appearancePolicy';
 import { useMotion } from '../motion';
 import { CarouselPlayback } from '@shared/carouselPlayback';
@@ -59,10 +60,11 @@ const currentVersion = selectedInstance;
 const versionLabel = (version: InstalledVersion) => displayVersionName(version);
 const cap = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
 const loaderText = (version: InstalledVersion) =>
-  version.loader ? `${version.loader === 'neoforge' ? 'NeoForge' : cap(version.loader)} ${version.loaderVersion ?? ''}`.trim() : '正式版';
-// 与下方实例卡片共用命名规则；技术版本只读真实元数据，不从名称推断。
-const heroName = computed(() => (currentVersion.value ? versionLabel(currentVersion.value) : '选择游戏实例'));
-const heroVersion = computed(() => currentVersion.value?.mcVersion || '版本未知');
+  version.loader
+    ? `${version.loader === 'neoforge' ? 'NeoForge' : cap(version.loader)} ${version.loaderVersion ?? ''}`.trim()
+    : t('home.loader.vanilla');
+const heroName = computed(() => (currentVersion.value ? versionLabel(currentVersion.value) : t('home.hero.choose_instance')));
+const heroVersion = computed(() => currentVersion.value?.mcVersion || t('home.hero.version_unknown'));
 
 function fitCss(fit: ImageFit): 'fill' | 'contain' | 'cover' {
   return fit === 'fill' ? 'fill' : fit === 'fit' ? 'contain' : 'cover';
@@ -109,7 +111,6 @@ const bannerLayers = computed(() =>
 let bannerTimer: ReturnType<typeof setInterval> | null = null;
 let playback: CarouselPlayback | null = null;
 let playbackKey = '';
-/** Only current/next/outgoing DOM images own decoded resources. */
 const readyBanners = new Set<string>();
 function syncBannerResources() {
   upcomingBanner.value = playback?.upcomingIndex() ?? bannerIndex.value;
@@ -174,7 +175,7 @@ function startBannerTimer() {
   bannerTimer = setInterval(() => {
     if (document.hidden || !playback) return;
     const nextIdx = playback.peekNext(Date.now());
-    if (nextIdx !== playback.index && !readyBanners.has(banners.value[nextIdx]?.src ?? '')) return; // 下一张未就绪，下一拍再试
+    if (nextIdx !== playback.index && !readyBanners.has(banners.value[nextIdx]?.src ?? '')) return;
     const index = playback.tick(Date.now());
     if (index !== bannerIndex.value) {
       outgoingBanner.value = bannerIndex.value;
@@ -204,7 +205,7 @@ function onBannerError(item: { custom: boolean; path: string }) {
   failedBanners.value = new Set([...failedBanners.value, item.path]);
   bannerIndex.value = 0;
   startBannerTimer();
-  toast('已跳过不可用的启动卡图片；仅显示已勾选且可用的图片', 'error');
+  toast(t('home.banner.skip_unavailable'), 'error');
 }
 
 // ---------------- 启动、设置与日志 ----------------
@@ -215,10 +216,9 @@ const launchFailed = computed(
 );
 const percent = computed(() => (store.progress ? Math.round(progressMono(store.progress) * 100) : 0));
 const launchText = computed(() => {
-  if (launching.value) return store.progress?.text || '正在启动…';
-  return running.value ? '再次启动' : launchFailed.value ? '重新启动' : '开始游戏';
+  if (launching.value) return store.progress?.text || t('home.launch.starting');
+  return running.value ? t('home.launch.relaunch') : launchFailed.value ? t('home.launch.restart') : t('home.launch.start');
 });
-// ---------------- 快捷行悬浮浮块（跟随指针在三格间平滑滑动） ----------------
 const runtimeHover = ref(-1);
 const runtimeStrip = ref<HTMLElement | null>(null);
 const runtimeBlob = reactive({ left: 0, width: 0 });
@@ -239,36 +239,35 @@ const runtimeBlobStyle = computed(() => ({
 
 const heroStatus = computed(() => {
   const version = currentVersion.value;
-  if (!version) return { text: '等待选择', tone: 'idle' };
-  if (running.value) return { text: '游戏运行中', tone: 'running' };
-  if (launching.value) return { text: '正在准备', tone: 'running' };
+  if (!version) return { text: t('home.status.idle'), tone: 'idle' };
+  if (running.value) return { text: t('home.status.running'), tone: 'running' };
+  if (launching.value) return { text: t('home.status.preparing'), tone: 'running' };
   if (launchFailed.value || version.failed || version.incomplete) {
-    return { text: '需要检查', tone: 'error' };
+    return { text: t('home.status.check'), tone: 'error' };
   }
-  return { text: '就绪', tone: 'ready' };
+  return { text: t('home.status.ready'), tone: 'ready' };
 });
 
 async function startVersion(id: string, createCommandWorld = false) {
   if (!id) return;
   selectedId.value = id;
-  // 多开支持：仅「正在启动」的重复点击拦截；已有游戏运行中仍可再启动新实例
   if (launching.value) {
-    toast('正在启动中，请稍候', 'info');
+    toast(t('home.launch.launching_wait'), 'info');
     return;
   }
   if (!store.selectedAccount) {
-    toast('请先在账户页选择或添加账号', 'error');
+    toast(t('home.launch.need_account'), 'error');
     store.currentView = 'accounts';
     return;
   }
   store.launchingVersionId = id;
   store.launchingFolder = currentVersion.value?.folder ?? store.settings?.activeFolder ?? store.settings?.gameDir ?? '';
-  store.launchState = { status: 'launching', text: '正在准备启动…' };
+  store.launchState = { status: 'launching', text: t('home.launch.preparing') };
   try {
     await launchGame(id, undefined, currentVersion.value?.folder, createCommandWorld);
   } catch (error) {
     store.launchState = { status: 'error', text: errText(error) };
-    toast('启动失败：' + errText(error), 'error');
+    toast(t('home.launch.failed', { e: errText(error) }), 'error');
   }
 }
 
@@ -282,9 +281,9 @@ async function quickRestart(version: InstalledVersion, token?: string) {
     const folder = version.folder ?? store.settings?.activeFolder ?? '';
     const result = await restartGame(version.id, folder, token);
     restartConfirm.value = result.requiresForce ? { id: version.id, folder, token: result.forceToken! } : null;
-    if (!result.requiresForce) toast('已确认退出并重新启动同一实例', 'success');
+    if (!result.requiresForce) toast(t('home.toast.restarted'), 'success');
   } catch (e) {
-    toast('重启失败：' + errText(e), 'error');
+    toast(t('home.toast.restart_failed', { e: errText(e) }), 'error');
     restartConfirm.value = null;
   } finally {
     restartBusy.value = false;
@@ -322,9 +321,9 @@ async function exportFailureLogs() {
   exportingLogs.value = true;
   try {
     const saved = await exportLaunchLogs(store.launchingVersionId || selectedId.value);
-    if (saved) toast(`错误日志已导出：${saved}`, 'success');
+    if (saved) toast(t('home.toast.logs_exported', { path: saved }), 'success');
   } catch (error) {
-    toast(`导出失败：${errText(error)}`, 'error');
+    toast(t('home.toast.logs_export_failed', { e: errText(error) }), 'error');
   } finally {
     exportingLogs.value = false;
   }
@@ -334,13 +333,18 @@ async function exportFailureLogs() {
 const javas = ref<JavaInfo[]>([]);
 const javaChecked = ref(false);
 const javaText = computed(() => {
-  if (currentVersion.value?.javaAuto) return '自动选择';
+  if (currentVersion.value?.javaAuto) return t('home.runtime.java_auto');
   const versionJava = currentVersion.value?.javaPath || (!store.settings?.javaAuto ? store.settings?.javaPath : '');
   if (versionJava) {
     const match = javas.value.find((java) => java.path === versionJava);
-    return match ? `Java ${match.version} (${match.architecture ?? (match.is64Bit ? '64-bit' : '32-bit')})` : versionJava;
+    return match
+      ? t('home.runtime.java_pick', {
+          version: match.version,
+          arch: match.architecture ?? (match.is64Bit ? '64-bit' : '32-bit'),
+        })
+      : versionJava;
   }
-  return '自动选择';
+  return t('home.runtime.java_auto');
 });
 const javaPicker = ref<{ id: string; folder?: string; name: string; choice: string } | null>(null);
 const javaSaving = ref(false);
@@ -366,19 +370,20 @@ async function saveJavaChoice() {
     await setVersionJava(target.id, target.choice.startsWith('@') ? '' : target.choice, target.choice === '@auto', target.folder);
     await refreshInstalled();
     javaPicker.value = null;
-    toast('已更新此实例的 Java 选择', 'success');
+    toast(t('home.toast.java_saved'), 'success');
   } catch (error) {
-    toast('保存失败：' + errText(error), 'error');
+    toast(t('home.toast.save_failed', { e: errText(error) }), 'error');
   } finally {
     javaSaving.value = false;
   }
 }
 const memoryText = computed(() => {
-  // 与设置实时同步：开启自动分配显示「自动」，关闭显示手动数值
-  if (store.settings?.memoryAuto === true) return '自动';
+  if (store.settings?.memoryAuto === true) return t('home.runtime.memory_auto');
   const mb = store.settings?.memoryMB ?? 0;
-  if (!mb) return '—';
-  return mb % 1024 === 0 ? `${mb / 1024} GB` : `${(mb / 1024).toFixed(1)} GB`;
+  if (!mb) return t('home.runtime.memory_empty');
+  return mb % 1024 === 0
+    ? t('home.runtime.memory_gb', { value: String(mb / 1024) })
+    : t('home.runtime.memory_gb', { value: (mb / 1024).toFixed(1) });
 });
 
 function loadJavaSummary() {
@@ -395,13 +400,13 @@ async function loadJavaSummaryImpl() {
 }
 
 // ---------------- 账户与 3D 皮肤 ----------------
-const accountName = computed(() => store.selectedAccount?.username ?? '未登录');
+const accountName = computed(() => store.selectedAccount?.username ?? t('home.account.not_signed_in'));
 const accountTypeLabel = computed(() => {
   const account = store.selectedAccount;
-  if (!account) return '添加账户后开始游戏';
-  if (account.type === 'microsoft') return 'Microsoft 正版账户';
-  if (account.type === 'yggdrasil') return account.providerName ?? '外置 Yggdrasil';
-  return '离线账户';
+  if (!account) return t('home.account.after_add');
+  if (account.type === 'microsoft') return t('home.account.type_microsoft');
+  if (account.type === 'yggdrasil') return account.providerName ?? t('home.account.type_yggdrasil');
+  return t('home.account.type_offline');
 });
 
 const skinProfile = ref<ProfileSkins | null>(null);
@@ -412,7 +417,6 @@ let skinRequestToken = 0;
 const currentSkin = computed(() => skinProfile.value?.skins[0] ?? null);
 const skinSrc = computed(() => currentSkin.value?.dataUrl ?? '');
 const skinVariant = computed<SkinVariant>(() => (currentSkin.value?.variant === 'slim' ? 'slim' : 'classic'));
-/** 首页 3D 预览与皮肤页共用披风渲染：有披风则显示，无则不显示（无手动开关） */
 const activeCape = computed(() => skinProfile.value?.capes?.find((c) => c.active)?.dataUrl ?? '');
 
 function reloadSkin(refresh = false) {
@@ -446,8 +450,6 @@ watch(
 );
 
 // ---------------- 最近游戏与菜单 ----------------
-// 收藏优先 + 最近游玩排序；启动某实例后 recordLastPlayed 更新使其自然提前。
-// 选中实例不再直接置顶——只有启动过才排到第一个。
 const wideRecent = ref(window.innerWidth >= 1500);
 const updateRecentWidth = () => {
   wideRecent.value = window.innerWidth >= 1500;
@@ -506,7 +508,7 @@ async function openVersionFolder(id: string) {
   try {
     await openDir(`versions/${id}`);
   } catch (error) {
-    toast('打开文件夹失败：' + errText(error), 'error');
+    toast(t('home.toast.open_folder_failed', { e: errText(error) }), 'error');
   }
 }
 
@@ -530,9 +532,9 @@ async function confirmRemove() {
     await removeVersion(version.id, version.folder);
     await refreshInstalled();
     removeModal.open = false;
-    toast(`已删除 ${version.id}`, 'success');
+    toast(t('home.toast.removed', { id: version.id }), 'success');
   } catch (error) {
-    toast('删除失败：' + errText(error), 'error');
+    toast(t('home.toast.remove_failed', { e: errText(error) }), 'error');
   } finally {
     removeModal.busy = false;
   }
@@ -572,7 +574,7 @@ onUnmounted(() => {
         <div data-ui="HomeView:5838d59b9e2a" v-if="banners.length" class="hero-shade"></div>
 
         <div data-ui="HomeView:2e850cf13849" class="hero-content" data-edit="bannerText">
-          <span data-ui="HomeView:13616e708e66" class="hero-kicker">当前版本</span>
+          <span data-ui="HomeView:13616e708e66" class="hero-kicker">{{ t('home.hero.current_version') }}</span>
           <div data-ui="HomeView:027bc7e292dc" class="hero-metadata-slot">
             <Transition name="instance-switch" mode="out-in">
               <div
@@ -589,7 +591,9 @@ onUnmounted(() => {
                 "
                 class="hero-metadata"
               >
-                <h1 data-ui="HomeView:d209b16cd00e" :title="heroName" :class="{ 'long-name': heroName.length > 16 }">{{ heroName }}</h1>
+                <h1 data-ui="HomeView:d209b16cd00e" :title="heroName" :class="{ 'long-name': heroName.length > 16 }">
+                  {{ heroName }}
+                </h1>
                 <div data-ui="HomeView:273ef3354188" class="hero-edition">
                   <span
                     data-ui="HomeView:cbc929d650f0"
@@ -625,13 +629,13 @@ onUnmounted(() => {
                     d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1.4 1.68V21h-4v-.08A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15 1.7 1.7 0 0 0 3 13.6H3v-4h.08A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10.4 3H14a1.7 1.7 0 0 0 1.4 1.6 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9 1.7 1.7 0 0 0 21 10.4V14a1.7 1.7 0 0 0-1.6 1Z"
                   />
                 </svg>
-                版本设置
+                {{ t('home.hero.version_settings') }}
               </button>
               <button
                 data-ui="HomeView:8389ad960143"
                 class="hero-more"
                 :disabled="!currentVersion"
-                title="更多实例操作"
+                :title="t('home.hero.more_actions')"
                 @click="currentVersion && openCardMenu($event, currentVersion.id)"
               >
                 <svg viewBox="0 0 24 24" fill="currentColor">
@@ -660,7 +664,7 @@ onUnmounted(() => {
                 data-ui="HomeView:5ca10c2a5c92"
                 ref="versionMenuButton"
                 class="launch-arrow"
-                title="选择游戏实例"
+                :title="t('home.hero.select_instance')"
                 @click="toggleVersionMenu"
               >
                 <svg
@@ -693,14 +697,15 @@ onUnmounted(() => {
           class="runtime-item"
           @mouseenter="runtimeHover = 0"
           @click="openJavaPicker"
-          title="选择此实例的 Java：自动或手动"
+          :title="t('home.runtime.java_title')"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M8 2v4M16 2v4M7 8h10a4 4 0 0 1 4 4v0a8 8 0 0 1-8 8h-2a8 8 0 0 1-8-8v0a4 4 0 0 1 4-4Z" />
             <path d="M8 13h8M9 17h6" />
           </svg>
           <span
-            ><small>运行环境</small><strong>{{ javaText }}</strong></span
+            ><small>{{ t('home.runtime.java') }}</small
+            ><strong>{{ javaText }}</strong></span
           >
           <svg class="runtime-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <path d="m9 6 6 6-6 6" />
@@ -712,7 +717,8 @@ onUnmounted(() => {
             <path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4M9 9h6v6H9Z" />
           </svg>
           <span
-            ><small>内存分配</small><strong>{{ memoryText }}</strong></span
+            ><small>{{ t('home.runtime.memory') }}</small
+            ><strong>{{ memoryText }}</strong></span
           >
           <svg class="runtime-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <path d="m9 6 6 6-6 6" />
@@ -729,7 +735,8 @@ onUnmounted(() => {
             <path d="M3 12h4l2-7 4 14 2-7h6" />
           </svg>
           <span
-            ><small>运行状态</small><strong><i></i>{{ heroStatus.text }}</strong></span
+            ><small>{{ t('home.runtime.state') }}</small
+            ><strong><i></i>{{ heroStatus.text }}</strong></span
           >
           <svg class="runtime-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <path d="m9 6 6 6-6 6" />
@@ -739,7 +746,7 @@ onUnmounted(() => {
 
       <section data-ui="HomeView:d4eaa1c0d798" class="instances-block">
         <div data-ui="HomeView:07c360f67ff2" class="instances-head">
-          <h2 data-ui="HomeView:ab67b2084be9">最近游戏</h2>
+          <h2 data-ui="HomeView:ab67b2084be9">{{ t('home.recent.title') }}</h2>
           <button data-ui="HomeView:1f3a4e95599d" class="manage-instances" @click="store.currentView = 'game'">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
               <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -747,7 +754,7 @@ onUnmounted(() => {
               <rect x="3" y="14" width="7" height="7" rx="1" />
               <rect x="14" y="14" width="7" height="7" rx="1" />
             </svg>
-            管理实例
+            {{ t('home.recent.manage') }}
           </button>
         </div>
 
@@ -783,21 +790,26 @@ onUnmounted(() => {
               <strong data-ui="HomeView:51623bcd9cd5" :title="versionLabel(version)">{{ versionLabel(version) }}</strong>
               <span data-ui="HomeView:59cc23bdfbdc" :title="displayVersionSub(version)">{{ displayVersionSub(version) }}</span>
             </div>
-            <button data-ui="HomeView:b5167161777c" class="instance-more" title="更多" @click.stop="openCardMenu($event, version.id)">
+            <button
+              data-ui="HomeView:b5167161777c"
+              class="instance-more"
+              :title="t('home.recent.more')"
+              @click.stop="openCardMenu($event, version.id)"
+            >
               <svg viewBox="0 0 24 24" fill="currentColor">
                 <circle cx="5" cy="12" r="1.7" />
                 <circle cx="12" cy="12" r="1.7" />
                 <circle cx="19" cy="12" r="1.7" />
               </svg>
             </button>
-            <span data-ui="HomeView:ba095d8dcc15" v-if="store.lastPlayed[version.id]" class="instance-last"
-              >上次游玩：{{ fmtLastPlayed(store.lastPlayed[version.id]) }}</span
-            >
+            <span data-ui="HomeView:ba095d8dcc15" v-if="store.lastPlayed[version.id]" class="instance-last">{{
+              t('home.recent.last_played', { time: fmtLastPlayed(store.lastPlayed[version.id]) })
+            }}</span>
             <button
               data-ui="HomeView:1a638472fc2a"
               class="instance-play"
               :disabled="launching"
-              :title="`启动 ${version.id}`"
+              :title="t('home.recent.launch_title', { name: version.id })"
               @click.stop="startVersion(version.id)"
             >
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5Z" /></svg>
@@ -805,7 +817,7 @@ onUnmounted(() => {
           </article>
         </div>
         <button data-ui="HomeView:c485ad83d7d3" v-else class="empty-instances" @click="store.currentView = 'game'">
-          尚未安装游戏实例，点击前往版本管理
+          {{ t('home.recent.empty') }}
         </button>
       </section>
     </div>
@@ -817,9 +829,14 @@ onUnmounted(() => {
             <Avatar :size="54" />
             <div data-ui="HomeView:69c3212000eb" class="account-copy" data-edit="text">
               <strong>{{ accountName }}</strong>
-              <span><i></i>{{ store.selectedAccount.type === 'offline' ? '离线账号' : '已登录' }}</span>
+              <span><i></i>{{ store.selectedAccount.type === 'offline' ? t('home.account.offline') : t('home.account.signed_in') }}</span>
             </div>
-            <button data-ui="HomeView:c7c1ffb68ac7" class="account-more" title="账户管理" @click="store.currentView = 'accounts'">
+            <button
+              data-ui="HomeView:c7c1ffb68ac7"
+              class="account-more"
+              :title="t('home.account.manage')"
+              @click="store.currentView = 'accounts'"
+            >
               <svg viewBox="0 0 24 24" fill="currentColor">
                 <circle cx="5" cy="12" r="1.8" />
                 <circle cx="12" cy="12" r="1.8" />
@@ -846,11 +863,12 @@ onUnmounted(() => {
           <div class="account-head">
             <div data-ui="HomeView:14b73e10a66b" class="account-placeholder">?</div>
             <div data-ui="HomeView:b713dda14ce9" class="account-copy">
-              <strong>未登录</strong><span data-ui="HomeView:ab6dcd8df3ac" class="offline-state">请选择账户</span>
+              <strong>{{ t('home.account.not_signed_in') }}</strong
+              ><span data-ui="HomeView:ab6dcd8df3ac" class="offline-state">{{ t('home.account.choose') }}</span>
             </div>
           </div>
           <button class="account-provider" @click="store.currentView = 'accounts'">
-            <span data-ui="HomeView:57ae15324d65" class="provider-mark offline">+</span><span>添加或选择账户</span>
+            <span data-ui="HomeView:57ae15324d65" class="provider-mark offline">+</span><span>{{ t('home.account.add_or_choose') }}</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
               <path d="m9 6 6 6-6 6" />
             </svg>
@@ -861,14 +879,20 @@ onUnmounted(() => {
       <section data-ui="HomeView:f56ae81d7b8f" class="skin-panel" data-edit="card">
         <div data-ui="HomeView:a11abb820a96" class="skin-head">
           <div>
-            <h3>皮肤预览</h3>
-            <span>{{ currentSkin ? (skinVariant === 'slim' ? '纤细模型' : '经典模型') : '动态角色' }}</span>
+            <h3>{{ t('home.skin.title') }}</h3>
+            <span>{{
+              currentSkin
+                ? skinVariant === 'slim'
+                  ? t('home.skin.model_slim')
+                  : t('home.skin.model_classic')
+                : t('home.skin.model_dynamic')
+            }}</span>
           </div>
           <button
             data-ui="HomeView:d5082937e164"
             class="skin-refresh"
             :disabled="skinLoading || !store.selectedAccount"
-            title="联网刷新皮肤（默认使用本地缓存）"
+            :title="t('home.skin.refresh_title')"
             @click="reloadSkin(true)"
           >
             <svg
@@ -893,7 +917,7 @@ onUnmounted(() => {
         >
           <SkinViewer3D :src="skinSrc" :variant="skinVariant" :cape="activeCape" />
           <div data-ui="HomeView:862dfc8e4099" v-if="skinLoading" class="skin-overlay">
-            <span data-ui="HomeView:369e7ffcf786" class="spin"></span><span>正在加载皮肤…</span>
+            <span data-ui="HomeView:369e7ffcf786" class="spin"></span><span>{{ t('home.skin.loading') }}</span>
           </div>
           <button
             data-ui="HomeView:0309ef6b61da"
@@ -901,7 +925,7 @@ onUnmounted(() => {
             class="skin-overlay action"
             @click="store.currentView = 'accounts'"
           >
-            登录后加载角色皮肤
+            {{ t('home.skin.sign_in_prompt') }}
           </button>
           <button
             data-ui="HomeView:70bc857e7889"
@@ -910,12 +934,14 @@ onUnmounted(() => {
             :title="skinError"
             @click="reloadSkin(true)"
           >
-            皮肤加载失败，点击重试
+            {{ t('home.skin.load_failed') }}
           </button>
         </div>
         <button data-ui="HomeView:d3685d94fd0f" class="skin-tip" @click="store.currentView = store.selectedAccount ? 'skins' : 'accounts'">
-          拖动可旋转 · 行走动画
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6" /></svg>
+          {{ t('home.skin.hint') }}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="m9 6 6 6-6 6" />
+          </svg>
         </button>
       </section>
       <CreatorCard class="home-creator" />
@@ -930,7 +956,7 @@ onUnmounted(() => {
         :style="{ top: versionMenu.top + 'px', left: versionMenu.left + 'px', width: versionMenu.width + 'px' }"
       >
         <button data-ui="HomeView:9fae1e3ba335" class="menu-item" @click="folderListOpen = !folderListOpen">
-          {{ folderListOpen ? '‹ 返回版本选择' : '文件夹列表 ›' }}
+          {{ folderListOpen ? t('home.menu.back_to_versions') : t('home.menu.folders') }}
         </button>
         <template v-if="folderListOpen">
           <button
@@ -946,7 +972,9 @@ onUnmounted(() => {
           >
             {{ folder.name }}
           </button>
-          <button data-ui="HomeView:a82260e8c53c" class="menu-item" @click="store.currentView = 'game'">添加 / 管理文件夹</button>
+          <button data-ui="HomeView:a82260e8c53c" class="menu-item" @click="store.currentView = 'game'">
+            {{ t('home.menu.manage_folders') }}
+          </button>
         </template>
         <template v-else>
           <button
@@ -964,7 +992,9 @@ onUnmounted(() => {
             <span data-ui="HomeView:f77a89b73779" v-else class="menu-spacer"></span>
             {{ versionLabel(version) }}
           </button>
-          <div data-ui="HomeView:2de4cc34bb59" v-if="!sortedInstalled.length" class="menu-empty">暂无已安装实例</div>
+          <div data-ui="HomeView:2de4cc34bb59" v-if="!sortedInstalled.length" class="menu-empty">
+            {{ t('home.menu.no_instances') }}
+          </div>
         </template>
       </div>
     </Teleport>
@@ -985,7 +1015,7 @@ onUnmounted(() => {
             cardMenu.id = '';
           "
         >
-          管理实例
+          {{ t('home.card_menu.manage') }}
         </button>
         <button
           data-ui="HomeView:a0dd508b6e16"
@@ -995,19 +1025,19 @@ onUnmounted(() => {
             cardMenu.id = '';
           "
         >
-          启动实例
+          {{ t('home.card_menu.launch') }}
         </button>
         <button
           data-ui="HomeView:cc765cc95569"
           class="menu-item"
-          title="新建允许命令的创造模式测试世界并自动进入（Minecraft 1.20+）"
+          :title="t('home.card_menu.launch_command_title')"
           :disabled="running || launching || restartBusy"
           @click="
             startVersion(cardMenuVersion.id, true);
             cardMenu.id = '';
           "
         >
-          启动并创建命令世界
+          {{ t('home.card_menu.launch_command') }}
         </button>
         <button
           data-ui="HomeView:98ec7f1bfdb4"
@@ -1015,7 +1045,7 @@ onUnmounted(() => {
           :disabled="!running || restartBusy"
           @click="quickRestart(cardMenuVersion)"
         >
-          快速重启游戏
+          {{ t('home.card_menu.quick_restart') }}
         </button>
         <button
           data-ui="HomeView:a83bf9067bf3"
@@ -1025,31 +1055,37 @@ onUnmounted(() => {
             cardMenu.id = '';
           "
         >
-          {{ isFavorite(cardMenuVersion.id, cardMenuVersion.folder) ? '取消收藏' : '收藏实例' }}
+          {{
+            isFavorite(cardMenuVersion.id, cardMenuVersion.folder) ? t('home.card_menu.favorite_remove') : t('home.card_menu.favorite_add')
+          }}
         </button>
-        <button data-ui="HomeView:471f5e20fd6f" class="menu-item" @click="openVersionFolder(cardMenuVersion.id)">打开文件夹</button>
-        <button data-ui="HomeView:31cc199f9344" class="menu-item danger" @click="requestRemove(cardMenuVersion)">删除实例</button>
+        <button data-ui="HomeView:471f5e20fd6f" class="menu-item" @click="openVersionFolder(cardMenuVersion.id)">
+          {{ t('home.card_menu.open_folder') }}
+        </button>
+        <button data-ui="HomeView:31cc199f9344" class="menu-item danger" @click="requestRemove(cardMenuVersion)">
+          {{ t('home.card_menu.delete') }}
+        </button>
       </div>
     </Teleport>
 
     <Teleport to="body">
       <div data-ui="HomeView:923206ea2c37" v-if="logOpen" class="log-mask" @pointerdown.self="logOpen = false">
-        <section data-ui="HomeView:21a3dfa129bb" class="log-dialog" role="dialog" aria-modal="true" aria-label="游戏日志">
+        <section data-ui="HomeView:21a3dfa129bb" class="log-dialog" role="dialog" aria-modal="true" :aria-label="t('home.log.title')">
           <header data-ui="HomeView:e10df8fdf6ce">
             <div>
-              <h3>启动日志</h3>
-              <span>{{ store.logs.length }} 行 · {{ heroStatus.text }}</span>
+              <h3>{{ t('home.log.title') }}</h3>
+              <span>{{ t('home.log.summary', { count: String(store.logs.length), status: heroStatus.text }) }}</span>
             </div>
-            <button data-ui="HomeView:8c1728a36b47" class="log-close" title="关闭" @click="logOpen = false">×</button>
+            <button data-ui="HomeView:8c1728a36b47" class="log-close" :title="t('home.log.close')" @click="logOpen = false">×</button>
           </header>
           <div data-ui="HomeView:1921d3d812a6" v-if="launchFailed" class="log-failure">
-            <span>检测到启动失败或异常退出</span>
+            <span>{{ t('home.log.failure') }}</span>
             <button data-ui="HomeView:4e02813325fa" :disabled="exportingLogs" @click="exportFailureLogs">
-              {{ exportingLogs ? '导出中…' : '导出错误日志' }}
+              {{ exportingLogs ? t('home.log.exporting') : t('home.log.export') }}
             </button>
           </div>
           <div data-ui="HomeView:d816343842fa" ref="logBody" class="log-body">
-            <p data-ui="HomeView:9e34f7306c51" v-if="!store.logs.length" class="log-empty">暂无启动日志</p>
+            <p data-ui="HomeView:9e34f7306c51" v-if="!store.logs.length" class="log-empty">{{ t('home.log.empty') }}</p>
             <pre
               data-ui="HomeView:b8671047aacf"
               v-else
@@ -1057,7 +1093,7 @@ onUnmounted(() => {
           </div>
           <footer data-ui="HomeView:113536fd4ef0">
             <button data-ui="HomeView:287dd6a53ff1" class="btn btn-ghost btn-sm" :disabled="!store.logs.length" @click="store.logs = []">
-              清空日志
+              {{ t('home.log.clear') }}
             </button>
           </footer>
         </section>
@@ -1066,8 +1102,8 @@ onUnmounted(() => {
 
     <ConfirmModal
       :open="removeModal.open"
-      title="删除版本"
-      :message="`确定要删除版本「${removeModal.target?.id}」吗？该版本目录将移入系统回收站（共享依赖与资源保留）。`"
+      :title="t('home.confirm.remove_title')"
+      :message="t('home.confirm.remove_message', { id: removeModal.target?.id ?? '' })"
       :busy="removeModal.busy"
       @cancel="removeModal.open = false"
       @confirm="confirmRemove"
@@ -1088,37 +1124,49 @@ onUnmounted(() => {
         aria-modal="true"
         aria-labelledby="java-picker-title"
       >
-        <h3 data-ui="HomeView:5e6790a8da51" id="java-picker-title" class="modal-title">选择 Java 运行环境</h3>
-        <p data-ui="HomeView:96c5153e7b82" class="java-picker-description">{{ javaPicker.name }} · 仅修改此实例，不影响其他实例</p>
+        <h3 data-ui="HomeView:5e6790a8da51" id="java-picker-title" class="modal-title">{{ t('home.java.title') }}</h3>
+        <p data-ui="HomeView:96c5153e7b82" class="java-picker-description">
+          {{ t('home.java.instance_hint', { name: javaPicker.name }) }}
+        </p>
         <label class="java-option"
           ><input data-ui="HomeView:e530b03f8660" v-model="javaPicker.choice" type="radio" value="@auto" name="home-java" /><span
-            ><strong>自动选择</strong><small>按游戏的真实版本要求匹配 Java，必要时自动下载</small></span
+            ><strong>{{ t('home.java.auto') }}</strong
+            ><small>{{ t('home.java.auto_desc') }}</small></span
           ></label
         >
         <label class="java-option"
           ><input data-ui="HomeView:a0b100241102" v-model="javaPicker.choice" type="radio" value="@inherit" name="home-java" /><span
-            ><strong>跟随全局设置</strong
+            ><strong>{{ t('home.java.inherit') }}</strong
             ><small>{{
-              store.settings?.javaAuto ? '当前全局：自动选择' : '当前全局：' + (store.settings?.javaPath || '匹配本地 Java')
+              store.settings?.javaAuto
+                ? t('home.java.inherit_auto')
+                : store.settings?.javaPath
+                  ? t('home.java.inherit_path', { path: store.settings.javaPath })
+                  : t('home.java.inherit_local')
             }}</small></span
           ></label
         >
         <div data-ui="HomeView:2b732ea02a21" class="java-list">
           <label data-ui="HomeView:484d96932255" v-for="java in javas" :key="java.path" class="java-option"
             ><input data-ui="HomeView:3b272633f5d0" v-model="javaPicker.choice" type="radio" :value="java.path" name="home-java" /><span
-              ><strong>Java {{ java.version }} · {{ java.architecture || (java.is64Bit ? '64-bit' : '32-bit') }}</strong
+              ><strong>{{
+                t('home.java.entry', {
+                  version: java.version,
+                  arch: java.architecture || (java.is64Bit ? '64-bit' : '32-bit'),
+                })
+              }}</strong
               ><small data-ui="HomeView:012aa6cd6faf" :title="java.path">{{ java.path }}</small></span
             ></label
           >
           <p data-ui="HomeView:cf5a93492c1f" v-if="!javas.length" class="java-picker-description">
-            {{ javaChecked ? '未发现本地 Java，可使用自动选择，或在设置中添加 Java。' : '正在扫描本地 Java…' }}
+            {{ javaChecked ? t('home.java.no_local') : t('home.java.scanning') }}
           </p>
           <p
             data-ui="HomeView:c23c056bc1bd"
             v-if="javaPicker.choice && !javaPicker.choice.startsWith('@') && !javas.some((java) => java.path === javaPicker?.choice)"
             class="java-picker-description"
           >
-            当前指定：{{ javaPicker.choice }}
+            {{ t('home.java.current', { path: javaPicker.choice }) }}
           </p>
         </div>
         <div data-ui="HomeView:e1c395584dc9" class="modal-actions">
@@ -1131,11 +1179,13 @@ onUnmounted(() => {
               openSettings('java');
             "
           >
-            管理 Java
+            {{ t('home.java.manage') }}
           </button>
-          <button data-ui="HomeView:6248b7b5543e" class="btn btn-ghost" :disabled="javaSaving" @click="javaPicker = null">取消</button>
+          <button data-ui="HomeView:6248b7b5543e" class="btn btn-ghost" :disabled="javaSaving" @click="javaPicker = null">
+            {{ t('home.java.cancel') }}
+          </button>
           <button data-ui="HomeView:853a319d45b3" class="btn btn-gold" :disabled="javaSaving" @click="saveJavaChoice">
-            {{ javaSaving ? '保存中…' : '保存选择' }}
+            {{ javaSaving ? t('home.java.saving') : t('home.java.save') }}
           </button>
         </div>
       </section>
@@ -1143,20 +1193,20 @@ onUnmounted(() => {
   </Teleport>
   <Teleport to="body"
     ><div data-ui="HomeView:9d63fadc1ed6" v-if="restartConfirm" class="modal-mask" style="z-index: 10030">
-      <section data-ui="HomeView:b6df5ebbb9a2" class="modal" role="dialog" aria-modal="true" aria-label="正常退出超时">
-        <h3>正常退出等待超时</h3>
-        <p data-ui="HomeView:2925c2d17b9d">Minecraft 可能仍在保存世界。建议在游戏内保存退出，然后重试。</p>
-        <p data-ui="HomeView:37b32c3aeef4" style="color: var(--danger)">强制结束可能丢失进度或损坏存档；只有你确认后才会执行。</p>
+      <section data-ui="HomeView:b6df5ebbb9a2" class="modal" role="dialog" aria-modal="true" :aria-label="t('home.restart.timeout_title')">
+        <h3>{{ t('home.restart.timeout_title') }}</h3>
+        <p data-ui="HomeView:2925c2d17b9d">{{ t('home.restart.timeout_desc') }}</p>
+        <p data-ui="HomeView:37b32c3aeef4" style="color: var(--danger)">{{ t('home.restart.timeout_warn') }}</p>
         <div data-ui="HomeView:6801f8598bb3" style="display: flex; gap: 12px; justify-content: flex-end">
           <button data-ui="HomeView:1ab5dde2249d" class="btn btn-ghost" :disabled="restartBusy" @click="cancelRestartPrompt">
-            取消重启，继续等待</button
+            {{ t('home.restart.cancel') }}</button
           ><button
             data-ui="HomeView:df15de437ca0"
             class="btn btn-danger"
             :disabled="restartBusy"
             @click="quickRestart({ id: restartConfirm.id, folder: restartConfirm.folder } as InstalledVersion, restartConfirm.token)"
           >
-            确认强制结束并重启
+            {{ t('home.restart.force') }}
           </button>
         </div>
       </section>

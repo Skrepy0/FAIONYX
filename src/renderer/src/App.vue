@@ -43,7 +43,7 @@ import {
   startUpdateDownload,
 } from './api';
 import type { ReleaseInfo } from '@shared/types';
-import { QQ_GROUP_NUMBER } from '@shared/branding';
+import { locale, t, $t } from '@renderer/i18n';
 import UpdateModal from './components/UpdateModal.vue';
 import {
   applyLaunchState,
@@ -117,96 +117,102 @@ const viewMap: Record<ViewName, Component> = {
 
 const currentComponent = computed(() => viewMap[store.currentView]);
 
-const navItems: Array<{ key: ViewName; label: string; icon: string }> = [
+const navItems = computed<Array<{ key: ViewName; label: string; icon: string }>>(() => [
   {
     key: 'home',
-    label: '首页',
+    label: t('root.nav.home'),
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></svg>',
   },
   {
     key: 'game',
-    label: '游戏版本',
+    label: t('root.nav.game'),
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="11" rx="5.5"/><path d="M7.5 10.8v3.4M5.8 12.5h3.4"/><circle cx="15.6" cy="11.9" r="0.6" fill="currentColor" stroke="none"/><circle cx="18" cy="13.6" r="0.6" fill="currentColor" stroke="none"/></svg>',
   },
   {
     key: 'friends',
-    label: '联机',
+    label: t('root.nav.friends'),
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M2 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 4 5"/></svg>',
   },
   {
     key: 'keys',
-    label: '默认配置',
+    label: t('root.nav.keys'),
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>',
   },
   {
     key: 'skins',
-    label: '皮肤',
+    label: t('root.nav.skins'),
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4-6 3 2 5 3-1v9h8v-9l3 1 2-5-6-3a3 3 0 0 1-6 0Z"/></svg>',
   },
   {
     key: 'community',
-    label: '社区资源',
+    label: t('root.nav.community'),
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a13.5 13.5 0 0 1 0 18"/><path d="M12 3a13.5 13.5 0 0 0 0 18"/></svg>',
   },
   {
     key: 'settings',
-    label: '设置',
+    label: t('root.nav.settings'),
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06-.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>',
   },
-];
+]);
 
 /** 功能禁用判定 */
 const isFeatureOff = (key: string): boolean => (store.settings?.disabledFeatures ?? []).includes(key);
 
 /** 过滤禁用功能后的主导航 */
-const visibleNavItems = computed(() => navItems.filter((n) => !isFeatureOff(n.key)));
-
-/** 过滤禁用功能后的资源管理子项 */
-const visibleResourceSubItems = computed(() => resourceSubItems.filter((s) => !isFeatureOff(s.key)));
+const visibleNavItems = computed(() => navItems.value.filter((n) => !isFeatureOff(n.key)));
 
 /** 资源管理子级菜单（模组/资源包/光影包），按游戏版本管理对应目录 */
-const resourceSubItems: Array<{ key: ViewName; label: string; icon: string }> = [
+const resourceSubItems = computed<Array<{ key: ViewName; label: string; icon: string }>>(() => [
   {
     key: 'mods',
-    label: '模组',
+    label: t('root.nav.resource.mods'),
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/></svg>',
   },
   {
     key: 'packs',
-    label: '资源包',
+    label: t('root.nav.resource.packs'),
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>',
   },
   {
     key: 'shaders',
-    label: '光影包',
+    label: t('root.nav.resource.shaders'),
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
   },
 
   {
     key: 'recordings',
-    label: '录像',
+    label: t('root.nav.resource.recordings'),
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="14" height="14" rx="3"/><path d="m17 10 4-3v10l-4-3"/></svg>',
   },
   {
     key: 'projections',
-    label: '投影',
+    label: t('root.nav.resource.projections'),
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 9 5v8l-9 5-9-5V8zM3 8l9 5 9-5M12 13v8"/></svg>',
   },
   {
     key: 'bridge',
-    label: 'MOD 面板',
+    label: t('root.nav.resource.bridge'),
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="3.5"/></svg>',
   },
   {
     key: 'servers',
-    label: '服务器',
+    label: t('root.nav.resource.servers'),
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>',
   },
-];
+]);
+/** 过滤禁用功能后的资源管理子项 */
+const visibleResourceSubItems = computed(() => resourceSubItems.value.filter((s) => !isFeatureOff(s.key)));
 
 /** 资源管理组是否展开（默认折叠；当前在其中任一子页时强制展开高亮） */
 const resourceExpanded = ref(localStorage.getItem('faionyx.resourceExpanded') === 'true');
 watch(resourceExpanded, (value) => localStorage.setItem('faionyx.resourceExpanded', String(value)));
+watch(
+  () => store.settings,
+  (s) => {
+    if (s?.locale) locale.value = s.locale;
+  },
+  { immediate: true }
+);
 const inResourceGroup = computed(() =>
   ['mods', 'packs', 'shaders', 'bridge', 'servers', 'recordings', 'projections'].includes(store.currentView)
 );
@@ -247,7 +253,7 @@ let closeHintShown = false;
 const win = async (action: 'minimize' | 'maximize' | 'close') => {
   if (action === 'close' && store.launchState?.status === 'running' && !closeHintShown) {
     closeHintShown = true;
-    toast('关闭启动器不影响游戏，游戏继续运行', 'info');
+    toast(t('root.toast.info.close_launcher'), 'info');
     setTimeout(() => window.faionyx.send('window:close'), 1300);
     return;
   }
@@ -303,7 +309,7 @@ async function onUpdateNow() {
     updateModal.taskId = taskId;
     updateModal.state = 'downloading';
   } catch (e) {
-    toast('启动更新下载失败：' + errText(e), 'error');
+    toast(t('root.toast.error.start_update', { e: errText(e) }), 'error');
     updateModal.open = false;
   }
 }
@@ -317,9 +323,9 @@ async function onUpdateSkip() {
   try {
     await skipUpdateVersion(release.version);
     store.settings = { ...store.settings!, skipUpdateVersion: release.version };
-    toast(`已跳过 v${release.version}，下个版本再提醒`, 'info');
+    toast(t('root.toast.info.update_skip', { version: release.version }), 'info');
   } catch (e) {
-    toast('保存失败：' + errText(e), 'error');
+    toast(t('root.toast.error.save_failed', { e: errText(e) }), 'error');
   }
 }
 async function onUpdateCancelDownload() {
@@ -334,7 +340,7 @@ async function onUpdateInstallNow() {
     updateModal.open = false;
     toast(updateReadyMessage(), 'success');
   } catch (e) {
-    toast('安装更新失败：' + errText(e), 'error');
+    toast(t('root.toast.error.install_update_failed', { e: errText(e) }), 'error');
     updateModal.open = false;
   }
 }
@@ -353,10 +359,10 @@ async function onConfigReset() {
   try {
     await resetSettingsToDefaults();
     configMismatch.value = false;
-    toast('设置已重置为默认值（原配置已备份）', 'success');
+    toast(t('root.toast.success.config_reset'), 'success');
     setTimeout(() => location.reload(), 800);
   } catch (e) {
-    toast('重置失败：' + errText(e), 'error');
+    toast(t('root.toast.error.config_reset_failed', { e: errText(e) }), 'error');
   }
 }
 
@@ -497,7 +503,7 @@ function onDrop(e: DragEvent) {
     e.stopPropagation();
     if (dragHasFiles(e)) {
       if (store.resourceDropHandler) store.resourceDropHandler(e);
-      else toast('页面正在加载，请稍后再拖入', 'info');
+      else toast(t('root.toast.import.drop.info.please_wait'), 'info');
     }
     return;
   }
@@ -535,7 +541,7 @@ function onDrop(e: DragEvent) {
     modDrop.open = true;
     return;
   }
-  toast('压缩包请一次导入一个文件；混合文件请分开拖入', 'error');
+  toast(t('root.toast.import.drop.error.mixed_kinds'), 'error');
 }
 
 function routeYggdrasilImport(input: YggdrasilProviderInput) {
@@ -570,7 +576,7 @@ async function routeSingleImport(filePath: string, _displayName: string) {
     else if (result.kind === 'mod') Object.assign(modDrop, { files: [filePath], open: true });
     else toast(result.message, 'error');
   } catch (e) {
-    if (revision === importProbeRevision) toast('导入识别失败：' + errText(e), 'error');
+    if (revision === importProbeRevision) toast(t('root.toast.import.parse.error', { e: errText(e) }), 'error');
   }
 }
 
@@ -578,7 +584,7 @@ async function routeSingleImport(filePath: string, _displayName: string) {
 const FORMAT_LABEL: Record<ModpackInfo['format'], string> = {
   mrpack: 'Modrinth (.mrpack)',
   curseforge: 'CurseForge',
-  fullpack: '完整客户端包',
+  fullpack: 'Full Client Pack',
 };
 const FORMAT_TAG_CLASS: Record<ModpackInfo['format'], string> = {
   mrpack: 'tag-success',
@@ -632,7 +638,7 @@ const mpRelatedExisting = computed(() => {
 const mpNeedsReplaceConfirm = computed(() => mpModal.conflictAction === 'update' || mpModal.conflictAction === 'overwrite');
 
 function fmtPackBytes(bytes: number): string {
-  if (!bytes) return '大小未知';
+  if (!bytes) return t('root.import.pack_bytes.unknown');
   if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`;
   if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
   return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
@@ -705,21 +711,21 @@ function closeModpackImport() {
 function confirmModpackImport() {
   if (!mpModal.info) return;
   if (!mpModal.customName.trim()) {
-    mpModal.error = '实例名称不能为空';
+    mpModal.error = t('root.import.modpack.error.name.null');
     return;
   }
   if (mpModal.conflictAction === 'rename' && mpNameConflict.value) {
-    mpModal.error = `实例名称已存在：${mpNameConflict.value.id}，请改名或选择其他处理方式`;
+    mpModal.error = t('root.import.modpack.error.name.exist', { id: mpNameConflict.value.id });
     return;
   }
   if (mpNeedsReplaceConfirm.value && (!mpModal.existingId || !mpModal.confirmReplace)) {
-    mpModal.error = '请选择现有实例并勾选影响范围确认';
+    mpModal.error = t('root.import.modpack.error.name.select_instance');
     return;
   }
   const filePath = mpModal.filePath;
   const nameSource = mpModal.nameSource;
   mpModal.open = false;
-  toast('开始解析并安装整合包…', 'info');
+  toast(t('root.toast.import.modpack.info.start_parse'), 'info');
   void installModpack(filePath, {
     nameSource,
     instanceName: mpModal.customName.trim(),
@@ -729,7 +735,7 @@ function confirmModpackImport() {
     confirmReplace: mpNeedsReplaceConfirm.value && mpModal.confirmReplace,
     keySyncOverride: mpModal.keySyncOverride,
   }).catch((e) => {
-    toast('整合包安装失败：' + errText(e), 'error');
+    toast(t('root.toast.import.modpack.error.install_failed', { e: errText(e) }), 'error');
   });
 }
 
@@ -739,7 +745,7 @@ async function onImportClick() {
     const p = await selectFile();
     if (p) void routeSingleImport(p, p.split(/[\\/]/).pop() ?? p);
   } catch (e) {
-    toast('导入失败：' + errText(e), 'error');
+    toast(t('root.toast.import.error', { e: errText(e) }), 'error');
   }
 }
 
@@ -765,11 +771,11 @@ async function onExportLogs() {
   try {
     const p = await exportLaunchLogs(store.launchingVersionId, store.launchingFolder);
     if (p) {
-      toast(`错误日志已导出：${p}`, 'success');
+      toast(t('root.toast.export.logs.success', { p: p }), 'success');
       launchFail.open = false;
     }
   } catch (e) {
-    toast('导出失败：' + errText(e), 'error');
+    toast(t('root.toast.export.logs.error', { e: errText(e) }), 'error');
   } finally {
     launchFail.exporting = false;
   }
@@ -793,7 +799,7 @@ function closeTopDropdowns() {
 function onGlobalPointerDown(event: PointerEvent) {
   if (!noticeOpen.value && !dlOpen.value && !notesOpen.value) return;
   const target = event.target as HTMLElement | null;
-  if (target?.closest?.('.notice-panel, .dl-toggle, [title="通知"]')) return;
+  if (target?.closest?.('.notice-panel, .dl-toggle, [data-ui="App:b3baec2490ab"]')) return;
   closeTopDropdowns();
 }
 const activeTaskCount = computed(
@@ -801,12 +807,12 @@ const activeTaskCount = computed(
 );
 const launcherHealth = computed(() => {
   if (store.launchState?.status === 'error') {
-    return { tone: 'error', text: '最近启动出现异常' };
+    return { tone: 'error', text: t('root.launcher.health.error') };
   }
   if (activeTaskCount.value) {
-    return { tone: 'busy', text: `${activeTaskCount.value} 项后台任务进行中` };
+    return { tone: 'busy', text: t('root.launcher.health.busy', { value: activeTaskCount.value.toString() }) };
   }
-  return { tone: 'ok', text: '系统无异常' };
+  return { tone: 'ok', text: t('root.launcher.health.ok') };
 });
 
 async function onPauseTask(id: string) {
@@ -815,7 +821,7 @@ async function onPauseTask(id: string) {
   try {
     if (await pauseTask(id)) task.status = 'paused';
   } catch (e) {
-    toast('暂停失败：' + errText(e), 'error');
+    toast(t('root.toast.task.pause.error', { e: errText(e) }), 'error');
   }
 }
 
@@ -825,7 +831,7 @@ async function onResumeTask(id: string) {
   try {
     if (await resumeTask(id)) task.status = 'running';
   } catch (e) {
-    toast('恢复失败：' + errText(e), 'error');
+    toast(t('root.toast.task.resume.error', { e: errText(e) }), 'error');
   }
 }
 
@@ -840,12 +846,12 @@ async function onCancelTask(id: string) {
         taskId: id,
         ok: false,
         cancelled: true,
-        error: '任务已结束',
+        error: t('root.task.cancel.finalize.error'),
       });
-      toast('任务已结束或不存在', 'info');
+      toast(t('root.toast.task.cancel.finalize.error'), 'info');
     }
   } catch (e) {
-    toast('取消失败：' + errText(e), 'error');
+    toast(t('root.toast.task.cancel.error', { e: errText(e) }), 'error');
   }
 }
 
@@ -858,9 +864,9 @@ function taskSubText(t: { stage: string; text: string }): string {
 
 function taskEtaText(seconds?: number): string {
   if (seconds == null || !Number.isFinite(seconds) || seconds <= 3) return '';
-  if (seconds >= 3600) return ` · 本阶段约剩 ${Math.ceil(seconds / 3600)}h`;
-  if (seconds >= 60) return ` · 本阶段约剩 ${Math.ceil(seconds / 60)}min`;
-  return ` · 本阶段约剩 ${Math.round(seconds)}s`;
+  if (seconds >= 3600) return t('root.task.eta.text', { value: Math.ceil(seconds / 3600).toString(), d: 'h' });
+  if (seconds >= 60) return t('root.task.eta.text', { value: Math.ceil(seconds / 60).toString(), d: 'min' });
+  return t('root.task.eta.text', { value: Math.round(seconds).toString(), d: 's' });
 }
 
 function fmtNoticeTime(ts: number): string {
@@ -924,7 +930,7 @@ watch(
     probe.onerror = () => {
       if (currentBgImage.value !== imagePath) return;
       failedBackground.value = imagePath;
-      toast('自定义背景不可用，已回退到主题默认背景', 'error');
+      toast(t('root.toast.custom_bg.break.error'), 'error');
     };
     probe.src = managedImageUrl(imagePath);
   },
@@ -1113,6 +1119,7 @@ onMounted(async () => {
   void pollTickets();
   offs.push(installVisualDesign());
   void loadExitNotices();
+  if (store.settings?.locale) locale.value = store.settings.locale;
   applyTheme(store.settings?.theme, store.settings?.custom);
   document.addEventListener('pointerdown', closeOtherFileMores, true);
   motionQuery.addEventListener('change', onMotionChange);
@@ -1151,7 +1158,7 @@ onMounted(async () => {
   offs.push(() => window.removeEventListener('pointerdown', onGlobalPointerDown, true));
   offs.push(
     window.faionyx.on('window:caption-pointerdown', closeTopDropdowns),
-    window.faionyx.on('files:dragError', (error) => toast('无法拖出文件：' + String(error), 'error')),
+    window.faionyx.on('files:dragError', (error) => toast(t('root.toast.file.drag.error', { e: String(error) }), 'error')),
     onProgress((e) => {
       if (e.manualFiles && !store.tasks.some((t) => t.manualFiles?.token === e.manualFiles?.token)) dlOpen.value = true;
       store.progress = e;
@@ -1167,15 +1174,15 @@ onMounted(async () => {
           updateModal.state = 'done';
         } else {
           updateModal.open = false;
-          if (!r.cancelled) toast('更新下载失败：' + (r.error || '未知错误'), 'error');
+          if (!r.cancelled) toast(t('root.toast.error.update_install', { e: r.error || t('common.error.unknown') }), 'error');
         }
       }
-      if (r.cancelled) toast('任务已取消', 'info');
+      if (r.cancelled) toast(t('root.toast.task.cancel.info'), 'info');
     }),
     onUpdatePrompt((payload) => {
       // 回滚通知（更新失败自动还原后备份）
       if ((payload as { rollbackNotice?: boolean }).rollbackNotice) {
-        toast('上次更新未完成，已停止自动重试。可在设置中重新下载或选择备份恢复。', 'error');
+        toast(t('root.toast.rollback.error.unfinished'), 'error');
         return;
       }
       store.updatePrompt = { release: payload, rollback: false };
@@ -1184,7 +1191,7 @@ onMounted(async () => {
       if (updateModal.open && r.taskId === updateModal.taskId) updateModal.slowHint = true;
     }),
     onUpdateReady((r) => {
-      toast(updateReadyMessage(`新版本 v${r.version} 已下载完成`), 'success');
+      toast(updateReadyMessage(t('root.toast.update.install.success', { version: r.version })), 'success');
     }),
     onInstallDone((r) => {
       store.installing.delete(r.versionId);
@@ -1196,9 +1203,17 @@ onMounted(async () => {
         store.failedInstalls.delete(r.versionId);
         const favorites = r.favoriteModsResult;
         toast(
-          favorites
-            ? `版本 ${r.versionId} 安装完成；${favorites.baseOnly ? '已按确认不安装收藏模组' : `已安装 ${favorites.installed} 项收藏模组及 ${favorites.dependencies} 项必要前置，跳过 ${favorites.skipped.length} 项`}。模组目录：${favorites.modsDirectory}`
-            : `版本 ${r.versionId} 安装完成`,
+          !favorites
+            ? t('root.toast.install.success', { id: r.versionId })
+            : favorites.baseOnly
+              ? t('root.toast.install.success.base_only', { id: r.versionId, dir: favorites.modsDirectory })
+              : t('root.toast.install.success.favorites', {
+                  id: r.versionId,
+                  installed: String(favorites.installed),
+                  dependencies: String(favorites.dependencies),
+                  skipped: String(favorites.skipped.length),
+                  dir: favorites.modsDirectory,
+                }),
           'success'
         );
         void refreshInstalled();
@@ -1207,7 +1222,13 @@ onMounted(async () => {
         void refreshInstalled();
       } else {
         store.failedInstalls.add(r.versionId);
-        toast(`安装失败${r.stage ? `（${stageLabel(r.stage)}）` : ''}：` + (r.error ?? '未知错误'), 'error');
+        toast(
+          t('root.toast.install.error', {
+            stage: r.stage ? t('root.toast.install.error.stage', { stage: stageLabel(r.stage) }) : '',
+            error: r.error ?? t('common.error.unknown'),
+          }),
+          'error'
+        );
       }
     }),
     // 游戏目录迁移完成：立即全局刷新（版本列表/最近游戏/资源管理），全程无需重启
@@ -1234,7 +1255,7 @@ onMounted(async () => {
       if (s.status === 'error') {
         // 启动失败：弹窗提示并提供「导出错误日志」
         launchFail.open = true;
-        launchFail.title = '游戏启动失败';
+        launchFail.title = t('root.launch_fail.title.start');
         launchFail.text = s.text;
       } else if (s.status === 'exited') {
         if (
@@ -1247,10 +1268,12 @@ onMounted(async () => {
         if (s.savedWindowSize?.scope === 'instance') void refreshInstalled().catch(() => undefined);
         if (shouldReportGameCrash(s)) {
           launchFail.open = true;
-          launchFail.title = `游戏异常退出（代码 ${signedExitCode(s.code ?? null) ?? '未知'}）`;
-          launchFail.text = '游戏进程崩溃或被异常终止。可导出错误日志（含 crash-report 与 latest.log）用于排查。';
+          launchFail.title = t('root.launch_fail.title.crash', {
+            code: String(signedExitCode(s.code ?? null) ?? t('common.error.unknown')),
+          });
+          launchFail.text = t('root.launch_fail.text.crash');
         } else {
-          toast(s.exitKind === 'shutdown-timeout' ? s.text : '游戏已退出', 'info');
+          toast(s.exitKind === 'shutdown-timeout' ? s.text : t('root.toast.game.exited'), 'info');
         }
         // 游戏退出后只扫描刚运行的实例，避免共享 servers.dat 被错误关联到其他版本。
         const exitedVersionId = s.versionId || store.launchingVersionId;
@@ -1274,12 +1297,15 @@ onMounted(async () => {
     const broken = store.installed.filter((v) => v.incomplete);
     if (broken.length) {
       toast(
-        `检测到 ${broken.length} 个版本下载未完成（${broken.map((b) => b.id).join('、')}），可在「游戏版本 → 已安装」继续下载或删除残留`,
+        t('root.toast.broken_versions', {
+          count: String(broken.length),
+          ids: broken.map((b) => b.id).join('、'),
+        }),
         'info'
       );
     }
   } catch (e) {
-    toast('初始化失败：' + errText(e), 'error');
+    toast(t('root.toast.init_failed', { e: errText(e) }), 'error');
   } finally {
     store.initialized = true;
     await nextTick();
@@ -1343,7 +1369,7 @@ onUnmounted(() => {
           data-ui="App:adafe645f766"
           ref="navEl"
           class="nav"
-          aria-label="主导航"
+          :aria-label="$t('root.nav.aria_main')"
           @pointerover="retargetNav"
           @pointerleave="resetNav"
           @focusin="retargetNav"
@@ -1389,7 +1415,7 @@ onUnmounted(() => {
                     <path d="M3 11h18" />
                   </svg>
                 </span>
-                <span data-ui="App:215ddb49217f" class="nav-label">资源管理</span>
+                <span data-ui="App:215ddb49217f" class="nav-label">{{ $t('root.nav.group.resources') }}</span>
                 <svg
                   class="nav-caret"
                   :class="{ open: resourceExpanded || inResourceGroup }"
@@ -1435,7 +1461,7 @@ onUnmounted(() => {
           data-ui="App:f81b37b0f9eb"
           class="sidebar-health"
           :class="`is-${launcherHealth.tone}`"
-          title="打开通知中心"
+          :title="$t('root.topbar.open_notice_center')"
           @click="toggleNotices"
         >
           <i data-ui="App:8534bb11ef26"></i>
@@ -1455,7 +1481,7 @@ onUnmounted(() => {
             v-if="canGoBack && store.currentView !== 'home'"
             class="top-back"
             :disabled="!canGoBack"
-            title="返回上一个页面"
+            :title="$t('root.topbar.back')"
             @click="goBack"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -1473,7 +1499,7 @@ onUnmounted(() => {
                 <path d="m7 10 5 5 5-5" />
                 <path d="M4 21h16" />
               </svg>
-              下载
+              {{ $t('root.topbar.download') }}
               <span data-ui="App:1585a95f110a" v-if="activeTaskCount" class="dl-badge">{{ activeTaskCount }}</span>
             </button>
             <button data-ui="App:0995359279d1" v-if="store.currentView !== 'home'" class="top-btn" @click="onImportClick">
@@ -1482,13 +1508,13 @@ onUnmounted(() => {
                 <path d="m7 8 5-5 5 5" />
                 <path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
               </svg>
-              导入
+              {{ $t('root.topbar.import') }}
             </button>
             <button
               data-ui="App:50549c4d6612"
               v-if="store.currentView === 'home' && activeTaskCount"
               class="top-icon-btn dl-toggle"
-              title="下载中心"
+              :title="$t('root.topbar.download_center')"
               @click="dlOpen = !dlOpen"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1502,7 +1528,7 @@ onUnmounted(() => {
               data-ui="App:0a28f190d06e"
               v-if="store.currentView === 'home'"
               class="top-icon-btn dl-toggle"
-              title="更新日志"
+              :title="$t('root.topbar.notes')"
               @click="notesOpen = !notesOpen"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1511,7 +1537,7 @@ onUnmounted(() => {
                 <path d="M12 7v5l3.5 2" />
               </svg>
             </button>
-            <button data-ui="App:b3baec2490ab" class="top-icon-btn" title="通知" @click="toggleNotices">
+            <button data-ui="App:b3baec2490ab" class="top-icon-btn" :title="$t('root.topbar.notice')" @click="toggleNotices">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
                 <path d="M13.7 21a2 2 0 0 1-3.4 0" />
@@ -1522,17 +1548,17 @@ onUnmounted(() => {
             <template v-if="!isMac">
               <span data-ui="App:2d64ba8e392c" class="top-divider"></span>
 
-              <button data-ui="App:e3e46a2d0aaf" class="win-btn" title="最小化" @click="win('minimize')">
+              <button data-ui="App:e3e46a2d0aaf" class="win-btn" :title="$t('root.topbar.minimize')" @click="win('minimize')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                   <path d="M5 12h14" />
                 </svg>
               </button>
-              <button data-ui="App:bd7bf1eb0182" class="win-btn" title="最大化/还原" @click="win('maximize')">
+              <button data-ui="App:bd7bf1eb0182" class="win-btn" :title="$t('root.topbar.maximize')" @click="win('maximize')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                   <rect x="6" y="6" width="12" height="12" rx="1.5" />
                 </svg>
               </button>
-              <button data-ui="App:f3cf1f9c86a5" class="win-btn win-close" title="关闭" @click="win('close')">
+              <button data-ui="App:f3cf1f9c86a5" class="win-btn win-close" :title="$t('root.topbar.close')" @click="win('close')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                   <path d="M6 6l12 12M18 6 6 18" />
                 </svg>
@@ -1545,12 +1571,12 @@ onUnmounted(() => {
             <div data-ui="App:8e1aef347238" v-if="noticeOpen" class="notice-mask" @click="noticeOpen = false"></div>
             <div data-ui="App:9730228f244a" v-if="noticeOpen" class="notice-panel">
               <div data-ui="App:e6028868bd80" class="notice-head">
-                <span data-ui="App:43feec7b6fd3" class="notice-title">通知</span>
+                <span data-ui="App:43feec7b6fd3" class="notice-title">{{ $t('root.notice.title') }}</span>
                 <button data-ui="App:da706702d37c" class="btn btn-ghost btn-sm" :disabled="!store.notices.length" @click="clearNotices">
-                  清空
+                  {{ $t('root.notice.clear') }}
                 </button>
               </div>
-              <div data-ui="App:84df1441fafa" v-if="!store.notices.length" class="notice-empty">暂无通知</div>
+              <div data-ui="App:84df1441fafa" v-if="!store.notices.length" class="notice-empty">{{ $t('root.notice.empty') }}</div>
               <div data-ui="App:b4daafdb8870" v-else class="notice-list">
                 <div data-ui="App:a73122485a3f" v-for="n in store.notices" :key="n.id" class="notice-item" :class="'notice-' + n.type">
                   <span data-ui="App:adb2057c5de6" class="notice-dot"></span>
@@ -1566,7 +1592,7 @@ onUnmounted(() => {
                         noticeOpen = false;
                       "
                     >
-                      查看原因
+                      {{ $t('root.notice.view_reason') }}
                     </button>
                     <span data-ui="App:9f929a457637" class="notice-time">{{ fmtNoticeTime(n.time) }}</span>
                   </div>
@@ -1580,7 +1606,7 @@ onUnmounted(() => {
             <div data-ui="App:c07fadcedfba" v-if="notesOpen" class="notice-mask" @click="notesOpen = false"></div>
             <div data-ui="App:8e6f6e3d72b8" v-if="notesOpen" class="notice-panel notes-panel">
               <div data-ui="App:aeac05a751bf" class="notice-head">
-                <span data-ui="App:6919eb62e967" class="notice-title">更新日志</span>
+                <span data-ui="App:6919eb62e967" class="notice-title">{{ $t('root.notes.title') }}</span>
                 <span data-ui="App:632f2221de5a" class="muted">{{ latestUpdateNote()?.version }} · {{ latestUpdateNote()?.date }}</span>
               </div>
               <div data-ui="App:27bd32aa001a" class="notes-list">
@@ -1604,7 +1630,7 @@ onUnmounted(() => {
             <div data-ui="App:32e6a4482be2" v-if="dlOpen" class="notice-mask" @click="dlOpen = false"></div>
             <div data-ui="App:17d738b19ef5" v-if="dlOpen" class="notice-panel dl-panel">
               <div data-ui="App:1960026275b2" class="notice-head">
-                <span data-ui="App:9bb15b429862" class="notice-title">下载中心</span>
+                <span data-ui="App:9bb15b429862" class="notice-title">{{ $t('root.download.title') }}</span>
                 <button
                   data-ui="App:93f5c2a356cd"
                   class="btn btn-ghost btn-sm"
@@ -1613,76 +1639,105 @@ onUnmounted(() => {
                     store.currentView = 'game';
                   "
                 >
-                  去版本下载
+                  {{ $t('root.download.go_versions') }}
                 </button>
               </div>
-              <div data-ui="App:61130e12d278" v-if="!store.tasks.length" class="notice-empty">没有进行中的任务</div>
+              <div data-ui="App:61130e12d278" v-if="!store.tasks.length" class="notice-empty">{{ $t('root.download.empty') }}</div>
               <div data-ui="App:9f518a7bbb67" v-else class="notice-list">
                 <div
                   data-ui="App:ac5c4222257f"
-                  v-for="t in store.tasks"
-                  :key="t.id"
-                  :data-task-id="t.id"
+                  v-for="task in store.tasks"
+                  :key="task.id"
+                  :data-task-id="task.id"
                   class="dl-item"
-                  :class="'dl-' + t.status"
+                  :class="'dl-' + task.status"
                 >
                   <div data-ui="App:1147e17bfe61" class="dl-item-head">
-                    <span data-ui="App:a4f0a4d42456" class="dl-title" :title="t.title">{{ t.title }}</span>
-                    <span data-ui="App:7faad0b50853" v-if="t.status === 'running'" class="dl-actions">
-                      <button data-ui="App:4db86123aef2" class="btn btn-ghost btn-sm" @click="onPauseTask(t.id)">暂停</button>
-                      <button data-ui="App:4f9c2f515cb9" class="btn btn-ghost btn-sm" @click="onCancelTask(t.id)">取消</button>
+                    <span data-ui="App:a4f0a4d42456" class="dl-title" :title="task.title">{{ task.title }}</span>
+                    <span data-ui="App:7faad0b50853" v-if="task.status === 'running'" class="dl-actions">
+                      <button data-ui="App:4db86123aef2" class="btn btn-ghost btn-sm" @click="onPauseTask(task.id)">
+                        {{ $t('root.download.pause') }}
+                      </button>
+                      <button data-ui="App:4f9c2f515cb9" class="btn btn-ghost btn-sm" @click="onCancelTask(task.id)">
+                        {{ $t('root.download.cancel') }}
+                      </button>
                     </span>
-                    <span data-ui="App:03cdc173529c" v-else-if="t.status === 'paused'" class="dl-actions">
-                      <button data-ui="App:7cae05871ea8" class="btn btn-ghost btn-sm" @click="onResumeTask(t.id)">继续</button>
-                      <button data-ui="App:13a915056e72" class="btn btn-ghost btn-sm" @click="onCancelTask(t.id)">取消</button>
+                    <span data-ui="App:03cdc173529c" v-else-if="task.status === 'paused'" class="dl-actions">
+                      <button data-ui="App:7cae05871ea8" class="btn btn-ghost btn-sm" @click="onResumeTask(task.id)">
+                        {{ $t('root.download.resume') }}
+                      </button>
+                      <button data-ui="App:13a915056e72" class="btn btn-ghost btn-sm" @click="onCancelTask(task.id)">
+                        {{ $t('root.download.cancel') }}
+                      </button>
                     </span>
-                    <button data-ui="App:ea8947fe4164" v-else-if="t.status === 'cancelling'" class="btn btn-ghost btn-sm" disabled>
-                      正在取消…
+                    <button data-ui="App:ea8947fe4164" v-else-if="task.status === 'cancelling'" class="btn btn-ghost btn-sm" disabled>
+                      {{ $t('root.download.cancelling') }}
                     </button>
-                    <button data-ui="App:d19e1566b2b8" v-else class="dl-dismiss" title="移除记录" @click="dismissTask(t.id)">×</button>
-                  </div>
-                  <div data-ui="App:a1b294f53a4e" class="dl-sub muted">
-                    <template v-if="t.status === 'running'">
-                      {{ taskSubText(t) ? taskSubText(t) + ' · ' : ''
-                      }}{{ t.indeterminate ? '正在计算总量' : '总进度 ' + taskProgressPercent(t) + '%' }}{{ taskEtaText(t.etaSeconds) }}
-                      <span v-if="t.speed && t.speed > 0"> · {{ formatSpeed(t.speed) }}</span>
-                    </template>
-                    <template v-else-if="t.status === 'paused'"
-                      >已暂停 · {{ t.indeterminate ? '总量未知' : taskProgressPercent(t) + '%' }}</template
+                    <button
+                      data-ui="App:d19e1566b2b8"
+                      v-else
+                      class="dl-dismiss"
+                      :title="$t('root.download.remove')"
+                      @click="dismissTask(task.id)"
                     >
-                    <template v-else-if="t.status === 'cancelling'">正在停止网络与后台任务…</template>
-                    <template v-else-if="t.status === 'done'">已完成</template>
-                    <template v-else-if="t.status === 'cancelled'">已取消</template>
-                    <template v-else> 失败于「{{ stageLabel(t.stage || 'error') }}」阶段：{{ t.error }} </template>
+                      ×
+                    </button>
                   </div>
+
+                  <div data-ui="App:a1b294f53a4e" class="dl-sub muted">
+                    <template v-if="task.status === 'running'">
+                      {{ taskSubText(task) ? taskSubText(task) + ' · ' : ''
+                      }}{{
+                        task.indeterminate
+                          ? $t('root.download.calculating')
+                          : $t('root.download.total_progress', { value: String(taskProgressPercent(task)) })
+                      }}{{ taskEtaText(task.etaSeconds) }}
+                      <span v-if="task.speed && task.speed > 0"> · {{ formatSpeed(task.speed) }}</span>
+                    </template>
+                    <template v-else-if="task.status === 'paused'">{{
+                      task.indeterminate
+                        ? $t('root.download.paused_unknown')
+                        : $t('root.download.paused', { value: String(taskProgressPercent(task)) })
+                    }}</template>
+                    <template v-else-if="task.status === 'cancelling'">{{ $t('root.download.cancelling_status') }}</template>
+                    <template v-else-if="task.status === 'done'">{{ $t('root.download.done') }}</template>
+                    <template v-else-if="task.status === 'cancelled'">{{ $t('root.download.cancelled') }}</template>
+                    <template v-else>
+                      {{
+                        $t('root.download.failed', {
+                          stage: stageLabel(task.stage || 'error'),
+                          error: task.error ?? '',
+                        })
+                      }}
+                    </template>
+                  </div>
+
                   <ModpackSupplement
-                    v-if="t.manualFiles && (t.status === 'running' || t.status === 'paused')"
-                    :request="t.manualFiles"
-                    :paused="t.status === 'paused'"
+                    v-if="task.manualFiles && (task.status === 'running' || task.status === 'paused')"
+                    :request="task.manualFiles"
+                    :paused="task.status === 'paused'"
                   />
+
                   <div
                     data-ui="App:c299fc9739a0"
-                    v-if="t.status === 'running' || t.status === 'paused' || t.status === 'cancelling'"
+                    v-if="task.status === 'running' || task.status === 'paused' || task.status === 'cancelling'"
                     class="dl-bar"
-                    :class="{
-                      'is-indeterminate': t.indeterminate && t.status === 'running',
-                    }"
+                    :class="{ 'is-indeterminate': task.indeterminate && task.status === 'running' }"
                   >
                     <div
                       data-ui="App:21050ee2a501"
                       class="dl-bar-fill"
-                      :style="{
-                        width: t.indeterminate ? '35%' : taskProgressPercent(t) + '%',
-                      }"
+                      :style="{ width: task.indeterminate ? '35%' : taskProgressPercent(task) + '%' }"
                     ></div>
                   </div>
+
                   <div
                     data-ui="download.parallel-stages"
-                    v-if="t.parallelStages?.length && (t.status === 'running' || t.status === 'paused')"
+                    v-if="task.parallelStages?.length && (task.status === 'running' || task.status === 'paused')"
                     class="dl-stages"
                   >
                     <div
-                      v-for="lane in t.parallelStages"
+                      v-for="lane in task.parallelStages"
                       :key="lane.id"
                       :data-ui="'download.stage.' + lane.id"
                       class="dl-stage"
@@ -1692,29 +1747,21 @@ onUnmounted(() => {
                         <span>{{ lane.label }}</span>
                         <span class="muted">{{
                           lane.state === 'done'
-                            ? '已就绪'
+                            ? $t('root.download.stage.ready')
                             : lane.state === 'waiting'
-                              ? '准备中'
+                              ? $t('root.download.stage.preparing')
                               : lane.indeterminate
-                                ? '处理中'
-                                : taskProgressPercent({
-                                    status: 'running',
-                                    progress: lane.progress,
-                                  }) + '%'
+                                ? $t('root.download.stage.processing')
+                                : taskProgressPercent({ status: 'running', progress: lane.progress }) + '%'
                         }}</span>
                       </div>
-                      <div class="dl-stage-detail muted" :title="lane.text">
-                        {{ lane.text }}
-                      </div>
+                      <div class="dl-stage-detail muted" :title="lane.text">{{ lane.text }}</div>
                       <div v-if="!lane.indeterminate" class="dl-bar">
                         <div
                           class="dl-bar-fill"
                           :style="{
                             width:
-                              taskProgressPercent({
-                                status: lane.state === 'done' ? 'done' : 'running',
-                                progress: lane.progress,
-                              }) + '%',
+                              taskProgressPercent({ status: lane.state === 'done' ? 'done' : 'running', progress: lane.progress }) + '%',
                           }"
                         ></div>
                       </div>
@@ -1758,14 +1805,16 @@ onUnmounted(() => {
 
       <!-- 配置文件版本不兼容（回退后旧版读到新版配置） -->
       <div data-ui="App:78cc4acb6895" v-if="configMismatch" class="menu-overlay cfg-mismatch-mask">
-        <div data-ui="App:242f0b62f9c2" class="card cfg-mismatch-modal" role="dialog" aria-label="配置不兼容">
-          <h3 data-ui="App:02fbfeb3a028" class="upd-modal-title">配置文件版本不兼容</h3>
-          <p data-ui="App:4de81003067a" class="muted">
-            当前配置文件由更新版本的启动器创建，可能包含本版本不认识的格式。可以继续尝试使用（可能异常），或重置为默认设置（原配置会自动备份）。
-          </p>
+        <div data-ui="App:242f0b62f9c2" class="card cfg-mismatch-modal" role="dialog" :aria-label="$t('root.cfg_mismatch.title')">
+          <h3 data-ui="App:02fbfeb3a028" class="upd-modal-title">{{ $t('root.cfg_mismatch.title') }}</h3>
+          <p data-ui="App:4de81003067a" class="muted">{{ $t('root.cfg_mismatch.desc') }}</p>
           <div data-ui="App:296426110d1e" class="upd-modal-actions">
-            <button data-ui="App:84897164b21e" class="btn btn-ghost" @click="configMismatch = false">继续尝试</button>
-            <button data-ui="App:889590063f51" class="btn btn-danger" @click="onConfigReset">重置设置</button>
+            <button data-ui="App:84897164b21e" class="btn btn-ghost" @click="configMismatch = false">
+              {{ $t('root.cfg_mismatch.continue') }}
+            </button>
+            <button data-ui="App:889590063f51" class="btn btn-danger" @click="onConfigReset">
+              {{ $t('root.cfg_mismatch.reset') }}
+            </button>
           </div>
         </div>
       </div>
@@ -1782,7 +1831,7 @@ onUnmounted(() => {
           <path d="m7 8 5-5 5 5" />
           <path d="M12 3v12" />
         </svg>
-        <p data-ui="App:d7601e4e4d82" class="drop-title">松开导入：存档 / 整合包 / MOD / 外置登录提供商</p>
+        <p data-ui="App:d7601e4e4d82" class="drop-title">{{ $t('root.drop.title') }}</p>
       </div>
     </div>
   </Teleport>
@@ -1810,9 +1859,11 @@ onUnmounted(() => {
               launchFail.open = false;
             "
           >
-            查看原因
+            {{ $t('root.launch_fail.view_reason') }}
           </button>
-          <button data-ui="App:bbc871d022c8" class="btn btn-ghost" @click="launchFail.open = false">关闭</button>
+          <button data-ui="App:bbc871d022c8" class="btn btn-ghost" @click="launchFail.open = false">
+            {{ $t('root.launch_fail.close') }}
+          </button>
           <button data-ui="App:43f37fe4338f" class="btn btn-gold" :disabled="launchFail.exporting" @click="onExportLogs">
             <svg
               viewBox="0 0 24 24"
@@ -1828,7 +1879,7 @@ onUnmounted(() => {
               <path d="m7 10 5 5 5-5" />
               <path d="M4 21h16" />
             </svg>
-            {{ launchFail.exporting ? '导出中…' : '导出错误日志' }}
+            {{ launchFail.exporting ? $t('root.launch_fail.exporting') : $t('root.launch_fail.export') }}
           </button>
         </div>
       </div>
@@ -1839,12 +1890,12 @@ onUnmounted(() => {
   <Teleport to="body">
     <div data-ui="App:597ca4365452" v-if="mpModal.open" class="modal-mask" @pointerdown.self="closeModpackImport">
       <div data-ui="App:cac81d31c8a1" class="modal mp-modal">
-        <h3 data-ui="App:df7892dbbb9e" class="mp-title">导入整合包</h3>
+        <h3 data-ui="App:df7892dbbb9e" class="mp-title">{{ $t('root.mp.title') }}</h3>
 
         <!-- 解析中 -->
         <div data-ui="App:e3835fac276d" v-if="mpModal.probing" class="mp-loading">
           <span data-ui="App:f629f7fbfbeb" class="spin"></span>
-          <span data-ui="App:5a2de4468a9a" class="muted">解析中…</span>
+          <span data-ui="App:5a2de4468a9a" class="muted">{{ $t('root.mp.parsing') }}</span>
         </div>
 
         <!-- 解析成功：包信息 + 命名选项 -->
@@ -1855,26 +1906,26 @@ onUnmounted(() => {
             <span data-ui="App:cbc7743772be" v-if="mpModal.info.loader" class="tag tag-gold">
               {{ mpModal.info.loader }}{{ mpModal.info.loaderVersion ? ' ' + mpModal.info.loaderVersion : '' }}
             </span>
-            <span data-ui="App:84ba06a0c358" v-if="mpModal.info.version && mpModal.info.version !== mpModal.info.innerName" class="tag"
-              >版本 {{ mpModal.info.version }}</span
-            >
+            <span data-ui="App:84ba06a0c358" v-if="mpModal.info.version && mpModal.info.version !== mpModal.info.innerName" class="tag">
+              {{ $t('root.mp.tags.version', { version: mpModal.info.version }) }}
+            </span>
           </div>
           <p data-ui="App:94bfb09f6b96" class="mp-summary">
-            {{ mpModal.info.fileCount }} 个清单文件 ·
+            {{ $t('root.mp.summary.files', { count: String(mpModal.info.fileCount) }) }} ·
             {{ fmtPackBytes(mpModal.info.downloadBytes) }}
             <span data-ui="App:b63322e9dda7" v-if="mpModal.info.hasOverrides"> · overrides</span>
             <span data-ui="App:99b02870d974" v-if="mpModal.info.hasClientOverrides"> · client-overrides</span>
           </p>
 
-          <p data-ui="App:596a49ffb57e" class="mp-label">目标游戏文件夹</p>
+          <p data-ui="App:596a49ffb57e" class="mp-label">{{ $t('root.mp.label.target_folder') }}</p>
           <select data-ui="App:274944e712ba" v-model="mpModal.targetFolder" class="select" @change="onMpTargetFolderChange">
             <option v-for="folder in store.settings?.folders || []" :key="folder.path" :value="folder.path">
-              {{ folder.name }}{{ folder.isDefault ? '（默认）' : '' }} ·
+              {{ folder.name }}{{ folder.isDefault ? $t('root.mp.folder_default') : '' }} ·
               {{ folder.path }}
             </option>
           </select>
 
-          <p data-ui="App:7b097008a36b" class="mp-label">实例命名</p>
+          <p data-ui="App:7b097008a36b" class="mp-label">{{ $t('root.mp.label.name') }}</p>
           <div data-ui="App:72a2299fc011" class="mp-name-opts">
             <button
               data-ui="App:3a719b866a06"
@@ -1884,7 +1935,7 @@ onUnmounted(() => {
             >
               <span data-ui="App:b8da1ddfc48f" class="mp-radio"></span>
               <span data-ui="App:ffd1edc7712c" class="mp-name-text">
-                <span data-ui="App:46b21df17f0a" class="mp-name-label">使用压缩包文件名</span>
+                <span data-ui="App:46b21df17f0a" class="mp-name-label">{{ $t('root.mp.name.file') }}</span>
                 <span data-ui="App:70d3893f031f" class="mp-name-value">{{ mpModal.info.fileName }}</span>
               </span>
             </button>
@@ -1896,7 +1947,7 @@ onUnmounted(() => {
             >
               <span data-ui="App:ebce50ef2232" class="mp-radio"></span>
               <span data-ui="App:6471e9d8a5fe" class="mp-name-text">
-                <span data-ui="App:5e013419bf1c" class="mp-name-label">使用整合包名称</span>
+                <span data-ui="App:5e013419bf1c" class="mp-name-label">{{ $t('root.mp.name.inner') }}</span>
                 <span data-ui="App:787ec3b759bb" class="mp-name-value">{{ mpModal.info.innerName }}</span>
               </span>
             </button>
@@ -1906,7 +1957,7 @@ onUnmounted(() => {
             v-model="mpModal.customName"
             class="input mp-custom-name"
             maxlength="120"
-            placeholder="自定义实例名称"
+            :placeholder="$t('root.mp.name.custom_placeholder')"
             @input="
               mpModal.confirmReplace = false;
               mpModal.error = '';
@@ -1914,9 +1965,13 @@ onUnmounted(() => {
           />
 
           <div data-ui="App:fc46c9326814" v-if="mpRelatedExisting.length" class="mp-conflict">
-            <strong data-ui="App:e35ef0415ba0">检测到实例冲突或相同整合包版本</strong>
+            <strong data-ui="App:e35ef0415ba0">{{ $t('root.mp.conflict.title') }}</strong>
             <span data-ui="App:e671a36e2cab">
-              {{ mpRelatedExisting.map((item) => `${item.id}${item.samePackVersion ? '（同包同版本）' : ''}`).join('、') }}
+              {{
+                mpRelatedExisting
+                  .map((item) => `${item.id}${item.samePackVersion ? '（' + $t('root.mp.conflict.same_version') + '）' : ''}`)
+                  .join('、')
+              }}
             </span>
             <div data-ui="App:109bf3c86358" class="mp-conflict-actions">
               <label data-ui="App:f85325e79d42"
@@ -1927,7 +1982,7 @@ onUnmounted(() => {
                   value="rename"
                   @change="onMpConflictActionChange"
                 />
-                重新命名</label
+                {{ $t('root.mp.conflict.rename') }}</label
               >
               <label data-ui="App:acbdff7eee51"
                 ><input
@@ -1937,7 +1992,7 @@ onUnmounted(() => {
                   value="new"
                   @change="onMpConflictActionChange"
                 />
-                作为新实例安装（自动加序号）</label
+                {{ $t('root.mp.conflict.new') }}</label
               >
               <label data-ui="App:89f12da61d4f"
                 ><input
@@ -1947,7 +2002,7 @@ onUnmounted(() => {
                   value="update"
                   @change="onMpConflictActionChange"
                 />
-                更新现有实例</label
+                {{ $t('root.mp.conflict.update') }}</label
               >
               <label data-ui="App:9a75f39d2361"
                 ><input
@@ -1957,29 +2012,32 @@ onUnmounted(() => {
                   value="overwrite"
                   @change="onMpConflictActionChange"
                 />
-                覆盖安装</label
+                {{ $t('root.mp.conflict.overwrite') }}</label
               >
             </div>
 
             <template v-if="mpNeedsReplaceConfirm">
               <select data-ui="App:831130030ba1" v-model="mpModal.existingId" class="select mp-existing-select">
                 <option v-for="item in mpExistingInFolder" :key="item.id" :value="item.id">
-                  {{ item.id }}{{ item.samePackVersion ? ' · 同一整合包版本' : '' }}
+                  {{ item.id }}{{ item.samePackVersion ? ' · ' + $t('root.mp.conflict.same_version') : '' }}
                 </option>
               </select>
               <div data-ui="App:5ea11cdf2f61" class="mp-impact" :class="{ danger: mpModal.conflictAction === 'overwrite' }">
                 <template v-if="mpModal.conflictAction === 'update'">
-                  将重建包管理文件并恢复用户存档、配置及非包管理文件；同名的新包 MOD 优先。操作失败会恢复完整备份。
+                  {{ $t('root.mp.conflict.impact.update') }}
                 </template>
                 <template v-else>
-                  将重建实例包文件；存档、配置、截图、资源包及可识别的用户 MOD 会保留，其他未知顶层内容可能被移除。操作失败会恢复完整备份。
+                  {{ $t('root.mp.conflict.impact.overwrite') }}
                 </template>
               </div>
               <label data-ui="App:76acdea2ae5a" class="mp-replace-confirm">
                 <input data-ui="App:8c2c4f6d4693" v-model="mpModal.confirmReplace" type="checkbox" />
-                <span data-ui="App:84709e2c73a5"
-                  >我已确认上述影响范围，并同意{{ mpModal.conflictAction === 'update' ? '更新' : '覆盖' }}所选实例。</span
-                >
+                <span data-ui="App:84709e2c73a5">{{
+                  $t('root.mp.conflict.confirm', {
+                    action:
+                      mpModal.conflictAction === 'update' ? $t('root.mp.conflict.action.update') : $t('root.mp.conflict.action.overwrite'),
+                  })
+                }}</span>
               </label>
             </template>
           </div>
@@ -1987,31 +2045,35 @@ onUnmounted(() => {
           <!-- 默认按键冲突：检测到作者预设键位且已开启默认按键同步时，给出替换选项（默认不替换） -->
           <label data-ui="App:0e88d6c50d0d" v-if="mpModal.info?.hasPresetKeys && store.settings?.keySync" class="mp-keysync-opt">
             <input data-ui="App:e3245af7e07a" v-model="mpModal.keySyncOverride" type="checkbox" />
-            <span data-ui="App:25de5e67e1b9"
-              >该整合包含作者预设键位（options.txt）。用启动器默认按键替换预设键位；其余设置保留。不勾选则保留作者预设。</span
-            >
+            <span data-ui="App:25de5e67e1b9">{{ $t('root.mp.keysync.hint') }}</span>
           </label>
 
           <p data-ui="App:9feeb075e091" v-if="mpNameConflict && mpModal.conflictAction === 'rename'" class="mp-error">
-            名称「{{ mpModal.customName }}」已存在，请重新命名或选择其他处理方式。
+            {{ $t('root.mp.error.name_exist', { name: mpModal.customName }) }}
           </p>
           <p data-ui="App:88ee270d21af" v-if="mpModal.error" class="mp-error">
             {{ mpModal.error }}
           </p>
 
           <div data-ui="App:ca67c0af2cc9" class="mp-actions">
-            <button data-ui="App:20064d25fb9e" class="btn btn-ghost" @click="closeModpackImport">取消</button>
-            <button data-ui="App:1cef44943a65" class="btn btn-gold" @click="confirmModpackImport">确认导入</button>
+            <button data-ui="App:20064d25fb9e" class="btn btn-ghost" @click="closeModpackImport">
+              {{ $t('root.mp.action.cancel') }}
+            </button>
+            <button data-ui="App:1cef44943a65" class="btn btn-gold" @click="confirmModpackImport">
+              {{ $t('root.mp.action.confirm') }}
+            </button>
           </div>
         </template>
 
         <!-- 解析失败 -->
         <template v-else>
           <p data-ui="App:597453576b07" class="mp-error">
-            {{ mpModal.error || '无法解析该整合包' }}
+            {{ mpModal.error || $t('root.mp.error.parse_failed') }}
           </p>
           <div data-ui="App:bea4b4fe18e5" class="mp-actions">
-            <button data-ui="App:4ff5fe62cac3" class="btn btn-ghost" @click="closeModpackImport">关闭</button>
+            <button data-ui="App:4ff5fe62cac3" class="btn btn-ghost" @click="closeModpackImport">
+              {{ $t('root.mp.action.close') }}
+            </button>
           </div>
         </template>
       </div>

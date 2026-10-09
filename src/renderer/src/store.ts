@@ -2,6 +2,7 @@
  * 轻量全局状态（Vue reactive），跨视图共享。
  */
 import { computed, reactive, watch } from 'vue';
+import { settingsCatalog } from '../../shared/settingsCatalog';
 import { trackLaunchState } from '@shared/launchTracking';
 import type { Account, InstalledVersion, LaunchState, ProgressEvent, Settings, YggdrasilProviderInput } from '@shared/types';
 import {
@@ -79,7 +80,7 @@ export const store = reactive({
   selectedAccount: null as Account | null,
   installed: [] as InstalledVersion[],
   currentView: 'home' as ViewName,
-  settingsSection: '' as '' | 'java' | 'memory' | 'downloads',
+  settingsSection: '' as '' | SettingsItemId,
   /** 顶栏搜索关键字（游戏版本页版本列表联动过滤） */
   searchKeyword: '',
   /** 资源管理（模组/资源包/光影包）当前选中的版本 id；空 = 跟随第一个已装版本 */
@@ -125,6 +126,7 @@ export const store = reactive({
   /** 后台任务列表（版本安装/整合包导入/资源下载），驱动顶栏下载中心 */
   tasks: [] as TaskItem[],
   toasts: [] as ToastItem[],
+  locale: 'zh-CN',
 });
 
 const normalizeFolder = (value = '') => value.replaceAll('\\', '/').replace(/\/$/, '').toLowerCase();
@@ -162,10 +164,10 @@ watch(
   },
   { flush: 'sync' }
 );
+export type SettingsItemId = (typeof settingsCatalog)[number]['id'];
 
 export const applyLaunchState = (state: LaunchState) => trackLaunchState(store, state);
-
-export function openSettings(section: 'java' | 'memory' | 'downloads'): void {
+export function openSettings(section: SettingsItemId): void {
   store.settingsSection = section;
   store.currentView = 'settings';
 }

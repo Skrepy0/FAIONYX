@@ -7,6 +7,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { bridgeInstall, bridgeInstalled, bridgeManifest, bridgeReset, bridgeSet, bridgeStatus, errText } from '../api';
 import { refreshInstalled, store, toast, selectedInstance, displayVersionName as versionLabel } from '../store';
+import { t } from '@renderer/i18n';
 import SelectMenu from '../components/SelectMenu.vue';
 import type { BridgeParam, BridgeStatus } from '@shared/types';
 
@@ -40,7 +41,9 @@ async function refreshBridgePresent() {
     const result = await bridgeInstalled(v.id);
     if (request === presenceRequest) bridgePresent.value = result;
   } catch (e) {
-    if (request === presenceRequest) presenceError.value = '无法确认桥接 MOD 是否已安装：' + errText(e);
+    if (request === presenceRequest) {
+      presenceError.value = t('bridge.error.presence_check', { e: errText(e) });
+    }
   }
 }
 
@@ -52,12 +55,12 @@ async function onInstallBridge() {
     const result = await bridgeInstall(v.id);
     if (result.ok) {
       if (currentVersion.value === v && !disposed) bridgePresent.value = true;
-      toast(result.already ? '桥接 MOD 已在实例中' : '桥接 MOD 已装入实例，启动游戏后自动接入', 'success');
+      toast(result.already ? t('bridge.toast.already_installed') : t('bridge.toast.installed'), 'success');
     } else {
-      toast('安装失败：' + (result.error ?? ''), 'error');
+      toast(t('bridge.error.install_failed', { e: result.error ?? '' }), 'error');
     }
   } catch (e) {
-    toast('安装失败：' + errText(e), 'error');
+    toast(t('bridge.error.install_failed', { e: errText(e) }), 'error');
   } finally {
     installingBridge.value = false;
   }
@@ -69,14 +72,16 @@ async function refreshStatus() {
   const request = ++statusRequest,
     v = currentVersion.value;
   if (!v) {
-    status.value = { connected: false, reason: '未选择实例' };
+    status.value = { connected: false, reason: t('bridge.status.reason.no_instance') };
     return;
   }
   try {
     const next = await bridgeStatus(v.id);
     if (request === statusRequest) status.value = next;
   } catch {
-    if (request === statusRequest) status.value = { connected: false, reason: '桥接状态检查失败' };
+    if (request === statusRequest) {
+      status.value = { connected: false, reason: t('bridge.status.reason.check_failed') };
+    }
   }
 }
 
@@ -91,7 +96,7 @@ async function loadManifest() {
   } catch (e) {
     if (request !== manifestRequest || disposed) return;
     params.value = [];
-    if (status.value?.connected) toast('读取参数清单失败：' + errText(e), 'error');
+    if (status.value?.connected) toast(t('bridge.error.manifest_failed', { e: errText(e) }), 'error');
   } finally {
     if (request === manifestRequest) loadingManifest.value = false;
   }
@@ -156,12 +161,33 @@ const groupedParams = computed(() => {
   }));
 });
 
-const APPLY_HINT: Record<BridgeParam['apply'], string> = {
-  INSTANT: '',
-  RELOAD_RESOURCES: '需重载资源',
-  REJOIN_WORLD: '需重进世界',
-  RESTART_GAME: '需重启游戏',
-};
+/** 生效方式提示：INSTANT 无提示，其余走 i18n */
+function applyHint(kind: BridgeParam['apply']): string {
+  if (kind === 'RELOAD_RESOURCES') return t('bridge.tag.reload_resources');
+  if (kind === 'REJOIN_WORLD') return t('bridge.tag.rejoin_world');
+  if (kind === 'RESTART_GAME') return t('bridge.tag.restart_game');
+  return '';
+}
+
+/** 状态标题：根据连接状态 / 安装状态 / 运行状态给一句主文案 */
+const statusTitle = computed(() => {
+  const s = status.value;
+  if (s?.connected) return t('bridge.status.connected', { version: s.modVersion || '?' });
+  if (!currentVersion.value) return t('bridge.status.not_selected');
+  if (bridgePresent.value === false) return t('bridge.status.no_bridge');
+  if (bridgePresent.value === null) return t('bridge.status.unknown');
+  return gameRunning.value ? t('bridge.status.waiting_game') : t('bridge.status.before_launch');
+});
+
+/** 状态详情：连接提示 / 安装引导 / 运行提示；后端返回的 reason 优先展示 */
+const statusDetail = computed(() => {
+  const s = status.value;
+  if (s?.connected) return t('bridge.status.connected_hint');
+  if (!currentVersion.value) return t('bridge.status.not_selected_hint');
+  if (bridgePresent.value === false) return t('bridge.status.no_bridge_hint');
+  if (bridgePresent.value === null) return t('bridge.status.unknown_hint');
+  return s?.reason || t('bridge.status.before_launch_hint');
+});
 
 async function applyParam(p: BridgeParam, value: unknown) {
   const v = currentVersion.value;
@@ -175,7 +201,7 @@ async function applyParam(p: BridgeParam, value: unknown) {
       toast(result.notice, 'info');
     }
   } else {
-    itemError.value[p.id] = result.error ?? '修改失败';
+    itemError.value[p.id] = result.error ?? t('bridge.error.set_failed');
   }
 }
 
@@ -186,9 +212,9 @@ async function resetParam(p: BridgeParam) {
   if (result.ok) {
     p.value = p.defaultValue;
     delete itemError.value[p.id];
-    toast(`「${p.label}」已恢复默认`, 'success');
+    toast(t('bridge.toast.reset_one', { label: p.label }), 'success');
   } else {
-    itemError.value[p.id] = result.error ?? '恢复失败';
+    itemError.value[p.id] = result.error ?? t('bridge.error.reset_failed');
   }
 }
 
@@ -198,9 +224,9 @@ async function resetAll() {
   const result = await bridgeReset(v.id);
   if (result.ok) {
     await loadManifest();
-    toast('已恢复全部默认配置', 'success');
+    toast(t('bridge.toast.reset_all'), 'success');
   } else {
-    toast('恢复失败：' + (result.error ?? ''), 'error');
+    toast(t('bridge.error.reset_all_failed', { e: result.error ?? '' }), 'error');
   }
 }
 
@@ -212,13 +238,13 @@ function isModified(p: BridgeParam): boolean {
 <template>
   <div data-ui="BridgeView:cfdb5a4d90a2" class="page bridge-page">
     <div data-ui="BridgeView:db609f258d77" class="page-head">
-      <h1 data-ui="BridgeView:83a0b6c9508f" class="page-title">MOD 面板</h1>
-      <p data-ui="BridgeView:bb8e2f3a040b" class="page-sub">游戏运行期间实时读取与修改 MOD 参数；以 MOD 返回的实际结果为准</p>
+      <h1 data-ui="BridgeView:83a0b6c9508f" class="page-title">{{ t('bridge.title') }}</h1>
+      <p data-ui="BridgeView:bb8e2f3a040b" class="page-sub">{{ t('bridge.subtitle') }}</p>
     </div>
 
     <div data-ui="BridgeView:b3265d72c149" class="card bridge-status" :class="{ connected: status?.connected }">
       <div class="bridge-context">
-        <span>{{ currentVersion ? versionLabel(currentVersion) : '尚未选择游戏实例' }}</span
+        <span>{{ currentVersion ? versionLabel(currentVersion) : t('bridge.not_selected') }}</span
         ><button
           class="btn btn-ghost btn-sm"
           :disabled="installingBridge"
@@ -227,35 +253,13 @@ function isModified(p: BridgeParam): boolean {
             poll();
           "
         >
-          刷新状态
+          {{ t('bridge.refresh_status') }}
         </button>
       </div>
       <span data-ui="BridgeView:5325fe599383" class="bridge-dot" :class="{ on: status?.connected }"></span>
       <div data-ui="BridgeView:b1906759db96" class="bridge-status-text">
-        <strong>{{
-          status?.connected
-            ? `已连接桥接 MOD（v${status.modVersion || '?'}）`
-            : !currentVersion
-              ? '先选择游戏实例'
-              : bridgePresent === false
-                ? '尚未安装桥接 MOD'
-                : bridgePresent === null
-                  ? '尚未确认安装状态'
-                  : gameRunning
-                    ? '等待游戏接入'
-                    : '启动游戏后自动接入'
-        }}</strong>
-        <span class="muted">{{
-          status?.connected
-            ? '参数修改即时下发，以游戏返回结果为准。'
-            : !currentVersion
-              ? '选择已安装加载器的实例后，可安装桥接 MOD。'
-              : bridgePresent === false
-                ? '安装后启动游戏，即可调整支持的 MOD 参数。'
-                : bridgePresent === null
-                  ? '请刷新确认安装情况，再进行操作。'
-                  : status?.reason || '前往首页启动游戏；此页面会自动检测连接。'
-        }}</span>
+        <strong>{{ statusTitle }}</strong>
+        <span class="muted">{{ statusDetail }}</span>
         <p v-if="presenceError" class="connection-error" role="alert">{{ presenceError }}</p>
       </div>
       <div class="bridge-guide-actions">
@@ -265,31 +269,36 @@ function isModified(p: BridgeParam): boolean {
           :disabled="installingBridge || !currentVersion?.loader"
           @click="onInstallBridge"
         >
-          {{ installingBridge ? '安装中…' : '安装桥接 MOD' }}
+          {{ installingBridge ? t('bridge.install.installing') : t('bridge.install.action') }}
         </button>
-        <small v-if="currentVersion && !currentVersion.loader && bridgePresent === false" class="muted"
-          >纯净版不加载 MOD，请选择带加载器的实例。</small
-        >
+        <small v-if="currentVersion && !currentVersion.loader && bridgePresent === false" class="muted">{{
+          t('bridge.install.vanilla_hint')
+        }}</small>
         <button
           v-if="!status?.connected"
           class="btn"
           :class="bridgePresent === false ? 'btn-ghost' : 'btn-gold'"
           @click="store.currentView = currentVersion ? 'home' : 'game'"
         >
-          {{ currentVersion ? '前往首页' : '选择游戏实例' }}
+          {{ currentVersion ? t('bridge.go_home') : t('bridge.go_versions') }}
         </button>
         <button data-ui="BridgeView:b3c6f77da5ef" v-if="status?.connected && params.length" class="btn btn-ghost" @click="resetAll">
-          全部恢复默认
+          {{ t('bridge.reset_all') }}
         </button>
       </div>
     </div>
     <!-- 参数区 -->
     <template v-if="status?.connected">
       <div data-ui="BridgeView:e2062fc19818" v-if="params.length" class="bridge-toolbar">
-        <input data-ui="BridgeView:ca30db9d543d" v-model="search" class="input bridge-search" placeholder="搜索参数名称、说明、分组…" />
+        <input
+          data-ui="BridgeView:ca30db9d543d"
+          v-model="search"
+          class="input bridge-search"
+          :placeholder="t('bridge.search_placeholder')"
+        />
       </div>
       <div data-ui="BridgeView:f720f714d75f" v-if="loadingManifest" class="card empty">
-        <span data-ui="BridgeView:6bcd3d93d313" class="spin"></span><span>正在读取参数清单…</span>
+        <span data-ui="BridgeView:6bcd3d93d313" class="spin"></span><span>{{ t('bridge.loading_manifest') }}</span>
       </div>
       <template v-else>
         <div data-ui="BridgeView:ca3ed5c40349" v-for="mod in groupedParams" :key="mod.modId" class="bridge-mod">
@@ -308,15 +317,15 @@ function isModified(p: BridgeParam): boolean {
               <div data-ui="BridgeView:20c0ec6ff98d" class="bridge-row-info">
                 <span data-ui="BridgeView:d6913ec6096c" class="bridge-label">
                   {{ p.label }}
-                  <span data-ui="BridgeView:7737e6691034" v-if="APPLY_HINT[p.apply]" class="tag bridge-apply-tag">{{
-                    APPLY_HINT[p.apply]
+                  <span data-ui="BridgeView:7737e6691034" v-if="applyHint(p.apply)" class="tag bridge-apply-tag">{{
+                    applyHint(p.apply)
                   }}</span>
                   <span
                     data-ui="BridgeView:072b1f0fecd4"
                     v-if="p.scope === 'SERVER'"
                     class="tag bridge-scope-tag"
-                    title="服务器参数：必须由服务端校验权限，本地接口只读"
-                    >服务器</span
+                    :title="t('bridge.tag.server_title')"
+                    >{{ t('bridge.tag.server') }}</span
                   >
                 </span>
                 <span data-ui="BridgeView:7c9682444806" v-if="p.description" class="muted bridge-desc">{{ p.description }}</span>
@@ -367,7 +376,7 @@ function isModified(p: BridgeParam): boolean {
                   data-ui="BridgeView:1433b0496f90"
                   v-if="isModified(p)"
                   class="bridge-reset"
-                  title="恢复默认"
+                  :title="t('bridge.action.reset')"
                   :disabled="p.scope === 'SERVER'"
                   @click="resetParam(p)"
                 >
@@ -388,10 +397,10 @@ function isModified(p: BridgeParam): boolean {
           </div>
         </div>
         <div data-ui="BridgeView:ebfce48a2687" v-if="params.length && !groupedParams.length" class="card empty">
-          <span>没有匹配「{{ search }}」的参数</span>
+          <span>{{ t('bridge.no_match', { keyword: search }) }}</span>
         </div>
         <div data-ui="BridgeView:80ec96dd566a" v-if="!params.length && !loadingManifest" class="card empty">
-          <span>桥接 MOD 没有注册任何参数</span>
+          <span>{{ t('bridge.no_params') }}</span>
         </div>
       </template>
     </template>

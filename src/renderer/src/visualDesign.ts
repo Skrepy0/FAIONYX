@@ -1,3 +1,4 @@
+import { t } from '@renderer/i18n';
 import { computed, ref, shallowRef, watch } from 'vue';
 import { store, toast } from './store';
 import type { Settings } from '@shared/types';
@@ -67,7 +68,7 @@ export async function beginDesign() {
       designRecovered.value = JSON.stringify(saved) !== baseline;
     }
   } catch {
-    designSaveState.value = '草稿读取失败';
+    designSaveState.value = t('visual.draft_read_failed');
   }
   refresh();
 }
@@ -81,20 +82,20 @@ export async function flushDesign() {
   saveTimer = undefined;
   if (!designDraft.value) return;
   const snapshot = copy();
-  designSaveState.value = '正在保存草稿…';
+  designSaveState.value = t('visual.draft_saving');
   const work = saveQueue.catch(() => {}).then(() => window.faionyx.invoke('appearance:draftSave', snapshot));
   saveQueue = work;
   try {
     await work;
-    designSaveState.value = '草稿已保存';
+    designSaveState.value = t('visual.draft_saved');
   } catch (e) {
-    designSaveState.value = '草稿保存失败，请重试';
+    designSaveState.value = t('visual.draft_save_failed');
     throw e;
   }
 }
 function scheduleSave() {
   clearTimeout(saveTimer);
-  designSaveState.value = '有未应用的修改';
+  designSaveState.value = t('visual.draft_unsaved');
   saveTimer = setTimeout(() => void flushDesign().catch(() => {}), 400);
 }
 function persist(design: VisualDesign) {
@@ -243,38 +244,38 @@ export function installVisualDesign() {
         ),
         tag = el.tagName.toLowerCase();
       const named: Array<[string, string]> = [
-        ['.shell', '启动器窗口'],
-        ['.sidebar', '侧栏'],
-        ['.topbar', '顶栏'],
-        ['.content', '页面'],
-        ['.hero', '游戏封面'],
-        ['.hero-content', '封面信息'],
-        ['.home-layout', '首页布局'],
-        ['.home-main', '首页主区'],
-        ['.home-side', '首页侧区'],
-        ['.instance-card', '游戏实例卡片'],
-        ['.theme-option', '主题卡片'],
-        ['.launch-btn,.launch-main', '启动按钮'],
+        ['.shell', t('visual.target.shell')],
+        ['.sidebar', t('visual.target.sidebar')],
+        ['.topbar', t('visual.target.topbar')],
+        ['.content', t('visual.target.content')],
+        ['.hero', t('visual.target.hero')],
+        ['.hero-content', t('visual.target.hero_content')],
+        ['.home-layout', t('visual.target.home_layout')],
+        ['.home-main', t('visual.target.home_main')],
+        ['.home-side', t('visual.target.home_side')],
+        ['.instance-card', t('visual.target.instance_card')],
+        ['.theme-option', t('visual.target.theme_card')],
+        ['.launch-btn,.launch-main', t('visual.target.launch_btn')],
       ];
       const semantic = named.find(([selector]) => el.matches(selector))?.[1];
       let decoration =
         !!el.closest('.theme-preview,.fm-file-icon,.nav-bubble,svg,.nav-icon') ||
         (!text && !el.children.length && !['input', 'textarea', 'img', 'button', 'select'].includes(tag));
       const kind = el.matches('button')
-        ? '按钮'
+        ? t('visual.kind.btn')
         : el.matches('input,select,textarea')
-          ? '输入控件'
+          ? t('visual.kind.input')
           : el.matches('.card,article,section')
-            ? '卡片'
+            ? t('visual.kind.card')
             : el.matches('h1,h2,h3,h4')
-              ? '标题'
+              ? t('visual.kind.title')
               : text
-                ? '文字'
+                ? t('visual.kind.text')
                 : el.matches('.sidebar')
-                  ? '侧栏'
+                  ? t('visual.kind.sidebar')
                   : el.matches('.topbar')
-                    ? '顶栏'
-                    : '容器';
+                    ? t('visual.kind.topbar')
+                    : t('visual.kind.container');
       if (!semantic && !text && !el.matches('button,input,select,textarea,img,.card,article,section,[role]')) decoration = true;
       const labelText = (
         semantic ||

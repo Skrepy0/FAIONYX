@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import type { ProjectionCatalog, ProjectionEntry, ProjectionRequest, ProjectionResult } from '@shared/projections';
 import { errText } from '../api';
 import { store, toast } from '../store';
+import { t } from '@renderer/i18n';
 import ContentSkeleton from '../components/ContentSkeleton.vue';
 import SelectMenu from '../components/SelectMenu.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
@@ -26,8 +27,17 @@ let refreshTimer: ReturnType<typeof setInterval> | undefined;
 const activeFolder = computed(() => store.settings?.activeFolder || store.settings?.gameDir || '');
 const folderFilter = ref('');
 const folderOptions = computed(() => [
-  { value: '', label: '全部已绑定文件夹' },
+  { value: '', label: t('projections.filter.folder_all') },
   ...(store.settings?.folders ?? []).map((f) => ({ value: f.path, label: f.name + ' · ' + f.path })),
+]);
+const kindOptions = computed(() => [
+  { value: 'all', label: t('projections.filter.kind_all') },
+  ...['litematic', 'schem', 'schematic', 'nbt'].map((v) => ({ value: v, label: '.' + v })),
+]);
+const sourceOptions = computed(() => [
+  { value: 'all', label: t('projections.filter.source_all') },
+  { value: 'library', label: t('projections.filter.source_library') },
+  { value: 'instances', label: t('projections.filter.source_instances') },
 ]);
 watch(
   () => JSON.stringify([activeFolder.value, store.settings?.folders]),
@@ -70,8 +80,8 @@ async function refresh(silent = false) {
     const next = await invoke<ProjectionCatalog>('projections:list');
     if (disposed || id !== generation) return;
     data.value = next;
-    if (!targets.value.some((t) => t.value === target.value)) target.value = '';
-    selected.value = selected.value.filter((id) => next.entries.some((e) => e.id === id));
+    if (!targets.value.some((tg) => tg.value === target.value)) target.value = '';
+    selected.value = selected.value.filter((sid) => next.entries.some((e) => e.id === sid));
     page.value = Math.min(page.value, pages.value);
     if (!silent) target.value = '';
   } catch (e) {
@@ -119,7 +129,12 @@ async function execute(action: ProjectionRequest['action'] | 'import') {
       const failed = result.filter((r) => !r.ok);
       selected.value = failed.map((r) => r.id);
       toast(
-        `已完成 ${result.length - failed.length} 项${failed.length ? `，${failed.length} 项未完成` : ''}`,
+        failed.length
+          ? t('projections.toast.done_partial', {
+              ok: String(result.length - failed.length),
+              failed: String(failed.length),
+            })
+          : t('projections.toast.done', { count: String(result.length) }),
         failed.length ? 'error' : 'success'
       );
       await refresh();
@@ -154,26 +169,25 @@ onUnmounted(() => {
     <header class="page-head recording-heading" data-ui="projections:heading">
       <div data-ui="ProjectionsView:3e7b827962e6">
         <h1 data-ui="ProjectionsView:2ac7467a0648">
-          投影 <small>{{ data.entries.length }} 个</small>
+          {{ t('projections.title') }} <small>{{ t('projections.count', { count: String(data.entries.length) }) }}</small>
         </h1>
-        <p class="muted">汇总全部绑定目录与隔离实例中的投影文件。</p>
+        <p class="muted">{{ t('projections.subtitle') }}</p>
       </div>
       <div class="actions">
-        <button data-ui="ProjectionsView:78a31a977742" class="btn btn-ghost" @click="open()">打开收藏文件夹</button
-        ><button data-ui="ProjectionsView:1594a41b4b07" class="btn btn-gold" :disabled="busy" @click="execute('import')">导入投影…</button
+        <button data-ui="ProjectionsView:78a31a977742" class="btn btn-ghost" @click="open()">{{ t('projections.open_library') }}</button
+        ><button data-ui="ProjectionsView:1594a41b4b07" class="btn btn-gold" :disabled="busy" @click="execute('import')">
+          {{ t('projections.import') }}</button
         ><button data-ui="ProjectionsView:54ee9bdbb21c" class="btn btn-ghost" :disabled="busy || loading" @click="refresh()">
-          {{ loading ? '读取中…' : '↻ 刷新' }}
+          {{ loading ? t('projections.loading') : t('projections.refresh') }}
         </button>
       </div>
     </header>
     <div class="recording-library" data-ui="projections:library">
-      <span data-ui="ProjectionsView:2931d23fc4f5" class="muted">导入与收藏保存位置：</span
-      ><span class="path" :title="data.library">{{ data.library || '正在读取…' }}</span>
+      <span data-ui="ProjectionsView:2931d23fc4f5" class="muted">{{ t('projections.library_location') }}</span
+      ><span class="path" :title="data.library">{{ data.library || t('projections.library_reading') }}</span>
       <details class="recording-help">
-        <summary>使用说明</summary>
-        <p>
-          自动汇总全部已绑定目录中的实例、共享目录与收藏，原投影保持原位。按住投影名称可拖出，勾选后可一起拖出。复制时校验完整性，同名文件自动添加序号。通过“转换”检查格式与游戏版本差异，再生成副本。
-        </p>
+        <summary>{{ t('projections.help_summary') }}</summary>
+        <p>{{ t('projections.help_body') }}</p>
       </details>
     </div>
     <section class="recording-workspace card">
@@ -183,47 +197,33 @@ onUnmounted(() => {
           data-ui="ProjectionsView:a4bc662c17f4"
           v-model="query"
           class="input"
-          aria-label="搜索投影"
-          placeholder="搜索投影名称、实例或路径…"
+          :aria-label="t('projections.filter.search_aria')"
+          :placeholder="t('projections.filter.search_placeholder')"
           :disabled="busy"
         />
-        <SelectMenu
-          v-model="kind"
-          :disabled="busy"
-          :options="[
-            { value: 'all', label: '全部格式' },
-            ...['litematic', 'schem', 'schematic', 'nbt'].map((v) => ({ value: v, label: '.' + v })),
-          ]"
-        />
-        <SelectMenu
-          v-model="source"
-          :disabled="busy"
-          :options="[
-            { value: 'all', label: '全部位置' },
-            { value: 'library', label: '集中收藏' },
-            { value: 'instances', label: '游戏目录' },
-          ]"
-        />
+        <SelectMenu v-model="kind" :disabled="busy" :options="kindOptions" />
+        <SelectMenu v-model="source" :disabled="busy" :options="sourceOptions" />
       </div>
       <div data-ui="ProjectionsView:03ebe3d01f67" v-if="error" class="card" role="alert">
-        {{ error }} <button data-ui="ProjectionsView:d86b658466b7" class="btn btn-ghost" @click="refresh()">重试</button>
+        {{ error }}
+        <button data-ui="ProjectionsView:d86b658466b7" class="btn btn-ghost" @click="refresh()">{{ t('projections.retry') }}</button>
       </div>
       <details data-ui="ProjectionsView:4886ef0bbbad" v-if="data.warnings.length" class="card">
-        <summary>部分目录未读取（{{ data.warnings.length }}）</summary>
+        <summary>{{ t('projections.warnings_summary', { count: String(data.warnings.length) }) }}</summary>
         <p data-ui="ProjectionsView:a95d7ac71e30" v-for="warning in data.warnings" :key="warning">{{ warning }}</p>
       </details>
       <div v-if="filtered.length" class="recording-controls" data-ui="projections:controls">
         <div class="actions">
           <button data-ui="ProjectionsView:f5fef6266bd6" class="btn btn-ghost" :disabled="busy || !rows.length" @click="selectPage">
-            选择当前页</button
+            {{ t('projections.select_page') }}</button
           ><button
             data-ui="ProjectionsView:8436cfb2245d"
             class="btn btn-ghost"
             :disabled="busy || !filtered.length"
             @click="selected = filtered.map((e) => e.id)"
           >
-            全选筛选结果（{{ filtered.length }}）</button
-          ><span>已选 {{ selected.length }} 项</span
+            {{ t('projections.select_all_filtered', { count: String(filtered.length) }) }}</button
+          ><span>{{ t('projections.selected_count', { count: String(selected.length) }) }}</span
           ><button
             data-ui="ProjectionsView:ed589ee8e06c"
             v-if="selected.length"
@@ -231,34 +231,37 @@ onUnmounted(() => {
             :disabled="busy"
             @click="selected = []"
           >
-            清空
+            {{ t('projections.clear') }}
           </button>
         </div>
         <div data-ui="ProjectionsView:c59dbb632ead" v-if="selected.length" class="actions operation-row">
           <button data-ui="ProjectionsView:85f3f8414f9d" class="btn btn-gold" :disabled="busy" @click="execute('collect')">
-            收集到当前文件夹收藏</button
+            {{ t('projections.action.collect') }}</button
           ><button data-ui="ProjectionsView:000f81fa6db3" class="btn btn-ghost" :disabled="busy" @click="execute('export')">
-            提取到文件夹…</button
-          ><SelectMenu v-model="target" :disabled="busy" :options="targets" placeholder="选择目标实例" /><button
+            {{ t('projections.action.export') }}</button
+          ><SelectMenu
+            v-model="target"
+            :disabled="busy"
+            :options="targets"
+            :placeholder="t('projections.action.target_placeholder')"
+          /><button
             data-ui="ProjectionsView:fa2131a8e18d"
             class="btn btn-ghost"
             :disabled="busy || target === ''"
             @click="confirm = 'dispatch'"
           >
-            复制到实例</button
+            {{ t('projections.action.dispatch') }}</button
           ><button data-ui="ProjectionsView:1699f50ec9f0" class="btn btn-danger" :disabled="busy" @click="confirm = 'trash'">
-            移入回收站
+            {{ t('projections.action.trash') }}
           </button>
         </div>
       </div>
       <div data-ui="ProjectionsView:69fb5a4a1573" v-if="loading && data.entries.length" class="status-strip" role="status">
-        正在更新投影列表…
+        {{ t('projections.status.updating') }}
       </div>
-      <ContentSkeleton v-if="loading && !data.entries.length" class="card" label="正在读取投影目录…" />
+      <ContentSkeleton v-if="loading && !data.entries.length" class="card" :label="t('projections.skeleton.loading')" />
       <div data-ui="ProjectionsView:9196e415ffb9" v-else-if="!rows.length && !error" class="card empty">
-        <span>{{
-          data.entries.length ? '没有匹配的投影，请调整搜索或筛选。' : '暂无投影。可导入 .litematic、.schem、.schematic 或原版结构 .nbt。'
-        }}</span
+        <span>{{ data.entries.length ? t('projections.empty.no_match') : t('projections.empty.none') }}</span
         ><button
           data-ui="ProjectionsView:c0ed13df1c01"
           v-if="data.entries.length"
@@ -270,7 +273,7 @@ onUnmounted(() => {
             folderFilter = '';
           "
         >
-          清除筛选
+          {{ t('projections.empty.clear_filters') }}
         </button>
       </div>
       <div v-else-if="rows.length" :inert="loading || !!error" class="recording-list" data-ui="projections:list">
@@ -280,50 +283,64 @@ onUnmounted(() => {
             v-model="selected"
             type="checkbox"
             :value="entry.id"
-            :aria-label="`选择 ${entry.name}`"
+            :aria-label="t('projections.row.select_aria', { name: entry.name })"
             :disabled="busy"
           />
           <div
             data-ui="ProjectionsView:3867dfbdf0e7"
             class="recording-info"
             :draggable="!busy && !loading && !store.editMode"
-            title="按住拖出投影文件"
+            :title="t('projections.row.drag_title')"
             @dragstart="drag($event, entry)"
           >
             <strong data-ui="ProjectionsView:6f5f6ab090cd" tabindex="0" :title="entry.name">{{ entry.name }}</strong>
             <div data-ui="ProjectionsView:80aad3d6d4fa" class="muted">
-              {{ '.' + entry.kind }} · {{ entry.source }} · {{ size(entry.size) }} · {{ entry.blocks ?? '?' }} 方块 ·
-              {{ entry.gameVersion || entry.dataVersion || '版本未知' }} · {{ new Date(entry.modified).toLocaleString() }}
+              {{ '.' + entry.kind }} · {{ entry.source }} · {{ size(entry.size) }} ·
+              {{ t('projections.row.blocks', { count: String(entry.blocks ?? '?') }) }} ·
+              {{ entry.gameVersion || entry.dataVersion || t('projections.row.version_unknown') }} ·
+              {{ new Date(entry.modified).toLocaleString() }}
             </div>
             <p v-if="entry.error" class="scan-error" role="status">{{ entry.error }}</p>
             <div data-ui="ProjectionsView:2185a2a82be6" class="muted path" :title="entry.directory">{{ entry.directory }}</div>
           </div>
-          <button data-ui="ProjectionsView:e41d05dae554" class="btn btn-ghost btn-sm" @click="open(entry)">定位文件</button
-          ><button class="btn btn-ghost btn-sm" :disabled="!!entry.error || busy" @click="converting = entry">转换</button>
+          <button data-ui="ProjectionsView:e41d05dae554" class="btn btn-ghost btn-sm" @click="open(entry)">
+            {{ t('projections.row.locate') }}</button
+          ><button class="btn btn-ghost btn-sm" :disabled="!!entry.error || busy" @click="converting = entry">
+            {{ t('projections.row.convert') }}
+          </button>
         </article>
       </div>
       <div data-ui="ProjectionsView:419803271708" v-if="pages > 1" class="actions pagination">
-        <button data-ui="ProjectionsView:0fa04d3df515" class="btn btn-ghost" :disabled="page <= 1" @click="page--">上一页</button
-        ><span>{{ page }} / {{ pages }} · {{ filtered.length }} 个投影</span
-        ><button data-ui="ProjectionsView:6380222140de" class="btn btn-ghost" :disabled="page >= pages" @click="page++">下一页</button>
+        <button data-ui="ProjectionsView:0fa04d3df515" class="btn btn-ghost" :disabled="page <= 1" @click="page--">
+          {{ t('projections.pagination.prev') }}</button
+        ><span>{{
+          t('projections.pagination.summary', {
+            page: String(page),
+            pages: String(pages),
+            count: String(filtered.length),
+          })
+        }}</span
+        ><button data-ui="ProjectionsView:6380222140de" class="btn btn-ghost" :disabled="page >= pages" @click="page++">
+          {{ t('projections.pagination.next') }}
+        </button>
       </div>
     </section>
     <details data-ui="ProjectionsView:d26a22685a69" v-if="results.length" open class="card recording-results">
-      <summary>上次操作结果</summary>
+      <summary>{{ t('projections.results.summary') }}</summary>
       <p data-ui="ProjectionsView:3b547d60eb96" v-for="result in results" :key="result.id" :class="{ failed: !result.ok }">
-        {{ result.name }}：{{ result.ok ? '已完成' : result.error
+        {{ result.name }}：{{ result.ok ? t('projections.results.ok') : result.error
         }}<span data-ui="ProjectionsView:3a6703ddc9e2" v-if="result.path" class="muted path"> → {{ result.path }}</span>
       </p>
     </details>
     <ConfirmModal
       :open="!!confirm"
-      :title="confirm === 'trash' ? '移入系统回收站' : '复制投影到实例'"
+      :title="confirm === 'trash' ? t('projections.confirm.trash_title') : t('projections.confirm.dispatch_title')"
       :message="
         confirm === 'trash'
-          ? `将所选 ${selected.length} 个原位置的投影移入系统回收站，可从系统回收站恢复。`
-          : `将 ${selected.length} 个投影复制到所选实例的 schematics 目录，保留源文件。请确认目标游戏版本、加载器与投影模组兼容；操作期间目标游戏需关闭。`
+          ? t('projections.confirm.trash_message', { count: String(selected.length) })
+          : t('projections.confirm.dispatch_message', { count: String(selected.length) })
       "
-      :confirm-text="confirm === 'trash' ? '移入回收站' : '确认复制'"
+      :confirm-text="confirm === 'trash' ? t('projections.confirm.trash_confirm') : t('projections.confirm.dispatch_confirm')"
       @cancel="confirm = ''"
       @confirm="execute(confirm as 'trash' | 'dispatch')"
     />
@@ -331,6 +348,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* 样式未改动，沿用原文件 */
 .recordings-page {
   max-width: 1440px;
   margin: 0 auto;
