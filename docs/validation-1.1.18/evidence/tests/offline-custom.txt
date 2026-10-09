@@ -1,1 +1,0 @@
-{"complete":true,"theme":"custom","directory":"E:\\FAIONYX\\out\\qa-offline118-custom-3a1b48dc-c3f7-4718-8355-c2029744f652","screenshots":20,"recording":"E:\\FAIONYX\\out\\offline118-editor-001cac3f-8c87-40a7-b2e2-b709eedff0cb-custom"}
