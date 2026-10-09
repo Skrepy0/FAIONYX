@@ -1,7 +1,6 @@
 <script setup lang="ts">
 /**
  * 启动器更新弹窗：发现新版本 / 下载中 / 下载完成 三态。
- * 常驻内测群备用下载提示 + 复制群号；低速 30s 内嵌醒目提示一次。
  */
 import { computed, ref } from 'vue';
 import UpdateDialogShell from './UpdateDialogShell.vue';
@@ -23,8 +22,6 @@ const props = defineProps<{
   etaText?: string;
   /** 低速提示（30s<100KB/s 出现一次） */
   slowHint?: boolean;
-  /** 内测群号（配置项，可覆盖） */
-  qqGroup: string;
   /** 回退模式（文案微调） */
   rollback?: boolean;
 }>();
@@ -37,17 +34,6 @@ const emit = defineEmits<{
   (e: 'installNow'): void;
   (e: 'close'): void;
 }>();
-
-const copied = ref(false);
-async function copyGroup() {
-  try {
-    await navigator.clipboard.writeText(props.qqGroup);
-    copied.value = true;
-    setTimeout(() => (copied.value = false), 1600);
-  } catch {
-    /* 剪贴板不可用时静默 */
-  }
-}
 
 const bodyHtml = computed(() =>
   renderMarkdownLite((props.release.body || '').replace(/^\s*(?:#{1,4}\s*)?FAIONYX\s+v?[\d.]+\s*(?:\r?\n|$)/i, '').trim() || '暂无更新说明')
@@ -131,12 +117,6 @@ const sizeText = computed(() => {
     </template>
     <p v-else class="upd-done-text">{{ installExplanation }}</p>
     <details v-if="state !== 'done'" class="upd-help" :open="slowHint || undefined">
-      <summary>其他下载方式与安装说明</summary>
-      <p class="muted">{{ QQ_GROUP_HINT }}</p>
-      <div class="upd-qq-row">
-        <span>内测群 {{ qqGroup }}</span
-        ><button class="btn btn-ghost btn-sm" @click="copyGroup">{{ copied ? '已复制' : '复制群号' }}</button>
-      </div>
       <p class="muted">如果旧桌面快捷方式失效，请重新指向更新后的文件。</p>
     </details>
     <template #footer>

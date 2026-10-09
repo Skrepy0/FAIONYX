@@ -271,9 +271,6 @@ const updateModal = reactive<{
   rollback: false,
 });
 
-/** 内测群号：设置覆盖优先，默认 shared/branding 常量 */
-const qqGroup = computed(() => store.settings?.qqGroupNumber?.trim() || QQ_GROUP_NUMBER);
-
 /** 更新下载任务进度（从下载中心任务列表取，含速度） */
 const updateTask = computed(() => store.tasks.find((t) => t.id === updateModal.taskId));
 const updatePercent = computed(() => updateTask.value?.progress ?? 0);
@@ -1742,7 +1739,6 @@ onUnmounted(() => {
         :percent="updatePercent"
         :speed-text="updateSpeedText"
         :slow-hint="updateModal.slowHint"
-        :qq-group="qqGroup"
         :rollback="updateModal.rollback"
         @update-now="onUpdateNow"
         @later="onUpdateLater"

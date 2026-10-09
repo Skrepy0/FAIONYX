@@ -34,7 +34,12 @@ async function toggle(e: Event) {
     <template v-if="windows"
       ><div class="organizer-actions">
         <button class="btn btn-ghost btn-sm" :disabled="busy" @click="run">{{ busy ? '正在整理…' : '整理系统内存' }}</button
-        ><label><input :checked="store.settings?.memoryOrganizeBeforeLaunch === true" type="checkbox" @change="toggle" />启动前整理</label>
+        ><label style="display: flex; gap: 5px"
+          ><input :checked="store.settings?.memoryOrganizeBeforeLaunch === true" type="checkbox" @change="toggle" /><span
+            style="justify-content: center; justify-items: center"
+            >启动前整理</span
+          ></label
+        >
       </div>
       <p class="muted">整理可回收工作集；运行中的游戏和受保护进程会跳过。内存可能随进程活动回涨。</p>
       <p v-if="result" role="status">

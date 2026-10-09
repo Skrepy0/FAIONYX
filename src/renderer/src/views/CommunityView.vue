@@ -1559,7 +1559,6 @@ function selectDownloadInstance() {
 }
 .community-page .kind-capsules {
   margin: 0;
-  padding: 0 0 8px;
   border-bottom: 1px solid var(--border);
 }
 .community-page .search-card .filter-row {
