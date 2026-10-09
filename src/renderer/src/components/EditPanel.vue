@@ -732,6 +732,7 @@ onUnmounted(() => {
                       min="0"
                       max="100"
                       :aria-label="label + '透明度'"
+                      :style="{ '--fill': Math.round(rgba(key)[3] * 100) + '%' }"
                       :value="Math.round(rgba(key)[3] * 100)"
                       @focus="checkpoint"
                       @input="setAlpha(key, ($event.target as HTMLInputElement).value)"
@@ -1047,20 +1048,105 @@ onUnmounted(() => {
   padding: 0 4px !important;
   background: transparent !important;
 }
+
+/* ---------- 透明度滑块行 ---------- */
+
 .alpha-row {
   display: flex;
   gap: 8px;
   align-items: center;
 }
-.alpha-row input {
+.alpha-row input[type='range'] {
   flex: 1;
   min-width: 0;
-  padding: 0;
-  accent-color: var(--accent);
 }
 .alpha-row small {
   min-width: 34px;
 }
+
+/* ---------- Range 滑块：脱离通用 input 样式，自绘 ---------- */
+
+.design-workspace input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  width: 100%;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  border: 0; /* 覆盖通用 input 的边框 */
+  border-radius: 0;
+  background: transparent; /* 覆盖通用 input 的背景块 */
+  cursor: pointer;
+  /* 已填充百分比；未设置时退化为整条灰轨，不影响其它场景 */
+  --fill: 0%;
+}
+.design-workspace input[type='range']::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--accent) 0,
+    var(--accent) var(--fill),
+    color-mix(in srgb, var(--text) 14%, transparent) var(--fill),
+    color-mix(in srgb, var(--text) 14%, transparent) 100%
+  );
+}
+.design-workspace input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px; /* (4 - 14) / 2，thumb 与轨道居中对齐 */
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+.design-workspace input[type='range']::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--text) 14%, transparent);
+}
+.design-workspace input[type='range']::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.design-workspace input[type='range']::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+.design-workspace input[type='range']:hover::-webkit-slider-thumb,
+.design-workspace input[type='range']:focus-visible::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+.design-workspace input[type='range']:hover::-moz-range-thumb,
+.design-workspace input[type='range']:focus-visible::-moz-range-thumb {
+  transform: scale(1.15);
+}
+.design-workspace input[type='range']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.design-workspace fieldset:disabled input[type='range']::-webkit-slider-thumb {
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+/* ---------- 颜色选择器行 ---------- */
+
 .color-row {
   display: flex;
   gap: 5px;
@@ -1071,11 +1157,28 @@ onUnmounted(() => {
   min-width: 32px;
   height: 32px;
   padding: 2px;
+  border-radius: 8px;
+  background: var(--card-2);
+  cursor: pointer;
+}
+.color-row input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.color-row input[type='color']::-webkit-color-swatch {
+  border: 0;
+  border-radius: 5px;
+}
+.color-row input[type='color']::-moz-color-swatch {
+  border: 0;
+  border-radius: 5px;
 }
 .color-row input:not([type='color']) {
   flex: 1;
   min-width: 0;
 }
+
+/* ---------- 通用控件样式（range / color 已在上面覆盖） ---------- */
+
 .design-workspace button,
 .design-workspace input,
 .design-workspace select,
