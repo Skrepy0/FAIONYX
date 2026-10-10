@@ -43,7 +43,7 @@ function productAssetNames(version, platform = 'all') {
 function releaseAssetNames(version, platform = 'all') {
   const products = productAssetNames(version, platform);
   // Preserve the legacy all-platform order: Windows, source, Mac, handoff.
-  return [...products.slice(0, 3), `FAIONYX-${version}-source.zip`, ...products.slice(3), `FAIONYX-${version}-handoff.zip`];
+  return [...products.slice(0, 3), `FAIONYX-${version}-source.zip`, ...products.slice(3)];
 }
 
 function assertUniqueAssetNames(names) {

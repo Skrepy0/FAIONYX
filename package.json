@@ -23,7 +23,8 @@
     "license:check": "node scripts/check-licenses.cjs",
     "format": "prettier --write .",
     "lang:update": "node scripts/gen-locales.cjs",
-    "lang:check": "node scripts/check-locales.cjs"
+    "lang:check": "node scripts/check-locales.cjs",
+    "pack": "node scripts/pack-source.cjs"
   },
   "build": {
     "electronDist": "D:\\Front-projects\\FAIONYX\\node_modules\\electron\\electron-v44.3.0-win32-x64",
