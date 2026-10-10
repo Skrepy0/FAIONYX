@@ -788,7 +788,11 @@ onUnmounted(() => {
             </svg>
             <div data-ui="HomeView:0541baba1a35" class="instance-copy">
               <strong data-ui="HomeView:51623bcd9cd5" :title="versionLabel(version)">{{ versionLabel(version) }}</strong>
-              <span data-ui="HomeView:59cc23bdfbdc" :title="displayVersionSub(version)">{{ displayVersionSub(version) }}</span>
+              <span
+                data-ui="HomeView:59cc23bdfbdc"
+                :title="displayVersionSub(version) === '未知' ? t('version.unknown') : displayVersionSub(version)"
+                >{{ displayVersionSub(version) === '未知' ? t('version.unknown') : displayVersionSub(version) }}</span
+              >
             </div>
             <button
               data-ui="HomeView:b5167161777c"

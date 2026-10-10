@@ -248,11 +248,15 @@ export const DEFAULT_CUSTOM_THEME: CustomTheme = {
   },
 };
 
-/** 正式主题色板。所有主题共用同一套布局和玻璃材质，只改变配色与背景策略。 */
-export const THEME_PRESETS: Record<BuiltinThemeName, { label: string; colors: CustomTheme['colors']; description: string }> = {
+/**
+ * 正式主题色板。
+ * 文案层（label/description）走 i18n key，由渲染层调用 t() 翻译；
+ * 共享层不直接依赖 renderer 的 i18n 运行时。
+ */
+export const THEME_PRESETS: Record<BuiltinThemeName, { labelKey: string; descriptionKey: string; colors: CustomTheme['colors'] }> = {
   'blue-white': {
-    label: '白蓝',
-    description: '清爽明亮的蓝白玻璃界面',
+    labelKey: 'theme.blue-white.label',
+    descriptionKey: 'theme.blue-white.desc',
     colors: {
       accent: '#2563eb',
       bg: '#edf0f7',
@@ -266,8 +270,8 @@ export const THEME_PRESETS: Record<BuiltinThemeName, { label: string; colors: Cu
     },
   },
   'black-orange': {
-    label: '橙黑',
-    description: '深色底与克制的暖橙强调色',
+    labelKey: 'theme.black-orange.label',
+    descriptionKey: 'theme.black-orange.desc',
     colors: {
       accent: '#f97316',
       bg: '#0b0b0e',
@@ -281,8 +285,8 @@ export const THEME_PRESETS: Record<BuiltinThemeName, { label: string; colors: Cu
     },
   },
   'white-pink': {
-    label: '粉白',
-    description: '柔和浅色底与粉色强调色',
+    labelKey: 'theme.white-pink.label',
+    descriptionKey: 'theme.white-pink.desc',
     colors: {
       accent: '#ec4899',
       bg: '#fdf2f8',
@@ -296,8 +300,8 @@ export const THEME_PRESETS: Record<BuiltinThemeName, { label: string; colors: Cu
     },
   },
   'black-pink': {
-    label: '粉黑',
-    description: '深色底与柔亮粉色强调色',
+    labelKey: 'theme.black-pink.label',
+    descriptionKey: 'theme.black-pink.desc',
     colors: {
       accent: '#f472b6',
       bg: '#171019',
@@ -312,8 +316,8 @@ export const THEME_PRESETS: Record<BuiltinThemeName, { label: string; colors: Cu
   },
   // Keep the persisted key so existing default-theme users migrate without losing customization.
   transparent: {
-    label: '默认·黑紫',
-    description: '中性炭黑界面与柔和紫色强调，保留轻盈玻璃层次',
+    labelKey: 'theme.transparent.label',
+    descriptionKey: 'theme.transparent.desc',
     colors: {
       accent: '#9475ed',
       bg: '#212121',
@@ -529,14 +533,18 @@ export const DEFAULT_HOME_LAYOUT: HomeLayout = {
   ],
 };
 
-export const HOME_MODULE_LABELS: Record<string, string> = {
-  banner: '欢迎横幅',
-  logDrawer: '启动日志',
-  recentGames: '最近游戏',
-  accountCard: '账户信息',
-  sysInfo: '系统信息',
-  quickActions: '快速操作',
-  authorCard: '作者卡片',
+/**
+ * 首页模块的 i18n key。
+ * 共享层只提供 key，具体文案由渲染层调用 t() 翻译。
+ */
+export const HOME_MODULE_LABEL_KEYS: Record<string, string> = {
+  banner: 'home.module.banner',
+  logDrawer: 'home.module.logDrawer',
+  recentGames: 'home.module.recentGames',
+  accountCard: 'home.module.accountCard',
+  sysInfo: 'home.module.sysInfo',
+  quickActions: 'home.module.quickActions',
+  authorCard: 'home.module.authorCard',
 };
 
 // ---------------- 背景 ----------------

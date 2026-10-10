@@ -9,7 +9,6 @@ import { registerVersionCategoriesIpc } from './core/versionCategories';
 import { normalizeVersionCategoryState, renameCategoryAssignment } from '../shared/versionCategories';
 import { registerMemoryOrganizerIpc } from './core/memoryOrganizer';
 import { registerProjectionsIpc } from './core/projectionsIpc';
-import { registerMascotsIpc } from './core/mascots';
 import { activeLaunchStates, rememberLaunchState } from './core/launchUiState';
 import { startNativeFileDrag } from './core/nativeFileDrag';
 import { dragResourceFilesSync } from './core/resourceDragPaths';
@@ -109,7 +108,6 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
   registerVersionCategoriesIpc();
   registerMemoryOrganizerIpc();
   registerProjectionsIpc(getWin);
-  registerMascotsIpc();
   registerInstanceCenterIpc(getWin);
   registerRecordingsIpc(getWin);
   ipcMain.handle('recordings:modVersions', (_e, kind, mc, loader) => recordingModVersions(kind, mc, loader));

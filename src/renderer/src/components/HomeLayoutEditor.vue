@@ -415,6 +415,7 @@ function setLaunchFit(fit: ImageFit) {
             max="1"
             step="0.05"
             :value="1 - store.settings.background.opacity"
+            :style="{ '--fill': (1 - store.settings.background.opacity) * 100 + '%' }"
             @input="setBg({ opacity: 1 - Number(($event.target as HTMLInputElement).value) })"
           />
           <span class="muted bg-val">{{ Math.round((1 - store.settings.background.opacity) * 100) }}%</span>
@@ -429,6 +430,7 @@ function setLaunchFit(fit: ImageFit) {
             max="40"
             step="2"
             :value="store.settings.background.blur"
+            :style="{ '--fill': (store.settings.background.blur / 40) * 100 + '%' }"
             @input="setBg({ blur: Number(($event.target as HTMLInputElement).value) })"
           />
           <span class="muted bg-val">{{ store.settings.background.blur }}px</span>
@@ -1117,6 +1119,86 @@ function setLaunchFit(fit: ImageFit) {
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
+}
+.slider {
+  flex: 1;
+  min-width: 120px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+
+  -webkit-appearance: none;
+  appearance: none;
+  /* 已填充百分比；由模板通过 :style 传入 */
+  --fill: 0%;
+}
+
+/* 轨道：WebKit */
+.slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--accent) 0,
+    var(--accent) var(--fill),
+    color-mix(in srgb, var(--text) 12%, transparent) var(--fill),
+    color-mix(in srgb, var(--text) 12%, transparent) 100%
+  );
+}
+
+/* 滑块：WebKit */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -4px; /* (6 - 14) / 2，让 thumb 与轨道居中对齐 */
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: var(--card-solid, #fff);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+  transition: transform 120ms ease;
+}
+
+.slider:hover::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+
+.slider:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+/* 轨道 + 已填充：Firefox */
+.slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+.slider::-moz-range-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+/* 滑块：Firefox */
+.slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: var(--card-solid, #fff);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+  transition: transform 120ms ease;
+}
+
+.slider:hover::-moz-range-thumb {
+  transform: scale(1.15);
 }
 @media (max-width: 760px) {
   .launch-carousel-list li {

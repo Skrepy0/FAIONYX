@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { store, dismissToast } from '../store';
-import { t } from '@renderer/i18n';
+import { t as translate } from '@renderer/i18n';
 </script>
 
 <template>
@@ -8,7 +8,7 @@ import { t } from '@renderer/i18n';
     <div v-for="t in store.toasts.slice(-3)" :key="t.id" class="toast" :class="`toast-${t.type}`">
       <span class="toast-dot"></span>
       <span class="toast-text">{{ t.text }}</span
-      ><button class="icon-btn toast-close" :aria-label="t('common.close')" @click="dismissToast(t.id)">×</button>
+      ><button class="icon-btn toast-close" :aria-label="translate('common.close')" @click="dismissToast(t.id)">×</button>
     </div>
   </TransitionGroup>
 </template>

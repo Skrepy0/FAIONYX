@@ -353,10 +353,13 @@ function mapCfFiles(files: CfFile[], projectId: string): CommunityFile[] {
 function withZhTitle(list: CommunityResult[]): CommunityResult[] {
   return list.map((r) => {
     const originalTitle = r.originalTitle ?? r.title;
-    const zh = MOD_ZH[r.slug];
-    if (zh && !r.title.startsWith(zh) && !(r.originalTitle && r.title !== r.originalTitle)) {
-      return { ...r, originalTitle, title: `${zh} | ${r.title}` };
+    if (getSettings().locale === 'zh-CN') {
+      const zh = MOD_ZH[r.slug];
+      if (zh && !r.title.startsWith(zh) && !(r.originalTitle && r.title !== r.originalTitle)) {
+        return { ...r, originalTitle, title: `${zh} | ${r.title}` };
+      }
     }
+
     return { ...r, originalTitle };
   });
 }

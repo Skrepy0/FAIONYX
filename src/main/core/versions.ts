@@ -822,7 +822,7 @@ export function scanInstalledFolder(
     const name = entry.name;
     const jp = versionJsonInFolder(root, name);
     if (!fs.existsSync(jp)) {
-      out.push({ id: name, mcVersion: '未知', folder: root, incomplete: true });
+      out.push({ id: name, mcVersion: t('version.unknown'), folder: root, incomplete: true });
       errors.push(t('versions.error.missing_descriptor', { name }));
       continue;
     }
@@ -888,7 +888,7 @@ export function scanInstalledFolder(
       if (fs.existsSync(path.join(dir, name, '.installing'))) item.failed = true;
       out.push(item);
     } catch (error) {
-      out.push({ id: name, mcVersion: '未知', folder: root, incomplete: true });
+      out.push({ id: name, mcVersion: t('version.unknown'), folder: root, incomplete: true });
       errors.push(t('versions.error.descriptor_corrupt', { name, error: error instanceof Error ? error.message : String(error) }));
     }
   }

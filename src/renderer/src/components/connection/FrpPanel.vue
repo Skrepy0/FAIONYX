@@ -396,7 +396,7 @@ onBeforeUnmount(() => {
             >
               {{ tunnel.busy ? t('frp.tunnel.cancel_start') : t('frp.tunnel.stop') }}
             </button>
-            <details class="frp-more" @keydown.esc="($eventunnel.currentTarget as HTMLDetailsElement).open = false">
+            <details class="frp-more" @keydown.esc="($event.currentTarget as HTMLDetailsElement).open = false">
               <summary class="btn btn-ghost btn-sm" :aria-label="t('frp.tunnel.more_actions', { name: tunnel.name })">⋯</summary>
               <div>
                 <button

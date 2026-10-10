@@ -31,21 +31,6 @@ import {
 import { snapped, type ComponentDesign } from '@shared/visualDesign';
 import { DEFAULT_CUSTOM_THEME, DEFAULT_HOME_LAYOUT, DEFAULT_BACKGROUND, DEFAULT_LAUNCH_THUMBNAIL } from '@shared/types';
 import { copyText } from '../api';
-const PAGE_LABELS: Record<ViewName, string> = {
-  home: 'edit.page_home',
-  game: 'edit.page_game',
-  mods: 'edit.page_mods',
-  packs: 'edit.page_packs',
-  shaders: 'edit.page_shaders',
-  keys: 'edit.page_keys',
-  skins: 'edit.page_skins',
-  community: 'edit.page_community',
-  servers: 'edit.page_servers',
-  friends: 'edit.page_friends',
-  settings: 'edit.page_settings',
-  accounts: 'edit.page_accounts',
-  bridge: 'edit.page_bridge',
-};
 const pages: { value: ViewName; label: string }[] = [
   { value: 'home', label: t('edit.page_home') },
   { value: 'game', label: t('edit.page_game') },
@@ -575,18 +560,18 @@ onUnmounted(() => {
         </div>
         <div class="designer-layers">
           <div
-            v-for="t in layers"
-            :key="t.scope + t.key"
+            v-for="layer in layers"
+            :key="layer.scope + layer.key"
             class="layer-row"
-            :class="{ active: designSelection === t.scope + '|' + t.key }"
-            :style="{ paddingLeft: Math.min(4, t.depth - 1) * 12 + 'px' }"
+            :class="{ active: designSelection === layer.scope + '|' + layer.key }"
+            :style="{ paddingLeft: Math.min(4, layer.depth - 1) * 12 + 'px' }"
           >
-            <button class="fold" :aria-label="t('edit.expand_fold', { label: t })" @click="fold(t)">
-              {{ baseLayers.some((x) => x.parentKey === t.key) ? (folded.has(t.key) ? '›' : '⌄') : '·' }}</button
-            ><button class="layer-label" :title="t.label" @click="select(t)">
-              {{ t.label }}</button
-            ><span :title="style(t).locked ? t('edit.locked') : style(t).hidden ? t('edit.hidden') : ''">{{
-              style(t).locked ? '▣' : style(t).hidden ? '○' : ''
+            <button class="fold" :aria-label="t('edit.expand_fold', { label: layer.label })" @click="fold(layer)">
+              {{ baseLayers.some((x) => x.parentKey === layer.key) ? (folded.has(layer.key) ? '›' : '⌄') : '·' }}</button
+            ><button class="layer-label" :title="layer.label" @click="select(layer)">
+              {{ layer.label }}</button
+            ><span :title="style(layer).locked ? t('edit.locked') : style(layer).hidden ? t('edit.hidden') : ''">{{
+              style(layer).locked ? '▣' : style(layer).hidden ? '○' : ''
             }}</span>
           </div>
         </div>

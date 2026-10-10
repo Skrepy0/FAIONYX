@@ -375,7 +375,7 @@ onUnmounted(stopCapture);
         <div data-ui="KeysView:5e83994d56a1" v-for="group in keyGrouped" :key="group.category" class="cfg-group">
           <h4 data-ui="KeysView:21f659d3f704" class="cfg-cat">{{ categoryLabel(group.category) }}</h4>
           <div data-ui="KeysView:577547417d1b" v-for="item in group.items" :key="item.id" class="cfg-row">
-            <span data-ui="KeysView:be428b06c1c7" class="cfg-label" :title="item.id">{{ bindLabel(item.id) }}</span>
+            <span data-ui="KeysView:be428b06c1c7" class="cfg-label" :title="bindLabel(item.id)">{{ bindLabel(item.id) }}</span>
             <button
               data-ui="KeysView:5f341e9d9083"
               class="cfg-bind"
@@ -383,7 +383,7 @@ onUnmounted(stopCapture);
               :title="capturing === item.id ? t('keys.keys.capture_active') : t('keys.keys.capture_hint')"
               @click="startCapture(item.id)"
             >
-              {{ capturing === item.id ? t('keys.keys.capturing') : mcKeyLabelI18n(keys[item.id] ?? item.defaultBind) }}
+              {{ capturing === item.id ? t('keys.keys.capturing') : mcKeyLabel(keys[item.id] ?? item.defaultBind) }}
             </button>
             <button
               data-ui="KeysView:05190022165a"

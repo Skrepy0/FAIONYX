@@ -379,8 +379,8 @@ const themeOptions = computed(() => {
     named('white-pink'),
     {
       key: 'custom' as const,
-      label: t('settings.theme.custom.label'),
-      description: t('settings.theme.custom.desc'),
+      labelKey: t('settings.theme.custom.label'),
+      descriptionKey: t('settings.theme.custom.desc'),
       colors: customColors,
     },
   ];
@@ -790,8 +790,8 @@ async function onRemovePlugin(p: PluginInfo) {
                 :key="theme.key"
                 class="theme-option"
                 :class="{ active: store.settings.theme === theme.key }"
-                :title="theme.description"
-                @click="chooseTheme(theme.key, theme.label)"
+                :title="t(theme.descriptionKey)"
+                @click="chooseTheme(theme.key, t(theme.labelKey))"
               >
                 <span
                   data-ui="SettingsView:ff8e35becbf3"
@@ -861,7 +861,7 @@ async function onRemovePlugin(p: PluginInfo) {
                     <path d="M20 6 9 17l-5-5" />
                   </svg>
                 </span>
-                <span data-ui="SettingsView:6e56a2fb3976" class="theme-label">{{ theme.label }}</span>
+                <span data-ui="SettingsView:6e56a2fb3976" class="theme-label">{{ t(theme.labelKey) }}</span>
               </button>
             </div>
             <div class="theme-tools">
