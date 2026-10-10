@@ -783,7 +783,87 @@ async function onRemovePlugin(p: PluginInfo) {
             <span class="collapse-arrow" aria-hidden="true"></span>
           </summary>
           <div class="collapse-body">
-            <!-- theme-options 不变 -->
+            <div data-ui="SettingsView:98eed5eaae97" class="theme-options">
+              <button
+                data-ui="SettingsView:ae1494b5d771"
+                v-for="theme in themeOptions"
+                :key="theme.key"
+                class="theme-option"
+                :class="{ active: store.settings.theme === theme.key }"
+                :title="theme.description"
+                @click="chooseTheme(theme.key, theme.label)"
+              >
+                <span
+                  data-ui="SettingsView:ff8e35becbf3"
+                  class="theme-preview"
+                  :class="{ 'preview-custom': theme.key === 'custom', 'preview-transparent': theme.key === 'transparent' }"
+                  :style="{ background: theme.colors.bg }"
+                >
+                  <span
+                    data-ui="SettingsView:202a66a2a038"
+                    class="tp-side"
+                    :style="{
+                      background: theme.colors.sidebarBg,
+                      borderRight: '1px solid ' + theme.colors.border,
+                    }"
+                  >
+                    <span data-ui="SettingsView:f9ad546443d3" class="tp-dot" :style="{ background: theme.colors.accent }"></span>
+                  </span>
+                  <span data-ui="SettingsView:a397f44260a9" class="tp-main">
+                    <span
+                      data-ui="SettingsView:e0b92057c385"
+                      class="tp-top"
+                      :style="{
+                        background: theme.colors.card,
+                        borderBottom: '1px solid ' + theme.colors.border,
+                      }"
+                    ></span>
+                    <span data-ui="SettingsView:b2cf2e01e30e" class="tp-body">
+                      <span
+                        data-ui="SettingsView:d9c43308480c"
+                        class="tp-block"
+                        :style="{
+                          background: theme.colors.card,
+                          border: '1px solid ' + theme.colors.border,
+                        }"
+                      ></span>
+                      <span data-ui="SettingsView:fb0c4f0c22dd" class="tp-btn" :style="{ background: theme.colors.accent }"></span>
+                    </span>
+                  </span>
+                  <span data-ui="SettingsView:bb37f5272e76" v-if="theme.key === 'custom'" class="tp-custom-grad"></span>
+                  <svg
+                    v-if="theme.key === 'custom'"
+                    class="tp-palette"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M12 22C6.49 22 2 17.51 2 12S6.49 2 12 2s10 4.04 10 9c0 3.31-2.69 6-6 6h-1.77c-.28 0-.5.22-.5.5 0 .12.05.23.13.33.41.47.64 1.06.64 1.67A2.5 2.5 0 0 1 12 22Z"
+                    />
+                    <circle cx="7.5" cy="11.5" r="1" fill="currentColor" stroke="none" />
+                    <circle cx="12" cy="7.5" r="1" fill="currentColor" stroke="none" />
+                    <circle cx="16.5" cy="11.5" r="1" fill="currentColor" stroke="none" />
+                  </svg>
+                  <svg
+                    v-if="store.settings.theme === theme.key"
+                    class="tp-check"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                </span>
+                <span data-ui="SettingsView:6e56a2fb3976" class="theme-label">{{ theme.label }}</span>
+              </button>
+            </div>
             <div class="theme-tools">
               <p class="muted group-hint">{{ t('settings.theme.hint') }}</p>
               <button data-ui="SettingsView:16e9da51c37b" class="btn personalize-btn" @click="enterEditMode">
