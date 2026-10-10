@@ -11,6 +11,7 @@ import { renderSkinHead } from '../skin-render';
 import { trackBootTask } from '../bootTasks';
 import { store } from '../store';
 import { skinRevision } from '../skinRevision';
+import { t } from '@renderer/i18n';
 
 const props = withDefaults(defineProps<{ size?: number; account?: Account | null }>(), { size: 48 });
 const account = computed(() => (props.account === undefined ? store.selectedAccount : props.account));
@@ -49,7 +50,7 @@ const fontPx = computed(() => `${Math.round(props.size * 0.42)}px`);
 </script>
 
 <template>
-  <img v-if="head" :src="head" class="mc-avatar" :style="{ width: px, height: px }" alt="头像" />
+  <img v-if="head" :src="head" class="mc-avatar" :style="{ width: px, height: px }" :alt="t('avatar.alt')" />
   <div v-else class="mc-avatar letter" :style="{ width: px, height: px, fontSize: fontPx }">
     {{ letter }}
   </div>

@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import SelectMenu from './SelectMenu.vue';
 import ConfirmModal from './ConfirmModal.vue';
+import { t } from '@renderer/i18n';
 import {
   favorites,
   favoriteBusy,
@@ -134,7 +135,7 @@ async function confirmLink() {
   linkError.value = '';
   try {
     if (await linkFavorite(linkRecord.value.key, linkSource.value, projectId.value.trim())) linkRecord.value = null;
-    else linkError.value = favoriteErrors.value.get(linkRecord.value.key) || '该收藏正在保存，请稍后重试。';
+    else linkError.value = favoriteErrors.value.get(linkRecord.value.key) || t('common.saving_favorite');
   } finally {
     linking.value = false;
   }
@@ -143,67 +144,76 @@ function project(record: ModFavorite): CommunityProjectReference {
   return { source: record.source!, projectId: record.projectId!, title: record.name };
 }
 const sourceOptions = [
-  { value: 'all', label: '全部来源' },
+  { value: 'all', label: t('common.all_sources') },
   { value: 'modrinth', label: 'Modrinth' },
   { value: 'curseforge', label: 'CurseForge' },
-  { value: 'unlinked', label: '来源未关联' },
+  { value: 'unlinked', label: t('common.unlinked') },
 ];
 const sortOptions = [
-  { value: 'newest', label: '最近收藏' },
-  { value: 'oldest', label: '最早收藏' },
-  { value: 'name', label: '名称排序' },
+  { value: 'newest', label: t('common.newest') },
+  { value: 'oldest', label: t('common.oldest') },
+  { value: 'name', label: t('common.sort_by_name') },
 ];
 </script>
 
 <template>
-  <section class="favorites-manager" data-ui="favorites:manager" aria-label="收藏模组管理" :aria-busy="loading">
+  <section class="favorites-manager" data-ui="favorites:manager" :aria-label="t('common.favorite_section')" :aria-busy="loading">
     <div class="card favorites-toolbar">
       <div class="favorites-heading">
         <div>
           <h2>
-            已收藏 MOD <small>{{ favorites.length }}</small>
+            {{ t('common.favorites_title') }} <small>{{ favorites.length }}</small>
           </h2>
-          <p class="muted">跨实例共享。新建游戏实例时可一并安装；也可为单个模组选择兼容实例。</p>
+          <p class="muted">{{ t('common.favorites_shared_hint') }}</p>
         </div>
-        <button class="btn btn-ghost btn-sm" :disabled="loading" @click="refresh">{{ loading ? '读取中…' : '刷新' }}</button>
+        <button class="btn btn-ghost btn-sm" :disabled="loading" @click="refresh">
+          {{ loading ? t('common.reading') : t('common.refresh') }}
+        </button>
       </div>
       <div class="favorites-filters">
-        <input class="input" v-model="keyword" aria-label="搜索收藏模组" placeholder="搜索名称、项目 ID 或文件哈希…" /><SelectMenu
-          v-model="source"
-          aria-label="收藏来源"
-          :options="sourceOptions"
-        /><SelectMenu v-model="sort" aria-label="收藏排序" :options="sortOptions" />
+        <input
+          class="input"
+          v-model="keyword"
+          :aria-label="t('common.search_favorites')"
+          :placeholder="t('common.search_favorites_placeholder')"
+        /><SelectMenu v-model="source" :aria-label="t('common.favorite_source')" :options="sourceOptions" /><SelectMenu
+          v-model="sort"
+          :aria-label="t('common.favorite_sort')"
+          :options="sortOptions"
+        />
       </div>
       <div class="favorites-selection">
         <label class="favorite-select"
           ><input
             type="checkbox"
-            aria-label="选择全部筛选结果"
+            :aria-label="t('common.select_all', { count: String(visible.length) })"
             :checked="allSelected"
             :indeterminate="someSelected && !allSelected"
             :disabled="!visible.length"
             @change="selectVisible(($event.target as HTMLInputElement).checked)"
-          />选择当前 {{ visible.length }} 项</label
-        ><span class="muted">已选 {{ selected.size }} 项</span
-        ><button v-if="selected.size" class="btn btn-ghost btn-sm" @click="selected = new Set()">清空选择</button
+          />{{ t('common.select_all_filtered', { count: String(visible.length) }) }}</label
+        ><span class="muted">{{ t('common.selected_count', { count: String(selected.size) }) }}</span
+        ><button v-if="selected.size" class="btn btn-ghost btn-sm" @click="selected = new Set()">{{ t('common.clear_selection') }}</button
         ><button class="btn btn-danger btn-sm batch-unfavorite" :disabled="!selected.size || selectionBusy" @click="requestCancellation">
-          取消所选收藏
+          {{ t('common.cancel_favorites') }}
         </button>
       </div>
     </div>
     <div v-if="loadError" class="favorites-status" role="alert">
-      读取失败：{{ loadError }}<span v-if="favorites.length"> · 保留上次已确认的收藏</span
-      ><button class="btn btn-ghost btn-sm" @click="refresh">重试</button>
+      {{ t('common.read_failed', { error: loadError }) }}<span v-if="favorites.length">{{ t('common.keep_last_favorites') }}</span
+      ><button class="btn btn-ghost btn-sm" @click="refresh">{{ t('common.retry') }}</button>
     </div>
-    <div v-if="loading && !favorites.length" class="card favorite-empty" role="status">正在读取收藏…</div>
+    <div v-if="loading && !favorites.length" class="card favorite-empty" role="status">{{ t('common.loading_list') }}</div>
     <div v-else-if="!favorites.length && !loadError" class="card favorite-empty">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true">
         <path d="m12 3 2.8 5.7 6.3.9-4.6 4.4 1.1 6.3-5.6-3-5.6 3 1.1-6.3L3 9.6l6.2-.9Z" /></svg
-      ><strong>还没有收藏模组</strong><span class="muted">在浏览列表中点亮星标，即可在这里统一管理。</span
-      ><button class="btn btn-gold" @click="emit('browse')">去浏览模组</button>
+      ><strong>{{ t('common.no_favorites') }}</strong
+      ><span class="muted">{{ t('common.no_favorites_hint') }}</span
+      ><button class="btn btn-gold" @click="emit('browse')">{{ t('common.browse_mods') }}</button>
     </div>
     <div v-else-if="!visible.length && !loadError" class="card favorite-empty">
-      <strong>没有匹配的收藏</strong><span class="muted">尝试其他名称或来源。</span
+      <strong>{{ t('common.no_match') }}</strong
+      ><span class="muted">{{ t('common.no_match_hint') }}</span
       ><button
         class="btn btn-ghost"
         @click="
@@ -211,7 +221,7 @@ const sortOptions = [
           source = 'all';
         "
       >
-        清除筛选
+        {{ t('common.clear_filter') }}
       </button>
     </div>
     <div v-else class="favorite-list">
@@ -226,11 +236,11 @@ const sortOptions = [
           <label class="favorite-select"
             ><input
               type="checkbox"
-              :aria-label="`选择收藏 ${record.name}`"
+              :aria-label="t('common.select_favorite', { name: record.name })"
               :checked="selected.has(record.key)"
               :disabled="favoriteBusy.has(record.key)"
               @change="select(record.key, ($event.target as HTMLInputElement).checked)"
-            /><span class="sr-only">选择 {{ record.name }}</span></label
+            /><span class="sr-only">{{ record.name }}</span></label
           ><span class="favorite-icon" aria-hidden="true"
             ><img
               v-if="icon(record) && !failedIcons.has(record.key)"
@@ -254,24 +264,28 @@ const sortOptions = [
             <span
               class="tag"
               :class="record.source === 'modrinth' ? 'tag-success' : record.source === 'curseforge' ? 'tag-cf' : 'tag-danger'"
-              >{{ record.source === 'modrinth' ? 'Modrinth' : record.source === 'curseforge' ? 'CurseForge' : '来源未关联' }}</span
+              >{{ record.source === 'modrinth' ? 'Modrinth' : record.source === 'curseforge' ? 'CurseForge' : t('common.unlinked') }}</span
             >
           </div>
         </div>
         <p class="favorite-identity muted" :title="record.projectId || record.sha1 || record.key">
-          {{ record.projectId ? `项目 ID · ${record.projectId}` : `文件 SHA1 · ${record.sha1 || record.key.slice(5)}` }}
+          {{
+            record.projectId
+              ? t('common.project_id_label', { id: record.projectId })
+              : t('common.file_sha1_label', { hash: record.sha1 || record.key.slice(5) })
+          }}
         </p>
-        <p v-if="!record.source || !record.projectId" class="favorite-link-hint">关联来源项目后，可查询兼容版本并下载。</p>
-        <p v-else class="favorite-link-hint muted">下载时按 Minecraft 版本和加载器查询兼容文件。</p>
+        <p v-if="!record.source || !record.projectId" class="favorite-link-hint">{{ t('common.link_hint') }}</p>
+        <p v-else class="favorite-link-hint muted">{{ t('common.download_compat_hint') }}</p>
         <p v-if="favoriteErrors.get(record.key)" class="favorites-status" role="alert">{{ favoriteErrors.get(record.key) }}</p>
         <div class="favorite-card-foot">
-          <small class="muted">收藏于 {{ new Date(record.added).toLocaleDateString('zh-CN') }}</small>
+          <small class="muted">{{ t('common.added_on', { date: new Date(record.added).toLocaleDateString('zh-CN') }) }}</small>
           <div class="favorite-card-actions">
             <button
               class="icon-btn favorite-remove"
               :disabled="favoriteBusy.has(record.key)"
-              :aria-label="`取消收藏 ${record.name}`"
-              title="取消收藏"
+              :aria-label="t('common.cancel_favorite') + ' ' + record.name"
+              :title="t('common.cancel_favorite')"
               @click="removeFavorites([record.key])"
             >
               <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true">
@@ -283,16 +297,16 @@ const sortOptions = [
               :disabled="favoriteBusy.has(record.key)"
               @click="emit('details', project(record))"
             >
-              查看详情</button
+              {{ t('common.view_details') }}</button
             ><button
               v-if="record.source && record.projectId"
               class="btn btn-gold btn-sm favorite-download"
               :disabled="favoriteBusy.has(record.key)"
               @click="emit('download', project(record))"
             >
-              选择版本并安装</button
+              {{ t('common.select_version_install') }}</button
             ><button v-else class="btn btn-ghost btn-sm favorite-link" :disabled="favoriteBusy.has(record.key)" @click="openLink(record)">
-              关联项目
+              {{ t('common.link_project') }}
             </button>
           </div>
         </div>
@@ -300,9 +314,9 @@ const sortOptions = [
     </div>
     <ConfirmModal
       :open="!!pendingRemoval.length"
-      title="取消所选收藏"
-      :message="`将取消 ${pendingRemoval.length} 个模组的收藏，已安装的模组文件会保留。`"
-      confirm-text="取消收藏"
+      :title="t('common.cancel_favorites')"
+      :message="t('common.cancel_favorites_message', { count: String(pendingRemoval.length) })"
+      :confirm-text="t('common.cancel_favorite')"
       :busy="removing"
       :error="removalError"
       @confirm="cancelSelected"
@@ -317,29 +331,34 @@ const sortOptions = [
       >
         <section class="modal favorite-link-modal" role="dialog" aria-modal="true" aria-labelledby="favorite-link-title">
           <div class="favorite-link-heading">
-            <h3 class="modal-title" id="favorite-link-title">关联模组项目</h3>
-            <button class="icon-btn" aria-label="关闭关联项目" :disabled="linking" @click="linkRecord = null">×</button>
+            <h3 class="modal-title" id="favorite-link-title">{{ t('common.link_project_title') }}</h3>
+            <button class="icon-btn" :aria-label="t('common.link_project_close')" :disabled="linking" @click="linkRecord = null">×</button>
           </div>
-          <p class="muted">{{ linkRecord.name }} · 将验证来源项目是 Minecraft 模组；重复项目会合并，保留已有收藏时间和文件哈希。</p>
+          <p class="muted">{{ t('common.link_project_hint', { name: linkRecord.name }) }}</p>
           <label
-            >来源平台<SelectMenu
+            >{{ t('common.source_platform') }}
+            <SelectMenu
               v-model="linkSource"
               :options="sourceOptions.filter((option) => option.value === 'modrinth' || option.value === 'curseforge')"
-              aria-label="关联来源平台" /></label
-          ><label
-            >项目 ID<input
+              :aria-label="t('common.source_platform')"
+            />
+          </label>
+          <label>
+            {{ t('common.project_id') }}
+            <input
               v-model="projectId"
               class="input"
               :disabled="linking"
-              aria-label="来源项目 ID"
-              placeholder="Modrinth 项目 ID / slug，或 CurseForge 数字 ID"
+              :aria-label="t('common.project_id')"
+              :placeholder="t('common.project_id_placeholder')"
               @keydown.enter.prevent="confirmLink"
-          /></label>
+            />
+          </label>
           <p v-if="linkError" class="favorites-status" role="alert">{{ linkError }}</p>
           <div class="modal-actions">
-            <button class="btn btn-ghost" :disabled="linking" @click="linkRecord = null">取消</button
+            <button class="btn btn-ghost" :disabled="linking" @click="linkRecord = null">{{ t('common.cancel') }}</button
             ><button class="btn btn-gold confirm-favorite-link" :disabled="!projectId.trim() || linking" @click="confirmLink">
-              {{ linking ? '验证并关联…' : '验证并关联' }}
+              {{ linking ? t('common.verifying_and_linking') : t('common.verify_and_link') }}
             </button>
           </div>
         </section>

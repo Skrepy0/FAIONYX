@@ -4,6 +4,7 @@ import type { CommunityFile, InstalledVersion, ModInstallPlan, ProgressEvent } f
 import { prepareModInstall, commitModInstall, discardModInstall, errText, onProgress, cancelTask, formatSpeed } from '../api';
 import { matchingModProgress, modProgressPercent, modProgressBytes } from '../modInstallProgress';
 import { store, toast } from '../store';
+import { t } from '@renderer/i18n';
 import MarqueeText from './MarqueeText.vue';
 import CommunityModDetails from './CommunityModDetails.vue';
 import type { CommunityProjectReference } from '@shared/types';
@@ -97,23 +98,23 @@ async function cancelDownload() {
 <template>
   <Teleport to="body"
     ><div class="modal-mask" style="z-index: 10020" @pointerdown.self="!busy && emit('close')">
-      <section class="modal modinstall-modal" role="dialog" aria-modal="true" aria-label="安装 MOD 与前置">
-        <h3 class="modal-title">安装 MOD 与前置</h3>
+      <section class="modal modinstall-modal" role="dialog" aria-modal="true" :aria-label="t('mid.install_title')">
+        <h3 class="modal-title">{{ t('mid.install_title') }}</h3>
         <p class="muted modinstall-sub">
           {{ target.id }} · MC {{ target.mcVersion }} · {{ target.loader }} {{ target.loaderVersion }}<br />{{ target.folder }}
         </p>
         <div v-if="busy" class="modal-loading">
-          <span class="spin"></span><span class="muted">{{ plan ? '正在下载、校验并安装…' : '正在读取 MOD 元数据与递归前置关系…' }}</span>
+          <span class="spin"></span><span class="muted">{{ plan ? t('mid.downloading_installing') : t('mid.reading_metadata') }}</span>
         </div>
         <div v-if="busy && progress" class="mod-progress" data-ui="mod-install:progress">
           <div class="mod-progress-caption">
             <span>{{ progress.text }}</span
-            ><strong>{{ progressPercent == null ? '处理中…' : progressPercent + '%' }}</strong>
+            ><strong>{{ progressPercent == null ? t('mid.processing') : progressPercent + '%' }}</strong>
           </div>
           <div
             class="mod-progress-track"
             role="progressbar"
-            aria-label="MOD 下载与安装进度"
+            :aria-label="t('mid.progress_label')"
             :aria-valuenow="progressPercent"
             aria-valuemin="0"
             aria-valuemax="100"
@@ -125,14 +126,15 @@ async function cancelDownload() {
             <span v-if="progress.bytesDone != null"
               >{{ modProgressBytes(progress.bytesDone)
               }}<template v-if="progress.bytesTotal != null"> / {{ modProgressBytes(progress.bytesTotal) }}</template
-              ><template v-else> · 总大小未知</template></span
+              ><template v-else> · {{ t('mid.unknown_total') }}</template></span
             ><span v-if="progress.speed">{{ formatSpeed(progress.speed) }}</span
-            ><span v-if="!plan">预下载与检测，尚未安装</span><span>顶部“下载”同步记录本次任务</span>
+            ><span v-if="!plan">{{ t('mid.precaching') }}</span
+            ><span>{{ t('mid.download_synced') }}</span>
           </div>
         </div>
         <template v-if="plan">
           <div v-for="f in plan.files" :key="f.fileName" class="dependency-row">
-            <span class="tag">{{ f.dependency ? '待安装前置' : '所选 MOD' }}</span>
+            <span class="tag">{{ f.dependency ? t('mid.dependency_tag') : t('mid.selected_mod_tag') }}</span>
             <div class="dependency-name"><MarqueeText :text="f.fileName" /><MarqueeText :text="f.version" /></div>
             <button
               v-if="f.dependency && f.source && f.projectId"
@@ -140,32 +142,31 @@ async function cancelDownload() {
               :disabled="busy"
               @click="dependencyDetails(f)"
             >
-              查看项目
+              {{ t('mid.view_project') }}
             </button>
           </div>
-          <p v-if="plan.missing.length" class="muted modal-note">元数据要求：{{ plan.missing.join('、') }}</p>
+          <p v-if="plan.missing.length" class="muted modal-note">{{ t('mid.metadata_requires') }}{{ plan.missing.join('、') }}</p>
           <p v-for="warning in plan.warnings" :key="warning" class="modal-error">{{ warning }}</p>
           <label v-if="dependencies.length" class="dependency-choice"
             ><input v-model="includeDependencies" type="checkbox" :disabled="busy" /><span
-              >同时下载 {{ dependencies.length }} 个必要前置<small
-                >与 MC {{ target.mcVersion }} / {{ target.loader }} 匹配，递归检测并校验后一起安装。</small
-              ></span
+              >{{ t('mid.download_deps', { count: dependencies.length })
+              }}<small>{{ t('mid.deps_hint', { mc: target.mcVersion, loader: target.loader?.toString() || 'null' }) }}</small></span
             ></label
           >
           <p v-if="dependencyOptOut" class="modal-error" role="status">
-            已取消自动下载。必要前置仍未准备好，暂不写入所选 MOD。请先自行安装前置，再点击重新检测；也可勾选后一起下载。
+            {{ t('mid.dependency_cancelled') }}
           </p>
-          <p class="modal-note">已有兼容前置将复用；无法查询、没有兼容版本或出现冲突时会停止，不会当作“无需前置”继续安装。</p>
+          <p class="modal-note">{{ t('mid.reuse_hint') }}</p>
         </template>
         <p v-if="error" class="modal-error">{{ error }}</p>
         <div class="modal-actions">
           <button v-if="busy && progress?.taskId" class="btn btn-ghost" :disabled="cancelling" @click="cancelDownload">
-            {{ cancelling ? '正在取消…' : '取消下载' }}</button
-          ><button class="btn btn-ghost" :disabled="busy" @click="emit('close')">取消</button
+            {{ cancelling ? t('mid.cancelling') : t('mid.cancel_download') }}</button
+          ><button class="btn btn-ghost" :disabled="busy" @click="emit('close')">{{ t('common.cancel') }}</button
           ><button v-if="error || dependencyOptOut || plan?.warnings.length" class="btn btn-ghost" :disabled="busy" @click="prepare">
-            {{ error ? '重试检测' : '重新检测' }}</button
+            {{ error ? t('mid.retry') : t('mid.recheck') }}</button
           ><button v-if="plan" class="btn btn-gold" :disabled="busy || !!plan.warnings.length || dependencyOptOut" @click="install">
-            {{ dependencies.length ? '下载前置并安装' : '确认安装' }}
+            {{ dependencies.length ? t('mid.download_deps_install') : t('mid.confirm_install') }}
           </button>
         </div>
       </section>

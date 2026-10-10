@@ -5,6 +5,7 @@ import type { FavoriteInstallIntent, FavoriteInstallSkip, FavoriteSkipReason, Mo
 import SelectMenu from './SelectMenu.vue';
 import { cancelFavoriteVersions, errText, requestFavoriteVersions } from '../api';
 import { favorites, loadFavorites } from '../modFavorites';
+import { t } from '@renderer/i18n';
 
 const props = defineProps<{
   mc: string;
@@ -116,15 +117,11 @@ async function queryRow(row: Row, current = generation) {
     row.status = row.selected ? 'available' : result.status === 'unreliable' ? 'unreliable' : 'incompatible';
     row.approvedSkip = row.status === 'incompatible';
     row.checked = row.status === 'available';
-    row.message = row.selected
-      ? ''
-      : row.status === 'unreliable'
-        ? '存在兼容版本，但缺少可靠下载地址、文件名或哈希；请重试或明确跳过。'
-        : '该项目没有此 Minecraft 版本与加载器的兼容文件，本次跳过。';
+    row.message = row.selected ? '' : row.status === 'unreliable' ? t('dup.favorite.unreliable') : t('dup.favorite.incompatible');
   } catch (failure) {
     if (current !== generation) return;
     row.status = 'query-error';
-    row.message = ('查询失败：' + errText(failure)).slice(0, 1000);
+    row.message = t('dup.favorite.query_failed', { error: errText(failure) }).slice(0, 1000);
   } finally {
     tickets.delete(ticket);
     if (current === generation) update();
@@ -179,12 +176,12 @@ watch(
         checked: !!favorite.source && !!favorite.projectId,
         approvedSkip: !favorite.source || !favorite.projectId,
         status: !favorite.source || !favorite.projectId ? 'unlinked' : props.loader ? 'loading' : 'needs-loader',
-        message: !favorite.source || !favorite.projectId ? '来源项目尚未关联，不能自动安装，本次跳过。' : '',
+        message: !favorite.source || !favorite.projectId ? t('dup.favorite.unlinked') : '',
       }));
       loadingFavorites.value = false;
       await Promise.all(rows.value.filter((row) => row.status === 'loading').map((row) => queryRow(row, current)));
     } catch (failure) {
-      if (current === generation) error.value = '读取收藏失败：' + errText(failure);
+      if (current === generation) error.value = t('dup.favorite.read_failed', { error: errText(failure) });
     } finally {
       if (current === generation) {
         loadingFavorites.value = false;
@@ -200,16 +197,19 @@ watch(
   <section class="favorite-picker" data-ui="favorites:install">
     <label class="check-option"
       ><input v-model="enabled" type="checkbox" data-ui="favorites:enable" @change="update" /><span
-        ><strong>同时安装收藏模组</strong><small>兼容项目默认选中；不兼容或未关联的项目会列明跳过，查询失败需要处理。</small></span
+        ><strong>{{ t('dup.favorite.enable') }}</strong
+        ><small>{{ t('dup.favorite.enable_hint') }}</small></span
       ></label
     >
     <template v-if="enabled">
-      <p v-if="busy" class="muted" role="status">正在检查 Minecraft {{ mc }} / {{ loader || '未选择加载器' }} 的兼容版本…</p>
-      <p v-if="error" role="alert" class="unavailable">
-        {{ error }} <button class="btn btn-ghost btn-sm" @click="retry++">重新读取</button>
+      <p v-if="busy" class="muted" role="status">
+        {{ t('dup.favorite.checking', { mc, loader: loader || t('dup.favorite.no_loader_selected') }) }}
       </p>
-      <p v-if="!loader && !busy && !baseOnly" class="unavailable" role="status">请先选择模组加载器，或明确选择不安装收藏模组。</p>
-      <p v-if="!busy && !rows.length && !error" class="muted">暂无收藏模组，可在社区的「已收藏 MOD」中管理。</p>
+      <p v-if="error" role="alert" class="unavailable">
+        {{ error }} <button class="btn btn-ghost btn-sm" @click="retry++">{{ t('common.reread') }}</button>
+      </p>
+      <p v-if="!loader && !busy && !baseOnly" class="unavailable" role="status">{{ t('dup.favorite.no_loader') }}</p>
+      <p v-if="!busy && !rows.length && !error" class="muted" v-html="t('dup.favorite.empty')"></p>
       <div v-for="row in rows" :key="row.favorite.key" class="favorite-row" :data-favorite-key="row.favorite.key">
         <label
           ><input
@@ -228,31 +228,34 @@ watch(
           @change="update"
         />
         <div v-if="row.status === 'query-error' || row.status === 'unreliable'" class="favorite-row-actions">
-          <button class="btn btn-ghost btn-sm" :disabled="busy" data-ui="favorites:retry" @click="queryRow(row)">重试此项</button>
+          <button class="btn btn-ghost btn-sm" :disabled="busy" data-ui="favorites:retry" @click="queryRow(row)">
+            {{ t('dup.favorite.retry_one') }}
+          </button>
           <button
             class="btn btn-ghost btn-sm"
             :disabled="busy || row.approvedSkip || baseOnly"
             data-ui="favorites:skip"
             @click="approveSkip(row)"
           >
-            {{ row.approvedSkip || baseOnly ? '已确认跳过' : '跳过此项' }}
+            {{ row.approvedSkip || baseOnly ? t('dup.favorite.skipped') : t('dup.favorite.skip_one') }}
           </button>
         </div>
       </div>
       <p class="favorite-summary" data-ui="favorites:summary" aria-live="polite">
-        将安装 {{ selectedCount }} 项收藏模组，跳过 {{ skippedCount }} 项<span v-if="pendingCount > 0 && !baseOnly"
-          >，{{ pendingCount }} 项尚待处理</span
-        >。
+        {{ t('dup.favorite.summary', { selected: String(selectedCount), skipped: String(skippedCount) })
+        }}<span v-if="pendingCount > 0 && !baseOnly">{{ t('dup.favorite.pending', { count: String(pendingCount) }) }}</span>
       </p>
-      <button v-if="baseOnly" class="btn btn-ghost btn-sm" data-ui="favorites:resume" @click="resumeSelection">重新选择收藏模组</button>
-      <p v-if="selectedCount > 100" class="unavailable" role="alert">每次最多安装 100 项，请取消部分选择。</p>
+      <button v-if="baseOnly" class="btn btn-ghost btn-sm" data-ui="favorites:resume" @click="resumeSelection">
+        {{ t('dup.favorite.reselect') }}
+      </button>
+      <p v-if="selectedCount > 100" class="unavailable" role="alert">{{ t('dup.favorite.max_100') }}</p>
       <div v-if="!busy && !error && selectedCount === 0" class="favorite-empty-decision">
-        <p class="muted">本次没有要安装的收藏模组。确认后将继续安装游戏，其他单独选择的选项照常安装。</p>
+        <p class="muted">{{ t('dup.favorite.none_to_install') }}</p>
         <button class="btn btn-ghost btn-sm" :disabled="baseOnly" data-ui="favorites:base-only" @click="continueWithoutFavorites">
-          {{ baseOnly ? '已确认不安装收藏模组' : '不安装收藏模组，继续安装游戏' }}
+          {{ baseOnly ? t('dup.favorite.skipped_all') : t('dup.favorite.skip_all') }}
         </button>
       </div>
-      <p class="muted favorite-install-help">必要前置会一并校验和安装；查询失败不会自动忽略。</p>
+      <p class="muted favorite-install-help">{{ t('dup.favorite.prereq_hint') }}</p>
     </template>
   </section>
 </template>

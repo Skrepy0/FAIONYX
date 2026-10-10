@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ServerEntry, ServerPingResult } from '@shared/types';
 import { privateServerText } from '@shared/serverPrivacy';
+import { t } from '@renderer/i18n';
 import ConnectionStatus from './ConnectionStatus.vue';
 import ServerAddress from './ServerAddress.vue';
 defineProps<{
@@ -19,16 +20,18 @@ defineEmits<{ select: []; toggle: []; connect: []; favorite: []; address: [] }>(
     <label v-if="selectMode" class="server-check"
       ><input
         type="checkbox"
-        :aria-label="'选择 ' + privateServerText(server.name, server, addressRevealed)"
+        :aria-label="t('server.select') + ' ' + privateServerText(server.name, server, addressRevealed)"
         :checked="checked"
         @change="$emit('toggle')"
     /></label>
     <button
       class="btn btn-ghost server-favorite"
       :class="{ starred: server.favorite }"
-      :aria-label="(server.favorite ? '取消收藏 ' : '收藏 ') + privateServerText(server.name, server, addressRevealed)"
+      :aria-label="
+        (server.favorite ? t('server.unfavorite') : t('server.favorite')) + ' ' + privateServerText(server.name, server, addressRevealed)
+      "
       :aria-pressed="!!server.favorite"
-      :title="server.favorite ? '取消收藏' : '收藏，优先显示'"
+      :title="server.favorite ? t('server.unfavorite') : t('server.favorite_tooltip')"
       @click="$emit('favorite')"
     >
       {{ server.favorite ? '★' : '☆' }}
@@ -37,7 +40,9 @@ defineEmits<{ select: []; toggle: []; connect: []; favorite: []; address: [] }>(
       <button
         type="button"
         class="server-select-hit"
-        :aria-label="(selectMode ? '选择 ' : '查看 ') + privateServerText(server.name, server, addressRevealed)"
+        :aria-label="
+          (selectMode ? t('server.select') + ' ' : t('server.view') + ' ') + privateServerText(server.name, server, addressRevealed)
+        "
         :aria-pressed="selectMode ? checked : active"
         @click="selectMode ? $emit('toggle') : $emit('select')"
         @dblclick="!selectMode && $emit('connect')"
@@ -55,7 +60,7 @@ defineEmits<{ select: []; toggle: []; connect: []; favorite: []; address: [] }>(
             privateServerText(
               server.minecraftVersion
                 ? [server.minecraftVersion, server.loader, server.loaderVersion].filter(Boolean).join(' · ')
-                : server.versionId || '尚未关联实例',
+                : server.versionId || t('server.unbound_instance'),
               server,
               addressRevealed
             )
@@ -65,7 +70,9 @@ defineEmits<{ select: []; toggle: []; connect: []; favorite: []; address: [] }>(
       <span class="server-row-state"
         ><ConnectionStatus
           :tone="pending ? 'pending' : ping?.online ? 'success' : 'neutral'"
-          :label="pending ? '检测中' : ping?.online ? '在线' : ping ? '未连通' : '未检测'"
+          :label="
+            pending ? t('server.checking') : ping?.online ? t('server.online') : ping ? t('server.unreachable') : t('server.untested')
+          "
         /><small v-if="ping?.online && !pending">{{ ping.latencyMs }} ms</small></span
       >
     </div>

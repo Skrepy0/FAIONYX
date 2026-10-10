@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useMotion } from '../motion';
+import { t } from '@renderer/i18n';
 const names = ['Fly-Flown', 'Mahiru'];
 const expanded = ref(false);
 const drift = names.map(() => ({
@@ -30,22 +31,23 @@ function onFocusOut(event: FocusEvent) {
         aria-controls="creator-names"
         @click="expanded = true"
       >
-        参与测试及创作者<small data-ui="CreatorCard:d9b60520217e" lang="en">TESTERS &amp; CREATORS</small></button
+        {{ t('common.testers_creators') }}<small data-ui="CreatorCard:d9b60520217e" lang="en">TESTERS &amp; CREATORS</small></button
       ><a
         data-ui="CreatorCard:86b4c178a448"
         href="https://github.com/Skrepy0/FAIONYX"
         target="_blank"
         rel="noopener noreferrer"
         class="icon-btn"
-        aria-label="源码"
+        :aria-label="t('common.source_code')"
         >↗</a
       >
     </div>
     <div class="creator-message">
-      <p data-ui="CreatorCard:5031cfb3dd7e" class="creator-intro">
-        感谢 <a href="https://github.com/kamubaba-i/KAMUCL" target="_blank">KAMUCL</a> 的开源, 由
-        <a href="https://github.com/Skrepy0" target="_blank">Skrepy</a> 二次修改
-      </p>
+      <p
+        data-ui="CreatorCard:5031cfb3dd7e"
+        class="creator-intro"
+        v-html="t('common.thanks_to', { kamuclUrl: 'https://github.com/kamubaba-i/KAMUCL', skrepyUrl: 'https://github.com/Skrepy0' })"
+      ></p>
     </div>
     <div class="creator-reveal" :class="{ expanded }">
       <div class="creator-reveal-inner">

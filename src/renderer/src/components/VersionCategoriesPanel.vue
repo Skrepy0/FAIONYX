@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { nextTick, reactive, ref, watch } from 'vue';
 import type { VersionCategory, VersionCategoryAction } from '@shared/types';
+import { t } from '@renderer/i18n';
 
 const props = defineProps<{ open: boolean; categories: VersionCategory[]; counts: Record<string, number>; busy: boolean; error: string }>();
 const emit = defineEmits<{ close: []; action: [action: VersionCategoryAction] }>();
@@ -78,65 +79,67 @@ watch(
         @keydown="trapFocus"
       >
         <header class="category-header">
-          <h3 id="version-category-title" class="modal-title">{{ deleting ? '删除分类' : '管理版本分类' }}</h3>
-          <button class="btn btn-ghost" :disabled="busy" aria-label="关闭分类管理" @click="close">×</button>
+          <h3 id="version-category-title" class="modal-title">{{ deleting ? t('vcp.delete_title') : t('vcp.manage_title') }}</h3>
+          <button class="btn btn-ghost" :disabled="busy" :aria-label="t('vcp.close_aria')" @click="close">×</button>
         </header>
         <div v-if="deleting" class="category-content">
-          <p>删除“{{ deleting.name }}”后，其实例将回到未分类。实例文件和收藏均会保留。</p>
+          <p>{{ t('vcp.delete_hint', { name: deleting.name }) }}</p>
           <p v-if="error" class="error" role="alert">{{ error }}</p>
         </div>
         <div v-else class="category-content">
-          <p class="muted">分类用于整理实例，不改变安装位置。“收藏”自动显示已收藏的版本。此处统计包含全部游戏文件夹。</p>
+          <p class="muted">{{ t('vcp.hint') }}</p>
           <form class="category-create" @submit.prevent="create">
-            <label for="version-category-name">新建分类</label>
+            <label for="version-category-name">{{ t('vcp.new_label') }}</label>
             <div>
               <input
                 id="version-category-name"
                 v-model="name"
                 class="input"
                 maxlength="40"
-                placeholder="例如：生存、整合包、测试"
+                :placeholder="t('vcp.new_placeholder')"
                 :disabled="busy"
-              /><button class="btn btn-gold" :disabled="busy || !name.trim()">新建</button>
+              /><button class="btn btn-gold" :disabled="busy || !name.trim()">{{ t('vcp.new_btn') }}</button>
             </div>
           </form>
-          <p v-if="!categories.length" class="category-empty muted">还没有自建分类。在版本的“更多操作”中可选择所属分类。</p>
-          <ul v-else class="category-list" aria-label="自建分类">
+          <p v-if="!categories.length" class="category-empty muted">{{ t('vcp.empty_hint') }}</p>
+          <ul v-else class="category-list" :aria-label="t('vcp.self_created_aria')">
             <li v-for="category in categories" :key="category.id">
               <form v-if="renaming.id === category.id" class="category-rename" @submit.prevent="rename">
                 <input
                   v-model="renaming.name"
                   class="input"
                   maxlength="40"
-                  :aria-label="'重命名 ' + category.name"
+                  :aria-label="t('vcp.rename_field_aria', { name: category.name })"
                   :disabled="busy"
                 /><button class="btn btn-gold btn-sm" :disabled="busy || !renaming.name.trim() || renaming.name.trim() === category.name">
-                  保存</button
-                ><button type="button" class="btn btn-ghost btn-sm" :disabled="busy" @click="renaming.id = ''">取消</button>
+                  {{ t('vcp.save') }}</button
+                ><button type="button" class="btn btn-ghost btn-sm" :disabled="busy" @click="renaming.id = ''">
+                  {{ t('common.cancel') }}
+                </button>
               </form>
               <template v-else
                 ><div class="category-name">
                   <strong>{{ category.name }}</strong
-                  ><span class="muted">{{ counts[category.id] || 0 }} 个实例</span>
+                  ><span class="muted">{{ counts[category.id] || 0 }} {{ t('vcp.instances_count') }}</span>
                 </div>
                 <div class="category-actions">
                   <button
                     class="btn btn-ghost btn-sm"
                     :disabled="busy"
-                    :aria-label="'重命名分类 ' + category.name"
+                    :aria-label="t('vcp.rename_category_aria', { name: category.name })"
                     @click="
                       renaming.id = category.id;
                       renaming.name = category.name;
                     "
                   >
-                    重命名</button
+                    {{ t('vcp.rename') }}</button
                   ><button
                     class="btn btn-ghost btn-sm"
                     :disabled="busy"
-                    :aria-label="'删除分类 ' + category.name"
+                    :aria-label="t('vcp.delete_category_aria', { name: category.name })"
                     @click="deleting = category"
                   >
-                    删除
+                    {{ t('common.remove') }}
                   </button>
                 </div></template
               >
@@ -145,18 +148,19 @@ watch(
           <p v-if="error" class="error" role="alert">{{ error }}</p>
         </div>
         <footer v-if="deleting" class="modal-actions category-footer">
-          <button class="btn btn-ghost" data-ui="games:category-delete-cancel" :disabled="busy" @click="deleting = null">取消</button
+          <button class="btn btn-ghost" data-ui="games:category-delete-cancel" :disabled="busy" @click="deleting = null">
+            {{ t('common.cancel') }}</button
           ><button
             class="btn btn-danger"
             data-ui="games:category-delete-confirm"
             :disabled="busy"
             @click="emit('action', { type: 'remove', id: deleting.id })"
           >
-            {{ busy ? '删除中…' : '仅删除分类' }}
+            {{ busy ? t('vcp.deleting') : t('vcp.delete_only') }}
           </button>
         </footer>
         <footer v-else class="modal-actions category-footer">
-          <button class="btn btn-ghost" :disabled="busy" @click="close">完成</button>
+          <button class="btn btn-ghost" :disabled="busy" @click="close">{{ t('common.done') }}</button>
         </footer>
       </section>
     </div>

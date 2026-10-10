@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { errText, getSettings, importWorld, listFolders, listLoaders, scanFolder } from '../api';
 import { refreshInstalled, store, toast } from '../store';
+import { t } from '@renderer/i18n';
 import type { GameFolder, InstalledVersion, LoaderName, WorldCandidateInfo, WorldImportInfo, WorldImportOptions } from '@shared/types';
 
 const props = defineProps<{
@@ -116,7 +117,7 @@ async function loadTargetFolder() {
     versions.value = result.versions;
     chooseDefaultTarget();
   } catch (reason) {
-    if (sequence === folderLoadSequence) error.value = `读取目标文件夹失败：${errText(reason)}`;
+    if (sequence === folderLoadSequence) error.value = t('wi.folder_read_failed', { error: errText(reason) });
   } finally {
     if (sequence === folderLoadSequence) loadingTargets.value = false;
   }
@@ -158,7 +159,7 @@ watch([newLoader, newMinecraftVersion], async ([loader, minecraftVersion]) => {
     if (sequence !== loaderLoadSequence) return;
     loaderVersions.value = list;
     newLoaderVersion.value = list[0] ?? '';
-    if (!list.length) loaderError.value = `${loader} 暂无适配 ${minecraftVersion} 的可用版本`;
+    if (!list.length) loaderError.value = t('wi.no_loader_version', { loader, mc: minecraftVersion });
   } catch (reason) {
     if (sequence === loaderLoadSequence) loaderError.value = errText(reason);
   }
@@ -189,8 +190,10 @@ async function submit() {
     const result = await importWorld(props.filePath, options);
     store.settings = await getSettings();
     await refreshInstalled();
-    const packs = result.installedResourcePacks.length ? `，并安装 ${result.installedResourcePacks.length} 个资源包` : '';
-    toast(`存档「${result.worldName}」已导入到 ${result.versionId}${packs}`, 'success');
+    const packs = result.installedResourcePacks.length
+      ? t('wi.installed_packs', { count: String(result.installedResourcePacks.length) })
+      : '';
+    toast(t('wi.imported_to', { world: result.worldName, version: result.versionId, packs }), 'success');
     emit('close');
   } catch (reason) {
     error.value = errText(reason);
@@ -204,11 +207,11 @@ async function submit() {
   <Teleport to="body">
     <div v-if="open" class="modal-mask" @pointerdown.self="!busy && emit('close')">
       <div class="modal world-modal">
-        <h3 class="world-title">导入 Minecraft 存档</h3>
+        <h3 class="world-title">{{ t('wi.title') }}</h3>
 
         <template v-if="info && candidate">
           <label v-if="info.candidates.length > 1" class="field">
-            <span>检测到多个世界</span>
+            <span>{{ t('wi.multi_worlds') }}</span>
             <select v-model="selectedCandidateId" class="select">
               <option v-for="item in info.candidates" :key="item.id" :value="item.id">{{ item.worldName }} · {{ item.id }}</option>
             </select>
@@ -217,52 +220,54 @@ async function submit() {
           <div class="world-summary">
             <div>
               <strong>{{ candidate.worldName }}</strong
-              ><span>{{ candidate.fileCount }} 个文件 · {{ fmtSize(candidate.totalBytes) }}</span>
+              ><span>{{ candidate.fileCount }} {{ t('wi.files') }} · {{ fmtSize(candidate.totalBytes) }}</span>
             </div>
             <div class="world-tags">
-              <span class="tag">{{ candidate.minecraftVersion || '版本未知' }}</span>
+              <span class="tag">{{ candidate.minecraftVersion || t('wi.unknown_version') }}</span>
               <span class="tag" :class="candidate.versionConfidence === 'exact' ? 'tag-success' : 'tag-gold'">
                 {{
                   candidate.versionConfidence === 'exact'
-                    ? '元数据确认'
+                    ? t('wi.meta_confirmed')
                     : candidate.versionConfidence === 'approximate'
-                      ? 'DataVersion 推测'
-                      : '无法确定版本'
+                      ? t('wi.dataversion_guess')
+                      : t('wi.unknown_version')
                 }}
               </span>
               <span v-if="candidate.gameMode" class="tag">{{ candidate.gameMode }}</span>
-              <span v-if="candidate.hardcore" class="tag tag-danger">极限</span>
-              <span v-if="candidate.loader" class="tag tag-gold">推测 {{ candidate.loader }}</span>
+              <span v-if="candidate.hardcore" class="tag tag-danger">{{ t('wi.hardcore') }}</span>
+              <span v-if="candidate.loader" class="tag tag-gold">{{ t('wi.inferred_loader') }} {{ candidate.loader }}</span>
             </div>
-            <p v-if="candidate.datapackCount">检测到 {{ candidate.datapackCount }} 个数据包记录。</p>
-            <p v-if="candidate.hasWorldResourcePack">检测到世界内置 resources.zip，将随存档保留。</p>
+            <p v-if="candidate.datapackCount">{{ t('wi.datapacks_detected', { count: String(candidate.datapackCount) }) }}</p>
+            <p v-if="candidate.hasWorldResourcePack">{{ t('wi.world_resource_pack') }}</p>
             <p v-if="candidate.resourcePacks.length">
-              检测到 {{ candidate.resourcePacks.length }} 个结构有效的资源包，将以不覆盖方式安装。
+              {{ t('wi.resource_packs_detected', { count: String(candidate.resourcePacks.length) }) }}
             </p>
           </div>
 
           <div v-if="candidate.modEvidence.length" class="world-warning">
-            <strong>检测到模组痕迹</strong>
-            <span>{{ candidate.modEvidence.join('；') }}。普通存档不包含可靠的完整 MOD 清单，FAIONYX 不会猜测或自动下载未知依赖。</span>
+            <strong>{{ t('wi.mod_evidence') }}</strong>
+            <span>{{ candidate.modEvidence.join('；') }}。{{ t('wi.mod_evidence_hint') }}</span>
           </div>
 
           <label class="field">
-            <span>目标游戏文件夹</span>
+            <span>{{ t('wi.target_folder') }}</span>
             <select v-model="targetFolder" class="select" :disabled="busy" @change="loadTargetFolder">
               <option v-for="folder in folders" :key="folder.path" :value="folder.path">
-                {{ folder.name }}{{ folder.isDefault ? '（默认）' : '' }} · {{ folder.path }}
+                {{ folder.name }}{{ folder.isDefault ? t('wi.default_suffix') : '' }} · {{ folder.path }}
               </option>
             </select>
           </label>
 
           <div class="mode-tabs">
-            <button :class="{ active: mode === 'existing' }" :disabled="!versions.length" @click="mode = 'existing'">使用已有实例</button>
-            <button :class="{ active: mode === 'new' }" @click="mode = 'new'">新建自定义实例</button>
+            <button :class="{ active: mode === 'existing' }" :disabled="!versions.length" @click="mode = 'existing'">
+              {{ t('wi.use_existing') }}
+            </button>
+            <button :class="{ active: mode === 'new' }" @click="mode = 'new'">{{ t('wi.create_new') }}</button>
           </div>
 
           <template v-if="mode === 'existing'">
             <label class="field">
-              <span>目标实例</span>
+              <span>{{ t('wi.target_instance') }}</span>
               <select v-model="targetVersionId" class="select" :disabled="loadingTargets || busy">
                 <option
                   v-for="version in orderedVersions"
@@ -272,7 +277,9 @@ async function submit() {
                 >
                   {{ version.id }} · MC {{ version.mcVersion }}{{ version.loader ? ` · ${version.loader}` : ''
                   }}{{
-                    candidate.versionConfidence === 'exact' && version.mcVersion === candidate.minecraftVersion ? '（推荐：版本一致）' : ''
+                    candidate.versionConfidence === 'exact' && version.mcVersion === candidate.minecraftVersion
+                      ? t('wi.recommended_suffix')
+                      : ''
                   }}
                 </option>
               </select>
@@ -280,7 +287,9 @@ async function submit() {
             <label v-if="exactMismatch" class="ack-row danger">
               <input v-model="allowMismatch" type="checkbox" />
               <span
-                >目标实例为 {{ targetVersion?.mcVersion }}，与存档 {{ candidate.minecraftVersion }} 不同；我确认承担跨版本转换风险。</span
+                >{{ t('wi.target_is', { target: targetVersion?.mcVersion }) }}，{{
+                  t('wi.world_is', { world: candidate.minecraftVersion })
+                }}；{{ t('wi.risk_ack') }}</span
               >
             </label>
           </template>
@@ -288,12 +297,13 @@ async function submit() {
           <template v-else>
             <div class="new-grid">
               <label class="field"
-                ><span>Minecraft 版本</span><input v-model="newMinecraftVersion" class="input" placeholder="例如 1.20.1"
+                ><span>{{ t('wi.mc_version') }}</span
+                ><input v-model="newMinecraftVersion" class="input" :placeholder="t('wi.mc_version_placeholder')"
               /></label>
               <label class="field"
                 ><span>Loader</span
                 ><select v-model="newLoader" class="select">
-                  <option value="">纯净版</option>
+                  <option value="">{{ t('wi.vanilla') }}</option>
                   <option value="fabric">Fabric</option>
                   <option value="forge">Forge</option>
                   <option value="neoforge">NeoForge</option>
@@ -302,19 +312,25 @@ async function submit() {
               >
             </div>
             <label v-if="newLoader" class="field"
-              ><span>Loader 版本</span
+              ><span>{{ t('wi.loader_version') }}</span
               ><select v-model="newLoaderVersion" class="select" :disabled="!loaderVersions.length">
                 <option v-for="value in loaderVersions" :key="value" :value="value">{{ value }}</option></select
               ><small v-if="loaderError" class="error-text">{{ loaderError }}</small></label
             >
-            <label class="field"><span>新实例名称</span><input v-model="newInstanceName" class="input" /></label>
+            <label class="field"
+              ><span>{{ t('wi.new_instance_name') }}</span
+              ><input v-model="newInstanceName" class="input"
+            /></label>
           </template>
 
-          <label class="field"><span>最终存档名称</span><input v-model="worldName" class="input" maxlength="120" /></label>
+          <label class="field"
+            ><span>{{ t('wi.final_world_name') }}</span
+            ><input v-model="worldName" class="input" maxlength="120"
+          /></label>
 
           <label v-if="needsModAcknowledgement" class="ack-row">
             <input v-model="acknowledgeUnknownMods" type="checkbox" />
-            <span>我已了解：只能确认上述证据，无法从普通存档确定全部所需 MOD。</span>
+            <span>{{ t('wi.mod_ack') }}</span>
           </label>
 
           <div v-if="info.warnings.length" class="world-notes">
@@ -322,13 +338,13 @@ async function submit() {
           </div>
           <p v-if="error" class="error-text">{{ error }}</p>
           <div class="modal-actions">
-            <button class="btn btn-ghost" :disabled="busy" @click="emit('close')">取消</button>
+            <button class="btn btn-ghost" :disabled="busy" @click="emit('close')">{{ t('common.cancel') }}</button>
             <button class="btn btn-gold" :disabled="!canSubmit" @click="submit">
-              {{ busy ? '正在导入…' : '确认导入' }}
+              {{ busy ? t('wi.importing') : t('wi.confirm_import') }}
             </button>
           </div>
         </template>
-        <p v-else class="error-text">没有可导入的世界信息。</p>
+        <p v-else class="error-text">{{ t('wi.no_info') }}</p>
       </div>
     </div>
   </Teleport>

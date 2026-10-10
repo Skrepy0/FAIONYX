@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onUnmounted, ref, watch } from 'vue';
 import { store } from '../store';
+import { t } from '@renderer/i18n';
 
 const visible = ref(false);
 let timer: ReturnType<typeof setTimeout> | undefined;
@@ -38,7 +39,10 @@ onUnmounted(dismiss);
     <Transition name="launch-notice">
       <div v-if="visible" class="launch-success" role="status" aria-live="polite">
         <span class="launch-success-icon" aria-hidden="true">✓</span>
-        <div><strong>游戏已启动</strong><small>游戏进程已运行，窗口正在加载，请稍候</small></div>
+        <div>
+          <strong>{{ t('common.game_launched') }}</strong
+          ><small>{{ t('common.game_launched_hint') }}</small>
+        </div>
       </div>
     </Transition>
   </Teleport>

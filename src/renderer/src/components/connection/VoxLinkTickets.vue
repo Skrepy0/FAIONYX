@@ -4,6 +4,7 @@ import UpdateDialogShell from '../UpdateDialogShell.vue';
 import ConfirmModal from '../ConfirmModal.vue';
 import type { TicketFileGrant, TicketResult, VoxTicketDetail } from '@shared/voxlinkTickets';
 import { ticketSummaries, loadTickets } from '../../voxlinkTickets';
+import { t } from '@renderer/i18n';
 const emit = defineEmits<{ close: [] }>();
 const detail = ref<VoxTicketDetail | null>(null),
   creating = ref(false),
@@ -96,7 +97,7 @@ async function choose() {
         'voxlink:tickets:release',
         picked.map((f) => f.id)
       );
-      error.value = '每条消息最多 10 个附件，附件总量不得超过 500 MB';
+      error.value = t('voxlink.tickets.error_too_many_files');
       return;
     }
     files.value.push(...picked);
@@ -167,47 +168,67 @@ onUnmounted(() => {
 });
 </script>
 <template>
-  <UpdateDialogShell label="VoxLink 工单" @dismiss="close">
+  <UpdateDialogShell :label="t('voxlink.tickets.shell_label')" @dismiss="close">
     <template #header
-      ><h2>{{ creating ? '提交工单' : detail ? `工单 #${detail.id}` : '我的 VoxLink 工单' }}</h2>
-      <button class="btn btn-ghost" :disabled="busy" aria-label="关闭工单" @click="close">×</button></template
+      ><h2>
+        {{
+          creating
+            ? t('voxlink.tickets.submit_ticket')
+            : detail
+              ? t('voxlink.tickets.ticket_detail').replace('{id}', detail.id)
+              : t('voxlink.tickets.my_tickets')
+        }}
+      </h2>
+      <button class="btn btn-ghost" :disabled="busy" :aria-label="t('voxlink.tickets.close_ticket')" @click="close">×</button></template
     >
     <p v-if="error" class="connection-error" role="alert">{{ error }}</p>
-    <p v-if="busy" role="status">{{ progress ? '正在上传 ' + progress : '正在处理工单请求…' }}</p>
-    <p v-if="waitSeconds" class="connection-muted" role="status">请等待 {{ waitSeconds }} 秒后再次提交或追问。</p>
+    <p v-if="busy" role="status">
+      {{ progress ? t('voxlink.tickets.uploading') + ' ' + progress : t('voxlink.tickets.processing_request') }}
+    </p>
+    <p v-if="waitSeconds" class="connection-muted" role="status">{{ t('voxlink.tickets.wait_seconds', { seconds: waitSeconds }) }}</p>
     <template v-if="!creating && !detail">
-      <p class="connection-muted">提交的问题和你选择的附件会发往 VoxLink 工单服务。</p>
-      <p v-if="!ticketSummaries.length && !busy">暂无工单。</p>
+      <p class="connection-muted">{{ t('voxlink.tickets.description_hint') }}</p>
+      <p v-if="!ticketSummaries.length && !busy">{{ t('voxlink.tickets.no_tickets') }}</p>
       <div class="ticket-list">
         <button v-for="ticket in rows" :key="ticket.id" class="ticket-row" :disabled="busy" @click="open(ticket.id)">
           <strong>#{{ ticket.id }}</strong
-          ><span>{{ ticket.hasUnread ? '有未读回复' : ticket.replyCount ? '已查看' : '等待回复' }}</span
+          ><span>{{
+            ticket.hasUnread
+              ? t('voxlink.tickets.has_unread')
+              : ticket.replyCount
+                ? t('voxlink.tickets.viewed')
+                : t('voxlink.tickets.waiting_reply')
+          }}</span
           ><small>{{ time(ticket.lastTimeMs || ticket.timeMs) }}</small>
         </button>
       </div>
       <div v-if="pages > 1" class="ticket-pages">
-        <button class="btn" :disabled="busy || page === 0" @click="page--">上一页</button><span>{{ page + 1 }}/{{ pages }}</span
-        ><button class="btn" :disabled="busy || page + 1 >= pages" @click="page++">下一页</button>
+        <button class="btn" :disabled="busy || page === 0" @click="page--">{{ t('voxlink.tickets.prev_page') }}</button
+        ><span>{{ page + 1 }}/{{ pages }}</span
+        ><button class="btn" :disabled="busy || page + 1 >= pages" @click="page++">{{ t('voxlink.tickets.next_page') }}</button>
       </div>
     </template>
     <template v-else-if="creating"
       ><label class="ticket-field"
-        >问题描述<textarea
+        >{{ t('voxlink.tickets.issue_description')
+        }}<textarea
           v-model="description"
           class="input"
           maxlength="10000"
           rows="8"
           :disabled="busy"
-          placeholder="说明发生了什么、预期结果及复现步骤"
+          :placeholder="t('voxlink.tickets.placeholder_describe_issue')"
         /></label
-      ><small class="connection-muted">{{ description.length }}/10000 字</small></template
+      ><small class="connection-muted">{{ description.length }}/10000 {{ t('voxlink.tickets.characters') }}</small></template
     >
     <template v-else-if="detail">
       <small class="connection-muted">{{ time(detail.timeMs) }}</small>
       <article class="ticket-message">
-        <strong>我 · 首次提交</strong>
+        <strong>{{ t('voxlink.tickets.me_first_submission') }}</strong>
         <p>{{ detail.description }}</p>
-        <small v-for="file in detail.attachments" :key="file.name">附件：{{ file.name }} · {{ (file.size / 1048576).toFixed(1) }} MB</small>
+        <small v-for="file in detail.attachments" :key="file.name"
+          >{{ t('voxlink.tickets.attachment') }}：{{ file.name }} · {{ (file.size / 1048576).toFixed(1) }} MB</small
+        >
       </article>
       <article
         v-for="(message, index) in messages"
@@ -215,55 +236,76 @@ onUnmounted(() => {
         class="ticket-message"
         :class="{ admin: message.from === 'admin' }"
       >
-        <strong>{{ message.from === 'admin' ? 'VoxLink 回复' : '我的追问' }} · {{ time(message.timeMs) }}</strong>
+        <strong
+          >{{ message.from === 'admin' ? t('voxlink.tickets.voxlink_reply') : t('voxlink.tickets.my_followup') }} ·
+          {{ time(message.timeMs) }}</strong
+        >
         <p>{{ message.text }}</p>
         <small v-for="file in message.attachments" :key="file.name"
-          >附件：{{ file.name }} · {{ (file.size / 1048576).toFixed(1) }} MB</small
+          >{{ t('voxlink.tickets.attachment') }}：{{ file.name }} · {{ (file.size / 1048576).toFixed(1) }} MB</small
         >
       </article>
       <div v-if="messagePages > 1" class="ticket-pages">
-        <button class="btn" :disabled="busy || messagePage === 0" @click="messagePage--">较早消息</button
+        <button class="btn" :disabled="busy || messagePage === 0" @click="messagePage--">{{ t('voxlink.tickets.earlier_messages') }}</button
         ><span>{{ messagePage + 1 }}/{{ messagePages }}</span
-        ><button class="btn" :disabled="busy || messagePage + 1 >= messagePages" @click="messagePage++">较新消息</button>
+        ><button class="btn" :disabled="busy || messagePage + 1 >= messagePages" @click="messagePage++">
+          {{ t('voxlink.tickets.newer_messages') }}
+        </button>
       </div>
       <label class="ticket-field"
-        >补充问题<textarea v-model="text" class="input" maxlength="2000" rows="3" :disabled="busy || detail.deleted" />
+        >{{ t('voxlink.tickets.supplementary_question')
+        }}<textarea v-model="text" class="input" maxlength="2000" rows="3" :disabled="busy || detail.deleted" />
       </label>
-      <small class="connection-muted">{{ text.length }}/2000 字 · {{ detail.messages.length }}/200 条消息</small>
+      <small class="connection-muted"
+        >{{ text.length }}/2000 {{ t('voxlink.tickets.characters') }} · {{ detail.messages.length }}/200
+        {{ t('voxlink.tickets.messages') }}</small
+      >
     </template>
     <template v-if="creating || detail">
       <ul class="ticket-files">
         <li v-for="file in files" :key="file.id">
           <span>{{ file.name }} · {{ (file.size / 1048576).toFixed(1) }} MB</span
-          ><button class="btn btn-ghost" :disabled="busy" :aria-label="`移除附件 ${file.name}`" @click="removeFile(file)">×</button>
+          ><button
+            class="btn btn-ghost"
+            :disabled="busy"
+            :aria-label="t('voxlink.tickets.remove_attachment').replace('{name}', file.name)"
+            @click="removeFile(file)"
+          >
+            ×
+          </button>
         </li>
       </ul>
-      <button class="btn btn-ghost" :disabled="busy || files.length >= 10" @click="choose">选择附件</button>
-      <p class="connection-muted">每条消息最多 10 个附件；工单附件总量最多 500 MB。只有点击提交或发送追问时才上传。</p>
+      <button class="btn btn-ghost" :disabled="busy || files.length >= 10" @click="choose">
+        {{ t('voxlink.tickets.choose_attachment') }}
+      </button>
+      <p class="connection-muted">{{ t('voxlink.tickets.attachment_limit_hint') }}</p>
     </template>
     <template #footer>
-      <button v-if="busy" class="btn" @click="cancel">取消请求</button>
+      <button v-if="busy" class="btn" @click="cancel">{{ t('voxlink.tickets.cancel_request') }}</button>
       <template v-else
-        ><button class="btn btn-ghost" @click="creating || detail ? back() : close()">{{ creating || detail ? '返回列表' : '关闭' }}</button
-        ><button v-if="detail" class="btn btn-ghost" @click="confirmDelete = true">删除工单</button
-        ><button v-if="detail" class="btn" :disabled="!ownLast?.id" @click="retract">撤回上一条追问</button
+        ><button class="btn btn-ghost" @click="creating || detail ? back() : close()">
+          {{ creating || detail ? t('voxlink.tickets.back_list') : t('voxlink.tickets.close') }}</button
+        ><button v-if="detail" class="btn btn-ghost" @click="confirmDelete = true">{{ t('voxlink.tickets.delete_ticket') }}</button
+        ><button v-if="detail" class="btn" :disabled="!ownLast?.id" @click="retract">
+          {{ t('voxlink.tickets.retract_last_followup') }}</button
         ><button
           v-if="detail"
           class="btn btn-gold"
           :disabled="!!waitSeconds || detail.deleted || detail.messages.length >= 200 || (!text.trim() && !files.length)"
           @click="reply"
         >
-          发送追问</button
-        ><button v-else-if="creating" class="btn btn-gold" :disabled="!!waitSeconds || !description.trim()" @click="submit">提交工单</button
-        ><button v-else class="btn btn-gold" @click="newTicket">新工单</button></template
+          {{ t('voxlink.tickets.send_followup') }}</button
+        ><button v-else-if="creating" class="btn btn-gold" :disabled="!!waitSeconds || !description.trim()" @click="submit">
+          {{ t('voxlink.tickets.submit_ticket') }}</button
+        ><button v-else class="btn btn-gold" @click="newTicket">{{ t('voxlink.tickets.new_ticket') }}</button></template
       >
     </template>
   </UpdateDialogShell>
   <ConfirmModal
     :open="confirmDelete"
-    title="删除工单"
-    message="删除后该工单从本机列表移除，服务端会标记为玩家已删除。"
-    confirm-text="删除"
+    :title="t('voxlink.tickets.delete_confirm_title')"
+    :message="t('voxlink.tickets.delete_confirm_message')"
+    :confirm-text="t('voxlink.tickets.delete')"
     @confirm="remove"
     @cancel="confirmDelete = false"
   />

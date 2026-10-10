@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { store, exitEditMode, toast, type ViewName } from '../store';
+import { t } from '@renderer/i18n';
 import {
   beginDesign,
   finishDesign,
@@ -30,20 +31,35 @@ import {
 import { snapped, type ComponentDesign } from '@shared/visualDesign';
 import { DEFAULT_CUSTOM_THEME, DEFAULT_HOME_LAYOUT, DEFAULT_BACKGROUND, DEFAULT_LAUNCH_THUMBNAIL } from '@shared/types';
 import { copyText } from '../api';
+const PAGE_LABELS: Record<ViewName, string> = {
+  home: 'edit.page_home',
+  game: 'edit.page_game',
+  mods: 'edit.page_mods',
+  packs: 'edit.page_packs',
+  shaders: 'edit.page_shaders',
+  keys: 'edit.page_keys',
+  skins: 'edit.page_skins',
+  community: 'edit.page_community',
+  servers: 'edit.page_servers',
+  friends: 'edit.page_friends',
+  settings: 'edit.page_settings',
+  accounts: 'edit.page_accounts',
+  bridge: 'edit.page_bridge',
+};
 const pages: { value: ViewName; label: string }[] = [
-  { value: 'home', label: '首页' },
-  { value: 'game', label: '游戏版本' },
-  { value: 'mods', label: '模组' },
-  { value: 'packs', label: '材质包' },
-  { value: 'shaders', label: '光影包' },
-  { value: 'keys', label: '默认配置' },
-  { value: 'skins', label: '皮肤' },
-  { value: 'community', label: '社区资源' },
-  { value: 'servers', label: '服务器' },
-  { value: 'friends', label: '联机' },
-  { value: 'settings', label: '设置' },
-  { value: 'accounts', label: '账户' },
-  { value: 'bridge', label: 'MOD 面板' },
+  { value: 'home', label: t('edit.page_home') },
+  { value: 'game', label: t('edit.page_game') },
+  { value: 'mods', label: t('edit.page_mods') },
+  { value: 'packs', label: t('edit.page_packs') },
+  { value: 'shaders', label: t('edit.page_shaders') },
+  { value: 'keys', label: t('edit.page_keys') },
+  { value: 'skins', label: t('edit.page_skins') },
+  { value: 'community', label: t('edit.page_community') },
+  { value: 'servers', label: t('edit.page_servers') },
+  { value: 'friends', label: t('edit.page_friends') },
+  { value: 'settings', label: t('edit.page_settings') },
+  { value: 'accounts', label: t('edit.page_accounts') },
+  { value: 'bridge', label: t('edit.page_bridge') },
 ];
 const filter = ref(''),
   folded = ref(new Set<string>()),
@@ -96,28 +112,28 @@ const fields = computed(() =>
           ? [
               {
                 key: 'x',
-                label: '横向位移',
+                label: t('edit.x'),
                 unit: 'px',
                 min: -10000,
                 max: 10000,
               },
               {
                 key: 'y',
-                label: '纵向位移',
+                label: t('edit.y'),
                 unit: 'px',
                 min: -10000,
                 max: 10000,
               },
             ]
           : []),
-        { key: 'width', label: '宽度', unit: 'px', min: 8, max: 10000 },
-        { key: 'height', label: '高度', unit: 'px', min: 8, max: 10000 },
+        { key: 'width', label: t('edit.width'), unit: 'px', min: 8, max: 10000 },
+        { key: 'height', label: t('edit.height'), unit: 'px', min: 8, max: 10000 },
         ...(designSelected.value?.container
           ? [
-              { key: 'gap', label: '组件间距', unit: 'px', min: 0, max: 200 },
+              { key: 'gap', label: t('edit.gap'), unit: 'px', min: 0, max: 200 },
               {
                 key: 'padding',
-                label: '内部留白',
+                label: t('edit.padding'),
                 unit: 'px',
                 min: 0,
                 max: 200,
@@ -127,13 +143,13 @@ const fields = computed(() =>
       ]
     : tab.value === 'appearance'
       ? [
-          { key: 'opacity', label: '透明度', unit: '%', min: 0, max: 100 },
-          { key: 'radius', label: '圆角', unit: 'px', min: 0, max: 300 },
-          { key: 'blur', label: '毛玻璃', unit: 'px', min: 0, max: 80 },
+          { key: 'opacity', label: t('edit.opacity'), unit: '%', min: 0, max: 100 },
+          { key: 'radius', label: t('edit.radius'), unit: 'px', min: 0, max: 300 },
+          { key: 'blur', label: t('edit.blur'), unit: 'px', min: 0, max: 80 },
         ]
       : [
-          { key: 'fontSize', label: '字号', unit: 'px', min: 6, max: 200 },
-          { key: 'fontWeight', label: '字重', unit: '', min: 100, max: 900 },
+          { key: 'fontSize', label: t('edit.font_size'), unit: 'px', min: 6, max: 200 },
+          { key: 'fontWeight', label: t('edit.font_weight'), unit: '', min: 100, max: 900 },
         ]
 );
 function rgba(key: 'color' | 'background') {
@@ -241,7 +257,7 @@ async function close(action: 'apply' | 'keep' | 'discard') {
     designStageReady.value = false;
     exitEditMode();
   } catch (e) {
-    toast('保存失败，草稿已保留：' + String(e), 'error');
+    toast(t('edit.save_failed', { error: String(e) }), 'error');
   } finally {
     busy.value = false;
   }
@@ -255,7 +271,7 @@ async function exportTheme() {
     await flushDesign();
     const result = await window.faionyx.invoke('appearance:exportTheme', designDraft.value);
     await copyText(String(result));
-    toast('完整主题码已复制', 'success');
+    toast(t('edit.theme_copied'), 'success');
   } catch (e) {
     toast(String(e), 'error');
   }
@@ -265,13 +281,13 @@ async function importTheme() {
     previewAppearance((await window.faionyx.invoke('appearance:importTheme', code.value, true)) as any);
     themeOpen.value = false;
     code.value = '';
-    toast('主题已载入草稿，应用后生效', 'success');
+    toast(t('edit.theme_loaded'), 'success');
   } catch (e) {
     toast(String(e), 'error');
   }
 }
 function defaults() {
-  if (confirm('将默认外观载入草稿？应用前可撤销。'))
+  if (confirm(t('edit.confirm_load_defaults')))
     previewAppearance({
       theme: 'transparent',
       custom: structuredClone(DEFAULT_CUSTOM_THEME),
@@ -524,33 +540,38 @@ onUnmounted(() => {
     ><div class="design-workspace">
       <header class="designer-toolbar" data-design-tools>
         <div>
-          <strong>外观工作台</strong><small>{{ designSaveState || '修改仅在预览中生效' }}</small>
+          <strong>{{ t('edit.title') }}</strong
+          ><small>{{ designSaveState || t('edit.preview_only') }}</small>
         </div>
         <button :class="{ active: !browse }" @click="browse = !browse">
-          {{ browse ? '浏览导航' : '选择组件' }}</button
+          {{ browse ? t('edit.browse_nav') : t('edit.select_component') }}</button
         ><label class="toolbar-check">
           <input v-model="snap" type="checkbox" />
-          <span>吸附</span> </label
-        ><button :disabled="!designHistory.length" @click="undoDesign()">撤销</button
-        ><button :disabled="!designFuture.length" @click="undoDesign(true)">重做</button
-        ><select v-model="zoom" aria-label="预览缩放" @change="fit">
-          <option value="fit">适应画布</option>
+          <span>{{ t('edit.snap') }}</span> </label
+        ><button :disabled="!designHistory.length" @click="undoDesign()">{{ t('edit.undo') }}</button
+        ><button :disabled="!designFuture.length" @click="undoDesign(true)">{{ t('edit.redo') }}</button
+        ><select v-model="zoom" :aria-label="t('edit.zoom')" @change="fit">
+          <option value="fit">{{ t('edit.zoom_fit') }}</option>
           <option value="100">100%</option></select
-        ><button @click="themeOpen = true">主题与恢复</button><span class="spacer" /><button :disabled="busy" @click="requestClose">
-          退出</button
-        ><button class="primary" :disabled="busy" @click="close('apply')">应用外观</button>
+        ><button @click="themeOpen = true">{{ t('edit.theme_and_restore') }}</button><span class="spacer" /><button
+          :disabled="busy"
+          @click="requestClose"
+        >
+          {{ t('edit.exit') }}</button
+        ><button class="primary" :disabled="busy" @click="close('apply')">{{ t('edit.apply_appearance') }}</button>
       </header>
       <aside class="designer-layers-panel" :class="{ mobile: mobileTab === 'layers' }" data-design-tools>
         <div class="mobile-tabs">
-          <button @click="mobileTab = 'layers'">图层</button><button @click="mobileTab = 'properties'">属性</button>
+          <button @click="mobileTab = 'layers'">{{ t('edit.layers') }}</button
+          ><button @click="mobileTab = 'properties'">{{ t('edit.properties') }}</button>
         </div>
         <div class="side-head">
-          <strong>页面与图层</strong
-          ><select v-model="store.currentView" aria-label="编辑页面">
+          <strong>{{ t('edit.pages_and_layers') }}</strong
+          ><select v-model="store.currentView" :aria-label="t('edit.edit_page')">
             <option v-for="p in pages" :value="p.value">
               {{ p.label }}
             </option></select
-          ><input v-model="filter" placeholder="搜索组件" aria-label="搜索图层" />
+          ><input v-model="filter" :placeholder="t('edit.search_component')" :aria-label="t('edit.search_layers')" />
         </div>
         <div class="designer-layers">
           <div
@@ -560,16 +581,16 @@ onUnmounted(() => {
             :class="{ active: designSelection === t.scope + '|' + t.key }"
             :style="{ paddingLeft: Math.min(4, t.depth - 1) * 12 + 'px' }"
           >
-            <button class="fold" :aria-label="'展开或折叠 ' + t.label" @click="fold(t)">
+            <button class="fold" :aria-label="t('edit.expand_fold', { label: t })" @click="fold(t)">
               {{ baseLayers.some((x) => x.parentKey === t.key) ? (folded.has(t.key) ? '›' : '⌄') : '·' }}</button
             ><button class="layer-label" :title="t.label" @click="select(t)">
               {{ t.label }}</button
-            ><span :title="style(t).locked ? '已锁定' : style(t).hidden ? '已隐藏' : ''">{{
+            ><span :title="style(t).locked ? t('edit.locked') : style(t).hidden ? t('edit.hidden') : ''">{{
               style(t).locked ? '▣' : style(t).hidden ? '○' : ''
             }}</span>
           </div>
         </div>
-        <small class="side-foot">单击选择组件 · 双击深入子层<br />锁定后不会被拖动或缩放</small>
+        <small class="side-foot">{{ t('edit.select_hint') }}<br />{{ t('edit.lock_hint') }}</small>
       </aside>
       <main ref="viewport" class="designer-viewport">
         <div class="preview-scroll">
@@ -594,10 +615,11 @@ onUnmounted(() => {
       </main>
       <aside class="designer-panel" :class="{ mobile: mobileTab === 'properties' }" data-design-tools>
         <div class="mobile-tabs">
-          <button @click="mobileTab = 'layers'">图层</button><button @click="mobileTab = 'properties'">属性</button>
+          <button @click="mobileTab = 'layers'">{{ t('edit.layers') }}</button
+          ><button @click="mobileTab = 'properties'">{{ t('edit.properties') }}</button>
         </div>
         <div class="property-scroll">
-          <p v-if="designRecovered" class="notice">已恢复未应用的草稿</p>
+          <p v-if="designRecovered" class="notice">{{ t('edit.draft_recovered') }}</p>
           <template v-if="designSelected"
             ><nav class="breadcrumbs">
               <button v-for="t in ancestors" @click="select(t)">
@@ -615,7 +637,7 @@ onUnmounted(() => {
                       hidden: ($event.target as HTMLInputElement).checked,
                     })
                   "
-                />隐藏</label
+                />{{ t('edit.hide') }}</label
               ><label
                 ><input
                   type="checkbox"
@@ -625,15 +647,15 @@ onUnmounted(() => {
                       locked: ($event.target as HTMLInputElement).checked,
                     })
                   "
-                />锁定</label
-              ><button @click="resetComponent">重置组件</button>
+                />{{ t('edit.lock') }}</label
+              ><button @click="resetComponent">{{ t('edit.reset_component') }}</button>
             </div>
             <div class="property-tabs">
               <button
                 v-for="(label, key) in {
-                  layout: '布局',
-                  appearance: '外观',
-                  text: '文字',
+                  layout: t('edit.tab_layout'),
+                  appearance: t('edit.tab_appearance'),
+                  text: t('edit.tab_text'),
                 }"
                 :class="{ active: tab === key }"
                 :disabled="key === 'text' && !designSelected.text"
@@ -645,7 +667,8 @@ onUnmounted(() => {
             <fieldset :disabled="locked(designSelected)">
               <template v-if="tab === 'layout'"
                 ><label class="field"
-                  >排布方式<select
+                  >{{ t('edit.mode')
+                  }}<select
                     :value="selectedDesign.mode || 'flow'"
                     @change="
                       changeComponent({
@@ -655,17 +678,13 @@ onUnmounted(() => {
                       })
                     "
                   >
-                    <option value="flow">智能排布</option>
-                    <option value="free">自由定位</option>
+                    <option value="flow">{{ t('edit.mode_flow') }}</option>
+                    <option value="free">{{ t('edit.mode_free') }}</option>
                   </select></label
                 >
                 <p class="help">
                   {{
-                    free
-                      ? '在所属容器中定位，允许叠放。'
-                      : designSelected.sortable
-                        ? '拖至同组组件前后排序，尺寸与间距参与布局。'
-                        : '尺寸参与原有布局；此容器不支持拖动排序，可使用自由定位。'
+                    free ? t('edit.mode_free_hint') : designSelected.sortable ? t('edit.mode_flow_hint') : t('edit.mode_unsupported_hint')
                   }}
                 </p></template
               >
@@ -673,7 +692,11 @@ onUnmounted(() => {
                 <label v-for="f in fields" :key="f.key" class="field"
                   ><span
                     >{{ f.label }} <small>{{ f.unit }}</small
-                    ><button class="reset" :aria-label="'重置' + f.label" @click.prevent="changeComponent({ [f.key]: undefined })">
+                    ><button
+                      class="reset"
+                      :aria-label="t('edit.reset') + ' ' + f.label"
+                      @click.prevent="changeComponent({ [f.key]: undefined })"
+                    >
                       ↺
                     </button></span
                   ><input
@@ -683,28 +706,33 @@ onUnmounted(() => {
                     :max="f.max"
                     :step="f.key === 'fontWeight' ? 100 : 1"
                     :value="value(f.key)"
-                    placeholder="自动"
+                    :placeholder="t('edit.auto')"
                     @change="numeric(f.key, $event)"
                 /></label>
               </div>
               <template v-if="tab === 'layout' && free"
-                ><h4>对齐容器</h4>
+                ><h4>{{ t('edit.align_container') }}</h4>
                 <div class="actions">
-                  <button @click="align('x', 0)">左</button><button @click="align('x', 0.5)">水平居中</button
-                  ><button @click="align('x', 1)">右</button><button @click="align('y', 0)">顶</button
-                  ><button @click="align('y', 0.5)">垂直居中</button><button @click="align('y', 1)">底</button>
+                  <button @click="align('x', 0)">{{ t('edit.align_left') }}</button
+                  ><button @click="align('x', 0.5)">{{ t('edit.align_center_h') }}</button
+                  ><button @click="align('x', 1)">{{ t('edit.align_right') }}</button
+                  ><button @click="align('y', 0)">{{ t('edit.align_top') }}</button
+                  ><button @click="align('y', 0.5)">{{ t('edit.align_center_v') }}</button
+                  ><button @click="align('y', 1)">{{ t('edit.align_bottom') }}</button>
                 </div>
-                <h4>叠放层级</h4>
+                <h4>{{ t('edit.layer_order') }}</h4>
                 <div class="actions">
-                  <button @click="layer('top')">置顶</button><button @click="layer('up')">上一层</button
-                  ><button @click="layer('down')">下一层</button><button @click="layer('bottom')">置底</button>
+                  <button @click="layer('top')">{{ t('edit.layer_top') }}</button
+                  ><button @click="layer('up')">{{ t('edit.layer_up') }}</button
+                  ><button @click="layer('down')">{{ t('edit.layer_down') }}</button
+                  ><button @click="layer('bottom')">{{ t('edit.layer_bottom') }}</button>
                 </div></template
               >
               <template v-if="tab === 'appearance'"
                 ><label
                   v-for="(label, key) in {
-                    color: '文字颜色',
-                    background: '背景颜色',
+                    color: t('edit.color_text'),
+                    background: t('edit.color_background'),
                   }"
                   class="field"
                   >{{ label }}
@@ -716,22 +744,22 @@ onUnmounted(() => {
                       @focus="checkpoint"
                       @input="setColor(key, ($event.target as HTMLInputElement).value)"
                     /><input
-                      :aria-label="label + '值'"
+                      :aria-label="label + ' ' + t('edit.color_value_label')"
                       :value="selectedDesign[key]"
-                      placeholder="#RRGGBB 或 rgba(…)，支持透明度"
+                      :placeholder="t('edit.color_placeholder')"
                       @change="
                         changeComponent({
                           [key]: ($event.target as HTMLInputElement).value,
                         })
                       "
-                    /><button :aria-label="'重置' + label" @click="changeComponent({ [key]: undefined })">↺</button>
+                    /><button :aria-label="t('edit.reset') + ' ' + label" @click="changeComponent({ [key]: undefined })">↺</button>
                   </div>
                   <div class="alpha-row">
                     <input
                       type="range"
                       min="0"
                       max="100"
-                      :aria-label="label + '透明度'"
+                      :aria-label="label + ' ' + t('edit.alpha')"
                       :style="{ '--fill': Math.round(rgba(key)[3] * 100) + '%' }"
                       :value="Math.round(rgba(key)[3] * 100)"
                       @focus="checkpoint"
@@ -742,35 +770,37 @@ onUnmounted(() => {
               >
               <template v-if="tab === 'text'"
                 ><label class="field"
-                  >外显文字<textarea
+                  >{{ t('edit.display_text')
+                  }}<textarea
                     :value="selectedDesign.text"
-                    aria-label="外显文字"
-                    placeholder="保留原文"
+                    :aria-label="t('edit.display_text')"
+                    :placeholder="t('edit.display_text_placeholder')"
                     @change="
                       changeComponent({
                         text: ($event.target as HTMLTextAreaElement).value,
                       })
                     "
-                  /><button @click="changeComponent({ text: undefined })">恢复原文</button></label
+                  /><button @click="changeComponent({ text: undefined })">{{ t('edit.restore_text') }}</button></label
                 ><label class="field"
-                  >字体<input
+                  >{{ t('edit.font')
+                  }}<input
                     :value="selectedDesign.fontFamily"
-                    aria-label="字体"
-                    placeholder="跟随主题"
+                    :aria-label="t('edit.font')"
+                    :placeholder="t('edit.font_placeholder')"
                     @change="
                       changeComponent({
                         fontFamily: ($event.target as HTMLInputElement).value,
                       })
                     "
-                  /><button @click="changeComponent({ fontFamily: undefined })">恢复默认字体</button></label
+                  /><button @click="changeComponent({ fontFamily: undefined })">{{ t('edit.restore_font') }}</button></label
                 ></template
               >
             </fieldset></template
           >
           <div v-else class="property-empty">
-            <h3>让启动器成为你的样子</h3>
-            <p>点击预览中的卡片或按钮，或者从左侧图层中选择。</p>
-            <p>默认智能排布，精细叠放可切换自由定位。</p>
+            <h3>{{ t('edit.empty_title') }}</h3>
+            <p>{{ t('edit.empty_p1') }}</p>
+            <p>{{ t('edit.empty_p2') }}</p>
           </div>
         </div>
       </aside>
@@ -786,7 +816,7 @@ onUnmounted(() => {
         data-design-tools
       >
         <span>{{ Math.round(box.width / scale) }} × {{ Math.round(box.height / scale) }}</span
-        ><button v-if="!locked(designSelected)" aria-label="拖拽调整尺寸" @pointerdown.stop="down($event, true)" />
+        ><button v-if="!locked(designSelected)" :aria-label="t('edit.drag_resize')" @pointerdown.stop="down($event, true)" />
       </div>
       <div
         v-if="insertion"
@@ -804,25 +834,27 @@ onUnmounted(() => {
       <div v-if="exitOpen || themeOpen" class="designer-dialog-mask" data-design-tools>
         <section class="designer-dialog" role="dialog" aria-modal="true">
           <template v-if="exitOpen"
-            ><h2>如何保留这次修改？</h2>
-            <p>预览中的调整还没有应用到正式外观。</p>
+            ><h2>{{ t('edit.exit_title') }}</h2>
+            <p>{{ t('edit.exit_desc') }}</p>
             <div class="actions">
-              <button :disabled="busy" @click="close('discard')">放弃修改</button
-              ><button :disabled="busy" @click="close('keep')">保留草稿并退出</button
-              ><button class="primary" :disabled="busy" @click="close('apply')">应用并退出</button
-              ><button @click="exitOpen = false">继续编辑</button>
+              <button :disabled="busy" @click="close('discard')">{{ t('edit.discard') }}</button
+              ><button :disabled="busy" @click="close('keep')">{{ t('edit.keep_draft') }}</button
+              ><button class="primary" :disabled="busy" @click="close('apply')">{{ t('edit.apply_and_exit') }}</button
+              ><button @click="exitOpen = false">{{ t('edit.continue_edit') }}</button>
             </div></template
           ><template v-else
-            ><h2>主题与恢复</h2>
-            <p>导入与重置先进入草稿，点击应用后生效。</p>
+            ><h2>{{ t('edit.theme_title') }}</h2>
+            <p>{{ t('edit.theme_desc') }}</p>
             <div class="actions">
-              <button @click="exportTheme">复制完整主题码</button><button @click="resetPage()">重置当前页</button
-              ><button @click="resetPage(true)">重置所有组件</button><button @click="defaults">恢复默认外观</button>
+              <button @click="exportTheme">{{ t('edit.copy_theme_code') }}</button
+              ><button @click="resetPage()">{{ t('edit.reset_page') }}</button
+              ><button @click="resetPage(true)">{{ t('edit.reset_all') }}</button
+              ><button @click="defaults">{{ t('edit.restore_defaults') }}</button>
             </div>
-            <textarea v-model="code" aria-label="主题码" placeholder="粘贴完整主题码" />
+            <textarea v-model="code" :aria-label="t('edit.theme_code_label')" :placeholder="t('edit.theme_code_placeholder')" />
             <div class="actions">
-              <button class="primary" :disabled="!code.trim()" @click="importTheme">导入到草稿</button
-              ><button @click="themeOpen = false">返回编辑</button>
+              <button class="primary" :disabled="!code.trim()" @click="importTheme">{{ t('edit.import_to_draft') }}</button
+              ><button @click="themeOpen = false">{{ t('edit.back_to_edit') }}</button>
             </div></template
           >
         </section>

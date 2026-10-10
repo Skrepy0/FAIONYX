@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import type { ManualModpackRequest } from '@shared/types';
 import { supplyModpackFiles, openModpackFile, errText } from '../api';
+import { t } from '@renderer/i18n';
 const props = defineProps<{ request: ManualModpackRequest; paused?: boolean }>();
 const busy = ref(false),
   message = ref('');
@@ -11,8 +12,8 @@ async function supply() {
   try {
     const result = await supplyModpackFiles(props.request.token);
     message.value = result.rejected.length
-      ? `已补充 ${result.accepted} 个；以下文件与所需版本不匹配：${result.rejected.join('、')}`
-      : `已补充 ${result.accepted} 个，剩余 ${result.remaining} 个`;
+      ? t('ms.supplied_mismatch', { accepted: result.accepted, rejected: result.rejected.join('、') })
+      : t('ms.supplied_remaining', { accepted: result.accepted, remaining: result.remaining });
   } catch (error) {
     message.value = errText(error);
   } finally {
@@ -29,17 +30,19 @@ async function open(fileID: number) {
 </script>
 <template>
   <section class="pack-supplement" data-ui="download.modpack-supplement">
-    <strong>需要补充 {{ request.files.length }} 个文件</strong>
-    <p>已检查包内文件、本地游戏目录与可用下载来源，仍未找到以下文件的对应版本。可选择已有文件继续安装；其他下载仍会进行。</p>
+    <strong>{{ t('ms.title', { count: request.files.length }) }}</strong>
+    <p>{{ t('ms.desc') }}</p>
     <div class="supplement-list">
       <div v-for="file in request.files" :key="file.fileID" class="supplement-row">
         <span :title="file.fileName">{{ file.fileName }}</span>
-        <button class="btn btn-ghost btn-sm" @click="open(file.fileID)">文件页面 ↗</button>
+        <button class="btn btn-ghost btn-sm" @click="open(file.fileID)">{{ t('ms.file_page') }}</button>
       </div>
     </div>
-    <button class="btn btn-gold btn-sm" :disabled="busy || paused" @click="supply">{{ busy ? '正在校验…' : '选择已下载文件…' }}</button>
+    <button class="btn btn-gold btn-sm" :disabled="busy || paused" @click="supply">
+      {{ busy ? t('ms.validating') : t('ms.select_files') }}
+    </button>
     <p v-if="message" role="status">{{ message }}</p>
-    <small>支持一次选择多个文件，仅接受大小及 SHA1 一致的版本。</small>
+    <small>{{ t('ms.multi_hint') }}</small>
   </section>
 </template>
 <style scoped>

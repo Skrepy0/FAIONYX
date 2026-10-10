@@ -8,6 +8,7 @@ import ModInstallDialog from './ModInstallDialog.vue';
 import MarqueeText from './MarqueeText.vue';
 import { errText, installVersion, onInstallDone, parseMods, getModTargets } from '../api';
 import { selectInstance, selectedInstance, displayVersionName, refreshInstalled, store, toast } from '../store';
+import { t } from '@renderer/i18n';
 import {
   matchesVersionRange as matchRange,
   modMatchesInstance as modMatchesVersion,
@@ -113,7 +114,7 @@ watch(
         bestEffortVersions.value[0]?.v;
       selectedVersion.value = first ? instanceKey(first) : '';
     } catch (e) {
-      toast('MOD 识别失败：' + errText(e), 'error');
+      toast(t('mdf.identify_failed', { error: errText(e) }), 'error');
       emit('close');
     } finally {
       if (generation === scanGeneration) parsing.value = false;
@@ -131,7 +132,7 @@ async function onInstallSelected() {
     branch.value === 'matched' ? true : bestEffortVersions.value.find((x) => instanceKey(x.v) === selectedVersion.value)?.ok.includes(m)
   );
   if (!targets.length) {
-    toast('所选版本与全部 MOD 均不兼容', 'error');
+    toast(t('mdf.version_incompatible'), 'error');
     return;
   }
   modRequest.value = { target: selected, input: { paths: targets.map((m) => m.filePath) } };
@@ -141,7 +142,7 @@ async function onInstallSelected() {
 function onDownloadNew() {
   emit('close');
   store.currentView = 'game';
-  toast('请在游戏版本页选择兼容的版本安装，完成后重新拖入 MOD 即可装入', 'info');
+  toast(t('mdf.install_after_version'), 'info');
 }
 
 /** 「自动下载最新兼容版本」：取 MOD 支持的最高 release + 多数派加载器，走现有下载链路；
@@ -157,20 +158,18 @@ async function onAutoDownload() {
       if (m.loader) loaderCount.set(m.loader, (loaderCount.get(m.loader) ?? 0) + 1);
     }
     const loader = [...loaderCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
-    if (validMods.value.some((m) => m.loader !== loader)) throw new Error('不同加载器的 MOD 不能装入同一实例，请分批导入');
-    if (!loader) throw new Error('没有可识别的加载器类型');
-    // 取发布清单中满足所有该 loader MOD 范围的最高 release
+    if (validMods.value.some((m) => m.loader !== loader)) throw new Error(t('mdf.loader_mismatch'));
+    if (!loader) throw new Error(t('mdf.no_loader'));
     const { getManifest } = await import('../api');
     const manifest = await getManifest();
     const releases = manifest.filter((v) => v.type === 'release');
     const target = releases.find((v) => validMods.value.every((m) => !m.loader || matchRange(m.mcRange, v.id)));
-    if (!target) throw new Error('没有找到兼容的正式版 MC');
-    // 加载器版本维度：取该加载器适配该 MC 的最新版本，且满足 MOD 声明的 loader 版本范围
+    if (!target) throw new Error(t('mdf.no_compatible_release'));
     const { listLoaders } = await import('../api');
     const loaderVersions = await listLoaders(loader, target.id);
-    if (!loaderVersions.length) throw new Error(`${LOADER_TAG[loader]} 没有适配 ${target.id} 的版本`);
+    if (!loaderVersions.length) throw new Error(t('mdf.no_loader_version', { loader: LOADER_TAG[loader], mc: target.id }));
     const loaderVersion = loaderVersions.find((lv) => validMods.value.every((m) => !m.loaderRange || matchRange(m.loaderRange, lv)));
-    if (!loaderVersion) throw new Error('没有同时满足全部 MOD 区间要求的加载器版本');
+    if (!loaderVersion) throw new Error(t('mdf.no_loader_match'));
     // Fabric 模组自动携带最新 Fabric API（绝大多数 Fabric MOD 需要）
     let fabricApi: string | undefined;
     if (loader === 'fabric') {
@@ -187,7 +186,13 @@ async function onAutoDownload() {
       store.settings?.folders.find((folder) => folder.isDefault)?.path || store.settings?.activeFolder || store.settings?.gameDir || '';
     emit('close');
     toast(
-      `开始自动下载 ${target.id} + ${LOADER_TAG[loader]} ${loaderVersion}${fabricApi ? ' + Fabric API' : ''}，完成后将自动装入 ${filePaths.length} 个 MOD`,
+      t('mdf.auto_download_start', {
+        mc: target.id,
+        loader: LOADER_TAG[loader],
+        loaderVersion,
+        fabricApi: fabricApi ? ' + Fabric API' : '',
+        count: String(filePaths.length),
+      }),
       'info'
     );
     store.installing.add(target.id);
@@ -196,7 +201,7 @@ async function onAutoDownload() {
       if (r.versionId !== target.id) return;
       off();
       if (!r.ok) {
-        toast('版本安装失败，MOD 未能自动装入，可重新拖入', 'error');
+        toast(t('mdf.version_install_failed'), 'error');
         return;
       }
       void autoInstallMods(filePaths, r.installedId, destinationFolder);
@@ -208,7 +213,7 @@ async function onAutoDownload() {
       throw e;
     }
   } catch (e) {
-    toast('自动下载失败：' + errText(e), 'error');
+    toast(t('mdf.auto_download_failed', { error: errText(e) }), 'error');
   } finally {
     autoState.busy = false;
   }
@@ -220,10 +225,10 @@ async function autoInstallMods(filePaths: string[], installedId: string | undefi
     await refreshInstalled();
     const scanned = await getModTargets();
     const v = scanned.versions.find((v) => v.id === installedId && v.folder === folder);
-    if (!v) throw new Error('未找到本次安装的确切实例，请重新拖入 MOD');
+    if (!v) throw new Error(t('mdf.instance_not_found'));
     modRequest.value = { target: v, input: { paths: filePaths } };
   } catch (e) {
-    toast('MOD 自动装入失败，请重新拖入：' + errText(e), 'error');
+    toast(t('mdf.auto_install_failed', { error: errText(e) }), 'error');
   }
 }
 
@@ -238,20 +243,20 @@ const modCompatOf = (m: ModInfo): string[] => matchMap.value[m.filePath] ?? [];
   <Teleport to="body">
     <div v-if="open" class="modal-mask" @pointerdown.self="emit('close')">
       <div class="modal moddrop-modal">
-        <h3 class="modal-title">MOD 识别与安装</h3>
+        <h3 class="modal-title">{{ t('mdf.title') }}</h3>
 
-        <!-- 解析中 -->
+        <!-- Parsing -->
         <div v-if="parsing" class="parse-loading">
           <span class="spin"></span>
-          <span class="muted">正在识别 MOD 信息…</span>
+          <span class="muted">{{ t('mdf.identifying') }}</span>
         </div>
 
         <template v-else>
           <div v-if="scanErrors.length" class="none-hint">
-            部分目录或实例未能完整扫描；修复后请重新拖入。
+            {{ t('mdf.scan_incomplete') }}
             <div v-for="error in scanErrors" :key="error">{{ error }}</div>
           </div>
-          <!-- 识别结果列表 -->
+          <!-- Identified results list -->
           <div class="mod-list">
             <div v-for="m in mods" :key="m.filePath + m.fileName" class="mod-row" :class="{ failed: !!m.error }">
               <img v-if="m.iconDataUrl" class="mod-icon" :src="m.iconDataUrl" alt="" />
@@ -267,9 +272,13 @@ const modCompatOf = (m: ModInfo): string[] => matchMap.value[m.filePath] ?? [];
                   <template v-else>
                     <span v-if="m.mcRange">MC {{ m.mcRange }}</span>
                     <span v-if="m.loaderRange"> · Loader {{ m.loaderRange }}</span>
-                    <span v-if="m.dependencies.length"> · 前置：{{ m.dependencies.join(', ') }}</span>
+                    <span v-if="m.dependencies.length"> · {{ t('mdf.dependencies', { deps: m.dependencies.join(', ') }) }}</span>
                     <span v-if="!m.error && branch !== 'none'" :class="modCompatOf(m).length ? 'compat-ok' : 'compat-bad'">
-                      {{ modCompatOf(m).length ? ` · 匹配 ${modCompatOf(m).length} 个本地版本` : ' · 无匹配版本' }}
+                      {{
+                        modCompatOf(m).length
+                          ? ` · ${t('mdf.match_local', { count: String(modCompatOf(m).length) })}`
+                          : ` · ${t('mdf.no_match_version')}`
+                      }}
                     </span>
                   </template>
                 </div>
@@ -277,9 +286,11 @@ const modCompatOf = (m: ModInfo): string[] => matchMap.value[m.filePath] ?? [];
             </div>
           </div>
 
-          <!-- 分支：全部匹配 -->
+          <!-- All matched -->
           <template v-if="branch === 'matched'">
-            <p class="modal-label">选择装入版本（{{ commonVersions.length }} 个版本可装入全部 {{ validMods.length }} 个 MOD）</p>
+            <p class="modal-label">
+              {{ t('mdf.select_version', { count: String(commonVersions.length), mods: String(validMods.length) }) }}
+            </p>
             <div class="ver-list">
               <label
                 v-for="v in commonVersions"
@@ -290,23 +301,25 @@ const modCompatOf = (m: ModInfo): string[] => matchMap.value[m.filePath] ?? [];
                 <input v-model="selectedVersion" @change="syncDropSelection" type="radio" :value="instanceKey(v)" />
                 <span class="ver-name"
                   >{{ displayVersionName(v)
-                  }}<small>{{ v.mcVersion }} · {{ v.loader }} {{ v.loaderVersion || '版本未知' }}<br />{{ v.folder }}</small></span
+                  }}<small
+                    >{{ v.mcVersion }} · {{ v.loader }} {{ v.loaderVersion || t('mdf.unknown_version') }}<br />{{ v.folder }}</small
+                  ></span
                 >
-                <span v-if="v.isolated" class="tag">已隔离</span>
+                <span v-if="v.isolated" class="tag">{{ t('common.isolated') }}</span>
               </label>
             </div>
             <div class="modal-actions">
-              <button class="btn btn-ghost" @click="emit('close')">取消</button>
-              <button class="btn btn-ghost" @click="onDownloadNew">下载新版本</button>
+              <button class="btn btn-ghost" @click="emit('close')">{{ t('common.cancel') }}</button>
+              <button class="btn btn-ghost" @click="onDownloadNew">{{ t('mdf.download_new') }}</button>
               <button class="btn btn-gold" :disabled="installing" @click="onInstallSelected">
-                {{ installing ? '装入中…' : '装入所选版本' }}
+                {{ installing ? t('mdf.installing') : t('mdf.install_selected') }}
               </button>
             </div>
           </template>
 
-          <!-- 分支：部分匹配 -->
+          <!-- Partial match -->
           <template v-else-if="branch === 'partial'">
-            <p class="modal-label">没有能装入全部 MOD 的版本，以下为可装入部分 MOD 的版本（不兼容项将被跳过）：</p>
+            <p class="modal-label">{{ t('mdf.no_full_match') }}</p>
             <div class="ver-list">
               <label
                 v-for="x in bestEffortVersions"
@@ -317,32 +330,30 @@ const modCompatOf = (m: ModInfo): string[] => matchMap.value[m.filePath] ?? [];
                 <input v-model="selectedVersion" type="radio" :value="instanceKey(x.v)" />
                 <span class="ver-name"
                   >{{ displayVersionName(x.v)
-                  }}<small>{{ x.v.mcVersion }} · {{ x.v.loader }} {{ x.v.loaderVersion || '版本未知' }}<br />{{ x.v.folder }}</small></span
+                  }}<small
+                    >{{ x.v.mcVersion }} · {{ x.v.loader }} {{ x.v.loaderVersion || t('mdf.unknown_version') }}<br />{{ x.v.folder }}</small
+                  ></span
                 >
-                <span class="muted">可装 {{ x.ok.length }}/{{ validMods.length }}</span>
+                <span class="muted">{{ t('mdf.can_install', { ok: String(x.ok.length), total: String(validMods.length) }) }}</span>
               </label>
             </div>
             <div class="modal-actions">
-              <button class="btn btn-ghost" @click="emit('close')">取消</button>
-              <button class="btn btn-ghost" @click="onDownloadNew">下载新版本</button>
+              <button class="btn btn-ghost" @click="emit('close')">{{ t('common.cancel') }}</button>
+              <button class="btn btn-ghost" @click="onDownloadNew">{{ t('mdf.download_new') }}</button>
               <button class="btn btn-gold" :disabled="installing" @click="onInstallSelected">
-                {{ installing ? '装入中…' : '装入兼容的 MOD' }}
+                {{ installing ? t('mdf.installing') : t('mdf.install_compatible') }}
               </button>
             </div>
           </template>
 
-          <!-- 分支：全无匹配 -->
+          <!-- No match at all -->
           <template v-else-if="branch === 'none'">
             <div class="none-hint">
               <p>
-                {{
-                  scanErrors.length
-                    ? '尚不能确认所有本地实例的兼容性，请先处理扫描错误。'
-                    : `已扫描全部注册目录中的 ${allTargets.length} 个实例，未找到满足 MOD 元数据要求的版本。`
-                }}
+                {{ scanErrors.length ? t('mdf.scan_errors_first') : t('mdf.scanned_all', { count: String(allTargets.length) }) }}
               </p>
               <details v-if="allTargets.length">
-                <summary>查看逐个实例的匹配原因</summary>
+                <summary>{{ t('mdf.view_match_reasons') }}</summary>
                 <div v-for="item in mismatchDetails" :key="instanceKey(item.v)" class="mismatch-item">
                   <strong>{{ displayVersionName(item.v) }}</strong
                   ><small>{{ item.v.folder }}</small>
@@ -351,17 +362,17 @@ const modCompatOf = (m: ModInfo): string[] => matchMap.value[m.filePath] ?? [];
               </details>
             </div>
             <div class="modal-actions">
-              <button class="btn btn-ghost" @click="emit('close')">取消</button>
-              <button class="btn btn-ghost" @click="onCustomDownload">自定义下载</button>
+              <button class="btn btn-ghost" @click="emit('close')">{{ t('common.cancel') }}</button>
+              <button class="btn btn-ghost" @click="onCustomDownload">{{ t('mdf.custom_download') }}</button>
               <button v-if="validMods.length && !scanErrors.length" class="btn btn-gold" :disabled="autoState.busy" @click="onAutoDownload">
-                {{ autoState.busy ? '分析中…' : '自动下载最新兼容版本' }}
+                {{ autoState.busy ? t('mdf.analyzing') : t('mdf.auto_download') }}
               </button>
             </div>
           </template>
 
-          <!-- 失败文件原因汇总 -->
+          <!-- Failed file summary -->
           <div v-if="failedMods.length" class="failed-summary muted">
-            {{ failedMods.length }} 个文件无法识别（详见上方列表），已跳过，不影响其他 MOD 安装。
+            {{ t('mdf.failed_files', { count: String(failedMods.length) }) }}
           </div>
         </template>
       </div>

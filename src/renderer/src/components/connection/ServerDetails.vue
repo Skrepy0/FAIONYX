@@ -4,6 +4,7 @@ import ConnectionPanel from './ConnectionPanel.vue';
 import ConnectionStatus from './ConnectionStatus.vue';
 import ServerAddress from './ServerAddress.vue';
 import { privateServerText } from '@shared/serverPrivacy';
+import { t } from '@renderer/i18n';
 defineProps<{
   server: ServerEntry;
   ping: ServerPingResult | null;
@@ -22,12 +23,13 @@ defineProps<{
 defineEmits<{ bind: [value: string]; connect: []; refresh: []; edit: []; remove: []; relink: []; versions: []; copy: []; address: [] }>();
 </script>
 <template>
-  <ConnectionPanel title="连接服务器" class="server-detail">
+  <ConnectionPanel :title="t('server.connect_server')" class="server-detail">
     <template #action
-      ><button class="btn btn-ghost btn-sm" :disabled="pending" @click="$emit('refresh')">{{ pending ? '检测中…' : '刷新' }}</button
+      ><button class="btn btn-ghost btn-sm" :disabled="pending" @click="$emit('refresh')">
+        {{ pending ? t('server.checking') : t('server.refresh') }}</button
       ><ConnectionStatus
         :tone="pending ? 'pending' : ping?.online ? 'success' : 'neutral'"
-        :label="pending ? '检测中' : ping?.online ? '在线' : ping ? '未连通' : '未检测'"
+        :label="pending ? t('server.checking') : ping?.online ? t('server.online') : ping ? t('server.unreachable') : t('server.untested')"
     /></template>
     <div data-ui="ServerDetails:bcfe4bdd0062" class="server-detail-title">
       <span data-ui="ServerDetails:d5eb9cf8090b" class="server-monogram large" aria-hidden="true">{{
@@ -43,40 +45,44 @@ defineEmits<{ bind: [value: string]; connect: []; refresh: []; edit: []; remove:
     </div>
     <div data-ui="ServerDetails:9358a88a51a0" class="server-facts">
       <div>
-        <span>在线玩家</span
+        <span>{{ t('server.online_players') }}</span
         ><strong>{{ ping?.online && !pending ? privateServerText(ping.players, server, addressRevealed) : '—' }}</strong>
       </div>
       <div>
-        <span>网络延迟</span><strong>{{ ping?.online && !pending ? ping.latencyMs + ' ms' : '—' }}</strong>
+        <span>{{ t('server.latency') }}</span
+        ><strong>{{ ping?.online && !pending ? ping.latencyMs + ' ms' : '—' }}</strong>
       </div>
     </div>
     <p data-ui="ServerDetails:8faafdb2bb97" v-if="ping?.online && !pending" class="connection-muted">
-      服务器版本：{{ privateServerText(ping.version, server, addressRevealed) }}
+      {{ t('server.server_version') }}{{ privateServerText(ping.version, server, addressRevealed) }}
     </p>
     <label data-ui="ServerDetails:59f1e2f8c71a" class="connection-field"
-      >使用此实例连接<select
+      >{{ t('server.use_instance_to_connect')
+      }}<select
         data-ui="ServerDetails:0a9558147a76"
         class="select"
         :value="bound"
         :disabled="busy || binding"
         @change="$emit('bind', ($event.target as HTMLSelectElement).value)"
       >
-        <option value="">未关联实例 · 连接时选择</option>
+        <option value="">{{ t('server.unbound_instance') }}</option>
         <option v-for="v in targets" :key="targetToken(v)" :value="targetToken(v)">
-          {{ targetLabel(v) }}{{ v.isolated ? '（隔离）' : '' }}
+          {{ targetLabel(v) }}{{ v.isolated ? t('server.isolated') : '' }}
         </option>
       </select></label
     >
     <div data-ui="ServerDetails:49a9cb995a70" v-if="missing" class="connection-result">
-      <ConnectionStatus tone="danger" label="关联实例缺失" />
-      <p>原实例可能已移动或所在磁盘不可用。</p>
+      <ConnectionStatus tone="danger" :label="t('server.bound_instance_missing')" />
+      <p>{{ t('server.instance_moved_or_disk_unavailable') }}</p>
       <div data-ui="ServerDetails:5a115acf33b4" class="connection-actions">
-        <button data-ui="ServerDetails:cc40b80410ef" class="btn btn-ghost" @click="$emit('relink')">重新关联</button
-        ><button data-ui="ServerDetails:172ad57da113" class="btn btn-ghost" @click="$emit('versions')">前往版本页</button>
+        <button data-ui="ServerDetails:cc40b80410ef" class="btn btn-ghost" @click="$emit('relink')">{{ t('server.relink') }}</button
+        ><button data-ui="ServerDetails:172ad57da113" class="btn btn-ghost" @click="$emit('versions')">
+          {{ t('server.go_to_versions') }}
+        </button>
       </div>
     </div>
     <p data-ui="ServerDetails:d3a016071ead" v-else-if="server.candidateVersionIds?.length" class="connection-muted">
-      共享目录记录，请选择并确认具体实例。
+      {{ t('server.shared_directory_select_confirm') }}
     </p>
     <div data-ui="ServerDetails:1e93687b1aac" class="connection-muted">
       <p data-ui="ServerDetails:1399ead01b1a" v-if="server.minecraftVersion">
@@ -86,20 +92,29 @@ defineEmits<{ bind: [value: string]; connect: []; refresh: []; edit: []; remove:
       <p>{{ lastUsed }}</p>
     </div>
     <button data-ui="ServerDetails:1081b0ad3610" class="btn btn-gold server-connect" :disabled="busy || binding" @click="$emit('connect')">
-      {{ running ? '游戏已运行' : busy ? '正在启动…' : server.versionId && !missing ? '启动并连接' : '选择实例并连接'
+      {{
+        running
+          ? t('server.game_running')
+          : busy
+            ? t('server.starting')
+            : server.versionId && !missing
+              ? t('server.launch_and_connect')
+              : t('server.select_instance_and_connect')
       }}<span data-ui="ServerDetails:82645c79195b" aria-hidden="true">↗</span>
     </button>
     <div data-ui="ServerDetails:afa5660e1f9f" class="connection-actions server-secondary">
       <button data-ui="ServerDetails:5d680c5d54c5" class="btn btn-ghost" :disabled="busy || binding" @click="$emit('edit')">
-        编辑服务器
+        {{ t('server.edit_server') }}
       </button>
       <details class="server-more" @keydown.esc="($event.currentTarget as HTMLDetailsElement).open = false">
-        <summary class="btn btn-ghost">更多</summary>
-        <div><button class="btn btn-danger" :disabled="busy || binding" @click="$emit('remove')">删除服务器</button></div>
+        <summary class="btn btn-ghost">{{ t('server.more') }}</summary>
+        <div>
+          <button class="btn btn-danger" :disabled="busy || binding" @click="$emit('remove')">{{ t('server.delete_server') }}</button>
+        </div>
       </details>
     </div>
     <p data-ui="ServerDetails:571a6e757999" v-if="ping && !ping.online && !pending" class="connection-muted server-footnote">
-      状态检测失败不一定代表无法进入游戏，仍可尝试连接。
+      {{ t('server.status_check_failed_not_block') }}
     </p>
   </ConnectionPanel>
 </template>

@@ -3,6 +3,7 @@
 // FAIONYX preview lifecycle and interaction; geometry is skinview3d v3.4.2 (MIT).
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 import { MASCOT_INTERACTIVE } from '../mascotInteraction';
+import { t } from '@renderer/i18n';
 import {
   AmbientLight,
   DirectionalLight,
@@ -204,7 +205,7 @@ async function updateCape(): Promise<void> {
   try {
     if (props.cape) image = normalizeCape(await loadImage(props.cape));
   } catch {
-    error = '披风材质无法加载或尺寸不受支持，请刷新重试';
+    error = t('sv.cape_load_failed');
   }
   if (closed || request !== capeRequest) return;
   const next = image ? texture(image) : null,
@@ -469,7 +470,7 @@ defineExpose({ resetView, view, finishGesture, zoomBy, setLighting });
     @auxclick.prevent
     @dblclick="!editCanvas && resetView()"
   >
-    <p v-if="!supported" class="viewer3d-fallback muted">当前环境不支持 3D 预览</p>
+    <p v-if="!supported" class="viewer3d-fallback muted">{{ t('sv.preview_not_supported') }}</p>
   </div>
 </template>
 <style scoped>

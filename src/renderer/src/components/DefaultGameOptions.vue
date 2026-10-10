@@ -12,6 +12,7 @@ import {
 } from '@shared/gameOptions';
 import { getDefaultGameOptions, setDefaultGameOptions, errText } from '../api';
 import { store, toast } from '../store';
+import { t } from '@renderer/i18n';
 const emit = defineEmits<{ section: [value: 'keys' | 'packs'] }>();
 const state = ref<DefaultGameOptions>({ enabled: false, values: {} });
 const draft = ref<Record<string, GameOptionValue>>({});
@@ -23,7 +24,11 @@ const versions = computed(() => [
   ...new Set(['26.2', ...store.installed.map((v) => v.mcVersion).filter(Boolean), '1.21.11', '1.20.1', '1.16.5', '1.12.2']),
 ]);
 const title = computed(() =>
-  page.value === 'root' ? '选项' : page.value === 'mouse' ? '鼠标设置' : GAME_OPTION_PAGES.find((p) => p[0] === page.value)?.[1]
+  page.value === 'root'
+    ? t('gameoptions.root_title')
+    : page.value === 'mouse'
+      ? t('gameoptions.mouse_title')
+      : GAME_OPTION_PAGES.find((p) => p[0] === page.value)?.[1]
 );
 const rows = computed(() => {
   const list = GAME_OPTIONS.filter((d) => d.page === page.value || (page.value === 'controls' && d.id === 'mouseSensitivity')).map((d) =>
@@ -35,7 +40,7 @@ const unavailable = computed(() => uniqueGameOptions.filter((d) => d.id in state
 const value = (d: GameOptionDef) => draft.value[d.id] ?? state.value.values[d.id] ?? d.initial;
 const label = (d: GameOptionDef) =>
   d.choices?.find((c) => c[0] === value(d))?.[1] ??
-  (typeof value(d) === 'boolean' ? (value(d) ? '开启' : '关闭') : String(value(d)) + (d.unit ?? ''));
+  (typeof value(d) === 'boolean' ? (value(d) ? t('gameoptions.on') : t('gameoptions.off')) : String(value(d)) + (d.unit ?? ''));
 async function save(change: Parameters<typeof setDefaultGameOptions>[0]) {
   if (busy.value) return;
   busy.value = true;
@@ -44,7 +49,7 @@ async function save(change: Parameters<typeof setDefaultGameOptions>[0]) {
     draft.value = {};
   } catch (e) {
     draft.value = {};
-    toast('保存游戏选项失败：' + errText(e), 'error');
+    toast(t('gameoptions.loading_failed', { e: errText(e) }), 'error');
   } finally {
     busy.value = false;
   }
@@ -80,11 +85,11 @@ onMounted(async () => {
   <section data-ui="DefaultGameOptions:28b5a6c34e3b" class="card game-options" :data-design-page="'game-options-' + page">
     <header data-ui="DefaultGameOptions:6b4ccdfa01fc" class="options-header">
       <div data-ui="DefaultGameOptions:f45beec037f5">
-        <h2 data-ui="DefaultGameOptions:8bae28f66b28">游戏选项</h2>
-        <p class="muted">按游戏内「Esc → 选项」的入口顺序设置，下次启动时应用。</p>
+        <h2 data-ui="DefaultGameOptions:8bae28f66b28">{{ t('gameoptions.title') }}</h2>
+        <p class="muted">{{ t('gameoptions.subtitle') }}</p>
       </div>
       <label data-ui="DefaultGameOptions:e3d3749c5eee" class="options-sync"
-        ><span>启动时同步</span
+        ><span>{{ t('gameoptions.sync_label') }}</span
         ><span data-ui="DefaultGameOptions:80969e0561bb" class="switch"
           ><input
             data-ui="DefaultGameOptions:c814db8dde4e"
@@ -98,17 +103,19 @@ onMounted(async () => {
       ></label>
     </header>
     <div data-ui="DefaultGameOptions:66d723e1d987" class="options-context">
-      <span data-ui="DefaultGameOptions:9de7c18725e7" class="tag">{{ Object.keys(state.values).length }} 项自定义</span>
+      <span data-ui="DefaultGameOptions:9de7c18725e7" class="tag">{{
+        t('gameoptions.custom_count', { count: String(Object.keys(state.values).length) })
+      }}</span>
       <label data-ui="DefaultGameOptions:0e5b899edc75"
-        >兼容性预览
+        >{{ t('gameoptions.compatibility_preview') }}
         <select data-ui="DefaultGameOptions:9b4bafc1fc30" v-model="version" class="input">
           <option v-for="v in versions" :key="v" :value="v">Minecraft {{ v }}</option>
         </select></label
       >
     </div>
-    <p class="options-note muted">只同步你修改的项目，其余保留游戏设置。预览版本用于检查兼容性，启动时会按实际版本转换数值。</p>
+    <p class="options-note muted">{{ t('gameoptions.note') }}</p>
     <p data-ui="DefaultGameOptions:10d78a0fdb4e" v-if="unavailable.length" class="options-warning">
-      {{ version }} 不支持：{{ unavailable.map((d) => d.label).join('、') }}。这些项目仅对支持它们的版本生效。
+      {{ t('gameoptions.unsupported_warning', { version, items: unavailable.map((d) => d.label).join('、') }) }}
     </p>
     <div data-ui="DefaultGameOptions:0d8159fbfd41" class="options-path">
       <button
@@ -117,16 +124,22 @@ onMounted(async () => {
         class="btn btn-ghost btn-sm"
         @click="page = page === 'mouse' ? 'controls' : 'root'"
       >
-        ← 返回</button
-      ><span>选项{{ page === 'mouse' ? ' / 控制' : '' }}{{ page !== 'root' ? ' / ' + title : '' }}</span>
+        {{ t('gameoptions.back') }}</button
+      ><span
+        >{{ t('gameoptions.path_prefix') }}{{ page === 'mouse' ? t('gameoptions.path_mouse_prefix') : ''
+        }}{{ page !== 'root' ? title : '' }}</span
+      >
     </div>
     <Transition name="subpage" :duration="200"
       ><div :key="page" class="options-subpage">
         <div data-ui="DefaultGameOptions:e6f5ebde59ad" v-if="page === 'controls'" class="mc-options-grid options-entrances">
-          <button data-ui="DefaultGameOptions:f1628cab636d" class="btn btn-ghost" @click="page = 'mouse'">鼠标设置 · 灵敏度与滚动…</button
-          ><button data-ui="DefaultGameOptions:6db7a55c29cd" class="btn btn-ghost" @click="emit('section', 'keys')">按键控制…</button>
+          <button data-ui="DefaultGameOptions:f1628cab636d" class="btn btn-ghost" @click="page = 'mouse'">
+            {{ t('gameoptions.mouse_settings_entry') }}</button
+          ><button data-ui="DefaultGameOptions:6db7a55c29cd" class="btn btn-ghost" @click="emit('section', 'keys')">
+            {{ t('gameoptions.keys_control_entry') }}
+          </button>
         </div>
-        <div data-ui="DefaultGameOptions:389b53ed107f" v-if="loading" class="empty">正在读取配置…</div>
+        <div data-ui="DefaultGameOptions:389b53ed107f" v-if="loading" class="empty">{{ t('gameoptions.loading_config') }}</div>
         <div data-ui="DefaultGameOptions:82a40224d2d5" v-else class="mc-options-grid">
           <div
             data-ui="DefaultGameOptions:07ce737f0b81"
@@ -141,7 +154,7 @@ onMounted(async () => {
                 ><input
                   data-ui="DefaultGameOptions:77a5c1dbe109"
                   type="number"
-                  :aria-label="d.label + '数值'"
+                  :aria-label="t('gameoptions.option_value_label', { label: d.label })"
                   :min="d.min"
                   :max="d.max"
                   :step="d.step"
@@ -189,13 +202,13 @@ onMounted(async () => {
               <small data-ui="DefaultGameOptions:38e2caddc1ea">{{
                 !supportedGameOption(d, version)
                   ? d.until
-                    ? '此版本已移除此选项'
-                    : '需要 Minecraft ' + d.since + ' 或更新版本'
+                    ? t('gameoptions.removed_option_hint')
+                    : t('gameoptions.requires_version', { version: d.since ?? '' })
                   : d.id in state.values
                     ? state.enabled
-                      ? '将应用到游戏'
-                      : '已保存 · 同步未开启'
-                    : '跟随游戏 · 尚未覆盖'
+                      ? t('gameoptions.will_apply')
+                      : t('gameoptions.saved_sync_off')
+                    : t('gameoptions.follow_game')
               }}</small
               ><button
                 data-ui="DefaultGameOptions:505c33332d96"
@@ -203,14 +216,14 @@ onMounted(async () => {
                 :disabled="busy"
                 @click="save({ id: d.id, value: null })"
               >
-                跟随游戏</button
+                {{ t('gameoptions.follow_game_action') }}</button
               ><button
                 data-ui="DefaultGameOptions:1de07779d63b"
                 v-else
                 :disabled="busy || !supportedGameOption(d, version)"
                 @click="save({ id: d.id, value: value(d) })"
               >
-                应用此值
+                {{ t('gameoptions.apply_value_action') }}
               </button>
             </div>
           </div>
@@ -220,15 +233,15 @@ onMounted(async () => {
             class="btn btn-ghost mouse-shortcut"
             @click="page = 'mouse'"
           >
-            鼠标灵敏度
+            {{ t('gameoptions.mouse_sensitivity_entry') }}
             <strong data-ui="DefaultGameOptions:816053e0a80f">{{
               label(uniqueGameOptions.find((d) => d.id === 'mouseSensitivity')!)
             }}</strong
-            ><span>控制 → 鼠标设置 ›</span>
+            ><span>{{ t('gameoptions.mouse_entry_suffix') }}</span>
           </button>
           <div data-ui="DefaultGameOptions:5ff085d36e21" v-if="page === 'root'" class="option-cell world-option">
-            <div class="option-caption">世界选项 / 难度</div>
-            <p class="muted">由单人世界或服务器管理，请在游戏中修改。</p>
+            <div class="option-caption">{{ t('gameoptions.world_options_title') }}</div>
+            <p class="muted">{{ t('gameoptions.world_options_hint') }}</p>
           </div>
         </div>
 
@@ -244,13 +257,13 @@ onMounted(async () => {
           </button>
         </div>
         <p data-ui="DefaultGameOptions:49d93417eccf" v-if="page === 'credits'" class="empty">
-          Minecraft 的鸣谢与著作权信息请在游戏内查看；此入口不修改配置。
+          {{ t('gameoptions.credits_empty') }}
         </p>
       </div></Transition
     >
     <details class="options-note muted">
-      <summary>同步规则与兼容性说明</summary>
-      <p>只同步已修改的原版选项，未修改项跟随游戏。预览版本不会切换游戏实例；启动时按真实版本转换。模组接管的选项需同时检查模组配置。</p>
+      <summary>{{ t('gameoptions.sync_rules_summary') }}</summary>
+      <p>{{ t('gameoptions.sync_rules_detail') }}</p>
     </details>
   </section>
 </template>

@@ -23,7 +23,123 @@ import type { DefaultResourcePack } from '@shared/types';
 import { activeInstalled, selectedInstance, displayVersionName, store, toast } from '../store';
 import { updateSettings } from '../settingsUpdates';
 import { t } from '@renderer/i18n';
-import { KEYBIND_CATEGORIES, VANILLA_KEYBINDS, codeToMcKey, mcKeyLabel, mouseButtonToMcKey } from '@shared/keybindings';
+import { KEYBIND_CATEGORIES, VANILLA_KEYBINDS, codeToMcKey, mouseButtonToMcKey } from '@shared/keybindings';
+
+// ---- i18n helpers for shared keybindings data (labels live in shared/keybindings.ts,
+//      but display strings for the renderer UI resolve through the locale files) ----
+const BIND_LABEL_KEYS: Record<string, string> = {
+  'key_key.forward': 'keys.bindings.key_forward',
+  'key_key.back': 'keys.bindings.key_back',
+  'key_key.left': 'keys.bindings.key_left',
+  'key_key.right': 'keys.bindings.key_right',
+  'key_key.jump': 'keys.bindings.key_jump',
+  'key_key.sneak': 'keys.bindings.key_sneak',
+  'key_key.sprint': 'keys.bindings.key_sprint',
+  'key_key.attack': 'keys.bindings.key_attack',
+  'key_key.use': 'keys.bindings.key_use',
+  'key_key.pickItem': 'keys.bindings.key_pickItem',
+  'key_key.inventory': 'keys.bindings.key_inventory',
+  'key_key.drop': 'keys.bindings.key_drop',
+  'key_key.swapOffhand': 'keys.bindings.key_swapOffhand',
+  'key_key.hotbar.1': 'keys.bindings.key_hotbar.1',
+  'key_key.hotbar.2': 'keys.bindings.key_hotbar.2',
+  'key_key.hotbar.3': 'keys.bindings.key_hotbar.3',
+  'key_key.hotbar.4': 'keys.bindings.key_hotbar.4',
+  'key_key.hotbar.5': 'keys.bindings.key_hotbar.5',
+  'key_key.hotbar.6': 'keys.bindings.key_hotbar.6',
+  'key_key.hotbar.7': 'keys.bindings.key_hotbar.7',
+  'key_key.hotbar.8': 'keys.bindings.key_hotbar.8',
+  'key_key.hotbar.9': 'keys.bindings.key_hotbar.9',
+  'key_key.togglePerspective': 'keys.bindings.key_togglePerspective',
+  'key_key.smoothCamera': 'keys.bindings.key_smoothCamera',
+  'key_key.zoom': 'keys.bindings.key_zoom',
+  'key_key.chat': 'keys.bindings.key_chat',
+  'key_key.command': 'keys.bindings.key_command',
+  'key_key.socialInteractions': 'keys.bindings.key_socialInteractions',
+  'key_key.advancements': 'keys.bindings.key_advancements',
+  'key_key.screenshot': 'keys.bindings.key_screenshot',
+  'key_key.fullscreen': 'keys.bindings.key_fullscreen',
+  'key_key.narrator': 'keys.bindings.key_narrator_toggle',
+  'key_key.playerlist': 'keys.bindings.key_playerlist',
+  'key_key.saveToolbarActivator': 'keys.bindings.key_saveToolbarActivator',
+  'key_key.loadToolbarActivator': 'keys.bindings.key_loadToolbarActivator',
+  'key_key.spectatorOutlines': 'keys.bindings.key_spectatorOutlines',
+};
+const CATEGORY_KEYS: Record<string, string> = {
+  'keys.bindings.category_movement': 'keys.bindings.category_movement',
+};
+function bindLabel(id: string): string {
+  const key = BIND_LABEL_KEYS[id];
+  return key ? t(key) : id;
+}
+function categoryLabel(cat: string): string {
+  const map: Record<string, string> = {
+    移动: 'keys.bindings.category_movement',
+    游戏: 'keys.bindings.category_gameplay',
+    物品栏: 'keys.bindings.category_inventory',
+    视角: 'keys.bindings.category_camera',
+    界面: 'keys.bindings.category_interface',
+    多人游戏: 'keys.bindings.category_multiplayer',
+    杂项: 'keys.bindings.category_misc',
+  };
+  return t(map[cat] ?? 'keys.bindings.category_misc');
+}
+function mcKeyLabelI18n(bind: string): string {
+  if (!bind || bind === 'key.keyboard.unknown') return t('keys.bindings.key_unbound');
+  if (bind.startsWith('key.mouse.')) {
+    const suffix = bind.slice('key.mouse.'.length);
+    const map: Record<string, string> = {
+      left: 'keys.bindings.mouse_left',
+      middle: 'keys.bindings.mouse_middle',
+      right: 'keys.bindings.mouse_right',
+      '4': 'keys.bindings.mouse_4',
+      '5': 'keys.bindings.mouse_5',
+    };
+    return map[suffix] ? t(map[suffix]) : bind;
+  }
+  const key = bind.replace(/^key\.keyboard\./, '');
+  const map: Record<string, string> = {
+    space: 'keys.bindings.key_space',
+    tab: 'keys.bindings.key_tab',
+    enter: 'keys.bindings.key_enter',
+    escape: 'keys.bindings.key_escape',
+    backspace: 'keys.bindings.key_backspace',
+    delete: 'keys.bindings.key_delete',
+    'left.shift': 'keys.bindings.key_left.shift',
+    'right.shift': 'keys.bindings.key_right.shift',
+    'left.control': 'keys.bindings.key_left.control',
+    'right.control': 'keys.bindings.key_right.control',
+    'left.alt': 'keys.bindings.key_left.alt',
+    'right.alt': 'keys.bindings.key_right.alt',
+    'left.win': 'keys.bindings.key_left.win',
+    'right.win': 'keys.bindings.key_right.win',
+    up: 'keys.bindings.key_up',
+    down: 'keys.bindings.key_down',
+    left: 'keys.bindings.key_arrow_left',
+    right: 'keys.bindings.key_arrow_right',
+    'page.up': 'keys.bindings.key_page.up',
+    'page.down': 'keys.bindings.key_page.down',
+    'caps.lock': 'keys.bindings.key_caps.lock',
+    'num.lock': 'keys.bindings.key_num.lock',
+    'grave.accent': 'keys.bindings.key_grave.accent',
+    apostrophe: 'keys.bindings.key_apostrophe',
+    slash: 'keys.bindings.key_slash',
+    backslash: 'keys.bindings.key_backslash',
+    minus: 'keys.bindings.key_minus',
+    equal: 'keys.bindings.key_equal',
+    comma: 'keys.bindings.key_comma',
+    period: 'keys.bindings.key_period',
+    'left.bracket': 'keys.bindings.key_left.bracket',
+    'right.bracket': 'keys.bindings.key_right.bracket',
+    semicolon: 'keys.bindings.key_semicolon',
+    home: 'keys.bindings.key_home',
+    end: 'keys.bindings.key_end',
+    insert: 'keys.bindings.key_insert',
+  };
+  if (map[key]) return t(map[key]);
+  if (key.startsWith('keypad.')) return t('keys.bindings.key_prefix_keypad') + key.slice(7);
+  return key.length === 1 ? key.toUpperCase() : key;
+}
 
 const keys = ref<Record<string, string>>({});
 const section = ref<'game' | 'keys' | 'packs'>('game');
@@ -114,7 +230,11 @@ async function toggleKeySync(on: boolean) {
 const keyGrouped = computed(() => {
   const kw = keySearch.value.trim().toLowerCase();
   const match = (id: string, label: string, bind: string) =>
-    !kw || label.toLowerCase().includes(kw) || id.toLowerCase().includes(kw) || mcKeyLabel(bind).toLowerCase().includes(kw);
+    !kw ||
+    label.toLowerCase().includes(kw) ||
+    bindLabel(id).toLowerCase().includes(kw) ||
+    id.toLowerCase().includes(kw) ||
+    mcKeyLabelI18n(bind).toLowerCase().includes(kw);
   return KEYBIND_CATEGORIES.map((cat) => ({
     category: cat,
     items: VANILLA_KEYBINDS.filter((d) => d.category === cat && match(d.id, d.label, keys.value[d.id] ?? d.defaultBind)),
@@ -361,9 +481,9 @@ onUnmounted(stopCapture);
       />
       <div data-ui="KeysView:a8f22f80d5d3" class="cfg-scroll">
         <div data-ui="KeysView:5e83994d56a1" v-for="group in keyGrouped" :key="group.category" class="cfg-group">
-          <h4 data-ui="KeysView:21f659d3f704" class="cfg-cat">{{ group.category }}</h4>
+          <h4 data-ui="KeysView:21f659d3f704" class="cfg-cat">{{ categoryLabel(group.category) }}</h4>
           <div data-ui="KeysView:577547417d1b" v-for="item in group.items" :key="item.id" class="cfg-row">
-            <span data-ui="KeysView:be428b06c1c7" class="cfg-label" :title="item.id">{{ item.label }}</span>
+            <span data-ui="KeysView:be428b06c1c7" class="cfg-label" :title="item.id">{{ bindLabel(item.id) }}</span>
             <button
               data-ui="KeysView:5f341e9d9083"
               class="cfg-bind"
@@ -371,7 +491,7 @@ onUnmounted(stopCapture);
               :title="capturing === item.id ? t('keys.keys.capture_active') : t('keys.keys.capture_hint')"
               @click="startCapture(item.id)"
             >
-              {{ capturing === item.id ? t('keys.keys.capturing') : mcKeyLabel(keys[item.id] ?? item.defaultBind) }}
+              {{ capturing === item.id ? t('keys.keys.capturing') : mcKeyLabelI18n(keys[item.id] ?? item.defaultBind) }}
             </button>
             <button
               data-ui="KeysView:05190022165a"
