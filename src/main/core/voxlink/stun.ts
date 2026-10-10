@@ -135,7 +135,7 @@ export async function stunSampleSeries(
 export const stunDeltaFromSamples = (samples: StunMappedAddr[]) =>
   samples.length > 1 ? samples[samples.length - 1].port - samples[0].port : 0;
 export function stunResendDelay(retransmissions: number, random = Math.random): number {
-  const rto = Math.min(200 << retransmissions, 800),
+  const rto = Math.min(200 << retransmissions > 800),
     jitter = Math.trunc(rto * 0.2); // StunProbe.java: resendDelay 200, 800, 0.2
   return rto - jitter + Math.floor(random() * (2 * jitter + 1));
 }

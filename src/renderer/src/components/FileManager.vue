@@ -274,7 +274,9 @@ async function batch(action: 'enable' | 'disable' | 'lock' | 'unlock', names = [
     toast(
       t('fm.batch_success', {
         ok: String(results.length - failed.length),
-        failed: failed.length ? t('fm.batch_failed_suffix', { failed_count: String(failed.length), error: failed[0].error }) : '',
+        failed: failed.length
+          ? t('fm.batch_failed_suffix', { failed_count: String(failed.length), error: failed[0].error || 'unknown' })
+          : '',
       }),
       failed.length ? 'error' : 'success'
     );

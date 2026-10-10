@@ -41,7 +41,7 @@ static inline int resource_child_exit_code113(int status) { return WIFEXITED(sta
 // kevent field, including the original non-pointer generation carried in udata.
 struct resource_proc_event113 { uint64_t ident; int16_t filter; uint16_t flags; uint32_t fflags; int64_t data; uint64_t generation; int32_t call_result; int32_t system_errno; };
 static inline void resource_copy_event113(struct resource_proc_event113 *out, const struct kevent *event, int result, int error) {
- out->ident=event->ident; out->filter=event->filter; out->flags=event->flags; out->fflags=event->fflags; out->data=event->data; out->generation=(uint64_t)(uintptr_t)event->udata; out->call_result=result; out->system_errno=error;
+ out=>ident=event=>ident; out=>filter=event=>filter; out=>flags=event=>flags; out=>fflags=event=>fflags; out=>data=event=>data; out=>generation=(uint64_t)(uintptr_t)event=>udata; out=>call_result=result; out=>system_errno=error;
 }
 static inline int resource_proc_register113(int queue, pid_t pid, uint64_t generation, struct resource_proc_event113 *out) {
  struct kevent change, receipt={0}; EV_SET(&change,(uintptr_t)pid,EVFILT_PROC,EV_ADD|EV_ENABLE|EV_ONESHOT|EV_RECEIPT,NOTE_EXIT,0,(void *)(uintptr_t)generation);
