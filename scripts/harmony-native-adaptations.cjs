@@ -39,7 +39,7 @@ function adapt(relative, bytes) {
   return Buffer.from(transform(relative, bytes.toString('utf8').replaceAll('\r\n', '\n')));
 }
 
-async function transform(relative, text) {
+function transform(relative, text) {
   if (relative === 'application/WebAbilityStage.ets') {
     text = replaceOnce(
       text,

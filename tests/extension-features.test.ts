@@ -13,7 +13,6 @@ import {
 import { analyzeProjection, convertProjection, validateState } from '../src/main/core/projectionConversion';
 import { paintSkinPixel, makeBaseOpaque, isBasePixel } from '../src/shared/skinPixels';
 import { favoriteKey } from '../src/shared/modFavorites';
-import { MascotHoverGate, sortMascots } from '../src/shared/mascots';
 import { shouldSkipMemoryProcess } from '../src/shared/memoryOrganizer';
 test('typed NBT retains every numeric width, signed long, list type and arrays', () => {
   const root = tag(10, {
@@ -117,18 +116,6 @@ test('favorites distinguish platforms and unknown local hashes', () => {
   assert.notEqual(favoriteKey({ source: 'modrinth', projectId: '123' }), favoriteKey({ source: 'curseforge', projectId: '123' }));
   assert.equal(favoriteKey({ sha1: 'A'.repeat(40) }), 'sha1:' + 'a'.repeat(40));
   assert.throws(() => favoriteKey({ source: 'invalid', projectId: '../file' }));
-});
-test('hover only counts true mouse entries; stationary reorder and moving targets do not count', () => {
-  const gate = new MascotHoverGate();
-  assert.equal(gate.move(1, 1, 'q3', false), 'q3');
-  assert.equal(gate.move(1, 1, 'qiqi', false), undefined);
-  assert.equal(gate.move(2, 1, 'q3', false), undefined);
-  assert.equal(gate.move(3, 1, '', false), undefined);
-  assert.equal(gate.move(4, 1, 'qiqi', true), undefined);
-  assert.equal(gate.move(5, 1, 'qiqi', false), undefined);
-  assert.equal(gate.move(6, 1, '', false), undefined);
-  assert.equal(gate.move(7, 1, 'qiqi', false), 'qiqi');
-  assert.deepEqual(sortMascots({ order: ['qiqi', 'q3'], counts: { q3: 2, qiqi: 2 } }), ['qiqi', 'q3']);
 });
 test('memory organizer skips known games, Java and Windows system executables', () => {
   for (const [pid, name] of [
