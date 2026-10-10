@@ -1,3 +1,4 @@
+import { translate as t } from '../../shared/i18n';
 import { Worker } from 'node:worker_threads';
 import path from 'node:path';
 import fs from 'node:fs/promises';
@@ -28,8 +29,8 @@ export function runProjectionWorker<T = any>(
       void worker.terminate();
       error ? reject(error) : resolve(result!);
     };
-    const cancel = () => finish(new Error('投影任务已取消，原文件保留')),
-      timer = setTimeout(() => finish(new Error('投影解析超过 120 秒，已停止')), 120000);
+    const cancel = () => finish(new Error(t('projjobs.error.task_cancelled_kept'))),
+      timer = setTimeout(() => finish(new Error(t('projjobs.error.parse_timeout'))), 120000);
     signal?.addEventListener('abort', cancel, { once: true });
     if (signal?.aborted) cancel();
     worker.on('message', (message) => {
@@ -40,7 +41,7 @@ export function runProjectionWorker<T = any>(
     });
     worker.once('error', (e) => finish(e));
     worker.once('exit', (code) => {
-      if (!settled) finish(new Error('投影线程提前退出：' + code));
+      if (!settled) finish(new Error(t('projjobs.error.worker_exited_early', { code: String(code ?? '') })));
     });
   });
 }
@@ -50,25 +51,25 @@ export function registerProjectionConversion(
 ) {
   const analyses = new Map<string, { view: ProjectionAnalysis; sourceId: string; file: string; time: number }>();
   const task = async <T>(title: string, run: (signal: AbortSignal, progress: (fraction: number, text: string) => void) => Promise<T>) => {
-    const t = registerTask(title, 'world');
+    const job = registerTask(title, 'world');
     let ok = false;
     try {
-      const result = await run(t.controller.signal, (fraction, text) =>
-        getWin()?.webContents.send(IPC_EVENT.progress, { taskId: t.id, taskTitle: title, stage: 'world', progress: fraction, text })
+      const result = await run(job.controller.signal, (fraction, text) =>
+        getWin()?.webContents.send(IPC_EVENT.progress, { taskId: job.id, taskTitle: title, stage: 'world', progress: fraction, text })
       );
       ok = true;
       return result;
     } finally {
-      getWin()?.webContents.send(IPC_EVENT.taskDone, { taskId: t.id, ok, cancelled: t.controller.signal.aborted });
-      finishTask(t.id);
+      getWin()?.webContents.send(IPC_EVENT.taskDone, { taskId: job.id, ok, cancelled: job.controller.signal.aborted });
+      finishTask(job.id);
     }
   };
   ipcMain.handle('projections:versions', () => projectionVersions());
   ipcMain.handle('projections:analyze', async (_e, id: string, format: ProjectionFormat, version?: string) => {
     for (const [id, a] of analyses) if (Date.now() - a.time > 1800000) analyses.delete(id);
-    if (analyses.size >= 16) throw new Error('待确认转换过多，请关闭旧转换窗口');
+    if (analyses.size >= 16) throw new Error(t('projjobs.error.too_many_pending'));
     const source = await resolveSource(id),
-      data = await task('投影转换 · 分析差异', (signal, progress) =>
+      data = await task(t('projjobs.task.analyze'), (signal, progress) =>
         runProjectionWorker<Omit<ProjectionAnalysis, 'id'>>(
           { file: source.file, sourceFormat: source.format, action: 'analyze', format, version },
           signal,
@@ -84,11 +85,12 @@ export function registerProjectionConversion(
   });
   ipcMain.handle('projections:convert', async (_e, id: string, choices: ProjectionChoices) => {
     const a = analyses.get(id);
-    if (!a || Date.now() - a.time > 1800000) throw new Error('转换分析已过期，请重新分析');
-    if (!choices || typeof choices !== 'object' || JSON.stringify(choices).length > 1000000) throw new Error('转换选择无效');
+    if (!a || Date.now() - a.time > 1800000) throw new Error(t('projjobs.error.analysis_expired'));
+    if (!choices || typeof choices !== 'object' || JSON.stringify(choices).length > 1000000)
+      throw new Error(t('projjobs.error.invalid_choices'));
     const current = await resolveSource(a.sourceId);
-    if (current.file !== a.file || current.format !== a.view.sourceFormat) throw new Error('投影来源已变化，请重新扫描并分析');
-    return task('投影转换 · 生成与验证', async (signal, progress) => {
+    if (current.file !== a.file || current.format !== a.view.sourceFormat) throw new Error(t('projjobs.error.source_changed'));
+    return task(t('projjobs.task.convert'), async (signal, progress) => {
       const bytes = Buffer.from(
         await runProjectionWorker<Uint8Array>(
           {
@@ -123,7 +125,7 @@ export function registerProjectionConversion(
               if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
             }
           }
-          if (!output) throw new Error('转换副本重名过多');
+          if (!output) throw new Error(t('projjobs.error.name_conflicts'));
           if (signal.aborted) {
             await fs.unlink(output);
             signal.throwIfAborted();
@@ -133,7 +135,7 @@ export function registerProjectionConversion(
         }
       });
       analyses.delete(id);
-      progress(1, '生成文件已验证，原文件哈希保持不变');
+      progress(1, t('projjobs.text.convert_verified'));
       return { path: output, name: path.basename(output) };
     });
   });

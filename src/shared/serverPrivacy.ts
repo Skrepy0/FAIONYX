@@ -1,4 +1,5 @@
 import type { ServerEntry } from './types';
+import { translate as t } from './i18n';
 
 /** Display privacy only. The real address remains unchanged for ping/copy/join. */
 export function privateServerText(text: string, server: Pick<ServerEntry, 'address' | 'host'>, revealed = false): string {
@@ -29,7 +30,7 @@ export function privateServerText(text: string, server: Pick<ServerEntry, 'addre
       return `(?<![\\p{L}\\p{N}._-])${escaped}(?::\\d{1,5})?(?![\\p{L}\\p{N}._:-])`;
     })
     .join('|');
-  return text.replace(new RegExp(pattern, 'giu'), '地址已隐藏');
+  return text.replace(new RegExp(pattern, 'giu'), t('server.address_hidden'));
 }
 
 export function serverAddressRevealed(

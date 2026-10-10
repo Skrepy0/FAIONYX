@@ -1,4 +1,5 @@
 import { Readable } from 'node:stream';
+import { translate as t } from '../../shared/i18n';
 
 type RequestOptions = { signal?: AbortSignal; headers?: Record<string, string>; method?: string; body?: string };
 
@@ -41,7 +42,7 @@ export async function systemDownload(url: string, init: RequestOptions): Promise
     };
     request.on('error', (error) => {
       clean();
-      const failure = new TypeError('系统下载连接失败', { cause: error });
+      const failure = new TypeError(t('systemdownload.error.connect_failed'), { cause: error });
       incoming?.destroy(failure);
       if (!settled) {
         settled = true;

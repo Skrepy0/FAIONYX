@@ -11,13 +11,19 @@ import {
   type BootState,
   type GlassPoint,
 } from '@shared/startup';
+import { setCurrentLocale, translate } from '@shared/i18n';
 import './splash.css';
+
+const splashLocale = new URLSearchParams(location.search).get('locale') || 'zh-CN';
+setCurrentLocale(splashLocale);
+const splashT = translate;
 
 const bridge = window.faionyxSplash;
 const root = document.documentElement;
 const canvas = document.querySelector<HTMLCanvasElement>('#glass')!;
 const ctx = canvas.getContext('2d', { alpha: true })!;
 const caption = document.querySelector<HTMLSpanElement>('#stage')!;
+if (caption) caption.textContent = `${splashT('splash.stage.init')}…`;
 const icon = new Image();
 let state: BootState = { completed: [], ready: false },
   pointer: GlassPoint | null = null;
@@ -32,7 +38,7 @@ let nextFrame = 0;
 let finishTimer = 0,
   finished = false;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const labels = ['读取配置', '加载账户', '扫描游戏实例', '加载首页图片、Java 与皮肤', '准备首帧'];
+const labels = ['splash.stage.settings', 'splash.stage.accounts', 'splash.stage.instances', 'splash.stage.assets', 'splash.stage.paint'];
 
 /* ---------------- 滚动锁定 ---------------- */
 
@@ -194,7 +200,7 @@ const offPointer = bridge.onPointer((next) => {
 });
 const offState = bridge.onState((next) => {
   state = next;
-  caption.textContent = state.ready ? '准备就绪' : `${labels[Math.min(4, state.completed.length)]}…`;
+  caption.textContent = state.ready ? splashT('splash.ready') : `${splashT(labels[Math.min(4, state.completed.length)])}…`;
 });
 const offReveal = bridge.onReveal(() => {
   document.body.classList.add('leaving');
@@ -242,7 +248,7 @@ icon.onload = () => {
 };
 icon.onerror = () => {
   unlockScroll();
-  bridge.failed('Icon资源无法加载');
+  bridge.failed(splashT('splash.icon_failed'));
 };
 icon.src = iconUrl;
 
@@ -251,7 +257,7 @@ window.addEventListener('orientationchange', scheduleResize);
 window.addEventListener('load', scheduleResize, { once: true });
 window.addEventListener('error', () => {
   unlockScroll();
-  bridge.failed('启动动画渲染失败');
+  bridge.failed(splashT('splash.render_failed'));
 });
 window.addEventListener('unload', () => {
   cancelAnimationFrame(raf);

@@ -2,20 +2,25 @@
 import UpdateDialogShell from './UpdateDialogShell.vue';
 import notices from '../../../../THIRD_PARTY_NOTICES.md?raw';
 import { renderMarkdownLite } from '../markdownLite';
+import { t } from '@renderer/i18n';
 const noticesHtml = renderMarkdownLite(notices);
 const emit = defineEmits<{ dismiss: [] }>();
 const files = import.meta.glob('../../../../licenses/*.txt', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
 </script>
 
 <template>
-  <UpdateDialogShell label="第三方许可与声明" @dismiss="emit('dismiss')">
-    <template #header><h2>第三方许可与声明</h2></template>
+  <UpdateDialogShell :label="t('common.third_party_notices')" @dismiss="emit('dismiss')">
+    <template #header
+      ><h2>{{ t('common.third_party_notices') }}</h2></template
+    >
     <div class="notices-markdown" v-html="noticesHtml"></div>
     <details v-for="(text, file) in files" :key="file">
       <summary>{{ file.split('/').at(-1) }}</summary>
       <pre class="license-text">{{ text }}</pre>
     </details>
-    <template #footer><button class="btn btn-ghost" @click="emit('dismiss')">关闭</button></template>
+    <template #footer
+      ><button class="btn btn-ghost" @click="emit('dismiss')">{{ t('common.close') }}</button></template
+    >
   </UpdateDialogShell>
 </template>
 

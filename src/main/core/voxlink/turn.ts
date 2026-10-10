@@ -11,6 +11,7 @@ import { openTurnTcp } from './turnTcp';
 import dns from 'node:dns/promises';
 import crypto from 'node:crypto';
 import type { RudpCodec, RudpTarget } from './rudp';
+import { translate as t } from '../../../shared/i18n';
 
 const header = (type: number) => Buffer.from([0x56, 0x4c, 1, type]);
 function isPacket(p: Buffer, type: number, length: number): boolean {
@@ -64,7 +65,7 @@ async function socketFor(
   await new Promise<void>((resolve, reject) => {
     const closed = () => {
       socket.off('error', failed);
-      reject(new Error('中继连接已取消'));
+      reject(new Error(t('voxlink.turn.error.connection_cancelled')));
     };
     const failed = (e: Error) => {
       socket.off('close', closed);
@@ -105,18 +106,18 @@ function exchange(
     const onMessage = (p: Buffer, info: dgram.RemoteInfo) => {
       if (info.address === target.address && info.port === target.port && accept(p)) finish(undefined, p);
     };
-    const onClose = () => finish(new Error('中继连接已关闭'));
-    const onAbort = () => finish(new Error('中继连接已取消'));
+    const onClose = () => finish(new Error(t('voxlink.turn.error.connection_closed')));
+    const onAbort = () => finish(new Error(t('voxlink.turn.error.connection_cancelled')));
     let sent = 0;
     const send = () => {
       if (repeat && sent++ >= 5) return;
       try {
         socket.send(packet, target.port, target.address, () => {});
       } catch {
-        finish(new Error('中继连接已关闭'));
+        finish(new Error(t('voxlink.turn.error.connection_closed')));
       }
     };
-    const timer = setTimeout(() => finish(new Error('中继节点响应超时')), timeout);
+    const timer = setTimeout(() => finish(new Error(t('voxlink.turn.error.node_timeout'))), timeout);
     const retry = repeat ? setInterval(send, repeat) : undefined;
     socket.on('message', onMessage);
     socket.once('close', onClose);
@@ -172,7 +173,7 @@ export class TurnCodec implements RudpCodec {
     sessionId: string,
     readonly role: 1 | 2
   ) {
-    if (!/^[a-f\d]{32}$/i.test(sessionId)) throw new Error('中继会话标识无效');
+    if (!/^[a-f\d]{32}$/i.test(sessionId)) throw new Error(t('voxlink.turn.error.session_id_invalid'));
     this.session = Buffer.from(sessionId, 'hex');
   }
   encode(frame: Buffer): Buffer {
@@ -224,7 +225,7 @@ export class TurnSession {
       !data.ticket ||
       data.ticket.length > 4096
     )
-      throw new Error('中继凭据无效');
+      throw new Error(t('voxlink.turn.error.credential_invalid'));
     const { socket, target, detachAbort } = await socketFor(data.host, data.port, signal);
     const session = new TurnSession(socket, target, data.sessionId, role);
     session.detachAbort = detachAbort;
@@ -259,7 +260,12 @@ export class TurnSession {
       for (let round = 0; round < 3; round++) {
         code = await bindRound();
         if (code === 0) break;
-        if (code !== 5 && code !== 4) throw new Error(['', '中继凭据无效', '中继凭据过期', '中继会话已满'][code] || '中继绑定失败');
+        if (code !== 5 && code !== 4)
+          throw new Error(
+            [t('voxlink.turn.error.credential_invalid'), t('voxlink.turn.error.credential_expired'), t('voxlink.turn.error.session_full')][
+              code - 1
+            ] || t('voxlink.turn.error.bind_failed')
+          );
         if (round < 2) await delay(1000, undefined, { signal });
       }
       if (code === 5) {
@@ -277,7 +283,7 @@ export class TurnSession {
         }
       }
       // Binding alone does not report success: the engine still waits for the peer/data path.
-      if (code !== 0) throw new Error(code === 4 ? '中继角色暂被占用，请稍后重试' : '中继绑定失败（UDP 与 TCP 均不可用）');
+      if (code !== 0) throw new Error(code === 4 ? t('voxlink.turn.error.role_busy') : t('voxlink.turn.error.bind_failed_udp_tcp'));
       session.bound = true;
       session.keepalive = setInterval(() => session.control(6), 15_000);
       session.socket.once('close', () => {

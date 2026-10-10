@@ -5,6 +5,7 @@ import zlib from 'node:zlib';
 import AdmZip from 'adm-zip';
 import { NbtList, writeNbt } from './nbt';
 import { supportsQuickPlayMultiplayer } from './serverUtils';
+import { translate as t } from '../../shared/i18n';
 
 function worldGeneration(seed: bigint, splitFormat: boolean) {
   const noise = (dimension: string, biome: string) => ({
@@ -70,9 +71,8 @@ export function buildCommandWorldData(
 export function createCommandWorld(gameDirectory: string, clientJar: string): { id: string; path: string } {
   const zip = new AdmZip(clientJar);
   const version = JSON.parse(zip.readAsText('version.json')) as { id: string; world_version: number; stable?: boolean; series_id?: string };
-  if (!supportsQuickPlayMultiplayer(version.id))
-    throw new Error('此 Minecraft 版本不支持官方单人 Quick Play（需要 1.20+）；请在游戏内新建世界并开启命令');
-  if (!Number.isInteger(version.world_version) || version.world_version < 0) throw new Error('客户端缺少真实世界数据版本，未创建存档');
+  if (!supportsQuickPlayMultiplayer(version.id)) throw new Error(t('commandworld.error.quickplay_unsupported'));
+  if (!Number.isInteger(version.world_version) || version.world_version < 0) throw new Error(t('commandworld.error.missing_world_version'));
   const id = `FAIONYX-Test-${new Date().toISOString().replace(/[:.]/g, '-')}-${crypto.randomBytes(3).toString('hex')}`;
   const destination = path.join(gameDirectory, 'saves', id);
   fs.mkdirSync(path.dirname(destination), { recursive: true });
@@ -84,7 +84,7 @@ export function createCommandWorld(gameDirectory: string, clientJar: string): { 
   const splitFormat = !!worldGenClass?.includes(Buffer.from('SavedDataType'));
   fs.writeFileSync(
     path.join(destination, 'level.dat'),
-    buildCommandWorldData(version, `命令测试 ${new Date().toLocaleString('zh-CN')}`, seed, splitFormat),
+    buildCommandWorldData(version, t('commandworld.world_name', { time: new Date().toLocaleString('zh-CN') }), seed, splitFormat),
     { flag: 'wx' }
   );
   if (splitFormat) {

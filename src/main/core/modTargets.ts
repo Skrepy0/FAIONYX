@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { InstalledVersion, ModInfo, ModInstallResult } from '../../shared/types';
 import { modMatchesInstance } from '../../shared/modCompatibility';
 import { canonicalPath, pathIdentity } from './folderPaths';
+import { translate as t } from '../../shared/i18n';
 
 export function scanModTargets(
   folders: string[],
@@ -16,7 +17,7 @@ export function scanModTargets(
     if (seen.has(key)) continue;
     seen.add(key);
     try {
-      if (!fs.statSync(folder).isDirectory()) throw new Error('不是文件夹');
+      if (!fs.statSync(folder).isDirectory()) throw new Error(t('modtargets.error.not_folder'));
       const result = scan(canonicalPath(folder));
       versions.push(...result.versions);
       errors.push(...result.errors.map((e) => `${folder}：${e}`));
@@ -29,7 +30,7 @@ export function scanModTargets(
 
 export function selectModTarget(versions: InstalledVersion[], id: string, folder: string): InstalledVersion {
   const target = versions.find((v) => v.id === id && v.folder && pathIdentity(v.folder) === pathIdentity(folder));
-  if (!target || target.incomplete || target.failed || !target.gameDirectory) throw new Error('目标实例已移除、不完整或未登记，请重新扫描');
+  if (!target || target.incomplete || target.failed || !target.gameDirectory) throw new Error(t('modtargets.error.target_removed'));
   return target;
 }
 
@@ -46,16 +47,23 @@ export async function copyCompatibleMods(
     try {
       const mod = parse(file);
       if (!modMatchesInstance(mod, target))
-        throw new Error(`不兼容：MC ${target.mcVersion} / ${target.loader} ${target.loaderVersion ?? '版本未知'}`);
+        throw new Error(
+          t('modtargets.error.incompatible', {
+            mcVersion: target.mcVersion,
+            loader: target.loader ?? '',
+            loaderVersion: target.loaderVersion ?? t('modtargets.version_unknown'),
+          })
+        );
       await fs.promises.mkdir(dir, { recursive: true });
       // Never overwrite user-added content as a side effect of target selection.
       await fs.promises.copyFile(file, path.join(dir, name), fs.constants.COPYFILE_EXCL);
-      results.push({ fileName: name, ok: true, message: '已装入' });
+      results.push({ fileName: name, ok: true, message: t('modtargets.result.installed') });
     } catch (e) {
       results.push({
         fileName: name,
         ok: false,
-        message: (e as NodeJS.ErrnoException).code === 'EEXIST' ? '同名文件已存在，未覆盖' : e instanceof Error ? e.message : String(e),
+        message:
+          (e as NodeJS.ErrnoException).code === 'EEXIST' ? t('modtargets.result.name_exists') : e instanceof Error ? e.message : String(e),
       });
     }
   }

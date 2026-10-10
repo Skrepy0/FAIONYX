@@ -1,5 +1,6 @@
 import type { CommunityFile } from './types';
 import type { RecordingKind } from './recordings';
+import { translate as t } from './i18n';
 export const RECORDING_PROJECTS: Record<RecordingKind, string> = { replaymod: 'Nv2fQJo5', flashback: '4das1Fjq' };
 export function compatibleRecordingMod(file: CommunityFile, mc: string, loader: string) {
   return (
@@ -20,12 +21,12 @@ export async function resolveRecordingDependencies(
   const chosen = new Map<string, CommunityFile>(),
     queue = [...roots];
   for (let index = 0; index < queue.length; index++) {
-    if (queue.length > 100) throw new Error('录像模组必要前置过多');
+    if (queue.length > 100) throw new Error(t('recordingmods.error.too_many_dependencies'));
     const file = queue[index];
-    if (!file.projectId || !compatibleRecordingMod(file, mc, loader)) throw new Error('模组或必要前置没有当前游戏与加载器的兼容文件');
+    if (!file.projectId || !compatibleRecordingMod(file, mc, loader)) throw new Error(t('recordingmods.error.no_compatible_file'));
     const existing = chosen.get(file.projectId);
     if (existing) {
-      if (existing.fileId !== file.fileId) throw new Error('必要前置版本冲突，请调整模组版本：' + file.projectId);
+      if (existing.fileId !== file.fileId) throw new Error(t('recordingmods.error.dependency_conflict', { project: file.projectId }));
       continue;
     }
     chosen.set(file.projectId, file);

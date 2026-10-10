@@ -12,6 +12,7 @@ import { store, toast } from '../store';
 import { errText, saveSettings } from '../api';
 import { refreshSkinAfter } from '../skinRevision';
 import { mergeSkinCloseIntent, type SkinCloseIntent } from '../skinEditorInteraction';
+import { t } from '@renderer/i18n';
 const props = defineProps<{ current?: string; variant?: 'classic' | 'slim' }>();
 const emit = defineEmits<{ close: []; uploaded: [] }>();
 const canvas = shallowRef(document.createElement('canvas'));
@@ -71,7 +72,7 @@ function flushPalette(): Promise<void> {
       try {
         await saveSettings({ skinEditorPalette: next });
       } catch (error) {
-        toast('调色板偏好未能保存：' + errText(error), 'error');
+        toast(t('se.palette_save_failed', { error: errText(error) }), 'error');
       }
     }
   })().finally(() => {
@@ -93,20 +94,20 @@ watch(
 );
 watch(busy, (pending) => window.faionyx.send('window:skinEditorBusy', { ownerId, pending }), { flush: 'sync' });
 const parts = [
-  { key: 'head', name: '头部' },
-  { key: 'body', name: '身体' },
-  { key: 'leftArm', name: '左臂' },
-  { key: 'rightArm', name: '右臂' },
-  { key: 'leftLeg', name: '左腿' },
-  { key: 'rightLeg', name: '右腿' },
+  { key: 'head', name: t('se.part_head') },
+  { key: 'body', name: t('se.part_body') },
+  { key: 'leftArm', name: t('se.part_left_arm') },
+  { key: 'rightArm', name: t('se.part_right_arm') },
+  { key: 'leftLeg', name: t('se.part_left_leg') },
+  { key: 'rightLeg', name: t('se.part_right_leg') },
 ];
 const views = [
-  { name: '正面', yaw: 0, pitch: 0 },
-  { name: '背面', yaw: Math.PI, pitch: 0 },
-  { name: '左侧', yaw: Math.PI / 2, pitch: 0 },
-  { name: '右侧', yaw: -Math.PI / 2, pitch: 0 },
-  { name: '俯视', yaw: 0, pitch: (Math.PI * 5) / 12 },
-  { name: '仰视', yaw: 0, pitch: (-Math.PI * 5) / 12 },
+  { name: t('se.view_front'), yaw: 0, pitch: 0 },
+  { name: t('se.view_back'), yaw: Math.PI, pitch: 0 },
+  { name: t('se.view_left'), yaw: Math.PI / 2, pitch: 0 },
+  { name: t('se.view_right'), yaw: -Math.PI / 2, pitch: 0 },
+  { name: t('se.view_top'), yaw: 0, pitch: (Math.PI * 5) / 12 },
+  { name: t('se.view_bottom'), yaw: 0, pitch: (-Math.PI * 5) / 12 },
 ];
 const selectedView = ref('');
 const previewExpanded = ref(false),
@@ -122,10 +123,10 @@ onMounted(() => {
   if (contentElement.value) contentResize.observe(contentElement.value);
 });
 const drawingTools = [
-  { key: 'brush', name: '绘制', shortcut: 'B' },
-  { key: 'erase', name: '橡皮', shortcut: 'E' },
-  { key: 'pick', name: '吸色', shortcut: 'I' },
-  { key: 'fill', name: '填色', shortcut: 'G' },
+  { key: 'brush', name: t('se.tool_brush'), shortcut: 'B' },
+  { key: 'erase', name: t('se.tool_erase'), shortcut: 'E' },
+  { key: 'pick', name: t('se.tool_pick'), shortcut: 'I' },
+  { key: 'fill', name: t('se.tool_fill'), shortcut: 'G' },
 ];
 function toggleLighting() {
   if (!blocked.value) {
@@ -145,10 +146,10 @@ const canApplySkin = computed(() => isOffline.value || store.selectedAccount?.ty
 const uploadTarget = shallowRef<{ id: string; username: string; type: string; variant: 'classic' | 'slim' }>();
 const uploadState = computed(() =>
   isOffline.value
-    ? '应用到此离线账号，下次启动游戏在本机显示'
+    ? t('se.apply_to_offline')
     : store.selectedAccount?.type === 'microsoft'
-      ? `上传至 ${store.selectedAccount.username}`
-      : '请选择离线或微软正版账号；可编辑与保存 PNG'
+      ? t('se.upload_to', { username: store.selectedAccount.username })
+      : t('se.select_account')
 );
 let snapshot: Uint8ClampedArray | undefined, last: { x: number; y: number; key: string } | undefined;
 const pixels = () => ctx.getImageData(0, 0, 64, 64);
@@ -190,7 +191,7 @@ function paint(x: number, y: number, face: SkinFace) {
   if (tool.value === 'pick') {
     const sample = sampleSkinBrush(image.data.slice(i, i + 4), layer.value === 'outer');
     if (!sample) {
-      sampleHint.value = '此处是透明像素，已保留当前画笔颜色与透明度。';
+      sampleHint.value = t('se.transparent_pixel');
       return;
     }
     color.value = sample.color;
@@ -243,7 +244,7 @@ function history(back: boolean) {
 async function replaceImage(src: string) {
   const raw = await loadImage(src);
   if (disposed || finishingClose.value) return;
-  if (raw.width !== 64 || ![32, 64].includes(raw.height)) throw Error('请选择 64×64 或 64×32 皮肤 PNG');
+  if (raw.width !== 64 || ![32, 64].includes(raw.height)) throw Error(t('se.invalid_skin_size'));
   const image = migrateLegacySkin(raw);
   snapshot = pixels().data;
   ctx.clearRect(0, 0, 64, 64);
@@ -271,7 +272,7 @@ function failOperation(error: unknown) {
 }
 async function importImage(src: string) {
   if (!canEdit()) return;
-  beginOperation('正在读取皮肤…');
+  beginOperation(t('se.reading_skin'));
   try {
     await replaceImage(src);
   } catch (error) {
@@ -287,13 +288,13 @@ async function choose(event: Event) {
     input.value = '';
     return;
   }
-  beginOperation('正在读取皮肤…');
+  beginOperation(t('se.reading_skin'));
   try {
-    if (file.size > 200000) throw Error('皮肤 PNG 文件过大，请使用标准 64×64 或 64×32 PNG');
+    if (file.size > 200000) throw Error(t('se.skin_too_large'));
     const src = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result));
-      reader.onerror = () => reject(Error('皮肤 PNG 读取失败'));
+      reader.onerror = () => reject(Error(t('se.skin_read_failed')));
       reader.readAsDataURL(file);
     });
     await replaceImage(src);
@@ -316,12 +317,12 @@ function newSkin() {
 }
 async function save() {
   if (busy.value || finishingClose.value || disposed) return false;
-  beginOperation('正在保存皮肤…');
+  beginOperation(t('se.saving_skin'));
   try {
     const saved = await window.faionyx.invoke('skin:editorSave', canvas.value.toDataURL('image/png'));
     if (saved) {
       dirty.value = false;
-      toast('皮肤 PNG 已保存', 'success');
+      toast(t('se.skin_saved'), 'success');
     }
     return !!saved;
   } catch (error) {
@@ -349,17 +350,17 @@ async function upload() {
   const target = uploadTarget.value;
   if (!target || target.id !== store.selectedAccount?.id) {
     uploadConfirm.value = false;
-    failOperation(Error('账号已变更，请重新确认应用账号'));
+    failOperation(Error(t('se.account_changed')));
     return;
   }
   const local = target.type === 'offline';
-  beginOperation(local ? '正在应用本地皮肤…' : '正在上传皮肤…');
+  beginOperation(local ? t('se.applying_local') : t('se.uploading_skin'));
   try {
     await refreshSkinAfter(window.faionyx.invoke('skin:editorUpload', canvas.value.toDataURL('image/png'), target.variant, target.id));
     uploadConfirm.value = false;
     if (local) dirty.value = false;
     emit('uploaded');
-    toast(local ? `已应用到「${target.username}」离线账号，下次启动游戏生效` : '皮肤已上传，预览与历史已更新', 'success');
+    toast(local ? t('se.applied_to_offline', { username: target.username }) : t('se.skin_uploaded'), 'success');
   } catch (error) {
     failOperation(error);
   } finally {
@@ -509,13 +510,13 @@ onBeforeUnmount(() => {
         class="modal skin-editor"
         role="dialog"
         aria-modal="true"
-        aria-label="绘制皮肤"
+        :aria-label="t('se.editor_aria')"
         :inert="finishingClose || askClose || uploadConfirm"
       >
         <header class="editor-header">
           <div>
-            <h2>绘制皮肤</h2>
-            <p class="muted">64 × 64 像素 · {{ dirty ? '有未保存更改' : '已保存' }}</p>
+            <h2>{{ t('se.editor_title') }}</h2>
+            <p class="muted">64 × 64 {{ t('se.pixels') }} · {{ dirty ? t('se.unsaved_changes') : t('se.saved') }}</p>
           </div>
           <button
             ref="closeButton"
@@ -523,7 +524,7 @@ onBeforeUnmount(() => {
             class="icon-btn editor-close"
             :disabled="finishingClose"
             @click="requestClose()"
-            aria-label="关闭绘制皮肤"
+            :aria-label="t('se.close_editor_aria')"
             data-modal-dismiss
           >
             <UiGlyph name="close" />
@@ -536,7 +537,7 @@ onBeforeUnmount(() => {
           :class="{ 'preview-expanded': previewExpanded }"
           :inert="busy"
         >
-          <nav class="editor-tool-rail" aria-label="绘制工具">
+          <nav class="editor-tool-rail" :aria-label="t('se.tools_aria')">
             <button
               v-for="item in drawingTools"
               :key="item.key"
@@ -550,11 +551,16 @@ onBeforeUnmount(() => {
               <UiGlyph :name="item.key" :size="24" /><span>{{ item.name }}</span>
             </button>
             <span class="tool-rail-divider"></span>
-            <button class="editor-tool" :disabled="blocked || !undo.length" @click="history(true)" title="撤销 (Ctrl+Z)">
-              <UiGlyph name="undo" :size="24" /><span>撤销</span>
+            <button class="editor-tool" :disabled="blocked || !undo.length" @click="history(true)" :title="t('se.undo') + ' (Ctrl+Z)'">
+              <UiGlyph name="undo" :size="24" /><span>{{ t('se.undo') }}</span>
             </button>
-            <button class="editor-tool" :disabled="blocked || !redo.length" @click="history(false)" title="重做 (Ctrl+Shift+Z)">
-              <UiGlyph name="redo" :size="24" /><span>重做</span>
+            <button
+              class="editor-tool"
+              :disabled="blocked || !redo.length"
+              @click="history(false)"
+              :title="t('se.redo') + ' (Ctrl+Shift+Z)'"
+            >
+              <UiGlyph name="redo" :size="24" /><span>{{ t('se.redo') }}</span>
             </button>
           </nav>
           <div class="editor-model">
@@ -578,8 +584,8 @@ onBeforeUnmount(() => {
               <button
                 class="icon-btn preview-light"
                 :aria-pressed="studioLight"
-                aria-label="切换预览灯光"
-                title="切换预览灯光"
+                :aria-label="t('se.toggle_lighting_aria')"
+                :title="t('se.toggle_lighting')"
                 :disabled="blocked"
                 @click="toggleLighting"
               >
@@ -589,22 +595,24 @@ onBeforeUnmount(() => {
                 <button
                   class="icon-btn"
                   :aria-pressed="previewExpanded"
-                  :aria-label="previewExpanded ? '恢复编辑布局' : '扩大模型预览'"
-                  :title="previewExpanded ? '恢复布局 (Esc)' : '扩大预览'"
+                  :aria-label="previewExpanded ? t('se.restore_layout_aria') : t('se.expand_preview_aria')"
+                  :title="previewExpanded ? t('se.restore_layout') : t('se.expand_preview')"
                   :disabled="blocked"
                   @click="togglePreview"
                 >
                   <UiGlyph name="expand" />
                 </button>
                 <div class="preview-zoom">
-                  <button class="icon-btn" aria-label="放大皮肤预览" :disabled="blocked" @click="viewer?.zoomBy(1.2)">+</button
-                  ><button class="icon-btn" aria-label="缩小皮肤预览" :disabled="blocked" @click="viewer?.zoomBy(1 / 1.2)">−</button>
+                  <button class="icon-btn" :aria-label="t('se.zoom_in_aria')" :disabled="blocked" @click="viewer?.zoomBy(1.2)">+</button
+                  ><button class="icon-btn" :aria-label="t('se.zoom_out_aria')" :disabled="blocked" @click="viewer?.zoomBy(1 / 1.2)">
+                    −
+                  </button>
                 </div>
               </div>
-              <p class="editor-pointer-help muted">左键绘制 · 中键 / Alt+左键旋转 · 滚轮缩放</p>
+              <p class="editor-pointer-help muted">{{ t('se.pointer_help') }}</p>
             </div>
-            <div class="editor-controls editor-view-controls" role="group" aria-label="快捷视角">
-              <span class="control-label">视角</span>
+            <div class="editor-controls editor-view-controls" role="group" :aria-label="t('se.quick_view_aria')">
+              <span class="control-label">{{ t('se.view_label') }}</span>
               <div class="tools view-tools">
                 <button
                   v-for="view in views"
@@ -615,14 +623,16 @@ onBeforeUnmount(() => {
                   @click="selectView(view)"
                 >
                   <UiGlyph name="cube" /><span>{{ view.name }}</span></button
-                ><button class="btn btn-ghost" @click="resetView"><UiGlyph name="cube" /><span>恢复视角</span></button>
+                ><button class="btn btn-ghost" @click="resetView">
+                  <UiGlyph name="cube" /><span>{{ t('se.reset_view') }}</span>
+                </button>
               </div>
             </div>
-            <div class="editor-controls editor-part-controls" role="group" aria-label="显示部位">
+            <div class="editor-controls editor-part-controls" role="group" :aria-label="t('se.parts_aria')">
               <div class="control-heading">
-                <span class="control-label">显示部位</span
+                <span class="control-label">{{ t('se.parts_label') }}</span
                 ><button class="btn btn-ghost btn-sm editor-show-all" :disabled="!hiddenParts.length" @click="hiddenParts = []">
-                  全部显示
+                  {{ t('se.show_all') }}
                 </button>
               </div>
               <div class="tools part-tools">
@@ -638,32 +648,34 @@ onBeforeUnmount(() => {
                 </button>
               </div>
               <p v-if="hiddenParts.length === parts.length" class="muted editor-empty-parts" role="status">
-                所有部位已隐藏，点击部位或“全部显示”恢复。
+                {{ t('se.all_parts_hidden') }}
               </p>
             </div>
           </div>
-          <aside aria-label="绘制工具与颜色">
+          <aside :aria-label="t('se.tools_colors_aria')">
             <div class="tools file-tools">
-              <button class="btn" @click="newSkin"><UiGlyph name="file" />新建</button
-              ><button class="btn" @click="fileInput?.click()"><UiGlyph name="image" />导入 PNG</button
+              <button class="btn" @click="newSkin"><UiGlyph name="file" />{{ t('se.new') }}</button
+              ><button class="btn" @click="fileInput?.click()"><UiGlyph name="image" />{{ t('se.import_png') }}</button
               ><input ref="fileInput" class="file-input" type="file" accept="image/png" @change="choose" /><button
                 class="btn"
                 :disabled="!current"
                 @click="current && importImage(current)"
               >
-                <UiGlyph name="folder" />读取当前皮肤
+                <UiGlyph name="folder" />{{ t('se.read_current') }}
               </button>
             </div>
             <div class="editor-options">
               <label
-                >模型<select v-model="variant" aria-label="皮肤模型">
-                  <option value="classic">经典 Classic</option>
-                  <option value="slim">纤细 Slim</option>
+                >{{ t('se.model')
+                }}<select v-model="variant" :aria-label="t('se.skin_model_aria')">
+                  <option value="classic">{{ t('se.classic_model_option') }}</option>
+                  <option value="slim">{{ t('se.slim_model_option') }}</option>
                 </select></label
               ><label
-                >图层<select v-model="layer" aria-label="皮肤图层">
-                  <option value="inner">基础层（不透明）</option>
-                  <option value="outer">外层（可透明）</option>
+                >{{ t('se.layer')
+                }}<select v-model="layer" :aria-label="t('se.skin_layer_aria')">
+                  <option value="inner">{{ t('se.inner_layer_option') }}</option>
+                  <option value="outer">{{ t('se.outer_layer_option') }}</option>
                 </select></label
               >
             </div>
@@ -677,7 +689,7 @@ onBeforeUnmount(() => {
             />
             <p v-if="sampleHint" class="editor-sample-hint muted" role="status">{{ sampleHint }}</p>
             <div v-if="invisibleBrush" class="editor-zero-alpha" role="status">
-              <span>当前画笔透明度为 {{ Math.round(alpha * 1000) / 10 }}%，不会添加可见颜色。</span
+              <span>{{ t('se.current_brush_alpha', { alpha: Math.round(alpha * 1000) / 10 }) }}</span
               ><button
                 class="btn btn-ghost btn-sm"
                 :disabled="blocked"
@@ -686,7 +698,7 @@ onBeforeUnmount(() => {
                   alpha = 1;
                 "
               >
-                恢复不透明（100%）
+                {{ t('se.restore_opaque') }}
               </button>
             </div>
           </aside>
@@ -695,20 +707,20 @@ onBeforeUnmount(() => {
           <button class="btn btn-ghost editor-upload" :disabled="blocked || !canApplySkin" @click="openUpload">
             <UiGlyph name="upload" />{{
               isOffline
-                ? '应用到离线账号'
+                ? t('se.apply_to_offline_btn')
                 : store.selectedAccount?.type === 'microsoft'
-                  ? `上传至 ${store.selectedAccount.username}`
-                  : '应用到当前账号'
+                  ? t('se.upload_to_btn', { username: store.selectedAccount.username })
+                  : t('se.apply_to_current_btn')
             }}
           </button>
           <div class="editor-footer-save">
-            <button class="btn" :disabled="finishingClose" @click="requestClose()">取消</button
-            ><button class="btn btn-gold" :disabled="blocked" @click="save"><UiGlyph name="download" />保存 PNG…</button>
+            <button class="btn" :disabled="finishingClose" @click="requestClose()">{{ t('common.cancel') }}</button
+            ><button class="btn btn-gold" :disabled="blocked" @click="save"><UiGlyph name="download" />{{ t('se.save_png') }}</button>
           </div>
           <p v-if="finishingClose || busy || isOffline || !canApplySkin" class="muted editor-operation-status" role="status">
-            {{ finishingClose ? '正在保存调色板偏好…' : busy ? busyText + (closeIntent ? ' 完成后处理关闭请求。' : '') : uploadState }}
+            {{ finishingClose ? t('se.saving_palette') : busy ? busyText + (closeIntent ? t('se.close_after_busy') : '') : uploadState }}
           </p>
-          <button v-if="busy && closeIntent" class="btn btn-ghost btn-sm" @click="cancelClose">取消关闭</button>
+          <button v-if="busy && closeIntent" class="btn btn-ghost btn-sm" @click="cancelClose">{{ t('se.cancel_close') }}</button>
           <p v-if="operationError" class="editor-operation-error" role="alert">{{ operationError }}</p>
         </footer>
       </section>
@@ -718,16 +730,16 @@ onBeforeUnmount(() => {
         class="modal skin-close-dialog editor-confirm"
         role="alertdialog"
         aria-modal="true"
-        aria-label="保存皮肤更改"
+        :aria-label="t('se.save_changes_title')"
         aria-describedby="skin-unsaved-description"
       >
-        <h2>皮肤尚未保存</h2>
-        <p id="skin-unsaved-description">保存当前皮肤后退出，或放弃本次未保存的修改。</p>
+        <h2>{{ t('se.skin_not_saved') }}</h2>
+        <p id="skin-unsaved-description">{{ t('se.save_or_discard') }}</p>
         <div class="modal-actions">
-          <button class="btn btn-gold" :disabled="busy" @click="saveClose">保存并退出</button
-          ><button class="btn" :disabled="busy" @click="finishClose">放弃更改</button
+          <button class="btn btn-gold" :disabled="busy" @click="saveClose">{{ t('se.save_and_exit') }}</button
+          ><button class="btn" :disabled="busy" @click="finishClose">{{ t('se.discard_changes') }}</button
           ><button class="btn" data-modal-initial-focus data-modal-dismiss @click="cancelClose">
-            {{ busy ? '取消关闭' : '继续绘制' }}
+            {{ busy ? t('se.cancel_close') : t('se.keep_editing') }}
           </button>
         </div>
         <p v-if="busy" class="muted" role="status">{{ busyText }}</p>
@@ -739,31 +751,30 @@ onBeforeUnmount(() => {
         class="modal skin-upload-dialog editor-confirm"
         role="alertdialog"
         aria-modal="true"
-        :aria-label="uploadTarget?.type === 'offline' ? '确认应用本地皮肤' : '确认上传皮肤'"
+        :aria-label="uploadTarget?.type === 'offline' ? t('se.confirm_apply_local') : t('se.confirm_upload')"
       >
-        <h2>{{ uploadTarget?.type === 'offline' ? '应用到离线账号' : '上传皮肤' }}</h2>
+        <h2>{{ uploadTarget?.type === 'offline' ? t('se.apply_to_offline_btn') : t('se.upload_skin') }}</h2>
         <p>
-          {{ uploadTarget?.type === 'offline' ? '将保存到离线账号' : '将上传至' }} {{ uploadTarget?.username }}，使用{{
-            uploadTarget?.variant === 'slim' ? '纤细' : '经典'
-          }}模型。
+          {{ uploadTarget?.type === 'offline' ? t('se.will_save_to_offline') : t('se.will_upload_to') }} {{ uploadTarget?.username }}，{{
+            uploadTarget?.variant === 'slim' ? t('se.slim_model') : t('se.classic_model')
+          }}。
         </p>
         <p v-if="uploadTarget?.type === 'offline'" class="muted offline-skin-hint">
-          仅在本机游戏显示，下次启动生效。首次启动会从作者官方来源下载并校验 authlib-injector
-          皮肤加载组件，之后可在断网时使用缓存；其他玩家看到的皮肤由服务器决定。
+          {{ t('se.offline_skin_hint') }}
         </p>
         <div class="modal-actions">
           <button class="btn btn-gold" :disabled="busy" @click="upload">
             {{
               busy
                 ? uploadTarget?.type === 'offline'
-                  ? '正在应用…'
-                  : '正在上传…'
+                  ? t('se.applying') + '…'
+                  : t('se.uploading') + '…'
                 : uploadTarget?.type === 'offline'
-                  ? '确认应用'
-                  : '确认上传'
+                  ? t('se.confirm_apply')
+                  : t('se.confirm_upload_btn')
             }}</button
           ><button class="btn" data-modal-initial-focus data-modal-dismiss @click="cancelUpload">
-            {{ busy ? '完成后关闭编辑器' : '取消' }}
+            {{ busy ? t('se.close_after_upload') : t('common.cancel') }}
           </button>
         </div>
         <p v-if="operationError" class="editor-operation-error" role="alert">{{ operationError }}</p>

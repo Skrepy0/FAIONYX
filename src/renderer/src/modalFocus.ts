@@ -1,5 +1,9 @@
 /** Accessibility for legacy and shared dialogs, including nested teleported dialogs. */
+import { t } from '@renderer/i18n';
 export function installModalFocus() {
+  const cancelWords = () => [t('common.cancel'), t('common.close'), t('common.back')];
+  const dismissRe = () => new RegExp(`^(${cancelWords().join('|')})$`);
+  const anyCancelRe = () => new RegExp(cancelWords().join('|'));
   const openers = new Map<HTMLElement, HTMLElement | null>();
   const selector = '.modal-mask .modal, [role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]';
   const visible = (el: HTMLElement) => !!el.getClientRects().length && !el.closest('[inert]');
@@ -24,11 +28,11 @@ export function installModalFocus() {
       dialog.setAttribute('aria-modal', 'true');
       dialog.tabIndex = -1;
       if (!dialog.hasAttribute('aria-label') && !dialog.hasAttribute('aria-labelledby'))
-        dialog.setAttribute('aria-label', dialog.querySelector('h2,h3,.modal-title')?.textContent?.trim() || '对话框');
+        dialog.setAttribute('aria-label', dialog.querySelector('h2,h3,.modal-title')?.textContent?.trim() || t('common.dialog'));
       if (!dialog.contains(document.activeElement))
         (
           controls(dialog).find((el) => el.hasAttribute('data-modal-initial-focus')) ??
-          controls(dialog).find((el) => /取消|关闭/.test(el.textContent || '')) ??
+          controls(dialog).find((el) => anyCancelRe().test(el.textContent || '')) ??
           controls(dialog)[0] ??
           dialog
         ).focus({ preventScroll: true });
@@ -70,7 +74,7 @@ export function installModalFocus() {
         items.find(
           (el) =>
             el.tagName === 'BUTTON' &&
-            (/^(取消|关闭|返回)$/.test(el.textContent?.trim() || '') || /关闭/.test(el.getAttribute('aria-label') || el.title))
+            (dismissRe().test(el.textContent?.trim() || '') || anyCancelRe().test(el.getAttribute('aria-label') || el.title))
         );
       if (cancel) {
         event.preventDefault();

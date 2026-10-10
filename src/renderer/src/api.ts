@@ -3,6 +3,7 @@
  * 所有 IPC 通道名一律取自 @shared/types 的 IPC / IPC_EVENT 常量。
  */
 import { refreshSkinAfter } from './skinRevision';
+import { t } from '@renderer/i18n';
 import { IPC, IPC_EVENT } from '@shared/types';
 import type {
   DefaultResourcePack,
@@ -406,7 +407,7 @@ export const exportLaunchLogs = (versionId: string, folder?: string) => invoke<s
 /** 把 invoke 抛出的错误转成适合 toast 展示的短文本 */
 export function errText(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e);
-  return msg.replace(/^Error invoking remote method '[^']+':\s*(Error:\s*)?/, '') || '未知错误';
+  return msg.replace(/^Error invoking remote method '[^']+':\s*(Error:\s*)?/, '') || t('common.unknown_error');
 }
 
 /** 复制文本到剪贴板（带降级方案），返回是否成功 */

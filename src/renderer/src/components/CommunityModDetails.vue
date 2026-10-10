@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { communityProject, errText } from '../api';
+import { t } from '@renderer/i18n';
 import type { CommunityModProject, CommunityProjectReference } from '@shared/types';
 
 const props = withDefaults(defineProps<{ reference: CommunityProjectReference; allowDownload?: boolean }>(), { allowDownload: true });
@@ -55,53 +56,58 @@ function download() {
       >
         <header class="project-heading">
           <div>
-            <span class="project-platform muted">{{ reference.source === 'modrinth' ? 'Modrinth' : 'CurseForge' }} · MOD 详情</span>
+            <span class="project-platform muted"
+              >{{ reference.source === 'modrinth' ? 'Modrinth' : 'CurseForge' }} · {{ t('common.mod_details') }}</span
+            >
             <h3 id="community-project-title" class="modal-title">{{ project?.title || reference.title }}</h3>
           </div>
-          <button class="icon-btn" data-modal-dismiss aria-label="关闭模组详情" @click="emit('close')">×</button>
+          <button class="icon-btn" data-modal-dismiss :aria-label="t('common.close_mod_details')" @click="emit('close')">×</button>
         </header>
-        <div v-if="loading" class="project-loading muted" role="status"><span class="spin" />正在读取来源项目资料…</div>
+        <div v-if="loading" class="project-loading muted" role="status"><span class="spin" />{{ t('common.loading_project_info') }}</div>
         <div v-else-if="error" class="project-error" role="alert">
           <p>{{ error }}</p>
-          <button class="btn btn-ghost btn-sm" @click="retry++">重试</button>
+          <button class="btn btn-ghost btn-sm" @click="retry++">{{ t('common.retry') }}</button>
         </div>
         <template v-else-if="project">
           <p v-if="project.description" class="project-summary" data-ui="community:project-summary">{{ project.description }}</p>
-          <p v-else class="muted project-summary">来源平台未提供摘要。</p>
+          <p v-else class="muted project-summary">{{ t('common.no_summary') }}</p>
           <dl class="project-facts">
             <div>
-              <dt>项目 ID</dt>
+              <dt>{{ t('common.project_id_fact') }}</dt>
               <dd>{{ project.projectId }}</dd>
             </div>
             <div v-if="project.author">
-              <dt>作者</dt>
+              <dt>{{ t('common.author') }}</dt>
               <dd>{{ project.author }}</dd>
             </div>
             <div v-if="project.license">
-              <dt>许可证</dt>
+              <dt>{{ t('common.license') }}</dt>
               <dd>{{ project.license }}</dd>
             </div>
             <div v-if="project.downloads !== undefined" data-ui="community:project-downloads">
-              <dt>下载量</dt>
+              <dt>{{ t('common.downloads') }}</dt>
               <dd>{{ project.downloads.toLocaleString('zh-CN') }}</dd>
             </div>
             <div v-if="project.followers !== undefined">
-              <dt>关注人数</dt>
+              <dt>{{ t('common.followers') }}</dt>
               <dd>{{ project.followers.toLocaleString('zh-CN') }}</dd>
             </div>
             <div v-if="project.updatedAt && date(project.updatedAt)">
-              <dt>更新日期</dt>
+              <dt>{{ t('common.updated') }}</dt>
               <dd>{{ date(project.updatedAt) }}</dd>
             </div>
           </dl>
-          <div v-if="project.categories.length" class="project-categories" aria-label="项目类别">
+          <div v-if="project.categories.length" class="project-categories" :aria-label="t('common.project_categories')">
             <span v-for="category in project.categories" :key="category" class="tag">{{ category }}</span>
           </div>
         </template>
         <footer class="modal-actions">
-          <button v-if="project?.webpage" class="btn btn-ghost project-source" @click="openSource">打开来源页面 ↗</button
-          ><button class="btn btn-ghost" data-modal-dismiss @click="emit('close')">关闭</button
-          ><button v-if="project && allowDownload" class="btn btn-gold project-download" @click="download">选择版本并安装</button>
+          <button v-if="project?.webpage" class="btn btn-ghost project-source" @click="openSource">
+            {{ t('common.open_source_page') }}</button
+          ><button class="btn btn-ghost" data-modal-dismiss @click="emit('close')">{{ t('common.close') }}</button
+          ><button v-if="project && allowDownload" class="btn btn-gold project-download" @click="download">
+            {{ t('common.select_version_install_btn') }}
+          </button>
         </footer>
       </section>
     </div></Teleport

@@ -27,6 +27,7 @@ import ConfirmModal from './ConfirmModal.vue';
 import DupCleanModal from './DupCleanModal.vue';
 import SelectMenu from './SelectMenu.vue';
 import type { FsEntry, ModUpdateReport } from '@shared/types';
+import { t } from '@renderer/i18n';
 
 function dragResource(event: DragEvent, entry: FsEntry) {
   event.preventDefault();
@@ -116,7 +117,7 @@ const importing = ref(false);
 async function dropResources(event: DragEvent) {
   const v = currentVersion.value;
   if (!v) {
-    toast('请先选择当前文件夹中的游戏版本', 'error');
+    toast(t('fm.need_version'), 'error');
     return;
   }
   if (importing.value) return;
@@ -128,10 +129,10 @@ async function dropResources(event: DragEvent) {
   importing.value = true;
   try {
     const count = await importResources(files, v.id, folder, kind);
-    toast('已导入 ' + count + ' 项到 ' + v.id + ' / ' + kind, 'success');
+    toast(t('fm.import_success', { count: String(count), id: v.id, kind }), 'success');
     await load();
   } catch (e) {
-    toast('导入失败：' + errText(e), 'error');
+    toast(t('fm.import_failed', { error: errText(e) }), 'error');
   } finally {
     importing.value = false;
   }
@@ -193,11 +194,11 @@ const readableName = (e: FsEntry) => (props.rel === 'resourcepacks' ? resourceDi
 
 async function copyPath() {
   if (!fullPath.value) {
-    toast('目录尚未读取，请刷新后重试', 'info');
+    toast(t('fm.path_not_ready'), 'info');
     return;
   }
   const ok = await copyText(fullPath.value);
-  toast(ok ? '已复制完整路径' : '复制失败', ok ? 'success' : 'error');
+  toast(ok ? t('fm.copy_path') : t('fm.copy_failed'), ok ? 'success' : 'error');
 }
 
 // ---------------- 顶栏搜索联动（过滤文件名） ----------------
@@ -271,7 +272,10 @@ async function batch(action: 'enable' | 'disable' | 'lock' | 'unlock', names = [
     )) as ModOperationResult[];
     const failed = results.filter((r) => !r.ok);
     toast(
-      '已处理 ' + (results.length - failed.length) + ' 项' + (failed.length ? '；' + failed.length + ' 项失败：' + failed[0].error : ''),
+      t('fm.batch_success', {
+        ok: String(results.length - failed.length),
+        failed: failed.length ? t('fm.batch_failed_suffix', { failed_count: String(failed.length), error: failed[0].error }) : '',
+      }),
       failed.length ? 'error' : 'success'
     );
     if (generation === loadGeneration) {
@@ -334,7 +338,7 @@ async function onOpenDir() {
   try {
     await openDir(effectiveRel.value, currentVersion.value?.folder || activeFolder.value);
   } catch (e) {
-    toast('打开文件夹失败：' + errText(e), 'error');
+    toast(t('fm.open_folder_failed', { error: errText(e) }), 'error');
   } finally {
     opening.value = false;
   }
@@ -362,7 +366,12 @@ async function onToggleDisable(entry: FsEntry, event?: Event) {
     const result = await toggleDisableFs(effectiveRel.value, entry.name, currentVersion.value?.folder || activeFolder.value);
     if (generation !== loadGeneration) return;
     entries.value = result;
-    toast(isDisabledMod(entry) ? `已启用 ${entry.name.replace(/\.disabled$/i, '')}` : `已禁用 ${entry.name}`, 'success');
+    toast(
+      isDisabledMod(entry)
+        ? t('fm.enabled_name', { name: entry.name.replace(/\.disabled$/i, '') })
+        : t('fm.disabled_name', { name: entry.name }),
+      'success'
+    );
   } catch (e) {
     toast(errText(e), 'error');
   } finally {
@@ -381,9 +390,9 @@ async function onConfirmRemove() {
     if (generation !== loadGeneration) return;
     entries.value = result;
     delModal.open = false;
-    toast(`已移入回收站：${entry.name}`, 'success');
+    toast(t('fm.moved_to_trash', { name: entry.name }), 'success');
   } catch (e) {
-    toast('删除失败：' + errText(e), 'error');
+    toast(t('fm.delete_failed', { error: errText(e) }), 'error');
   } finally {
     delModal.busy = false;
   }
@@ -443,7 +452,7 @@ async function onCheckUpdates() {
         })
         .catch(() => {});
     updatePanel.selected = new Set(report.entries.filter((e) => e.update && !catalog.value[e.fileName]?.locked).map((e) => e.fileName));
-    if (!report.entries.length) toast('该实例 mods 目录为空', 'info');
+    if (!report.entries.length) toast(t('fm.empty_mods'), 'info');
   } catch (e) {
     if (generation === loadGeneration) updatePanel.error = errText(e);
   } finally {
@@ -475,17 +484,17 @@ async function applyUpdates(fileNames: string[]) {
   try {
     const results = await applyModUpdates(v.id, targets, v.folder);
     if (operation !== updateOperation) {
-      toast('原实例的模组更新已结束', 'info');
+      toast(t('fm.update_cancelled'), 'info');
       return;
     }
     let okCount = 0;
     for (const r of results) {
       updatePanel.itemState[r.fileName] = r.ok ? 'ok' : 'error';
       if (r.ok) okCount++;
-      else updatePanel.itemError[r.fileName] = r.error ?? '未知错误';
+      else updatePanel.itemError[r.fileName] = r.error ?? t('fm.update_unknown_error');
     }
     if (okCount) {
-      toast(`已更新 ${okCount} 个 MOD`, 'success');
+      toast(t('fm.mod_update_count', { count: String(okCount) }), 'success');
       updatePanel.report = {
         ...report,
         entries: report.entries.filter((e) => updatePanel.itemState[e.fileName] !== 'ok'),
@@ -494,7 +503,7 @@ async function applyUpdates(fileNames: string[]) {
       void load();
     }
     const failed = results.filter((r) => !r.ok);
-    if (failed.length) toast(`${failed.length} 个更新失败：${failed[0].error ?? ''}`, 'error');
+    if (failed.length) toast(t('fm.some_failed_count', { count: String(failed.length), error: failed[0].error ?? '' }), 'error');
     if (updatePanel.report?.entries.length === 0) updatePanel.open = false;
   } catch (e) {
     if (operation === updateOperation)
@@ -502,7 +511,7 @@ async function applyUpdates(fileNames: string[]) {
         updatePanel.itemState[target.fileName] = 'error';
         updatePanel.itemError[target.fileName] = errText(e);
       }
-    toast('更新失败：' + errText(e), 'error');
+    toast(t('fm.update_failed', { error: errText(e) }), 'error');
   } finally {
     if (operation === updateOperation) updatePanel.applying = false;
   }
@@ -531,7 +540,7 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
           :disabled="updatePanel.checking || !currentVersion"
           @click="onCheckUpdates"
         >
-          {{ updatePanel.checking ? '检测中…' : '检测更新' }}
+          {{ updatePanel.checking ? t('fm.checking_updates') : t('fm.check_updates') }}
         </button>
         <button
           class="btn"
@@ -547,28 +556,31 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
           class="file-more"
           @keydown.esc="($event.currentTarget as HTMLDetailsElement).open = false"
         >
-          <summary class="btn btn-ghost" aria-label="模组管理更多操作">更多</summary>
+          <summary class="btn btn-ghost" :aria-label="t('fm.more_menu_aria')">{{ t('fm.more') }}</summary>
           <div
             data-ui="FileManager:bd84b9640929"
             class="file-more-actions"
             @click="($event.currentTarget as HTMLElement).closest('details')?.removeAttribute('open')"
           >
-            <button class="btn btn-ghost" :disabled="!currentVersion" @click="migrationOpen = true">版本迁移</button
-            ><button class="btn btn-ghost" :disabled="!currentVersion" @click="dupOpen = true">清理重复</button>
+            <button class="btn btn-ghost" :disabled="!currentVersion" @click="migrationOpen = true">{{ t('fm.migrate_version') }}</button
+            ><button class="btn btn-ghost" :disabled="!currentVersion" @click="dupOpen = true">{{ t('fm.clean_duplicates') }}</button>
           </div>
         </details>
       </div>
     </header>
     <div v-if="availableVersions.length" class="fm-context">
       <label
-        >游戏实例<SelectMenu
+        >{{ t('fm.version')
+        }}<SelectMenu
           v-model="store.resourceVersionId"
           class="fm-ver-select"
           :options="
             availableVersions.map((v) => ({
               value: v.id,
               label: versionLabel(v),
-              description: [v.mcVersion, v.loader, v.loaderVersion, v.isolated ? '已隔离' : '共享'].filter(Boolean).join(' · '),
+              description: [v.mcVersion, v.loader, v.loaderVersion, v.isolated ? t('fm.isolated') : t('fm.shared')]
+                .filter(Boolean)
+                .join(' · '),
             }))
           "
       /></label>
@@ -576,25 +588,31 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
         v-if="props.rel !== 'mods'"
         class="btn btn-ghost"
         :disabled="loading || !currentVersion"
-        aria-label="刷新文件列表"
+        :aria-label="t('fm.refresh_aria')"
         @click="load"
       >
-        {{ loading ? '读取中…' : '↻ 刷新' }}
+        {{ loading ? t('fm.refreshing') : t('fm.refresh') + ' ↻' }}
       </button>
-      <button class="fm-path" :title="fullPath + '（点击复制完整路径）'" @click="copyPath">{{ displayPath }}</button>
+      <button class="fm-path" :title="fullPath + t('fm.copy_path_hint')" @click="copyPath">{{ displayPath }}</button>
     </div>
-    <!-- 未安装任何版本时提示 -->
+    <!-- Empty state when no version installed -->
     <div data-ui="FileManager:de9f15303347" v-if="!currentVersion" class="card empty">
-      <span>当前游戏文件夹没有可选版本，请先到「游戏版本」页安装或选择版本</span>
+      <span>{{ t('fm.no_version') }}</span>
     </div>
 
-    <!-- MOD 更新检测面板（内联，不跳页） -->
+    <!-- MOD update check panel (inline, no navigation) -->
     <div data-ui="FileManager:1c4db7ee7d0f" v-if="props.rel === 'mods' && updatePanel.open" class="card upd-panel">
       <div data-ui="FileManager:9d0c31f6fdf0" class="upd-head">
-        <strong>MOD 更新检测</strong>
+        <strong>{{ t('fm.mod_update_check') }}</strong>
         <span data-ui="FileManager:2c10d1e0ff26" v-if="updatePanel.report" class="muted">
-          共 {{ updatePanel.report.entries.length }} 个 · 可更新 {{ updatableEntries.length }} · 已最新 {{ latestCount
-          }}<template v-if="unmatchedCount"> · {{ unmatchedCount }} 个未匹配来源</template>
+          {{
+            t('fm.up_to_date_count', {
+              total: String(updatePanel.report.entries.length),
+              updatable: String(updatableEntries.length),
+              latest: String(latestCount),
+              unmatched: unmatchedCount ? t('fm.unmatched_count', { count: String(unmatchedCount) }) : '',
+            })
+          }}
         </span>
         <span data-ui="FileManager:2887ce491013" class="upd-head-spacer"></span>
         <button
@@ -603,16 +621,16 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
           :disabled="updatePanel.applying"
           @click="updatePanel.open = false"
         >
-          收起
+          {{ t('fm.close') }}
         </button>
       </div>
       <div data-ui="FileManager:29ea6314dfcd" v-if="updatePanel.checking" class="empty upd-empty">
         <span data-ui="FileManager:f3a3151fbbf3" class="spin"></span>
-        <span>正在计算文件哈希并查询 Modrinth…</span>
+        <span>{{ t('fm.checking_hash') }}</span>
       </div>
       <div data-ui="FileManager:e3e16f3446cd" v-else-if="updatePanel.error" class="empty upd-empty">
-        <span>检测失败：{{ updatePanel.error }}</span>
-        <button data-ui="FileManager:c52333bc5a18" class="btn btn-ghost btn-sm" @click="onCheckUpdates">重试</button>
+        <span>{{ t('fm.update_error') }}{{ updatePanel.error }}</span>
+        <button data-ui="FileManager:c52333bc5a18" class="btn btn-ghost btn-sm" @click="onCheckUpdates">{{ t('common.retry') }}</button>
       </div>
       <template v-else-if="updatePanel.report">
         <div data-ui="FileManager:e4442186c4ad" v-if="updatableEntries.length" class="upd-list">
@@ -639,7 +657,8 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
                 ><small data-ui="FileManager:a248bf5f85c5" class="muted">{{ e.name }}</small></span
               >
               <span data-ui="FileManager:a8fbbedbb2c1" class="muted upd-ver"
-                >{{ e.currentVersion || '未知' }} → <b data-ui="FileManager:540c87044085">{{ e.update!.versionNumber }}</b></span
+                >{{ e.currentVersion || t('fm.unknown_version') }} →
+                <b data-ui="FileManager:540c87044085">{{ e.update!.versionNumber }}</b></span
               >
               <span data-ui="FileManager:9cedea4e08aa" v-if="updatePanel.itemState[e.fileName] === 'start'" class="spin upd-spin"></span>
               <span
@@ -647,7 +666,7 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
                 v-else-if="updatePanel.itemState[e.fileName] === 'error'"
                 class="upd-err"
                 :title="updatePanel.itemError[e.fileName]"
-                >失败</span
+                >{{ t('common.error') || t('fm.update_error_detail') }}</span
               >
               <button
                 data-ui="FileManager:d3761b27321a"
@@ -655,7 +674,13 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
                 :disabled="updatePanel.applying"
                 @click="catalog[e.fileName]?.locked ? (switchFile = e.fileName) : applyUpdates([e.fileName])"
               >
-                {{ catalog[e.fileName]?.locked ? '已锁定 · 选版本' : updatePanel.itemState[e.fileName] === 'error' ? '重试' : '更新' }}
+                {{
+                  catalog[e.fileName]?.locked
+                    ? t('fm.locked_choose_ver')
+                    : updatePanel.itemState[e.fileName] === 'error'
+                      ? t('common.retry')
+                      : t('fm.apply_update')
+                }}
               </button>
             </div>
             <p
@@ -664,11 +689,13 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
               class="upd-error-detail"
               role="alert"
             >
-              {{ updatePanel.itemError[e.fileName] || '更新失败，请重试' }}
+              {{ updatePanel.itemError[e.fileName] || t('fm.update_error_detail') }}
             </p>
           </div>
         </div>
-        <div data-ui="FileManager:27ab16a8261b" v-else class="empty upd-empty"><span>所有已匹配来源的 MOD 均为最新</span></div>
+        <div data-ui="FileManager:27ab16a8261b" v-else class="empty upd-empty">
+          <span>{{ t('fm.all_up_to_date') }}</span>
+        </div>
         <div data-ui="FileManager:b6d97d6a46a3" v-if="updatableEntries.length" class="upd-foot">
           <button
             data-ui="FileManager:d1841e395c61"
@@ -676,9 +703,9 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
             :disabled="updatePanel.applying || !updatePanel.selected.size"
             @click="applyUpdates([...updatePanel.selected])"
           >
-            {{ updatePanel.applying ? '正在更新…' : `一键更新选中（${updatePanel.selected.size}）` }}
+            {{ updatePanel.applying ? t('fm.updating') : t('fm.batch_update', { count: String(updatePanel.selected.size) }) }}
           </button>
-          <span class="muted">更新会先校验新文件哈希，失败时保留旧文件</span>
+          <span class="muted">{{ t('fm.update_note') }}</span>
         </div>
       </template>
     </div>
@@ -688,61 +715,73 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
         data-ui="FileManager:ec68a12c2ae9"
         v-model="localSearch"
         class="input fm-search"
-        aria-label="搜索本地模组"
-        placeholder="搜索文件名或模组名称…"
+        :aria-label="t('fm.search_placeholder')"
+        :placeholder="t('fm.search_placeholder')"
       />
       <SelectMenu
         v-model="modFilter"
         :options="[
-          { value: 'all', label: '全部状态' },
-          { value: 'enabled', label: '已启用' },
-          { value: 'disabled', label: '已禁用' },
-          { value: 'locked', label: '已锁定' },
+          { value: 'all', label: t('fm.filter_all') },
+          { value: 'enabled', label: t('fm.filter_enabled') },
+          { value: 'disabled', label: t('fm.filter_disabled') },
+          { value: 'locked', label: t('fm.filter_locked') },
         ]"
       />
       <SelectMenu
         v-model="sortBy"
         :options="[
-          { value: 'name', label: '名称排序' },
-          { value: 'date', label: '最近修改' },
-          { value: 'size', label: '文件大小' },
+          { value: 'name', label: t('fm.sort_name') },
+          { value: 'date', label: t('fm.sort_date') },
+          { value: 'size', label: t('fm.sort_size') },
         ]"
       />
 
-      <button class="btn btn-ghost fm-refresh" :disabled="loading" title="刷新文件列表" aria-label="刷新文件列表" @click="load">
+      <button
+        class="btn btn-ghost fm-refresh"
+        :disabled="loading"
+        :title="t('fm.refresh_aria')"
+        :aria-label="t('fm.refresh_aria')"
+        @click="load"
+      >
         <span v-if="loading" class="spin"></span><span v-else aria-hidden="true">↻</span>
       </button>
     </div>
     <div data-ui="FileManager:50137bbe5c59" v-if="selection.size && props.rel === 'mods'" class="fm-batch card">
-      <strong>已选 {{ selection.size }} 项</strong
+      <strong>{{ t('fm.selected_count', { count: String(selection.size) }) }}</strong
       ><button data-ui="FileManager:8a3d5842bdcc" class="btn btn-ghost btn-sm" :disabled="batchBusy" @click="selectAll(true)">
-        全选筛选结果（{{ filtered.filter(isModEntry).length }}）</button
+        {{ t('fm.select_all_filtered', { count: String(filtered.filter(isModEntry).length) }) }}</button
       ><button data-ui="FileManager:3f98d111f11c" class="btn btn-ghost btn-sm" :disabled="batchBusy" @click="batch('enable')">
-        批量启用</button
+        {{ t('fm.batch_enable') }}</button
       ><button data-ui="FileManager:f9e4a6481640" class="btn btn-ghost btn-sm" :disabled="batchBusy" @click="batch('disable')">
-        批量禁用</button
-      ><button data-ui="FileManager:91b8dde939da" class="btn btn-ghost btn-sm" :disabled="batchBusy" @click="batch('lock')">锁定版本</button
+        {{ t('fm.batch_disable') }}</button
+      ><button data-ui="FileManager:91b8dde939da" class="btn btn-ghost btn-sm" :disabled="batchBusy" @click="batch('lock')">
+        {{ t('fm.lock_version') }}</button
       ><button data-ui="FileManager:d3ca28eade0c" class="btn btn-ghost btn-sm" :disabled="batchBusy" @click="batch('unlock')">
-        解除锁定</button
+        {{ t('fm.unlock_version') }}</button
       ><button data-ui="FileManager:c17b974e4578" class="btn btn-ghost btn-sm" :disabled="batchBusy" @click="selection = new Set()">
-        清空选择
+        {{ t('fm.clear_selection') }}
       </button>
     </div>
     <p data-ui="FileManager:080a7432d0c7" v-if="catalogError" class="muted" role="alert">
-      模组识别或锁定记录读取失败：{{ catalogError }}。可刷新重试，写入操作仍会由后端校验。
+      {{ t('fm.catalog_error', { error: catalogError }) }}
     </p>
     <details data-ui="FileManager:3bdbccefe0d1" v-if="batchResults.length" class="fm-results card" :open="batchResults.some((r) => !r.ok)">
       <summary data-ui="FileManager:fb44f4241998">
-        上次批量操作：{{ batchResults.filter((r) => r.ok).length }} 项成功 · {{ batchResults.filter((r) => !r.ok).length }} 项失败
+        {{
+          t('fm.batch_result', {
+            ok: String(batchResults.filter((r) => r.ok).length),
+            failed: String(batchResults.filter((r) => !r.ok).length),
+          })
+        }}
       </summary>
       <div data-ui="FileManager:9d10b3e8ea6e" class="fm-result-list">
         <p data-ui="FileManager:b6f08c17dc51" v-for="r in batchResults" :key="r.fileName" :class="{ failed: !r.ok }">
           <strong>{{ r.fileName }}</strong
-          ><span>{{ r.ok ? '已完成' : r.error }}</span>
+          ><span>{{ r.ok ? t('fm.batch_done') : r.error }}</span>
         </p>
       </div>
     </details>
-    <!-- 文件列表 -->
+    <!-- File list -->
     <div
       data-ui="FileManager:cdc99c60dc51"
       v-if="currentVersion"
@@ -751,34 +790,39 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
       :aria-busy="loading"
     >
       <div data-ui="FileManager:aaf1f853f556" v-if="entries.length && (loading || loadError)" class="status-strip" role="status">
-        {{ loading ? '正在刷新，暂时保留上次的文件列表…' : '刷新失败：' + loadError
-        }}<button data-ui="FileManager:1168663564f5" v-if="loadError" class="btn btn-ghost btn-sm" @click="load">重试</button>
+        {{ loading ? t('fm.refreshing_list') : t('fm.refresh_failed') + loadError
+        }}<button data-ui="FileManager:1168663564f5" v-if="loadError" class="btn btn-ghost btn-sm" @click="load">
+          {{ t('common.retry') }}
+        </button>
       </div>
-      <ContentSkeleton v-if="loading && !entries.length" label="正在读取文件列表…" retry @retry="load" />
+      <ContentSkeleton v-if="loading && !entries.length" :label="t('fm.reading_list')" retry @retry="load" />
       <div data-ui="FileManager:12ff8f1f3706" v-else-if="loadError && !entries.length" class="empty">
-        <span>读取失败：{{ loadError }}</span>
-        <button data-ui="FileManager:9605a11dc3ac" class="btn btn-ghost btn-sm" @click="load">重试</button>
+        <span>{{ t('fm.read_failed') }}{{ loadError }}</span>
+        <button data-ui="FileManager:9605a11dc3ac" class="btn btn-ghost btn-sm" @click="load">{{ t('common.retry') }}</button>
       </div>
       <div data-ui="FileManager:c33c3939fd8c" v-else-if="!entries.length" class="empty">
         <span data-ui="FileManager:a3b8daa1f95d" class="empty-icon" v-html="props.icon"></span>
         <span>{{ props.emptyText }}</span>
-        <small v-if="props.rel === 'shaderpacks'" class="muted">将光影包 ZIP 放入上方文件夹，然后刷新列表。</small>
+        <small v-if="props.rel === 'shaderpacks'" class="muted">{{ t('fm.shader_hint') }}</small>
       </div>
       <div data-ui="FileManager:40d26ad64938" v-else-if="!filtered.length" class="empty">
-        <span>当前搜索或筛选条件没有匹配的文件</span>
+        <span>{{ t('fm.empty_filter') }}</span>
       </div>
       <div data-ui="FileManager:893880828b4a" v-else class="fm-list" :inert="loading || !!loadError">
         <div class="fm-table-head">
           <input
             v-if="props.rel === 'mods'"
             type="checkbox"
-            aria-label="选择当前页模组"
+            :aria-label="t('fm.select_page_mod')"
             :checked="pageChecked.all"
             :indeterminate="pageChecked.partial"
             :disabled="batchBusy || !pageMods.length"
             @change="togglePageSelection"
-          /><span v-else></span><span>名称</span><span>大小</span><span class="fm-date">修改时间</span
-          ><span v-if="props.rel === 'mods'">启用</span><span>操作</span>
+          /><span v-else></span><span>{{ t('fm.col_name') }}</span
+          ><span>{{ t('fm.col_size') }}</span
+          ><span class="fm-date">{{ t('fm.col_date') }}</span
+          ><span v-if="props.rel === 'mods'">{{ t('fm.col_enable') }}</span
+          ><span>{{ t('fm.col_action') }}</span>
         </div>
         <div
           data-ui="FileManager:9628c4638932"
@@ -791,7 +835,7 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
             data-ui="FileManager:8d3101b3257d"
             v-if="isModEntry(e)"
             type="checkbox"
-            :aria-label="'选择 ' + e.name"
+            :aria-label="t('fm.select_mod', { name: e.name })"
             :checked="selection.has(e.name)"
             :disabled="batchBusy"
             @change="selectMod(e.name, ($event.target as HTMLInputElement).checked)"
@@ -839,7 +883,7 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
             data-ui="FileManager:8c8c91106eaa"
             class="fm-name"
             tabindex="0"
-            :title="e.name + ' · 按住拖到桌面或文件夹'"
+            :title="e.name + ' · ' + t('fm.drag_hint')"
             :draggable="!store.editMode && !batchBusy && !loading"
             @dragstart="dragResource($event, e)"
             >{{ readableName(e)
@@ -848,30 +892,32 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
               catalog[e.name].name
             }}</small
             ><small v-if="isDisabledMod(e) || catalog[e.name]?.locked" class="fm-internal">{{
-              [isDisabledMod(e) ? '已禁用' : '', catalog[e.name]?.locked ? '已锁定' : ''].filter(Boolean).join(' · ')
+              [isDisabledMod(e) ? t('fm.filter_disabled') : '', catalog[e.name]?.locked ? t('fm.filter_locked') : '']
+                .filter(Boolean)
+                .join(' · ')
             }}</small></span
           >
 
-          <span data-ui="FileManager:558cc8ea9415" class="muted fm-meta">{{ e.isDir ? '文件夹' : fmtSize(e.size) }}</span>
+          <span data-ui="FileManager:558cc8ea9415" class="muted fm-meta">{{ e.isDir ? t('fm.folder') : fmtSize(e.size) }}</span>
           <span data-ui="FileManager:bf6ae194335f" class="muted fm-meta fm-date">{{ fmtDate(e.mtime) }}</span>
 
           <label
             data-ui="FileManager:7fe2dcd1bb05"
             v-if="isModEntry(e)"
             class="switch fm-toggle"
-            :title="isDisabledMod(e) ? '启用模组' : '禁用模组'"
+            :title="isDisabledMod(e) ? t('fm.enable_mod') : t('fm.disable_mod')"
             ><input
               data-ui="FileManager:eeccaf57cd1c"
               type="checkbox"
               role="switch"
-              :aria-label="(isDisabledMod(e) ? '启用 ' : '禁用 ') + e.name"
+              :aria-label="isDisabledMod(e) ? t('fm.enable_aria', { name: e.name }) : t('fm.disable_aria', { name: e.name })"
               :checked="!isDisabledMod(e)"
               :disabled="!!toggling || batchBusy"
               @change="onToggleDisable(e, $event)" /><span data-ui="FileManager:902dfce79a14" class="switch-ui"></span
           ></label>
           <span v-if="props.rel === 'mods' && !isModEntry(e)" aria-hidden="true"></span>
           <details class="file-more" @keydown.esc="($event.currentTarget as HTMLDetailsElement).open = false">
-            <summary data-ui="FileManager:859ab7a92cdd" class="btn btn-ghost btn-sm" :aria-label="'更多操作 ' + e.name">
+            <summary data-ui="FileManager:859ab7a92cdd" class="btn btn-ghost btn-sm" :aria-label="t('fm.more_aria', { name: e.name })">
               <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true">
                 <circle cx="3.2" cy="8" r="1.35" />
                 <circle cx="8" cy="8" r="1.35" />
@@ -884,23 +930,23 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
                 v-if="isModEntry(e)"
                 class="btn btn-ghost btn-sm"
                 :disabled="batchBusy"
-                :aria-label="(catalog[e.name]?.locked ? '解除锁定 ' : '锁定版本 ') + e.name"
-                :title="catalog[e.name]?.locked ? '已锁定：不参与自动更新' : '锁定此模组版本'"
+                :aria-label="(catalog[e.name]?.locked ? t('fm.unlock_version') + ' ' : t('fm.lock_version') + ' ') + e.name"
+                :title="catalog[e.name]?.locked ? t('fm.locked_no_auto_update') : t('fm.lock_this')"
                 @click="batch(catalog[e.name]?.locked ? 'unlock' : 'lock', [e.name])"
               >
-                {{ catalog[e.name]?.locked ? '已锁定' : '锁定' }}</button
+                {{ catalog[e.name]?.locked ? t('fm.filter_locked') : t('fm.lock_this') }}</button
               ><button
                 data-ui="FileManager:fd277c185a8b"
                 v-if="isModEntry(e)"
                 class="btn btn-ghost btn-sm"
                 :disabled="batchBusy"
-                :aria-label="'切换版本 ' + e.name"
+                :aria-label="t('fm.switch_version_aria', { name: e.name })"
                 @click="switchFile = e.name"
               >
-                版本
+                {{ t('fm.version') }}
               </button>
               <button data-ui="FileManager:537aea904555" class="btn btn-danger btn-sm fm-remove" :disabled="batchBusy" @click="onRemove(e)">
-                删除
+                {{ t('fm.delete_action') }}
               </button>
             </div>
           </details>
@@ -908,11 +954,20 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
       </div>
     </div>
 
-    <nav data-ui="FileManager:c2e38e035918" v-if="currentVersion && pageCount > 1" class="fm-pagination" aria-label="资源列表分页">
-      <span class="muted">共 {{ filtered.length }} 项 · 每页 {{ PAGE_SIZE }} 项</span>
-      <button data-ui="FileManager:50c8efdbe2b5" class="btn btn-ghost btn-sm" :disabled="page <= 1" @click="page--">上一页</button>
+    <nav
+      data-ui="FileManager:c2e38e035918"
+      v-if="currentVersion && pageCount > 1"
+      class="fm-pagination"
+      :aria-label="t('fm.pagination_label')"
+    >
+      <span class="muted">{{ t('fm.pagination_summary', { total: String(filtered.length), size: String(PAGE_SIZE) }) }}</span>
+      <button data-ui="FileManager:50c8efdbe2b5" class="btn btn-ghost btn-sm" :disabled="page <= 1" @click="page--">
+        {{ t('fm.prev_page') }}
+      </button>
       <span>{{ page }} / {{ pageCount }}</span>
-      <button data-ui="FileManager:eba7aed9ee2d" class="btn btn-ghost btn-sm" :disabled="page >= pageCount" @click="page++">下一页</button>
+      <button data-ui="FileManager:eba7aed9ee2d" class="btn btn-ghost btn-sm" :disabled="page >= pageCount" @click="page++">
+        {{ t('fm.next_page') }}
+      </button>
     </nav>
     <ModVersionModal
       v-if="switchFile && currentVersion"
@@ -921,21 +976,21 @@ function toggleUpdateSelect(fileName: string, checked: boolean) {
       @close="switchFile = ''"
       @done="
         load();
-        toast('模组版本已切换', 'success');
+        toast(t('fm.switch_version_toast'), 'success');
       "
     />
     <ModMigrationModal v-if="migrationOpen && currentVersion" :source="currentVersion" @close="migrationOpen = false" />
-    <!-- 删除文件二次确认 -->
+    <!-- Confirm file deletion -->
     <ConfirmModal
       :open="delModal.open"
-      title="删除文件"
-      :message="`确定要删除「${delModal.target?.name}」吗？文件将移入系统回收站，可从回收站恢复。`"
+      :title="t('fm.delete_file_title')"
+      :message="t('fm.delete_file_message', { name: delModal.target?.name ?? '' })"
       :busy="delModal.busy"
       @cancel="delModal.open = false"
       @confirm="onConfirmRemove"
     />
 
-    <!-- 清理重复 MOD（仅模组页） -->
+    <!-- Clean duplicate mods (mods tab only) -->
     <DupCleanModal
       v-if="props.rel === 'mods' && dupOpen && currentVersion"
       :open="dupOpen"

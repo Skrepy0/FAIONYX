@@ -17,6 +17,7 @@ import { parseModFile } from './modinfo';
 import { communityExactFile, communityFiles, communitySearch } from './community';
 import { downloadAll } from './download';
 import { fileHash } from './fileHash';
+import { translate as t } from '../../shared/i18n';
 
 export interface DependencyRepository {
   files(source: CommunitySource, projectId: string, target: InstalledVersion): Promise<CommunityFile[]>;
@@ -83,28 +84,34 @@ export async function dependencyGraph(
   async function visit(file: CommunityFile) {
     const key = `${file.source}:${file.fileId}`;
     if (seen.has(key)) return;
-    if (!communityFileMatchesInstance(file, target)) throw new Error(`${file.fileName} 不支持 MC ${target.mcVersion} / ${target.loader}`);
-    if (seen.size >= 96) throw new Error('依赖图超过 96 项，请检查项目元数据');
+    if (!communityFileMatchesInstance(file, target))
+      throw new Error(
+        t('modinstallplan.error.file_unsupported_mc', { fileName: file.fileName, mcVersion: target.mcVersion, loader: target.loader || '' })
+      );
+    if (seen.size >= 96) throw new Error(t('modinstallplan.error.graph_too_large'));
     const project = `${file.source}:${file.projectId}`;
     if (file.projectId && projects.has(project) && projects.get(project) !== file.fileId)
-      throw new Error(`前置版本冲突：${file.projectId}`);
+      throw new Error(t('modinstallplan.error.pinned_conflict', { id: file.projectId }));
     if (file.projectId) projects.set(project, file.fileId);
     seen.add(key);
     for (const dep of file.dependencies ?? []) {
       if (!dep.required) continue;
-      if (!file.source || (!dep.projectId && !dep.fileId)) throw new Error(`无法定位 ${file.fileName} 的必要前置，请手动安装`);
+      if (!file.source || (!dep.projectId && !dep.fileId))
+        throw new Error(t('modinstallplan.error.dependency_unlocatable', { fileName: file.fileName }));
       const selected = roots.find(
         (root) => root.source === file.source && (dep.projectId ? root.projectId === dep.projectId : root.fileId === dep.fileId)
       );
-      if (selected && dep.fileId && selected.fileId !== dep.fileId) throw new Error(`前置版本冲突：${dep.projectId || dep.fileId}`);
+      if (selected && dep.fileId && selected.fileId !== dep.fileId)
+        throw new Error(t('modinstallplan.error.pinned_conflict', { id: dep.projectId || dep.fileId }));
       const next =
         selected ||
         (dep.fileId
           ? await repo.exact(file.source, dep.projectId, dep.fileId)
           : (await repo.files(file.source, dep.projectId!, target))[0]);
-      if (!next) throw new Error(`前置 ${dep.projectId} 没有兼容版本`);
+      if (!next) throw new Error(t('modinstallplan.error.dependency_no_compatible_version', { id: dep.projectId || dep.fileId || '' }));
       if (dep.fileId) {
-        if (next.fileId !== dep.fileId) throw new Error(`前置版本冲突：${dep.projectId || dep.fileId}`);
+        if (next.fileId !== dep.fileId)
+          throw new Error(t('modinstallplan.error.pinned_conflict', { id: dep.projectId || dep.fileId || '' }));
         pinnedFiles?.set(`${next.source}:${next.fileId}`, next);
       }
       await visit(next);
@@ -138,7 +145,7 @@ export async function prepareModInstall(
   repository = dependencyRepository
 ): Promise<ModInstallPlan> {
   for (const p of plans.values()) if (p.expires < Date.now()) clean(p);
-  if (plans.size >= 8) throw new Error('待确认安装过多，请取消已有安装计划');
+  if (plans.size >= 8) throw new Error(t('modinstallplan.error.too_many_pending'));
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-mod-plan-'));
   const id = crypto.randomUUID();
   const plan: PrivatePlan = {
@@ -154,11 +161,11 @@ export async function prepareModInstall(
     const roots: CommunityFile[] = [];
     if (input.file) {
       signal?.throwIfAborted();
-      if (!input.file.source || !input.file.projectId) throw new Error('缺少项目来源，请重新打开下载页');
+      if (!input.file.source || !input.file.projectId) throw new Error(t('modinstallplan.error.missing_project_source'));
       const file = await repository.exact(input.file.source, input.file.projectId, input.file.fileId);
-      if (!communityFileMatchesInstance(file, target)) throw new Error('所选 MOD 文件与目标实例不兼容');
+      if (!communityFileMatchesInstance(file, target)) throw new Error(t('modinstallplan.error.selected_file_incompatible'));
       const dest = path.join(directory, path.basename(file.fileName));
-      emit({ stage: 'download', progress: 0, overall: 0, indeterminate: true, text: '读取所选 MOD，解析内置前置要求…' });
+      emit({ stage: 'download', progress: 0, overall: 0, indeterminate: true, text: t('modinstallplan.state.read_selected_mod') });
       await downloadAll(
         [{ url: file.url, dest, sha1: file.sha1, size: file.size || undefined }],
         (_d, _t, speed, detail) =>
@@ -167,7 +174,7 @@ export async function prepareModInstall(
             progress: detail.fraction ?? 0,
             overall: (detail.fraction ?? 0) * 0.85,
             indeterminate: detail.indeterminate,
-            text: `下载所选 MOD：${file.fileName}`,
+            text: t('modinstallplan.state.download_selected_mod', { fileName: file.fileName }),
             speed,
             bytesDone: detail.bytesDone,
             bytesTotal: detail.bytesTotal ?? undefined,
@@ -196,13 +203,18 @@ export async function prepareModInstall(
       progress: 0,
       overall: input.file ? 0.85 : 0,
       indeterminate: true,
-      text: 'MOD 已准备，正在检测兼容性和必要前置（尚未安装）…',
+      text: t('modinstallplan.state.mod_prepared'),
     });
-    if (!plan.roots.length) throw new Error('没有待安装的 MOD');
+    if (!plan.roots.length) throw new Error(t('modinstallplan.error.nothing_to_install'));
     const mods = plan.roots.map(parseModFile);
     for (const mod of mods)
       if (!modMatchesInstance(mod, target))
-        throw new Error(`${mod.name || mod.fileName}：${mod.error || '与目标实例的 MC / Loader 版本不兼容'}`);
+        throw new Error(
+          t('modinstallplan.error.mod_incompatible', {
+            name: mod.name || mod.fileName,
+            reason: mod.error || t('modinstallplan.error.mod_incompatible_default'),
+          })
+        );
     const installed = installedMods(target);
     const missing = missingRequirements(mods, target, [...installed, ...mods]);
     const graph = await dependencyGraph(roots, target, repository, plan.pinnedFiles);
@@ -216,7 +228,8 @@ export async function prepareModInstall(
       const candidate = await repository.find(req.id, target);
       signal?.throwIfAborted();
       if (candidate) plan.downloads.push(...(await dependencyGraph([candidate], target, repository, plan.pinnedFiles)));
-      else if (!plan.downloads.length) plan.view.warnings.push(`无法自动定位前置 ${req.id} ${req.range}，请手动补齐后重试`);
+      else if (!plan.downloads.length)
+        plan.view.warnings.push(t('modinstallplan.log.missing_dependency', { id: req.id, range: req.range }));
     }
     const installedHashes = new Map<string, string>(),
       uniqueDownloads = [...new Map(plan.downloads.map((f) => [`${f.source}:${f.fileId}`, f])).values()];
@@ -252,7 +265,7 @@ export async function prepareModInstall(
     ];
     signal?.throwIfAborted();
     plans.set(id, plan);
-    emit({ stage: 'done', progress: 1, overall: 1, indeterminate: false, text: '预下载及检测完成，等待确认安装（尚未写入实例）' });
+    emit({ stage: 'done', progress: 1, overall: 1, indeterminate: false, text: t('modinstallplan.state.prepared_done') });
     return plan.view;
   } catch (error) {
     clean(plan);
@@ -273,12 +286,12 @@ export async function executeModPlan(
   signal?: AbortSignal
 ): Promise<string> {
   const plan = plans.get(id);
-  if (!plan || plan.expires < Date.now()) throw new Error('安装计划已过期，请重新解析');
+  if (!plan || plan.expires < Date.now()) throw new Error(t('modinstallplan.error.plan_expired'));
   plans.delete(id); // A plan may only commit once, including concurrent invoke calls.
   const created: string[] = [];
   try {
     const target = revalidate(plan.view.target);
-    if (target.gameDirectory !== plan.view.target.gameDirectory) throw new Error('实例隔离目录已变更，请重新解析');
+    if (target.gameDirectory !== plan.view.target.gameDirectory) throw new Error(t('modinstallplan.error.isolation_dir_changed'));
     let installed = installedMods(target);
     const rootMods = plan.roots.map(parseModFile);
     const staged = [...rootMods];
@@ -291,7 +304,9 @@ export async function executeModPlan(
       progress: 0,
       overall: 0,
       indeterminate: true,
-      text: dependencies.length ? `准备下载 ${dependencies.length} 个必要前置…` : '正在校验已准备的 MOD…',
+      text: dependencies.length
+        ? t('modinstallplan.state.preparing_download', { count: dependencies.length })
+        : t('modinstallplan.state.verifying_prepared'),
     });
     await downloadAll(
       dependencies.map((f) => ({ url: f.url, dest: f.dest, sha1: f.sha1, size: f.size || undefined })),
@@ -301,7 +316,7 @@ export async function executeModPlan(
           progress: detail.fraction ?? 0,
           overall: (detail.fraction ?? 0) * 0.85,
           indeterminate: detail.indeterminate,
-          text: `下载 ${dependencies.length} 个必要前置`,
+          text: t('modinstallplan.state.downloading_dependencies', { count: dependencies.length }),
           speed,
           bytesDone: detail.bytesDone,
           bytesTotal: detail.bytesTotal ?? undefined,
@@ -316,12 +331,13 @@ export async function executeModPlan(
       progress: 0,
       overall: dependencies.length ? 0.85 : 0,
       indeterminate: true,
-      text: '下载已完成，正在校验兼容性、哈希与前置…',
+      text: t('modinstallplan.state.download_done_verifying'),
     });
     for (const file of dependencies) {
       signal?.throwIfAborted();
       const mod = parseModFile(file.dest);
-      if (!modMatchesInstance(mod, target)) throw new Error(`${file.fileName} 的 JAR 元数据不兼容目标实例：${mod.error ?? ''}`);
+      if (!modMatchesInstance(mod, target))
+        throw new Error(t('modinstallplan.error.jar_metadata_incompatible', { fileName: file.fileName, error: mod.error ?? '' }));
       const pinned = plan.pinnedFiles.get(`${file.source}:${file.fileId}`);
       if (pinned) pinnedPaths.set(mod.filePath, pinned);
       // A pinned repository edge requires that exact file. An existing provider
@@ -329,13 +345,16 @@ export async function executeModPlan(
       if (pinned || !installed.some((m) => provided(m).some((p) => p.id === mod.id))) staged.push(mod);
     }
     const current = revalidate(plan.view.target);
-    if (current.gameDirectory !== target.gameDirectory) throw new Error('下载期间实例目录发生变化，未安装任何 MOD');
+    if (current.gameDirectory !== target.gameDirectory) throw new Error(t('modinstallplan.error.dir_changed_during_download'));
     installed = installedMods(current);
-    for (const mod of staged) if (!modMatchesInstance(mod, current)) throw new Error(`${mod.name} 的兼容性已变化，请重新解析`);
+    for (const mod of staged)
+      if (!modMatchesInstance(mod, current)) throw new Error(t('modinstallplan.error.compatibility_changed', { name: mod.name }));
     const missing = missingRequirements(staged, target, [...staged, ...installed]);
     if (missing.length)
       throw new Error(
-        `未写入任何 MOD；仍缺少或版本不满足：${missing.map((d) => `${d.id} ${d.range}`).join('、')}。请补齐前置或处理旧版冲突后重试`
+        t('modinstallplan.error.missing_dependencies', {
+          list: missing.map((d) => `${d.id} ${d.range}`).join(t('common.list_separator')),
+        })
       );
     const hashes = new Map<string, Promise<string>>();
     const hash = (file: string) => {
@@ -362,7 +381,10 @@ export async function executeModPlan(
           }
       if (!present)
         throw new Error(
-          `未写入任何 MOD；必要前置 ${pinned.projectId || pinned.fileName} 要求精确版本 ${pinned.fileId}，已准备或已安装的文件已变化，请重新检测`
+          t('modinstallplan.error.pinned_changed', {
+            name: pinned.projectId || pinned.fileName,
+            fileId: pinned.fileId,
+          })
         );
     }
     const accepted: ModInfo[] = [];
@@ -374,22 +396,32 @@ export async function executeModPlan(
         const pinned = pinnedPaths.get(mod.filePath);
         if (pinned)
           throw new Error(
-            `前置版本冲突：${mod.id} 要求精确版本 ${pinned.fileId}，已有 ${existing.version || '其他版本'}；未写入任何 MOD，请先处理旧文件后重新检测`
+            t('modinstallplan.error.pinned_conflict_existing', {
+              id: mod.id,
+              fileId: pinned.fileId,
+              version: existing.version || t('modinstallplan.error.pinned_conflict_existing_other'),
+            })
           );
-        throw new Error(`已存在 ${mod.id}，未覆盖或重复安装；请先处理旧文件`);
+        throw new Error(t('modinstallplan.error.already_exists', { id: mod.id }));
       }
       accepted.push(mod);
     }
     const dir = path.join(target.gameDirectory!, 'mods');
     fs.mkdirSync(dir, { recursive: true });
-    emit({ stage: 'mod-commit', progress: 0, overall: 0.95, indeterminate: true, text: `正在写入 ${accepted.length} 个 MOD…` });
+    emit({
+      stage: 'mod-commit',
+      progress: 0,
+      overall: 0.95,
+      indeterminate: true,
+      text: t('modinstallplan.state.writing_mods', { count: accepted.length }),
+    });
     for (const mod of accepted) {
       signal?.throwIfAborted();
       const dest = path.join(dir, path.basename(mod.fileName));
       fs.copyFileSync(mod.filePath, dest, fs.constants.COPYFILE_EXCL);
       created.push(dest);
     }
-    const message = `已安装 ${created.length} 个 MOD 到 ${dir}`;
+    const message = t('modinstallplan.log.installed', { count: created.length, dir });
     emit({ stage: 'done', progress: 1, overall: 1, indeterminate: false, text: message });
     return message;
   } catch (error) {

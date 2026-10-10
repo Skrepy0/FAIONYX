@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { GameProcessHandle } from './gracefulClose';
+import { translate as t } from '../../shared/i18n';
 
 interface SessionEntry {
   token: symbol;
@@ -17,7 +18,7 @@ interface SessionEntry {
  */
 export function formatExitGamesLine(pids: number[]): string | null {
   if (!pids.length) return null;
-  return `启动器已退出，游戏(进程 PID ${pids.join('、')})继续运行`;
+  return t('main.log.exit_game_running', { pids: pids.join(t('common.list_separator')) });
 }
 
 /**
@@ -64,8 +65,8 @@ export class GameSession {
 
   /** 找到指定版本最近会话的 token（无则 undefined） */
   tokenOf(versionId: string): symbol | undefined {
-    for (const [t, s] of [...this.sessions.entries()].reverse()) {
-      if (s.versionId === versionId) return t;
+    for (const [tok, s] of [...this.sessions.entries()].reverse()) {
+      if (s.versionId === versionId) return tok;
     }
     return undefined;
   }
@@ -85,9 +86,9 @@ export class GameSession {
     token: symbol | undefined = this.lastToken
   ): Promise<{ requiresForce: boolean; forceToken?: string }> {
     const entry = token ? this.sessions.get(token) : undefined;
-    if (!entry?.child) throw new Error('没有正在运行的游戏，或游戏仍在准备启动');
-    if (entry.stopping) throw new Error('正在等待游戏退出，请稍候');
-    if (forceToken && entry.stopApproval !== forceToken) throw new Error('强制结束确认已失效，未结束任何进程');
+    if (!entry?.child) throw new Error(t('gamesession.error.no_running_game'));
+    if (entry.stopping) throw new Error(t('gamesession.error.stopping_wait'));
+    if (forceToken && entry.stopApproval !== forceToken) throw new Error(t('gamesession.error.force_expired'));
     entry.stopping = true;
     try {
       if (forceToken) {
@@ -115,7 +116,7 @@ export class GameSession {
   ): Promise<void> {
     const entry = token ? this.sessions.get(token) : undefined;
     const child = entry?.child;
-    if (!entry || !child) throw new Error('游戏仍在准备启动，请稍后重试');
+    if (!entry || !child) throw new Error(t('gamesession.error.preparing_retry'));
     await new Promise<void>((resolve, reject) => {
       const cleanup = () => {
         clearTimeout(timer);
@@ -127,7 +128,7 @@ export class GameSession {
       };
       const timer = setTimeout(() => {
         cleanup();
-        reject(new Error('正常退出等待超时，游戏可能正在保存；可继续等待，或明确选择强制结束'));
+        reject(new Error(t('gamesession.error.graceful_timeout')));
       }, timeoutMs);
       child.once('close', exited);
       // A failed close request does not mean the JVM exited. Keep listening until
@@ -146,7 +147,7 @@ export class GameSession {
 
   attach(token: symbol, child: GameProcessHandle): void {
     const entry = this.sessions.get(token);
-    if (!entry) throw new Error('启动会话已失效');
+    if (!entry) throw new Error(t('gamesession.error.session_invalid'));
     entry.child = child;
     // The owned JVM's OS exit releases its file handles. Pipe drainage can finish
     // later (or a descendant can retain stdout); keep diagnostic ownership until
@@ -178,9 +179,9 @@ export class GameSession {
 
   async stop(timeoutMs = 8000, token: symbol | undefined = this.lastToken): Promise<void> {
     const entry = token ? this.sessions.get(token) : undefined;
-    if (!entry) throw new Error('没有可结束的游戏进程');
+    if (!entry) throw new Error(t('gamesession.error.no_process_to_stop'));
     const child = entry.child;
-    if (!child) throw new Error('游戏仍在准备启动，请等待进程创建后再结束');
+    if (!child) throw new Error(t('gamesession.error.preparing_wait'));
     await new Promise<void>((resolve, reject) => {
       const clean = () => {
         clearTimeout(timer);
@@ -195,12 +196,12 @@ export class GameSession {
         clean();
         reject(error);
       };
-      const timer = setTimeout(() => failed(new Error('游戏进程尚未确认退出；请在游戏内退出或检查进程状态')), timeoutMs);
+      const timer = setTimeout(() => failed(new Error(t('gamesession.error.exit_unconfirmed'))), timeoutMs);
       child.once('close', exited);
       child.once('error', failed);
       try {
         if (child.exitCode === null && child.signalCode === null && !child.kill()) {
-          failed(new Error('系统未接受结束请求，游戏状态保持运行'));
+          failed(new Error(t('gamesession.error.kill_rejected')));
         }
       } catch (error) {
         failed(error as Error);

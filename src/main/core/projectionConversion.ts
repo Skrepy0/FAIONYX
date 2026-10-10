@@ -1,3 +1,4 @@
+import { translate as t } from '../../shared/i18n';
 import { minecraftData } from './projectionRegistry';
 import type { ProjectionAnalysis, ProjectionChoices, ProjectionDifference, ProjectionFormat } from '../../shared/projections';
 import {
@@ -23,32 +24,32 @@ export function projectionVersions(): { version: string; dataVersion: number; su
 }
 export const versionName = (dataVersion?: number) => projectionVersions().find((v: any) => v.dataVersion === dataVersion)?.version;
 export function validateState(text: string, version: string): string | undefined {
-  const t = stateTag(text),
-    c = compound(t),
+  const tagValue = stateTag(text),
+    c = compound(tagValue),
     name = value(c, 'Name', 8),
     data = minecraftData(version);
-  if (!data?.blocksByName) return '目标版本缺少可信方块注册表';
-  if (!name.startsWith('minecraft:')) return '目标原版注册表不包含此模组方块';
+  if (!data?.blocksByName) return t('projconv.error.target_registry_missing');
+  if (!name.startsWith('minecraft:')) return t('projconv.error.modded_block_unsupported');
   const block = data.blocksByName[name.slice(10)] as any;
-  if (!block) return '目标版本没有此方块';
+  if (!block) return t('projconv.error.block_missing');
   const props = c.Properties ? compound(c.Properties) : {},
     schema = block.states || [];
   for (const [key, v] of Object.entries(props)) {
     const state = schema.find((s: any) => s.name === key);
-    if (!state) return '目标版本没有属性 ' + key;
+    if (!state) return t('projconv.error.property_missing', { key });
     const values =
       state.values || (state.type === 'bool' ? ['true', 'false'] : Array.from({ length: state.num_values }, (_, i) => String(i)));
-    if (!values.includes(String(v.value))) return '目标版本不接受 ' + key + '=' + v.value;
+    if (!values.includes(String(v.value))) return t('projconv.error.property_value_rejected', { key, value: String(v.value) });
   }
   const missing = schema.filter((s: any) => !Object.hasOwn(props, s.name)).map((s: any) => s.name);
-  if (missing.length) return '需要明确选择目标属性：' + missing.join('、');
+  if (missing.length) return t('projconv.error.properties_required', { list: missing.join(t('common.list_separator')) });
 }
 export function analyzeProjection(
   p: Projection,
   format: ProjectionFormat,
   targetVersion?: string
 ): Omit<ProjectionAnalysis, 'id' | 'sourceHash'> {
-  if (!['litematic', 'schem', 'schematic', 'nbt'].includes(format)) throw new Error('目标格式无效');
+  if (!['litematic', 'schem', 'schematic', 'nbt'].includes(format)) throw new Error(t('projconv.error.target_format_invalid'));
   const sourceVersion = versionName(p.dataVersion),
     differences: ProjectionDifference[] = [],
     blocks = p.regions.reduce((n, r) => n + r.blocks.length, 0);
@@ -61,7 +62,7 @@ export function analyzeProjection(
     blocks,
   };
   if (targetVersion && !projectionVersions().find((v) => v.version === targetVersion && v.supported)) {
-    result.unsupported = '该版本暂缺可信注册表，未提供版本转换';
+    result.unsupported = t('projconv.state.version_registry_missing');
     return result;
   }
   const cross = !!targetVersion && targetVersion !== sourceVersion;
@@ -74,7 +75,7 @@ export function analyzeProjection(
     differences.push({
       key: 'litematicEncoding',
       kind: 'data',
-      description: '将写入已验证的 Litematic v6 / SubVersion 1 编码；原编码版本标签不再保留',
+      description: t('projconv.diff.litematic_encoding'),
       count: 1,
       discardOnly: true,
     });
@@ -84,22 +85,22 @@ export function analyzeProjection(
     differences.push({
       key: 'spongeVersion',
       kind: 'data',
-      description: 'Sponge 文件版本将升级为 v3；方块、实体与偏移保持，未验证的扩展数据需要逐项舍弃',
+      description: t('projconv.diff.sponge_version'),
       count: 1,
       discardOnly: true,
     });
   if (cross && !sourceVersion) {
-    result.unsupported = '无法确认原文件的现代游戏版本；旧 schematic 仅支持格式导入，不提供完整跨版本转换';
+    result.unsupported = t('projconv.state.source_version_unknown');
     return result;
   }
   if (format === 'schematic' && cross) {
-    result.unsupported = '旧 schematic 无法表示现代版本标签；请选择现代目标格式';
+    result.unsupported = t('projconv.state.schematic_cross_version');
     return result;
   }
   if (format !== 'litematic') {
     try {
       const flat = flatten(p);
-      if (format === 'nbt' && flat.blocks.length > 180000) result.unsupported = '原版结构标签过多；请拆分为不超过 18 万方块的区域';
+      if (format === 'nbt' && flat.blocks.length > 180000) result.unsupported = t('projconv.state.too_many_blocks');
     } catch (e) {
       result.unsupported = e instanceof Error ? e.message : String(e);
     }
@@ -108,7 +109,7 @@ export function analyzeProjection(
     differences.push({
       key: 'regions',
       kind: 'data',
-      description: '目标格式只有一个区域，将合并区域，区域名称和有符号选择方向不再保留',
+      description: t('projconv.diff.regions_merged'),
       count: p.regions.length,
       discardOnly: true,
     });
@@ -116,7 +117,7 @@ export function analyzeProjection(
     differences.push({
       key: 'direction',
       kind: 'data',
-      description: '目标格式保留绝对偏移，但不保留负向选择方向与区域名称',
+      description: t('projconv.diff.direction_dropped'),
       count: 1,
       discardOnly: true,
     });
@@ -124,7 +125,7 @@ export function analyzeProjection(
     differences.push({
       key: 'nativeOffset',
       kind: 'data',
-      description: '原版结构不支持放置偏移；会保留 FAIONYXOffset 标签供启动器读取，原版游戏将忽略该标签',
+      description: t('projconv.diff.native_offset'),
       count: 1,
       discardOnly: true,
     });
@@ -132,7 +133,7 @@ export function analyzeProjection(
     differences.push({
       key: 'legacyVersion',
       kind: 'data',
-      description: '旧 schematic 不支持现代游戏版本标签，将保存为 1.12 格式',
+      description: t('projconv.diff.legacy_version'),
       count: 1,
       discardOnly: true,
     });
@@ -140,15 +141,15 @@ export function analyzeProjection(
   for (const [ri, r] of p.regions.entries()) {
     const counts = new Map<number, number>();
     for (const b of r.blocks) counts.set(b, (counts.get(b) || 0) + 1);
-    for (const [pi, t] of r.palette.entries()) {
+    for (const [pi, tagValue] of r.palette.entries()) {
       if (!counts.has(pi)) continue;
-      const text = stateText(t),
+      const text = stateText(tagValue),
         reason = cross
           ? validateState(text, targetVersion!)
           : format === 'schematic' && !legacy.has(text) && !text.startsWith('legacy:block_')
-            ? '旧 schematic 无法表示此方块状态'
+            ? t('projconv.error.legacy_schematic_block')
             : format !== 'schematic' && text.startsWith('legacy:block_')
-              ? '无法可靠映射旧数值 ID，请选择替代方块或舍弃'
+              ? t('projconv.error.legacy_id_unmappable')
               : undefined;
       if (reason)
         differences.push({
@@ -158,12 +159,12 @@ export function analyzeProjection(
           count: counts.get(pi)!,
           replacement: 'minecraft:air',
         });
-      const unknown = Object.keys(compound(t)).filter((k) => !['Name', 'Properties'].includes(k));
+      const unknown = Object.keys(compound(tagValue)).filter((k) => !['Name', 'Properties'].includes(k));
       if (unknown.length && (cross || format === 'schem' || format === 'schematic'))
         differences.push({
           key: `stateExtra:${ri}:${pi}`,
           kind: 'data',
-          description: text + ' 的未验证方块状态附加标签：' + unknown.join('、'),
+          description: t('projconv.diff.state_extra', { text, list: unknown.join(t('common.list_separator')) }),
           count: unknown.length,
           discardOnly: true,
         });
@@ -172,27 +173,27 @@ export function analyzeProjection(
       ['entity', r.entities],
       ['blockEntity', r.blockEntities],
     ] as const)
-      for (const [i, t] of items.entries()) {
+      for (const [i, tagValue] of items.entries()) {
         // Exact typed payload survives format conversion. Cross-version entity schemas require DFU;
         // no unverified migrations are claimed. The user can explicitly discard each payload.
         if (cross || (format === 'schematic' && p.format !== 'schematic')) {
-          const id = compound(t).id?.value || '未知类型';
+          const id = compound(tagValue).id?.value || t('projconv.label.unknown_type');
           differences.push({
             key: `${kind}:${ri}:${i}`,
             kind,
-            description: `${id}：该版本组合的实体 NBT 迁移规则尚未验证`,
+            description: t('projconv.diff.entity_migration_unverified', { id }),
             count: 1,
             discardOnly: true,
           });
         } else if (kind === 'blockEntity') {
-          const c = compound(t),
+          const c = compound(tagValue),
             pos = ['x', 'y', 'z'].map((k) => value(c, k, 3)),
             at = pos[0] + pos[2] * r.size[0] + pos[1] * r.size[0] * r.size[2];
           if (differences.some((d) => d.key === `block:${ri}:${r.blocks[at]}`))
             differences.push({
               key: `${kind}:${ri}:${i}`,
               kind,
-              description: '此方块实体对应方块将被替换，需要舍弃其数据',
+              description: t('projconv.diff.block_entity_replaced'),
               count: 1,
               discardOnly: true,
             });
@@ -202,7 +203,7 @@ export function analyzeProjection(
       differences.push({
         key: `regionExtra:${ri}`,
         kind: 'data',
-        description: '区域附加标签：' + Object.keys(r.extra).join('、') + '；目标格式或版本不保证语义',
+        description: t('projconv.diff.region_extra', { list: Object.keys(r.extra).join(t('common.list_separator')) }),
         count: Object.keys(r.extra).length,
         discardOnly: true,
       });
@@ -211,7 +212,7 @@ export function analyzeProjection(
     differences.push({
       key: 'extra',
       kind: 'data',
-      description: '附加标签：' + Object.keys(p.extra).join('、') + '；目标格式或版本不保证语义',
+      description: t('projconv.diff.extra', { list: Object.keys(p.extra).join(t('common.list_separator')) }),
       count: Object.keys(p.extra).length,
       discardOnly: true,
     });
@@ -219,7 +220,7 @@ export function analyzeProjection(
     differences.push({
       key: 'metadata',
       kind: 'data',
-      description: '原版结构不支持投影作者等元数据',
+      description: t('projconv.diff.metadata'),
       count: Object.keys(p.metadata).length,
       discardOnly: true,
     });
@@ -235,24 +236,26 @@ export function convertProjection(
   if (analysis.unsupported) throw new Error(analysis.unsupported);
   for (const difference of analysis.differences) {
     const choice = choices[difference.key];
-    if (!choice) throw new Error('请确认全部差异：' + difference.description);
-    if (difference.discardOnly && choice !== 'discard') throw new Error('此数据仅可舍弃');
+    if (!choice) throw new Error(t('projconv.error.confirm_all_differences', { description: difference.description }));
+    if (difference.discardOnly && choice !== 'discard') throw new Error(t('projconv.error.discard_only'));
     const [kind, ri, pi] = difference.key.split(':');
     if (kind === 'block') {
       const replacement = choice === 'discard' ? 'minecraft:air' : choice;
       if (version) {
         const reason = validateState(replacement, version);
-        if (reason) throw new Error('替代方块不可用：' + reason);
+        if (reason) throw new Error(t('projconv.error.replacement_unavailable', { reason }));
       }
       if (format === 'schematic' && !Object.values((minecraftData as any).legacy.pc.blocks).includes(replacement))
-        throw new Error('替代方块无法写入旧 schematic');
+        throw new Error(t('projconv.error.replacement_legacy_schematic'));
       p.regions[+ri].palette[+pi] = stateTag(replacement);
     }
   }
   for (const [ri, r] of p.regions.entries()) {
     r.entities = r.entities.filter((_t, i) => choices[`entity:${ri}:${i}`] !== 'discard');
     r.blockEntities = r.blockEntities.filter((_t, i) => choices[`blockEntity:${ri}:${i}`] !== 'discard');
-    r.palette = r.palette.map((t, pi) => (choices[`stateExtra:${ri}:${pi}`] === 'discard' ? stateTag(stateText(t)) : t));
+    r.palette = r.palette.map((tagValue, pi) =>
+      choices[`stateExtra:${ri}:${pi}`] === 'discard' ? stateTag(stateText(tagValue)) : tagValue
+    );
     if (choices[`regionExtra:${ri}`] === 'discard') r.extra = {};
   }
   if (choices.extra === 'discard') p.extra = {};

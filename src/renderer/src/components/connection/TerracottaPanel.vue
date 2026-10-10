@@ -5,6 +5,7 @@ import ConnectionPanel from './ConnectionPanel.vue';
 import ConnectionStatus from './ConnectionStatus.vue';
 import { toast } from '../../store';
 import { copyText } from '../../api';
+import { t } from '@renderer/i18n';
 
 interface TcStatus {
   phase: 'idle' | 'downloading' | 'starting' | 'hosting' | 'joining' | 'ready';
@@ -50,20 +51,20 @@ const steps = computed<Step[]>(() => {
   const stepState = (active: boolean, done: boolean): 'done' | 'active' | 'pending' => (done ? 'done' : active ? 'active' : 'pending');
   return [
     {
-      label: '准备官方工具',
+      label: t('tc.prepare_tool'),
       state: stepState(phase === 'downloading', s.binaryReady),
-      detail: s.binaryReady ? '已就绪（SHA-256 校验通过）' : '等待下载',
+      detail: s.binaryReady ? t('tc.ready_verified') : t('tc.waiting_download'),
     },
-    { label: '启动陶瓦引擎', state: stepState(phase === 'starting', s.running), detail: s.running ? '运行中' : undefined },
+    { label: t('tc.start_engine'), state: stepState(phase === 'starting', s.running), detail: s.running ? t('tc.running') : undefined },
     {
-      label: hosting.value ? '创建房间' : '加入房间',
+      label: hosting.value ? t('tc.create_room') : t('tc.join_room'),
       state: stepState(phase === 'hosting' || phase === 'joining', !!s.room || !!s.url),
-      detail: s.stateRaw ? `引擎状态 ${s.stateRaw}` : undefined,
+      detail: s.stateRaw ? t('tc.engine_state', { state: s.stateRaw }) : undefined,
     },
     {
-      label: hosting.value ? '房间就绪' : '连接就绪',
+      label: hosting.value ? t('tc.room_ready') : t('tc.connection_ready'),
       state: stepState(false, phase === 'ready'),
-      detail: phase === 'ready' ? (hosting.value ? '房间码已生成' : '本地地址已生成') : undefined,
+      detail: phase === 'ready' ? (hosting.value ? t('tc.room_code_generated') : t('tc.local_address_generated')) : undefined,
     },
   ];
 });
@@ -88,7 +89,7 @@ function pushLog(text: string): void {
 }
 async function copyLogs(): Promise<void> {
   const text = logs.value.map((l) => `[${l.ts}] ${l.text}`).join('\n');
-  toast((await copyText(text)) ? '日志已复制' : '复制失败', 'info');
+  toast((await copyText(text)) ? t('common.copied') : t('common.copy_failed'), 'info');
 }
 
 let offEvent: (() => void) | undefined;
@@ -132,7 +133,7 @@ async function install(): Promise<void> {
   error.value = '';
   try {
     await window.faionyx.invoke('tc:install');
-    toast('陶瓦工具已下载并通过校验', 'success');
+    toast(t('tc.tool_verified'), 'success');
   } catch (e) {
     error.value = (e as Error).message.replace(/^Error invoking remote method '[^']*': (Error: )?/, '');
   } finally {
@@ -155,7 +156,7 @@ async function start(): Promise<void> {
     });
     status.value = result;
   } catch (e) {
-    error.value = (e as Error).message?.replace(/^Error invoking remote method '[^']*': (Error: )?/, '') ?? '操作失败';
+    error.value = (e as Error).message?.replace(/^Error invoking remote method '[^']*': (Error: )?/, '') ?? t('common.operation_failed');
   } finally {
     busy.value = false;
     void refresh();
@@ -178,7 +179,7 @@ function joinNow(): void {
   void start();
 }
 async function copy(value?: string | null): Promise<void> {
-  if (value) toast((await copyText(value)) ? '已复制' : '复制失败', 'info');
+  if (value) toast((await copyText(value)) ? t('common.copied') : t('common.copy_failed'), 'info');
 }
 
 onMounted(() => {
@@ -195,12 +196,13 @@ onUnmounted(() => {
     <section class="tc-tool">
       <div class="tc-tool-heading">
         <strong
-          >陶瓦工具 <small data-ui="TerracottaPanel:827e768b6562">{{ status?.toolVersion || '正在读取版本…' }}</small></strong
+          >{{ t('tc.tool') }}
+          <small data-ui="TerracottaPanel:827e768b6562">{{ status?.toolVersion || t('tc.reading_version') }}</small></strong
         ><button v-if="status?.binaryReady" class="btn btn-ghost btn-sm" @click="toolDetails = !toolDetails">
-          {{ toolDetails ? '收起' : '管理工具' }}
+          {{ toolDetails ? t('tc.collapse') : t('tc.manage_tool') }}
         </button>
       </div>
-      <p class="connection-muted">{{ status?.binaryReady ? '已安装并通过校验' : '尚未安装或需要修复' }}</p>
+      <p class="connection-muted">{{ status?.binaryReady ? t('tc.installed_verified') : t('tc.not_installed_or_need_fix') }}</p>
       <template v-if="status?.phase === 'downloading'">
         <progress
           data-ui="TerracottaPanel:6f7c029c3008"
@@ -212,9 +214,9 @@ onUnmounted(() => {
           {{ ((status.downloaded || 0) / 1048576).toFixed(1) }} MB{{
             status.total ? ' / ' + (status.total / 1048576).toFixed(1) + ' MB' : ''
           }}
-          · 下载后校验并解压
+          · {{ t('tc.download_then_verify') }}
         </p>
-        <button data-ui="TerracottaPanel:1590618aaf7d" class="btn btn-ghost" @click="cancelInstall">取消下载</button>
+        <button data-ui="TerracottaPanel:1590618aaf7d" class="btn btn-ghost" @click="cancelInstall">{{ t('tc.cancel_download') }}</button>
       </template>
       <button
         data-ui="TerracottaPanel:bcda19ff0078"
@@ -223,50 +225,57 @@ onUnmounted(() => {
         :disabled="busy"
         @click="install"
       >
-        下载陶瓦工具
+        {{ t('tc.download_tool') }}
       </button>
       <div v-if="toolDetails && status?.binaryReady" class="tc-tool-details">
         <p class="mono tc-binary-path">{{ status.binaryPath }}</p>
-        <p class="connection-muted">当前官方工具已通过完整性校验；校验失败时会显示重新下载入口。</p>
-        <button class="btn btn-ghost btn-sm" @click="refresh">重新校验</button>
+        <p class="connection-muted">{{ t('tc.installed_hint') }}</p>
+        <button class="btn btn-ghost btn-sm" @click="refresh">{{ t('tc.reverify') }}</button>
       </div>
     </section>
 
     <!-- 状态区：引擎指标 + 进行中/已就绪的房间与地址 -->
-    <ConnectionPanel title="当前连接">
+    <ConnectionPanel :title="t('tc.current_connection')">
       <template #action>
         <ConnectionStatus
           :tone="error ? 'danger' : connected || (hosting && status?.phase === 'ready') ? 'success' : busyPhase ? 'pending' : 'neutral'"
           :label="
             error
-              ? '操作未完成'
+              ? t('tc.operation_incomplete')
               : connected
-                ? '连接就绪'
+                ? t('tc.connection_ready')
                 : hosting && status?.phase === 'ready'
-                  ? '房间已就绪'
+                  ? t('tc.room_ready')
                   : busyPhase
-                    ? '正在连接'
+                    ? t('tc.connecting')
                     : status?.binaryReady
-                      ? '尚未联机'
-                      : '工具待准备'
+                      ? t('tc.offline')
+                      : t('tc.tool_pending')
           "
         />
       </template>
 
       <details class="tc-diagnostics">
-        <summary>详细状态</summary>
+        <summary>{{ t('tc.detailed_status') }}</summary>
         <p v-if="status?.binaryPath" class="mono tc-binary-path">{{ status.binaryPath }}</p>
         <div data-ui="TerracottaPanel:ce3fababc2be" class="tc-metrics">
           <div>
-            <span>二进制</span
-            ><ConnectionStatus :tone="status?.binaryReady ? 'success' : 'neutral'" :label="status?.binaryReady ? '已就绪' : '待下载'" />
+            <span>{{ t('tc.binary') }}</span
+            ><ConnectionStatus
+              :tone="status?.binaryReady ? 'success' : 'neutral'"
+              :label="status?.binaryReady ? t('tc.ready') : t('tc.pending_download')"
+            />
           </div>
           <div>
-            <span>进程</span
-            ><ConnectionStatus :tone="status?.running ? 'success' : 'neutral'" :label="status?.running ? '运行中' : '未运行'" />
+            <span>{{ t('tc.process') }}</span
+            ><ConnectionStatus
+              :tone="status?.running ? 'success' : 'neutral'"
+              :label="status?.running ? t('tc.running') : t('tc.not_running')"
+            />
           </div>
           <div>
-            <span>引擎状态</span><strong>{{ status?.stateRaw ?? '—' }}</strong>
+            <span>{{ t('tc.engine_status') }}</span
+            ><strong>{{ status?.stateRaw ?? '—' }}</strong>
           </div>
         </div>
       </details>
@@ -277,7 +286,7 @@ onUnmounted(() => {
         class="room-card"
         :class="{ ok: status.phase === 'ready' }"
       >
-        <p data-ui="TerracottaPanel:1bd0e99be803" class="room-label">房间码（发给好友）</p>
+        <p data-ui="TerracottaPanel:1bd0e99be803" class="room-label">{{ t('tc.room_code_send_to_friend') }}</p>
         <p data-ui="TerracottaPanel:56648d11bc2e" class="room-code">
           <code>{{ status.room }}</code
           ><button
@@ -286,49 +295,56 @@ onUnmounted(() => {
             :disabled="!status.room"
             @click="copy(status.room)"
           >
-            复制房间码
+            {{ t('tc.copy_room_code') }}
           </button>
         </p>
         <p class="connection-muted">
-          把 U/ 开头的房间码发给好友（官方四段格式）。好友既可以用 FAIONYX 加入，也可以在陶瓦联机官方工具里输入。
+          {{ t('tc.room_code_hint') }}
         </p>
-        <div class="connection-actions"><button class="btn btn-ghost" :disabled="busy" @click="stop">关闭房间</button></div>
+        <div class="connection-actions">
+          <button class="btn btn-ghost" :disabled="busy" @click="stop">{{ t('tc.close_room') }}</button>
+        </div>
       </div>
 
       <!-- 加入方：本地地址就绪 -->
       <div data-ui="TerracottaPanel:df0a2c1c5a0a" v-else-if="connected" class="connection-result success" aria-live="polite">
-        <ConnectionStatus tone="success" label="已连接 · 本地地址就绪" />
+        <ConnectionStatus tone="success" :label="t('tc.connected_local_ready')" />
         <p data-ui="TerracottaPanel:9d326d8a8d4e" class="mc-address">
           <code>{{ status?.url }}</code
-          ><button data-ui="TerracottaPanel:ce5c6200c8bf" class="btn btn-ghost copy-mini" @click="copy(status?.url)">复制地址</button>
+          ><button data-ui="TerracottaPanel:ce5c6200c8bf" class="btn btn-ghost copy-mini" @click="copy(status?.url)">
+            {{ t('tc.copy_address') }}
+          </button>
         </p>
         <ol data-ui="TerracottaPanel:2344f43069e9" class="join-guide">
-          <li>打开 Minecraft（与房主相同的实例与版本）</li>
-          <li>进入「多人游戏」→「直接连接」</li>
-          <li>粘贴上方地址并加入</li>
+          <li>{{ t('tc.join_step_open_mc') }}</li>
+          <li>{{ t('tc.join_step_multiplayer') }}</li>
+          <li>{{ t('tc.join_step_paste_address') }}</li>
         </ol>
-        <div class="connection-actions"><button class="btn btn-ghost" :disabled="busy" @click="stop">断开</button></div>
+        <div class="connection-actions">
+          <button class="btn btn-ghost" :disabled="busy" @click="stop">{{ t('tc.disconnect') }}</button>
+        </div>
       </div>
 
       <!-- 进行中 -->
       <div data-ui="TerracottaPanel:c48e076cac45" v-else-if="busyPhase" class="connection-result" aria-live="polite">
-        <ConnectionStatus tone="pending" label="正在建立连接…" />
+        <ConnectionStatus tone="pending" :label="t('tc.establishing_connection')" />
         <p class="connection-muted">
-          当前阶段：{{
+          {{ t('tc.current_phase')
+          }}{{
             status?.phase === 'downloading'
-              ? '下载官方工具'
+              ? t('tc.download_tool')
               : status?.phase === 'starting'
-                ? '启动陶瓦引擎'
+                ? t('tc.start_engine')
                 : status?.phase === 'joining'
-                  ? '正在加入房间'
+                  ? t('tc.joining_room')
                   : status?.phase === 'hosting'
-                    ? '等待房间号'
-                    : '处理中'
-          }}{{ status?.stateRaw ? ` · 引擎状态 ${status.stateRaw}` : '' }}
+                    ? t('tc.waiting_room_code')
+                    : t('tc.processing')
+          }}{{ status?.stateRaw ? ` · ` + t('tc.engine_state', { state: status.stateRaw }) : '' }}
         </p>
       </div>
 
-      <ol data-ui="TerracottaPanel:8c761921c1c5" v-if="steps.length" class="stage-bar" aria-label="连接过程">
+      <ol data-ui="TerracottaPanel:8c761921c1c5" v-if="steps.length" class="stage-bar" :aria-label="t('tc.connection_process')">
         <li data-ui="TerracottaPanel:25a2ddf62ba7" v-for="s in steps" :key="s.label" class="stage-item" :class="s.state">
           <span data-ui="TerracottaPanel:f1d7550a3d17" class="stage-dot" aria-hidden="true">{{ s.state === 'done' ? '✓' : '' }}</span>
           <span data-ui="TerracottaPanel:99431821492b" class="stage-copy"
@@ -339,27 +355,28 @@ onUnmounted(() => {
       </ol>
 
       <div data-ui="TerracottaPanel:48b8a0fb7f25" v-if="busyPhase && status?.phase !== 'downloading'" class="connection-actions">
-        <button data-ui="TerracottaPanel:e4686b6661b3" class="btn btn-ghost" @click="stop">取消连接</button>
+        <button data-ui="TerracottaPanel:e4686b6661b3" class="btn btn-ghost" @click="stop">{{ t('tc.cancel_connection') }}</button>
       </div>
       <p data-ui="TerracottaPanel:1861deb0662b" v-if="error" class="connection-error" role="alert">{{ error }}</p>
     </ConnectionPanel>
 
     <!-- 主操作区：创建房间 / 加入房间 两栏并排（窄窗口自动换行） -->
-    <section class="tc-operations" aria-label="创建或加入房间">
+    <section class="tc-operations" :aria-label="t('tc.create_or_join_room')">
       <p v-if="!status?.binaryReady || status?.running" class="connection-muted">
-        {{ !status?.binaryReady ? '请先下载并校验陶瓦工具，再创建或加入房间。' : '当前已有会话，请先关闭或断开，再创建或加入其他房间。' }}
+        {{ !status?.binaryReady ? t('tc.prerequisite_hint') : t('tc.session_active_hint') }}
       </p>
       <div data-ui="TerracottaPanel:1ffe44625ede" class="connection-columns">
         <div class="op-card">
-          <h3>创建房间</h3>
-          <p class="connection-muted">先启动游戏并对局域网开放世界；陶瓦会自动完成其余工作，房间码会出现在上方「连接状态」。</p>
+          <h3>{{ t('tc.host_room_heading') }}</h3>
+          <p class="connection-muted">{{ t('tc.host_room_hint') }}</p>
           <label class="connection-field"
-            >游戏内名字<input
+            >{{ t('tc.player_name_label')
+            }}<input
               data-ui="TerracottaPanel:6810d6fb09db"
               v-model="playerName"
               class="input"
               maxlength="16"
-              placeholder="可选，默认 FAIONYX"
+              :placeholder="t('tc.player_name_placeholder')"
           /></label>
           <div class="connection-actions">
             <button
@@ -371,23 +388,24 @@ onUnmounted(() => {
                 start();
               "
             >
-              {{ busy && mode === 'host' ? '处理中…' : '创建陶瓦房间' }}
+              {{ busy && mode === 'host' ? t('tc.processing_ing') : t('tc.create_taocotta_room') }}
             </button>
           </div>
         </div>
         <div class="op-card">
-          <h3>加入房间</h3>
+          <h3>{{ t('tc.join_room_heading') }}</h3>
           <label class="connection-field"
-            >房间码<input
+            >{{ t('tc.room_code_label')
+            }}<input
               data-ui="TerracottaPanel:c407f428b093"
               v-model="roomCode"
               class="input room-input"
-              placeholder="U/XXXX-XXXX-XXXX-XXXX"
+              :placeholder="t('tc.room_code_placeholder')"
               :disabled="busy"
               @keydown.enter="joinNow"
           /></label>
           <p data-ui="TerracottaPanel:9bf07a151f37" v-if="roomCode.trim() && !joinCodeValid" class="connection-muted">
-            格式：U/ 开头 + 四段各 4 位（例如 U/AB12-CD34-EF56-GH78）。
+            {{ t('tc.room_code_format_hint') }}
           </p>
           <div class="connection-actions">
             <button
@@ -396,33 +414,32 @@ onUnmounted(() => {
               :disabled="busy || status?.running || !joinCodeValid || !status?.binaryReady"
               @click="joinNow"
             >
-              {{ busy && mode === 'join' ? '连接中…' : '加入房间' }}
+              {{ busy && mode === 'join' ? t('tc.connecting_ing') : t('tc.join_room_btn') }}
             </button>
           </div>
-          <p class="connection-muted">加入成功（引擎给出本地地址）后，地址会显示在上方「连接状态」。</p>
+          <p class="connection-muted">{{ t('tc.join_success_hint') }}</p>
         </div>
       </div>
     </section>
 
     <!-- 参考信息区：默认折叠 -->
     <details data-ui="TerracottaPanel:3fe99c5bebdf" class="connection-details reference-details">
-      <summary>关于陶瓦联机</summary>
+      <summary>{{ t('tc.about_heading') }}</summary>
       <div data-ui="TerracottaPanel:47f49123c2eb" class="connection-detail-content">
-        <p>陶瓦联机（Terracotta）是 burningtnt（GitHub burningtnt/Terracotta）维护的独立开源联机项目，基于 EasyTier、AGPL-3.0 协议。</p>
+        <p>{{ t('tc.about_body_1') }}</p>
         <p>
-          点击「下载陶瓦工具」获取官方 {{ status?.toolVersion || '指定版本' }} 二进制，分别校验压缩包与 EXE 的 SHA-256；极端 NAT
-          环境下成功率较高。
+          {{ t('tc.about_body_2', { version: status?.toolVersion || t('tc.version_specified') }) }}
         </p>
-        <p>房间码为官方四段格式 U/XXXX-XXXX-XXXX-XXXX，与陶瓦官方工具互通。</p>
+        <p>{{ t('tc.about_body_3') }}</p>
       </div>
     </details>
 
     <!-- 日志区：窄、默认收起 -->
     <details data-ui="TerracottaPanel:9ff4da54ff0d" class="connection-details log-details">
-      <summary>陶瓦引擎日志（{{ logs.length }} 条）</summary>
+      <summary>{{ t('tc.logs_heading', { count: logs.length }) }}</summary>
       <div data-ui="TerracottaPanel:387469b5876d" class="log-tools">
         <button data-ui="TerracottaPanel:1e6ff6dd4e33" class="btn btn-ghost copy-mini" :disabled="!logs.length" @click="copyLogs">
-          复制日志
+          {{ t('tc.copy_logs') }}
         </button>
       </div>
       <div data-ui="TerracottaPanel:9ba0004a10df" ref="logViewport" class="connection-log-viewport" aria-live="polite" tabindex="0">
@@ -430,7 +447,7 @@ onUnmounted(() => {
           <span data-ui="TerracottaPanel:41e49f406b4c" class="log-ts">{{ l.ts }}</span
           >{{ l.text }}
         </p>
-        <p data-ui="TerracottaPanel:c7a082d9c420" v-if="!logs.length" class="connection-muted">暂无日志。</p>
+        <p data-ui="TerracottaPanel:c7a082d9c420" v-if="!logs.length" class="connection-muted">{{ t('tc.no_logs') }}</p>
       </div>
     </details>
   </div>

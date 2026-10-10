@@ -25,6 +25,7 @@ import ServerAddress from '../components/connection/ServerAddress.vue';
 import { privateServerText, serverAddressRevealed } from '@shared/serverPrivacy';
 import '../components/connection/connection.css';
 import { selectInstance, selectedInstance, refreshInstalled, store, toast } from '../store';
+import { t } from '@renderer/i18n';
 import type { InstalledVersion, ServerEntry, ServerPingResult } from '@shared/types';
 
 // ---------------- 列表与状态 ----------------
@@ -60,10 +61,10 @@ async function load() {
     const r = await syncServersFromDat();
     servers.value = r.list;
     targets.value = r.targets ?? store.installed;
-    if (r.added > 0) toast(`已从游戏内同步 ${r.added} 个服务器`, 'info');
-    if (r.errors?.length) toast(`有 ${r.errors.length} 条服务器记录未能读取，请检查游戏服务器列表或手动添加`, 'error');
+    if (r.added > 0) toast(t('servers.toast.synced_in', { count: String(r.added) }), 'info');
+    if (r.errors?.length) toast(t('servers.toast.read_errors', { count: String(r.errors.length) }), 'error');
   } catch (e) {
-    loadError.value = publicMessage('读取服务器列表失败：' + errText(e));
+    loadError.value = publicMessage(t('servers.toast.list_failed', { e: errText(e) }));
     toast(loadError.value, 'error');
   } finally {
     loading.value = false;
@@ -79,11 +80,14 @@ async function syncNow() {
     const r = await syncServersFromDat();
     servers.value = r.list;
     targets.value = r.targets ?? store.installed;
-    const detail = r.added || r.updated ? `新增 ${r.added}，更新 ${r.updated ?? 0}` : '没有发现变化';
-    toast(`游戏内服务器同步完成：${detail}`, r.errors?.length ? 'error' : 'success');
-    if (r.errors?.length) toast(`有 ${r.errors.length} 条服务器记录未能读取，请检查游戏服务器列表或手动添加`, 'error');
+    const detail =
+      r.added || r.updated
+        ? t('servers.toast.sync_detail', { added: String(r.added), updated: String(r.updated ?? 0) })
+        : t('servers.toast.sync_no_change');
+    toast(t('servers.toast.sync_done', { detail }), r.errors?.length ? 'error' : 'success');
+    if (r.errors?.length) toast(t('servers.toast.read_errors', { count: String(r.errors.length) }), 'error');
   } catch (e) {
-    loadError.value = publicMessage('同步失败：' + errText(e));
+    loadError.value = publicMessage(t('servers.toast.sync_failed', { e: errText(e) }));
   } finally {
     loading.value = false;
   }
@@ -112,7 +116,7 @@ async function pingOne(s: ServerEntry) {
     pings[s.id] = {
       online: false,
       players: '-',
-      motd: '无法连接（服务器离线或地址错误）',
+      motd: t('servers.ping.unreachable'),
       version: '-',
       latencyMs: 0,
     };
@@ -153,7 +157,7 @@ async function onAdd() {
     addModal.open = false;
     addModal.name = '';
     addModal.address = '';
-    toast(editingId ? '服务器已更新' : '服务器已添加', 'success');
+    toast(editingId ? t('servers.toast.updated') : t('servers.toast.added'), 'success');
     const just = editingId ? servers.value.find((s) => s.id === editingId) : servers.value[servers.value.length - 1];
     if (just) {
       activeId.value = just.id;
@@ -210,17 +214,18 @@ async function onDelete() {
       }
       selected.value = new Set();
       delModal.open = false;
-      toast(`已删除 ${okCount} 个服务器`, 'success');
+      toast(t('servers.toast.deleted_many', { count: String(okCount) }), 'success');
     } else {
-      const t = delModal.target;
-      if (!t) return;
-      servers.value = await removeServer(t.id);
-      delete pings[t.id];
+      // NOTE: 参数名不能用 t，会遮蔽 i18n 的 t()。
+      const target = delModal.target;
+      if (!target) return;
+      servers.value = await removeServer(target.id);
+      delete pings[target.id];
       delModal.open = false;
-      toast('已删除服务器', 'success');
+      toast(t('servers.toast.deleted_one'), 'success');
     }
   } catch (e) {
-    toast(publicMessage('删除失败：' + errText(e)), 'error');
+    toast(publicMessage(t('servers.toast.delete_failed', { e: errText(e) })), 'error');
   } finally {
     delModal.busy = false;
   }
@@ -228,8 +233,8 @@ async function onDelete() {
 
 // ---------------- 一键进服 ----------------
 function syncJoinSelection() {
-  const t = parseTargetToken(joinModal.versionId);
-  if (t) void selectInstance(t.id, t.folder);
+  const target = parseTargetToken(joinModal.versionId);
+  if (target) void selectInstance(target.id, target.folder);
 }
 const joinModal = reactive({ open: false, target: null as ServerEntry | null, versionId: '' });
 
@@ -259,9 +264,9 @@ const folderLabel = (folder: string): string =>
 const targetLabel = (target: InstalledVersion): string =>
   `${folderLabel(target.folder)} · ${target.id}${target.loader ? ` · ${target.loader} ${target.loaderVersion ?? ''}` : ''}`;
 const formatLastUsed = (value?: string): string => {
-  if (!value) return '尚未从启动器进入';
+  if (!value) return t('servers.last_used.never');
   const time = new Date(value);
-  return Number.isNaN(time.getTime()) ? '时间未知' : `上次启动 ${time.toLocaleString()}`;
+  return Number.isNaN(time.getTime()) ? t('servers.last_used.unknown') : t('servers.last_used.at', { time: time.toLocaleString() });
 };
 
 /** 双击卡片：已绑定版本直接启动进服；未绑定弹版本选择 */
@@ -289,7 +294,7 @@ async function doLaunch(s: ServerEntry, versionId: string) {
     const prepared = await withDeadline(
       () => prepareServerLaunch(s.id, versionId, target?.folder ?? s.folder),
       15000,
-      '服务器启动准备超时，请检查实例目录是否可访问后重试'
+      t('servers.toast.launch_timeout')
     );
     store.settings = await getSettings();
     // Preparation already pins the target folder. Reuse the list loaded by this
@@ -302,12 +307,12 @@ async function doLaunch(s: ServerEntry, versionId: string) {
     servers.value = await listServers();
     toast(
       prepared.directJoin
-        ? `正在启动并进入 ${privateServerText(s.name, s)}…`
-        : `Minecraft ${prepared.minecraftVersion} 不支持快速进入，已启动正确实例`,
+        ? t('servers.toast.launching_direct', { name: privateServerText(s.name, s) })
+        : t('servers.toast.launching_legacy', { version: prepared.minecraftVersion }),
       'info'
     );
   } catch (e) {
-    toast(publicMessage('启动失败：' + errText(e)), 'error');
+    toast(publicMessage(t('servers.toast.launch_failed', { e: errText(e) })), 'error');
   } finally {
     launchBusy.value = false;
   }
@@ -321,16 +326,16 @@ async function onBind(s: ServerEntry, token: string) {
     const target = parseTargetToken(token);
     servers.value = await bindServer(s.id, target?.id ?? '', target?.folder);
     if (target) await selectInstance(target.id, target.folder);
-    toast(publicMessage(target ? `已关联到 ${target.id}` : '已解除实例关联'), 'success');
+    toast(publicMessage(target ? t('servers.toast.bound', { id: target.id }) : t('servers.toast.unbound')), 'success');
   } catch (e) {
-    toast(publicMessage('绑定失败：' + errText(e)), 'error');
+    toast(publicMessage(t('servers.toast.bind_failed', { e: errText(e) })), 'error');
   } finally {
     bindingId.value = '';
   }
 }
 
 function relinkMissing(s: ServerEntry) {
-  toast('关联实例已缺失；可选择现有实例重新关联，或到游戏版本页重新下载', 'info');
+  toast(t('servers.toast.relink_missing'), 'info');
   openJoin(s);
 }
 
@@ -338,7 +343,7 @@ const versionMissing = (s: ServerEntry): boolean => !!s.versionId && !targetOf(s
 
 function openJoin(s: ServerEntry) {
   if (!targets.value.length) {
-    toast('还没有安装任何版本，请先到游戏版本页安装', 'error');
+    toast(t('servers.toast.no_instances'), 'error');
     return;
   }
   joinModal.target = s;
@@ -357,7 +362,7 @@ async function onJoin() {
     const linked = servers.value.find((server) => server.id === s.id) ?? s;
     await doLaunch(linked, target.id);
   } catch (e) {
-    toast(publicMessage('启动失败：' + errText(e)), 'error');
+    toast(publicMessage(t('servers.toast.launch_failed', { e: errText(e) })), 'error');
   }
 }
 
@@ -385,7 +390,7 @@ async function toggleFavorite(server: ServerEntry) {
   try {
     servers.value = await favoriteServer(server.id, !server.favorite);
   } catch (e) {
-    toast(publicMessage('收藏失败：' + errText(e)), 'error');
+    toast(publicMessage(t('servers.toast.favorite_failed', { e: errText(e) })), 'error');
   }
 }
 const activeServer = computed(() => filteredServers.value.find((s) => s.id === activeId.value) ?? filteredServers.value[0]);
@@ -400,7 +405,7 @@ function requestDelete(s: ServerEntry) {
 async function copyAddress(s: ServerEntry) {
   if (!addressRevealed(s)) return;
   try {
-    toast((await copyText(s.address)) ? '服务器地址已复制' : '复制失败', 'info');
+    toast((await copyText(s.address)) ? t('servers.toast.copied') : t('servers.toast.copy_failed'), 'info');
   } catch (e) {
     toast(publicMessage(errText(e)), 'error');
   }
@@ -412,11 +417,12 @@ async function copyAddress(s: ServerEntry) {
     <header data-ui="ServersView:c2edecc77ee3" class="connection-header">
       <div>
         <h1 data-ui="ServersView:ee8e70e0acab">
-          服务器 <small>{{ servers.length }} 个 · {{ onlineCount }} 个在线</small>
+          {{ t('servers.title') }}
+          <small>{{ t('servers.title.summary', { total: String(servers.length), online: String(onlineCount) }) }}</small>
         </h1>
       </div>
       <button data-ui="ServersView:c8a77fb10c66" class="btn btn-gold" :disabled="loading" @click="openAdd()">
-        <span data-ui="ServersView:12718dc300bd" aria-hidden="true">＋</span> 添加服务器
+        <span data-ui="ServersView:12718dc300bd" aria-hidden="true">＋</span> {{ t('servers.add') }}
       </button>
     </header>
     <div data-ui="ServersView:eee6f822ac69" class="server-toolbar">
@@ -428,8 +434,8 @@ async function copyAddress(s: ServerEntry) {
           data-ui="ServersView:3445c173cb2a"
           v-model="store.searchKeyword"
           type="search"
-          placeholder="搜索名称、地址或服务器介绍"
-          aria-label="搜索服务器"
+          :placeholder="t('servers.search.placeholder')"
+          :aria-label="t('servers.search.aria')"
       /></label>
       <div data-ui="ServersView:1b941bebf470" class="connection-actions">
         <button
@@ -438,27 +444,29 @@ async function copyAddress(s: ServerEntry) {
           :disabled="refreshing || loading || !servers.length"
           @click="pingAll"
         >
-          {{ refreshing ? '刷新中…' : '刷新状态' }}</button
+          {{ refreshing ? t('servers.refreshing') : t('servers.refresh') }}</button
         ><button data-ui="ServersView:976ee42760fa" class="btn btn-ghost" :disabled="loading || !!bindingId || launchBusy" @click="syncNow">
-          {{ loading ? '同步中…' : '同步游戏列表' }}</button
+          {{ loading ? t('servers.syncing') : t('servers.sync') }}</button
         ><button data-ui="ServersView:6701e62ae081" class="btn btn-ghost" :disabled="!servers.length || loading" @click="toggleSelectMode">
-          {{ selectMode ? '退出多选' : '批量管理' }}
+          {{ selectMode ? t('servers.batch.exit') : t('servers.batch.enter') }}
         </button>
       </div>
     </div>
     <p data-ui="ServersView:de3efa1d5d8c" v-if="loadError" class="connection-error" role="alert">
-      {{ loadError }} <button data-ui="ServersView:99e827f2934b" class="btn btn-ghost" @click="load">重试</button>
+      {{ loadError }}
+      <button data-ui="ServersView:99e827f2934b" class="btn btn-ghost" @click="load">{{ t('servers.retry') }}</button>
     </p>
 
     <div data-ui="ServersView:f5fd3e224d72" v-if="selectMode" class="server-batch">
       <label data-ui="ServersView:95d3c099e4dd" class="check-all"
-        ><input data-ui="ServersView:ae275f78348c" type="checkbox" :checked="allChecked" @change="toggleAll" /> 全选搜索结果</label
-      ><span>已选 {{ selectedCount }} 项</span
+        ><input data-ui="ServersView:ae275f78348c" type="checkbox" :checked="allChecked" @change="toggleAll" />
+        {{ t('servers.batch.select_all') }}</label
+      ><span>{{ t('servers.batch.selected', { count: String(selectedCount) }) }}</span
       ><button data-ui="ServersView:bfafec35f377" class="btn btn-danger" :disabled="!selectedCount" @click="openBatchDelete">
-        删除所选
+        {{ t('servers.batch.delete') }}
       </button>
     </div>
-    <ContentSkeleton v-if="loading && !servers.length" class="connection-panel" label="正在整理服务器列表…" />
+    <ContentSkeleton v-if="loading && !servers.length" class="connection-panel" :label="t('servers.loading')" />
     <div data-ui="ServersView:0c74b7b7657d" v-else-if="!servers.length && !loadError" class="connection-panel connection-empty">
       <span data-ui="ServersView:ace2288ec1cd" class="connection-symbol" aria-hidden="true"
         ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -466,17 +474,19 @@ async function copyAddress(s: ServerEntry) {
           <rect x="3" y="13" width="18" height="8" rx="2" />
           <path d="M7 7h2m-2 10h2" /></svg
       ></span>
-      <h3>下一站，去哪个世界？</h3>
-      <p>添加好友的服务器地址，或同步游戏内的收藏。关联实例后即可快速进入。</p>
-      <button data-ui="ServersView:425560590e46" class="btn btn-gold" @click="openAdd()">添加第一个服务器</button>
+      <h3>{{ t('servers.empty.heading') }}</h3>
+      <p>{{ t('servers.empty.desc') }}</p>
+      <button data-ui="ServersView:425560590e46" class="btn btn-gold" @click="openAdd()">{{ t('servers.empty.add_first') }}</button>
     </div>
     <div data-ui="ServersView:18026edb487f" v-else-if="!filteredServers.length && !loadError" class="connection-panel connection-empty">
-      <h3>没有找到匹配的服务器</h3>
-      <p>试试其他名称、地址或关键词。</p>
-      <button data-ui="ServersView:9d3cfed9a775" class="btn btn-ghost" @click="store.searchKeyword = ''">清除搜索</button>
+      <h3>{{ t('servers.empty.no_match_title') }}</h3>
+      <p>{{ t('servers.empty.no_match_desc') }}</p>
+      <button data-ui="ServersView:9d3cfed9a775" class="btn btn-ghost" @click="store.searchKeyword = ''">
+        {{ t('servers.empty.clear_search') }}
+      </button>
     </div>
     <div data-ui="ServersView:327a59a2e7d9" v-else-if="servers.length" class="server-workspace" :inert="loading || !!loadError">
-      <section data-ui="ServersView:9f97ae2c334b" class="server-list" aria-label="服务器列表">
+      <section data-ui="ServersView:9f97ae2c334b" class="server-list" :aria-label="t('servers.list.aria')">
         <ServerListItem
           v-for="s in filteredServers"
           :key="s.id"
@@ -493,7 +503,7 @@ async function copyAddress(s: ServerEntry) {
           @toggle="toggleSelect(s.id)"
           @connect="onCardDblClick(s)"
         />
-        <p data-ui="ServersView:14a890c77df9" class="connection-muted server-list-hint">选择查看详情 · 双击快速连接</p>
+        <p data-ui="ServersView:14a890c77df9" class="connection-muted server-list-hint">{{ t('servers.list.hint') }}</p>
       </section>
       <ServerDetails
         v-if="activeServer"
@@ -529,32 +539,34 @@ async function copyAddress(s: ServerEntry) {
         class="modal-mask connection-modal"
         @pointerdown.self="!addModal.busy && (addModal.open = false)"
       >
-        <div data-ui="ServersView:64843d40b149" class="modal" role="dialog" aria-modal="true" aria-label="服务器操作">
-          <h3 class="modal-title">{{ addModal.id ? '编辑服务器' : '添加服务器' }}</h3>
-          <p data-ui="ServersView:0673ab93fcb6" class="connection-muted">只修改启动器记录，不会覆盖游戏内服务器列表。</p>
+        <div data-ui="ServersView:64843d40b149" class="modal" role="dialog" aria-modal="true" :aria-label="t('servers.modal.aria')">
+          <h3 class="modal-title">{{ addModal.id ? t('servers.modal.edit_title') : t('servers.modal.add_title') }}</h3>
+          <p data-ui="ServersView:0673ab93fcb6" class="connection-muted">{{ t('servers.modal.only_launcher') }}</p>
           <p data-ui="ServersView:ff5270751bc0" v-if="addModal.error" class="connection-error" role="alert">{{ addModal.error }}</p>
-          <label data-ui="ServersView:ef16ee272d28" for="server-edit-name" class="modal-label">服务器名称</label>
+          <label data-ui="ServersView:ef16ee272d28" for="server-edit-name" class="modal-label">{{ t('servers.modal.name_label') }}</label>
           <input
             data-ui="ServersView:269e49ea31d8"
             id="server-edit-name"
             v-model="addModal.name"
             class="input"
-            placeholder="例如：好友的生存服"
+            :placeholder="t('servers.modal.name_placeholder')"
             maxlength="30"
           />
-          <label data-ui="ServersView:7726e21fdba4" for="server-edit-address" class="modal-label">服务器地址</label>
+          <label data-ui="ServersView:7726e21fdba4" for="server-edit-address" class="modal-label">{{
+            t('servers.modal.address_label')
+          }}</label>
           <input
             data-ui="ServersView:96ef483b19f6"
             id="server-edit-address"
             v-model="addModal.address"
             class="input mono"
-            placeholder="例如：mc.example.com 或 1.2.3.4:25565"
+            :placeholder="t('servers.modal.address_placeholder')"
             spellcheck="false"
             @keyup.enter="onAdd"
           />
           <div class="modal-actions">
             <button data-ui="ServersView:c271ffbad47f" class="btn btn-ghost" :disabled="addModal.busy" @click="addModal.open = false">
-              取消
+              {{ t('servers.modal.cancel') }}
             </button>
             <button
               data-ui="ServersView:597bd1616442"
@@ -562,7 +574,7 @@ async function copyAddress(s: ServerEntry) {
               :disabled="addModal.busy || !addModal.name.trim() || !addModal.address.trim()"
               @click="onAdd"
             >
-              {{ addModal.busy ? '保存中…' : addModal.id ? '保存修改' : '添加服务器' }}
+              {{ addModal.busy ? t('servers.modal.saving') : addModal.id ? t('servers.modal.save') : t('servers.modal.add') }}
             </button>
           </div>
         </div>
@@ -576,23 +588,21 @@ async function copyAddress(s: ServerEntry) {
         @pointerdown.self="!delModal.busy && (delModal.open = false)"
       >
         <div class="modal">
-          <h3 class="modal-title">删除服务器</h3>
+          <h3 class="modal-title">{{ t('servers.delete.title') }}</h3>
           <p data-ui="ServersView:76f7cd862f50" class="confirm-text">
             <template v-if="delModal.batch">
-              确定要从 FAIONYX 删除所选的 {{ selectedCount }} 个服务器吗？这只会删除启动器记录，不会修改 Minecraft 的
-              servers.dat；下次同步时，游戏内仍存在的条目可能再次出现。
+              {{ t('servers.delete.batch_text', { count: String(selectedCount) }) }}
             </template>
             <template v-else>
-              确定要从 FAIONYX 删除「{{ publicName(delModal.target) }}」吗？这只会删除启动器记录，不会修改 Minecraft 的
-              servers.dat；下次同步时，游戏内仍存在的条目可能再次出现。
+              {{ t('servers.delete.single_text', { name: publicName(delModal.target) }) }}
             </template>
           </p>
           <div class="modal-actions">
             <button data-ui="ServersView:f352d5e4009a" class="btn btn-ghost" :disabled="delModal.busy" @click="delModal.open = false">
-              取消
+              {{ t('servers.modal.cancel') }}
             </button>
             <button data-ui="ServersView:488f14bc3ac2" class="btn btn-danger" :disabled="delModal.busy" @click="onDelete">
-              {{ delModal.busy ? '删除中…' : '确认删除' }}
+              {{ delModal.busy ? t('servers.delete.deleting') : t('servers.delete.confirm') }}
             </button>
           </div>
         </div>
@@ -606,8 +616,8 @@ async function copyAddress(s: ServerEntry) {
         @pointerdown.self="joinModal.open = false"
       >
         <div class="modal">
-          <h3 class="modal-title">进入 {{ publicName(joinModal.target) }}</h3>
-          <p data-ui="ServersView:86a7b84a1c0f" class="modal-label">选择游戏实例，确认后保存关联并进入服务器。</p>
+          <h3 class="modal-title">{{ t('servers.join.title', { name: publicName(joinModal.target) }) }}</h3>
+          <p data-ui="ServersView:86a7b84a1c0f" class="modal-label">{{ t('servers.join.desc') }}</p>
           <ServerAddress
             v-if="joinModal.target"
             :address="joinModal.target.address"
@@ -619,12 +629,12 @@ async function copyAddress(s: ServerEntry) {
               {{ targetLabel(v) }}
             </option>
           </select>
-          <p data-ui="ServersView:6b5692aed293" class="muted join-hint">
-            Java 1.20 及以上会使用官方 Quick Play 直接进入；更旧版本只启动正确实例，并保留服务器记录。
-          </p>
+          <p data-ui="ServersView:6b5692aed293" class="muted join-hint">{{ t('servers.join.hint') }}</p>
           <div class="modal-actions">
-            <button data-ui="ServersView:ed11f95a3941" class="btn btn-ghost" @click="joinModal.open = false">取消</button>
-            <button data-ui="ServersView:9bd6d5ab8297" class="btn btn-gold" @click="onJoin">启动并进入</button>
+            <button data-ui="ServersView:ed11f95a3941" class="btn btn-ghost" @click="joinModal.open = false">
+              {{ t('servers.modal.cancel') }}
+            </button>
+            <button data-ui="ServersView:9bd6d5ab8297" class="btn btn-gold" @click="onJoin">{{ t('servers.join.action') }}</button>
           </div>
         </div>
       </div>

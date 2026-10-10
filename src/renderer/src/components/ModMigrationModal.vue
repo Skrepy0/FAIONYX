@@ -6,6 +6,7 @@ import MinecraftVersionPicker from './MinecraftVersionPicker.vue';
 import SelectMenu from './SelectMenu.vue';
 import { getModIcons, errText } from '../api';
 import { store, toast } from '../store';
+import { t } from '@renderer/i18n';
 const props = defineProps<{ source: InstalledVersion }>(),
   emit = defineEmits<{ (e: 'close'): void }>();
 const mc = ref(''),
@@ -72,7 +73,7 @@ async function start() {
   starting.value = true;
   try {
     await window.faionyx.invoke(IPC.modsMigrationApply, plan.value.id, confirmed.value);
-    toast('版本迁移已开始，可在下载中心查看进度或取消', 'success');
+    toast(t('mmm.migration_started'), 'success');
     emit('close');
   } catch (e) {
     error.value = errText(e);
@@ -87,22 +88,24 @@ async function start() {
       <section class="modal migration-modal" role="dialog" aria-modal="true" aria-labelledby="migration-title">
         <header>
           <div>
-            <h2 id="migration-title">版本迁移</h2>
-            <p class="muted">将当前模组迁移到新的隔离实例，原版本保持完整。</p>
+            <h2 id="migration-title">{{ t('mmm.title') }}</h2>
+            <p class="muted">{{ t('mmm.desc') }}</p>
           </div>
-          <button class="btn btn-ghost" aria-label="关闭版本迁移" :disabled="starting" @click="emit('close')">×</button>
+          <button class="btn btn-ghost" :aria-label="t('mmm.close_aria')" :disabled="starting" @click="emit('close')">×</button>
         </header>
         <div class="migration-body">
           <div class="migration-route">
             <div>
-              <small class="muted">当前版本</small><strong>{{ source.name || source.id }}</strong
+              <small class="muted">{{ t('mmm.current_version') }}</small
+              ><strong>{{ source.name || source.id }}</strong
               ><span class="muted">{{ source.mcVersion }} · {{ source.loader }}</span>
             </div>
             <span aria-hidden="true">→</span>
             <div>
-              <label>目标 Minecraft 版本<MinecraftVersionPicker v-model="mc" :disabled="starting" /></label
+              <label>{{ t('mmm.target_version') }}<MinecraftVersionPicker v-model="mc" :disabled="starting" /></label
               ><label
-                >加载器<SelectMenu
+                >{{ t('mmm.loader')
+                }}<SelectMenu
                   v-model="loader"
                   :disabled="starting"
                   :options="[
@@ -114,18 +117,19 @@ async function start() {
               /></label>
             </div>
           </div>
-          <p class="migration-hint">迁移模组及必要前置，保留启停状态。新实例自动安装游戏与加载器；存档、资源包和配置文件仍保留在原实例。</p>
+          <p class="migration-hint">{{ t('mmm.hint') }}</p>
           <div v-if="error" class="migration-error" role="alert">{{ error }}</div>
-          <div v-if="checking" class="migration-loading"><span class="spin" /> 正在检查每个模组的适配版本与前置依赖…</div>
+          <div v-if="checking" class="migration-loading"><span class="spin" /> {{ t('mmm.checking') }}</div>
           <template v-if="plan"
             ><div class="migration-summary">
-              <strong>检查完成</strong><span>{{ plan.entries.filter((e) => e.status === 'compatible').length }} 个可迁移</span
-              ><span>{{ plan.entries.filter((e) => e.status === 'dependency').length }} 个新增前置</span
+              <strong>{{ t('mmm.check_done') }}</strong
+              ><span>{{ plan.entries.filter((e) => e.status === 'compatible').length }} {{ t('mmm.compatible') }}</span
+              ><span>{{ plan.entries.filter((e) => e.status === 'dependency').length }} {{ t('mmm.new_dep') }}</span
               ><button class="btn btn-ghost btn-sm" @click="onlyMissing = !onlyMissing">
-                {{ unavailable.length }} 个未匹配{{ onlyMissing ? ' · 显示全部' : '' }}
+                {{ unavailable.length }} {{ t('mmm.unmatched') }}{{ onlyMissing ? ' · ' + t('mmm.show_all') : '' }}
               </button>
             </div>
-            <input v-model="query" class="input" placeholder="搜索本地文件名或模组名称" />
+            <input v-model="query" class="input" :placeholder="t('mmm.search_placeholder')" />
             <div class="migration-list">
               <article
                 v-for="(e, index) in rows"
@@ -135,32 +139,35 @@ async function start() {
                 <img v-if="icons[e.fileName]" :src="icons[e.fileName]" alt="" /><span v-else class="migration-icon">◇</span>
                 <div class="migration-mod">
                   <strong :title="e.fileName || e.name">{{ e.fileName || e.name }}</strong
-                  ><small class="muted">{{ e.name }}<template v-if="e.disabled"> · 已禁用</template></small
+                  ><small class="muted"
+                    >{{ e.name }}<template v-if="e.disabled"> · {{ t('mmm.disabled') }}</template></small
                   ><small v-if="e.target"
-                    >{{ e.currentVersion || '新增前置' }} → {{ e.target.version
+                    >{{ e.currentVersion || t('mmm.new_dep') }} → {{ e.target.version
                     }}<span class="muted"> · {{ e.target.fileName }}</span></small
                   ><small v-else class="migration-error-text">{{ e.reason }}</small>
                 </div>
-                <span class="tag">{{ e.status === 'unavailable' ? '禁用保留' : e.status === 'dependency' ? '新增前置' : '可迁移' }}</span>
+                <span class="tag">{{
+                  e.status === 'unavailable' ? t('mmm.disabled_keep') : e.status === 'dependency' ? t('mmm.new_dep') : t('mmm.compatible')
+                }}</span>
               </article>
             </div>
             <div v-if="attention" class="migration-warning">
-              <strong>以下情况需要你确认</strong>
-              <p v-if="unavailable.length">{{ unavailable.length }} 个模组没有匹配的适配文件，会复制到新实例并保持禁用，不会丢失原文件。</p>
+              <strong>{{ t('mmm.need_confirm') }}</strong>
+              <p v-if="unavailable.length">{{ unavailable.length }} {{ t('mmm.unmatched_detail') }}</p>
               <p v-for="warning in plan.warnings">{{ warning }}</p>
-              <label><input v-model="confirmed" type="checkbox" />我已了解这些情况，确认继续迁移</label>
+              <label><input v-model="confirmed" type="checkbox" />{{ t('mmm.confirm_checkbox') }}</label>
             </div>
           </template>
         </div>
         <footer>
-          <span class="muted">下载完成并校验后生成目标实例</span
-          ><button class="btn btn-ghost" :disabled="starting" @click="emit('close')">取消</button
+          <span class="muted">{{ t('mmm.footer_hint') }}</span
+          ><button class="btn btn-ghost" :disabled="starting" @click="emit('close')">{{ t('common.cancel') }}</button
           ><button v-if="!plan" class="btn btn-gold" :disabled="!mc.trim() || checking" @click="inspect">
-            {{ checking ? '检查中…' : '检查兼容性' }}</button
+            {{ checking ? t('mmm.checking_btn') : t('mmm.check_compat') }}</button
           ><template v-else
-            ><button class="btn btn-ghost" :disabled="starting" @click="inspect">重新检查</button
+            ><button class="btn btn-ghost" :disabled="starting" @click="inspect">{{ t('mmm.recheck') }}</button
             ><button class="btn btn-gold" :disabled="starting || (attention > 0 && !confirmed)" @click="start">
-              {{ starting ? '正在创建任务…' : '确认迁移' }}
+              {{ starting ? t('mmm.creating') : t('mmm.confirm_migrate') }}
             </button></template
           >
         </footer>

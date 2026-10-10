@@ -17,6 +17,7 @@ import { selectedAccount } from './accounts';
 import { launcherLogPath } from './launcherLog';
 import { redactDiagnosticPath, redactDiagnosticText, safeDiagnosticFilePart } from './diagnostics';
 import { writeDiagnosticArchive, type DiagnosticManifestEntry, type DiagnosticSource } from './diagnosticArchive';
+import { translate as t } from '../../shared/i18n';
 
 const execFileAsync = promisify(execFile);
 
@@ -72,8 +73,8 @@ async function newestCrashReport(dir: string): Promise<string | null> {
 async function javaSummary(javaPath: string): Promise<{ path: string; version: string; architecture: string }> {
   const unknown = {
     path: redactDiagnosticPath(javaPath),
-    version: '（未知）',
-    architecture: '（未知）',
+    version: t('exportlogs.label.unknown'),
+    architecture: t('exportlogs.label.unknown'),
   };
   if (!javaPath) return unknown;
   try {
@@ -84,13 +85,19 @@ async function javaSummary(javaPath: string): Promise<{ path: string; version: s
       maxBuffer: 256 * 1024,
     });
     const output = `${result.stderr ?? ''}\n${result.stdout ?? ''}`;
-    const version = /version\s+"([^"]+)"/i.exec(output)?.[1] ?? output.split(/\r?\n/)[0]?.trim() ?? '（未知）';
-    const architecture = /64-Bit|x86_64|aarch64/i.test(output) ? '64-bit' : /32-Bit|i[3-6]86|x86/i.test(output) ? '32-bit' : '（未知）';
+    const version = /version\s+"([^"]+)"/i.exec(output)?.[1] ?? output.split(/\r?\n/)[0]?.trim() ?? t('exportlogs.label.unknown');
+    const architecture = /64-Bit|x86_64|aarch64/i.test(output)
+      ? '64-bit'
+      : /32-Bit|i[3-6]86|x86/i.test(output)
+        ? '32-bit'
+        : t('exportlogs.label.unknown');
     return { path: redactDiagnosticPath(javaPath), version, architecture };
   } catch (error) {
     return {
       ...unknown,
-      version: `验证失败：${redactDiagnosticText(error instanceof Error ? error.message : String(error))}`,
+      version: t('exportlogs.error.java_probe_failed', {
+        message: redactDiagnosticText(error instanceof Error ? error.message : String(error)),
+      }),
     };
   }
 }
@@ -98,27 +105,34 @@ async function javaSummary(javaPath: string): Promise<{ path: string; version: s
 function summaryText(manifest: DiagnosticManifest): string {
   const m = manifest;
   return [
-    '================ FAIONYX 启动失败诊断摘要 ================',
-    `导出时间: ${m.exportedAt}`,
-    `FAIONYX: ${m.launcher.version}`,
-    `操作系统: ${m.operatingSystem.platform} ${m.operatingSystem.release} (${m.operatingSystem.architecture})`,
+    t('exportlogs.summary.header'),
+    t('exportlogs.summary.exported_at', { value: m.exportedAt }),
+    t('exportlogs.summary.launcher', { version: m.launcher.version }),
+    t('exportlogs.summary.os', {
+      platform: m.operatingSystem.platform,
+      release: m.operatingSystem.release,
+      architecture: m.operatingSystem.architecture,
+    }),
     '',
-    `实例: ${m.instance.name} [${m.instance.id}]`,
-    `Minecraft: ${m.instance.minecraftVersion}`,
-    `Loader: ${m.instance.loader ?? 'vanilla'}${m.instance.loaderVersion ? ` ${m.instance.loaderVersion}` : ''}`,
-    `实例目录: ${m.instance.directory}`,
-    `版本隔离: ${m.instance.isolated ? '开启' : '关闭'}`,
+    t('exportlogs.summary.instance', { name: m.instance.name, id: m.instance.id }),
+    t('exportlogs.summary.minecraft', { version: m.instance.minecraftVersion }),
+    t('exportlogs.summary.loader', {
+      loader: m.instance.loader ?? 'vanilla',
+      loaderVersion: m.instance.loaderVersion ? ` ${m.instance.loaderVersion}` : '',
+    }),
+    t('exportlogs.summary.instance_dir', { value: m.instance.directory }),
+    t('exportlogs.summary.isolation', { state: m.instance.isolated ? t('exportlogs.label.on') : t('exportlogs.label.off') }),
     '',
-    `Java: ${m.java.version} (${m.java.architecture})`,
-    `Java 路径: ${m.java.path}`,
-    `进程 PID: ${m.process.pid ?? '（未知）'}`,
-    `启动时间: ${m.process.startedAt ?? '（未知）'}`,
-    `退出时间: ${m.process.endedAt ?? '（未知）'}`,
-    `退出码: ${m.process.exitCode ?? '（未知）'}`,
-    `进程错误: ${m.process.spawnError ?? '（无记录）'}`,
-    `启动参数摘要: ${m.process.command ?? '（尚未生成）'}`,
+    t('exportlogs.summary.java', { version: m.java.version, architecture: m.java.architecture }),
+    t('exportlogs.summary.java_path', { value: m.java.path }),
+    t('exportlogs.summary.pid', { value: m.process.pid ?? t('exportlogs.label.unknown') }),
+    t('exportlogs.summary.started_at', { value: m.process.startedAt ?? t('exportlogs.label.unknown') }),
+    t('exportlogs.summary.ended_at', { value: m.process.endedAt ?? t('exportlogs.label.unknown') }),
+    t('exportlogs.summary.exit_code', { value: m.process.exitCode ?? t('exportlogs.label.unknown') }),
+    t('exportlogs.summary.spawn_error', { value: m.process.spawnError ?? t('exportlogs.label.no_record') }),
+    t('exportlogs.summary.command', { value: m.process.command ?? t('exportlogs.label.not_generated') }),
     '',
-    '每个日志的来源、缺失与截断情况见 manifest.json。',
+    t('exportlogs.summary.manifest_note'),
   ].join('\n');
 }
 
@@ -151,9 +165,9 @@ export async function exportLaunchLogs(win: BrowserWindow | null, versionId: str
   const now = new Date();
   const defName = `FAIONYX-Diagnostic-${safeDiagnosticFilePart(item?.mcVersion || vid)}-${fmtStamp(now)}.zip`;
   const opts = {
-    title: '导出错误日志',
+    title: t('exportlogs.dialog.title'),
     defaultPath: defName,
-    filters: [{ name: 'ZIP 压缩包', extensions: ['zip'] }],
+    filters: [{ name: t('exportlogs.dialog.zip_filter'), extensions: ['zip'] }],
   };
   const result = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts);
   if (result.canceled || !result.filePath) return null;
@@ -184,7 +198,7 @@ export async function exportLaunchLogs(win: BrowserWindow | null, versionId: str
     instance: {
       id: vid,
       name: item?.modpackName || vid,
-      minecraftVersion: item?.mcVersion || '（未知）',
+      minecraftVersion: item?.mcVersion || t('exportlogs.label.unknown'),
       loader: item?.loader ?? null,
       loaderVersion: item?.loaderVersion ?? null,
       directory: redactDiagnosticPath(effectiveGameDir),
@@ -266,6 +280,6 @@ export async function exportLaunchLogs(win: BrowserWindow | null, versionId: str
     await writeDiagnosticArchive(result.filePath, manifest, sources, summaryText(manifest), secrets);
     return result.filePath;
   } catch (error) {
-    throw new Error(`写入诊断包失败：${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(t('exportlogs.error.write_failed', { message: error instanceof Error ? error.message : String(error) }));
   }
 }

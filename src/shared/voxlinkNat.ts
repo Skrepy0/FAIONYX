@@ -1,24 +1,26 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 // NatLabels.java, VoxLink c475faa9. Display names never determine the punch strategy.
+import { translate as t } from './i18n';
+
 export const NAT_RAW_LABELS: Record<string, string> = {
-  unknown: '未知',
-  full_cone: '完全锥形 NAT',
-  restricted_cone: '受限锥形 NAT',
-  port_restricted_cone: '端口受限锥形 NAT',
-  symmetric_easy_inc: '易打洞对称 NAT（端口递增）',
-  symmetric_easy_dec: '易打洞对称 NAT（端口递减）',
-  symmetric: '对称 NAT',
-  open: '开放',
-  moderate: '中等限制',
-  strict: '严格限制',
+  unknown: 'voxlinknat.unknown',
+  full_cone: 'voxlinknat.full_cone',
+  restricted_cone: 'voxlinknat.restricted_cone',
+  port_restricted_cone: 'voxlinknat.port_restricted_cone',
+  symmetric_easy_inc: 'voxlinknat.symmetric_easy_inc',
+  symmetric_easy_dec: 'voxlinknat.symmetric_easy_dec',
+  symmetric: 'voxlinknat.symmetric',
+  open: 'voxlinknat.open',
+  moderate: 'voxlinknat.moderate',
+  strict: 'voxlinknat.strict',
 };
 export const NAT_CLASS_LABELS: Record<string, string> = {
-  CONE: '锥形 NAT',
-  EASY_SYM: '易打洞对称 NAT',
-  HARD_SYM: '困难对称 NAT',
-  UNKNOWN: '未知',
+  CONE: 'voxlinknat.cone',
+  EASY_SYM: 'voxlinknat.easy_sym',
+  HARD_SYM: 'voxlinknat.hard_sym',
+  UNKNOWN: 'voxlinknat.unknown',
 };
 export const natLabel = (natClass: string | undefined, raw: unknown): string =>
   natClass && natClass !== 'UNKNOWN'
-    ? (NAT_CLASS_LABELS[natClass] ?? '未知')
-    : (NAT_RAW_LABELS[typeof raw === 'string' ? raw.trim().toLowerCase() : 'unknown'] ?? '未知');
+    ? t(NAT_CLASS_LABELS[natClass] ?? 'voxlinknat.unknown')
+    : t(NAT_RAW_LABELS[typeof raw === 'string' ? raw.trim().toLowerCase() : 'unknown'] ?? 'voxlinknat.unknown');

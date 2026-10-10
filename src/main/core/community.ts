@@ -36,6 +36,7 @@ import { logScope } from './launcherLog';
 import { downloadFileName } from './downloadFileName';
 import { defaultFolderPath, folderOfVersion, withGameFolder } from './paths';
 import { canonicalPath, samePath } from './folderPaths';
+import { translate as t } from '../../shared/i18n';
 
 const communityLog = logScope('community');
 
@@ -125,7 +126,7 @@ async function mrSearch(q: CommunityQuery): Promise<CommunitySearchPage> {
     facets: JSON.stringify(facets),
   });
   const data = (await mrFetch(`/search?${params.toString()}`)) as { hits?: MrHit[]; total_hits: number };
-  if (!Number.isFinite(data.total_hits)) throw new Error('Modrinth 未返回结果总数，请重试');
+  if (!Number.isFinite(data.total_hits)) throw new Error(t('community.error.modrinth_no_total'));
   const items = (data.hits ?? []).map((h) => ({
     source: 'modrinth' as const,
     projectId: String(h.project_id ?? ''),
@@ -267,7 +268,7 @@ async function cfSearch(q: CommunityQuery): Promise<CommunitySearchPage> {
   if (q.mcVersion) params.set('gameVersion', q.mcVersion);
   if (q.loader && usesCommunityLoader(q.kind)) params.set('modLoaderType', String(CF_LOADER_TYPE[q.loader]));
   const data = (await cfFetch(`/mods/search?${params.toString()}`)) as { data?: CfMod[]; pagination?: { totalCount: number } };
-  if (!Number.isFinite(data.pagination?.totalCount)) throw new Error('CurseForge 未返回结果总数，请重试');
+  if (!Number.isFinite(data.pagination?.totalCount)) throw new Error(t('community.error.curseforge_no_total'));
   const items = (data.data ?? []).map((m) => ({
     source: 'curseforge' as const,
     projectId: String(m.id ?? ''),
@@ -313,7 +314,7 @@ async function cfFiles(projectId: string, filter?: { mcVersion?: string; loader?
     const page = data.data ?? [];
     all.push(...page);
     if (page.length < 50 || all.length >= (data.pagination?.totalCount ?? Infinity)) break;
-    if (index >= 9950) throw new Error('项目版本过多，请先选择 Minecraft 版本 / Loader 后重试');
+    if (index >= 9950) throw new Error(t('community.error.project_too_many_versions'));
   }
   return mapCfFiles(all, projectId);
 }
@@ -352,10 +353,13 @@ function mapCfFiles(files: CfFile[], projectId: string): CommunityFile[] {
 function withZhTitle(list: CommunityResult[]): CommunityResult[] {
   return list.map((r) => {
     const originalTitle = r.originalTitle ?? r.title;
-    const zh = MOD_ZH[r.slug];
-    if (zh && !r.title.startsWith(zh) && !(r.originalTitle && r.title !== r.originalTitle)) {
-      return { ...r, originalTitle, title: `${zh} | ${r.title}` };
+    if (getSettings().locale === 'zh-CN') {
+      const zh = MOD_ZH[r.slug];
+      if (zh && !r.title.startsWith(zh) && !(r.originalTitle && r.title !== r.originalTitle)) {
+        return { ...r, originalTitle, title: `${zh} | ${r.title}` };
+      }
     }
+
     return { ...r, originalTitle };
   });
 }
@@ -386,10 +390,11 @@ async function providerSearch(source: CommunitySource, q: CommunityQuery): Promi
         ).values(),
       ];
       const identities = linkedIdentities.slice(0, 10);
-      if (linkedIdentities.length > 10) warnings.push('百科条目关联的来源项目较多，本次仅核对前 10 项；请使用完整中文名缩小范围。');
+      if (linkedIdentities.length > 10) warnings.push(t('community.warn.identities_capped'));
       if (!identities.length)
-        warnings.push(`MC百科条目未提供 ${source === 'modrinth' ? 'Modrinth' : 'CurseForge'} 项目链接，已保留原中文结果；可切换来源。`);
+        warnings.push(t('community.warn.no_linked_projects', { source: source === 'modrinth' ? 'Modrinth' : 'CurseForge' }));
       let cursor = 0;
+      let identityQueryFailed = false;
       await Promise.all(
         Array.from({ length: Math.min(2, identities.length) }, async () => {
           while (cursor < identities.length) {
@@ -403,15 +408,19 @@ async function providerSearch(source: CommunitySource, q: CommunityQuery): Promi
                 items.push({ ...item, originalTitle, title: `${identity.title} | ${originalTitle}` });
               }
             } catch {
+              identityQueryFailed = true;
               warnings.push(
-                `“${identity.title}”的 ${source === 'modrinth' ? 'Modrinth' : 'CurseForge'} 项目查询失败，可重试；未使用同名项目替代。`
+                t('community.warn.identity_query_failed', {
+                  title: identity.title,
+                  source: source === 'modrinth' ? 'Modrinth' : 'CurseForge',
+                })
               );
             }
           }
         })
       );
-      if (encyclopedia.entries.length) warnings.push('MC百科中文名称关联：仅使用百科条目明确链接且当前版本／加载器筛选匹配的来源项目。');
-      if (original.total > 50) warnings.push('原中文关键词匹配较多，本次百科关联合并前 50 项；请缩小关键词查看其他结果。');
+      if (encyclopedia.entries.length) warnings.push(t('community.warn.encyclopedia_matching'));
+      if (original.total > 50) warnings.push(t('community.warn.original_merged_first_50'));
       // On an encyclopedia outage preserve the existing alias path and its full
       // provider pagination; a failure must not turn into a cached empty match.
       catalog = {
@@ -420,7 +429,7 @@ async function providerSearch(source: CommunitySource, q: CommunityQuery): Promi
         warnings: [...new Set(warnings)],
       };
       if (aliasCatalogs.size >= 12) aliasCatalogs.delete(aliasCatalogs.keys().next().value!);
-      if (!encyclopedia.warnings.length && !warnings.some((warning) => warning.includes('查询失败'))) aliasCatalogs.set(key, catalog);
+      if (!encyclopedia.warnings.length && !identityQueryFailed) aliasCatalogs.set(key, catalog);
     }
     return {
       items: catalog.items.slice(q.offset, q.offset + q.limit),
@@ -440,7 +449,7 @@ async function builtinProviderSearch(source: CommunitySource, q: CommunityQuery)
     // A domestic project may advertise only its Chinese name. Never replace that
     // user's query permanently with an alias that has no compatible results.
     if (!page.total) return rawProviderSearch(source, q);
-    return { ...page, warnings: [...(page.warnings ?? []), `中文别名检索：${q.keyword} → ${terms[0]}`] };
+    return { ...page, warnings: [...(page.warnings ?? []), t('community.warn.alias_search', { keyword: q.keyword, alias: terms[0] })] };
   }
   // Multiple aliases are a bounded catalog, with honest totals for the retrieved
   // union. Pagination slices the same deduplicated snapshot rather than mixing
@@ -461,7 +470,7 @@ async function builtinProviderSearch(source: CommunitySource, q: CommunityQuery)
           pages[index] = {
             ...first,
             items: [...first.items, ...(second?.items ?? [])],
-            warnings: first.total > 100 ? [`“${keyword}”匹配较多，本次中文别名检索仅合并前 100 项；可用具体英文名搜索完整结果。`] : [],
+            warnings: first.total > 100 ? [t('community.warn.alias_merged_first_100', { keyword })] : [],
           };
         }
       })
@@ -470,7 +479,12 @@ async function builtinProviderSearch(source: CommunitySource, q: CommunityQuery)
     catalog = {
       time: Date.now(),
       items,
-      warnings: [...new Set([`中文别名检索：${terms.join('、')}`, ...pages.flatMap((page) => page.warnings ?? [])])],
+      warnings: [
+        ...new Set([
+          t('community.warn.alias_search_multi', { terms: terms.join(t('common.list_separator')) }),
+          ...pages.flatMap((page) => page.warnings ?? []),
+        ]),
+      ],
     };
     if (aliasCatalogs.size >= 12) aliasCatalogs.delete(aliasCatalogs.keys().next().value!);
     aliasCatalogs.set(key, catalog);
@@ -515,7 +529,7 @@ export async function communitySearchPage(input: CommunityQuery): Promise<Commun
   const totals = { modrinth: 0, curseforge: 0 };
   counts.forEach((result, i) => {
     if (result.status === 'fulfilled') totals[sources[i]] = result.value;
-    else warnings.push(`${sources[i] === 'modrinth' ? 'Modrinth' : 'CurseForge'} 暂不可用，当前仅统计另一来源；可重试或切换来源。`);
+    else warnings.push(t('community.warn.source_unavailable', { source: sources[i] === 'modrinth' ? 'Modrinth' : 'CurseForge' }));
   });
   const slots = communityPageSlots(totals, q.offset, q.limit);
   const pages = await Promise.all(
@@ -567,8 +581,8 @@ function projectWebpage(value: unknown, source: CommunitySource): string | undef
 
 /** Metadata is verified against the platform's MOD type before it reaches a dialog or a favorite link. */
 export async function communityProject(source: CommunitySource, projectId: string, kind: CommunityKind): Promise<CommunityModProject> {
-  if (kind !== 'mod') throw new Error('收藏详情仅支持 MOD 项目');
-  if (typeof projectId !== 'string') throw new Error('请填写有效的来源项目 ID');
+  if (kind !== 'mod') throw new Error(t('community.error.favorite_mod_only'));
+  if (typeof projectId !== 'string') throw new Error(t('community.error.invalid_project_id'));
   if (source === 'modrinth' && /^[a-zA-Z0-9_-]{1,100}$/.test(projectId)) {
     const project = (await mrFetch(`/project/${encodeURIComponent(projectId)}`)) as {
       id?: string;
@@ -590,7 +604,7 @@ export async function communityProject(source: CommunitySource, projectId: strin
       typeof project.title !== 'string' ||
       !project.title
     )
-      throw new Error('该 Modrinth 项目不是有效模组');
+      throw new Error(t('community.error.not_modrinth_mod'));
     const slug = projectText(project.slug, 100);
     return {
       kind: 'mod',
@@ -618,7 +632,7 @@ export async function communityProject(source: CommunitySource, projectId: strin
       typeof project?.name !== 'string' ||
       !project.name
     )
-      throw new Error('该 CurseForge 项目不是有效 Minecraft 模组');
+      throw new Error(t('community.error.not_curseforge_mod'));
     return {
       kind: 'mod',
       source,
@@ -642,7 +656,7 @@ export async function communityProject(source: CommunitySource, projectId: strin
       webpage: projectWebpage(project.links?.websiteUrl, source),
     };
   }
-  throw new Error('请填写有效的来源项目 ID');
+  throw new Error(t('community.error.invalid_project_id'));
 }
 
 export async function communityModProject(
@@ -659,7 +673,7 @@ export async function communityModProject(
 }
 
 export async function curseForgeFilePage(projectID: number, fileID: number): Promise<string> {
-  if (![projectID, fileID].every((n) => Number.isSafeInteger(n) && n > 0)) throw new Error('CurseForge 文件标识无效');
+  if (![projectID, fileID].every((n) => Number.isSafeInteger(n) && n > 0)) throw new Error(t('community.error.invalid_cf_file'));
   const { httpFetch } = await import('./httpClient');
   const channel = cfChannel();
   const sources = [
@@ -685,7 +699,7 @@ export async function curseForgeFilePage(projectID: number, fileID: number): Pro
       /* Try the other public metadata source. */
     }
   }
-  throw new Error('无法读取 CurseForge 文件页面，请稍后重试');
+  throw new Error(t('community.error.cf_page_failed'));
 }
 
 /** 依赖查找保留数组接口；界面使用含总数的分页接口。 */
@@ -710,7 +724,7 @@ export async function communityExactFile(source: CommunitySource, projectId: str
           [((await cfFetch(`/mods/${encodeURIComponent(projectId ?? '')}/files/${encodeURIComponent(fileId)}`)) as { data: CfFile }).data],
           projectId ?? ''
         );
-  if (!files[0]) throw new Error('依赖版本没有可下载文件');
+  if (!files[0]) throw new Error(t('community.error.dep_no_download'));
   return files[0];
 }
 
@@ -756,9 +770,9 @@ export async function communityDownload(
         ? defaultFolderPath()
         : folderOfVersion(target.versionId)
       : String(target.folder).trim();
-  if (!requested) throw new Error('目标游戏文件夹不能为空');
+  if (!requested) throw new Error(t('community.error.folder_required'));
   const registered = getSettings().folders.find((folder) => samePath(folder.path, requested));
-  if (!registered && (target.kind === 'modpack' || target.folder !== undefined)) throw new Error('目标游戏文件夹未在 FAIONYX 中登记');
+  if (!registered && (target.kind === 'modpack' || target.folder !== undefined)) throw new Error(t('community.error.folder_unregistered'));
   const folder = canonicalPath(registered?.path ?? requested);
   return withGameFolder(folder, () => communityDownloadInFolder(file, { ...target, folder }, emit, onDone, signal));
 }
@@ -773,31 +787,35 @@ async function communityDownloadInFolder(
   signal?.throwIfAborted();
   const fileName = downloadFileName(String(file.fileName ?? ''));
   const displayName = String(file.fileName ?? '') || fileName;
-  communityLog.info(`开始下载 ${target.kind} 资源 ${displayName} → 实例 ${target.versionId}`);
-  const dlProgress = (d: number, t: number, speed: number, eta: number | null) =>
+  communityLog.info(t('community.log.download_start', { kind: target.kind, name: displayName, versionId: target.versionId }));
+  const dlProgress = (d: number, total: number, speed: number, eta: number | null) =>
     emit({
       stage: 'download',
-      progress: t ? d / t : 0,
+      progress: total ? d / total : 0,
       // 压缩包只是整合包任务的第一步；不能先报 100% 再开始安装。
-      overall: target.kind === 'modpack' ? (t ? d / t : 0) * 0.1 : t ? d / t : 0,
+      overall: target.kind === 'modpack' ? (total ? d / total : 0) * 0.1 : total ? d / total : 0,
       speed,
       etaSeconds: eta ?? undefined,
       bytesDone: d,
-      bytesTotal: t || undefined,
-      indeterminate: !t,
-      text: `下载 ${displayName} ${(d / 1024 / 1024).toFixed(1)}MB${t ? '/' + (t / 1024 / 1024).toFixed(1) + 'MB' : ''}`,
+      bytesTotal: total || undefined,
+      indeterminate: !total,
+      text: t('community.state.downloading', {
+        name: displayName,
+        done: (d / 1024 / 1024).toFixed(1),
+        total: total ? '/' + (total / 1024 / 1024).toFixed(1) + 'MB' : '',
+      }),
     });
 
   // CurseForge 受限文件（作者禁止直链，downloadUrl 为 null）：官方 API 现场解析真实下载地址
   if (file.source === 'curseforge' && !file.url) {
-    if (!file.projectId) throw new Error('缺少 CurseForge 项目 ID，请重新选择下载文件');
+    if (!file.projectId) throw new Error(t('community.error.cf_project_id_missing'));
     const ch = cfChannel();
-    if (!ch.official) throw new Error('该文件作者限制了直链下载，需要在设置页填入 CurseForge API Key 后才能下载');
+    if (!ch.official) throw new Error(t('community.error.cf_direct_link_restricted'));
     const data = (await fetchJson(
       `${ch.base}/mods/${encodeURIComponent(file.projectId)}/files/${encodeURIComponent(file.fileId)}/download-url`,
       { 'x-api-key': ch.key }
     )) as { data?: string };
-    if (!data.data) throw new Error('CurseForge 未返回下载地址');
+    if (!data.data) throw new Error(t('community.error.cf_no_download_url'));
     file = { ...file, url: data.data };
   }
 
@@ -819,7 +837,7 @@ async function communityDownloadInFolder(
       try {
         fs.rmSync(tmpRoot, { recursive: true, force: true });
       } catch (err) {
-        communityLog.warn(`整合包临时文件清理失败：${tmpRoot}`, err);
+        communityLog.warn(t('community.log.modpack_cleanup_failed', { dir: tmpRoot }), err);
       }
     };
     try {
@@ -839,14 +857,15 @@ async function communityDownloadInFolder(
           outcome = { versionId: id, ok: true };
         } catch (err) {
           outcome = { versionId: '', ok: false, error: errText(err) };
-          communityLog.error(`整合包 ${displayName} 后台安装失败`, err);
+          communityLog.error(t('community.log.modpack_install_failed', { name: displayName }), err);
         } finally {
           cleanup();
         }
-        if (!outcome.ok) emit({ stage: 'error', progress: 0, text: `整合包安装失败: ${outcome.error}` });
+        if (!outcome.ok)
+          emit({ stage: 'error', progress: 0, text: t('community.state.modpack_install_failed', { error: String(outcome.error) }) });
         onDone?.(outcome);
-      })().catch((err) => communityLog.error('整合包完成通知失败', err));
-      return '整合包已开始安装';
+      })().catch((err) => communityLog.error(t('community.log.modpack_notify_failed'), err));
+      return t('community.state.modpack_started');
     } catch (err) {
       cleanup();
       throw err;
@@ -875,11 +894,11 @@ async function communityDownloadInFolder(
     }
     const dest = path.join(base, 'datapacks', fileName);
     await transfer(dest);
-    return `${dest}（提示：请将文件移入存档 saves/<世界>/datapacks 后生效）`;
+    return t('community.state.datapack_hint', { dest });
   }
 
   const sub = KIND_SUBDIR[target.kind];
-  if (!sub) throw new Error(`不支持的资源类型: ${target.kind}`);
+  if (!sub) throw new Error(t('community.error.unsupported_kind', { kind: target.kind }));
   const dest = path.join(base, sub, fileName);
   await transfer(dest);
   return dest;

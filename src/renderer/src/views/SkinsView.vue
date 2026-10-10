@@ -19,6 +19,7 @@ import SkinEditor from '../components/SkinEditor.vue';
 import type { SkinPreviewAnimation } from '../skinModel';
 import { resolveSkinPreview } from '../skinPreviewSelection';
 import { createFallbackSkin } from '../fallbackSkin';
+import { t } from '@renderer/i18n';
 const editorOpen = ref(false);
 import type { CapeInfo, ProfileSkins, SkinHistoryEntry, SkinVariant } from '@shared/types';
 
@@ -76,10 +77,10 @@ const viewerRef = ref<InstanceType<typeof SkinViewer3D> | null>(null);
 /** 预览姿势只改变本地模型，不上传或更换账号皮肤。 */
 const previewAnim = ref<SkinPreviewAnimation>('walk');
 const previewModes: { key: SkinPreviewAnimation; name: string; title: string }[] = [
-  { key: 'walk', name: '行走', title: '行走姿势' },
-  { key: 'idle', name: '待机', title: '待机姿势' },
-  { key: 'crouch', name: '蹲下', title: '蹲下姿势' },
-  { key: 'fly', name: '飞行', title: '鞘翅飞行姿势' },
+  { key: 'walk', name: t('skins.preview_pose.walk'), title: t('skins.preview_pose.walk_title') },
+  { key: 'idle', name: t('skins.preview_pose.idle'), title: t('skins.preview_pose.idle_title') },
+  { key: 'crouch', name: t('skins.preview_pose.crouch'), title: t('skins.preview_pose.crouch_title') },
+  { key: 'fly', name: t('skins.preview_pose.fly'), title: t('skins.preview_pose.fly_title') },
 ];
 
 /** 行走/待机分段控件滑动块（与导航水滴/游戏 Tab 同款弹簧动效） */
@@ -139,8 +140,8 @@ async function renderCapes() {
       if (rendered) {
         map[c.id] = rendered;
         if (c.textureError) errors[c.id] = c.textureError;
-      } else errors[c.id] = '披风材质无法加载或尺寸不受支持，请刷新重试';
-    } else errors[c.id] = c.textureError || '披风材质尚未下载，请刷新重试';
+      } else errors[c.id] = t('skins.cape_load_error');
+    } else errors[c.id] = c.textureError || t('skins.cape_not_downloaded');
   }
   if (request === capeRenderRequest && profileToken === profileRequest) {
     capeRenders.value = map;
@@ -164,9 +165,9 @@ async function onCapeClick(c: CapeInfo) {
     const next = await changeCape(c.active ? null : c.id);
     if (request !== profileRequest) return;
     profile.value = next;
-    toast(c.active ? '已卸下披风' : `已换上披风「${c.alias}」`, 'success');
+    toast(c.active ? t('skins.cape_deactivated_toast') : t('skins.cape_active_toast', { name: c.alias }), 'success');
   } catch (e) {
-    if (request === profileRequest) toast('披风更换失败：' + errText(e), 'error');
+    if (request === profileRequest) toast(t('skins.cape_change_failed', { error: errText(e) }), 'error');
   } finally {
     if (request === profileRequest) capeBusy.value = null;
   }
@@ -222,9 +223,9 @@ async function commitHistoryRename(item: SkinHistoryEntry) {
     const next = await renameSkinHistory(item.id, name, scopeId);
     if (request !== historyRequest || accountId !== store.selectedAccount?.id) return;
     historyList.value = next;
-    toast(name ? `已重命名为「${name}」` : '已恢复默认名称', 'success');
+    toast(name ? t('skins.rename_toast', { name }) : t('skins.rename_toast_default'), 'success');
   } catch (e) {
-    toast('重命名失败：' + errText(e), 'error');
+    toast(t('skins.rename_failed', { error: errText(e) }), 'error');
   }
 }
 
@@ -259,13 +260,13 @@ async function onRestore(item: SkinHistoryEntry) {
   const request = profileRequest,
     accountId = store.selectedAccount?.id;
   const local = isOffline.value;
-  const accountName = store.selectedAccount?.username || '此前账号',
+  const accountName = store.selectedAccount?.username || t('skins.previous_account'),
     selectedPreview = previewHistoryId.value;
   historyBusy.value = item.id;
   try {
     const next = local ? await uploadSkinFromHistory(item.id, accountId) : await uploadSkinFromHistory(item.id);
     if (request !== profileRequest || accountId !== store.selectedAccount?.id) {
-      toast(`「${accountName}」已换回历史皮肤；当前预览保持不变`, 'success');
+      toast(t('skins.restore_switched_toast', { name: accountName }), 'success');
       return;
     }
     // Invalidate an older profile read still in flight for this same account.
@@ -274,11 +275,11 @@ async function onRestore(item: SkinHistoryEntry) {
     profileError.value = '';
     profile.value = next;
     if (previewHistoryId.value === selectedPreview) previewHistoryId.value = '';
-    toast(local ? '已应用历史皮肤，下次启动游戏生效' : '已换回历史皮肤', 'success');
+    toast(local ? t('skins.restore_applied_toast') : t('skins.restore_switched_toast', { name: accountName }), 'success');
     void loadHistory();
   } catch (e) {
     const context = accountId === store.selectedAccount?.id ? '' : `「${accountName}」`;
-    toast(context + '换回皮肤失败：' + errText(e), 'error');
+    toast(context + t('skins.restore_failed_prefix') + errText(e), 'error');
   } finally {
     historyBusy.value = null;
   }
@@ -299,9 +300,9 @@ async function onDeleteHistory(item: SkinHistoryEntry) {
     delete map[item.id];
     historyRenders.value = map;
     if (previewHistoryId.value === item.id) previewHistoryId.value = '';
-    toast(local ? '已删除本地历史记录，当前应用的皮肤保留' : '历史皮肤已移入回收站', 'success');
+    toast(local ? t('skins.delete_local_toast') : t('skins.delete_toast'), 'success');
   } catch (e) {
-    toast('删除失败：' + errText(e), 'error');
+    toast(t('skins.delete_failed') + errText(e), 'error');
   } finally {
     historyBusy.value = null;
   }
@@ -318,7 +319,7 @@ function fileToDataUrl(f: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => resolve(String(r.result));
-    r.onerror = () => reject(new Error('读取文件失败'));
+    r.onerror = () => reject(new Error(t('skins.read_file_failed')));
     r.readAsDataURL(f);
   });
 }
@@ -328,12 +329,12 @@ async function pickFile(f: File | undefined | null) {
   if (!canApplySkin.value) return;
   if (!f) return;
   if (!/\.png$/i.test(f.name)) {
-    toast('请选择 PNG 格式的皮肤文件', 'error');
+    toast(t('skins.select_png'), 'error');
     return;
   }
   const p = window.faionyx.getFilePath(f);
   if (!p) {
-    toast('无法获取文件路径', 'error');
+    toast(t('skins.get_path_failed'), 'error');
     return;
   }
   pending.value = { path: p, name: f.name };
@@ -362,7 +363,7 @@ async function doUpload() {
   if (!canApplySkin.value || !pending.value || uploading.value) return;
   const request = profileRequest,
     accountId = store.selectedAccount?.id;
-  const accountName = store.selectedAccount?.username || '此前账号',
+  const accountName = store.selectedAccount?.username || t('skins.previous_account'),
     selectedFile = pending.value;
   const local = isOffline.value;
   uploading.value = true;
@@ -371,19 +372,21 @@ async function doUpload() {
       ? await applyOfflineSkin(selectedFile.path, variant.value, accountId!)
       : await uploadSkin(selectedFile.path, variant.value);
     if (request !== profileRequest || accountId !== store.selectedAccount?.id) {
-      toast(`「${accountName}」的皮肤${local ? '已应用' : '上传成功'}；当前预览保持不变`, 'success');
+      toast(
+        `${t('skins.upload_tag_prefix', { name: accountName })}${local ? t('skins.upload_applied_tag') : t('skins.upload_success_tag')}；${t('skins.preview_unchanged')}`,
+        'success'
+      );
       return;
     }
     profileRequest++;
     loadingProfile.value = false;
     profileError.value = '';
     profile.value = next;
-    toast(local ? '已应用到离线账号，下次启动游戏生效' : '皮肤上传成功', 'success');
+    toast(local ? t('skins.upload_offline_toast') : t('skins.upload_success_toast'), 'success');
     if (pending.value === selectedFile) clearPending();
     void loadHistory();
   } catch (e) {
-    const context = accountId === store.selectedAccount?.id ? '' : `「${accountName}」`;
-    toast(context + (local ? '本地皮肤应用失败：' : '皮肤上传失败：') + errText(e), 'error');
+    toast(t('skins.upload_failed') + errText(e), 'error');
   } finally {
     uploading.value = false;
   }
@@ -446,9 +449,9 @@ async function onResetOffline() {
     profileError.value = '';
     profile.value = next;
     previewHistoryId.value = '';
-    toast('已恢复游戏默认皮肤，下次启动游戏生效', 'success');
+    toast(t('skins.reset_default_toast'), 'success');
   } catch (error) {
-    toast('恢复默认皮肤失败：' + errText(error), 'error');
+    toast(t('skins.reset_default_failed') + errText(error), 'error');
   } finally {
     uploading.value = false;
   }
@@ -494,20 +497,20 @@ watch(
     />
     <div data-ui="SkinsView:483ce0fd91a6" class="page-head">
       <div class="skin-page-heading">
-        <h1 data-ui="SkinsView:b30aa0d910d4" class="page-title">皮肤与披风</h1>
+        <h1 data-ui="SkinsView:b30aa0d910d4" class="page-title">{{ t('skins.title') }}</h1>
         <p data-ui="SkinsView:dc0d51be1910" class="page-sub">
           {{
             isExternal
-              ? `查看 ${store.selectedAccount?.providerName ?? '外置皮肤站'} 的角色材质`
+              ? t('skins.subtitle.external', { provider: store.selectedAccount?.providerName ?? t('skins.external_provider_fallback') })
               : isMs
-                ? '管理微软正版账号的皮肤与披风'
+                ? t('skins.subtitle.microsoft')
                 : isOffline
-                  ? '本地 PNG 皮肤 · 在本机游戏中显示'
-                  : '预览本地皮肤；选择账号后可应用'
+                  ? t('skins.subtitle.offline')
+                  : t('skins.subtitle.preview')
           }}
         </p>
       </div>
-      <button class="btn btn-gold skin-editor-entry" @click="editorOpen = true">绘制皮肤</button>
+      <button class="btn btn-gold skin-editor-entry" @click="editorOpen = true">{{ t('skins.draw_skin') }}</button>
     </div>
 
     <!-- 非微软账号：整页引导 -->
@@ -524,12 +527,15 @@ watch(
         <path d="m9 4-6 3 2 5 3-1v9h8v-9l3 1 2-5-6-3a3 3 0 0 1-6 0Z" />
       </svg>
       <p data-ui="SkinsView:b00f59b6449e" class="need-ms-text">
-        账号皮肤与披风需要微软正版账号或外置 Yggdrasil 账号；本地历史皮肤可直接预览
+        {{ t('skins.need_ms_title') }}
       </p>
       <p v-if="historyError" role="alert" class="muted">
-        读取本地历史失败：{{ historyError }}<button class="btn btn-ghost" @click="loadHistory">重试</button>
+        {{ t('skins.read_history_failed', { error: historyError })
+        }}<button class="btn btn-ghost" @click="loadHistory">{{ t('skins.retry') }}</button>
       </p>
-      <button data-ui="SkinsView:81397b7fad2a" class="btn btn-gold" @click="store.currentView = 'accounts'">去登录</button>
+      <button data-ui="SkinsView:81397b7fad2a" class="btn btn-gold" @click="store.currentView = 'accounts'">
+        {{ t('skins.go_login') }}
+      </button>
     </div>
 
     <template v-if="canViewProfile || historyList.length">
@@ -546,9 +552,15 @@ watch(
         <!-- 左：3D 人偶预览 -->
         <section data-ui="SkinsView:6a4cd6686688" class="card pane pane-preview">
           <header class="pane-head">
-            <h3 class="pane-title">3D 预览</h3>
+            <h3 class="pane-title">{{ t('skins.preview_3d') }}</h3>
             <div data-ui="SkinsView:bb4ca04a6667" v-if="previewReady" class="pane-tools preview-pose-tools">
-              <div data-ui="SkinsView:66970b2bfb5f" class="seg preview-pose-selector" ref="animSeg" role="group" aria-label="预览姿势">
+              <div
+                data-ui="SkinsView:66970b2bfb5f"
+                class="seg preview-pose-selector"
+                ref="animSeg"
+                role="group"
+                :aria-label="t('skins.preview_pose.aria')"
+              >
                 <span data-ui="SkinsView:aaed9003b2f3" class="seg-blob" :style="animSegBlobStyle" aria-hidden="true"></span>
                 <button
                   v-for="mode in previewModes"
@@ -563,7 +575,7 @@ watch(
                   {{ mode.name }}
                 </button>
               </div>
-              <button data-ui="SkinsView:1350e68d93c0" class="icon-btn" title="回正视角" @click="viewerRef?.resetView()">
+              <button data-ui="SkinsView:1350e68d93c0" class="icon-btn" :title="t('skins.reset_view')" @click="viewerRef?.resetView()">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -580,9 +592,11 @@ watch(
           </header>
           <div v-if="previewHistory" class="preview-selection" role="status">
             <span
-              ><strong>{{ historyDisplayName(previewHistory) }}</strong> · 仅预览，未更换账号皮肤</span
+              ><strong>{{ historyDisplayName(previewHistory) }}</strong> · {{ t('skins.previewing_label') }}</span
             >
-            <button class="btn btn-ghost btn-sm" @click="previewHistoryId = ''">{{ currentSkin ? '返回当前皮肤' : '结束预览' }}</button>
+            <button class="btn btn-ghost btn-sm" @click="previewHistoryId = ''">
+              {{ currentSkin ? t('skins.return_current') : t('skins.end_preview') }}
+            </button>
           </div>
           <div data-ui="SkinsView:69891078db9e" class="preview-3d">
             <template v-if="previewReady">
@@ -595,7 +609,7 @@ watch(
                 @cape-error="capeViewerError = $event"
               />
               <p v-if="capeViewerError" class="muted" role="alert">{{ capeViewerError }}</p>
-              <p data-ui="SkinsView:50827644b628" class="muted viewer-tip">拖动旋转 · 滚轮缩放 · 双击回正</p>
+              <p data-ui="SkinsView:50827644b628" class="muted viewer-tip">{{ t('skins.viewer_tip') }}</p>
             </template>
             <div data-ui="SkinsView:e868aac3a5b8" v-else class="preview-3d-empty">
               <span data-ui="SkinsView:931587e4968d" v-if="loadingProfile" class="spin"></span>
@@ -611,7 +625,7 @@ watch(
                   <circle cx="12" cy="8" r="4" />
                   <path d="M4 21v-1a8 8 0 0 1 16 0v1" />
                 </svg>
-                <span>暂无皮肤</span>
+                <span>{{ t('skins.no_skin') }}</span>
               </div>
             </div>
           </div>
@@ -621,13 +635,13 @@ watch(
         <div v-if="canViewProfile" class="skin-operation-panel">
           <section data-ui="SkinsView:8be659224d2f" class="card pane pane-info">
             <div data-ui="SkinsView:36f73e18abbe" v-if="profileError" class="status-strip error" role="alert">
-              读取皮肤失败：{{ profileError
-              }}<button data-ui="SkinsView:73348961dd1a" class="btn btn-ghost" @click="loadProfile(true)">重试</button>
+              {{ t('skins.read_skin_failed', { error: profileError })
+              }}<button data-ui="SkinsView:73348961dd1a" class="btn btn-ghost" @click="loadProfile(true)">{{ t('skins.retry') }}</button>
             </div>
             <header class="pane-head">
-              <h3 class="pane-title">当前皮肤</h3>
+              <h3 class="pane-title">{{ t('skins.current_skin') }}</h3>
               <span data-ui="SkinsView:636efe9c920f" class="tag" :class="currentVariant === 'slim' ? 'tag-cyan' : 'tag-gold'">
-                {{ currentVariant === 'slim' ? '纤细 Slim' : '经典 Classic' }}
+                {{ currentVariant === 'slim' ? t('skins.variant.slim') : t('skins.variant.classic') }}
               </span>
             </header>
 
@@ -649,7 +663,7 @@ watch(
                     :class="{ active: variant === 'classic' }"
                     @click="variant = 'classic'"
                   >
-                    经典 Classic
+                    {{ t('skins.variant.classic') }}
                   </button>
                   <button
                     data-ui="SkinsView:25ab876996cc"
@@ -657,11 +671,11 @@ watch(
                     :class="{ active: variant === 'slim' }"
                     @click="variant = 'slim'"
                   >
-                    纤细 Slim
+                    {{ t('skins.variant.slim') }}
                   </button>
                 </div>
               </div>
-              <button data-ui="SkinsView:dbcfe6eb10f9" class="icon-btn" title="移除待上传文件" @click="clearPending">
+              <button data-ui="SkinsView:dbcfe6eb10f9" class="icon-btn" :title="t('skins.remove_pending')" @click="clearPending">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                   <path d="M6 6l12 12M18 6 6 18" />
                 </svg>
@@ -669,27 +683,36 @@ watch(
             </div>
 
             <div data-ui="SkinsView:2ce0dc456e94" v-if="canApplySkin" class="skin-actions">
-              <button data-ui="SkinsView:45688b94a733" class="btn btn-ghost" @click="fileInput?.click()">选择皮肤文件…</button>
+              <button data-ui="SkinsView:45688b94a733" class="btn btn-ghost" @click="fileInput?.click()">
+                {{ t('skins.select_file') }}
+              </button>
               <button data-ui="SkinsView:18b48238d441" class="btn btn-gold" :disabled="!pending || uploading" @click="doUpload">
-                {{ uploading ? (isOffline ? '应用中…' : '上传中…') : isOffline ? '应用到离线账号' : '上传' }}
+                {{
+                  uploading
+                    ? isOffline
+                      ? t('skins.upload.applying')
+                      : t('skins.upload.uploading')
+                    : isOffline
+                      ? t('skins.upload.apply_offline')
+                      : t('skins.upload.upload')
+                }}
               </button>
               <button v-if="isOffline" class="btn btn-ghost" :disabled="uploading || !currentSkin" @click="onResetOffline">
-                恢复游戏默认皮肤
+                {{ t('skins.reset_default') }}
               </button>
             </div>
-            <p data-ui="SkinsView:aa2915a1b866" v-if="canApplySkin" class="muted skin-hint">支持 64×64 的 PNG 皮肤文件</p>
+            <p data-ui="SkinsView:aa2915a1b866" v-if="canApplySkin" class="muted skin-hint">{{ t('skins.hint_png_64') }}</p>
             <div data-ui="SkinsView:252d1a5f5b2f" v-else class="external-skin-note">
               <span data-ui="SkinsView:d35771891dd7" class="tag tag-cyan">{{ store.selectedAccount?.providerName }}</span>
               <p data-ui="SkinsView:d7b70906b3c5" class="muted skin-hint">
-                外置账号的皮肤与披风由所属皮肤站管理；FAIONYX 会读取并在启动时加载当前材质。
+                {{ t('skins.external_note') }}
               </p>
             </div>
             <p v-if="isOffline" class="muted skin-hint offline-skin-hint">
-              离线账号皮肤仅在本机游戏显示，修改从下次启动生效；其他玩家看到的皮肤由服务器决定。首次启动会从作者官方来源下载并校验
-              authlib-injector 皮肤加载组件，之后可在断网时使用缓存。
+              {{ t('skins.offline_hint') }}
             </p>
             <p v-if="isOffline && !currentSkin" class="muted skin-hint">
-              尚未应用本地皮肤。此处显示 FAIONYX 默认预览，游戏使用自身默认皮肤。
+              {{ t('skins.offline_no_skin') }}
             </p>
 
             <input
@@ -702,15 +725,17 @@ watch(
             />
           </section>
 
-          <div data-ui="SkinsView:de1900d63ab5" v-if="dragOver" class="drag-hint">松开以选择皮肤文件</div>
+          <div data-ui="SkinsView:de1900d63ab5" v-if="dragOver" class="drag-hint">{{ t('skins.drag_select') }}</div>
           <section data-ui="SkinsView:b5f0f1bd543a" v-if="!isOffline" class="card pane pane-capes">
             <header class="pane-head">
-              <h3 class="pane-title">披风（{{ capes.length }}）</h3>
-              <button class="btn btn-ghost" :disabled="loadingProfile || capeBusy !== null" @click="loadProfile(true)">刷新材质</button>
+              <h3 class="pane-title">{{ t('skins.capes_count', { count: capes.length.toString() }) }}</h3>
+              <button class="btn btn-ghost" :disabled="loadingProfile || capeBusy !== null" @click="loadProfile(true)">
+                {{ t('skins.refresh_capes') }}
+              </button>
             </header>
             <div data-ui="SkinsView:0f570e391601" v-if="loadingProfile" class="empty pane-empty"><span class="spin"></span></div>
             <div data-ui="SkinsView:23e5aa429fa5" v-else-if="!capes.length" class="empty pane-empty">
-              <span>该账号暂无披风</span>
+              <span>{{ t('skins.no_capes') }}</span>
             </div>
             <div data-ui="SkinsView:b74774f82cbb" v-else class="cape-grid">
               <button
@@ -720,7 +745,7 @@ watch(
                 class="cape-item"
                 :class="{ active: c.active }"
                 :disabled="capeBusy !== null || isExternal"
-                :title="isExternal ? '请在所属皮肤站管理披风' : c.active ? '点击卸下披风' : '点击使用该披风'"
+                :title="isExternal ? t('skins.cape_manage_external') : c.active ? t('skins.cape_deactivate') : t('skins.cape_activate')"
                 @click="onCapeClick(c)"
               >
                 <div data-ui="SkinsView:ef385c3e5a89" class="cape-preview">
@@ -730,7 +755,7 @@ watch(
                 <span data-ui="SkinsView:ecfe9b1c09a5" class="cape-name">{{ c.alias }}</span>
                 <span data-ui="SkinsView:d40a5d07ca29" class="cape-state">
                   <span data-ui="SkinsView:1816d05e22d8" v-if="capeBusy === c.id" class="spin"></span>
-                  <span data-ui="SkinsView:b5509fdec2ff" v-else-if="c.active" class="tag tag-gold">使用中</span>
+                  <span data-ui="SkinsView:b5509fdec2ff" v-else-if="c.active" class="tag tag-gold">{{ t('skins.cape_active') }}</span>
                   <span v-if="capeErrors[c.id]" class="muted" role="status">{{ capeErrors[c.id] }}</span>
                 </span>
               </button>
@@ -739,28 +764,28 @@ watch(
         </div>
         <section data-ui="SkinsView:7bae5dc497d8" class="card pane pane-history">
           <header class="pane-head">
-            <h3 class="pane-title">历史皮肤（{{ historyList.length }}）</h3>
+            <h3 class="pane-title">{{ t('skins.history_count', { count: historyList.length }) }}</h3>
             <input
               data-ui="SkinsView:eae2262398f8"
               v-if="historyList.length"
               v-model="historySearch"
               class="input history-search"
-              placeholder="搜索文件名…"
-              title="按文件名即时筛选历史皮肤"
+              :placeholder="t('skins.history_search_placeholder')"
+              :title="t('skins.history_search_title')"
             />
           </header>
           <div data-ui="SkinsView:07a35fa3d13e" v-if="historyError" class="status-strip error">
-            读取历史失败：{{ historyError
-            }}<button data-ui="SkinsView:795ecc15b13b" class="btn btn-ghost" @click="loadHistory">重试</button>
+            {{ t('skins.read_history_failed_msg', { error: historyError })
+            }}<button data-ui="SkinsView:795ecc15b13b" class="btn btn-ghost" @click="loadHistory">{{ t('skins.retry') }}</button>
           </div>
           <div data-ui="SkinsView:7cb3faa3d3a0" v-else-if="loadingHistory && !historyList.length" class="empty pane-empty">
             <span class="spin"></span>
           </div>
           <div data-ui="SkinsView:30798d037a0e" v-else-if="!historyList.length" class="empty pane-empty">
-            <span>暂无历史皮肤，上传皮肤后会自动保存到这里，方便随时换回</span>
+            <span>{{ t('skins.no_history') }}</span>
           </div>
           <div data-ui="SkinsView:cb559646d8cc" v-else-if="!filteredHistory.length" class="empty pane-empty">
-            <span>没有匹配「{{ historySearch }}」的历史皮肤</span>
+            <span>{{ t('skins.no_history_match', { keyword: historySearch }) }}</span>
           </div>
           <div data-ui="SkinsView:c57cc36b5fe3" v-else class="history-grid">
             <div data-ui="SkinsView:2848a3535fdf" v-for="item in filteredHistory" :key="item.id" class="history-item">
@@ -769,22 +794,31 @@ watch(
                 data-ui="SkinsView:915113e01369"
                 class="history-preview"
                 :class="{ selected: previewHistoryId === item.id }"
-                :aria-label="`预览 ${historyDisplayName(item)}`"
+                :aria-label="t('skins.history_preview_aria', { name: historyDisplayName(item) })"
                 :aria-pressed="previewHistoryId === item.id"
                 @click="previewSavedSkin(item)"
               >
-                <img data-ui="SkinsView:93154017e1c0" :src="historyRenders[item.id] || item.dataUrl" class="history-img" alt="历史皮肤" />
-                <span class="history-preview-hint">{{ previewHistoryId === item.id ? '预览中' : '点击预览' }}</span>
+                <img
+                  data-ui="SkinsView:93154017e1c0"
+                  :src="historyRenders[item.id] || item.dataUrl"
+                  class="history-img"
+                  :alt="t('skins.history_alt')"
+                />
+                <span class="history-preview-hint">{{
+                  previewHistoryId === item.id ? t('skins.history_previewing') : t('skins.history_click_preview')
+                }}</span>
               </button>
               <div data-ui="SkinsView:e8374fa9d9a7" class="history-actions">
                 <button
                   data-ui="SkinsView:96c3c4ae26c7"
                   class="btn btn-gold btn-sm"
                   :disabled="!canApplySkin || historyBusy !== null"
-                  :title="isOffline ? '应用到此离线账号，下次启动游戏生效' : isMs ? '上传并换回此皮肤' : '请先选择可应用皮肤的账号'"
+                  :title="
+                    isOffline ? t('skins.history_apply_offline') : isMs ? t('skins.history_apply_ms') : t('skins.history_need_account')
+                  "
                   @click="onRestore(item)"
                 >
-                  {{ historyBusy === item.id ? '处理中…' : '换回' }}
+                  {{ historyBusy === item.id ? t('skins.history_busy') : t('skins.history_restore') }}
                 </button>
                 <button
                   data-ui="SkinsView:18710f6d05c6"
@@ -792,12 +826,12 @@ watch(
                   :disabled="historyBusy !== null"
                   @click="onDeleteHistory(item)"
                 >
-                  删除
+                  {{ t('skins.history_delete') }}
                 </button>
               </div>
               <div data-ui="SkinsView:30559af409bc" class="history-meta">
                 <span data-ui="SkinsView:6db94431a918" class="tag" :class="item.variant === 'slim' ? 'tag-cyan' : 'tag-gold'">
-                  {{ item.variant === 'slim' ? '纤细' : '经典' }}
+                  {{ item.variant === 'slim' ? t('skins.variant_slim_short') : t('skins.variant_classic_short') }}
                 </span>
                 <span data-ui="SkinsView:cf1055002679" class="muted history-time">{{ fmtTime(item.time) }}</span>
               </div>
@@ -817,7 +851,7 @@ watch(
                   data-ui="SkinsView:4691c713a4de"
                   v-else
                   class="history-name"
-                  :title="`${historyDisplayName(item)}（点击重命名）`"
+                  :title="t('skins.name_rename_title', { name: historyDisplayName(item) })"
                   @click="startHistoryRename(item)"
                   >{{ historyDisplayName(item) }}</span
                 >

@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import type { InstalledVersion } from '@shared/types';
 import type { ModVersionChoices, ModChangePlan } from '@shared/modManagement';
 import { errText } from '../api';
+import { t } from '@renderer/i18n';
 const props = defineProps<{ source: InstalledVersion; fileName: string }>(),
   emit = defineEmits<{ (e: 'close'): void; (e: 'done'): void }>();
 const choices = ref<ModVersionChoices>(),
@@ -87,18 +88,22 @@ onMounted(load);
 <template>
   <Teleport to="body"
     ><div class="modal-mask" @pointerdown.self="!applying && emit('close')">
-      <section class="modal mod-version-modal" role="dialog" aria-modal="true" aria-label="切换模组版本">
+      <section class="modal mod-version-modal" role="dialog" aria-modal="true" :aria-label="t('mvm.title')">
         <header>
           <div>
-            <h2>切换模组版本</h2>
+            <h2>{{ t('mvm.title') }}</h2>
             <p class="muted">{{ fileName }}</p>
-            <small v-if="choices" class="muted">{{ choices.mcVersion }} · {{ choices.loader }} · 当前 {{ choices.currentVersion }}</small>
+            <small v-if="choices" class="muted"
+              >{{ choices.mcVersion }} · {{ choices.loader }} · {{ t('mvm.current') }} {{ choices.currentVersion }}</small
+            >
           </div>
-          <button class="btn btn-ghost" :disabled="applying" aria-label="关闭" @click="emit('close')">×</button>
+          <button class="btn btn-ghost" :disabled="applying" :aria-label="t('common.close')" @click="emit('close')">×</button>
         </header>
         <div class="version-content">
-          <div v-if="loading" class="empty">正在识别来源并查询适配版本…</div>
-          <div v-if="error" class="error">{{ error }}<button v-if="!choices" class="btn btn-ghost" @click="load">重试</button></div>
+          <div v-if="loading" class="empty">{{ t('mvm.identifying') }}</div>
+          <div v-if="error" class="error">
+            {{ error }}<button v-if="!choices" class="btn btn-ghost" @click="load">{{ t('common.retry') }}</button>
+          </div>
           <template v-if="choices"
             ><div class="version-columns">
               <div class="versions-list">
@@ -113,32 +118,32 @@ onMounted(load);
                   ><small>{{ f.releaseType }} · {{ f.date?.slice(0, 10) }}</small
                   ><small>{{ f.fileName }}</small>
                 </button>
-                <p v-if="!choices.files.length">此游戏版本与加载器下没有其他可下载文件。</p>
+                <p v-if="!choices.files.length">{{ t('mvm.no_files') }}</p>
               </div>
               <div class="version-detail">
-                <p v-if="checking" class="muted">正在检查前置并获取版本说明…</p>
+                <p v-if="checking" class="muted">{{ t('mvm.checking_deps') }}</p>
                 <template v-else-if="plan"
-                  ><h3>本次更改</h3>
+                  ><h3>{{ t('mvm.this_change') }}</h3>
                   <p v-for="f in plan.files">
-                    <span class="tag">{{ f.dependency ? '新增前置' : '替换模组' }}</span> {{ f.fileName }}
+                    <span class="tag">{{ f.dependency ? t('mvm.new_dep') : t('mvm.replace_mod') }}</span> {{ f.fileName }}
                   </p>
                   <div v-if="plan.warnings.length" class="warning">
                     <p v-for="w in plan.warnings">{{ w }}</p>
-                    <label><input v-model="confirmed" type="checkbox" />我已了解并确认本次更改</label>
+                    <label><input v-model="confirmed" type="checkbox" />{{ t('mvm.confirm_checkbox') }}</label>
                   </div>
-                  <h3>版本说明</h3>
+                  <h3>{{ t('mvm.version_notes') }}</h3>
                   <pre>{{ plan.changelog }}</pre>
                 </template>
-                <p v-else class="muted">选择一个适配版本，查看说明与必要前置。</p>
+                <p v-else class="muted">{{ t('mvm.select_hint') }}</p>
               </div>
             </div></template
           >
         </div>
         <footer>
-          <small class="muted">校验后替换，保留启停状态</small
-          ><button class="btn btn-ghost" :disabled="applying" @click="emit('close')">取消</button
+          <small class="muted">{{ t('mvm.verify_replace') }}</small
+          ><button class="btn btn-ghost" :disabled="applying" @click="emit('close')">{{ t('common.cancel') }}</button
           ><button class="btn btn-gold" :disabled="!plan || checking || applying || (!!plan?.warnings.length && !confirmed)" @click="apply">
-            {{ applying ? '正在下载与替换…' : '确认切换' }}
+            {{ applying ? t('mvm.downloading') : t('mvm.confirm_switch') }}
           </button>
         </footer>
       </section>

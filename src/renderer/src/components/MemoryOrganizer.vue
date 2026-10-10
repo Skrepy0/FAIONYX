@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { store, toast } from '../store';
 import { saveSettings, errText } from '../api';
+import { t } from '@renderer/i18n';
 import type { MemoryOrganizeResult } from '@shared/memoryOrganizer';
 const emit = defineEmits<{ refresh: [] }>(),
   busy = ref(false),
@@ -33,25 +34,33 @@ async function toggle(e: Event) {
   <div class="memory-organizer">
     <template v-if="windows"
       ><div class="organizer-actions">
-        <button class="btn btn-ghost btn-sm" :disabled="busy" @click="run">{{ busy ? '正在整理…' : '整理系统内存' }}</button
+        <button class="btn btn-ghost btn-sm" :disabled="busy" @click="run">
+          {{ busy ? t('common.organizing') : t('common.memory_organize') }}</button
         ><label style="display: flex; gap: 5px"
           ><input :checked="store.settings?.memoryOrganizeBeforeLaunch === true" type="checkbox" @change="toggle" /><span
             style="justify-content: center; justify-items: center"
-            >启动前整理</span
+            >{{ t('common.organize_before_launch') }}</span
           ></label
         >
       </div>
-      <p class="muted">整理可回收工作集；运行中的游戏和受保护进程会跳过。内存可能随进程活动回涨。</p>
+      <p class="muted">{{ t('common.organize_hint') }}</p>
       <p v-if="result" role="status">
-        可用 {{ result.beforeMB }} → {{ result.afterMB }} MB · 处理 {{ result.processed }} · 跳过 {{ result.skipped }} ·
-        {{ (result.elapsedMs / 1000).toFixed(1) }} 秒
+        {{
+          t('common.organize_result', {
+            before: String(result.beforeMB),
+            after: String(result.afterMB),
+            processed: String(result.processed),
+            skipped: String(result.skipped),
+            seconds: (result.elapsedMs / 1000).toFixed(1),
+          })
+        }}
       </p>
       <details v-if="result && Object.keys(result.failures).length">
-        <summary>跳过或失败原因</summary>
+        <summary>{{ t('common.skip_reasons') }}</summary>
         <p v-for="(count, reason) in result.failures" class="muted">{{ reason }}：{{ count }}</p>
       </details></template
     >
-    <p v-else class="muted">系统工作集整理仅适用于 Windows；本机可继续查看内存信息及设置游戏分配。</p>
+    <p v-else class="muted">{{ t('common.memory_windows_only') }}</p>
   </div>
 </template>
 <style scoped>

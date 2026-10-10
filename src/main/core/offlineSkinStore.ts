@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import type { SkinHistoryEntry, SkinHistoryItem, SkinVariant } from '../../shared/types';
+import { translate as t } from '../../shared/i18n';
 
 const MAX_PNG_BYTES = 200_000;
 const HISTORY_LIMIT = 30;
@@ -21,7 +22,7 @@ type Storage = Pick<typeof fs, 'mkdir' | 'readFile' | 'writeFile' | 'rename' | '
 
 /** PNG dimensions are bounded before decoding; the decoder must validate the actual pixels. */
 export function validateOfflineSkinBytes(bytes: Buffer): void {
-  if (bytes.length > MAX_PNG_BYTES) throw new Error('皮肤 PNG 文件过大，请使用标准 64×64 PNG');
+  if (bytes.length > MAX_PNG_BYTES) throw new Error(t('offskinstore.error.png_too_large'));
   if (
     bytes.length < 33 ||
     !bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) ||
@@ -30,14 +31,15 @@ export function validateOfflineSkinBytes(bytes: Buffer): void {
     bytes.readUInt32BE(16) !== 64 ||
     bytes.readUInt32BE(20) !== 64
   )
-    throw new Error('皮肤必须是 64×64 的 PNG 图片');
+    throw new Error(t('skins.error.skin_must_be_png64'));
   let offset = 8,
     image = false,
     ended = false;
   while (offset + 12 <= bytes.length) {
     const length = bytes.readUInt32BE(offset),
       kind = bytes.toString('ascii', offset + 4, offset + 8);
-    if (length > MAX_PNG_BYTES || offset + length + 12 > bytes.length || kind === 'acTL') throw new Error('皮肤 PNG 损坏或不是静态图片');
+    if (length > MAX_PNG_BYTES || offset + length + 12 > bytes.length || kind === 'acTL')
+      throw new Error(t('offskinstore.error.png_corrupt'));
     if (kind === 'IDAT') image = true;
     offset += length + 12;
     if (kind === 'IEND') {
@@ -45,7 +47,7 @@ export function validateOfflineSkinBytes(bytes: Buffer): void {
       break;
     }
   }
-  if (!image || !ended) throw new Error('皮肤 PNG 图片不完整');
+  if (!image || !ended) throw new Error(t('offskinstore.error.png_incomplete'));
 }
 
 /** Private appearance manifests are account scoped. Immutable PNGs survive resets and running launches. */
@@ -60,13 +62,13 @@ export class OfflineSkinStore {
     return path.join(this.directory(), 'accounts', crypto.createHash('sha256').update(accountId).digest('hex') + '.json');
   }
   private textureFile(hash: string) {
-    if (!SHA256.test(hash)) throw new Error('无效的本地皮肤记录');
+    if (!SHA256.test(hash)) throw new Error(t('offskinstore.error.invalid_record'));
     return path.join(this.directory(), 'textures', hash + '.png');
   }
   private async read(accountId: string): Promise<Manifest> {
     const file = this.manifestFile(accountId);
     try {
-      if ((await this.storage.stat(file)).size > 100_000) throw new Error('本地皮肤记录过大');
+      if ((await this.storage.stat(file)).size > 100_000) throw new Error(t('offskinstore.error.record_too_large'));
       const raw = JSON.parse(await this.storage.readFile(file, 'utf8')) as Manifest;
       if (
         raw.schema !== 1 ||
@@ -74,7 +76,7 @@ export class OfflineSkinStore {
         !Array.isArray(raw.history) ||
         (raw.selected && (!SHA256.test(raw.selected.hash) || !['classic', 'slim'].includes(raw.selected.variant)))
       )
-        throw new Error('本地皮肤记录损坏');
+        throw new Error(t('offskinstore.error.record_corrupt'));
       const history = raw.history
         .filter(
           (item) =>
@@ -115,25 +117,25 @@ export class OfflineSkinStore {
   private async pixels(hash: string): Promise<Buffer> {
     const file = this.textureFile(hash),
       stat = await this.storage.stat(file);
-    if (!stat.isFile() || stat.size > MAX_PNG_BYTES) throw new Error('本地皮肤文件无效');
+    if (!stat.isFile() || stat.size > MAX_PNG_BYTES) throw new Error(t('offskinstore.error.file_invalid'));
     const bytes = await this.storage.readFile(file);
     validateOfflineSkinBytes(bytes);
     await this.decode(bytes);
-    if (crypto.createHash('sha256').update(bytes).digest('hex') !== hash) throw new Error('本地皮肤文件校验失败');
+    if (crypto.createHash('sha256').update(bytes).digest('hex') !== hash) throw new Error(t('offskinstore.error.file_checksum_failed'));
     return bytes;
   }
   async readFile(file: string): Promise<Buffer> {
     const stat = await this.storage.stat(file).catch(() => {
-      throw new Error('皮肤文件不存在');
+      throw new Error(t('skins.error.skin_file_missing'));
     });
-    if (!stat.isFile() || stat.size > MAX_PNG_BYTES) throw new Error('皮肤文件无效或过大');
+    if (!stat.isFile() || stat.size > MAX_PNG_BYTES) throw new Error(t('offskinstore.error.file_invalid_or_too_large'));
     const bytes = await this.storage.readFile(file);
     validateOfflineSkinBytes(bytes);
     await this.decode(bytes);
     return bytes;
   }
   async apply(accountId: string, bytes: Buffer, variant: SkinVariant, name?: string): Promise<void> {
-    if (!['classic', 'slim'].includes(variant)) throw new Error('无效的皮肤模型');
+    if (!['classic', 'slim'].includes(variant)) throw new Error(t('skins.error.invalid_variant'));
     // Own the bytes before an asynchronous decode so later callers cannot mutate a pending write.
     bytes = Buffer.from(bytes);
     validateOfflineSkinBytes(bytes);
@@ -184,7 +186,7 @@ export class OfflineSkinStore {
   }
   async restore(accountId: string, id: string): Promise<void> {
     const item = (await this.read(accountId)).history.find((item) => item.id === id);
-    if (!item) throw new Error('历史皮肤不存在');
+    if (!item) throw new Error(t('skins.error.history_missing'));
     await this.apply(accountId, await this.pixels(item.id), item.variant, item.name);
   }
   async reset(accountId: string): Promise<void> {
@@ -195,7 +197,7 @@ export class OfflineSkinStore {
   }
   async delete(accountId: string, id: string): Promise<void> {
     await this.mutate(accountId, async (manifest) => {
-      if (!manifest.history.some((item) => item.id === id)) throw new Error('历史皮肤不存在');
+      if (!manifest.history.some((item) => item.id === id)) throw new Error(t('skins.error.history_missing'));
       manifest.history = manifest.history.filter((item) => item.id !== id);
       await this.atomic(this.manifestFile(accountId), JSON.stringify(manifest, null, 2));
     });
@@ -203,7 +205,7 @@ export class OfflineSkinStore {
   async rename(accountId: string, id: string, name: string): Promise<void> {
     await this.mutate(accountId, async (manifest) => {
       const item = manifest.history.find((item) => item.id === id);
-      if (!item) throw new Error('历史皮肤不存在');
+      if (!item) throw new Error(t('skins.error.history_missing'));
       item.name = String(name).trim().slice(0, 80) || undefined;
       await this.atomic(this.manifestFile(accountId), JSON.stringify(manifest, null, 2));
     });

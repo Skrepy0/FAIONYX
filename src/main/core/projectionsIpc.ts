@@ -1,3 +1,4 @@
+import { translate as t } from '../../shared/i18n';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -37,7 +38,7 @@ const metadataCache = new Map<string, { size: number; modified: number; metadata
 function activeRoot() {
   const settings = getSettings(),
     root = settings.activeFolder || settings.gameDir;
-  if (!root || !settings.folders.some((f) => key(f.path) === key(root))) throw new Error('请先选择已登记的游戏文件夹');
+  if (!root || !settings.folders.some((f) => key(f.path) === key(root))) throw new Error(t('projipc.error.select_registered_folder'));
   return path.resolve(root);
 }
 async function library(root: string) {
@@ -47,10 +48,10 @@ async function library(root: string) {
 }
 function selectedItems(ids: unknown): Stored[] {
   const bound = new Set(getSettings().folders.map((f) => key(f.path)));
-  if (!Array.isArray(ids) || !ids.length || ids.length > 10000) throw new Error('请选择投影文件');
+  if (!Array.isArray(ids) || !ids.length || ids.length > 10000) throw new Error(t('projipc.error.select_projection_files'));
   return [...new Set(ids)].map((id) => {
     const s = catalog.get(id);
-    if (!s || !s.source.folder || !bound.has(key(s.source.folder))) throw new Error('投影所属文件夹已解除绑定，请刷新列表');
+    if (!s || !s.source.folder || !bound.has(key(s.source.folder))) throw new Error(t('projipc.error.folder_unbound_refresh'));
     return s;
   });
 }
@@ -60,7 +61,7 @@ async function recordingDirectory(root: string, kind: ProjectionFormat, create =
   return dir;
 }
 async function scan(getWin: () => BrowserWindow | null): Promise<ProjectionCatalog> {
-  const task = registerTask('投影 · 扫描全部目录', 'world'),
+  const task = registerTask(t('projipc.task.scan_all_dirs'), 'world'),
     signal = task.controller.signal;
   let ok = false;
   try {
@@ -74,8 +75,13 @@ async function scan(getWin: () => BrowserWindow | null): Promise<ProjectionCatal
       const root = path.resolve(registered.path),
         label = registered.name || root;
       sources.push(
-        { folder: root, root: path.join(root, 'projections'), label: label + ' · 集中收藏', library: true },
-        { folder: root, root, label: label + ' · 共享目录', library: false }
+        {
+          folder: root,
+          root: path.join(root, 'projections'),
+          label: label + ' · ' + t('projections.filter.source_library'),
+          library: true,
+        },
+        { folder: root, root, label: label + ' · ' + t('games.instance.shared'), library: false }
       );
       try {
         const result = scanInstalledFolder(root);
@@ -86,7 +92,7 @@ async function scan(getWin: () => BrowserWindow | null): Promise<ProjectionCatal
             sources.push({ folder: root, root: c.dir, label: v.id, library: false });
             instances.push({ folder: root, id: v.id, name: v.id + ' · ' + root });
           } catch {
-            warnings.push('无法读取实例：' + root + ' / ' + v.id);
+            warnings.push(t('projipc.warn.instance_unreadable', { path: root + ' / ' + v.id }));
           }
         }
       } catch (e) {
@@ -103,7 +109,7 @@ async function scan(getWin: () => BrowserWindow | null): Promise<ProjectionCatal
         async function visit(rel: string, depth: number): Promise<void> {
           signal.throwIfAborted();
           await waitIfTaskPaused(signal);
-          if (++visited > 20000) throw new Error('扫描已达到 20000 个目录/文件上限，请分目录整理');
+          if (++visited > 20000) throw new Error(t('projipc.error.scan_limit'));
           const dir = await safePath(source.root, rel, true);
           let entries: fs.Dirent[];
           try {
@@ -120,7 +126,7 @@ async function scan(getWin: () => BrowserWindow | null): Promise<ProjectionCatal
               continue;
             }
             if (!file.isFile() || !file.name.toLowerCase().endsWith('.' + kind)) continue;
-            if (found.size >= 10000) throw new Error('仅显示前 10000 个投影文件');
+            if (found.size >= 10000) throw new Error(t('projipc.error.file_limit'));
             const full = await safePath(source.root, next),
               stat = await fs.promises.lstat(full);
             const id = crypto.createHash('sha256').update(key(full)).digest('hex');
@@ -168,10 +174,10 @@ async function scan(getWin: () => BrowserWindow | null): Promise<ProjectionCatal
       Object.assign(item.entry, metadata);
       getWin()?.webContents.send(IPC_EVENT.progress, {
         taskId: task.id,
-        taskTitle: '投影 · 扫描全部目录',
+        taskTitle: t('projipc.task.scan_all_dirs'),
         stage: 'world',
         progress: ++read / found.size,
-        text: `读取投影 ${read}/${found.size}`,
+        text: t('projipc.text.reading_projection', { read, total: found.size }),
       });
     }
     for (const id of metadataCache.keys()) if (!found.has(id)) metadataCache.delete(id);
@@ -195,7 +201,7 @@ async function current(s: Stored): Promise<string> {
   const file = await safePath(s.source.root, s.rel),
     stat = await fs.promises.lstat(file);
   if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== s.entry.size || stat.mtimeMs !== s.entry.modified)
-    throw new Error('投影已变化，请刷新列表后重试');
+    throw new Error(t('projipc.error.projection_changed_refresh'));
   return file;
 }
 export function registerProjectionsIpc(getWin: () => BrowserWindow | null) {
@@ -208,11 +214,12 @@ export function registerProjectionsIpc(getWin: () => BrowserWindow | null) {
     if (event.sender !== getWin()?.webContents) return;
     try {
       const items = selectedItems(ids);
-      if (items.length > 1000) throw new Error('每次最多拖出 1000 个投影，请分批选择');
+      if (items.length > 1000) throw new Error(t('projipc.error.too_many_drag'));
       const files = items.map((s) => {
         const file = dragPath(s.source.root, s.rel),
           stat = fs.lstatSync(file);
-        if (!stat.isFile() || stat.size !== s.entry.size || stat.mtimeMs !== s.entry.modified) throw new Error('投影已变化，请刷新后重试');
+        if (!stat.isFile() || stat.size !== s.entry.size || stat.mtimeMs !== s.entry.modified)
+          throw new Error(t('projipc.error.projection_changed_retry'));
         return file;
       });
       startNativeFileDrag(event.sender, files);
@@ -230,7 +237,14 @@ export function registerProjectionsIpc(getWin: () => BrowserWindow | null) {
   });
   async function run(items: Stored[], action: ProjectionRequest['action'], destination?: string) {
     const task = registerTask(
-      '投影文件 · ' + { collect: '收集', export: '提取', dispatch: '复制到实例', trash: '移入回收站' }[action],
+      t('projipc.task.file_action', {
+        action: {
+          collect: t('projipc.label.collect'),
+          export: t('projipc.label.export'),
+          dispatch: t('projections.action.dispatch'),
+          trash: t('projections.action.trash'),
+        }[action],
+      }),
       'world'
     );
     const signal = task.controller.signal,
@@ -261,7 +275,7 @@ export function registerProjectionsIpc(getWin: () => BrowserWindow | null) {
             });
           } else {
             await runProjectionWorker({ file, sourceFormat: item.entry.kind, action: 'metadata' }, signal);
-            if (!destination) throw new Error('未指定投影目标目录');
+            if (!destination) throw new Error(t('projipc.error.no_destination'));
             const root = destination;
             await withFileJob(root, signal, async () => {
               if (action === 'dispatch') await assertInstanceIdle(root);
@@ -275,7 +289,7 @@ export function registerProjectionsIpc(getWin: () => BrowserWindow | null) {
             id: item.entry.id,
             name: item.entry.name,
             ok: false,
-            error: signal.aborted ? '任务已取消，原投影保留' : String(e),
+            error: signal.aborted ? t('projipc.error.task_cancelled_kept') : String(e),
           });
         }
         done += item.entry.size;
@@ -285,7 +299,7 @@ export function registerProjectionsIpc(getWin: () => BrowserWindow | null) {
         taskId: task.id,
         ok: !failed,
         cancelled: signal.aborted,
-        error: failed ? `${failed} 个投影处理失败，请查看投影页结果` : undefined,
+        error: failed ? t('projipc.error.some_failed', { failed }) : undefined,
       });
       return results;
     } finally {
@@ -300,16 +314,19 @@ export function registerProjectionsIpc(getWin: () => BrowserWindow | null) {
       request.ids.length < 1 ||
       request.ids.length > 10000
     )
-      throw new Error('投影操作参数无效');
+      throw new Error(t('projipc.error.invalid_operation'));
     const root = activeRoot(),
       items = selectedItems(request.ids);
     let dest: string | undefined = request.action === 'collect' ? await library(root) : undefined;
     if (request.action === 'dispatch') {
-      if (!request.target) throw new Error('请选择目标实例');
+      if (!request.target) throw new Error(t('projipc.error.select_target_instance'));
       dest = centerTarget(request.target).dir;
     }
     if (request.action === 'export') {
-      const picked = await dialog.showOpenDialog({ title: '选择投影提取文件夹', properties: ['openDirectory', 'createDirectory'] });
+      const picked = await dialog.showOpenDialog({
+        title: t('projipc.dialog.select_export_folder'),
+        properties: ['openDirectory', 'createDirectory'],
+      });
       if (picked.canceled) return null;
       dest = picked.filePaths[0];
     }
@@ -318,9 +335,9 @@ export function registerProjectionsIpc(getWin: () => BrowserWindow | null) {
   ipcMain.handle('projections:import', async () => {
     const root = activeRoot();
     const picked = await dialog.showOpenDialog({
-      title: '导入投影到集中收藏',
+      title: t('projipc.dialog.import_to_library'),
       properties: ['openFile', 'multiSelections'],
-      filters: [{ name: 'Minecraft 投影', extensions: ['litematic', 'schem', 'schematic', 'nbt'] }],
+      filters: [{ name: t('projipc.filter.minecraft_projection'), extensions: ['litematic', 'schem', 'schematic', 'nbt'] }],
     });
     if (picked.canceled) return null;
     const destination = await library(root);
@@ -328,7 +345,7 @@ export function registerProjectionsIpc(getWin: () => BrowserWindow | null) {
     for (const file of picked.filePaths) {
       const stat = await fs.promises.lstat(file);
       items.push({
-        source: { root: path.dirname(file), label: '导入', library: false },
+        source: { root: path.dirname(file), label: t('root.topbar.import'), library: false },
         rel: path.basename(file),
         entry: {
           id: file,
@@ -336,7 +353,7 @@ export function registerProjectionsIpc(getWin: () => BrowserWindow | null) {
           kind: path.extname(file).slice(1).toLowerCase() as ProjectionFormat,
           size: stat.size,
           modified: stat.mtimeMs,
-          source: '导入',
+          source: t('root.topbar.import'),
           directory: path.dirname(file),
           library: false,
         },

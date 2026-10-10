@@ -2,6 +2,7 @@
 // Adapted from AUGUHDAR/VoxLink TcpHolePuncher / P2PBridge, revision 721c7fae.
 import net from 'node:net';
 import { setTimeout as delay } from 'node:timers/promises';
+import { translate as t } from '../../../shared/i18n';
 export async function chooseTcpPunchPort(): Promise<number> {
   const server = net.createServer();
   await new Promise<void>((resolve, reject) => {
@@ -13,7 +14,7 @@ export async function chooseTcpPunchPort(): Promise<number> {
   return port;
 }
 export async function tcpSimOpen(ip: string, port: number, host: boolean, signal: AbortSignal): Promise<net.Socket> {
-  if (!net.isIP(ip) || !Number.isInteger(port) || port < 1024 || port > 65535) throw new Error('TCP 打洞地址无效');
+  if (!net.isIP(ip) || !Number.isInteger(port) || port < 1024 || port > 65535) throw new Error(t('tcppunch.error.invalid_address'));
   const deadline = Date.now() + 10000;
   for (let attempt = 0; attempt < (host ? 5 : 1) && Date.now() < deadline; attempt++) {
     signal.throwIfAborted();
@@ -25,14 +26,14 @@ export async function tcpSimOpen(ip: string, port: number, host: boolean, signal
         const timer = setTimeout(
           () => {
             socket.destroy();
-            reject(new Error('TCP 同时打开超时'));
+            reject(new Error(t('tcppunch.error.sim_open_timeout')));
           },
           Math.min(3000, deadline - Date.now())
         );
         socket.once('error', reject);
         socket.once('close', () => {
           clearTimeout(timer);
-          reject(new Error('TCP 同时打开已关闭'));
+          reject(new Error(t('tcppunch.error.sim_open_closed')));
         });
         socket.connect({ host: ip, port, localPort: port }, () => {
           clearTimeout(timer);
@@ -67,8 +68,8 @@ export async function tcpSimOpen(ip: string, port: number, host: boolean, signal
       server.close();
       if (error) reject(error);
     };
-    const abort = () => finish(new Error('TCP 打洞已取消'));
-    const timer = setTimeout(() => finish(new Error('TCP 打洞未命中')), 10000);
+    const abort = () => finish(new Error(t('tcppunch.error.cancelled')));
+    const timer = setTimeout(() => finish(new Error(t('tcppunch.error.not_hit'))), 10000);
     signal.addEventListener('abort', abort, { once: true });
     server.once('error', finish);
     server.listen(port, net.isIP(ip) === 6 ? '::' : '0.0.0.0');
@@ -112,7 +113,7 @@ export async function bridgePunchedSocket(
       await new Promise<void>((resolve, reject) => {
         const timer = setTimeout(() => {
           socket.destroy();
-          reject(new Error('本地游戏连接超时'));
+          reject(new Error(t('tcppunch.error.local_connect_timeout')));
         }, 10000);
         socket.once('error', (e) => {
           clearTimeout(timer);

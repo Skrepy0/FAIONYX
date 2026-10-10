@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/** 图一固定布局下的个性化背景与启动卡图片管理。 */
+// Fixed-layout personalized background and launch-card image management.
 import { builtInLaunchImages } from '../launchImages';
 import ConfirmModal from './ConfirmModal.vue';
 import { computed, nextTick, ref, onMounted, onUnmounted } from 'vue';
@@ -8,6 +8,7 @@ import { carouselImages, carouselKeys, activeCarouselKeys, carouselDuration, MAX
 import { updateSettings } from '../settingsUpdates';
 import { errText, getSystemInfo, importBackground, importBackgroundMulti, importLaunchThumbnail, resetBackground } from '../api';
 import { store, toast } from '../store';
+import { t } from '@renderer/i18n';
 import { managedImageUrl } from '../managedAssets';
 import type { BackgroundSettings, ImageFit, Settings } from '@shared/types';
 
@@ -27,19 +28,19 @@ onMounted(() => {
 onUnmounted(() => window.removeEventListener('focus', refreshNativeMaterial));
 
 function save(patch: Partial<Settings>) {
-  void updateSettings(patch).catch((e) => toast('保存失败：' + errText(e), 'error'));
+  void updateSettings(patch).catch((e) => toast(t('hle.save_failed') + errText(e), 'error'));
 }
 
-// ---------------- 背景 ----------------
+// ---------------- Background ----------------
 const bgModes = [
-  { value: 'none', label: '系统桌面' },
-  { value: 'color', label: '纯色' },
-  { value: 'image', label: '图片' },
+  { value: 'none', label: t('hle.bg_system') },
+  { value: 'color', label: t('hle.bg_color') },
+  { value: 'image', label: t('hle.bg_image') },
 ] as const;
 const fitModes: Array<{ value: ImageFit; label: string }> = [
-  { value: 'fill', label: '填充' },
-  { value: 'fit', label: '适应' },
-  { value: 'crop', label: '裁切' },
+  { value: 'fill', label: t('hle.fit_fill') },
+  { value: 'fit', label: t('hle.fit_fit') },
+  { value: 'crop', label: t('hle.fit_crop') },
 ];
 const importingBackground = ref(false);
 const importingThumbnail = ref(false);
@@ -51,7 +52,7 @@ const slides = computed(() =>
     return {
       key,
       src: bundled?.src ?? managedImageUrl(key),
-      title: bundled?.title ?? `自定义图片 ${images.value.indexOf(key) + 1}`,
+      title: bundled ? t(bundled.title) : `${t('hle.custom_image')} ${images.value.indexOf(key) + 1}`,
       builtin: !!bundled,
     };
   })
@@ -77,7 +78,7 @@ async function deleteThumbnail() {
     await updateSettings({ launchThumbnail: { ...store.settings.launchThumbnail, images: next, image: next[0] ?? '' } });
     removeThumbnail.value = null;
   } catch (e) {
-    toast('移除图片失败：' + errText(e), 'error');
+    toast(t('hle.remove_failed') + errText(e), 'error');
   } finally {
     removingThumbnail.value = false;
   }
@@ -95,7 +96,7 @@ function reorderImage(from: string, to: string) {
   if (!keys.includes(from) || !keys.includes(to)) return;
   const order = reorderGallery(keys, from, to);
   save({ launchThumbnail: { ...store.settings.launchThumbnail, order } });
-  reorderAnnouncement.value = `${slides.value.find((image) => image.key === from)?.title}已移到第 ${order.indexOf(from) + 1} 位`;
+  reorderAnnouncement.value = `${slides.value.find((image) => image.key === from)?.title}${t('hle.moved_to')} ${order.indexOf(from) + 1} ${t('hle.position')}`;
 }
 function startImageDrag(event: DragEvent, key: string) {
   draggingImage.value = key;
@@ -159,16 +160,16 @@ async function pickImage() {
     if (settings) {
       store.settings = settings;
       backgroundPreviewFailed.value = false;
-      toast('背景已复制并优化到 FAIONYX 资源目录', 'success');
+      toast(t('hle.bg_copied'), 'success');
     }
   } catch (e) {
-    toast('导入背景失败：' + errText(e), 'error');
+    toast(t('hle.import_bg_failed') + errText(e), 'error');
   } finally {
     importingBackground.value = false;
   }
 }
 
-/** 多选导入背景图（自动切换用）：追加进 images 数组 */
+/** Multi-select import background images (for auto-switching): append to images array */
 const importingBackgroundMulti = ref(false);
 async function pickImageMulti() {
   if (importingBackgroundMulti.value) return;
@@ -178,16 +179,16 @@ async function pickImageMulti() {
     if (settings) {
       store.settings = settings;
       backgroundPreviewFailed.value = false;
-      toast(`背景图已加入切换列表（共 ${settings.background.images?.length ?? 1} 张）`, 'success');
+      toast(`${t('hle.bg_added')} (${t('hle.total_images', { count: settings.background.images?.length ?? 1 })})`, 'success');
     }
   } catch (e) {
-    toast('导入背景失败：' + errText(e), 'error');
+    toast(t('hle.import_bg_failed') + errText(e), 'error');
   } finally {
     importingBackgroundMulti.value = false;
   }
 }
 
-/** 背景图列表（多图切换用；空时回退单张 image） */
+/** Background image list (for multi-image switching; falls back to single image when empty) */
 const bgImageList = computed(() => {
   const bg = store.settings?.background;
   if (!bg) return [] as string[];
@@ -200,20 +201,20 @@ function removeBgImage(image: string) {
   save({ background: { ...store.settings.background, images: next, image: next[0] ?? '' } });
 }
 
-/** 切换策略 */
+/** Switch strategy */
 const switchModes = [
-  { value: 'off', label: '固定' },
-  { value: 'order', label: '按顺序' },
-  { value: 'random', label: '随机' },
+  { value: 'off', label: t('hle.switch_fixed') },
+  { value: 'order', label: t('hle.switch_order') },
+  { value: 'random', label: t('hle.switch_random') },
 ] as const;
 
 async function resetBg() {
   try {
     store.settings = await resetBackground();
     backgroundPreviewFailed.value = false;
-    toast('背景已恢复默认', 'success');
+    toast(t('hle.bg_reset'), 'success');
   } catch (error) {
-    toast('恢复背景失败：' + errText(error), 'error');
+    toast(t('hle.reset_bg_failed') + errText(error), 'error');
   }
 }
 
@@ -224,10 +225,10 @@ async function pickLaunchThumbnail() {
     const settings = await importLaunchThumbnail();
     if (settings) {
       store.settings = settings;
-      toast('图片已追加到启动卡轮播，原文件不受影响', 'success');
+      toast(t('hle.launch_thumb_added'), 'success');
     }
   } catch (error) {
-    toast('导入缩略图失败：' + errText(error), 'error');
+    toast(t('hle.import_thumb_failed') + errText(error), 'error');
   } finally {
     importingThumbnail.value = false;
   }
@@ -251,16 +252,18 @@ function setLaunchFit(fit: ImageFit) {
 </script>
 
 <template>
-  <!-- 背景 -->
+  <!-- Background -->
   <details class="card group layout-setting" data-section="background">
-    <summary>窗口背景 <small>桌面玻璃、颜色与图片</small></summary>
+    <summary>
+      {{ t('hle.window_bg') }} <small>{{ t('hle.window_bg_hint') }}</small>
+    </summary>
     <div class="layout-setting-body">
       <div class="layout-head">
         <div>
-          <h3 class="group-title group-title-tight">窗口背景</h3>
-          <p class="muted group-hint group-hint-flush">桌面玻璃的透出程度跟随当前主题；也可选择纯色或自定义图片。</p>
+          <h3 class="group-title group-title-tight">{{ t('hle.window_bg') }}</h3>
+          <p class="muted group-hint group-hint-flush">{{ t('hle.window_bg_desc') }}</p>
         </div>
-        <button data-ui="HomeLayoutEditor:457065564dba" class="btn btn-ghost btn-sm" @click="resetBg">恢复默认</button>
+        <button data-ui="HomeLayoutEditor:457065564dba" class="btn btn-ghost btn-sm" @click="resetBg">{{ t('hle.reset_default') }}</button>
       </div>
 
       <p
@@ -269,7 +272,7 @@ function setLaunchFit(fit: ImageFit) {
         class="group-hint"
         role="status"
       >
-        macOS 已开启“降低透明度”，系统会将毛玻璃显示为实色。可在“系统设置 → 辅助功能 → 显示”中关闭此选项，恢复桌面毛玻璃。
+        {{ t('hle.macos_transparency') }}
       </p>
       <div data-ui="HomeLayoutEditor:05b5e9438975" class="bg-modes">
         <button
@@ -286,7 +289,7 @@ function setLaunchFit(fit: ImageFit) {
 
       <template v-if="store.settings?.background.mode === 'color'">
         <div class="bg-row">
-          <span class="muted bg-label">背景色</span>
+          <span class="muted bg-label">{{ t('hle.bg_color_label') }}</span>
           <input
             data-ui="HomeLayoutEditor:b7f054062be4"
             type="color"
@@ -308,22 +311,22 @@ function setLaunchFit(fit: ImageFit) {
             data-ui="HomeLayoutEditor:65cf8c030362"
             :src="managedImageUrl(store.settings.background.image)"
             :style="{ objectFit: fitCss(store.settings.background.fit) }"
-            alt="自定义背景预览"
+            alt="{{ t('hle.bg_preview_alt') }}"
             @error="backgroundPreviewFailed = true"
           />
         </div>
         <div v-else class="image-preview image-preview-empty">
-          {{ backgroundPreviewFailed ? '受管背景不可用，将自动回退默认背景' : '尚未导入背景图片' }}
+          {{ backgroundPreviewFailed ? t('hle.bg_unavailable') : t('hle.bg_not_imported') }}
         </div>
         <div class="bg-row">
-          <span class="muted bg-label">背景图片</span>
+          <span class="muted bg-label">{{ t('hle.bg_image_label') }}</span>
           <button
             data-ui="HomeLayoutEditor:600aad811fea"
             class="btn btn-ghost btn-sm"
             :disabled="importingBackground || importingBackgroundMulti"
             @click="pickImage"
           >
-            {{ importingBackground ? '处理中…' : '导入单张…' }}
+            {{ importingBackground ? t('hle.processing') : t('hle.import_single') }}
           </button>
           <button
             data-ui="HomeLayoutEditor:b5d9e0d6a917"
@@ -331,21 +334,28 @@ function setLaunchFit(fit: ImageFit) {
             :disabled="importingBackground || importingBackgroundMulti"
             @click="pickImageMulti"
           >
-            {{ importingBackgroundMulti ? '处理中…' : '添加多张（可多选）…' }}
+            {{ importingBackgroundMulti ? t('hle.processing') : t('hle.add_multi') }}
           </button>
           <span data-ui="HomeLayoutEditor:a0ee9d306678" class="muted bg-img-path" :title="store.settings.background.image">
-            {{ store.settings.background.image ? '已由 FAIONYX 管理' : '未选择' }}
+            {{ store.settings.background.image ? t('hle.managed_by_faionyx') : t('hle.not_selected') }}
           </span>
         </div>
-        <ol data-ui="HomeLayoutEditor:e28f1ea34df0" v-if="bgImageList.length > 1" class="carousel-list" aria-label="背景图切换列表">
+        <ol
+          data-ui="HomeLayoutEditor:e28f1ea34df0"
+          v-if="bgImageList.length > 1"
+          class="carousel-list"
+          :aria-label="t('hle.bg_switch_list')"
+        >
           <li data-ui="HomeLayoutEditor:bcb005d78798" v-for="(image, index) in bgImageList" :key="image">
-            <img :src="managedImageUrl(image)" :alt="`第 ${index + 1} 张`" />
+            <img :src="managedImageUrl(image)" :alt="t('hle.bg_image_n', { n: index + 1 })" />
             <span>{{ index + 1 }}</span>
-            <button data-ui="HomeLayoutEditor:c50825368bbb" class="btn btn-ghost btn-sm" @click="removeBgImage(image)">移除</button>
+            <button data-ui="HomeLayoutEditor:c50825368bbb" class="btn btn-ghost btn-sm" @click="removeBgImage(image)">
+              {{ t('hle.remove') }}
+            </button>
           </li>
         </ol>
         <div v-if="bgImageList.length > 1" class="bg-row">
-          <span class="muted bg-label">自动切换</span>
+          <span class="muted bg-label">{{ t('hle.auto_switch') }}</span>
           <div class="fit-options">
             <button
               data-ui="HomeLayoutEditor:8f06ad84f746"
@@ -355,10 +365,10 @@ function setLaunchFit(fit: ImageFit) {
               :class="{ active: (store.settings.background.switchMode ?? 'off') === m.value }"
               :title="
                 m.value === 'off'
-                  ? '固定显示第一张'
+                  ? t('hle.switch_fixed_hint')
                   : m.value === 'order'
-                    ? '每次上线切换到下一张，运行中按间隔轮换'
-                    : '每次上线随机一张，运行中按间隔随机'
+                    ? t('hle.switch_order_hint')
+                    : t('hle.switch_random_hint')
               "
               @click="setBg({ switchMode: m.value })"
             >
@@ -367,7 +377,7 @@ function setLaunchFit(fit: ImageFit) {
           </div>
         </div>
         <div v-if="bgImageList.length > 1 && (store.settings.background.switchMode ?? 'off') !== 'off'" class="bg-row">
-          <span class="muted bg-label">切换间隔</span>
+          <span class="muted bg-label">{{ t('hle.switch_interval') }}</span>
           <input
             data-ui="HomeLayoutEditor:0d7dbca39e6b"
             type="number"
@@ -378,10 +388,10 @@ function setLaunchFit(fit: ImageFit) {
             :value="store.settings.background.switchIntervalSec ?? 300"
             @change="setBg({ switchIntervalSec: Math.max(30, Number(($event.target as HTMLInputElement).value) || 300) })"
           />
-          <span class="muted">秒 · 每次上线也会自动切换一张</span>
+          <span class="muted">{{ t('hle.switch_interval_hint') }}</span>
         </div>
         <div class="bg-row">
-          <span class="muted bg-label">显示方式</span>
+          <span class="muted bg-label">{{ t('hle.fit_label') }}</span>
           <div class="fit-options">
             <button
               data-ui="HomeLayoutEditor:f6ec348fd689"
@@ -396,7 +406,7 @@ function setLaunchFit(fit: ImageFit) {
           </div>
         </div>
         <div class="bg-row">
-          <span class="muted bg-label">图片透明度</span>
+          <span class="muted bg-label">{{ t('hle.image_opacity') }}</span>
           <input
             data-ui="HomeLayoutEditor:ca782d9e2791"
             type="range"
@@ -405,12 +415,13 @@ function setLaunchFit(fit: ImageFit) {
             max="1"
             step="0.05"
             :value="1 - store.settings.background.opacity"
+            :style="{ '--fill': (1 - store.settings.background.opacity) * 100 + '%' }"
             @input="setBg({ opacity: 1 - Number(($event.target as HTMLInputElement).value) })"
           />
           <span class="muted bg-val">{{ Math.round((1 - store.settings.background.opacity) * 100) }}%</span>
         </div>
         <div class="bg-row">
-          <span class="muted bg-label">图片模糊</span>
+          <span class="muted bg-label">{{ t('hle.image_blur') }}</span>
           <input
             data-ui="HomeLayoutEditor:48130ab6cc28"
             type="range"
@@ -419,49 +430,52 @@ function setLaunchFit(fit: ImageFit) {
             max="40"
             step="2"
             :value="store.settings.background.blur"
+            :style="{ '--fill': (store.settings.background.blur / 40) * 100 + '%' }"
             @input="setBg({ blur: Number(($event.target as HTMLInputElement).value) })"
           />
           <span class="muted bg-val">{{ store.settings.background.blur }}px</span>
         </div>
         <p data-ui="HomeLayoutEditor:c53c77f7d517" class="muted group-hint">
-          透明度越高图片越透；图片模糊单独控制清晰度。系统桌面毛玻璃由操作系统管理，不受这两个图片选项影响。
+          {{ t('hle.opacity_blur_hint') }}
         </p>
       </template>
     </div>
   </details>
 
-  <!-- 首页启动卡全局缩略图 -->
+  <!-- Home launch card global thumbnail -->
   <details class="card group layout-setting" data-section="thumbnail">
     <summary>
-      首页启动卡图片 <span class="carousel-count">{{ activeSlides.size }} / {{ slides.length }} 已启用</span
-      ><small>内置插画、自定义图片与轮播</small>
+      {{ t('hle.home_thumb') }} <span class="carousel-count">{{ activeSlides.size }} / {{ slides.length }} {{ t('hle.enabled') }}</span
+      ><small>{{ t('hle.home_thumb_hint') }}</small>
     </summary>
     <div class="layout-setting-body">
       <div class="layout-head">
         <div>
-          <h3 class="group-title group-title-tight">首页启动卡</h3>
+          <h3 class="group-title group-title-tight">{{ t('hle.home_thumb_title') }}</h3>
           <p class="muted group-hint group-hint-flush">
-            实例专属图片优先；否则按下面的勾选与顺序混合轮播。取消勾选会保留图片，全部关闭时使用主题底色。
+            {{ t('hle.home_thumb_desc') }}
           </p>
         </div>
       </div>
       <div class="carousel-primary-controls" data-ui="carousel:primary">
         <div class="bg-row">
-          <span class="muted bg-label">图片管理</span>
+          <span class="muted bg-label">{{ t('hle.image_manage') }}</span>
           <button
             data-ui="HomeLayoutEditor:d9002bd65d2e"
             class="btn btn-ghost btn-sm"
             :disabled="importingThumbnail"
             @click="pickLaunchThumbnail"
           >
-            {{ importingThumbnail ? '处理中…' : '添加图片（可多选）…' }}
+            {{ importingThumbnail ? t('hle.processing') : t('hle.add_image_multi') }}
           </button>
           <span data-ui="HomeLayoutEditor:6054c28ad3cc" class="muted bg-img-path">
-            已选 {{ activeSlides.size }} / {{ slides.length }} 张 · 自定义 {{ images.length }} / {{ MAX_CAROUSEL_IMAGES }} 张
+            {{
+              t('hle.selected_count', { active: activeSlides.size, total: slides.length, custom: images.length, max: MAX_CAROUSEL_IMAGES })
+            }}
           </span>
         </div>
         <div class="bg-row">
-          <span class="muted bg-label">显示方式</span>
+          <span class="muted bg-label">{{ t('hle.fit_label') }}</span>
           <div class="fit-options">
             <button
               data-ui="HomeLayoutEditor:537b581dd0d7"
@@ -476,11 +490,11 @@ function setLaunchFit(fit: ImageFit) {
           </div>
         </div>
         <div class="bg-row">
-          <span class="bg-label">播放顺序</span
+          <span class="bg-label">{{ t('hle.playback_order') }}</span
           ><label class="check-option"
             ><input
               type="checkbox"
-              aria-label="随机播放启动卡图片"
+              :aria-label="t('hle.random_playback')"
               :checked="store.settings?.launchThumbnail.randomPlayback === true"
               @change="
                 store.settings &&
@@ -488,11 +502,16 @@ function setLaunchFit(fit: ImageFit) {
                   launchThumbnail: { ...store.settings.launchThumbnail, randomPlayback: ($event.target as HTMLInputElement).checked },
                 })
               "
-            /><span><strong>随机播放</strong><small>每轮随机播放已启用图片；保留列表顺序和逐图时长。</small></span></label
+            /><span
+              ><strong>{{ t('hle.random_playback') }}</strong
+              ><small>{{ t('hle.random_playback_hint') }}</small></span
+            ></label
           >
         </div>
         <div class="bg-row carousel-default-time">
-          <label data-ui="HomeLayoutEditor:dee929e66133" class="bg-label" for="carousel-default-duration">默认停留时间</label
+          <label data-ui="HomeLayoutEditor:dee929e66133" class="bg-label" for="carousel-default-duration">{{
+            t('hle.default_duration')
+          }}</label
           ><input
             data-ui="HomeLayoutEditor:c51dd8fea2e7"
             id="carousel-default-duration"
@@ -503,11 +522,11 @@ function setLaunchFit(fit: ImageFit) {
             class="input num-input"
             :value="carouselDuration(store.settings?.launchThumbnail.intervalSeconds)"
             @change="setDuration(($event.target as HTMLInputElement).value)"
-          /><span class="muted">秒 · 未单独设置的图片使用此时长</span>
+          /><span class="muted">{{ t('hle.default_duration_hint') }}</span>
         </div>
       </div>
-      <div class="carousel-selection-actions" role="group" aria-label="轮播批量操作" data-ui="carousel:bulk">
-        <span class="muted">批量选择</span>
+      <div class="carousel-selection-actions" role="group" :aria-label="t('hle.carousel_bulk')" data-ui="carousel:bulk">
+        <span class="muted">{{ t('hle.bulk_select') }}</span>
         <button
           class="btn btn-ghost btn-sm"
           @click="
@@ -517,7 +536,7 @@ function setLaunchFit(fit: ImageFit) {
             )
           "
         >
-          全选
+          {{ t('hle.select_all') }}
         </button>
         <button
           class="btn btn-ghost btn-sm"
@@ -528,7 +547,7 @@ function setLaunchFit(fit: ImageFit) {
             )
           "
         >
-          全不选
+          {{ t('hle.select_none') }}
         </button>
         <button
           class="btn btn-ghost btn-sm"
@@ -539,19 +558,21 @@ function setLaunchFit(fit: ImageFit) {
             )
           "
         >
-          关闭内置图片
+          {{ t('hle.disable_builtin') }}
         </button>
         <details class="carousel-maintenance">
-          <summary class="btn btn-ghost btn-sm">更多操作</summary>
+          <summary class="btn btn-ghost btn-sm">{{ t('hle.more_actions') }}</summary>
           <div>
-            <button data-ui="HomeLayoutEditor:033eef52e2e9" class="btn btn-ghost btn-sm" @click="resetThumbnail">恢复默认顺序并全选</button>
+            <button data-ui="HomeLayoutEditor:033eef52e2e9" class="btn btn-ghost btn-sm" @click="resetThumbnail">
+              {{ t('hle.reset_order_select_all') }}
+            </button>
           </div>
         </details>
-        <span v-if="!activeSlides.size" class="muted" role="status">轮播已关闭，显示主题底色</span>
+        <span v-if="!activeSlides.size" class="muted" role="status">{{ t('hle.carousel_off') }}</span>
       </div>
-      <p class="carousel-reorder-hint muted">拖动左侧手柄排序；聚焦手柄后可用 ↑ ↓ 或 Home / End 调整。每张图片可单独启用和设置停留时间。</p>
+      <p class="carousel-reorder-hint muted">{{ t('hle.drag_reorder_hint') }}</p>
       <span class="sr-only" role="status" aria-live="polite">{{ reorderAnnouncement }}</span>
-      <ol data-ui="HomeLayoutEditor:78dcf55b4b19" class="carousel-list launch-carousel-list" aria-label="启动卡轮播顺序">
+      <ol data-ui="HomeLayoutEditor:78dcf55b4b19" class="carousel-list launch-carousel-list" :aria-label="t('hle.launch_order')">
         <li
           data-ui="HomeLayoutEditor:c9fcdfd782bb"
           v-for="(image, index) in slides"
@@ -569,8 +590,8 @@ function setLaunchFit(fit: ImageFit) {
             class="icon-btn carousel-drag-handle"
             :data-key="image.key"
             draggable="true"
-            :aria-label="`调整 ${image.title}的顺序，当前第 ${index + 1} 位`"
-            title="拖动排序，或使用方向键"
+            :aria-label="t('hle.adjust_order', { title: image.title, pos: index + 1 })"
+            :title="t('hle.drag_sort_hint')"
             @dragstart="startImageDrag($event, image.key)"
             @dragend="
               draggingImage = '';
@@ -588,19 +609,19 @@ function setLaunchFit(fit: ImageFit) {
             :alt="image.title"
             @error="brokenThumbnailPreviews = new Set([...brokenThumbnailPreviews, image.key])"
           />
-          <span v-else class="carousel-preview-missing" aria-label="图片不可用">图片不可用</span>
+          <span v-else class="carousel-preview-missing" :aria-label="t('hle.image_unavailable')">{{ t('hle.image_unavailable') }}</span>
           <label class="carousel-enabled"
             ><input
               type="checkbox"
               :checked="activeSlides.has(image.key)"
-              :aria-label="`${image.title}参与轮播`"
+              :aria-label="t('hle.carousel_participate', { title: image.title })"
               @change="setSlidesEnabled([image.key], ($event.target as HTMLInputElement).checked)"
             /><span :title="image.builtin ? image.title : image.key"
-              >{{ image.title }}<small>{{ image.builtin ? '内置图片' : '自定义图片' }}</small></span
+              >{{ image.title }}<small>{{ image.builtin ? t('hle.builtin_image') : t('hle.custom_image') }}</small></span
             ></label
           >
           <label data-ui="HomeLayoutEditor:1b8a2f6bf653" class="slide-duration"
-            >停留
+            >{{ t('hle.stay') }}
             <input
               data-ui="HomeLayoutEditor:b820622679f5"
               class="input"
@@ -608,20 +629,20 @@ function setLaunchFit(fit: ImageFit) {
               min="1"
               max="120"
               step="0.5"
-              :aria-label="`${image.title}停留秒数`"
+              :aria-label="t('hle.stay_seconds', { title: image.title })"
               :value="
                 carouselDuration(store.settings?.launchThumbnail.durations?.[image.key] ?? store.settings?.launchThumbnail.intervalSeconds)
               "
               @change="setDuration(($event.target as HTMLInputElement).value, image.key)"
-            /><span>秒</span></label
+            /><span>{{ t('hle.seconds') }}</span></label
           >
           <div class="carousel-row-actions">
             <button
               data-ui="HomeLayoutEditor:2b6f46e2b899"
               class="icon-btn"
               :disabled="index === 0"
-              :aria-label="`${image.title}向前移动`"
-              title="向前移动"
+              :aria-label="t('hle.move_forward', { title: image.title })"
+              :title="t('hle.move_forward')"
               @click="moveImage(index, -1)"
             >
               ↑</button
@@ -629,8 +650,8 @@ function setLaunchFit(fit: ImageFit) {
               data-ui="HomeLayoutEditor:5dd6420ad302"
               class="icon-btn"
               :disabled="index === slides.length - 1"
-              :aria-label="`${image.title}向后移动`"
-              title="向后移动"
+              :aria-label="t('hle.move_backward', { title: image.title })"
+              :title="t('hle.move_backward')"
               @click="moveImage(index, 1)"
             >
               ↓</button
@@ -638,8 +659,8 @@ function setLaunchFit(fit: ImageFit) {
               data-ui="HomeLayoutEditor:ebd5db203bf7"
               v-if="!image.builtin"
               class="icon-btn carousel-remove"
-              :aria-label="`移除文件 ${image.title}`"
-              title="移除文件"
+              :aria-label="t('hle.remove_file', { title: image.title })"
+              :title="t('hle.remove_file')"
               @click="removeThumbnail = image.key"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
@@ -653,9 +674,9 @@ function setLaunchFit(fit: ImageFit) {
   </details>
   <ConfirmModal
     :open="!!removeThumbnail"
-    title="移除自定义启动卡图片"
-    message="将删除 FAIONYX 管理的图片副本，原文件不受影响。若只想暂停轮播，请取消参与勾选。"
-    confirm-text="移除文件"
+    :title="t('hle.remove_custom_thumb_title')"
+    :message="t('hle.remove_custom_thumb_msg')"
+    :confirm-text="t('hle.remove_file')"
     :busy="removingThumbnail"
     @confirm="deleteThumbnail"
     @cancel="removeThumbnail = null"
@@ -680,7 +701,7 @@ function setLaunchFit(fit: ImageFit) {
   width: 90px;
   flex: none;
 }
-/* 背景 */
+/* Background */
 .bg-modes {
   display: flex;
   flex-wrap: wrap;
@@ -1098,6 +1119,86 @@ function setLaunchFit(fit: ImageFit) {
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
+}
+.slider {
+  flex: 1;
+  min-width: 120px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+
+  -webkit-appearance: none;
+  appearance: none;
+  /* 已填充百分比；由模板通过 :style 传入 */
+  --fill: 0%;
+}
+
+/* 轨道：WebKit */
+.slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--accent) 0,
+    var(--accent) var(--fill),
+    color-mix(in srgb, var(--text) 12%, transparent) var(--fill),
+    color-mix(in srgb, var(--text) 12%, transparent) 100%
+  );
+}
+
+/* 滑块：WebKit */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -4px; /* (6 - 14) / 2，让 thumb 与轨道居中对齐 */
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: var(--card-solid, #fff);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+  transition: transform 120ms ease;
+}
+
+.slider:hover::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+
+.slider:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+/* 轨道 + 已填充：Firefox */
+.slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+.slider::-moz-range-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+/* 滑块：Firefox */
+.slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: var(--card-solid, #fff);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+  transition: transform 120ms ease;
+}
+
+.slider:hover::-moz-range-thumb {
+  transform: scale(1.15);
 }
 @media (max-width: 760px) {
   .launch-carousel-list li {

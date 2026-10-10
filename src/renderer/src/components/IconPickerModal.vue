@@ -6,6 +6,7 @@ import { ref } from 'vue';
 import { setVersionIcon, uploadVersionIcon, errText } from '../api';
 import { refreshInstalled, toast } from '../store';
 import { MOB_ICONS } from '../mobIcons';
+import { t } from '@renderer/i18n';
 
 const props = defineProps<{
   open: boolean;
@@ -23,10 +24,10 @@ async function pick(icon: string) {
   try {
     await setVersionIcon(props.versionId, icon, props.folder);
     await refreshInstalled();
-    toast(icon ? '实例图标已更新' : '已恢复默认图标', 'success');
+    toast(icon ? t('ip.icon_updated') : t('ip.reset_default'), 'success');
     emit('close');
   } catch (e) {
-    toast('设置图标失败：' + errText(e), 'error');
+    toast(t('ip.set_failed', { error: errText(e) }), 'error');
   } finally {
     busy.value = false;
   }
@@ -39,11 +40,11 @@ async function onUpload() {
     const icon = await uploadVersionIcon(props.versionId, props.folder);
     if (icon) {
       await refreshInstalled();
-      toast('自定义图标已应用', 'success');
+      toast(t('ip.custom_applied'), 'success');
       emit('close');
     }
   } catch (e) {
-    toast('上传图标失败：' + errText(e), 'error');
+    toast(t('ip.upload_failed', { error: errText(e) }), 'error');
   } finally {
     busy.value = false;
   }
@@ -54,25 +55,25 @@ async function onUpload() {
   <Teleport to="body">
     <div v-if="open" class="modal-mask" @pointerdown.self="emit('close')">
       <div class="modal iconpick-modal">
-        <h3 class="modal-title">选择实例图标</h3>
+        <h3 class="modal-title">{{ t('ip.title') }}</h3>
 
         <div class="iconpick-top">
-          <button class="btn btn-ghost" :disabled="busy" @click="pick('')">恢复默认</button>
-          <button class="btn btn-gold" :disabled="busy" @click="onUpload">上传自定义图标…</button>
+          <button class="btn btn-ghost" :disabled="busy" @click="pick('')">{{ t('ip.reset_default') }}</button>
+          <button class="btn btn-gold" :disabled="busy" @click="onUpload">{{ t('ip.upload_custom') }}</button>
         </div>
 
-        <p class="modal-label">MC 生物头像</p>
+        <p class="modal-label">{{ t('ip.mc_mob_icons') }}</p>
         <div class="mob-grid">
           <button
             v-for="m in MOB_ICONS"
             :key="m.id"
             class="mob-cell"
             :class="{ active: currentIcon === 'mob:' + m.id }"
-            :title="m.name"
+            :title="t(m.name)"
             :disabled="busy"
             @click="pick('mob:' + m.id)"
           >
-            <img :src="`mobs/${m.id}.png`" :alt="m.name" loading="lazy" />
+            <img :src="`mobs/${m.id}.png`" :alt="t(m.name)" loading="lazy" />
           </button>
         </div>
       </div>

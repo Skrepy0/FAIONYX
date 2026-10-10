@@ -5,6 +5,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { errText, findModCrossDuplicates, findModDuplicates, removeFs } from '../api';
 import { store, toast } from '../store';
+import { t } from '@renderer/i18n';
 import type { ModCrossDuplicate, ModDuplicateGroup } from '@shared/types';
 
 const props = defineProps<{
@@ -39,7 +40,7 @@ const deleteList = computed(() => {
 
 async function scanSingle() {
   if (!props.versionId) {
-    toast('请先安装或选择一个游戏版本', 'info');
+    toast(t('dup.need_version'), 'info');
     return;
   }
   loading.value = true;
@@ -51,7 +52,7 @@ async function scanSingle() {
       keepMap[g.modId] = g.files.find((f) => f.latest)?.fileName ?? g.files[0]?.fileName ?? '';
     }
   } catch (e) {
-    toast('扫描失败：' + errText(e), 'error');
+    toast(t('dup.scan_failed', { error: errText(e) }), 'error');
   } finally {
     loading.value = false;
   }
@@ -73,7 +74,9 @@ async function onConfirmDelete() {
       }
     }
     toast(
-      `已移入回收站 ${ok} 个重复 MOD 文件` + (failed.length ? `；${failed.length} 个失败：${failed.join('；')}` : ''),
+      failed.length
+        ? t('dup.trashed_with_failed', { ok: String(ok), failed: String(failed.length), detail: failed.join('；') })
+        : t('dup.trashed', { ok: String(ok) }),
       failed.length ? 'error' : 'success'
     );
     emit('deleted');
@@ -91,7 +94,7 @@ const crossResults = ref<ModCrossDuplicate[] | null>(null);
 
 async function scanCross() {
   if (!crossSel.value.length) {
-    toast('请先勾选要对比的版本', 'info');
+    toast(t('dup.need_choose_version'), 'info');
     return;
   }
   crossLoading.value = true;
@@ -99,7 +102,7 @@ async function scanCross() {
   try {
     crossResults.value = await findModCrossDuplicates(crossSel.value, props.folder);
   } catch (e) {
-    toast('对比失败：' + errText(e), 'error');
+    toast(t('dup.cross_failed', { error: errText(e) }), 'error');
   } finally {
     crossLoading.value = false;
   }
@@ -122,22 +125,26 @@ onMounted(() => {
     <div v-if="open" class="modal-mask" @pointerdown.self="emit('close')">
       <div class="modal dup-modal">
         <div class="dup-header">
-          <h3 class="modal-title">清理重复 MOD</h3>
-          <button type="button" class="btn btn-ghost" aria-label="关闭清理重复模组" title="关闭" @click="emit('close')">✕</button>
+          <h3 class="modal-title">{{ t('dup.title') }}</h3>
+          <button type="button" class="btn btn-ghost" :aria-label="t('dup.close_aria')" :title="t('common.close')" @click="emit('close')">
+            ✕
+          </button>
         </div>
 
         <div class="dup-tabs">
-          <button class="game-tab" :class="{ active: tab === 'single' }" @click="tab = 'single'">本版本清理</button>
-          <button class="game-tab" :class="{ active: tab === 'cross' }" @click="tab = 'cross'">跨版本查重</button>
+          <button class="game-tab" :class="{ active: tab === 'single' }" @click="tab = 'single'">{{ t('dup.tab_single') }}</button>
+          <button class="game-tab" :class="{ active: tab === 'cross' }" @click="tab = 'cross'">{{ t('dup.tab_cross') }}</button>
         </div>
 
-        <!-- 单版本 -->
+        <!-- Single version -->
         <template v-if="tab === 'single'">
-          <div v-if="loading" class="dup-loading"><span class="spin"></span><span class="muted">正在解析 MOD 文件…</span></div>
-          <div v-else-if="!groups.length" class="dup-empty muted">该版本没有重复的 MOD ✓</div>
+          <div v-if="loading" class="dup-loading">
+            <span class="spin"></span><span class="muted">{{ t('dup.parsing') }}</span>
+          </div>
+          <div v-else-if="!groups.length" class="dup-empty muted">{{ t('dup.no_duplicates') }}</div>
           <template v-else>
             <p class="muted dup-hint">
-              发现 {{ groups.length }} 组重复 MOD（同一 mod id 多文件共存）。每组选择一个保留版本，其余将移入系统回收站：
+              {{ t('dup.found_groups', { count: String(groups.length) }) }}
             </p>
             <div class="dup-list">
               <div v-for="g in groups" :key="g.modId" class="dup-group">
@@ -149,23 +156,23 @@ onMounted(() => {
                   <input v-model="keepMap[g.modId]" type="radio" :value="f.fileName" :name="'keep-' + g.modId" />
                   <span class="dup-file-name">{{ f.fileName }}</span>
                   <span class="muted">v{{ f.version || '?' }}</span>
-                  <span v-if="f.latest" class="tag">最新</span>
+                  <span v-if="f.latest" class="tag">{{ t('common.newest') }}</span>
                 </label>
               </div>
             </div>
             <div class="modal-actions">
-              <span class="muted del-count">将删除 {{ deleteList.length }} 个文件</span>
-              <button class="btn btn-ghost" @click="emit('close')">取消</button>
+              <span class="muted del-count">{{ t('dup.will_delete', { count: String(deleteList.length) }) }}</span>
+              <button class="btn btn-ghost" @click="emit('close')">{{ t('common.cancel') }}</button>
               <button class="btn btn-danger" :disabled="deleting || !deleteList.length" @click="onConfirmDelete">
-                {{ deleting ? '删除中…' : `确认删除（${deleteList.length}）` }}
+                {{ deleting ? t('dup.deleting') : t('dup.confirm_delete', { count: String(deleteList.length) }) }}
               </button>
             </div>
           </template>
         </template>
 
-        <!-- 跨版本 -->
+        <!-- Cross-version -->
         <template v-else>
-          <p class="modal-label">勾选要对比的版本（≥2 个）</p>
+          <p class="modal-label">{{ t('dup.cross_label') }}</p>
           <div class="cross-versions">
             <label
               v-for="v in store.installed.filter((v) => !v.folder || v.folder.toLowerCase() === props.folder.toLowerCase())"
@@ -178,14 +185,14 @@ onMounted(() => {
             </label>
           </div>
           <button class="btn btn-gold btn-sm" :disabled="crossLoading" @click="scanCross">
-            {{ crossLoading ? '对比中…' : '开始对比' }}
+            {{ crossLoading ? t('dup.cross_comparing') : t('dup.cross_start') }}
           </button>
           <div v-if="crossResults" class="dup-list dup-list-cross">
-            <div v-if="!crossResults.length" class="dup-empty muted">所选版本间没有重复 MOD ✓</div>
+            <div v-if="!crossResults.length" class="dup-empty muted">{{ t('dup.cross_no_duplicates') }}</div>
             <div v-for="g in crossResults" :key="g.modId" class="dup-group">
               <div class="dup-group-head">
                 <span class="dup-group-name">{{ g.name }}</span>
-                <span class="tag">×{{ g.presentIn.length }} 个版本</span>
+                <span class="tag">{{ t('dup.cross_versions_count', { count: String(g.presentIn.length) }) }}</span>
               </div>
               <div v-for="p in g.presentIn" :key="p.versionId" class="dup-file cross-row">
                 <span class="dup-file-name">{{ p.versionId }}</span>

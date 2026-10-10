@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 import type { InstanceTarget } from '@shared/instanceCenter';
 import type { ModSyncPlan, ModSyncScope, ModSyncGate, ModSyncGateResult } from '@shared/voxlinkMods';
 import UpdateDialogShell from '../UpdateDialogShell.vue';
+import { t } from '@renderer/i18n';
 const props = defineProps<{ code: string; target?: InstanceTarget }>();
 const emit = defineEmits<{ join: [gate: ModSyncGate]; dismiss: [] }>();
 const scope = ref<ModSyncScope>('required'),
@@ -35,7 +36,7 @@ function dismiss() {
 }
 function cancelDownload() {
   if (operation) void window.faionyx.invoke('voxlink:mods:cancel', operation);
-  message.value = '正在取消下载…';
+  message.value = t('voxlink.mods.canceling');
 }
 function join(gate: ModSyncGate = 'BYPASSED') {
   cancel();
@@ -99,23 +100,33 @@ onUnmounted(() => {
 });
 </script>
 <template>
-  <UpdateDialogShell label="加入房间前检查模组" @dismiss="dismiss">
+  <UpdateDialogShell :label="t('voxlink.mods.shell_label')" @dismiss="dismiss">
     <template #header
-      ><h2>与房主同步模组</h2>
-      <button class="btn btn-ghost" aria-label="关闭" @click="dismiss">×</button></template
+      ><h2>{{ t('voxlink.mods.sync_mods_with_host') }}</h2>
+      <button class="btn btn-ghost" :aria-label="t('common.close')" @click="dismiss">×</button></template
     >
-    <p class="connection-muted">房间 {{ code }} · {{ target?.id || '尚未选择游戏实例' }}</p>
+    <p class="connection-muted">{{ t('voxlink.mods.room_label') }} {{ code }} · {{ target?.id || t('voxlink.mods.no_target_selected') }}</p>
     <p v-if="target" class="mod-path">{{ target.folder }}</p>
-    <p v-if="!target">先返回选择实例以检查模组，或跳过检查直接加入。</p>
+    <p v-if="!target">{{ t('voxlink.mods.return_select_instance') }}</p>
     <fieldset v-if="!plan" :disabled="busy" class="mod-scopes">
-      <legend>获取范围</legend>
-      <label><input v-model="scope" type="radio" value="required" /> 必装模组 <small>与房主联机所需</small></label>
-      <label><input v-model="scope" type="radio" value="all" /> 全部模组 <small>包含可选客户端模组</small></label>
+      <legend>{{ t('voxlink.mods.fetch_scope') }}</legend>
+      <label
+        ><input v-model="scope" type="radio" value="required" /> {{ t('voxlink.mods.required_mods') }}
+        <small>{{ t('voxlink.mods.required_mods_hint') }}</small></label
+      >
+      <label
+        ><input v-model="scope" type="radio" value="all" /> {{ t('voxlink.mods.all_mods') }}
+        <small>{{ t('voxlink.mods.all_mods_hint') }}</small></label
+      >
     </fieldset>
-    <p v-if="busy" role="status">{{ plan ? '正在下载并校验所选模组…' : '正在检查房主清单和本地文件…' }}</p>
+    <p v-if="busy" role="status">{{ plan ? t('voxlink.mods.downloading_and_verifying') : t('voxlink.mods.checking_host_manifest') }}</p>
     <p v-if="busy && progress" class="connection-muted" role="status">{{ progress }}</p>
     <template v-if="plan && !done">
-      <p class="connection-muted">房主环境：{{ plan.mcVersion }} · {{ plan.loader }}。禁用或版本冲突需手动处理。</p>
+      <p class="connection-muted">
+        {{ t('voxlink.mods.host_env', { mcVersion: plan.mcVersion, loader: plan.loader }) }}。{{
+          t('voxlink.mods.disable_or_conflict_manual')
+        }}
+      </p>
       <ul class="mod-rows">
         <li
           v-for="row in plan.rows"
@@ -128,7 +139,7 @@ onUnmounted(() => {
             type="checkbox"
             :value="row.entry.sha1"
             :disabled="busy"
-            :aria-label="`下载 ${row.entry.title}`"
+            :aria-label="t('voxlink.mods.download_n', { title: row.entry.title })"
           />
           <div>
             <strong>{{ row.entry.title || row.entry.fileName }}</strong
@@ -138,20 +149,22 @@ onUnmounted(() => {
         <li v-for="name in plan.unknownMods" :key="name" class="warning">
           <div>
             <strong>{{ name }}</strong
-            ><small>无法自动识别，请向房主确认</small>
+            ><small>{{ t('voxlink.mods.unable_identify_confirm_host') }}</small>
           </div>
         </li>
       </ul>
     </template>
     <p v-if="message" :class="done ? 'connection-muted' : 'connection-error'" role="status">{{ message }}</p>
     <template #footer>
-      <button class="btn btn-ghost" @click="busy && plan ? cancelDownload() : dismiss()">{{ busy ? '取消' : '返回' }}</button>
-      <button class="btn btn-ghost" :disabled="busy && !!plan" @click="join()">
-        {{ done ? '已知需重启，继续加入' : busy ? '跳过检查并加入' : '直接加入' }}
+      <button class="btn btn-ghost" @click="busy && plan ? cancelDownload() : dismiss()">
+        {{ busy ? t('common.cancel') : t('common.back') }}
       </button>
-      <button v-if="!plan" class="btn btn-gold" :disabled="busy || !target" @click="check">检查模组</button>
+      <button class="btn btn-ghost" :disabled="busy && !!plan" @click="join()">
+        {{ done ? t('voxlink.mods.known_restart_continue') : busy ? t('voxlink.mods.skip_check_join') : t('voxlink.mods.join_directly') }}
+      </button>
+      <button v-if="!plan" class="btn btn-gold" :disabled="busy || !target" @click="check">{{ t('voxlink.mods.check_mods') }}</button>
       <button v-else-if="!done && missing.length" class="btn btn-gold" :disabled="busy || !selected.length" @click="download">
-        下载所选（{{ selected.length }}）
+        {{ t('voxlink.mods.download_selected', { count: selected.length }) }}
       </button>
     </template>
   </UpdateDialogShell>

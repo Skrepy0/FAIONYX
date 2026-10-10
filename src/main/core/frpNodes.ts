@@ -40,6 +40,7 @@
  * 【缓存】结果缓存 10 分钟（≥ 任务要求的 10 分钟）；带 refresh 可强制刷新。
  *   失败时抛出真实错误（含 API 返回的 code/msg），绝不返回假数据。
  */
+import { translate as t } from '../../shared/i18n';
 import { httpFetch } from './httpClient';
 
 const API_BASE = 'https://api.natfrp.com/v4';
@@ -142,7 +143,7 @@ async function apiGet(path: string, accessKey: string, body?: Record<string, unk
       signal: AbortSignal.timeout(20_000),
     });
   } catch (e) {
-    throw new Error('无法连接樱花穿透，请检查网络后重试');
+    throw new Error(t('frpnodes.error.connect_failed'));
   }
   const text = await resp.text();
   if (!resp.ok) {
@@ -153,12 +154,12 @@ async function apiGet(path: string, accessKey: string, body?: Record<string, unk
     } catch {
       /* 保留原文 */
     }
-    throw new Error(`natfrp API ${path} 请求失败（HTTP ${resp.status}）：${detail.split(accessKey).join('***')}`);
+    throw new Error(t('frpnodes.error.request_failed', { path, status: String(resp.status), detail: detail.split(accessKey).join('***') }));
   }
   try {
     return JSON.parse(text) as unknown;
   } catch {
-    throw new Error(`natfrp API ${path} 返回了无法解析的内容`);
+    throw new Error(t('frpnodes.error.unparsable_response', { path }));
   }
 }
 
@@ -172,21 +173,22 @@ export interface FrpCreateTunnel {
  * A 200 response alone is insufficient; verify the account's uncached tunnel list. */
 export async function deleteFrpTunnel(accessKey: string, id: string): Promise<{ remoteDisconnectPending: boolean }> {
   const key = String(accessKey ?? '').trim();
-  if (!key || !/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id))) throw new Error('隧道或账号无效，无法删除');
+  if (!key || !/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id))) throw new Error(t('frpnodes.error.tunnel_or_account_invalid'));
   const exists = async () => {
     const rows = await apiGet('/tunnels', key);
-    if (!Array.isArray(rows) || rows.some((r) => !Number.isSafeInteger(r?.id))) throw new Error('无法确认远端隧道列表，请刷新后重试删除');
+    if (!Array.isArray(rows) || rows.some((r) => !Number.isSafeInteger(r?.id)))
+      throw new Error(t('frpnodes.error.remote_list_unconfirmed'));
     return rows.some((r) => r.id === Number(id));
   };
   cache = null;
   try {
     if (!(await exists())) return { remoteDisconnectPending: false };
     const result = (await apiGet('/tunnel/delete', key, { ids: id })) as { deleted?: number[]; failed?: number[] };
-    if (!Array.isArray(result?.deleted) || !Array.isArray(result.failed)) throw new Error('删除结果不完整，请重试确认远端状态');
+    if (!Array.isArray(result?.deleted) || !Array.isArray(result.failed)) throw new Error(t('frpnodes.error.delete_result_incomplete'));
     // Official `failed` means deleted but the online connection could not be kicked.
     if (!result.deleted.includes(Number(id)) && !result.failed.includes(Number(id)))
-      throw new Error('樱花穿透未确认删除该隧道，请检查隧道是否被锁定');
-    if (await exists()) throw new Error('远端仍存在该隧道，尚未确认删除成功，请稍后重试');
+      throw new Error(t('frpnodes.error.delete_unconfirmed_locked'));
+    if (await exists()) throw new Error(t('frpnodes.error.still_present'));
     return { remoteDisconnectPending: result.failed.includes(Number(id)) };
   } finally {
     cache = null;
@@ -195,14 +197,14 @@ export async function deleteFrpTunnel(accessKey: string, id: string): Promise<{ 
 /** Explicit user action only; no retries of POSTs, which might otherwise create duplicate tunnels. */
 export async function createFrpTunnel(accessKey: string, input: FrpCreateTunnel): Promise<{ id: number; name: string }> {
   const name = String(input?.name ?? '').trim();
-  if (!name || name.length > 64) throw new Error('请填写 1–64 字符的隧道名称');
+  if (!name || name.length > 64) throw new Error(t('frpnodes.error.tunnel_name_required'));
   if (!Number.isInteger(input.localPort) || input.localPort < 1 || input.localPort > 65535)
-    throw new Error('请填写游戏中显示的局域网端口（1–65535）');
+    throw new Error(t('frpnodes.error.local_port_required'));
   if (input.remotePort && (!Number.isInteger(input.remotePort) || input.remotePort < 1 || input.remotePort > 65535))
-    throw new Error('远程端口无效');
+    throw new Error(t('frpnodes.error.remote_port_invalid'));
   const result = await fetchFrpNodes(accessKey, { refresh: true });
   const node = result.nodes.find((n) => n.id === input.node);
-  if (!node?.online || !node.canCreate) throw new Error('所选节点离线或已满，请选择其他节点');
+  if (!node?.online || !node.canCreate) throw new Error(t('frpnodes.error.node_unavailable'));
   const created = (await apiGet('/tunnels', accessKey.trim(), {
     name,
     type: 'tcp',
@@ -212,18 +214,18 @@ export async function createFrpTunnel(accessKey: string, input: FrpCreateTunnel)
     ...(input.remotePort ? { remote: String(input.remotePort) } : {}),
   })) as { id: number; name: string };
   cache = null;
-  if (!Number.isSafeInteger(created?.id) || created.id <= 0) throw new Error('创建结果不完整，请刷新隧道列表确认，勿重复创建');
+  if (!Number.isSafeInteger(created?.id) || created.id <= 0) throw new Error(t('frpnodes.error.create_result_incomplete'));
   return created;
 }
 
 export async function getRunnableFrpTunnel(accessKey: string, id: string): Promise<FrpTunnelInfo> {
-  if (!/^\d+$/.test(id)) throw new Error('请先选择已创建的隧道');
+  if (!/^\d+$/.test(id)) throw new Error(t('frpnodes.error.select_tunnel_first'));
   const result = await fetchFrpNodes(accessKey, { refresh: true });
-  if (!result.tunnels) throw new Error('隧道列表获取失败，请检查访问密钥后重试');
-  const tunnel = result.tunnels.find((t) => String(t.id) === id);
-  if (!tunnel || tunnel.status !== 0) throw new Error('隧道不存在或不可用，请刷新列表重新选择');
-  if (tunnel.type !== 'tcp') throw new Error('Minecraft Java 版请选择 TCP 隧道');
-  if (!result.nodes.find((n) => n.id === tunnel.node)?.online) throw new Error('隧道所在节点已离线，请选择其他隧道');
+  if (!result.tunnels) throw new Error(t('frpnodes.error.tunnel_list_failed'));
+  const tunnel = result.tunnels.find((item) => String(item.id) === id);
+  if (!tunnel || tunnel.status !== 0) throw new Error(t('frpnodes.error.tunnel_unavailable'));
+  if (tunnel.type !== 'tcp') throw new Error(t('frpnodes.error.tcp_required'));
+  if (!result.nodes.find((n) => n.id === tunnel.node)?.online) throw new Error(t('frpnodes.error.node_offline'));
   return tunnel;
 }
 
@@ -256,7 +258,7 @@ interface RawTunnel {
 /** 拉取（或命中缓存）节点列表 + 节点状态 + 用户隧道。失败抛真实错误。 */
 export async function fetchFrpNodes(accessKey: string, opts: { refresh?: boolean } = {}): Promise<FrpNodesResult> {
   const key = String(accessKey ?? '').trim();
-  if (!key) throw new Error('请先填写访问密钥，再查询节点列表');
+  if (!key) throw new Error(t('frpnodes.error.access_key_required'));
   if (!opts.refresh && cache && cache.accessKey === key && Date.now() < cache.expiresAt) {
     return cache.result;
   }
@@ -288,7 +290,7 @@ export async function fetchFrpNodes(accessKey: string, opts: { refresh?: boolean
       const stat = statById.get(id);
       return {
         id,
-        name: typeof raw.name === 'string' ? raw.name : `节点 ${idStr}`,
+        name: typeof raw.name === 'string' ? raw.name : t('frp.nodes.node_label', { name: idStr }),
         host: typeof raw.host === 'string' ? raw.host : '',
         description: typeof raw.description === 'string' ? raw.description : '',
         vip: typeof raw.vip === 'number' ? raw.vip : 0,
@@ -315,18 +317,18 @@ export async function fetchFrpNodes(accessKey: string, opts: { refresh?: boolean
   if (tunnelsRes.status === 'fulfilled' && Array.isArray(tunnelsRes.value)) {
     const nameById = new Map(nodes.map((n) => [n.id, n.name]));
     tunnels = (tunnelsRes.value as RawTunnel[])
-      .filter((t) => typeof t.id === 'number')
-      .map((t) => ({
-        id: t.id as number,
-        name: typeof t.name === 'string' ? t.name : '',
-        type: typeof t.type === 'string' ? t.type : '',
-        node: typeof t.node === 'number' ? t.node : 0,
-        nodeName: nameById.get(typeof t.node === 'number' ? t.node : Number.NaN) ?? null,
-        online: t.online === true,
-        status: typeof t.status === 'number' ? t.status : 0,
-        localIp: typeof t.local_ip === 'string' ? t.local_ip : '',
-        localPort: typeof t.local_port === 'number' ? t.local_port : 0,
-        remote: typeof t.remote === 'string' ? t.remote : '',
+      .filter((row) => typeof row.id === 'number')
+      .map((row) => ({
+        id: row.id as number,
+        name: typeof row.name === 'string' ? row.name : '',
+        type: typeof row.type === 'string' ? row.type : '',
+        node: typeof row.node === 'number' ? row.node : 0,
+        nodeName: nameById.get(typeof row.node === 'number' ? row.node : Number.NaN) ?? null,
+        online: row.online === true,
+        status: typeof row.status === 'number' ? row.status : 0,
+        localIp: typeof row.local_ip === 'string' ? row.local_ip : '',
+        localPort: typeof row.local_port === 'number' ? row.local_port : 0,
+        remote: typeof row.remote === 'string' ? row.remote : '',
       }));
   }
 

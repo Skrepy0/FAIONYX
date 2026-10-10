@@ -2,6 +2,7 @@ import dgram from 'node:dgram';
 import http from 'node:http';
 import os from 'node:os';
 import { ipv4Scope } from './directProtocol';
+import { translate as t } from '../../shared/i18n';
 
 const MAX_XML = 512 * 1024;
 const servicePattern = /^urn:schemas-upnp-org:service:WAN(?:IP|PPP)Connection:[12]$/;
@@ -36,7 +37,7 @@ export function localRouterUrl(input: string, expectedHost?: string): URL {
     ipv4Scope(url.hostname) !== 'private' ||
     (expectedHost && url.hostname !== expectedHost)
   )
-    throw new Error('路由器地址必须来自同一本地网络设备');
+    throw new Error(t('directupnp.error.router_address'));
   return url;
 }
 const escapeXml = (value: unknown) =>
@@ -47,14 +48,14 @@ const decodeXml = (value: string) =>
     (_, name: string) => (({ amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" }) as Record<string, string>)[name]
   );
 export function xmlValue(xml: string, tag: string): string {
-  if (/<!DOCTYPE|<!ENTITY/i.test(xml)) throw new Error('不支持含外部实体的路由器响应');
+  if (/<!DOCTYPE|<!ENTITY/i.test(xml)) throw new Error(t('directupnp.error.external_entity'));
   return decodeXml(
     new RegExp(`<(?:(?:[\\w-]+):)?${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/(?:(?:[\\w-]+):)?${tag}>`, 'i').exec(xml)?.[1]?.trim() ?? ''
   );
 }
 export function parseGatewayServices(xml: string, location: string): Array<Pick<Gateway, 'controlUrl' | 'serviceType'>> {
   const base = localRouterUrl(location);
-  if (xml.length > MAX_XML || /<!DOCTYPE|<!ENTITY/i.test(xml)) throw new Error('路由器描述无效');
+  if (xml.length > MAX_XML || /<!DOCTYPE|<!ENTITY/i.test(xml)) throw new Error(t('directupnp.error.router_description'));
   const urlBase = xmlValue(xml, 'URLBase');
   const root = urlBase ? localRouterUrl(urlBase, base.hostname) : base;
   return [...xml.matchAll(/<(?:[\w-]+:)?service\b[^>]*>([\s\S]*?)<\/(?:[\w-]+:)?service>/gi)].flatMap((match) => {
@@ -89,7 +90,7 @@ export const localRequest: Transport = (input, options = {}) => {
         const localAddress = req.socket?.localAddress ?? '';
         res.on('data', (chunk: Buffer) => {
           size += chunk.length;
-          if (size > MAX_XML) res.destroy(new Error('路由器响应过大'));
+          if (size > MAX_XML) res.destroy(new Error(t('directupnp.error.response_too_large')));
           else chunks.push(chunk);
         });
         res.once('error', reject);
@@ -102,7 +103,7 @@ export const localRequest: Transport = (input, options = {}) => {
 };
 
 export function soapEnvelope(serviceType: string, action: string, values: Record<string, unknown>): string {
-  if (!servicePattern.test(serviceType) || !/^[A-Za-z]+$/.test(action)) throw new Error('无效 UPnP 请求');
+  if (!servicePattern.test(serviceType) || !/^[A-Za-z]+$/.test(action)) throw new Error(t('directupnp.error.invalid_request'));
   return `<?xml version="1.0"?><s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:${action} xmlns:u="${serviceType}">${Object.entries(
     values
   )
@@ -125,7 +126,11 @@ export async function gatewayAction(
   if (error || reply.status !== 200)
     throw new UpnpError(
       error || String(reply.status),
-      `UPnP ${action} 失败（${error || reply.status}）：${xmlValue(reply.body, 'errorDescription') || '路由器未接受请求'}`
+      t('directupnp.error.action_failed', {
+        action,
+        code: error || reply.status,
+        description: xmlValue(reply.body, 'errorDescription') || t('directupnp.error.request_rejected'),
+      })
     );
   return reply.body;
 }
@@ -230,7 +235,7 @@ export async function createMapping(
   const key = { NewRemoteHost: '', NewExternalPort: port, NewProtocol: 'TCP' };
   try {
     await gatewayAction(gateway, 'GetSpecificPortMappingEntry', key, signal, transport);
-    throw new Error('该端口已存在路由器映射，请重新开启房间以使用其他端口');
+    throw new Error(t('directupnp.error.port_mapped'));
   } catch (error) {
     if (!(error instanceof UpnpError) || error.code !== '714') throw error;
   }
@@ -257,7 +262,7 @@ export async function createMapping(
     renew: () => {
       const next = pending.then(async () => {
         if (!active) return;
-        if (!(await owned())) throw new Error('UPnP 映射归属已改变');
+        if (!(await owned())) throw new Error(t('directupnp.error.mapping_ownership'));
         if (active) await gatewayAction(gateway, 'AddPortMapping', values, undefined, transport);
       });
       pending = next.catch(() => undefined);

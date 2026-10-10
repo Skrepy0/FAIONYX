@@ -1,4 +1,6 @@
 /** Explicit product platforms. HarmonyOS must never inherit Linux binary rules. */
+import { translate as t } from './i18n';
+
 export type ProductPlatform = 'windows' | 'macos' | 'linux' | 'harmonyos' | 'unsupported';
 export type ProductArchitecture = 'x64' | 'arm64' | 'unsupported';
 export type InstallationKind = 'portable-exe' | 'mac-app' | 'appimage' | 'deb' | 'portable-directory' | 'hap' | 'development';
@@ -26,8 +28,7 @@ export function minecraftRuleOs(platform: string): 'windows' | 'osx' | 'linux' |
   return platform === 'win32' ? 'windows' : platform === 'darwin' ? 'osx' : platform === 'linux' ? 'linux' : 'unsupported';
 }
 export function requireDesktopGamePlatform(platform: string): void {
-  if (minecraftRuleOs(platform) === 'unsupported')
-    throw new Error('当前平台的原生 Java 与游戏运行链尚未验证，不能使用 Linux 或 Windows 运行库代替。');
+  if (minecraftRuleOs(platform) === 'unsupported') throw new Error(t('platform.error.native_runtime_unverified'));
 }
 export function platformInfo(platform: string, arch: string, installation: InstallationKind): PlatformInfo {
   const os = productPlatform(platform),
@@ -43,13 +44,13 @@ export function platformInfo(platform: string, arch: string, installation: Insta
 }
 
 export function updateArtifactName(version: string, platform: string, arch: string, installation: InstallationKind): string {
-  if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error('无效的更新版本');
-  if (arch !== 'x64' && arch !== 'arm64') throw new Error('当前处理器架构没有经过验证的更新包');
+  if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error(t('platform.error.invalid_version'));
+  if (arch !== 'x64' && arch !== 'arm64') throw new Error(t('platform.error.unsupported_arch'));
   if (platform === 'win32') return `FAIONYX-${version}.exe`;
   if (platform === 'darwin') return `FAIONYX-${version}-mac-${arch}.zip`;
   if (platform === 'linux') {
     const extension = installation === 'appimage' ? 'AppImage' : installation === 'deb' ? 'deb' : 'tar.gz';
     return `FAIONYX-${version}-linux-${arch}.${extension}`;
   }
-  throw new Error('当前平台的更新安装能力尚未验证');
+  throw new Error(t('platform.error.unsupported_platform'));
 }

@@ -5,6 +5,7 @@ import AdmZip from 'adm-zip';
 import { app } from 'electron';
 import type { DefaultResourcePack } from '../../shared/types';
 import { mcVersionAtLeast } from '../../shared/keybindings';
+import { translate as t } from '../../shared/i18n';
 
 const root = () => path.join(app.getPath('userData'), 'default-resourcepacks');
 const manifest = () => path.join(root(), 'packs.json');
@@ -17,7 +18,7 @@ type PackFormat = [number, number];
 function snapshot(file: string): Buffer | null {
   try {
     const stat = fs.lstatSync(file);
-    if (!stat.isFile() || stat.isSymbolicLink()) throw new Error(`配置或材质包路径不是普通文件：${path.basename(file)}`);
+    if (!stat.isFile() || stat.isSymbolicLink()) throw new Error(t('defpacks.error.not_regular_file', { name: path.basename(file) }));
     return fs.readFileSync(file);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
@@ -27,7 +28,7 @@ function snapshot(file: string): Buffer | null {
 function unchanged(file: string, expected: Buffer | null): void {
   const actual = snapshot(file);
   if (expected === null ? actual !== null : actual === null || !actual.equals(expected))
-    throw new Error(`${path.basename(file)} 在操作期间发生变化，未覆盖新配置，请重试`);
+    throw new Error(t('defpacks.error.changed_during_op', { name: path.basename(file) }));
 }
 function tempFile(file: string, role = 'write'): string {
   return `${file}.faionyx-${role}-${crypto.randomUUID()}.tmp`;
@@ -43,7 +44,7 @@ function stage(file: string, data: Buffer): string {
   const temp = tempFile(file);
   try {
     fs.writeFileSync(temp, data, { flag: 'wx' });
-    if (!fs.readFileSync(temp).equals(data)) throw new Error(`${path.basename(file)} 暂存校验失败`);
+    if (!fs.readFileSync(temp).equals(data)) throw new Error(t('defpacks.error.stage_verify_failed', { name: path.basename(file) }));
     return temp;
   } catch (error) {
     cleanTemp(temp);
@@ -66,7 +67,7 @@ function commitFiles(writes: Array<{ file: string; before: Buffer | null; after:
       fs.renameSync(w.temp, w.file);
       w.temp = '';
       w.published = true;
-      if (!snapshot(w.file)?.equals(w.after)) throw new Error(`${path.basename(w.file)} 写入校验失败`);
+      if (!snapshot(w.file)?.equals(w.after)) throw new Error(t('defpacks.error.write_verify_failed', { name: path.basename(w.file) }));
     }
   } catch (error) {
     const failed: string[] = [];
@@ -86,7 +87,10 @@ function commitFiles(writes: Array<{ file: string; before: Buffer | null; after:
       }
     if (failed.length)
       throw new Error(
-        `默认材质包写入失败，以下配置无法回滚：${failed.join('、')}；保留了 .tmp 恢复副本。${error instanceof Error ? error.message : String(error)}`
+        t('defpacks.error.commit_failed', {
+          files: failed.join(t('common.list_separator')),
+          error: error instanceof Error ? error.message : String(error),
+        })
       );
     throw error;
   } finally {
@@ -121,7 +125,7 @@ function packMetadata(data: Buffer, name: string): any {
   let meta: any;
   try {
     const entry = new AdmZip(data).getEntry('pack.mcmeta');
-    if (!entry || entry.header.size > 1024 * 1024) throw new Error('缺少有效的 pack.mcmeta');
+    if (!entry || entry.header.size > 1024 * 1024) throw new Error(t('defpacks.error.pack_mcmeta_missing'));
     meta = JSON.parse(
       entry
         .getData()
@@ -129,9 +133,9 @@ function packMetadata(data: Buffer, name: string): any {
         .replace(/^\uFEFF/, '')
     );
   } catch {
-    throw new Error(`${name} 缺少有效或可读取的 pack.mcmeta`);
+    throw new Error(t('defpacks.error.pack_mcmeta_unreadable', { name }));
   }
-  if (!meta?.pack || typeof meta.pack !== 'object' || Array.isArray(meta.pack)) throw new Error(`${name} 不是有效材质包`);
+  if (!meta?.pack || typeof meta.pack !== 'object' || Array.isArray(meta.pack)) throw new Error(t('defpacks.error.pack_invalid', { name }));
   return meta.pack;
 }
 export function importDefaultResourcePacks(files: string[]): DefaultResourcePack[] {
@@ -139,7 +143,7 @@ export function importDefaultResourcePacks(files: string[]): DefaultResourcePack
   // Validate the complete batch before changing the global defaults.
   const incoming = files.map((file) => {
     if (typeof file !== 'string' || path.extname(file).toLowerCase() !== '.zip' || !fs.statSync(file).isFile())
-      throw new Error('请选择 ZIP 格式材质包');
+      throw new Error(t('defpacks.error.zip_only'));
     const data = fs.readFileSync(file);
     packMetadata(data, path.basename(file));
     const original = path.basename(file).replace(/[<>:"/\\|?*\x00-\x1f]/g, '_');
@@ -158,7 +162,7 @@ export function importDefaultResourcePacks(files: string[]): DefaultResourcePack
     if (packs.some((p) => p.id === pack.id)) continue;
     const dest = path.join(root(), pack.id + '.zip'),
       existing = snapshot(dest);
-    if (existing !== null && hash(existing) !== pack.id) throw new Error(`默认材质包缓存被修改，未覆盖：${pack.name}`);
+    if (existing !== null && hash(existing) !== pack.id) throw new Error(t('defpacks.error.cache_modified', { name: pack.name }));
     if (existing === null) fs.writeFileSync(dest, data, { flag: 'wx' });
     packs.push(pack);
   }
@@ -169,10 +173,10 @@ export function removeDefaultResourcePack(id: string): DefaultResourcePack[] {
   return save(getDefaultResourcePacks().filter((p) => p.id !== id));
 }
 export function setDefaultResourcePackEnabled(id: string, enabled: boolean): DefaultResourcePack[] {
-  if (typeof enabled !== 'boolean') throw new Error('材质包启用状态无效');
+  if (typeof enabled !== 'boolean') throw new Error(t('defpacks.error.invalid_enabled'));
   const packs = getDefaultResourcePacks(),
     pack = packs.find((p) => p.id === id);
-  if (!pack) throw new Error('材质包不存在，请刷新后重试');
+  if (!pack) throw new Error(t('defpacks.error.pack_missing'));
   pack.enabled = enabled;
   return save(packs);
 }
@@ -190,15 +194,14 @@ function readPackOptions(text: string): Partial<Record<PackOptionKey, string[]>>
     const i = line.indexOf(':'),
       key = line.slice(0, i) as PackOptionKey;
     if (!optionKeys.includes(key)) continue;
-    if (values[key] !== undefined) throw new Error(`options.txt 中的 ${key} 重复，未覆盖原配置`);
+    if (values[key] !== undefined) throw new Error(t('defpacks.error.options_duplicate', { key }));
     let parsed: unknown;
     try {
       parsed = JSON.parse(line.slice(i + 1));
     } catch {
-      throw new Error(`options.txt 中的 ${key} 格式无效，未覆盖原配置`);
+      throw new Error(t('defpacks.error.options_invalid', { key }));
     }
-    if (!Array.isArray(parsed) || parsed.some((x) => typeof x !== 'string'))
-      throw new Error(`options.txt 中的 ${key} 格式无效，未覆盖原配置`);
+    if (!Array.isArray(parsed) || parsed.some((x) => typeof x !== 'string')) throw new Error(t('defpacks.error.options_invalid', { key }));
     values[key] = parsed;
   }
   return values;
@@ -279,16 +282,16 @@ function readInstanceState(data: Buffer | null): { initialized: boolean; managed
   try {
     raw = JSON.parse(data.toString('utf8').replace(/^\uFEFF/, ''));
   } catch {
-    throw new Error('默认材质包实例记录损坏，未覆盖实例配置');
+    throw new Error(t('defpacks.error.instance_state_corrupt'));
   }
   const managed = Array.isArray(raw) ? raw : raw?.version === 2 ? raw.managed : undefined;
-  if (!Array.isArray(managed) || managed.some((x) => !isManagedName(x))) throw new Error('默认材质包实例记录格式无效，未覆盖实例配置');
+  if (!Array.isArray(managed) || managed.some((x) => !isManagedName(x))) throw new Error(t('defpacks.error.instance_state_invalid'));
   return { initialized: true, managed: [...new Set(managed.flatMap(aliases))] };
 }
 function plainDirectoryExists(dir: string): boolean {
   try {
     const stat = fs.lstatSync(dir);
-    if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error('默认材质包目录不能是文件或符号链接');
+    if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error(t('defpacks.error.dir_not_plain'));
     return true;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
@@ -306,7 +309,7 @@ function updateInstancePacks(
   options: ResourcePackSyncOptions
 ): number {
   if (!mcVersionAtLeast(mcVersion, '1.6')) {
-    if (manual) throw new Error('此 Minecraft 版本不支持资源包');
+    if (manual) throw new Error(t('defpacks.error.version_unsupported'));
     return 0;
   }
   plainDirectoryExists(gameDir);
@@ -328,13 +331,13 @@ function updateInstancePacks(
   const apply = manual || initialize;
   const data = packs.map((p) => {
     const source = snapshot(path.join(root(), p.id + '.zip'));
-    if (source === null || hash(source) !== p.id) throw new Error(`默认材质包缓存缺失或被修改，未覆盖：${p.name}`);
+    if (source === null || hash(source) !== p.id) throw new Error(t('defpacks.error.cache_missing_or_modified', { name: p.name }));
     return { pack: p, source, meta: packMetadata(source, p.name), dest: path.join(gameDir, 'resourcepacks', managedName(p)) };
   });
   // Check every destination before copying or updating either configuration file.
   for (const item of data) {
     const current = snapshot(item.dest);
-    if (current !== null && hash(current) !== item.pack.id) throw new Error(`默认材质包副本被修改，未覆盖：${item.pack.name}`);
+    if (current !== null && hash(current) !== item.pack.id) throw new Error(t('defpacks.error.copy_modified', { name: item.pack.name }));
   }
   const targetFormat = readClientResourceFormat(clientJar);
   const incompatible = names.filter((name, i) =>
@@ -348,14 +351,14 @@ function updateInstancePacks(
   for (const item of data) {
     const current = snapshot(item.dest);
     if (current !== null) {
-      if (hash(current) !== item.pack.id) throw new Error(`默认材质包副本被修改，未覆盖：${item.pack.name}`);
+      if (hash(current) !== item.pack.id) throw new Error(t('defpacks.error.copy_modified', { name: item.pack.name }));
       continue;
     }
     // Publish the verified snapshot without replacing a file created after preflight.
     const staged = path.join(path.dirname(item.dest), `.faionyx-pack-${crypto.randomUUID()}.tmp`);
     try {
       fs.writeFileSync(staged, item.source, { flag: 'wx' });
-      if (hash(fs.readFileSync(staged)) !== item.pack.id) throw new Error(`默认材质包复制校验失败：${item.pack.name}`);
+      if (hash(fs.readFileSync(staged)) !== item.pack.id) throw new Error(t('defpacks.error.copy_verify_failed', { name: item.pack.name }));
       try {
         fs.linkSync(staged, item.dest);
       } catch (error) {
@@ -365,7 +368,8 @@ function updateInstancePacks(
     } finally {
       cleanTemp(staged);
     }
-    if (hash(fs.readFileSync(item.dest)) !== item.pack.id) throw new Error(`默认材质包复制校验失败：${item.pack.name}`);
+    if (hash(fs.readFileSync(item.dest)) !== item.pack.id)
+      throw new Error(t('defpacks.error.copy_verify_failed', { name: item.pack.name }));
   }
   unchanged(optionsFile, optionsBefore);
   unchanged(stateFile, stateBefore);

@@ -22,7 +22,16 @@ import {
 import type { DefaultResourcePack } from '@shared/types';
 import { activeInstalled, selectedInstance, displayVersionName, store, toast } from '../store';
 import { updateSettings } from '../settingsUpdates';
-import { KEYBIND_CATEGORIES, VANILLA_KEYBINDS, codeToMcKey, mcKeyLabel, mouseButtonToMcKey } from '@shared/keybindings';
+import { t } from '@renderer/i18n';
+import { KEYBIND_CATEGORIES, VANILLA_KEYBINDS, codeToMcKey, keybindLabelKey, mcKeyLabel, mouseButtonToMcKey } from '@shared/keybindings';
+
+// 键位/分类显示名统一由 shared/keybindings 提供 i18n 键，这里只做翻译。
+function bindLabel(id: string): string {
+  return t(keybindLabelKey(id));
+}
+function categoryLabel(cat: string): string {
+  return t(cat);
+}
 
 const keys = ref<Record<string, string>>({});
 const section = ref<'game' | 'keys' | 'packs'>('game');
@@ -40,7 +49,7 @@ const packTargets = computed(() =>
   activeInstalled.value.map((v) => ({
     value: v.id,
     label: displayVersionName(v),
-    description: `${v.mcVersion}${v.isolated ? ' · 独立游戏目录' : ' · 共享游戏目录'}`,
+    description: `${v.mcVersion} · ${v.isolated ? t('keys.packs.target.isolated') : t('keys.packs.target.shared')}`,
   }))
 );
 async function reapplyPacks() {
@@ -51,9 +60,14 @@ async function reapplyPacks() {
   reapplying.value = true;
   try {
     const result = await reapplyDefaultResourcePacks(folder, target.id);
-    toast(`已重新应用 ${result.count} 个默认材质包${result.shared ? '（共享游戏目录）' : ''}`, 'success');
+    toast(
+      t(result.shared ? 'keys.toast.pack.reapply_ok_shared' : 'keys.toast.pack.reapply_ok', {
+        count: String(result.count),
+      }),
+      'success'
+    );
   } catch (e) {
-    toast('重新应用失败：' + errText(e), 'error');
+    toast(t('keys.toast.pack.reapply_failed', { e: errText(e) }), 'error');
   } finally {
     packsBusy.value = false;
     reapplying.value = false;
@@ -64,7 +78,7 @@ async function togglePackSync(on: boolean) {
   try {
     await updateSettings({ resourcePackSync: on });
   } catch (e) {
-    toast('保存失败：' + errText(e), 'error');
+    toast(t('keys.toast.pack.save_failed', { e: errText(e) }), 'error');
   }
 }
 async function editPacks(action: () => Promise<DefaultResourcePack[]>, enable = false) {
@@ -74,7 +88,7 @@ async function editPacks(action: () => Promise<DefaultResourcePack[]>, enable = 
     resourcePacks.value = await action();
     if (enable && resourcePacks.value.length) await togglePackSync(true);
   } catch (e) {
-    toast('材质包配置失败：' + errText(e), 'error');
+    toast(t('keys.toast.pack.config_failed', { e: errText(e) }), 'error');
   } finally {
     packsBusy.value = false;
   }
@@ -99,16 +113,20 @@ async function toggleKeySync(on: boolean) {
   try {
     await updateSettings({ keySync: on });
     store.settings = { ...store.settings!, keySync: on };
-    toast(on ? '已开启按键设置同步' : '已关闭按键设置同步', 'success');
+    toast(on ? t('keys.toast.keys.sync_on') : t('keys.toast.keys.sync_off'), 'success');
   } catch (e) {
-    toast('保存失败：' + errText(e), 'error');
+    toast(t('keys.toast.pack.save_failed', { e: errText(e) }), 'error');
   }
 }
 
 const keyGrouped = computed(() => {
   const kw = keySearch.value.trim().toLowerCase();
-  const match = (id: string, label: string, bind: string) =>
-    !kw || label.toLowerCase().includes(kw) || id.toLowerCase().includes(kw) || mcKeyLabel(bind).toLowerCase().includes(kw);
+  const match = (id: string, labelKey: string, bind: string) =>
+    !kw ||
+    t(labelKey).toLowerCase().includes(kw) ||
+    bindLabel(id).toLowerCase().includes(kw) ||
+    id.toLowerCase().includes(kw) ||
+    mcKeyLabel(bind).toLowerCase().includes(kw);
   return KEYBIND_CATEGORIES.map((cat) => ({
     category: cat,
     items: VANILLA_KEYBINDS.filter((d) => d.category === cat && match(d.id, d.label, keys.value[d.id] ?? d.defaultBind)),
@@ -152,9 +170,9 @@ async function onCaptureMouse(e: MouseEvent) {
 async function applyKey(id: string, bind: string) {
   try {
     keys.value = await setDefaultKey(id, bind);
-    toast('已更新默认按键', 'success');
+    toast(t('keys.toast.keys.updated'), 'success');
   } catch (e) {
-    toast('设置失败：' + errText(e), 'error');
+    toast(t('keys.toast.keys.set_failed', { e: errText(e) }), 'error');
   }
 }
 async function resetOneKey(id: string) {
@@ -168,14 +186,14 @@ async function clearCapturedKey() {
   stopCapture();
   if (!id) return;
   await applyKey(id, 'key.keyboard.unknown');
-  toast('已将该按键设置为空', 'success');
+  toast(t('keys.toast.keys.cleared'), 'success');
 }
 async function resetAllKeys() {
   try {
     keys.value = await resetDefaultKeys();
-    toast('按键已全部恢复为 MC 原版默认', 'success');
+    toast(t('keys.toast.keys.reset_all'), 'success');
   } catch (e) {
-    toast('重置失败：' + errText(e), 'error');
+    toast(t('keys.toast.keys.reset_failed', { e: errText(e) }), 'error');
   }
 }
 
@@ -184,7 +202,7 @@ onMounted(async () => {
     keys.value = await getDefaultKeys();
     resourcePacks.value = await getDefaultResourcePacks();
   } catch (e) {
-    toast('读取默认按键失败：' + errText(e), 'error');
+    toast(t('keys.toast.keys.load_failed', { e: errText(e) }), 'error');
   } finally {
     loading.value = false;
   }
@@ -195,19 +213,22 @@ onUnmounted(stopCapture);
 <template>
   <div data-ui="KeysView:68edd6496058" class="page cfg-page" :data-design-page="section">
     <div data-ui="KeysView:3f669650903f" class="page-head">
-      <h1 data-ui="KeysView:f824d576be0f" class="page-title">默认配置</h1>
-      <p data-ui="KeysView:f1949eee5dfe" class="page-sub">让每个世界，都保留你熟悉的操作习惯。</p>
+      <h1 data-ui="KeysView:f824d576be0f" class="page-title">{{ t('keys.title') }}</h1>
+      <p data-ui="KeysView:f1949eee5dfe" class="page-sub">{{ t('keys.subtitle') }}</p>
     </div>
 
-    <nav data-ui="KeysView:c0a728e450f2" class="cfg-sections" aria-label="默认配置分类">
+    <nav data-ui="KeysView:c0a728e450f2" class="cfg-sections" :aria-label="t('keys.sections.aria')">
       <button data-ui="KeysView:384d69817c73" :class="{ active: section === 'game' }" @click="selectSection('game')">
-        <strong>游戏选项</strong><small>画面、控制与辅助功能</small>
+        <strong>{{ t('keys.section.game.title') }}</strong
+        ><small>{{ t('keys.section.game.desc') }}</small>
       </button>
       <button data-ui="KeysView:732b450bc0f6" :class="{ active: section === 'keys' }" @click="selectSection('keys')">
-        <strong>按键配置</strong><small>{{ keyModifiedCount }} 项自定义绑定</small>
+        <strong>{{ t('keys.section.keys.title') }}</strong
+        ><small>{{ t('keys.section.keys.desc', { count: String(keyModifiedCount) }) }}</small>
       </button>
       <button data-ui="KeysView:d7d636f03de6" :class="{ active: section === 'packs' }" @click="selectSection('packs')">
-        <strong>默认材质包</strong><small>{{ resourcePacks.length }} 个材质包</small>
+        <strong>{{ t('keys.section.packs.title') }}</strong
+        ><small>{{ t('keys.section.packs.desc', { count: String(resourcePacks.length) }) }}</small>
       </button>
     </nav>
     <DefaultGameOptions v-show="section === 'game'" @section="selectSection" />
@@ -222,8 +243,8 @@ onUnmounted(stopCapture);
     >
       <div class="cfg-col-head">
         <div>
-          <h3 class="group-title">默认材质包</h3>
-          <p class="muted group-hint">拖入多个 ZIP 材质包，列表靠后的包优先级更高</p>
+          <h3 class="group-title">{{ t('keys.packs.heading') }}</h3>
+          <p class="muted group-hint">{{ t('keys.packs.hint') }}</p>
         </div>
         <button
           data-ui="KeysView:876c0145d0d4"
@@ -231,10 +252,10 @@ onUnmounted(stopCapture);
           :disabled="packsBusy"
           @click="editPacks(pickDefaultResourcePacks, true)"
         >
-          {{ packsBusy && !reapplying ? '正在导入…' : '添加材质包…' }}
+          {{ packsBusy && !reapplying ? t('keys.packs.importing') : t('keys.packs.add') }}
         </button>
         <label data-ui="KeysView:f73970a957ff" class="cfg-sync"
-          ><span>新实例默认启用</span
+          ><span>{{ t('keys.packs.enable_by_default') }}</span
           ><span class="switch"
             ><input
               data-ui="KeysView:78b789615abb"
@@ -247,12 +268,12 @@ onUnmounted(stopCapture);
       <div data-ui="KeysView:22e226a30b38" v-for="(pack, index) in resourcePacks" :key="pack.id" class="cfg-row">
         <span data-ui="KeysView:deb0c6a821a6" class="cfg-label" :title="pack.name">{{ pack.name }}</span>
         <label data-ui="KeysView:8de22abf738d" class="cfg-sync pack-enable"
-          ><span>{{ pack.enabled ? '已启用' : '未启用' }}</span
+          ><span>{{ pack.enabled ? t('keys.packs.enabled') : t('keys.packs.disabled') }}</span
           ><span class="switch"
             ><input
               data-ui="KeysView:068b826fa09a"
               type="checkbox"
-              :aria-label="`启用材质包 ${pack.name}`"
+              :aria-label="t('keys.packs.enable_aria', { name: pack.name })"
               :checked="pack.enabled"
               :disabled="packsBusy"
               @change="editPacks(() => setDefaultResourcePackEnabled(pack.id, ($event.target as HTMLInputElement).checked))" /><span
@@ -263,7 +284,7 @@ onUnmounted(stopCapture);
           data-ui="KeysView:1cbe8606de10"
           class="btn btn-ghost btn-sm"
           :disabled="packsBusy || index === 0"
-          title="降低优先级"
+          :title="t('keys.packs.move_up')"
           @click="editPacks(() => moveDefaultResourcePack(pack.id, -1))"
         >
           ↑
@@ -272,7 +293,7 @@ onUnmounted(stopCapture);
           data-ui="KeysView:2a307d6181f9"
           class="btn btn-ghost btn-sm"
           :disabled="packsBusy || index === resourcePacks.length - 1"
-          title="提高优先级"
+          :title="t('keys.packs.move_down')"
           @click="editPacks(() => moveDefaultResourcePack(pack.id, 1))"
         >
           ↓
@@ -283,18 +304,18 @@ onUnmounted(stopCapture);
           :disabled="packsBusy"
           @click="editPacks(() => removeDefaultResourcePack(pack.id))"
         >
-          移除
+          {{ t('keys.packs.remove') }}
         </button>
       </div>
-      <p data-ui="KeysView:27229a3b7fa7" v-if="!resourcePacks.length" class="muted">将材质包拖到这里，或点击上方按钮添加。</p>
+      <p data-ui="KeysView:27229a3b7fa7" v-if="!resourcePacks.length" class="muted">{{ t('keys.packs.empty') }}</p>
 
       <p data-ui="KeysView:packs-instance-priority" class="muted group-hint">
-        全局列表作为初始默认。启用后，在尚未配置资源包的游戏目录首次应用；已有实例以游戏内选择为准，后续启动保留启停和排序。新增默认包只补充可选文件。
+        {{ t('keys.packs.behavior_hint') }}
       </p>
       <div class="pack-reapply">
         <div>
-          <strong>重新应用到实例</strong>
-          <p class="muted group-hint">按当前默认列表重设此实例的默认材质包选择，保留其他资源包。原文件和已复制文件保留。</p>
+          <strong>{{ t('keys.packs.reapply.title') }}</strong>
+          <p class="muted group-hint">{{ t('keys.packs.reapply.desc') }}</p>
         </div>
         <div class="pack-reapply-actions">
           <SelectMenu
@@ -302,29 +323,33 @@ onUnmounted(stopCapture);
             v-model="store.resourceVersionId"
             :options="packTargets"
             :disabled="packsBusy || !packTargets.length"
-            placeholder="选择目标实例"
-            aria-label="默认材质包目标实例"
+            :placeholder="t('keys.packs.reapply.target_placeholder')"
+            :aria-label="t('keys.packs.reapply.target_aria')"
           />
           <button data-ui="KeysView:packs-reapply" class="btn btn-ghost" :disabled="packsBusy || !selectedInstance" @click="reapplyPacks">
-            {{ reapplying ? '正在应用…' : '重新应用默认材质包' }}
+            {{ reapplying ? t('keys.packs.reapply.busy') : t('keys.packs.reapply.action') }}
           </button>
         </div>
         <p v-if="selectedInstance && !selectedInstance.isolated" data-ui="KeysView:packs-shared-hint" class="muted group-hint">
-          此实例使用共享游戏目录，重新应用也会影响使用同一目录的其他实例。
+          {{ t('keys.packs.reapply.shared_hint') }}
         </p>
       </div>
     </div>
-    <div data-ui="KeysView:22b5e108771c" v-if="loading" class="card empty"><span data-ui="KeysView:9c54c2c06f78" class="spin"></span></div>
+    <div data-ui="KeysView:22b5e108771c" v-if="loading" class="card empty">
+      <span data-ui="KeysView:9c54c2c06f78" class="spin"></span>
+    </div>
     <!-- 按键配置（同步开关整合进卡片头部，不再单独占一张卡） -->
     <div data-ui="KeysView:58a64397f47a" v-else v-show="section === 'keys'" class="card cfg-col">
       <div class="cfg-col-head">
         <div>
-          <h3 class="group-title">按键配置</h3>
-          <p data-ui="KeysView:0fec7e4d603b" class="muted group-hint" style="margin: 2px 0 0">对应游戏内「选项 → 控制 → 按键控制」</p>
+          <h3 class="group-title">{{ t('keys.keys.heading') }}</h3>
+          <p data-ui="KeysView:0fec7e4d603b" class="muted group-hint" style="margin: 2px 0 0">
+            {{ t('keys.keys.source_hint') }}
+          </p>
         </div>
         <div data-ui="KeysView:076aac6059fa" class="cfg-head-actions">
-          <label data-ui="KeysView:d24483e908e0" class="cfg-sync" title="启动任意版本时，用下方默认按键覆盖该实例 options.txt 的 key_* 项">
-            <span data-ui="KeysView:3c5373f12848" class="cfg-sync-text">按键设置同步</span>
+          <label data-ui="KeysView:d24483e908e0" class="cfg-sync" :title="t('keys.keys.sync_title')">
+            <span data-ui="KeysView:3c5373f12848" class="cfg-sync-text">{{ t('keys.keys.sync_label') }}</span>
             <span class="switch">
               <input
                 data-ui="KeysView:8da5b395e36b"
@@ -336,32 +361,37 @@ onUnmounted(stopCapture);
             </span>
           </label>
           <button data-ui="KeysView:051ad2a1db23" class="btn btn-ghost btn-sm" :disabled="!keyModifiedCount" @click="resetAllKeys">
-            全部恢复默认
+            {{ t('keys.keys.reset_all') }}
           </button>
         </div>
       </div>
-      <input data-ui="KeysView:7bb183320b84" v-model="keySearch" class="input cfg-search" placeholder="搜索按键名称…" />
+      <input
+        data-ui="KeysView:7bb183320b84"
+        v-model="keySearch"
+        class="input cfg-search"
+        :placeholder="t('keys.keys.search_placeholder')"
+      />
       <div data-ui="KeysView:a8f22f80d5d3" class="cfg-scroll">
         <div data-ui="KeysView:5e83994d56a1" v-for="group in keyGrouped" :key="group.category" class="cfg-group">
-          <h4 data-ui="KeysView:21f659d3f704" class="cfg-cat">{{ group.category }}</h4>
+          <h4 data-ui="KeysView:21f659d3f704" class="cfg-cat">{{ categoryLabel(group.category) }}</h4>
           <div data-ui="KeysView:577547417d1b" v-for="item in group.items" :key="item.id" class="cfg-row">
-            <span data-ui="KeysView:be428b06c1c7" class="cfg-label" :title="item.id">{{ item.label }}</span>
+            <span data-ui="KeysView:be428b06c1c7" class="cfg-label" :title="bindLabel(item.id)">{{ bindLabel(item.id) }}</span>
             <button
               data-ui="KeysView:5f341e9d9083"
               class="cfg-bind"
               :class="{ capturing: capturing === item.id, modified: (keys[item.id] ?? item.defaultBind) !== item.defaultBind }"
-              :title="capturing === item.id ? '按任意键设置，Esc 取消' : '点击后按任意键修改'"
+              :title="capturing === item.id ? t('keys.keys.capture_active') : t('keys.keys.capture_hint')"
               @click="startCapture(item.id)"
             >
-              {{ capturing === item.id ? '按任意键…' : mcKeyLabel(keys[item.id] ?? item.defaultBind) }}
+              {{ capturing === item.id ? t('keys.keys.capturing') : mcKeyLabel(keys[item.id] ?? item.defaultBind) }}
             </button>
             <button
               data-ui="KeysView:05190022165a"
               v-if="capturing === item.id"
               class="cfg-clear"
               data-key-clear
-              title="设为未指定"
-              aria-label="设为未指定"
+              :title="t('keys.keys.clear_title')"
+              :aria-label="t('keys.keys.clear_aria')"
               @click.stop="clearCapturedKey"
             >
               ×
@@ -370,7 +400,7 @@ onUnmounted(stopCapture);
               data-ui="KeysView:d943e4477ca3"
               class="cfg-reset"
               :class="{ invisible: (keys[item.id] ?? item.defaultBind) === item.defaultBind }"
-              title="恢复此项默认"
+              :title="t('keys.keys.reset_one')"
               @click="resetOneKey(item.id)"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -381,7 +411,7 @@ onUnmounted(stopCapture);
           </div>
         </div>
         <div data-ui="KeysView:1347fda480a9" v-if="!keyGrouped.length" class="empty">
-          <span>没有匹配「{{ keySearch }}」的按键</span>
+          <span>{{ t('keys.keys.no_match', { keyword: keySearch }) }}</span>
         </div>
       </div>
     </div>
@@ -391,7 +421,7 @@ onUnmounted(stopCapture);
 </template>
 
 <style scoped>
-/* 间距全部走全局设计令牌：元素与板块边缘保持呼吸感（card-pad 由 .card 提供） */
+/* 样式未改动，沿用原文件 */
 .cfg-page {
   width: 100%;
   max-width: 1040px;
@@ -485,7 +515,6 @@ onUnmounted(stopCapture);
   margin-bottom: var(--space-3);
   flex-wrap: wrap;
 }
-/* 头部操作区：同步开关 + 恢复默认 同行右置 */
 .cfg-head-actions {
   display: flex;
   align-items: center;

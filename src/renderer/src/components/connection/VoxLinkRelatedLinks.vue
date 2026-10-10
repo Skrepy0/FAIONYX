@@ -2,23 +2,26 @@
 import { ref } from 'vue';
 import { VOXLINK_LINKS } from '@shared/voxlinkLinks';
 import UpdateDialogShell from '../UpdateDialogShell.vue';
+import { t } from '@renderer/i18n';
 const open = ref(false);
 </script>
 <template>
   <div data-ui="voxlink:related-links">
-    <button class="btn btn-ghost" @click="open = true">相关链接 ↗</button>
-    <UpdateDialogShell v-if="open" label="VoxLink 相关链接" @dismiss="open = false">
+    <button class="btn btn-ghost" @click="open = true">{{ t('voxlink.related_links') }} ↗</button>
+    <UpdateDialogShell v-if="open" :label="t('voxlink.related_links_shell')" @dismiss="open = false">
       <template #header
-        ><h2>VoxLink · 相关链接</h2>
-        <p class="muted">项目主页、下载与社区</p></template
+        ><h2>VoxLink · {{ t('voxlink.related_links') }}</h2>
+        <p class="muted">{{ t('voxlink.links_description') }}</p></template
       >
-      <nav class="links-list" aria-label="VoxLink 相关链接清单">
+      <nav class="links-list" :aria-label="t('voxlink.related_links_list')">
         <a v-for="link in VOXLINK_LINKS" :key="link.label" :href="link.url" target="_blank" rel="noopener noreferrer"
-          ><strong>{{ link.label }} <span aria-hidden="true">↗</span></strong
+          ><strong>{{ t(link.label) }} <span aria-hidden="true">↗</span></strong
           ><small>{{ link.url }}</small></a
         >
       </nav>
-      <template #footer><button class="btn btn-gold" @click="open = false">关闭</button></template>
+      <template #footer
+        ><button class="btn btn-gold" @click="open = false">{{ t('common.close') }}</button></template
+      >
     </UpdateDialogShell>
   </div>
 </template>

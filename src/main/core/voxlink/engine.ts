@@ -8,6 +8,7 @@ import { networkInterfaces } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import { ApiClient, APIError, APP_VERSION, CLIENT_TAG, DEFAULT_SERVER_URL, validateRoomCode, validateServerURL } from './api';
+import { translate as t } from '../../../shared/i18n';
 import { normalizeVoxlinkRoomName } from '../../../shared/voxlinkRoom';
 import { NAT_RAW_LABELS, natLabel } from '../../../shared/voxlinkNat';
 import { STUN_SERVERS, stunSampleSeries, samplePortsSequential, stunDeltaFromSamples, type StunMappedAddr } from './stun';
@@ -194,7 +195,7 @@ export class ConnEngine extends EventEmitter {
       .toLowerCase();
     if (!Object.hasOwn(NAT_RAW_LABELS, raw) && !this.natNotes.has(raw)) {
       this.natNotes.add(raw);
-      this.deps.netLog('warn', '未收录的 NAT 类型，显示为未知：' + raw.slice(0, 80));
+      this.deps.netLog('warn', t('voxlink.engine.log.nat_unlisted', { nat: raw.slice(0, 80) }));
     }
     this.deps.emit('nat:state', {
       local: natLabel(local, undefined),
@@ -213,7 +214,7 @@ export class ConnEngine extends EventEmitter {
       key = raw + ':' + remote;
     if (expected && remote !== 'UNKNOWN' && expected !== remote && !this.natNotes.has(key)) {
       this.natNotes.add(key);
-      this.deps.netLog('info', `NAT 文案与协商分类不同 (${raw} / ${remote})，打洞使用协商分类`);
+      this.deps.netLog('info', t('voxlink.engine.log.nat_mismatch', { raw, remote }));
     }
   }
   constructor(readonly deps: EngineDeps) {
@@ -244,10 +245,10 @@ export class ConnEngine extends EventEmitter {
             'success',
             address,
             mode === 'p2p'
-              ? '已平滑升级为直连'
+              ? t('voxlink.engine.state.upgraded_direct')
               : mode === 'prelay'
-                ? 'TURN 已断开，热备玩家中继接替；若游戏已断线，请重新连接此地址'
-                : 'TURN 中继已连接'
+                ? t('voxlink.engine.state.prelay_takeover')
+                : t('voxlink.engine.state.turn_connected')
           );
       },
       disconnected: (peer) => {
@@ -306,12 +307,12 @@ export class ConnEngine extends EventEmitter {
       await new Promise<void>((resolve, reject) => {
         const timer = setTimeout(() => {
           socket.destroy();
-          reject(new Error('直连未命中'));
+          reject(new Error(t('voxlink.engine.error.direct_miss')));
         }, 5000); // ConnectionManager.java: TCP_CONNECT_TIMEOUT_MS.
         socket.once('error', reject);
         socket.once('close', () => {
           clearTimeout(timer);
-          reject(new Error('直连已关闭'));
+          reject(new Error(t('voxlink.engine.error.direct_closed')));
         });
         socket.connect(port, ip, () => {
           clearTimeout(timer);
@@ -328,7 +329,7 @@ export class ConnEngine extends EventEmitter {
         controller.abort();
         if (this.winner.get('host') === id) {
           this.winner.delete('host');
-          this.state('p2p', 'failed', '', '游戏通路已关闭');
+          this.state('p2p', 'failed', '', t('voxlink.engine.state.game_path_closed'));
           this.reconnect();
         }
       });
@@ -339,8 +340,8 @@ export class ConnEngine extends EventEmitter {
       operation.stop = bridge.stop;
       this.winner.set('host', id);
       this.stopPeerPunching('host', undefined, id);
-      this.state('p2p', 'success', bridge.address, '连接成功，请在游戏中输入下方地址');
-      this.stage('punch', 'ok', '直连游戏地址已就绪');
+      this.state('p2p', 'success', bridge.address, t('voxlink.engine.state.connected_enter_address'));
+      this.stage('punch', 'ok', t('voxlink.engine.state.direct_address_ready'));
     } catch {
       socket.destroy();
     } finally {
@@ -358,12 +359,12 @@ export class ConnEngine extends EventEmitter {
     const policy = this.policy('host'),
       wait = policy.advance(firewall);
     if (policy.terminal) {
-      this.state('p2p', 'failed', '', '未收到对方的网络回应。可手动使用 TURN 中继，或退出后重新加入');
+      this.state('p2p', 'failed', '', t('voxlink.engine.state.no_peer_response'));
       void this.sendSignal('cancel_connection', {}, 'host').catch(() => {});
       return;
     }
     this.reconnectPending = true;
-    this.state('p2p', 'trying', '', `正在重新协商连接 · 第 ${policy.round + 1} 轮`);
+    this.state('p2p', 'trying', '', t('voxlink.engine.state.renegotiating', { round: policy.round + 1 }));
     this.later(() => {
       this.reconnectPending = false;
       if (this.mode !== 'p2p' || this.winner.has('host')) return;
@@ -400,7 +401,7 @@ export class ConnEngine extends EventEmitter {
         this.winner.delete(id);
         controller.abort();
         if (!this.isHost) {
-          this.state('p2p', 'failed', '', 'TCP 游戏通路已关闭');
+          this.state('p2p', 'failed', '', t('voxlink.engine.state.tcp_path_closed'));
           this.reconnect();
         }
       });
@@ -417,14 +418,14 @@ export class ConnEngine extends EventEmitter {
       operation.stop = bridge.stop;
       this.winner.set(id, 'tcp');
       for (const [key, link] of this.links) if (link.peer === id) this.drop(key);
-      this.stage(this.isHost ? 'host_punch' : 'punch', 'ok', 'TCP 同时打开通路已建立');
+      this.stage(this.isHost ? 'host_punch' : 'punch', 'ok', t('voxlink.engine.state.tcp_punched'));
       if (!this.isHost) {
         this.turn.stop();
-        this.state('p2p', 'success', bridge.address, 'TCP 打洞已连接');
+        this.state('p2p', 'success', bridge.address, t('voxlink.engine.state.tcp_connected'));
       }
     } catch (error) {
       if (!controller.signal.aborted && epoch === this.generation)
-        this.deps.netLog('info', `TCP 辅助打洞未命中：${(error as Error).message}`);
+        this.deps.netLog('info', t('voxlink.engine.log.tcp_punch_miss', { error: (error as Error).message }));
     } finally {
       if (!operation.stop && this.tcp.get(id) === operation) {
         this.tcp.delete(id);
@@ -484,16 +485,16 @@ export class ConnEngine extends EventEmitter {
   beginFallbackTimer(): void {
     if (!this.joinedAt) this.joinedAt = Date.now();
     if (this.isHost) return;
-    this.state('p2p', 'trying', '', '正在与房主交换连接信息');
+    this.state('p2p', 'trying', '', t('voxlink.engine.state.exchanging_info'));
     this.later(
       () => {
-        if (this.mode === 'p2p' && !this.winner.has('host')) this.stage('turn', 'degraded', '现在可由你选择使用 TURN 中继');
+        if (this.mode === 'p2p' && !this.winner.has('host')) this.stage('turn', 'degraded', t('voxlink.engine.state.turn_available'));
       },
       Math.max(0, 20000 - (Date.now() - this.joinedAt))
     );
   } // ConnectionManager.java: getPunchUiStartMs; UI TURN threshold 20s
   async sendSignal(type: string, data: Data, to: string): Promise<void> {
-    if (!this.session || this.session.isDone()) throw new Error('房间已退出');
+    if (!this.session || this.session.isDone()) throw new Error(t('voxlink.engine.error.room_left'));
     await this.session.request('/signal/send', { type, data, ...(to ? { to } : {}) });
   }
   private drop(id: string): void {
@@ -527,7 +528,7 @@ export class ConnEngine extends EventEmitter {
       socket = await punchListen(this.isHost && !reverse ? this.hostPort : 0);
     if (epoch !== this.generation || !this.session) {
       socket.close();
-      throw new Error('房间已退出');
+      throw new Error(t('voxlink.engine.error.room_left'));
     }
     const punch = new Puncher({ conn: socket, authKey: auth });
     const link: Link = {
@@ -550,8 +551,8 @@ export class ConnEngine extends EventEmitter {
     if (!probe) return link; // ConnectionManager.java: joiner_extra creates a socket without STUN.
     try {
       const samples = await stunSampleSeries(socket, STUN_SERVERS, 2, 1, 1000, link.controller.signal); // ConnectionManager.java: dual STUN, PROBE_SOCKET_TIMEOUT_MS
-      if (!this.alive(id, link)) throw new Error('连接已取消');
-      if (!samples.length) throw new Error('暂未探测到公网映射，将继续尝试；也可手动使用中继');
+      if (!this.alive(id, link)) throw new Error(t('voxlink.engine.error.connection_cancelled'));
+      if (!samples.length) throw new Error(t('voxlink.engine.error.no_mapping'));
       link.samples = samples;
       link.mapped = samples[samples.length - 1];
       link.delta = stunDeltaFromSamples(samples);
@@ -564,7 +565,7 @@ export class ConnEngine extends EventEmitter {
           link.samples = extra;
         } // ConnectionManager.java: P-PRE / calculatePortDelta (trimmed EMA, minimum 1); does not shift the STUN endpoint.
       }
-      if (!this.alive(id, link)) throw new Error('连接已取消');
+      if (!this.alive(id, link)) throw new Error(t('voxlink.engine.error.connection_cancelled'));
       return link;
     } catch (error) {
       if (this.links.get(id) === link) this.drop(id);
@@ -685,7 +686,9 @@ export class ConnEngine extends EventEmitter {
     this.stage(
       this.isHost ? 'host_punch' : relay ? 'relay' : 'punch',
       'active',
-      `正在建立${link.reverse ? '反向' : '直连'}通路 · 第 ${policy.round + 1} 轮`
+      t(link.reverse ? 'voxlink.engine.state.establishing_reverse' : 'voxlink.engine.state.establishing_direct', {
+        round: policy.round + 1,
+      })
     );
     try {
       const mappings = await this.addSockets(id, link, count, this.isHost || link.reverse);
@@ -803,13 +806,13 @@ export class ConnEngine extends EventEmitter {
           }
         });
         void startHostLazyBridge(rc, this.hostPort, this.deps.netLog).catch((error) => this.deps.netLog('warn', error.message));
-        this.stage('host_punch', 'ok', '玩家通路已建立，等待游戏连接');
+        this.stage('host_punch', 'ok', t('voxlink.engine.state.host_path_ready'));
       } else {
         const result = await TcpBridge.startGuest(rc, () => {
           if (this.links.get(id) === link) {
             this.winner.delete(link.peer);
             this.drop(id);
-            this.state(relay ? 'prelay' : 'p2p', 'failed', '', '游戏通路已关闭');
+            this.state(relay ? 'prelay' : 'p2p', 'failed', '', t('voxlink.engine.state.game_path_closed'));
             this.reconnect();
           }
         });
@@ -820,8 +823,13 @@ export class ConnEngine extends EventEmitter {
         link.bridge = result.bridge;
         this.turn.stop();
         this.relayPending = false;
-        this.state(relay ? 'prelay' : 'p2p', 'success', result.addr, relay ? '玩家中继已连接' : '连接成功，请在游戏中输入下方地址');
-        this.stage(relay ? 'relay' : 'punch', 'ok', '游戏地址已就绪');
+        this.state(
+          relay ? 'prelay' : 'p2p',
+          'success',
+          result.addr,
+          relay ? t('voxlink.engine.state.player_relay_connected') : t('voxlink.engine.state.connected_enter_address')
+        );
+        this.stage(relay ? 'relay' : 'punch', 'ok', t('voxlink.engine.state.game_address_ready'));
         void this.sendSignal('connected', {}, 'host').catch((error) => this.deps.netLog('warn', error.message));
       }
     } catch (error) {
@@ -833,7 +841,7 @@ export class ConnEngine extends EventEmitter {
       this.stage(
         this.isHost ? 'host_punch' : relay ? 'relay' : 'punch',
         'retry',
-        policy.terminal ? '未收到对方回应，可手动选择中继' : '本轮未连通，继续尝试'
+        policy.terminal ? t('voxlink.engine.state.retry_manual_relay') : t('voxlink.engine.state.retry_continue')
       );
       if (!this.isHost && !relay) {
         // ConnectionManager.java: Wave 2 follows a UDP failure; direct TCP never selects TURN.
@@ -872,7 +880,7 @@ export class ConnEngine extends EventEmitter {
       return;
     this.creating.add(from);
     try {
-      this.stage('host_stun', 'active', '正在探测网络');
+      this.stage('host_stun', 'active', t('voxlink.engine.state.probing_network'));
       const caps = Array.isArray(data.clientCapabilities)
         ? data.clientCapabilities
         : Array.isArray(data.capabilities)
@@ -900,7 +908,7 @@ export class ConnEngine extends EventEmitter {
         },
         from
       ); // ConnectionManager.java: offer RTT sync 3000ms
-      this.stage('host_stun', 'ok', '网络探测完成，等待玩家回应');
+      this.stage('host_stun', 'ok', t('voxlink.engine.state.probe_done_wait_peer'));
     } finally {
       this.creating.delete(from);
     }
@@ -908,17 +916,17 @@ export class ConnEngine extends EventEmitter {
   private async guestOffer(data: Data): Promise<void> {
     if (this.creating.has('host') || this.links.get('host')?.started || this.winner.has('host') || this.mode !== 'p2p') return;
     this.creating.add('host');
-    this.stage('stun', 'active', '正在探测网络');
+    this.stage('stun', 'active', t('voxlink.engine.state.probing_network'));
     try {
       const auth = this.room?.hostCapabilities?.includes('punchAuthV1') ? derivePunchKey(this.code, this.clientID) : null;
       const link = await this.prepare('host', auth),
         policy = this.policy('host');
       const remoteNat: NatClass = data.hostSymmetric === true ? (data.hostEasySym === true ? 'EASY_SYM' : 'HARD_SYM') : 'CONE';
       policy.classify(link.nat, remoteNat, link.samples.length);
-      this.stage('stun', 'ok', '网络探测完成');
+      this.stage('stun', 'ok', t('voxlink.engine.state.probe_done'));
       const strategy = selectStrategy(link.nat, remoteNat, policy.cycle, false),
         target = endpoint(data, 'hostMapped');
-      if (!target) throw new Error('房主网络地址尚未就绪');
+      if (!target) throw new Error(t('voxlink.engine.error.host_address_not_ready'));
       this.tcpPeerIp = target.ip;
       // ConnectionManager.java: Wave 1 LAN/CGNAT and IPv6 race alongside UDP.
       const localIp = String(data.hostLocalIp ?? ''),
@@ -983,7 +991,7 @@ export class ConnEngine extends EventEmitter {
         this.turn.peerLeft(from);
         if (!this.isHost && from === 'host') {
           this.mode = 'direct';
-          this.state('p2p', 'failed', '', '对方已结束连接，请退出后重新加入');
+          this.state('p2p', 'failed', '', t('voxlink.engine.state.peer_ended'));
         }
         return;
       }
@@ -1024,7 +1032,7 @@ export class ConnEngine extends EventEmitter {
         this.turn.peerLeft(from);
         if (this.isHost) await this.hostOffer(from);
         else {
-          this.state('p2p', 'trying', '', '对端请求重新建立连接');
+          this.state('p2p', 'trying', '', t('voxlink.engine.state.peer_reconnect_request'));
           this.reconnect();
         }
         return;
@@ -1088,7 +1096,7 @@ export class ConnEngine extends EventEmitter {
         }
         if (type === 'relay_declined') {
           this.relayPending = false;
-          this.state('prelay', 'failed', '', '当前没有可用的玩家中继');
+          this.state('prelay', 'failed', '', t('voxlink.engine.state.no_player_relay'));
         }
         if (type === 'relay_notify' && !data.connected && this.mode === 'prelay') {
           const remote = endpoint(data, 'relay');
@@ -1188,17 +1196,17 @@ export class ConnEngine extends EventEmitter {
       if (epoch === this.generation) {
         this.drop(id);
         await this.sendSignal('relay_declined', { forClientId: targetId }, 'host').catch(() => {});
-        this.deps.netLog('info', '玩家中继探测未命中：' + (error as Error).message);
+        this.deps.netLog('info', t('voxlink.engine.log.relay_punch_miss', { error: (error as Error).message }));
       }
     }
   }
   usePlayerRelay(): { ok: boolean; err?: string } {
-    if (!this.session || this.isHost) return { ok: false, err: '请先加入房间' };
-    if (this.relayPending) return { ok: false, err: '正在请求玩家中继' };
+    if (!this.session || this.isHost) return { ok: false, err: t('voxlink.engine.error.join_room_first') };
+    if (this.relayPending) return { ok: false, err: t('voxlink.engine.error.relay_pending') };
     this.mode = 'prelay';
     this.stopPeerPunching('host');
     this.relayPending = true;
-    this.state('prelay', 'trying', '', '正在寻找玩家中继');
+    this.state('prelay', 'trying', '', t('voxlink.engine.state.finding_player_relay'));
     void this.sendSignal('relay_request', {}, 'host').catch((error) => {
       this.relayPending = false;
       this.state('prelay', 'failed', '', error.message);
@@ -1206,19 +1214,19 @@ export class ConnEngine extends EventEmitter {
     this.later(() => {
       if (this.relayPending) {
         this.relayPending = false;
-        this.state('prelay', 'failed', '', '玩家中继请求超时，可尝试 TURN');
+        this.state('prelay', 'failed', '', t('voxlink.engine.state.relay_request_timeout'));
       }
     }, 20000);
     return { ok: true };
   }
   async useTurnRelay(): Promise<void> {
-    if (!this.session || this.isHost) throw new Error('请先加入房间');
+    if (!this.session || this.isHost) throw new Error(t('voxlink.engine.error.join_room_first'));
     if (this.winner.has('host') || this.turn.busy()) return;
-    if (!this.joinedAt || Date.now() - this.joinedAt < 20000) throw new Error('连接尝试 20 秒后可选择 TURN 中继'); // ConnectionManager.java: getPunchUiStartMs
+    if (!this.joinedAt || Date.now() - this.joinedAt < 20000) throw new Error(t('voxlink.engine.error.turn_not_ready')); // ConnectionManager.java: getPunchUiStartMs
     this.mode = 'turn';
     this.reconnectPending = false;
     this.stopPeerPunching('host');
-    this.state('turn', 'trying', '', '正在建立你选择的 TURN 中继');
+    this.state('turn', 'trying', '', t('voxlink.engine.state.establishing_turn'));
     await this.turn.startGuest();
   }
   acceptSignal(type: string, from: string): boolean {
@@ -1231,10 +1239,11 @@ export class ConnEngine extends EventEmitter {
     return this.knownPeers.has(from);
   }
   tryDirect(): { ok: boolean; err?: string } {
-    if (!this.session || this.isHost || !net.isIP(this.hostIp) || !this.hostPort) return { ok: false, err: '当前房间没有有效直连地址' };
+    if (!this.session || this.isHost || !net.isIP(this.hostIp) || !this.hostPort)
+      return { ok: false, err: t('voxlink.engine.error.no_direct_address') };
     const epoch = this.generation;
     const socket = net.createConnection({ host: this.hostIp, port: this.hostPort });
-    this.state('direct', 'trying', '', '正在测试直连');
+    this.state('direct', 'trying', '', t('voxlink.engine.state.testing_direct'));
     let finished = false;
     const finish = (ok: boolean) => {
       if (finished) return;
@@ -1246,7 +1255,7 @@ export class ConnEngine extends EventEmitter {
           'direct',
           ok ? 'success' : 'failed',
           ok ? `${net.isIP(this.hostIp) === 6 ? '[' + this.hostIp + ']' : this.hostIp}:${this.hostPort}` : '',
-          ok ? '直连可用' : '直连不可用'
+          ok ? t('voxlink.engine.state.direct_ok') : t('voxlink.engine.state.direct_failed')
         );
     };
     const timer = setTimeout(() => finish(false), 3000);
@@ -1328,7 +1337,7 @@ export class VoxlinkApp {
           attempt >= JOIN_RETRY_BACKOFF_MS.length
         )
           throw error;
-        this.netLog('warn', `加入暂时失败 (${error.code})，将进行第 ${attempt + 2}/3 次尝试`);
+        this.netLog('warn', t('voxlink.engine.log.join_retry', { code: error.code, attempt: attempt + 2 }));
         await delay(JOIN_RETRY_BACKOFF_MS[attempt], undefined, { signal });
       }
     }
@@ -1411,7 +1420,7 @@ export class VoxlinkApp {
     return (await this.api.get(this.baseURL(), '/room/info', { code })) as Data;
   }
   private begin(): number {
-    if (this.pending || this.engine.session) throw new APIError('SESSION_ACTIVE', '请先退出当前房间');
+    if (this.pending || this.engine.session) throw new APIError('SESSION_ACTIVE', t('voxlink.engine.error.exit_room_first'));
     this.operationController.abort();
     this.operationController = new AbortController();
     this.pending = true;
@@ -1420,7 +1429,7 @@ export class VoxlinkApp {
   private async accept(epoch: number, code: string, token: string, isHost: boolean, room: RoomInfo, clientId = ''): Promise<void> {
     if (epoch !== this.operation) {
       void this.api.post(this.baseURL(), '/room/leave', { code, token, isHost }).catch(() => {});
-      throw new Error('操作已取消');
+      throw new Error(t('voxlink.engine.error.operation_cancelled'));
     }
     this.room = room;
     this.state = isHost ? 'hosting' : 'in_room';
@@ -1460,7 +1469,7 @@ export class VoxlinkApp {
     try {
       const name = normalizeVoxlinkRoomName(req.name);
       await probeHostPort(req.hostPort);
-      if (epoch !== this.operation) throw new Error('操作已取消');
+      if (epoch !== this.operation) throw new Error(t('voxlink.engine.error.operation_cancelled'));
       const result = (await this.api.post(
         this.baseURL(),
         '/room/create',
@@ -1503,7 +1512,7 @@ export class VoxlinkApp {
     this.joinEnvironment = { loader: req.loader, gameVersion: req.gameVersion };
     try {
       const code = req.code.trim().toUpperCase();
-      if (!validateRoomCode(code)) throw new APIError('INVALID_PARAMS', '请输入有效的六位房间码');
+      if (!validateRoomCode(code)) throw new APIError('INVALID_PARAMS', t('voxlink.engine.error.invalid_room_code'));
       const result = await this.requestJoin(code, req.password, this.operationController.signal);
       result.room = { ...result.room, code, isHost: false };
       await this.accept(epoch, code, result.clientToken, false, result.room, result.clientId);
@@ -1512,8 +1521,8 @@ export class VoxlinkApp {
       if (epoch === this.operation) this.pending = false;
     }
   }
-  async leaveRoom(reason = '用户退出房间'): Promise<{ left: boolean }> {
-    this.netLog('info', '退出房间：' + reason.slice(0, 100));
+  async leaveRoom(reason = t('voxlink.engine.log.leave_reason_default')): Promise<{ left: boolean }> {
+    this.netLog('info', t('voxlink.engine.log.leaving_room', { reason: reason.slice(0, 100) }));
     this.operation++;
     this.operationController.abort();
     this.pending = false;
@@ -1533,7 +1542,7 @@ export class VoxlinkApp {
     return { state: this.state, room: this.room, code: this.engine.code, token: this.engine.token, isHost: this.engine.isHost };
   }
   async sendRoomUpdate(value: { name?: string; category?: string; visible?: boolean; password?: string }): Promise<void> {
-    if (!this.engine.session || !this.engine.isHost) throw new Error('只有房主可以修改房间');
+    if (!this.engine.session || !this.engine.isHost) throw new Error(t('voxlink.engine.error.host_only_update'));
     await this.api.post(this.baseURL(), '/room/update', { ...value, code: this.engine.code, token: this.engine.token, isHost: true });
   }
   async getRoomMods(code: string): Promise<Data> {
@@ -1549,7 +1558,7 @@ export class VoxlinkApp {
     return (await this.api.get(this.baseURL(), '/stun', {})) as Data;
   }
   async openInBrowser(url: string): Promise<void> {
-    if (!validateServerURL(url)) throw new Error('链接无效');
+    if (!validateServerURL(url)) throw new Error(t('voxlink.engine.error.invalid_link'));
     const { shell } = await import('electron');
     await shell.openExternal(url);
   }

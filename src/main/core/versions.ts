@@ -47,6 +47,7 @@ import {
   withGameFolder,
 } from './paths';
 import { ensureInstanceThumbnail, removeInstanceThumbnail } from './appearanceAssets';
+import { translate as t } from '../../shared/i18n';
 
 export type ProgressEmit = (e: ProgressEvent) => void;
 
@@ -179,10 +180,12 @@ export async function fetchVersionManifest(_mirror: MirrorPref, refresh = false,
 
 /** 同步读取本地版本 json（容错 BOM 头）；versions/ 没有时回退到 .faionyx/base 依赖原版区 */
 export function readVersionJson(id: string): VersionJson {
-  if (typeof id !== 'string' || !id || id === '.' || id === '..' || /[\\/:\x00]/.test(id)) throw new Error('无效的版本 ID');
+  if (typeof id !== 'string' || !id || id === '.' || id === '..' || /[\\/:\x00]/.test(id))
+    throw new Error(t('versions.error.invalid_version_id'));
   let p = versionJsonPath(id);
   if (!fs.existsSync(p) && fs.existsSync(baseVersionJsonPath(id))) p = baseVersionJsonPath(id);
-  if (fs.lstatSync(p).isSymbolicLink() || fs.lstatSync(path.dirname(p)).isSymbolicLink()) throw new Error('版本文件不能使用符号链接');
+  if (fs.lstatSync(p).isSymbolicLink() || fs.lstatSync(path.dirname(p)).isSymbolicLink())
+    throw new Error(t('versions.error.version_symlink'));
   const raw = fs.readFileSync(p, 'utf-8');
   return JSON.parse(raw.replace(/^﻿/, '')) as VersionJson;
 }
@@ -199,7 +202,7 @@ export async function getVersionJson(versionId: string, dest?: string, signal?: 
       manifest = await fetchVersionManifest(mirror, true, signal);
       entry = manifest.find((v) => v.id === versionId);
     }
-    if (!entry) throw new Error(`版本清单中找不到 ${versionId}`);
+    if (!entry) throw new Error(t('versions.error.manifest_missing', { id: versionId }));
     fs.mkdirSync(path.dirname(jsonPath), { recursive: true });
     await downloadFile(entry.url, jsonPath, undefined, undefined, mirror, signal);
   }
@@ -341,14 +344,14 @@ async function installVanillaUnlocked(
   const jarPath = path.join(dir, `${finalId}.jar`);
   const mark = path.join(dir, '.installing');
   const mirror = getSettings().mirror;
-  const sourceText = mirror === 'bmclapi' ? 'BMCLAPI 镜像' : '官方源';
+  const sourceText = mirror === 'bmclapi' ? t('versions.label.mirror_bmclapi') : t('versions.label.mirror_official');
 
   // 事务标记：安装开始打标，全部成功才移除；失败由 cleanupPartialInstall 清理
   fs.mkdirSync(dir, { recursive: true });
   if (dest === 'versions') registerVersionFolder(finalId, gameDir()); // 新版本注册到当前活动文件夹
   fs.writeFileSync(mark, new Date().toISOString(), 'utf-8');
   try {
-    emit({ stage: 'version-json', progress: 0, text: `获取版本信息 ${versionId}`, source: sourceText });
+    emit({ stage: 'version-json', progress: 0, text: t('versions.state.fetch_version', { id: versionId }), source: sourceText });
     const vj = await getVersionJson(versionId, jsonPath, signal);
     // 自定义实例名：json id 同步改写，并记录真实 MC 版本供修复/Java 推断
     if (finalId !== versionId) {
@@ -359,12 +362,12 @@ async function installVanillaUnlocked(
 
     const parallel = new ParallelProgress(
       [
-        { id: 'libraries', label: '依赖库', weight: 0.34 },
-        { id: 'client', label: '游戏本体', weight: 0.17 },
-        { id: 'assets', label: '资源文件', weight: 0.27 },
+        { id: 'libraries', label: t('versions.label.libraries'), weight: 0.34 },
+        { id: 'client', label: t('versions.label.client'), weight: 0.17 },
+        { id: 'assets', label: t('versions.label.assets'), weight: 0.27 },
       ],
       emit,
-      '同步下载游戏本体、依赖库与资源',
+      t('versions.state.sync_download'),
       [0.04, 0.82]
     );
     await runParallelTasks(
@@ -378,11 +381,11 @@ async function installVanillaUnlocked(
                 const libTasks = libraryTasks(vj);
                 await downloadAll(
                   libTasks,
-                  (d, t, speed, detail) =>
+                  (d, total, speed, detail) =>
                     emit({
                       stage: 'libraries',
                       progress: detail.fraction ?? 0,
-                      text: `下载依赖库 ${d}/${t}`,
+                      text: t('versions.state.download_libraries', { done: d, total }),
                       speed,
                       etaSeconds: detail.etaSeconds ?? undefined,
                       bytesDone: detail.bytesDone,
@@ -420,7 +423,7 @@ async function installVanillaUnlocked(
                         indeterminate: detail.indeterminate,
                         speed,
                         etaSeconds: detail.etaSeconds ?? undefined,
-                        text: '下载游戏本体 ' + fmtMB(detail.bytesDone),
+                        text: t('versions.state.download_client', { size: fmtMB(detail.bytesDone) }),
                         source: sourceText,
                       }),
                     getSettings().downloadThreads,
@@ -439,7 +442,7 @@ async function installVanillaUnlocked(
         },
         async (signal) => {
           const emit: ProgressEmit = (event) => parallel.update('assets', event);
-          emit({ stage: 'assets', progress: 0, text: '获取资源索引' });
+          emit({ stage: 'assets', progress: 0, text: t('versions.state.fetch_assets_index') });
           // 3. 资源索引与资源文件
           if (vj.assetIndex?.url) {
             const idxPath = assetIndexPath(vj.assetIndex.id);
@@ -472,11 +475,11 @@ async function installVanillaUnlocked(
             }
             await downloadAll(
               tasks,
-              (d, t, speed, detail) =>
+              (d, total, speed, detail) =>
                 emit({
                   stage: 'assets',
                   progress: detail.fraction ?? 0,
-                  text: `下载资源文件 ${d}/${t}`,
+                  text: t('versions.state.download_assets', { done: d, total }),
                   speed,
                   etaSeconds: detail.etaSeconds ?? undefined,
                   bytesDone: detail.bytesDone,
@@ -491,7 +494,7 @@ async function installVanillaUnlocked(
 
             // legacy 版本需要把资源复制到 assets/virtual/legacy 下
             if (idx.virtual === true || idx.map_to_resources === true) {
-              emit({ stage: 'assets', progress: 1, text: '复制 legacy 资源' });
+              emit({ stage: 'assets', progress: 1, text: t('versions.state.copy_legacy') });
               let copied = 0;
               for (const [name, o] of Object.entries(objects)) {
                 throwIfCancelled(signal);
@@ -515,8 +518,8 @@ async function installVanillaUnlocked(
 
     emit(
       finalEvent
-        ? { stage: 'done', progress: 1, text: `校验完成，${versionId} 安装成功` }
-        : { stage: 'assets', progress: 1, text: `原版 ${versionId} 依赖准备完成` }
+        ? { stage: 'done', progress: 1, text: t('versions.state.install_done', { id: versionId }) }
+        : { stage: 'assets', progress: 1, text: t('versions.state.deps_ready', { id: versionId }) }
     );
     // 全部步骤成功：移除事务标记
     fs.rmSync(mark, { force: true });
@@ -583,7 +586,7 @@ async function installVersionInFolder(
     if (!loaderVersion) {
       const list = await listLoaderVersions(opts.loader, versionId, signal);
       loaderVersion = list[0];
-      if (!loaderVersion) throw new Error(`${opts.loader} 没有适配 ${versionId} 的版本`);
+      if (!loaderVersion) throw new Error(t('versions.error.loader_no_version', { loader: opts.loader, version: versionId }));
     }
     const installedId = await installLoader(opts.loader, versionId, loaderVersion, prepareReport, opts.instanceName, signal);
     // 必须先确定最终游戏目录，再安装附加模组；失败时直接报错，不能写入共享目录兜底。
@@ -599,23 +602,23 @@ async function installVersionInFolder(
       const mods = path.join(instanceDirectoryState(installedId, readVersionJson(installedId)).path, 'mods');
       try {
         await installRecordingMods(mods, recordingFiles, signal, (fraction) =>
-          report({ stage: 'download', progress: fraction, text: '下载并校验所选模组与必要前置' })
+          report({ stage: 'download', progress: fraction, text: t('versions.state.download_mods') })
         );
         await finishFavorites(installedId);
       } catch (e) {
         if (signal?.aborted) throw e;
         const { recordSupplementalFailure } = await import('./supplementalMods');
         recordSupplementalFailure({ folder: gameDir(), id: installedId }, versionId, opts, e);
-        throw new Error(`${installedId} 基础实例已保留；附加模组安装失败，请选择重试或保留基础实例：${e instanceof Error ? e.message : e}`);
+        throw new Error(t('versions.error.supplemental_failed', { id: installedId, error: e instanceof Error ? e.message : String(e) }));
       }
     } else await finishFavorites(installedId);
-    report({ stage: 'done', progress: 1, text: `${installedId} 安装完成` });
+    report({ stage: 'done', progress: 1, text: t('versions.state.installed', { id: installedId }) });
     return installedId;
   }
   const installedId = await installVanilla(versionId, prepareReport, 'versions', opts.instanceName, signal);
   if (isolated) setNewInstanceIsolation(installedId, true);
   await finishFavorites(installedId);
-  report({ stage: 'done', progress: 1, text: `${installedId} 安装完成` });
+  report({ stage: 'done', progress: 1, text: t('versions.state.installed', { id: installedId }) });
   return installedId;
 }
 
@@ -637,7 +640,7 @@ export function resolveVersionChain(id: string): { merged: VersionJson; baseId: 
   let cur: VersionJson | null = readVersionJson(id);
   const seen = new Set<string>();
   while (cur) {
-    if (seen.has(cur.id) || chain.length >= 32) throw new Error('版本继承链循环或过长');
+    if (seen.has(cur.id) || chain.length >= 32) throw new Error(t('versions.error.chain_cycle'));
     seen.add(cur.id);
     chain.push(cur);
     cur = cur.inheritsFrom ? readVersionJson(cur.inheritsFrom) : null;
@@ -719,10 +722,10 @@ export async function migrateFlattenedInstances(log: (msg: string) => void = () 
         if (!j.inheritsFrom) continue;
         if (flattenInstance(name)) {
           count++;
-          log(`实例「${name}」已合并为自包含实例（原依赖 ${j.inheritsFrom}）`);
+          log(t('versions.log.flattened', { name, parent: j.inheritsFrom ?? '' }));
         }
       } catch (e) {
-        log(`实例「${name}」合并失败（保留旧式继承，不影响启动）：${e instanceof Error ? e.message : String(e)}`);
+        log(t('versions.log.flatten_failed', { name, error: e instanceof Error ? e.message : String(e) }));
       }
     }
   }
@@ -733,16 +736,19 @@ export async function migrateFlattenedInstances(log: (msg: string) => void = () 
 export async function installClientJarOnly(id: string, emit: ProgressEmit, signal?: AbortSignal): Promise<void> {
   const j = readVersionJson(id);
   const client = j.downloads?.client;
-  if (!client?.url) throw new Error('实例 json 缺少客户端下载信息，无法自动补全');
+  if (!client?.url) throw new Error(t('versions.error.client_download_missing'));
   const mirror = getSettings().mirror;
   await downloadFile(
     client.url,
     versionJarPath(id),
-    (d, t) =>
+    (d, total) =>
       emit({
         stage: 'client',
-        progress: t ? d / t : 0,
-        text: `下载游戏本体 ${(d / 1024 / 1024).toFixed(1)}MB${t ? '/' + (t / 1024 / 1024).toFixed(1) + 'MB' : ''}`,
+        progress: total ? d / total : 0,
+        text: t('versions.state.download_client_size', {
+          done: (d / 1024 / 1024).toFixed(1),
+          total: total ? '/' + (total / 1024 / 1024).toFixed(1) + 'MB' : '',
+        }),
       }),
     client.sha1,
     mirror,
@@ -805,7 +811,7 @@ export function scanInstalledFolder(
   } catch (error) {
     return {
       versions: out,
-      errors: [`无法读取 versions：${error instanceof Error ? error.message : String(error)}`],
+      errors: [t('versions.error.read_versions', { error: error instanceof Error ? error.message : String(error) })],
     };
   }
   // 只有活动根目录写入运行时寻址表；全局诊断扫描不能污染当前实例映射。
@@ -816,8 +822,8 @@ export function scanInstalledFolder(
     const name = entry.name;
     const jp = versionJsonInFolder(root, name);
     if (!fs.existsSync(jp)) {
-      out.push({ id: name, mcVersion: '未知', folder: root, incomplete: true });
-      errors.push(`${name}：缺少版本描述 ${name}.json`);
+      out.push({ id: name, mcVersion: t('version.unknown'), folder: root, incomplete: true });
+      errors.push(t('versions.error.missing_descriptor', { name }));
       continue;
     }
     try {
@@ -873,7 +879,7 @@ export function scanInstalledFolder(
       item.isolationReason = directory.reason;
       if (resolved.broken) {
         item.incomplete = true;
-        errors.push(`${name}：继承的版本 ${j.inheritsFrom ?? '未知'} 缺失或损坏`);
+        errors.push(t('versions.error.parent_missing', { name, parent: j.inheritsFrom ?? t('versions.label.unknown') }));
       }
       if (!j.inheritsFrom) {
         const jar = path.join(dir, name, `${name}.jar`);
@@ -882,8 +888,8 @@ export function scanInstalledFolder(
       if (fs.existsSync(path.join(dir, name, '.installing'))) item.failed = true;
       out.push(item);
     } catch (error) {
-      out.push({ id: name, mcVersion: '未知', folder: root, incomplete: true });
-      errors.push(`${name}：版本描述损坏（${error instanceof Error ? error.message : String(error)}）`);
+      out.push({ id: name, mcVersion: t('version.unknown'), folder: root, incomplete: true });
+      errors.push(t('versions.error.descriptor_corrupt', { name, error: error instanceof Error ? error.message : String(error) }));
     }
   }
   return { versions: sortInstalled(out), errors };
@@ -916,15 +922,15 @@ export function listAllInstalled(): InstalledVersion[] {
 /** 实例名校验：非法字符与保留名（返回错误文案，合法返回 null） */
 export function validateInstanceName(name: string, excludeId?: string): string | null {
   const n = name.trim();
-  if (!n) return '实例名不能为空';
-  if (n.length > 64) return '实例名过长（最多 64 字符）';
-  if (/[\\/:*?"<>|]/.test(n)) return '实例名不能包含 \\ / : * ? " < > | 字符';
-  if (/^[.\s]|[.\s]$/.test(n)) return '实例名不能以空格或点开头/结尾';
-  if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(n)) return '实例名为系统保留名';
+  if (!n) return t('versions.error.instance_name_empty');
+  if (n.length > 64) return t('versions.error.instance_name_too_long');
+  if (/[\\/:*?"<>|]/.test(n)) return t('versions.error.instance_name_invalid_chars');
+  if (/^[.\s]|[.\s]$/.test(n)) return t('versions.error.instance_name_whitespace');
+  if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(n)) return t('versions.error.instance_name_reserved');
   if (n !== excludeId) {
     // 跨所有游戏文件夹查重
     for (const { dir } of allVersionsDirs()) {
-      if (fs.existsSync(path.join(dir, n))) return `实例「${n}」已存在，请换一个名字`;
+      if (fs.existsSync(path.join(dir, n))) return t('versions.error.instance_name_exists', { name: n });
     }
   }
   return null;
@@ -937,7 +943,7 @@ export function renameVersion(id: string, newName: string): void {
   const trimmed = newName.trim();
   const from = versionDir(id);
   const to = versionDir(trimmed);
-  if (!fs.existsSync(from)) throw new Error('实例不存在');
+  if (!fs.existsSync(from)) throw new Error(t('versions.error.instance_missing'));
   if (from === to) return;
   // 更新 json 内 id 字段（先读改写，再移动目录，避免中间态）；
   // 原版实例改名前记录真实 MC 版本 id（_mcVersion），改名后修复/Java 推断仍可用
@@ -968,19 +974,19 @@ export function renameVersion(id: string, newName: string): void {
   } catch (e) {
     const code = (e as NodeJS.ErrnoException).code;
     if (code === 'EBUSY' || code === 'EPERM' || code === 'ENOTEMPTY') {
-      throw new Error('文件夹正被占用（游戏运行中或被其他程序打开），请关闭后重试');
+      throw new Error(t('versions.error.folder_busy'));
     }
     throw e;
   }
 }
 export async function removeVersion(id: string, requestedFolder?: string): Promise<void> {
   const folder = requestedFolder || folderOfVersion(id);
-  if (!getSettings().folders.some((f) => samePath(f.path, folder))) throw new Error('游戏文件夹尚未登记');
+  if (!getSettings().folders.some((f) => samePath(f.path, folder))) throw new Error(t('versions.error.folder_unregistered'));
   await withGameFolder(folder, async () => {
     const { assertInstanceIdle } = await import('./instanceCenter');
     const { getRunningVersionIds } = await import('./launch');
     // Also cover a preparing JVM and shared/custom game directories.
-    if (getRunningVersionIds().has(id)) throw new Error('该版本的游戏仍在运行或正在退出，请等待结束后重试');
+    if (getRunningVersionIds().has(id)) throw new Error(t('versions.error.version_running'));
     let json: VersionJson | undefined;
     try {
       json = readVersionJson(id);
@@ -1000,7 +1006,7 @@ export async function removeVersion(id: string, requestedFolder?: string): Promi
 /** 设置实例图标：'mob:<内置id>' / 'file:<文件名>' / '' 恢复默认；更换时清理旧的自定义图标文件 */
 export function setVersionIcon(id: string, icon: string): void {
   if (icon && !/^mob:[a-z0-9_]{1,32}$/.test(icon) && !/^file:[\w.-]{1,64}$/.test(icon)) {
-    throw new Error('非法的图标标识');
+    throw new Error(t('versions.error.invalid_icon'));
   }
   const jp = versionJsonPath(id);
   const j = readVersionJson(id);
@@ -1020,10 +1026,10 @@ export function setVersionIcon(id: string, icon: string): void {
 
 /** 设置实例专属启动卡缩略图；只接受该游戏文件夹受管目录中的已验证图片。 */
 export function setVersionThumbnail(id: string, imagePath: string, fit: ImageFit = 'crop'): void {
-  if (!['fill', 'fit', 'crop'].includes(fit)) throw new Error('非法的缩略图显示方式');
+  if (!['fill', 'fit', 'crop'].includes(fit)) throw new Error(t('versions.error.invalid_thumbnail_fit'));
   const folder = folderOfVersion(id);
   const managed = ensureInstanceThumbnail(imagePath, folder);
-  if (!managed) throw new Error('缩略图不在 FAIONYX 受管目录中或图片已损坏');
+  if (!managed) throw new Error(t('versions.error.thumbnail_unmanaged'));
   const jsonPath = versionJsonPath(id);
   const version = readVersionJson(id);
   const previous = version._thumbnail;
@@ -1034,11 +1040,11 @@ export function setVersionThumbnail(id: string, imagePath: string, fit: ImageFit
 }
 
 export function setVersionThumbnailFit(id: string, fit: ImageFit): void {
-  if (!['fill', 'fit', 'crop'].includes(fit)) throw new Error('非法的缩略图显示方式');
+  if (!['fill', 'fit', 'crop'].includes(fit)) throw new Error(t('versions.error.invalid_thumbnail_fit'));
   const jsonPath = versionJsonPath(id);
   const version = readVersionJson(id);
   if (!version._thumbnail || !ensureInstanceThumbnail(version._thumbnail, folderOfVersion(id))) {
-    throw new Error('该实例尚未设置有效缩略图');
+    throw new Error(t('versions.error.thumbnail_missing'));
   }
   version._thumbnailFit = fit;
   fs.writeFileSync(jsonPath, JSON.stringify(version, null, 2), 'utf-8');

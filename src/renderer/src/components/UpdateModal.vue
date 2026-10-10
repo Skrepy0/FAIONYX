@@ -8,6 +8,7 @@ import type { ReleaseInfo } from '@shared/types';
 import { QQ_GROUP_HINT } from '@shared/branding';
 import { renderMarkdownLite } from '../markdownLite';
 import { usePlatformUpdate } from '../composables/usePlatformUpdate';
+import { t } from '@renderer/i18n';
 const { systemInstaller, installAction, installExplanation } = usePlatformUpdate();
 
 const props = defineProps<{
@@ -36,7 +37,9 @@ const emit = defineEmits<{
 }>();
 
 const bodyHtml = computed(() =>
-  renderMarkdownLite((props.release.body || '').replace(/^\s*(?:#{1,4}\s*)?FAIONYX\s+v?[\d.]+\s*(?:\r?\n|$)/i, '').trim() || '暂无更新说明')
+  renderMarkdownLite(
+    (props.release.body || '').replace(/^\s*(?:#{1,4}\s*)?FAIONYX\s+v?[\d.]+\s*(?:\r?\n|$)/i, '').trim() || t('um.no_notes')
+  )
 );
 const dateText = computed(() => {
   const d = new Date(props.release.publishedAt);
@@ -53,23 +56,30 @@ const sizeText = computed(() => {
 
 <template>
   <UpdateDialogShell
-    :label="rollback ? '版本回退确认' : '启动器更新'"
+    :label="rollback ? t('um.rollback_label') : t('um.update_label')"
     @dismiss="state === 'found' ? emit('later') : state === 'done' ? emit('close') : undefined"
   >
     <template #header>
       <div class="upd-head">
         <div>
-          <p class="upd-eyebrow">FAIONYX · {{ rollback ? '版本回退' : '软件更新' }}</p>
+          <p class="upd-eyebrow">FAIONYX · {{ rollback ? t('um.rollback') : t('um.software_update') }}</p>
           <h3 class="upd-title">
-            {{ state === 'found' ? (rollback ? '回退到' : '发现新版本') : state === 'downloading' ? '正在下载' : '准备安装' }} v{{
-              release.version
+            {{
+              state === 'found'
+                ? rollback
+                  ? t('um.rollback_to')
+                  : t('um.new_version')
+                : state === 'downloading'
+                  ? t('um.downloading')
+                  : t('um.ready_install')
             }}
+            v{{ release.version }}
           </h3>
         </div>
         <button
           v-if="state !== 'downloading'"
           class="icon-btn"
-          :aria-label="state === 'found' ? '稍后提醒' : '关闭'"
+          :aria-label="state === 'found' ? t('um.later') : t('um.close')"
           @click="state === 'found' ? emit('later') : emit('close')"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -78,20 +88,16 @@ const sizeText = computed(() => {
         </button>
       </div>
       <div class="upd-meta">
-        <span>当前 v{{ currentVersion }}</span
+        <span>{{ t('um.current') }} v{{ currentVersion }}</span
         ><span v-if="dateText">{{ dateText }}</span
         ><span v-if="sizeText">{{ sizeText }}</span>
       </div>
     </template>
     <template v-if="state === 'found'">
       <p v-if="rollback" class="upd-slow">
-        {{
-          systemInstaller
-            ? '旧版本可能不兼容新配置，请先备份；系统安装器将请求安装确认。'
-            : '旧版本可能不兼容新配置。回退前会自动备份当前版本。'
-        }}
+        {{ systemInstaller ? t('um.rollback_warn_installer') : t('um.rollback_warn_backup') }}
       </p>
-      <h4 class="upd-section-title">{{ rollback ? '此版本说明' : '更新内容' }}</h4>
+      <h4 class="upd-section-title">{{ rollback ? t('um.this_version_notes') : t('um.update_notes') }}</h4>
       <div class="upd-body" v-html="bodyHtml"></div>
     </template>
     <template v-else-if="state === 'downloading'">
@@ -101,7 +107,7 @@ const sizeText = computed(() => {
       <div
         class="upd-progress"
         role="progressbar"
-        aria-label="更新下载进度"
+        :aria-label="t('um.download_progress')"
         :aria-valuenow="Math.round((percent ?? 0) * 100)"
         aria-valuemin="0"
         aria-valuemax="100"
@@ -112,27 +118,27 @@ const sizeText = computed(() => {
         <span>{{ bytesText }}</span
         ><span>{{ etaText }}</span>
       </p>
-      <p class="muted upd-note">下载进度同时显示在下载中心，支持断点续传。</p>
-      <p v-if="slowHint" class="upd-slow">下载速度持续偏低，可以通过下方备用方式获取安装包。</p>
+      <p class="muted upd-note">{{ t('um.download_center_note') }}</p>
+      <p v-if="slowHint" class="upd-slow">{{ t('um.slow_hint') }}</p>
     </template>
     <p v-else class="upd-done-text">{{ installExplanation }}</p>
     <details v-if="state !== 'done'" class="upd-help" :open="slowHint || undefined">
-      <p class="muted">如果旧桌面快捷方式失效，请重新指向更新后的文件。</p>
+      <p class="muted">{{ t('um.shortcut_note') }}</p>
     </details>
     <template #footer>
       <div class="upd-actions">
         <template v-if="state === 'found'"
-          ><button v-if="!rollback" class="upd-skip" @click="emit('skip')">跳过此版本</button>
+          ><button v-if="!rollback" class="upd-skip" @click="emit('skip')">{{ t('um.skip_version') }}</button>
           <div class="upd-actions-right">
-            <button class="btn btn-ghost" @click="emit('later')">稍后提醒</button
-            ><button class="btn btn-gold" @click="emit('updateNow')">{{ rollback ? '确认回退' : '立即更新' }}</button>
+            <button class="btn btn-ghost" @click="emit('later')">{{ t('um.later') }}</button
+            ><button class="btn btn-gold" @click="emit('updateNow')">{{ rollback ? t('um.confirm_rollback') : t('um.update_now') }}</button>
           </div></template
         >
         <div v-else-if="state === 'downloading'" class="upd-actions-right">
-          <button class="btn btn-ghost" @click="emit('cancelDownload')">取消下载</button>
+          <button class="btn btn-ghost" @click="emit('cancelDownload')">{{ t('um.cancel_download') }}</button>
         </div>
         <div v-else class="upd-actions-right">
-          <button class="btn btn-ghost" @click="emit('close')">稍后</button
+          <button class="btn btn-ghost" @click="emit('close')">{{ t('um.later_short') }}</button
           ><button class="btn btn-gold" @click="emit('installNow')">{{ installAction }}</button>
         </div>
       </div>

@@ -4,6 +4,7 @@ import type { SupplementalFailure } from '@shared/supplementalMods';
 import { store, toast, refreshInstalled } from '../store';
 import { errText } from '../api';
 import UpdateDialogShell from './UpdateDialogShell.vue';
+import { t } from '@renderer/i18n';
 const pending = ref<SupplementalFailure[]>([]),
   busy = ref(false),
   error = ref(''),
@@ -33,16 +34,21 @@ async function act(retry: boolean) {
     store.fsRefreshTick++;
     toast(
       result
-        ? `已安装 ${result.installed} 项收藏模组及 ${result.dependencies} 项必要前置，跳过 ${result.skipped.length} 项。模组目录：${result.modsDirectory}`
+        ? t('sr.installed_result', {
+            installed: result.installed,
+            dependencies: result.dependencies,
+            skipped: result.skipped.length,
+            dir: result.modsDirectory,
+          })
         : retry
-          ? '附加模组已安装完成'
-          : '已保留基础实例，可正常启动',
+          ? t('sr.install_done')
+          : t('sr.keep_base_result'),
       'success'
     );
     try {
       await refreshInstalled();
     } catch (e) {
-      toast('安装结果已保存，实例列表刷新失败，请刷新：' + errText(e), 'info');
+      toast(t('sr.refresh_failed', { error: errText(e) }), 'info');
     }
   } catch (e) {
     error.value = errText(e);
@@ -53,17 +59,17 @@ async function act(retry: boolean) {
 </script>
 <template>
   <button v-if="pending.length && hidden" class="btn btn-ghost supplemental-pending" @click="hidden = false">
-    附加模组待处理（{{ pending.length }}）</button
-  ><UpdateDialogShell v-if="pending.length && !hidden" label="附加模组未完成" @dismiss="!busy && (hidden = true)"
+    {{ t('sr.pending', { count: pending.length }) }}</button
+  ><UpdateDialogShell v-if="pending.length && !hidden" :label="t('sr.title')" @dismiss="!busy && (hidden = true)"
     ><section class="supplemental-result">
-      <h2>基础实例已保留</h2>
-      <p>{{ pending[0].target.id }} 已安装，但所选模组没有全部完成。</p>
+      <h2>{{ t('sr.base_kept') }}</h2>
+      <p>{{ t('sr.not_all_installed', { id: pending[0].target.id }) }}</p>
       <p class="failure" role="alert">{{ error || pending[0].message }}</p>
-      <p class="muted">重试会重新校验版本与依赖。保留基础实例后可照常启动，已有用户模组会保留。</p>
+      <p class="muted">{{ t('sr.retry_hint') }}</p>
       <div class="actions">
-        <button class="btn btn-gold" :disabled="busy" @click="act(true)">{{ busy ? '处理中…' : '重试附加模组' }}</button
-        ><button class="btn btn-ghost" :disabled="busy" @click="act(false)">保留基础实例</button
-        ><button class="btn btn-ghost" :disabled="busy" @click="hidden = true">稍后处理</button>
+        <button class="btn btn-gold" :disabled="busy" @click="act(true)">{{ busy ? t('sr.processing') : t('sr.retry_mods') }}</button
+        ><button class="btn btn-ghost" :disabled="busy" @click="act(false)">{{ t('sr.keep_base') }}</button
+        ><button class="btn btn-ghost" :disabled="busy" @click="hidden = true">{{ t('sr.later') }}</button>
       </div>
     </section></UpdateDialogShell
   >

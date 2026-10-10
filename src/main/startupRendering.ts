@@ -1,5 +1,6 @@
 import { ipcMain, type BrowserWindow } from 'electron';
 import { launcherLogWarn } from './core/launcherLog';
+import { translate as t } from '../shared/i18n';
 
 /** Windows can schedule an initially hidden compositor at ~1fps even with throttling disabled.
  * A tiny, discarded capture requests real frames while boot resources settle. It does not show
@@ -31,7 +32,7 @@ export function prepareStartupFrames(window: BrowserWindow): void {
       // Electron owns/relinquishes the capturer count; only one request may be in flight.
       await contents.capturePage({ x: 0, y: 0, width: 1, height: 1 });
     } catch (error) {
-      launcherLogWarn('startup', '首帧预绘制不可用，继续使用默认绘制流程', error);
+      launcherLogWarn('startup', t('startuprender.log.prewarm_failed'), error);
       stop();
       return;
     }

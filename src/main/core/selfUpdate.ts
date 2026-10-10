@@ -16,6 +16,7 @@ import type { ReleaseInfo, UpdateCheckResult } from '../../shared/types';
 import { httpFetch } from './httpClient';
 import { logScope } from './launcherLog';
 import { isolatedUpdateTest, trustedUpdateRelease, updateAssetName } from './updateTrust';
+import { translate as t } from '../../shared/i18n';
 
 const updateLog = logScope('self-update');
 
@@ -68,7 +69,7 @@ function writeCache(cache: CheckCache): void {
     fs.mkdirSync(path.dirname(cacheFile()), { recursive: true });
     fs.writeFileSync(cacheFile(), JSON.stringify({ ...cache, source: apiBase() }), 'utf-8');
   } catch (e) {
-    updateLog.debug('检查缓存写入失败（不影响功能）', e);
+    updateLog.debug(t('selfupdate.log.cache_write_failed'), e);
   }
 }
 
@@ -124,7 +125,7 @@ async function ghFetch(url: string, etag?: string): Promise<Response> {
       });
     } catch (e) {
       if (attempt === 1) throw e;
-      updateLog.debug('GitHub 请求失败，1.5s 后重试一次', e);
+      updateLog.debug(t('selfupdate.log.gh_retry'), e);
       await new Promise((r) => setTimeout(r, 1500));
     } finally {
       clearTimeout(timer);
@@ -155,7 +156,7 @@ export async function checkLatest(force = false): Promise<UpdateCheckResult> {
     }
     if (res.status === 403 || res.status === 429) {
       const remain = res.headers.get('x-ratelimit-remaining');
-      updateLog.info(`GitHub API 限流（remaining=${remain}），静默降级`);
+      updateLog.info(t('selfupdate.log.rate_limited', { remaining: String(remain) }));
       if (cache?.latest !== undefined) {
         const has = !!cache.latest && isNewerVersion(cache.latest.version, current);
         return { ok: true, hasUpdate: has, release: cache.latest ?? undefined, fromCache: true, reason: 'rate-limited' };
@@ -174,7 +175,7 @@ export async function checkLatest(force = false): Promise<UpdateCheckResult> {
     const has = !!latest && isNewerVersion(latest.version, current);
     return { ok: true, hasUpdate: has, release: latest ?? undefined };
   } catch (e) {
-    updateLog.info('更新检查失败（静默降级）', e);
+    updateLog.info(t('selfupdate.log.check_failed'), e);
     if (cache?.latest !== undefined) {
       const has = !!cache.latest && isNewerVersion(cache.latest.version, current);
       return { ok: true, hasUpdate: has, release: cache.latest ?? undefined, fromCache: true, reason: 'network' };
@@ -225,7 +226,7 @@ export async function listReleases(): Promise<ReleaseInfo[]> {
       .map(toReleaseInfo)
       .filter((r): r is ReleaseInfo => !!r && !!r.assetUrl);
   } catch (e) {
-    updateLog.info('获取历史版本列表失败', e);
+    updateLog.info(t('selfupdate.log.list_failed'), e);
     return [];
   }
 }

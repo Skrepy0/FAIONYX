@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
+import { t } from '@renderer/i18n';
 const props = defineProps<{ modelValue: string; versions: string[]; loading?: boolean }>();
 const emit = defineEmits<{ 'update:modelValue': [value: string]; change: [] }>();
 const input = ref<HTMLInputElement>(),
@@ -103,13 +104,13 @@ onBeforeUnmount(close);
       data-ui="CommunityView:df846b92dee0"
       v-model="text"
       class="input"
-      aria-label="Minecraft 版本"
+      :aria-label="t('common.minecraft_version')"
       role="combobox"
       aria-autocomplete="list"
       :aria-expanded="open"
       aria-controls="community-version-options"
       :aria-activedescendant="open && keyboardSelection ? 'community-version-option-' + active : undefined"
-      :placeholder="loading ? '加载版本列表…' : '全部版本'"
+      :placeholder="loading ? t('common.loading_versions') : t('common.all_versions')"
       @focus="
         keyboardSelection = false;
         show();
@@ -145,9 +146,9 @@ onBeforeUnmount(close);
           @pointerdown.prevent
           @click="choose(version)"
         >
-          {{ version || '全部版本' }}
+          {{ version || t('common.all_versions') }}
         </button>
-        <p v-if="options.length === 1 && text.trim()" class="muted">没有匹配项；按 Enter 使用输入版本</p>
+        <p v-if="options.length === 1 && text.trim()" class="muted">{{ t('common.no_version_match') }}</p>
       </div>
     </Teleport>
   </div>

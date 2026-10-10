@@ -14,6 +14,7 @@ import { fmlArgument, missingNeoRuntime, reuseExternalRuntimeLibraries } from '.
 import type { FabricApiVersion, LoaderName, ProgressEvent } from '../../shared/types';
 import { BMCL_MAVEN_ROOT, downloadAll, downloadFile, fetchSignal } from './download';
 import { isCancelError } from './tasks';
+import { translate as t } from '../../shared/i18n';
 import { downloadLoaderInstaller } from './installerDownload';
 import { prepareInstallerDependencies } from './installerDependencies';
 import { SmoothedSpeedEstimator } from './downloadProgress';
@@ -72,7 +73,7 @@ function compareVersionDesc(a: string, b: string): number {
 
 /** 获取加载器可用版本列表（最新在前）；signal 用于任务取消 */
 export async function listLoaderVersions(loader: LoaderName, mcVersion: string, signal?: AbortSignal): Promise<string[]> {
-  loaderLog.debug(`查询 ${loader} 可用版本列表（MC ${mcVersion}）`);
+  loaderLog.debug(t('loaders.log.list_query', { loader, mcVersion }));
   let list: string[];
   switch (loader) {
     case 'fabric': {
@@ -105,12 +106,12 @@ export async function listLoaderVersions(loader: LoaderName, mcVersion: string, 
           list = data.map((x) => (typeof x === 'string' ? x : ((x as { version?: string }).version ?? ''))).filter(Boolean);
           break;
         }
-        throw new Error('返回格式异常');
+        throw new Error(t('loaders.error.return_format'));
       } catch {
         // 取消不降级：直接抛「已取消」
-        if (signal?.aborted) throw new Error('已取消');
+        if (signal?.aborted) throw new Error(t('loaders.error.cancelled'));
         // 回退：解析 maven-metadata.xml，过滤 mc 前缀（1.20.4 -> 20.4）
-        loaderLog.warn(`NeoForge 列表接口不可用，回退解析 maven-metadata（MC ${mcVersion}）`);
+        loaderLog.warn(t('loaders.log.neoforge_fallback', { mcVersion }));
         const res = await fetch('https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml', {
           signal: fetchSignal(signal),
         });
@@ -139,9 +140,9 @@ async function pickJavaForInstaller(mcVersion: string, emit: ProgressEmit, signa
 function runInstaller(javaPath: string, jar: string, emit: ProgressEmit, signal?: AbortSignal, target = gameDir()): Promise<void> {
   // External Java installers rewrite launcher_profiles.json in their target folder.
   // Only this final installer phase is serialized; version/file downloads remain concurrent.
-  emit({ stage: 'loader-process', progress: 0, indeterminate: true, text: '等待同一游戏目录的安装器任务完成…' });
+  emit({ stage: 'loader-process', progress: 0, indeterminate: true, text: t('loaders.state.installer_wait_dir') });
   return withFileJob(path.join(target, '.faionyx-installer'), signal, () => {
-    emit({ stage: 'loader-process', progress: 0, indeterminate: true, text: '正在启动加载器安装器…' });
+    emit({ stage: 'loader-process', progress: 0, indeterminate: true, text: t('loaders.state.installer_starting') });
     return runInstallerUnlocked(javaPath, jar, emit, signal, target);
   });
 }
@@ -163,7 +164,7 @@ function runInstallerUnlocked(
 
   const runOnce = (args: string[]): Promise<void> =>
     new Promise((resolve, reject) => {
-      loaderLog.info(`运行 ${path.basename(jar)} 安装器（目标目录 ${target}）`);
+      loaderLog.info(t('loaders.log.run_installer', { jar: path.basename(jar), target }));
       const proc = spawn(javaPath, args, { windowsHide: true, cwd: target });
       let cancelled = false;
       let spawnError: Error | null = null;
@@ -189,7 +190,12 @@ function runInstallerUnlocked(
         tail = lines.pop() ?? '';
         for (const l of lines) if (l.trim()) allLines.push(l);
         const shortTail = lines.slice(-2).join(' ').slice(-160);
-        emit({ stage: 'loader-process', progress: 0, indeterminate: true, text: `生成加载器运行文件: ${shortTail || '处理中…'}` });
+        emit({
+          stage: 'loader-process',
+          progress: 0,
+          indeterminate: true,
+          text: t('loaders.state.installer_generating', { tail: shortTail || t('common.processing') }),
+        });
       };
       proc.stdout.on('data', onData);
       proc.stderr.on('data', onData);
@@ -206,30 +212,31 @@ function runInstallerUnlocked(
           fs.mkdirSync(logDir, { recursive: true });
           fs.writeFileSync(
             path.join(logDir, 'installer.log'),
-            allLines.join('\n') + `\n\n[退出码 ${code ?? '未知'}] ${args.join(' ')}\n`,
+            allLines.join('\n') +
+              `\n\n${t('loaders.log.exit_code_line', { code: code ?? t('loaders.label.unknown'), args: args.join(' ') })}\n`,
             'utf-8'
           );
         } catch {
           /* 日志写盘失败不影响流程 */
         }
-        if (cancelled || signal?.aborted) reject(new Error('已取消'));
+        if (cancelled || signal?.aborted) reject(new Error(t('loaders.error.cancelled')));
         else if (spawnError) {
-          loaderLog.error(`安装器进程异常：${String(spawnError)}`);
+          loaderLog.error(t('loaders.log.installer_spawn_error', { error: String(spawnError) }));
           reject(spawnError);
         } else if (code === 0) resolve();
         else {
           const last = allLines.slice(-30).join('\n');
-          loaderLog.error(`安装器失败（退出码 ${code ?? '未知'}），末尾输出：${last.slice(-400)}`);
-          reject(new Error(`安装器退出码 ${code}（完整日志见 faionyx-logs/installer.log）\n${last}`));
+          loaderLog.error(t('loaders.log.installer_failed', { code: code ?? t('loaders.label.unknown'), tail: last.slice(-400) }));
+          reject(new Error(t('loaders.error.installer_exit', { code: code ?? t('loaders.label.unknown'), tail: last })));
         }
       });
     });
 
   return runOnce(buildArgs(useMirror)).catch((err) => {
-    if (signal?.aborted || isCancelError(err)) throw new Error('已取消');
+    if (signal?.aborted || isCancelError(err)) throw new Error(t('loaders.error.cancelled'));
     if (!useMirror) throw err;
-    loaderLog.warn('镜像模式安装失败，改用官方源重试');
-    emit({ stage: 'loader', progress: 0.7, text: '镜像模式安装失败，改用官方源重试…' });
+    loaderLog.warn(t('loaders.log.mirror_retry'));
+    emit({ stage: 'loader', progress: 0.7, text: t('loaders.state.mirror_retry') });
     return runOnce(buildArgs(false));
   });
 }
@@ -240,12 +247,12 @@ export async function repairNeoRuntime(json: VersionJson, clientJar: string, bas
   if (!missingNeoRuntime(json, librariesDir()).length) return;
   const neo = fmlArgument(json, '--fml.neoForgeVersion'),
     mc = fmlArgument(json, '--fml.mcVersion');
-  if (!neo || !mc) throw new Error('NeoForge 本体库缺失，且启动元数据不完整；请修复该实例的加载器配置');
-  loaderLog.info(`检测到 NeoForge ${neo} 本体库缺失，启动修复流程（不修改实例内容）`);
+  if (!neo || !mc) throw new Error(t('loaders.error.neo_metadata_incomplete'));
+  loaderLog.info(t('loaders.log.neo_repair_start', { neo }));
   const staging = fs.mkdtempSync(path.join(os.tmpdir(), 'faionyx-runtime-repair-'));
   // Keep failed repair logs for diagnosis; successful workspaces contain no player data.
   const jar = path.join(staging, 'installer.jar');
-  emit({ stage: 'repair', progress: 0, text: `修复 NeoForge ${neo} 本体库（不修改实例内容）…` });
+  emit({ stage: 'repair', progress: 0, text: t('loaders.state.repair_neo', { neo }) });
   const vanilla = path.join(staging, 'versions', mc);
   fs.mkdirSync(vanilla, { recursive: true });
   fs.copyFileSync(clientJar, path.join(vanilla, mc + '.jar'));
@@ -261,7 +268,8 @@ export async function repairNeoRuntime(json: VersionJson, clientJar: string, bas
   );
   try {
     const mirror = getSettings().mirror;
-    const repairEmit: ProgressEmit = (event) => emit({ ...event, stage: 'repair', text: `修复 NeoForge：${event.text}` });
+    const repairEmit: ProgressEmit = (event) =>
+      emit({ ...event, stage: 'repair', text: t('loaders.state.repair_neo_prefix', { text: event.text }) });
     await downloadLoaderInstaller(
       `https://maven.neoforged.net/releases/net/neoforged/neoforge/${neo}/neoforge-${neo}-installer.jar`,
       jar,
@@ -270,7 +278,7 @@ export async function repairNeoRuntime(json: VersionJson, clientJar: string, bas
         repairEmit({
           stage: 'repair',
           progress: total ? done / total : 0,
-          text: '下载安装器 ' + (done / 1024 / 1024).toFixed(1) + 'MB',
+          text: t('loaders.state.download_installer', { size: (done / 1024 / 1024).toFixed(1) }),
           bytesDone: done,
           bytesTotal: total || undefined,
         })
@@ -285,11 +293,11 @@ export async function repairNeoRuntime(json: VersionJson, clientJar: string, bas
       tasks.map((t) => t.dest)
     );
     const missing = missingNeoRuntime(json, librariesDir());
-    if (missing.length) throw new Error(`安装器未生成必要本体库：${missing.join('、')}`);
+    if (missing.length) throw new Error(t('loaders.error.neo_libs_missing', { list: missing.join(t('common.list_separator')) }));
     fs.rmSync(staging, { recursive: true, force: true });
   } catch (error) {
-    loaderLog.error(`NeoForge ${neo} 本体修复失败（未改动存档）`, error);
-    throw new Error(`NeoForge 本体修复失败（未改动存档），诊断目录：${staging}\n${error instanceof Error ? error.message : error}`);
+    loaderLog.error(t('loaders.log.neo_repair_failed', { neo }), error);
+    throw new Error(t('loaders.error.neo_repair_failed', { dir: staging, error: error instanceof Error ? error.message : String(error) }));
   }
 }
 
@@ -328,14 +336,21 @@ export async function installLoader(
   signal?: AbortSignal
 ): Promise<string> {
   const started = Date.now();
-  loaderLog.info(`开始安装 ${loader} ${loaderVersion}（MC ${mcVersion}${instanceName ? `，实例名 ${instanceName}` : ''}）`);
+  loaderLog.info(
+    t('loaders.log.install_start', {
+      loader,
+      loaderVersion,
+      mcVersion,
+      instance: instanceName ? t('loaders.log.install_instance_suffix', { name: instanceName }) : '',
+    })
+  );
   try {
     const id = await installLoaderInternal(loader, mcVersion, loaderVersion, emit, instanceName, signal);
-    loaderLog.info(`${loader} ${loaderVersion} 安装完成：实例 ${id}（耗时 ${((Date.now() - started) / 1000).toFixed(1)}s）`);
+    loaderLog.info(t('loaders.log.install_done', { loader, loaderVersion, id, seconds: ((Date.now() - started) / 1000).toFixed(1) }));
     return id;
   } catch (error) {
-    if (!isCancelError(error)) loaderLog.error(`安装 ${loader} ${loaderVersion} 失败`, error);
-    else loaderLog.debug(`安装 ${loader} ${loaderVersion} 已取消`);
+    if (!isCancelError(error)) loaderLog.error(t('loaders.log.install_failed', { loader, loaderVersion }), error);
+    else loaderLog.debug(t('loaders.log.install_cancelled', { loader, loaderVersion }));
     throw error;
   }
 }
@@ -348,7 +363,7 @@ async function installLoaderInternal(
   instanceName?: string,
   signal?: AbortSignal
 ): Promise<string> {
-  emit({ stage: 'version-json', progress: 0, text: `检查原版 ${mcVersion}` });
+  emit({ stage: 'version-json', progress: 0, text: t('loaders.state.check_vanilla', { mcVersion }) });
   const vanillaPreExisted = fs.existsSync(versionJsonPath(mcVersion));
   const installerBased = loader === 'forge' || loader === 'neoforge';
   const prepareVanilla = (report: ProgressEmit, signal?: AbortSignal, runtimeReady?: (signal: AbortSignal) => Promise<void>) =>
@@ -359,10 +374,10 @@ async function installLoaderInternal(
   // ---- fabric / quilt：profile json 直写 ----
   if (loader === 'fabric' || loader === 'quilt') {
     const base = loader === 'fabric' ? 'https://meta.fabricmc.net/v2' : 'https://meta.quiltmc.org/v3';
-    emit({ stage: 'loader', progress: 0.1, text: `获取 ${loader} ${loaderVersion} 配置` });
+    emit({ stage: 'loader', progress: 0.1, text: t('loaders.state.fetch_profile', { loader, loaderVersion }) });
     const profile = (await fetchJson(`${base}/versions/loader/${mcVersion}/${loaderVersion}/profile/json`, signal)) as VersionJson;
     const id = instanceName?.trim() || profile.id;
-    if (!id) throw new Error(`${loader} profile 缺少 id`);
+    if (!id) throw new Error(t('loaders.error.profile_missing_id', { loader }));
     // 自定义实例名：json id 同步改写，inheritsFrom 保持不变
     profile.id = id;
     profile._loader = loader;
@@ -375,11 +390,11 @@ async function installLoaderInternal(
     const mirror = getSettings().mirror;
     await downloadAll(
       tasks,
-      (d, t, speed, detail) =>
+      (d, total, speed, detail) =>
         emit({
           stage: 'loader',
           progress: 0.1 + (detail.fraction ?? 0) * 0.9,
-          text: `${loader} 依赖库 ${d}/${t}`,
+          text: t('loaders.state.deps', { loader, done: d, total }),
           speed,
           etaSeconds: detail.etaSeconds ?? undefined,
           bytesDone: detail.bytesDone,
@@ -390,7 +405,7 @@ async function installLoaderInternal(
       mirror,
       signal
     );
-    emit({ stage: 'done', progress: 1, text: `${id} 安装完成` });
+    emit({ stage: 'done', progress: 1, text: t('loaders.state.install_done', { id }) });
     registerVersionFolder(id, gameDir()); // fabric/quilt 实例注册到当前活动文件夹
     // 落地即拍平为自包含实例：原版内容合并进实例 json，client jar 复制进实例目录
     try {
@@ -424,15 +439,15 @@ async function installLoaderInternal(
       // continue. Every writer is drained before committing or rolling back.
       const parallel = new ParallelProgress(
         [
-          { id: 'vanilla', label: '原版环境', weight: 0.6 },
-          { id: 'installer', label: '加载器下载', weight: 0.2 },
-          { id: 'processor', label: '生成运行文件', weight: 0.2 },
+          { id: 'vanilla', label: t('loaders.label.vanilla_env'), weight: 0.6 },
+          { id: 'installer', label: t('loaders.label.loader_download'), weight: 0.2 },
+          { id: 'processor', label: t('loaders.label.generate_runtime'), weight: 0.2 },
         ],
         emit,
-        '同步准备原版环境与加载器',
+        t('loaders.state.parallel_prepare'),
         [0, 0.9]
       );
-      parallel.waiting('processor', '等待游戏本体、依赖库和加载器准备完成…');
+      parallel.waiting('processor', t('loaders.state.wait_all'));
       let resolvePrepared!: () => void, rejectPrepared!: (error: unknown) => void;
       const prepared = {
         promise: new Promise<void>((resolve, reject) => {
@@ -450,11 +465,11 @@ async function installLoaderInternal(
               (e) => parallel.update('vanilla', e),
               signal,
               async (signal) => {
-                parallel.waiting('processor', '等待加载器依赖下载与校验完成…');
+                parallel.waiting('processor', t('loaders.state.wait_loader_deps'));
                 await prepared.promise;
                 signal.throwIfAborted();
                 const processorEmit: ProgressEmit = (e) => parallel.update('processor', e);
-                processorEmit({ stage: 'java', progress: 0, indeterminate: true, text: '正在检查加载器所需的 Java 环境…' });
+                processorEmit({ stage: 'java', progress: 0, indeterminate: true, text: t('loaders.state.check_java') });
                 const javaPath = await pickJavaForInstaller(
                   mcVersion,
                   (e) => processorEmit({ ...e, progress: 0, overall: undefined, indeterminate: true }),
@@ -466,9 +481,9 @@ async function installLoaderInternal(
                   fs.writeFileSync(lp, JSON.stringify({ profiles: {}, settings: {}, version: 3 }, null, 2), 'utf-8');
                 }
                 signal?.throwIfAborted();
-                processorEmit({ stage: 'loader-process', progress: 0, indeterminate: true, text: '生成加载器运行文件…' });
+                processorEmit({ stage: 'loader-process', progress: 0, indeterminate: true, text: t('loaders.state.generate_runtime') });
                 await runInstaller(javaPath, jarPath, processorEmit, signal);
-                processorEmit({ stage: 'loader-process', progress: 1, text: '加载器运行文件已生成' });
+                processorEmit({ stage: 'loader-process', progress: 1, text: t('loaders.state.runtime_generated') });
 
                 parallel.done('processor');
               }
@@ -478,24 +493,24 @@ async function installLoaderInternal(
           async (signal) => {
             try {
               const loaderEmit: ProgressEmit = (e) => parallel.update('installer', e);
-              loaderEmit({ stage: 'loader', progress: 0.2, text: `下载 ${loader} 安装器` });
+              loaderEmit({ stage: 'loader', progress: 0.2, text: t('loaders.state.download_loader_installer', { loader }) });
               const estimator = new SmoothedSpeedEstimator();
               let networkBytes = 0;
               await downloadLoaderInstaller(
                 officialUrl,
                 jarPath,
                 getSettings().mirror,
-                (d, t, wire = 0) => {
+                (d, total, wire = 0) => {
                   networkBytes += wire;
-                  const rate = estimator.sample(networkBytes, t ? Math.max(0, t - d) : null, performance.now());
+                  const rate = estimator.sample(networkBytes, total ? Math.max(0, total - d) : null, performance.now());
                   loaderEmit({
                     stage: 'loader',
-                    progress: 0.2 + (t ? (d / t) * 0.4 : 0),
-                    text: '下载安装器 ' + (d / 1024 / 1024).toFixed(1) + 'MB',
+                    progress: 0.2 + (total ? (d / total) * 0.4 : 0),
+                    text: t('loaders.state.download_installer', { size: (d / 1024 / 1024).toFixed(1) }),
                     speed: rate.speedBps,
                     etaSeconds: rate.etaSeconds ?? undefined,
                     bytesDone: d,
-                    bytesTotal: t || undefined,
+                    bytesTotal: total || undefined,
                   });
                 },
                 signal
@@ -514,7 +529,7 @@ async function installLoaderInternal(
       );
 
       const id0 = findInstalledDir(loader, mcVersion, loaderVersion);
-      if (!id0) throw new Error('安装器运行结束，但未找到生成的版本目录');
+      if (!id0) throw new Error(t('loaders.error.no_version_dir'));
       // 自定义实例名：重命名安装器生成的目录与 json id
       id = id0;
       if (instanceName?.trim() && instanceName.trim() !== id0) {
@@ -527,7 +542,7 @@ async function installLoaderInternal(
 
     // 完整性自愈：安装器可能半失败（json 已写但部分库未下载，如 client 校验失败中止）
     // 逐文件校验版本 json 声明的库，缺失则经镜像补齐；补不齐则明确报错
-    emit({ stage: 'loader', progress: 0.92, text: '校验依赖库完整性…' });
+    emit({ stage: 'loader', progress: 0.92, text: t('loaders.state.verify_libraries') });
     const profileJson = readVersionJson(id);
     const libTasks = libraryTasks(profileJson);
     reuseExternalRuntimeLibraries(
@@ -538,14 +553,14 @@ async function installLoaderInternal(
     );
     const missing = libTasks.filter((t) => !fs.existsSync(t.dest));
     if (missing.length) {
-      emit({ stage: 'loader', progress: 0.94, text: `补全 ${missing.length} 个缺失依赖库…` });
+      emit({ stage: 'loader', progress: 0.94, text: t('loaders.state.fill_libraries', { count: missing.length }) });
       await downloadAll(
         missing,
-        (d, t, speed, detail) =>
+        (d, total, speed, detail) =>
           emit({
             stage: 'loader',
             progress: 0.94 + (detail.fraction ?? 0) * 0.05,
-            text: `补全依赖库 ${d}/${t}`,
+            text: t('loaders.state.fill_libraries_progress', { done: d, total }),
             speed,
             etaSeconds: detail.etaSeconds ?? undefined,
             bytesDone: detail.bytesDone,
@@ -557,7 +572,7 @@ async function installLoaderInternal(
         signal
       );
     }
-    emit({ stage: 'done', progress: 1, text: `${id} 安装完成` });
+    emit({ stage: 'done', progress: 1, text: t('loaders.state.install_done', { id }) });
     registerVersionFolder(id, gameDir()); // forge/neoforge 实例注册到当前活动文件夹
     // 落地即拍平为自包含实例（此时原版 json/jar 仍在 versions/ 可直接合并复制；finally 再迁移进依赖缓存区）
     try {
@@ -613,11 +628,11 @@ async function fetchFabricApiVersions(mcVersion: string, signal?: AbortSignal): 
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const arr = (await res.json()) as ModrinthVersion[];
-      if (!Array.isArray(arr)) throw new Error('响应格式异常');
+      if (!Array.isArray(arr)) throw new Error(t('loaders.error.response_format'));
       fabricApiCache.set(mcVersion, arr);
       return arr;
     } catch (e) {
-      if (signal?.aborted) throw new Error('已取消');
+      if (signal?.aborted) throw new Error(t('loaders.error.cancelled'));
       lastErr = e;
     }
   }
@@ -639,15 +654,15 @@ export async function installFabricApi(
   /** 目标 mods 目录（隔离实例为 versions/<id>/mods）；缺省回落共享 mods */
   modsDir?: string
 ): Promise<void> {
-  emit({ stage: 'fabric-api', progress: 0, text: `查询 Fabric API ${version}` });
+  emit({ stage: 'fabric-api', progress: 0, text: t('loaders.state.fabric_api_query', { version }) });
   const arr = await fetchFabricApiVersions(mcVersion, signal);
   const v = arr.find((x) => x.version_number === version);
   const file = v?.files?.find((f) => f.primary) ?? v?.files?.[0];
   if (!file?.url || !file.filename) {
-    throw new Error(`未找到适配 ${mcVersion} 的 Fabric API ${version} 文件`);
+    throw new Error(t('loaders.error.fabric_api_not_found', { mcVersion, version }));
   }
   const dest = path.join(modsDir ?? path.join(gameDir(), 'mods'), file.filename);
-  emit({ stage: 'fabric-api', progress: 0.2, text: `下载 Fabric API ${version}` });
+  emit({ stage: 'fabric-api', progress: 0.2, text: t('loaders.state.fabric_api_download', { version }) });
   await downloadFile(file.url, dest, undefined, file.hashes?.sha1, 'official', signal);
-  emit({ stage: 'fabric-api', progress: 1, text: `Fabric API 已放入 mods 文件夹` });
+  emit({ stage: 'fabric-api', progress: 1, text: t('loaders.state.fabric_api_done') });
 }

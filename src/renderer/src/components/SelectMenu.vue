@@ -4,6 +4,7 @@
  * 浮层 Teleport 到 body 避免卡片 overflow 裁切；点击外部 / Esc 关闭。
  */
 import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue';
+import { t } from '@renderer/i18n';
 
 defineOptions({ inheritAttrs: false });
 
@@ -25,7 +26,9 @@ const menuStyle = ref<Record<string, string>>({});
 const menuId = useId();
 
 const currentOption = computed(() => props.options.find((o) => o.value === props.modelValue));
-const currentLabel = computed(() => props.options.find((o) => o.value === props.modelValue)?.label ?? props.placeholder ?? '请选择');
+const currentLabel = computed(
+  () => props.options.find((o) => o.value === props.modelValue)?.label ?? props.placeholder ?? t('common.select_option')
+);
 
 function toggle() {
   if (props.disabled) return;
@@ -185,7 +188,7 @@ onBeforeUnmount(close);
             <path d="M20 6 9 17l-5-5" />
           </svg>
         </button>
-        <div data-ui="SelectMenu:1d0ad7174b00" v-if="!props.options.length" class="select-menu-empty">无可选项</div>
+        <div data-ui="SelectMenu:1d0ad7174b00" v-if="!props.options.length" class="select-menu-empty">{{ t('common.no_options') }}</div>
       </div>
     </Transition>
   </Teleport>

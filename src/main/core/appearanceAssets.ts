@@ -5,6 +5,7 @@ import path from 'node:path';
 import { ALLOWED_IMAGE_EXTENSIONS, isPathInside, type ManagedImagePurpose } from './imageAssetPolicy';
 import { encodeManagedImage, inspectImageFile, validateManagedImageSnapshot, type EncodedManagedImage } from './imageAssetProcessor';
 import { sniffImageFormat } from './imageAssetPolicy';
+import { translate as t } from '../../shared/i18n';
 
 export interface ManagedImage {
   path: string;
@@ -30,7 +31,7 @@ async function writeManagedImage(encoded: EncodedManagedImage, destinationDirect
   await fs.promises.mkdir(destinationDirectory, { recursive: true });
   const destinationStat = await fs.promises.lstat(destinationDirectory);
   if (!destinationStat.isDirectory() || destinationStat.isSymbolicLink()) {
-    throw new Error('FAIONYX 图片缓存目录不安全');
+    throw new Error(t('appearanceassets.error.unsafe_cache_dir'));
   }
   const name = `${crypto.randomUUID()}${encoded.extension}`;
   const destination = path.join(destinationDirectory, name);

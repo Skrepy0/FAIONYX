@@ -8,6 +8,7 @@
  * 启动成功后会输出形如 "[xxxxx.natfrp.cloud:yyyyy] start proxy success" 的日志行，
  * 失败会输出 "invalid token" / "tunnel not exists" / "login to server failed" 等。
  */
+import { translate as t } from '../../shared/i18n';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { app } from 'electron';
 import fs from 'node:fs';
@@ -37,7 +38,7 @@ export function frpcAsset(platform = process.platform, arch = process.arch): { u
       : arch === 'x64'
         ? '74ee362350314dd5ac8936fbe2299fc76671051e10beb46c8dd37c36a4503935'
         : undefined;
-  if (platform !== 'darwin' || !sha256) throw new Error(`樱花穿透暂不支持 ${platform}/${arch}`);
+  if (platform !== 'darwin' || !sha256) throw new Error(t('frp.error.platform_unsupported', { platform, arch }));
   return { url: `https://nya.globalslb.net/natfrp/client/frpc/0.51.0-sakura-14/frpc_darwin_${arch === 'x64' ? 'amd64' : 'arm64'}`, sha256 };
 }
 
@@ -157,16 +158,16 @@ export function ensureFrpcInstalled(onLog?: (line: string) => void): Promise<str
   if (fs.existsSync(target) && process.platform === 'win32') return Promise.resolve(target);
   const asset = frpcAsset();
   fs.mkdirSync(frpcDir(), { recursive: true });
-  onLog?.('正在准备樱花穿透官方客户端…');
+  onLog?.(t('frp.log.preparing_client'));
   installingFrpc = downloadAll([{ ...asset, dest: target }], undefined, 1, 'official')
     .then(() => {
       if (process.platform !== 'win32') fs.chmodSync(target, 0o755);
-      onLog?.('frpc 下载完成');
+      onLog?.(t('frp.log.client_downloaded'));
       return target;
     })
     .catch((err: unknown) => {
       const msg = err instanceof Error ? err.message : String(err);
-      throw new Error(`frpc 下载失败：${msg}。请检查网络后重试，官方下载地址：${asset.url}`);
+      throw new Error(t('frp.error.download_failed', { error: msg, url: asset.url }));
     })
     .finally(() => {
       installingFrpc = null;
@@ -241,7 +242,7 @@ export class FrpController {
         remoteAddress: null,
         pid: null,
         startedAt: null,
-        message: '尚未启动',
+        message: t('frp.state.not_started'),
         logs: [],
       };
     }
@@ -259,35 +260,35 @@ export class FrpController {
   private statusMessage(s: RunningSession): string {
     switch (s.status) {
       case 'starting':
-        return '正在连接 SakuraFrp…';
+        return t('frp.state.connecting_sakura');
       case 'running':
-        return s.remoteAddress ? `已连接，远程地址 ${s.remoteAddress}` : '已连接，等待远程地址';
+        return s.remoteAddress ? t('frp.state.connected_remote', { address: s.remoteAddress }) : t('frp.state.connected_waiting_remote');
       case 'auth_failed':
-        return '访问密钥无效或已失效';
+        return t('frp.state.auth_key_invalid');
       case 'tunnel_offline':
-        return '隧道不存在或已被禁用';
+        return t('frp.state.tunnel_missing');
       case 'error':
-        return 'frpc 进程异常退出';
+        return t('frp.state.process_crashed');
       case 'stopped':
-        return '已停止';
+        return t('frp.status.stopped');
       default:
-        return '空闲';
+        return t('frp.state.idle');
     }
   }
 
   async start(req: FrpConfig & { localPort: number }): Promise<StartResult> {
-    if (this.session) throw new Error('frpc 已在运行中，请先停止');
+    if (this.session) throw new Error(t('frp.error.already_running'));
     const epoch = ++this.epoch;
     this.detachedByUser = false;
 
     const accessKey = String(req.accessKey ?? '').trim();
     const tunnelId = String(req.tunnelId ?? '').trim();
     const localPort = Number(req.localPort ?? 0) || 0;
-    if (!accessKey) throw new Error('请填写访问密钥');
-    if (!tunnelId) throw new Error('请填写隧道 ID');
+    if (!accessKey) throw new Error(t('frp.error.access_key_required'));
+    if (!tunnelId) throw new Error(t('frp.error.tunnel_id_required'));
 
     const target = await ensureFrpcInstalled();
-    if (epoch !== this.epoch) throw new Error('启动已取消');
+    if (epoch !== this.epoch) throw new Error(t('frp.error.start_cancelled'));
     const saved = { accessKey, tunnelId, localPort };
 
     const args: string[] = ['-f', `${accessKey}:${tunnelId}`, '--disable_log_color'];
@@ -312,13 +313,13 @@ export class FrpController {
 
     const emit = (event: FrpEvent): void => this.sink?.(event);
 
-    emit({ type: 'status', status: 'starting', message: '正在连接 SakuraFrp…' });
+    emit({ type: 'status', status: 'starting', message: t('frp.state.connecting_sakura') });
     emit({
       type: 'log',
       data: {
         ts: startedAt,
         stream: 'system',
-        text: `启动命令: ${target} -f ${maskKey(accessKey)}:${saved.tunnelId}`,
+        text: t('frp.log.start_command', { command: `${target} -f ${maskKey(accessKey)}:${saved.tunnelId}` }),
       },
     });
 
@@ -354,7 +355,7 @@ export class FrpController {
 
     proc.on('error', (err) => {
       const message = sanitize(err.message, accessKey);
-      const entry: FrpLogEntry = { ts: new Date().toISOString(), stream: 'system', text: `进程错误：${message}` };
+      const entry: FrpLogEntry = { ts: new Date().toISOString(), stream: 'system', text: t('frp.log.process_error', { error: message }) };
       appendLog(newSession, entry);
       emit({ type: 'log', data: entry });
       if (this.session === newSession) {
@@ -370,7 +371,7 @@ export class FrpController {
 
     proc.on('exit', (code, signal) => {
       const wasStoppedByUser = this.detachedByUser;
-      const text = `frpc 已退出（code=${code ?? 'null'}, signal=${signal ?? 'null'}）`;
+      const text = t('frp.log.process_exited', { code: code ?? 'null', signal: signal ?? 'null' });
       const entry: FrpLogEntry = { ts: new Date().toISOString(), stream: 'system', text };
       appendLog(newSession, entry);
       emit({ type: 'log', data: entry });

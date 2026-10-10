@@ -46,12 +46,13 @@ const worldInput = ref(''),
   worldInfo = ref<WorldImportInfo>(),
   candidate = ref(''),
   mismatch = ref(false);
+import { t } from '@renderer/i18n';
 const sections = [
-  ['overview', '概览'],
-  ['worlds', '存档'],
-  ['screenshots', '截图'],
-  ['backups', '备份'],
-  ['diagnostics', '诊断'],
+  ['overview', t('ic.tab_overview')],
+  ['worlds', t('ic.tab_worlds')],
+  ['screenshots', t('ic.tab_screenshots')],
+  ['backups', t('ic.tab_backups')],
+  ['diagnostics', t('ic.tab_diagnostics')],
 ];
 const folders = computed(() => (store.settings?.folders || []).map((f) => ({ value: f.path, label: f.name })));
 const filtered = computed(() => worlds.value.filter((w) => w.name.toLowerCase().includes(search.value.toLowerCase())));
@@ -68,7 +69,7 @@ watch(image, async (selected) => {
   }
 });
 const invoke = <T,>(channel: string, ...args: unknown[]) => window.faionyx.invoke(channel, ...args) as Promise<T>;
-const formatDate = (v: string | number | undefined) => (v ? new Date(v).toLocaleString() : '未知');
+const formatDate = (v: string | number | undefined) => (v ? new Date(v).toLocaleString() : t('ic.unknown'));
 const size = (bytes: number) => (bytes >= 1024 ** 3 ? (bytes / 1024 ** 3).toFixed(1) + ' GB' : (bytes / 1024 ** 2).toFixed(1) + ' MB');
 async function refresh() {
   loading.value = true;
@@ -98,7 +99,7 @@ async function perform(action: () => Promise<unknown>) {
   error.value = '';
   try {
     await action();
-    toast('操作完成', 'success');
+    toast(t('ic.op_done'), 'success');
     form.value = '';
     await refreshInstalled();
     await refresh();
@@ -158,7 +159,7 @@ async function diagnose() {
 }
 function openRestore(b: BackupManifest) {
   restore.value = b;
-  name.value = (b.metadata?.type === 'world' ? String(b.metadata.world) : target.id) + '-恢复';
+  name.value = (b.metadata?.type === 'world' ? String(b.metadata.world) : target.id) + t('ic.restore_suffix');
   overwrite.value = false;
   form.value = 'restore';
 }
@@ -167,7 +168,7 @@ async function prepareImport() {
     const f = await selectFile();
     if (!f) return;
     const info = await probeWorld(f);
-    if (!info?.candidates.length) throw new Error('未发现有效存档');
+    if (!info?.candidates.length) throw new Error(t('ic.no_valid_worlds'));
     worldInput.value = f;
     worldInfo.value = info;
     candidate.value = info.candidates[0].id;
@@ -190,7 +191,7 @@ async function disableSelected() {
     throw new Error(
       results
         .filter((r) => !r.ok)
-        .map((r) => r.fileName + '：' + r.error)
+        .map((r) => r.fileName + t('ic.colon') + r.error)
         .join('\n')
     );
   await diagnose();
@@ -210,7 +211,7 @@ async function checkDependencies(fileName: string) {
 onMounted(async () => {
   document.addEventListener('keydown', key, true);
   await refresh();
-  document.querySelector<HTMLElement>('[aria-label="关闭实例管理"]')?.focus();
+  document.querySelector<HTMLElement>(`[aria-label="${t('ic.close_aria')}"]`)?.focus();
   if (tab.value === 'diagnostics') await diagnose();
 });
 onUnmounted(() => {
@@ -224,63 +225,70 @@ onUnmounted(() => {
       <section class="ic" role="dialog" aria-modal="true" aria-labelledby="ic-title" data-ui="instance-center:page">
         <header class="ic-header">
           <div>
-            <small>实例管理中心</small>
+            <small>{{ t('ic.center_title') }}</small>
             <h2 id="ic-title">{{ overview?.name || target.id }}</h2>
             <p>
               {{ overview?.mcVersion }} <span v-if="overview?.loader">· {{ overview.loader }}</span> ·
-              {{ overview?.shared ? '共享游戏目录' : '独立游戏目录' }}
+              {{ overview?.shared ? t('ic.shared_dir') : t('ic.isolated_dir') }}
             </p>
           </div>
-          <button class="btn btn-ghost" aria-label="关闭实例管理" @click="close">✕</button>
+          <button class="btn btn-ghost" :aria-label="t('ic.close_aria')" @click="close">✕</button>
         </header>
-        <nav class="ic-tabs" aria-label="实例功能">
+        <nav class="ic-tabs" :aria-label="t('ic.instance_func')">
           <button v-for="[value, label] in sections" :key="value" :class="{ active: tab === value }" @click="chooseTab(value)">
             {{ label }}
           </button>
         </nav>
         <div :key="tab" class="ic-content">
           <p v-if="error" class="ic-error" role="alert">
-            {{ error }} <button class="btn btn-sm" :disabled="busy" @click="refresh">重新加载</button>
+            {{ error }} <button class="btn btn-sm" :disabled="busy" @click="refresh">{{ t('ic.reload') }}</button>
           </p>
-          <p v-if="overview?.running" class="ic-hint">此目录的游戏正在运行。请退出游戏后再复制、备份或恢复。</p>
-          <p v-if="loading" class="ic-empty">正在读取实例…</p>
+          <p v-if="overview?.running" class="ic-hint">{{ t('ic.running_hint') }}</p>
+          <p v-if="loading" class="ic-empty">{{ t('ic.reading') }}</p>
           <template v-else-if="tab === 'overview'">
             <div class="ic-summary" data-ui="instance-center:overview">
               <div>
-                <h3>你的游戏，独立管理</h3>
+                <h3>{{ t('ic.manage_independent') }}</h3>
                 <p class="ic-path">{{ overview?.directory }}</p>
               </div>
-              <button class="btn btn-ghost" @click="perform(() => invoke(IPC.centerFile, target, 'directory', ''))">打开目录</button>
+              <button class="btn btn-ghost" @click="perform(() => invoke(IPC.centerFile, target, 'directory', ''))">
+                {{ t('ic.open_dir') }}
+              </button>
             </div>
             <div class="ic-grid">
-              <button class="ic-card" @click="navigate('mods')"><strong>模组管理 →</strong><span>版本、启停与兼容性</span></button
-              ><button class="ic-card" @click="navigate('packs')"><strong>资源包 →</strong><span>管理材质与界面资源</span></button
-              ><button class="ic-card" @click="navigate('shaders')"><strong>光影包 →</strong><span>管理游戏光影</span></button
-              ><button class="ic-card" @click="navigate('game')"><strong>版本设置 →</strong><span>Java、窗口与隔离设置</span></button>
+              <button class="ic-card" @click="navigate('mods')">
+                <strong>{{ t('ic.mods_mgmt') }} →</strong><span>{{ t('ic.mods_hint') }}</span></button
+              ><button class="ic-card" @click="navigate('packs')">
+                <strong>{{ t('ic.packs_mgmt') }} →</strong><span>{{ t('ic.packs_hint') }}</span></button
+              ><button class="ic-card" @click="navigate('shaders')">
+                <strong>{{ t('ic.shaders_mgmt') }} →</strong><span>{{ t('ic.shaders_hint') }}</span></button
+              ><button class="ic-card" @click="navigate('game')">
+                <strong>{{ t('ic.version_settings') }} →</strong><span>{{ t('ic.version_hint') }}</span>
+              </button>
             </div>
             <div class="ic-card">
-              <h3>复制一个独立实例</h3>
-              <p>保留模组、配置与锁定状态，原实例保持完整。可在副本里尝试新的模组组合。</p>
+              <h3>{{ t('ic.clone_instance') }}</h3>
+              <p>{{ t('ic.clone_hint') }}</p>
               <button
                 class="btn btn-gold"
                 :disabled="busy || overview?.running"
                 @click="
-                  name = target.id + '-副本';
+                  name = target.id + t('ic.clone_suffix');
                   form = 'clone';
                 "
               >
-                复制实例
+                {{ t('ic.clone_btn') }}
               </button>
             </div>
           </template>
           <template v-else-if="tab === 'worlds'">
             <div class="ic-tools">
-              <input v-model="search" class="input" placeholder="搜索存档名称" aria-label="搜索存档" /><button
+              <input v-model="search" class="input" :placeholder="t('ic.search_world')" :aria-label="t('ic.search_world_aria')" /><button
                 class="btn btn-gold"
                 :disabled="busy || overview?.running"
                 @click="prepareImport"
               >
-                导入存档
+                {{ t('ic.import_world') }}
               </button>
             </div>
             <div v-for="w in filtered" :key="w.id" class="ic-row">
@@ -288,36 +296,38 @@ onUnmounted(() => {
               <div v-else class="ic-world-icon">▧</div>
               <div class="ic-grow">
                 <strong>{{ w.name }}</strong
-                ><small>{{ w.version || '版本未知' }} · {{ w.mode || '模式未知' }} · {{ formatDate(w.lastPlayed) }}</small>
+                ><small
+                  >{{ w.version || t('ic.unknown_version') }} · {{ w.mode || t('ic.unknown_mode') }} · {{ formatDate(w.lastPlayed) }}</small
+                >
                 <p v-if="w.error" class="ic-error">{{ w.error }}</p>
               </div>
               <div class="ic-actions">
-                <button class="btn btn-sm" @click="perform(() => invoke(IPC.centerFile, target, 'world', w.id))">打开</button
+                <button class="btn btn-sm" @click="perform(() => invoke(IPC.centerFile, target, 'world', w.id))">{{ t('ic.open') }}</button
                 ><button
                   class="btn btn-sm"
                   :disabled="busy || overview?.running"
                   @click="perform(() => op({ kind: 'worldExport', world: w.id }))"
                 >
-                  导出 ZIP</button
+                  {{ t('ic.export_zip') }}</button
                 ><button
                   class="btn btn-sm"
                   :disabled="busy || overview?.running"
                   @click="perform(() => op({ kind: 'backup', world: w.id }))"
                 >
-                  备份
+                  {{ t('ic.backup') }}
                 </button>
               </div>
             </div>
-            <p v-if="!filtered.length" class="ic-empty">暂无匹配的存档</p>
-            <button class="btn btn-ghost" @click="chooseTab('backups')">查看备份与恢复 →</button>
+            <p v-if="!filtered.length" class="ic-empty">{{ t('ic.no_matched_worlds') }}</p>
+            <button class="btn btn-ghost" @click="chooseTab('backups')">{{ t('ic.view_backups') }} →</button>
           </template>
           <template v-else-if="tab === 'screenshots'">
             <div class="ic-shots">
               <button v-for="(s, i) in shots" :key="s.id" class="ic-shot" @click="lightbox = i">
-                <img :src="s.image" loading="lazy" alt="游戏截图" /><span>{{ s.id }}</span>
+                <img :src="s.image" loading="lazy" :alt="t('ic.screenshot_alt')" /><span>{{ s.id }}</span>
               </button>
             </div>
-            <p v-if="!shots.length" class="ic-empty">游戏中按截图键拍摄后，会显示在这里</p>
+            <p v-if="!shots.length" class="ic-empty">{{ t('ic.no_screenshots') }}</p>
             <div class="ic-tools">
               <button
                 class="btn btn-sm"
@@ -327,7 +337,7 @@ onUnmounted(() => {
                   refresh();
                 "
               >
-                上一页</button
+                {{ t('ic.prev_page') }}</button
               ><span>{{ page + 1 }} / {{ Math.max(1, Math.ceil(shotTotal / 24)) }}</span
               ><button
                 class="btn btn-sm"
@@ -337,45 +347,45 @@ onUnmounted(() => {
                   refresh();
                 "
               >
-                下一页
+                {{ t('ic.next_page') }}
               </button>
             </div>
           </template>
           <template v-else-if="tab === 'backups'">
             <div class="ic-summary">
               <div>
-                <h3>备份与改动保护</h3>
-                <p>自动保留最近 5 次改动保护；手动备份长期保留。实例备份不包含 Java 与可重新下载的公共运行文件。</p>
+                <h3>{{ t('ic.backup_protect') }}</h3>
+                <p>{{ t('ic.backup_protect_hint') }}</p>
               </div>
               <button class="btn btn-gold" :disabled="busy || overview?.running" @click="perform(() => op({ kind: 'backup' }))">
-                备份实例
+                {{ t('ic.backup_instance') }}
               </button>
             </div>
             <div v-for="b in backups" :key="b.id" class="ic-row">
               <div class="ic-grow">
                 <strong>{{ b.title }}</strong
                 ><small
-                  >{{ formatDate(b.createdAt) }} · {{ b.automatic ? '自动保护' : '手动备份' }} · {{ b.files.length }} 个文件 ·
-                  {{ size(b.files.reduce((n, f) => n + f.size, 0)) }}</small
+                  >{{ formatDate(b.createdAt) }} · {{ b.automatic ? t('ic.auto_protect') : t('ic.manual_backup') }} · {{ b.files.length }}
+                  {{ t('ic.files_count') }} · {{ size(b.files.reduce((n, f) => n + f.size, 0)) }}</small
                 >
               </div>
-              <button class="btn btn-sm" :disabled="busy || overview?.running" @click="openRestore(b)">恢复…</button>
+              <button class="btn btn-sm" :disabled="busy || overview?.running" @click="openRestore(b)">{{ t('ic.restore_btn') }}…</button>
             </div>
-            <p v-if="!backups.length" class="ic-empty">还没有备份，创建第一份备份以保护游戏进度</p>
+            <p v-if="!backups.length" class="ic-empty">{{ t('ic.no_backups') }}</p>
           </template>
           <template v-else-if="tab === 'diagnostics'">
             <div class="ic-summary">
               <div>
-                <h3>检查运行环境</h3>
-                <p>本地分析 Java、运行文件和本实例会话日志。{{ session ? '日志会话：' + formatDate(session) : '' }}</p>
+                <h3>{{ t('ic.check_env') }}</h3>
+                <p>{{ t('ic.check_env_hint') }}{{ session ? t('ic.log_session') + formatDate(session) : '' }}</p>
               </div>
-              <button class="btn btn-gold" :disabled="busy" @click="diagnose">{{ busy ? '正在处理…' : '开始检查' }}</button>
+              <button class="btn btn-gold" :disabled="busy" @click="diagnose">{{ busy ? t('ic.processing') : t('ic.start_check') }}</button>
             </div>
             <div v-for="(f, i) in findings" :key="f.rule + i" class="ic-card">
               <div class="ic-tools">
                 <strong>{{ f.title }}</strong
                 ><span class="ic-badge">{{
-                  f.confidence === 'certain' ? '已确认' : f.confidence === 'possible' ? '可能原因' : '证据不足'
+                  f.confidence === 'certain' ? t('ic.confirmed') : f.confidence === 'possible' ? t('ic.possible') : t('ic.insufficient')
                 }}</span>
               </div>
               <div v-for="mod in f.mods" :key="mod.fileName" class="ic-row">
@@ -384,7 +394,7 @@ onUnmounted(() => {
                   v-model="selectedMods"
                   :value="mod.fileName"
                   type="checkbox"
-                  :aria-label="'选择停用 ' + mod.fileName"
+                  :aria-label="t('ic.select_disable', { name: mod.fileName })"
                 /><img v-if="mod.icon" :src="mod.icon" alt="" />
                 <div class="ic-grow">
                   <strong>{{ mod.fileName }}</strong
@@ -396,7 +406,7 @@ onUnmounted(() => {
                   :disabled="busy || overview?.running"
                   @click="checkDependencies(mod.fileName)"
                 >
-                  核对必要前置
+                  {{ t('ic.check_deps') }}
                 </button>
               </div>
               <pre>{{ f.evidence }}</pre>
@@ -408,9 +418,9 @@ onUnmounted(() => {
                   :disabled="busy || overview?.running"
                   @click="perform(() => op({ kind: 'repair', planId }))"
                 >
-                  校验并修复运行文件
+                  {{ t('ic.repair_files') }}
                 </button>
-                <button v-if="f.action === 'mods'" class="btn btn-sm" @click="navigate('mods')">打开模组管理</button>
+                <button v-if="f.action === 'mods'" class="btn btn-sm" @click="navigate('mods')">{{ t('ic.open_mods_mgmt') }}</button>
                 <template v-if="f.rule === 'graphics'"
                   ><button
                     v-for="driver in [
@@ -422,20 +432,20 @@ onUnmounted(() => {
                     class="btn btn-sm"
                     @click="invoke('app:openExternal', driver[1])"
                   >
-                    {{ driver[0] }} 官方驱动
+                    {{ driver[0] }} {{ t('ic.official_driver') }}
                   </button></template
                 >
               </div>
             </div>
             <button v-if="selectedMods.length" class="btn btn-gold" :disabled="busy || overview?.running" @click="form = 'disable'">
-              停用选中的 {{ selectedMods.length }} 个模组…
+              {{ t('ic.disable_selected', { count: String(selectedMods.length) }) }}…
             </button>
             <div v-if="findings.some((f) => f.action === 'java')" class="ic-card">
-              <h3>选择适配 Java</h3>
+              <h3>{{ t('ic.select_java') }}</h3>
               <SelectMenu
                 v-model="javaPath"
                 :options="java.map((j) => ({ value: j.path, label: 'Java ' + j.major + ' · ' + j.path }))"
-                placeholder="尚未发现兼容运行时"
+                :placeholder="t('ic.no_compatible_runtime')"
               />
               <div class="ic-actions">
                 <button
@@ -443,7 +453,7 @@ onUnmounted(() => {
                   :disabled="busy || !javaPath || overview?.running"
                   @click="perform(() => setVersionJava(target.id, javaPath, false, target.folder))"
                 >
-                  为此实例应用</button
+                  {{ t('ic.apply_instance') }}</button
                 ><button
                   class="btn btn-ghost"
                   @click="
@@ -451,36 +461,36 @@ onUnmounted(() => {
                     openSettings('java');
                   "
                 >
-                  管理 Java
+                  {{ t('ic.manage_java') }}
                 </button>
               </div>
             </div>
             <button class="btn btn-ghost" :disabled="busy" @click="perform(() => exportLaunchLogs(target.id, target.folder))">
-              导出脱敏诊断日志
+              {{ t('ic.export_diagnostic_log') }}
             </button>
           </template>
-          <p v-if="busy" class="ic-hint" role="status">任务正在执行。进度及取消入口位于下载中心，关闭本页面不会取消任务。</p>
+          <p v-if="busy" class="ic-hint" role="status">{{ t('ic.task_running') }}</p>
         </div>
         <div v-if="form" class="ic-dialog-mask">
-          <section class="ic-dialog" role="dialog" aria-label="实例操作确认">
+          <section class="ic-dialog" role="dialog" :aria-label="t('ic.op_confirm')">
             <header>
               <h3>
                 {{
                   form === 'clone'
-                    ? '复制实例'
+                    ? t('ic.form_clone')
                     : form === 'restore'
-                      ? '恢复备份'
+                      ? t('ic.form_restore')
                       : form === 'disable'
-                        ? '确认停用模组'
+                        ? t('ic.form_disable')
                         : form === 'dependencies'
-                          ? '安装必要前置'
-                          : '导入存档'
+                          ? t('ic.form_dependencies')
+                          : t('ic.form_import')
                 }}
               </h3>
-              <button class="btn btn-sm" aria-label="关闭操作确认" @click="form = ''">✕</button>
+              <button class="btn btn-sm" :aria-label="t('ic.close_confirm')" @click="form = ''">✕</button>
             </header>
             <template v-if="form === 'disable'"
-              ><p>仅停用你勾选的文件。先创建自动保护记录，可在“备份”中恢复。请结合日志核对需要保留的版本。</p>
+              ><p>{{ t('ic.disable_hint') }}</p>
               <pre>{{ selectedMods.join('\n') }}</pre>
             </template>
             <template v-else-if="form === 'dependencies'"
@@ -491,30 +501,29 @@ onUnmounted(() => {
               </div></template
             >
             <label v-else-if="!overwrite || restore?.metadata?.type === 'world'"
-              >名称<input v-model="name" class="input" maxlength="120"
+              >{{ t('ic.name_label') }}<input v-model="name" class="input" maxlength="120"
             /></label>
             <template v-if="form === 'clone' || (form === 'restore' && restore?.metadata?.type !== 'world' && !overwrite)"
-              ><label>目标游戏文件夹<SelectMenu v-model="destination" :options="folders" /></label
+              ><label>{{ t('ic.target_folder') }}<SelectMenu v-model="destination" :options="folders" /></label
             ></template>
             <template v-if="form === 'clone'"
-              ><label class="ic-check"><input v-model="includeSaves" type="checkbox" />包含存档</label
-              ><label class="ic-check"><input v-model="includeShots" type="checkbox" />包含截图</label>
-              <p v-if="overview?.shared" class="ic-hint">当前为共享目录，以下范围会复制到新隔离实例。</p>
+              ><label class="ic-check"><input v-model="includeSaves" type="checkbox" />{{ t('ic.include_worlds') }}</label
+              ><label class="ic-check"><input v-model="includeShots" type="checkbox" />{{ t('ic.include_screenshots') }}</label>
+              <p v-if="overview?.shared" class="ic-hint">{{ t('ic.shared_clone_hint') }}</p>
               <details>
-                <summary>查看复制范围</summary>
+                <summary>{{ t('ic.view_clone_scope') }}</summary>
                 <p>{{ overview?.roots.join('、') }}</p>
               </details></template
             >
             <template v-if="form === 'restore'"
               ><p>
-                校验备份后恢复为新的{{
-                  restore?.metadata?.type === 'world' ? '存档' : '隔离实例'
-                }}。恢复自动保护记录时，会复制当前实例并还原受影响文件。
+                {{ t('ic.restore_desc_prefix') }}{{ restore?.metadata?.type === 'world' ? t('ic.world') : t('ic.isolated_instance')
+                }}{{ t('ic.restore_desc_suffix') }}
               </p>
               <label v-if="restore?.metadata?.type === 'world' || !overview?.shared" class="ic-check"
-                ><input v-model="overwrite" type="checkbox" />覆盖{{
-                  restore?.metadata?.type === 'world' ? '同名存档' : '当前实例'
-                }}（先备份现有内容）</label
+                ><input v-model="overwrite" type="checkbox" />{{ t('ic.overwrite')
+                }}{{ restore?.metadata?.type === 'world' ? t('ic.same_name_world') : t('ic.current_instance')
+                }}{{ t('ic.overwrite_suffix') }}</label
               ></template
             >
             <template v-if="form === 'import'"
@@ -523,14 +532,14 @@ onUnmounted(() => {
                 :options="
                   (worldInfo?.candidates || []).map((c) => ({
                     value: c.id,
-                    label: c.worldName + ' · ' + (c.minecraftVersion || '版本未知'),
+                    label: c.worldName + ' · ' + (c.minecraftVersion || t('ic.unknown_version')),
                   }))
                 "
-              /><label class="ic-check"><input v-model="mismatch" type="checkbox" />确认允许版本不匹配（建议先备份）</label></template
+              /><label class="ic-check"><input v-model="mismatch" type="checkbox" />{{ t('ic.allow_mismatch') }}</label></template
             >
             <p v-if="error" class="ic-error">{{ error }}</p>
             <footer>
-              <button class="btn btn-ghost" @click="form = ''">取消</button
+              <button class="btn btn-ghost" @click="form = ''">{{ t('common.cancel') }}</button
               ><button
                 class="btn btn-gold"
                 :disabled="busy || (form === 'disable' ? !selectedMods.length : form === 'dependencies' ? !dependencies : !name.trim())"
@@ -554,24 +563,26 @@ onUnmounted(() => {
                   )
                 "
               >
-                {{ busy ? '正在处理…' : '确认执行' }}
+                {{ busy ? t('ic.processing') : t('ic.confirm') }}
               </button>
             </footer>
           </section>
         </div>
       </section>
     </div>
-    <div v-if="image" class="ic-lightbox" role="dialog" aria-label="查看截图">
+    <div v-if="image" class="ic-lightbox" role="dialog" :aria-label="t('ic.view_screenshot')">
       <header>
         <strong>{{ image.id }}</strong
-        ><button class="btn" @click="lightbox = -1">关闭 ✕</button>
+        ><button class="btn" @click="lightbox = -1">{{ t('ic.close_view') }} ✕</button>
       </header>
-      <img :src="fullImage || image.image" alt="游戏截图大图" />
+      <img :src="fullImage || image.image" :alt="t('ic.screenshot_full_alt')" />
       <footer>
-        <button class="btn" :disabled="lightbox === 0" @click="lightbox--">上一张</button
-        ><button class="btn" @click="perform(() => invoke(IPC.centerFile, target, 'screenshot', image.id, true))">另存为</button
-        ><button class="btn" @click="perform(() => invoke(IPC.centerFile, target, 'screenshot', image.id))">打开所在位置</button
-        ><button class="btn" :disabled="lightbox === shots.length - 1" @click="lightbox++">下一张</button>
+        <button class="btn" :disabled="lightbox === 0" @click="lightbox--">{{ t('ic.prev_shot') }}</button
+        ><button class="btn" @click="perform(() => invoke(IPC.centerFile, target, 'screenshot', image.id, true))">
+          {{ t('ic.save_as') }}</button
+        ><button class="btn" @click="perform(() => invoke(IPC.centerFile, target, 'screenshot', image.id))">
+          {{ t('ic.open_location') }}</button
+        ><button class="btn" :disabled="lightbox === shots.length - 1" @click="lightbox++">{{ t('ic.next_shot') }}</button>
       </footer>
     </div>
   </Teleport>

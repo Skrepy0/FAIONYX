@@ -2,6 +2,7 @@
 import { computed, defineAsyncComponent, ref } from 'vue';
 import ConnectionStatus from '../components/connection/ConnectionStatus.vue';
 import '../components/connection/connection.css';
+import { t } from '@renderer/i18n';
 
 const FrpPanel = defineAsyncComponent(() => import('../components/connection/FrpPanel.vue'));
 const VoxLinkPanel = defineAsyncComponent(() => import('../components/connection/VoxLinkPanel.vue'));
@@ -11,35 +12,37 @@ const TerracottaPanel = defineAsyncComponent(() => import('../components/connect
 type ConnectPage = 'choose' | 'frp' | 'voxlink' | 'terracotta';
 const page = ref<ConnectPage>('choose');
 
-/** 三种联机方式：一句准确介绍 + 适用场景标签 */
-const methodCards: Array<{ key: Exclude<ConnectPage, 'choose'>; name: string; tag: string; scene: string; desc: string; icon: string }> = [
+/** 三种联机方式：一句准确介绍 + 适用场景标签；文案走 i18n，切换语言即时更新 */
+const methodCards = computed<
+  Array<{ key: Exclude<ConnectPage, 'choose'>; name: string; tag: string; scene: string; desc: string; icon: string }>
+>(() => [
   {
     key: 'frp',
-    name: 'FRP 内网穿透',
-    tag: '公网隧道',
-    scene: '适合愿意配置隧道的玩家',
-    desc: '注册樱花穿透（natfrp.com）并创建隧道，用官方 frpc 把本地世界映射到公网。填写访问密钥后选择或创建隧道；可用性取决于节点、账号权限和网络。',
+    name: t('friends.frp.name'),
+    tag: t('friends.frp.tag'),
+    scene: t('friends.frp.scene'),
+    desc: t('friends.frp.desc'),
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9m5 11V5m5 15v-8m5 8V8"/></svg>',
   },
   {
     key: 'voxlink',
-    name: 'VoxLink 联机',
-    tag: '6 位房间码 · 免公网 IP',
-    scene: '适合所有普通玩家的连接方式',
-    desc: '创建房间，把 6 位房间码发给好友即可开始连接。直连尝试 20 秒后，可由玩家主动选择 TURN 中继；连接成功后，按页面指引在游戏内输入地址。',
+    name: t('friends.voxlink.name'),
+    tag: t('friends.voxlink.tag'),
+    scene: t('friends.voxlink.scene'),
+    desc: t('friends.voxlink.desc'),
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="19" height="10" rx="5"/><path d="M8 12h2m4 0h2"/><circle cx="9" cy="12" r="0.8" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="0.8" fill="currentColor" stroke="none"/></svg>',
   },
   {
     key: 'terracotta',
-    name: '陶瓦联机',
-    tag: '独立开源 · 开箱即用',
-    scene: '适合使用官方工具和房间码联机的玩家',
-    desc: '独立开源联机项目（GitHub burningtnt/Terracotta，基于 EasyTier，AGPL-3.0）：手动下载官方工具并校验，创建/加入房间开箱即用，连接效果取决于双方网络。',
+    name: t('friends.terracotta.name'),
+    tag: t('friends.terracotta.tag'),
+    scene: t('friends.terracotta.scene'),
+    desc: t('friends.terracotta.desc'),
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v10l8 4 8-4V7l-8-4Z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>',
   },
-];
+]);
 
-const currentCard = computed(() => methodCards.find((c) => c.key === page.value));
+const currentCard = computed(() => methodCards.value.find((c) => c.key === page.value));
 function pick(key: ConnectPage) {
   if (key !== 'choose') page.value = key;
 }
@@ -54,12 +57,12 @@ function pick(key: ConnectPage) {
           <template v-if="page === 'choose'">
             <header data-ui="FriendConnectView:dc6bf3ba90d8" class="connection-header pick-head">
               <div data-ui="FriendConnectView:2d3d09104fce">
-                <h1>选择联机方式</h1>
-                <p>选择适合自己的方式，按指引与好友一起游玩。</p>
+                <h1>{{ t('friends.title') }}</h1>
+                <p>{{ t('friends.subtitle') }}</p>
               </div>
             </header>
 
-            <div data-ui="FriendConnectView:d9ae847bc410" class="pick-list" role="list" aria-label="联机方式列表">
+            <div data-ui="FriendConnectView:d9ae847bc410" class="pick-list" role="list" :aria-label="t('friends.list_aria')">
               <button
                 data-ui="FriendConnectView:52b385769542"
                 v-for="card in methodCards"
@@ -86,11 +89,13 @@ function pick(key: ConnectPage) {
             <div data-ui="FriendConnectView:23040345b003" :key="page" class="method-page">
               <header data-ui="FriendConnectView:d294772458fe" class="connection-header method-header">
                 <div data-ui="FriendConnectView:0eeacbd88403" class="header-copy">
-                  <h1>{{ currentCard?.name ?? '联机' }}</h1>
+                  <h1>{{ currentCard?.name ?? t('friends.fallback_title') }}</h1>
                   <p>{{ currentCard?.desc ?? '' }}</p>
                 </div>
                 <div data-ui="FriendConnectView:f84d848f6a7f" class="header-side">
-                  <button data-ui="FriendConnectView:8c7ad785d0c7" class="btn btn-ghost" @click="page = 'choose'">← 更换方式</button>
+                  <button data-ui="FriendConnectView:8c7ad785d0c7" class="btn btn-ghost" @click="page = 'choose'">
+                    {{ t('friends.back_choose') }}
+                  </button>
                 </div>
               </header>
 

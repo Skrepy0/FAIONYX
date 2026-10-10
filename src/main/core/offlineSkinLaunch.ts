@@ -6,6 +6,7 @@ import { app } from 'electron';
 import type { Account, SkinVariant } from '../../shared/types';
 import { getOfflineSkin } from './skins';
 import { ensureAuthlibInjector } from './yggdrasil';
+import { translate as t } from '../../shared/i18n';
 
 export interface OfflineSkinLaunch {
   args: string[];
@@ -48,7 +49,7 @@ export async function prepareOfflineSkinLaunch(account: Account, signal?: AbortS
   signal?.throwIfAborted();
   if (!snapshot) return null;
   const agent = path.join(__dirname, 'faionyx-offline-skin.jar').replace('app.asar', 'app.asar.unpacked');
-  if (!fs.existsSync(agent)) throw new Error('离线皮肤加载组件缺失，请重新安装启动器');
+  if (!fs.existsSync(agent)) throw new Error(t('offlineskin.error.component_missing'));
   const injector = await waitForResult(ensureAuthlibInjector(), signal);
   signal?.throwIfAborted();
   const launch = await createOfflineSkinLaunch(
@@ -87,7 +88,7 @@ export async function createOfflineSkinLaunch(
     account.username.length > 64 ||
     /[\u0000-\u001f\u007f]/.test(account.username)
   )
-    throw new Error('离线账号身份无效，无法应用皮肤');
+    throw new Error(t('offlineskin.error.invalid_identity'));
   const png = fs.readFileSync(snapshot.filePath);
   if (
     png.length < 24 ||
@@ -98,7 +99,7 @@ export async function createOfflineSkinLaunch(
     crypto.createHash('sha256').update(png).digest('hex') !== snapshot.sha256 ||
     !['classic', 'slim'].includes(snapshot.variant)
   )
-    throw new Error('离线皮肤文件已变化或无效，请重新应用皮肤');
+    throw new Error(t('offlineskin.error.skin_changed'));
   // Generate before reserving the socket: a crypto failure must not leak a
   // listening reservation, and key generation should not block the UI thread.
   const keys = await waitForResult(
@@ -144,7 +145,7 @@ export async function createOfflineSkinLaunch(
         if ((error as NodeJS.ErrnoException).code !== 'ENOENT') failures.push(error);
       }
     }
-    if (failures.length) throw new AggregateError(failures, '离线皮肤临时会话清理失败');
+    if (failures.length) throw new AggregateError(failures, t('offlineskin.error.cleanup_failed'));
   };
   try {
     signal?.throwIfAborted();

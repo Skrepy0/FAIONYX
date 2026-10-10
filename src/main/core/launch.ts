@@ -11,6 +11,7 @@ import { createCommandWorld } from './commandWorld';
 import { autoMemoryMB } from '../../shared/memory';
 import { requestGameWindowClose, focusGameWindow, spawnGameProcess } from './gracefulClose';
 import { logScope } from './launcherLog';
+import { translate as t } from '../../shared/i18n';
 
 const launchLog = logScope('launch');
 import { reuseExternalRuntimeLibraries } from './externalRuntime';
@@ -98,7 +99,7 @@ let invocation: Invocation | undefined;
 let restartPending: { invocation: Invocation; sessionToken?: symbol; forceToken?: string; waiting: boolean } | undefined;
 
 export function cancelRestart(): void {
-  if (restartPending?.waiting) throw new Error('仍在等待游戏正常退出，请稍后取消');
+  if (restartPending?.waiting) throw new Error(t('launch.error.wait_exit_cancel'));
   restartPending = undefined;
 }
 
@@ -108,7 +109,12 @@ export async function restartGame(
   folder: string,
   forceToken?: string
 ): Promise<{ requiresForce: boolean; forceToken?: string }> {
-  launchLog.info(`请求重启实例 ${versionId}${forceToken ? '（已带强杀确认）' : ''}`);
+  launchLog.info(
+    t('launch.log.restart_request', {
+      version: versionId,
+      forced: forceToken ? t('launch.log.restart_forced_suffix') : '',
+    })
+  );
   const targetToken = gameSession.tokenOf(versionId);
   if (forceToken) {
     if (
@@ -118,24 +124,24 @@ export async function restartGame(
       restartPending.invocation.versionId !== versionId ||
       pathIdentity(restartPending.invocation.folder) !== pathIdentity(folder)
     )
-      throw new Error('重启确认已失效，请重新请求');
+      throw new Error(t('launch.error.restart_confirm_expired'));
     restartPending.waiting = true;
     try {
       if (targetToken) await gameSession.stop(8000, targetToken);
     } catch (error) {
       restartPending = undefined;
-      launchLog.error(`重启确认后强制停止游戏失败：${versionId}`, error);
+      launchLog.error(t('launch.log.restart_force_stop_failed', { version: versionId }), error);
       throw error;
     }
   } else {
-    if (restartPending) throw new Error('已有重启请求正在处理');
+    if (restartPending) throw new Error(t('launch.error.restart_pending'));
     if (!invocation || !targetToken || invocation.versionId !== versionId || pathIdentity(invocation.folder) !== pathIdentity(folder))
-      throw new Error('此实例当前未运行；请选择启动实例');
+      throw new Error(t('launch.error.instance_not_running'));
     restartPending = { invocation, sessionToken: targetToken, waiting: true };
     try {
       await gameSession.stopGracefully(requestGameWindowClose, 30000, targetToken);
     } catch {
-      launchLog.warn(`实例 ${versionId} 30 秒内未正常退出，需要用户确认强杀后重启`);
+      launchLog.warn(t('launch.log.restart_grace_timeout', { version: versionId }));
       restartPending.waiting = false;
       restartPending.forceToken = crypto.randomUUID();
       return { requiresForce: true, forceToken: restartPending.forceToken };
@@ -143,7 +149,7 @@ export async function restartGame(
   }
   const previous = restartPending.invocation;
   try {
-    previous.onState({ status: 'launching', text: '游戏已确认退出，正在重新启动同一实例…' });
+    previous.onState({ status: 'launching', text: t('launch.state.restarting') });
     const token = gameSession.reserve(previous.versionId);
     try {
       await withGameFolder(previous.folder, () =>
@@ -267,7 +273,7 @@ export function restoreRunningGame(onState: (s: LaunchState) => void): RunningGa
     logDir: record.logDir,
     pid: record.pid,
   };
-  onState({ status: 'running', text: '检测到正在运行的游戏（启动器重启后恢复）' });
+  onState({ status: 'running', text: t('launch.state.restored_running') });
   return record;
 }
 
@@ -282,8 +288,8 @@ export function recordLaunchPreparationError(versionId: string, message: string)
 
 /** 终止当前游戏进程 */
 export const killGame = (forceToken?: string) => {
-  launchLog.info('收到终止游戏进程请求');
-  if (restartPending) throw new Error('正在处理重启，请先完成或取消重启请求');
+  launchLog.info(t('launch.log.kill_request'));
+  if (restartPending) throw new Error(t('launch.error.restart_in_progress'));
   return gameSession.requestStop(requestGameWindowClose, forceToken);
 };
 
@@ -331,16 +337,21 @@ export async function launch(
   serverAddress?: string,
   options: LaunchOptions = {}
 ): Promise<void> {
-  if (restartPending) throw new Error('正在重启游戏，请稍后再启动');
+  if (restartPending) throw new Error(t('launch.error.launching_restart'));
   requireDesktopGamePlatform(process.platform);
   const token = gameSession.reserve(versionId);
-  launchLog.info(`开始启动实例 ${versionId}${serverAddress ? `（直达服务器 ${serverAddress}）` : ''}`);
+  launchLog.info(
+    t('launch.log.launch_start', {
+      version: versionId,
+      server: serverAddress ? t('launch.log.launch_server_suffix', { server: serverAddress }) : '',
+    })
+  );
   invocation = { versionId, folder: gameDir(), emit, sendLog, onState, serverAddress, options: { ...options } };
   try {
     await launchOwned(versionId, emit, sendLog, onState, serverAddress, token, invocation.options);
   } catch (error) {
     gameSession.release(token);
-    launchLog.error(`实例 ${versionId} 启动失败`, error);
+    launchLog.error(t('launch.log.launch_failed', { version: versionId }), error);
     throw error;
   }
 }
@@ -355,9 +366,7 @@ async function launchOwned(
   options: LaunchOptions = {}
 ): Promise<void> {
   const settings = getSettings();
-  const deadline = new ProgressDeadline(60000, () =>
-    onState({ status: 'error', text: '启动准备已连续 60 秒没有进展，已取消本次启动；正在收尾，请稍后重试。' })
-  );
+  const deadline = new ProgressDeadline(60000, () => onState({ status: 'error', text: t('launch.state.prepare_stalled') }));
   const originalEmit = emit;
   emit = (event) => {
     if (deadline.signal.aborted) return;
@@ -400,7 +409,7 @@ async function launchOwned(
   const appearance: { offlineSkin: OfflineSkinLaunch | null } = { offlineSkin: null };
   const pipelineStarted = Date.now();
   try {
-    launchLog.debug(`启动管线开始：实例 ${versionId}`);
+    launchLog.debug(t('launch.log.pipeline_start', { version: versionId }));
     // a0) 自愈：版本链 json 缺失或链底客户端 jar 缺失时，自动补全下载原版文件
     let baseIdProbe = versionId;
     let chainBroken = false;
@@ -408,7 +417,7 @@ async function launchOwned(
       let cur: VersionJson = readVersionJson(versionId);
       const visited = new Set([versionId]);
       while (cur.inheritsFrom) {
-        if (visited.has(cur.inheritsFrom) || visited.size >= 32) throw new Error('版本继承链存在循环或超过 32 层');
+        if (visited.has(cur.inheritsFrom) || visited.size >= 32) throw new Error(t('launch.error.chain_cycle'));
         baseIdProbe = cur.inheritsFrom;
         visited.add(baseIdProbe);
         cur = readVersionJson(baseIdProbe);
@@ -416,7 +425,7 @@ async function launchOwned(
     } catch (e) {
       if (baseIdProbe === versionId) {
         // 连入口版本的 json 都丢了，无法推断链条，只能重装
-        throw new Error(`版本 ${versionId} 文件丢失，请在游戏版本页重新安装`);
+        throw new Error(t('launch.error.version_files_missing', { version: versionId }));
       }
       chainBroken = true;
     }
@@ -424,7 +433,7 @@ async function launchOwned(
     const baseInVersions = fs.existsSync(versionJsonPath(baseIdProbe));
     const jarProbe = baseInVersions ? versionJarPath(baseIdProbe) : baseVersionJarPath(baseIdProbe);
     if (chainBroken || !fs.existsSync(jarProbe)) {
-      launchLog.info(`检测到实例 ${versionId} 依赖的游戏文件缺失（chainBroken=${chainBroken}），开始自动补全`);
+      launchLog.info(t('launch.log.chain_broken', { version: versionId, broken: String(chainBroken) }));
       // 自包含实例（flatten 后）：json 不缺，仅补客户端 jar，绝不重写合并后的 json
       let flattened = false;
       try {
@@ -433,14 +442,14 @@ async function launchOwned(
         /* json 读取失败按旧链处理 */
       }
       if (flattened && !chainBroken) {
-        emit({ stage: 'repair', progress: 0, text: `检测到游戏本体缺失，正在自动补全…` });
+        emit({ stage: 'repair', progress: 0, text: t('launch.state.repair_client_missing') });
         await installClientJarOnly(versionId, emit, deadline.signal);
-        emit({ stage: 'repair', progress: 1, text: '文件补全完成' });
+        emit({ stage: 'repair', progress: 1, text: t('launch.state.repair_done') });
       } else {
         emit({
           stage: 'repair',
           progress: 0,
-          text: `检测到游戏文件缺失，正在自动补全 ${baseIdProbe}…`,
+          text: t('launch.state.repair_files_missing', { version: baseIdProbe }),
         });
         // installVanilla 内部：json 不在则下载，已存在文件校验跳过，只补缺失部分
         // 自定义命名的原版实例：真实 MC 版本 id 从 _mcVersion 取
@@ -468,12 +477,11 @@ async function launchOwned(
           /* json 缺失时用 probe（即真实 MC id） */
         }
         const { isMinecraftVersionId } = await import('./instanceMetadata');
-        if (!isMinecraftVersionId(realId))
-          throw new Error('无法可靠识别实例的 Minecraft 版本，不能自动补全游戏文件；请检查版本信息或重新安装');
+        if (!isMinecraftVersionId(realId)) throw new Error(t('launch.error.unknown_mc_version'));
         // 加载器实例的依赖原版补进 base 区；独立原版实例仍在 versions 区修复
         const dest = baseIdProbe !== versionId && !baseInVersions ? 'base' : 'versions';
         await installVanilla(realId, emit, dest, realId !== baseIdProbe ? baseIdProbe : undefined, deadline.signal);
-        emit({ stage: 'repair', progress: 1, text: '文件补全完成' });
+        emit({ stage: 'repair', progress: 1, text: t('launch.state.repair_done') });
       }
     }
 
@@ -486,7 +494,7 @@ async function launchOwned(
     } catch {
       /* a fresh instance */
     }
-    launchLog.debug(`实例 ${versionId} 游戏目录：${effectiveGameDir}`);
+    launchLog.debug(t('launch.log.game_dir', { version: versionId, dir: effectiveGameDir }));
     fs.mkdirSync(effectiveGameDir, { recursive: true });
 
     // 默认中文：仅在 options.txt 不存在时写入（绝不覆盖玩家已有设置）
@@ -500,10 +508,10 @@ async function launchOwned(
     }
 
     // a) 版本链合并
-    emit({ stage: 'launch', progress: 0, text: '解析版本信息' });
+    emit({ stage: 'launch', progress: 0, text: t('launch.state.resolve_version') });
     const { merged, baseId } = resolveChain(versionId);
-    launchLog.debug(`版本链解析完成：${versionId} → 底层 ${baseId}`);
-    if (!merged.mainClass) throw new Error('版本 json 缺少 mainClass，文件可能损坏');
+    launchLog.debug(t('launch.log.chain_resolved', { version: versionId, base: baseId }));
+    if (!merged.mainClass) throw new Error(t('launch.error.missing_main_class'));
     const instanceConfig = readVersionJson(versionId);
     const { resolveInstanceMetadata } = await import('./instanceMetadata');
     const { readClientVersionEvidence } = await import('./instanceVersionEvidence');
@@ -516,7 +524,7 @@ async function launchOwned(
     }).mcVersion;
     const clientJar = clientJarPath(baseId);
     const account = selectedAccount();
-    if (!account) throw new Error('尚未选择账号，请先在账号页添加并选择一个账号');
+    if (!account) throw new Error(t('launch.error.no_account'));
     const timed = async <T>(stage: string, work: () => Promise<T>): Promise<T> => {
       const started = Date.now();
       try {
@@ -525,7 +533,7 @@ async function launchOwned(
         deadline.signal.throwIfAborted();
         return result;
       } finally {
-        log(`[FAIONYX] 启动准备 · ${stage}：${Date.now() - started}ms`);
+        log(`[FAIONYX] ${t('launch.log.prepare_timing', { stage, ms: Date.now() - started })}`);
       }
     };
     // Both runtime selection and game options wait for the same verified client.
@@ -533,11 +541,11 @@ async function launchOwned(
     let clientPreparation: Promise<void> | undefined;
     const prepareClient = () =>
       (clientPreparation ??= (async () => {
-        emit({ stage: 'repair', progress: 0, text: '校验游戏本体完整性' });
+        emit({ stage: 'repair', progress: 0, text: t('launch.state.verify_client') });
         await ensureLaunchArtifact(
           { ...readVersionJson(baseId).downloads?.client, dest: clientJar },
           settings.mirror,
-          (done, total) => emit({ stage: 'repair', progress: total ? done / total : 0, text: '修复游戏本体' }),
+          (done, total) => emit({ stage: 'repair', progress: total ? done / total : 0, text: t('launch.state.repair_client') }),
           deadline.signal
         );
         const canonical = readClientVersionEvidence(clientJar);
@@ -545,27 +553,31 @@ async function launchOwned(
       })());
     const [{ classpath, nativesPath, launchAssets }, [validAccount, externalAuthArgs], javaPath] = await waitForPreparation([
       () =>
-        timed('游戏文件与配置', async () => {
+        timed(t('launch.stage.game_files'), async () => {
           await prepareClient();
 
           // 默认按键同步（总开关开启时覆盖实例 options.txt 的 key_* 项，其余行原样保留）
           const { syncDefaultGameOptions } = await import('./defaultGameOptions');
           const gameOptionsResult = syncDefaultGameOptions(effectiveGameDir, instanceMcVersion);
-          if (gameOptionsResult.applied.length) log(`[FAIONYX] 已同步 ${gameOptionsResult.applied.length} 项默认游戏选项并校验写入`);
-          if (gameOptionsResult.unsupported.length) log(`[FAIONYX] 当前版本不支持：${gameOptionsResult.unsupported.join('、')}`);
+          if (gameOptionsResult.applied.length)
+            log(`[FAIONYX] ${t('launch.log.synced_options', { count: gameOptionsResult.applied.length })}`);
+          if (gameOptionsResult.unsupported.length)
+            log(
+              `[FAIONYX] ${t('launch.log.unsupported_options', { list: gameOptionsResult.unsupported.join(t('common.list_separator')) })}`
+            );
           if (settings.resourcePackSync) {
             const { syncDefaultResourcePacks } = await import('./defaultResourcePacks');
             const count = syncDefaultResourcePacks(effectiveGameDir, instanceMcVersion, clientJarPath(baseId), { resourcePacksConfigured });
-            if (count) log(`[FAIONYX] 已装载 ${count} 个默认材质包`);
+            if (count) log(`[FAIONYX] ${t('launch.log.loaded_packs', { count })}`);
           }
           if (settings.keySync) {
             try {
               const { syncKeysToGameDir, keySyncSupportedForVersion } = await import('./keybindings');
               if (!keySyncSupportedForVersion(instanceMcVersion)) {
-                log(`[FAIONYX] Minecraft ${instanceMcVersion} 的键位为数字 keycode 格式，跳过按键同步`);
-              } else if (syncKeysToGameDir(effectiveGameDir)) log('[FAIONYX] 已同步默认按键到 options.txt');
+                log(`[FAIONYX] ${t('launch.log.keycode_skip', { version: instanceMcVersion })}`);
+              } else if (syncKeysToGameDir(effectiveGameDir)) log(`[FAIONYX] ${t('launch.log.keys_synced')}`);
             } catch (error) {
-              log(`[FAIONYX] 默认按键同步失败（不影响启动）：${error instanceof Error ? error.message : String(error)}`);
+              log(`[FAIONYX] ${t('launch.log.keys_failed', { error: error instanceof Error ? error.message : String(error) })}`);
             }
           }
 
@@ -577,7 +589,7 @@ async function launchOwned(
             librariesDir(),
             libTasks.map((t) => t.dest)
           );
-          if (reused) log(`[FAIONYX] 已复用注册目录中 ${reused} 个运行库文件`);
+          if (reused) log(`[FAIONYX] ${t('launch.log.libs_reused', { count: reused })}`);
           await repairNeoRuntime(merged, clientJar, readVersionJson(baseId), emit);
           const launchFiles = launchLibraryFiles(merged);
           await mapLaunchFiles(launchFiles, (file) => resolveNativeIntegrity(file, deadline.signal));
@@ -591,7 +603,7 @@ async function launchOwned(
               emit({
                 stage: 'repair',
                 progress: checkedLibraries / launchFiles.length,
-                text: `校验依赖库 ${checkedLibraries}/${launchFiles.length}`,
+                text: t('launch.state.check_libraries', { done: checkedLibraries, total: launchFiles.length }),
               });
             }
             return reason;
@@ -612,12 +624,16 @@ async function launchOwned(
                       stage: 'repair',
                       progress: total ? done / total : 0,
                       bytesDone: done,
-                      text: `修复依赖库 ${path.basename(file.dest)}`,
+                      text: t('launch.state.repair_library', { name: path.basename(file.dest) }),
                     }),
                   deadline.signal
                 );
-                launchLog.info(`已修复依赖库 ${path.basename(file.dest)}`);
-                emit({ stage: 'repair', progress: ++repaired / damaged.length, text: `修复依赖库 ${repaired}/${damaged.length}` });
+                launchLog.info(t('launch.log.library_repaired', { name: path.basename(file.dest) }));
+                emit({
+                  stage: 'repair',
+                  progress: ++repaired / damaged.length,
+                  text: t('launch.state.repair_library_count', { done: repaired, total: damaged.length }),
+                });
               }
             })
           );
@@ -625,7 +641,7 @@ async function launchOwned(
           if (repairFailure?.status === 'rejected') throw repairFailure.reason;
 
           // d) classpath 与 natives 解压
-          emit({ stage: 'launch', progress: 0.5, text: '准备运行库与 natives' });
+          emit({ stage: 'launch', progress: 0.5, text: t('launch.state.prepare_natives') });
           const { artifacts, natives } = resolvedLibraries(merged);
           const nativesPath =
             process.platform === 'linux' ? path.join(nativesDir(versionId), `linux-${process.arch}`) : nativesDir(versionId);
@@ -654,7 +670,8 @@ async function launchOwned(
                 zip.extractEntryTo(entry, nativesPath, true, true);
               }
             } catch (error) {
-              if (process.platform === 'linux') throw new Error(`Linux 原生运行库解压失败：${path.basename(jar)}；${String(error)}`);
+              if (process.platform === 'linux')
+                throw new Error(t('launch.error.native_extract', { jar: path.basename(jar), error: String(error) }));
               // Preserve the existing Windows/macOS extraction behavior.
             }
           }
@@ -668,14 +685,14 @@ async function launchOwned(
             assetsDir(),
             effectiveGameDir,
             async (tasks) => {
-              emit({ stage: 'repair', progress: 0, text: `补全游戏资源（含语言文件）${tasks.length} 项` });
+              emit({ stage: 'repair', progress: 0, text: t('launch.state.assets', { count: tasks.length }) });
               await downloadAll(
                 tasks,
                 (done, total, speed, detail) =>
                   emit({
                     stage: 'repair',
                     progress: total ? done / total : 1,
-                    text: `补全游戏资源 ${done}/${total}`,
+                    text: t('launch.state.assets_progress', { done, total }),
                     bytesDone: detail.bytesDone,
                     speed,
                   }),
@@ -685,26 +702,26 @@ async function launchOwned(
               );
             }
           );
-          log(`[FAIONYX] 游戏资源：${launchAssets.root}；索引：${launchAssets.indexId}`);
+          log(`[FAIONYX] ${t('launch.log.assets', { root: launchAssets.root, index: launchAssets.indexId })}`);
 
           return { classpath, nativesPath, launchAssets };
         }),
       () =>
-        timed('账号验证', () =>
+        timed(t('launch.stage.account'), () =>
           waitForPreparation([
             () => getValidAccount(account),
             async () => {
               appearance.offlineSkin = await prepareOfflineSkinLaunch(account, deadline.signal);
-              if (appearance.offlineSkin) log('[FAIONYX] 已准备当前离线账号的本地皮肤；仅在本机游戏显示，下次启动应用新选择');
+              if (appearance.offlineSkin) log(`[FAIONYX] ${t('launch.log.offline_skin')}`);
               return appearance.offlineSkin?.args ?? yggdrasil.launchArguments(account);
             },
           ])
         ),
       () =>
-        timed('Java 环境', async () => {
+        timed(t('launch.stage.java'), async () => {
           await prepareClient();
           // c) Java：版本独立指定 > 手动指定 > 自动管理
-          emit({ stage: 'java', progress: 0, text: '检查 Java 环境' });
+          emit({ stage: 'java', progress: 0, text: t('launch.state.check_java') });
           const requirement = await resolveJavaRequirement(merged, instanceMcVersion, {
             signal: deadline.signal,
             modsDirectory: path.join(effectiveGameDir, 'mods'),
@@ -718,18 +735,18 @@ async function launchOwned(
             javaPath = await ensureJava(merged, emit, instanceMcVersion, { requirement, signal: deadline.signal });
           } else if (versionJava) {
             if (!fs.existsSync(versionJava)) {
-              throw new Error(`该版本指定的 Java 不存在（${versionJava}），请在版本设置中重新选择`);
+              throw new Error(t('launch.error.version_java_missing', { path: versionJava }));
             }
             javaPath = versionJava;
-            emit({ stage: 'java', progress: 1, text: '使用该版本指定的 Java' });
+            emit({ stage: 'java', progress: 1, text: t('launch.state.use_version_java') });
           } else if (settings.javaAuto) {
             javaPath = await ensureJava(merged, emit, instanceMcVersion, { requirement, signal: deadline.signal });
           } else if (settings.javaPath) {
             if (!fs.existsSync(settings.javaPath)) {
-              throw new Error('手动指定的 Java 路径不存在，请在设置中重新选择');
+              throw new Error(t('launch.error.manual_java_missing'));
             }
             javaPath = settings.javaPath;
-            emit({ stage: 'java', progress: 1, text: '使用手动指定的 Java' });
+            emit({ stage: 'java', progress: 1, text: t('launch.state.use_manual_java') });
           } else {
             const found = await selectHealthyJava(
               await scanJavaForLaunch(emit, deadline.signal),
@@ -739,20 +756,22 @@ async function launchOwned(
               requirement
             );
             if (!found) {
-              throw new Error(`该版本需要 Java ${need} (64位)，但未找到（Java 自动管理已关闭）。请在设置中选择 Java 或开启自动管理`);
+              throw new Error(t('launch.error.java_not_found', { need }));
             }
             javaPath = found.path;
-            emit({ stage: 'java', progress: 1, text: `使用本机 Java ${found.version}` });
+            emit({ stage: 'java', progress: 1, text: t('launch.state.use_local_java', { version: found.version }) });
           }
-          launchLog.info(`选定 Java（推荐 Java ${need}，来源 ${requirement.source}）：${javaPath}`);
+          launchLog.info(t('launch.log.java_selected', { need, source: requirement.source, path: javaPath }));
 
           const selectedJavaPath = javaPath;
           javaPath = await resolveJavaExecutable(javaPath, deadline.signal);
-          if (selectedJavaPath !== javaPath) log(`[FAIONYX] Java 转发入口已解析到真实运行时: ${javaPath}`);
+          if (selectedJavaPath !== javaPath) log(`[FAIONYX] ${t('launch.log.java_resolved', { path: javaPath })}`);
           const javaInfo = await probeJavaAsync(javaPath, deadline.signal);
-          const incompatibility = javaInfo ? javaCompatibilityError(javaInfo, requirement, requiredArch, automatic) : 'Java 无法正常运行';
-          if (incompatibility) throw new Error('所选 Java 不适配：' + incompatibility + '；请修改实例设置或开启自动管理');
-          if (!javaInfo) throw new Error('Java 无法正常运行');
+          const incompatibility = javaInfo
+            ? javaCompatibilityError(javaInfo, requirement, requiredArch, automatic)
+            : t('launch.error.java_unusable');
+          if (incompatibility) throw new Error(t('launch.error.java_incompatible', { reason: incompatibility }));
+          if (!javaInfo) throw new Error(t('launch.error.java_unusable'));
           await validateJavaRuntime(javaPath, javaInfo.major);
           return javaPath;
         }),
@@ -804,7 +823,7 @@ async function launchOwned(
     } else if (merged.minecraftArguments) {
       gameArgs = merged.minecraftArguments.split(/\s+/).filter(Boolean).map(sub);
     } else {
-      throw new Error('版本 json 缺少游戏参数，文件可能损坏');
+      throw new Error(t('launch.error.missing_game_args'));
     }
 
     // e) JVM 参数
@@ -812,14 +831,20 @@ async function launchOwned(
     // 超出物理内存的分配会让 JVM 起不来或系统整卡死。
     const totalMemMB = Math.floor(os.totalmem() / 1024 / 1024);
     if (process.platform === 'win32' && settings.memoryOrganizeBeforeLaunch === true) {
-      emit({ stage: 'prepare', progress: 0, text: '整理可回收工作集' });
+      emit({ stage: 'prepare', progress: 0, text: t('launch.state.organize_memory') });
       try {
         const result = await (await import('./memoryOrganizer')).organizeMemory();
         sendLog(
-          `内存整理：可用 ${result.beforeMB} → ${result.afterMB} MB；处理 ${result.processed}，跳过 ${result.skipped}；${Object.keys(result.failures).join('；') || '完成'}`
+          t('launch.log.memory_organized', {
+            before: result.beforeMB,
+            after: result.afterMB,
+            processed: result.processed,
+            skipped: result.skipped,
+            failures: Object.keys(result.failures).join(t('common.list_separator')) || t('launch.log.memory_done'),
+          })
         );
       } catch (e) {
-        sendLog('内存整理失败，继续正常启动：' + String(e));
+        sendLog(t('launch.log.memory_failed', { error: String(e) }));
       }
     }
     const availableMemMB = Math.floor(os.freemem() / 1024 / 1024);
@@ -893,16 +918,16 @@ async function launchOwned(
     if (options.createCommandWorld) {
       const world = createCommandWorld(effectiveGameDir, clientJar);
       options.singleplayerWorld = world.id;
-      log(`[FAIONYX] 已新建允许命令的创造测试世界：${world.path}`);
+      log(`[FAIONYX] ${t('launch.log.world_created', { path: world.path })}`);
     }
     if (options.singleplayerWorld) {
       if (!fs.existsSync(path.join(effectiveGameDir, 'saves', options.singleplayerWorld, 'level.dat')))
-        throw new Error('待进入的测试世界不存在，未创建重复世界');
+        throw new Error(t('launch.error.world_missing'));
       gameArgs.push('--quickPlaySingleplayer', options.singleplayerWorld);
     } else if (serverAddress && supportsQuickPlayMultiplayer(minecraftVersion)) {
       gameArgs.push('--quickPlayMultiplayer', serverAddress);
     } else if (serverAddress) {
-      log(`[FAIONYX] Minecraft ${minecraftVersion} 不支持 Quick Play，已仅启动实例`);
+      log(`[FAIONYX] ${t('launch.log.no_quickplay', { version: minecraftVersion })}`);
     }
 
     // g) 启动进程（json 自带 -cp ${classpath} 时不再重复加 -cp；forge 的 -p 是模块路径仍需 -cp）
@@ -928,14 +953,16 @@ async function launchOwned(
     });
     const commandSummary = `${javaPath} ${logArgs.map((a) => (a.includes(' ') ? `"${a}"` : a)).join(' ')}`;
     log(
-      `[FAIONYX] 游戏窗口: mode=${windowArgs.mode}` +
-        (windowArgs.width && windowArgs.height ? `, width=${windowArgs.width}, height=${windowArgs.height}` : ', fullscreen=true')
+      `[FAIONYX] ${t('launch.log.window_mode', { mode: windowArgs.mode })}` +
+        (windowArgs.width && windowArgs.height
+          ? t('launch.log.window_size_suffix', { width: windowArgs.width, height: windowArgs.height })
+          : t('launch.log.fullscreen_suffix'))
     );
-    log(`[FAIONYX] 启动命令: ${commandSummary}`);
-    launchLog.debug(`启动命令：${commandSummary}`);
-    launchLog.info(`启动准备完成（耗时 ${Date.now() - pipelineStarted}ms），正在创建游戏进程`);
+    log(`[FAIONYX] ${t('launch.log.command', { command: commandSummary })}`);
+    launchLog.debug(t('launch.log.command', { command: commandSummary }));
+    launchLog.info(t('launch.log.prepare_done', { ms: Date.now() - pipelineStarted }));
 
-    emit({ stage: 'launch', progress: 1, text: '启动游戏进程' });
+    emit({ stage: 'launch', progress: 1, text: t('launch.state.launch_process') });
     // 脱离式创建：游戏进程与启动器生命周期完全解耦（Windows CreateProcessW，见 gracefulClose.ts），
     // 关闭启动器时游戏继续运行；stdout/stderr 仍以管道回流，日志体验不变。
     deadline.signal.throwIfAborted();
@@ -950,7 +977,7 @@ async function launchOwned(
     const proc = await withDeadline(
       (signal) => spawnGameProcess(javaPath, args, { cwd: effectiveGameDir, signal }),
       15000,
-      '游戏进程创建超时，请检查 Java 与系统权限'
+      t('launch.error.spawn_timeout')
     );
     gameSession.attach(token, proc);
     spawned = true;
@@ -979,9 +1006,14 @@ async function launchOwned(
             previous: initialWindowPreference,
             resolution: next as GameResolution,
           };
-          log(`[FAIONYX] 已保存游戏窗口化大小：${size.width} × ${size.height}`);
+          log(`[FAIONYX] ${t('launch.log.window_size_saved', { width: size.width, height: size.height })}`);
         }),
-      onError: (error) => log(`[FAIONYX] 保存游戏窗口大小失败：${error instanceof Error ? error.message : String(error)}；原设置保留`),
+      onError: (error) =>
+        log(
+          `[FAIONYX] ${t('launch.log.window_size_save_failed', {
+            error: error instanceof Error ? error.message : String(error),
+          })}`
+        ),
     });
     lastLaunch = {
       versionId,
@@ -1009,13 +1041,13 @@ async function launchOwned(
       })
     );
     // spawnGameProcess returns only after the OS confirms process creation.
-    launchLog.info(`游戏进程已启动：pid=${proc.pid}`);
-    onState({ status: 'running', text: '游戏进程已启动' });
+    launchLog.info(t('launch.log.process_started', { pid: String(proc.pid) }));
+    onState({ status: 'running', text: t('launch.state.running') });
     // QuickPlay 直达（创建命令世界/进服）：游戏窗口出现后拉到前台，避免鼠标被锁在未聚焦窗口里
     if (options.singleplayerWorld || serverAddress) {
       void focusGameWindow(proc)
-        .then(() => log('[FAIONYX] 游戏窗口已聚焦'))
-        .catch((error) => log(`[FAIONYX] 自动聚焦未完成：${error.message}；请点击任务栏中的 Minecraft 窗口`));
+        .then(() => log(`[FAIONYX] ${t('launch.log.window_focused')}`))
+        .catch((error) => log(`[FAIONYX] ${t('launch.log.focus_failed', { error: error.message })}`));
     }
 
     const exitEvidence = new GameExitEvidence();
@@ -1034,13 +1066,13 @@ async function launchOwned(
     proc.on('error', (err) => {
       // A failed kill can also emit 'error'; it is not evidence that the game exited.
       if (proc.pid && proc.exitCode === null && proc.signalCode === null) {
-        launchLog.warn(`进程操作失败，仍在跟踪游戏：${err.message}`);
-        log(`进程操作失败，仍在跟踪游戏: ${err.message}`);
+        launchLog.warn(t('launch.log.process_op_failed', { error: err.message }));
+        log(t('launch.log.process_op_failed', { error: err.message }));
         return;
       }
       if (!gameSession.release(token)) return;
       void windowSizeCapture.finish(false);
-      launchLog.error(`游戏进程启动失败：pid=${proc.pid ?? '未知'}`, err);
+      launchLog.error(t('launch.log.spawn_failed', { pid: proc.pid ?? t('launch.log.pid_unknown') }), err);
       if (exitRecord) rememberExit(() => exitHistory().end(exitRecord, null));
       logStream?.end();
       stdoutStream?.end();
@@ -1049,23 +1081,31 @@ async function launchOwned(
         lastLaunch.spawnError = err.message;
         lastLaunch.endedAt = new Date().toISOString();
       }
-      onState({ status: 'error', text: `进程启动失败: ${err.message}` });
+      onState({ status: 'error', text: t('launch.state.spawn_failed', { error: err.message }) });
     });
     proc.on('close', (code) => {
-      void appearance.offlineSkin?.dispose().catch((error) => launchLog.warn('离线皮肤临时配置清理失败：' + String(error)));
+      void appearance.offlineSkin
+        ?.dispose()
+        .catch((error) => launchLog.warn(t('launch.log.offline_skin_cleanup_failed', { error: String(error) })));
       if (!gameSession.release(token)) return;
       windowSizeCapture.finish(code === 0);
       const runS = spawnedAt ? Math.round((Date.now() - spawnedAt) / 1000) : null;
       const intentional = restartPending?.sessionToken === token || gameSession.wasIntentionalStop(token);
       const exitKind = exitEvidence.classify(code, intentional, process.platform);
       if (exitRecord) rememberExit(() => exitHistory().end(exitRecord, code, intentional, exitKind === 'shutdown-timeout'));
-      if (code === 0) launchLog.info(`实例 ${versionId} 游戏正常退出（code=0${runS !== null ? `，运行 ${runS}s` : ''}）`);
-      else if (intentional) launchLog.info(`实例 ${versionId} 游戏按用户要求退出（code=${code ?? '未知'}）`);
-      else if (exitKind === 'shutdown-timeout')
-        launchLog.warn(`实例 ${versionId} 已进入退出流程，退出清理超时（code=${code}），保留日志但不弹出游玩崩溃提示`);
+      if (code === 0)
+        launchLog.info(
+          t('launch.log.exit_normal', { version: versionId, run: runS !== null ? t('launch.log.run_seconds', { seconds: runS }) : '' })
+        );
+      else if (intentional) launchLog.info(t('launch.log.exit_user', { version: versionId, code: code ?? t('launch.log.pid_unknown') }));
+      else if (exitKind === 'shutdown-timeout') launchLog.warn(t('launch.log.exit_timeout', { version: versionId, code }));
       else
         launchLog.warn(
-          `实例 ${versionId} 游戏异常退出（code=${code ?? '未知'}${runS !== null ? `，运行 ${runS}s` : ''}），如频繁出现请导出错误日志`
+          t('launch.log.exit_abnormal', {
+            version: versionId,
+            code: code ?? t('launch.log.pid_unknown'),
+            run: runS !== null ? t('launch.log.run_seconds', { seconds: runS }) : '',
+          })
         );
       logStream?.end();
       stdoutStream?.end();
@@ -1082,7 +1122,10 @@ async function launchOwned(
         exitKind,
         intentionalRestart: restartPending?.sessionToken === token,
         intentionalStop: gameSession.wasIntentionalStop(token),
-        text: exitKind === 'shutdown-timeout' ? '游戏已关闭；退出清理超时，日志已保留' : `游戏已退出 (code=${code ?? '未知'})`,
+        text:
+          exitKind === 'shutdown-timeout'
+            ? t('launch.state.exited_timeout')
+            : t('launch.state.exited', { code: code ?? t('launch.log.pid_unknown') }),
       });
     });
   } finally {

@@ -13,6 +13,7 @@ import AdmZip from 'adm-zip';
 import type { LoaderName, ModCrossDuplicate, ModDuplicateGroup, ModInfo } from '../../shared/types';
 import { readVersionJson } from './versions';
 import { instanceDirectoryState } from './instances';
+import { translate as t } from '../../shared/i18n';
 
 export { compareVersions as compareMcVersion, matchesVersionRange as matchMcRange } from '../../shared/modCompatibility';
 
@@ -33,7 +34,7 @@ export function parseModFile(filePath: string): ModInfo {
       loader: null,
       mcRange: '',
       dependencies: [],
-      error: '文件损坏或不是有效的 jar 文件',
+      error: t('modinfo.error.corrupt_jar'),
     };
   }
 }
@@ -51,7 +52,7 @@ export function expandJarPaths(paths: string[]): { files: string[]; skipped: str
           .filter((n) => n.toLowerCase().endsWith('.jar'))
           .map((n) => path.join(p, n));
         if (jars.length) files.push(...jars);
-        else skipped.push(`${path.basename(p)}（文件夹内无 .jar）`);
+        else skipped.push(t('modinfo.skipped.no_jar_in_folder', { name: path.basename(p) }));
       } else if (p.toLowerCase().endsWith('.jar')) {
         files.push(p);
       } else {

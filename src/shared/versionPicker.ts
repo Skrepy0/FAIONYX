@@ -1,11 +1,12 @@
 import type { RemoteVersion } from './types';
 export type VersionCategory = 'release' | 'preview' | 'snapshot' | 'old' | 'all';
+/** label 为 i18n 键（versionpicker.filter.*），由调用方通过 t() 取显示名 */
 export const versionCategories: { value: VersionCategory; label: string }[] = [
-  { value: 'release', label: '正式版' },
-  { value: 'preview', label: '预发布 / 候选' },
-  { value: 'snapshot', label: '快照' },
-  { value: 'old', label: '远古版' },
-  { value: 'all', label: '全部' },
+  { value: 'release', label: 'versionpicker.filter.release' },
+  { value: 'preview', label: 'versionpicker.filter.preview' },
+  { value: 'snapshot', label: 'versionpicker.filter.snapshot' },
+  { value: 'old', label: 'versionpicker.filter.old' },
+  { value: 'all', label: 'versionpicker.filter.all' },
 ];
 export function versionCategory(v: RemoteVersion): VersionCategory {
   if (v.type === 'release') return 'release';

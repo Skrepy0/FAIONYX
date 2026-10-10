@@ -4,6 +4,7 @@ import { fileHash } from './fileHash';
 import { downloadAll } from './download';
 import { protectModChange } from './changeProtection';
 import { getSettings } from './settings';
+import { translate as t } from '../../shared/i18n';
 export interface ModReplacement {
   oldName?: string;
   oldSha1?: string;
@@ -15,15 +16,15 @@ export interface ModReplacement {
 export const modHash = (file: string) => fileHash(file);
 export function safeModName(name: string) {
   if (typeof name !== 'string' || path.basename(name) !== name || /[\\/:\0]/.test(name) || !/^.+\.jar(?:\.disabled)?$/i.test(name))
-    throw new Error('无效的模组文件名');
+    throw new Error(t('modtransaction.error.invalid_name'));
   return name;
 }
 export async function validateModFile(dir: string, name: string, sha1?: string) {
   safeModName(name);
   const p = path.join(dir, name),
     s = await fs.promises.lstat(p);
-  if (!s.isFile() || s.isSymbolicLink()) throw new Error('模组不是普通文件');
-  if (sha1 && (await modHash(p)) !== sha1) throw new Error('模组文件已变化，请重新检查：' + name);
+  if (!s.isFile() || s.isSymbolicLink()) throw new Error(t('modtransaction.error.not_regular_file'));
+  if (sha1 && (await modHash(p)) !== sha1) throw new Error(t('modtransaction.error.file_changed', { name }));
 }
 /** Caller holds the directory write lock. Downloads never touch the current files. */
 export async function replaceModFiles(
@@ -37,13 +38,13 @@ export async function replaceModFiles(
     olds = new Set<string>();
   for (const i of items) {
     safeModName(i.name);
-    if (!/^[a-f0-9]{40}$/i.test(i.sha1) || !i.url?.startsWith('https://')) throw new Error('文件缺少可信哈希或下载地址');
+    if (!/^[a-f0-9]{40}$/i.test(i.sha1) || !i.url?.startsWith('https://')) throw new Error(t('modtransaction.error.untrusted_source'));
     const k = i.name.toLowerCase();
-    if (names.has(k)) throw new Error('目标文件名重复：' + i.name);
+    if (names.has(k)) throw new Error(t('modtransaction.error.duplicate_target', { name: i.name }));
     names.add(k);
     if (i.oldName) {
       safeModName(i.oldName);
-      if (olds.has(i.oldName.toLowerCase())) throw new Error('重复的源文件');
+      if (olds.has(i.oldName.toLowerCase())) throw new Error(t('modtransaction.error.duplicate_source'));
       olds.add(i.oldName.toLowerCase());
       await validateModFile(dir, i.oldName, i.oldSha1);
     }
@@ -52,7 +53,7 @@ export async function replaceModFiles(
     backups: Array<{ original: string; backup: string }> = [],
     written: Array<{ file: string; sha1: string }> = [];
   let canClean = true;
-  let phase = '下载新模组';
+  let phase = t('modtransaction.state.download_new');
   try {
     const settings = getSettings();
     await downloadAll(
@@ -62,25 +63,26 @@ export async function replaceModFiles(
       settings.mirror,
       signal
     );
-    phase = '检查模组状态';
+    phase = t('modtransaction.state.check_status');
     await validate?.();
     for (const i of items) {
       if (i.oldName) await validateModFile(dir, i.oldName, i.oldSha1);
-      if (fs.existsSync(path.join(dir, i.name)) && i.name !== i.oldName) throw new Error('目标文件已存在，未覆盖：' + i.name);
+      if (fs.existsSync(path.join(dir, i.name)) && i.name !== i.oldName)
+        throw new Error(t('modtransaction.error.target_exists', { name: i.name }));
     }
-    phase = '保存修改前备份';
+    phase = t('modtransaction.state.backup_before');
     await protectModChange(
       dir,
       items.flatMap((i) => (i.oldName ? [i.oldName, i.name] : [i.name])),
-      '模组版本修改前',
+      t('modtransaction.label.backup_title'),
       signal
     );
-    phase = '检查模组状态';
+    phase = t('modtransaction.state.check_status');
     await validate?.();
     for (const i of items) if (i.oldName) await validateModFile(dir, i.oldName, i.oldSha1);
     signal?.throwIfAborted();
     try {
-      phase = '替换模组文件';
+      phase = t('modtransaction.state.replace_files');
       canClean = false;
       for (let n = 0; n < items.length; n++) {
         const i = items[n];
@@ -103,13 +105,15 @@ export async function replaceModFiles(
         for (const w of written) if (fs.existsSync(w.file) && (await modHash(w.file)) === w.sha1) await fs.promises.unlink(w.file);
         for (const b of backups) await fs.promises.copyFile(b.backup, b.original, fs.constants.COPYFILE_EXCL);
       } catch (rollbackError) {
-        throw new Error('文件被外部修改，自动恢复未完成；原文件已保存在 ' + stage + '。原因：' + String(rollbackError));
+        throw new Error(t('modtransaction.error.rollback_incomplete', { stage, error: String(rollbackError) }));
       }
       canClean = true;
       throw e;
     }
   } catch (error) {
-    throw new Error(`${phase}失败：${error instanceof Error ? error.message : String(error)}`, { cause: error });
+    throw new Error(t('modtransaction.error.phase_failed', { phase, error: error instanceof Error ? error.message : String(error) }), {
+      cause: error,
+    });
   } finally {
     // Keep recoverable originals when an outside change prevented rollback.
     const parent = path.resolve(path.dirname(dir));

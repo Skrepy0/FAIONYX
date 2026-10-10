@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { translate as t } from '../../shared/i18n';
 
 export interface ExitRecord {
   id: string;
@@ -60,8 +61,8 @@ export class ExitJournal {
         s,
         pending.kind,
         pending.kind === 'launcher'
-          ? '上次启动器未正常关闭，已保留异常退出记录。'
-          : `上次游戏「${pending.label}」已结束，但未收到退出状态（可能发生在启动器关闭期间）。`,
+          ? t('exitjournal.history.launcher_not_closed')
+          : t('exitjournal.history.game_ended_unknown', { label: pending.label }),
         pending.context,
         pending.kind === 'game'
       );
@@ -81,7 +82,7 @@ export class ExitJournal {
       pending = s.pending[id];
     if (!pending) return;
     if (shutdownTimeout && pending.kind === 'game') {
-      this.add(s, 'game', `游戏「${pending.label}」已关闭，退出清理超时；日志已保留。`, {
+      this.add(s, 'game', t('exitjournal.history.shutdown_timeout', { label: pending.label }), {
         ...pending.context,
         exitCode: code,
         exitKind: 'shutdown-timeout',
@@ -89,11 +90,18 @@ export class ExitJournal {
       });
       s.history[0].seen = true; // Informational history, not a new crash prompt on next launch.
     } else if (code !== 0 && !intentional)
-      this.add(s, pending.kind, `${pending.kind === 'game' ? `游戏「${pending.label}」` : '启动器'}异常退出（代码 ${code ?? '未知'}）。`, {
-        ...pending.context,
-        exitCode: code,
-        endedAt: new Date().toISOString(),
-      });
+      this.add(
+        s,
+        pending.kind,
+        pending.kind === 'game'
+          ? t('exitjournal.history.game_crash', { label: pending.label, code: String(code ?? t('exitjournal.unknown_code')) })
+          : t('exitjournal.history.launcher_crash', { code: String(code ?? t('exitjournal.unknown_code')) }),
+        {
+          ...pending.context,
+          exitCode: code,
+          endedAt: new Date().toISOString(),
+        }
+      );
     delete s.pending[id];
     this.save(s);
   }

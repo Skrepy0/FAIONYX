@@ -1,4 +1,5 @@
 import type { InstalledVersion, LoaderName, ModInfo } from './types';
+import { translate as t } from './i18n';
 
 export function normalizeLoader(value: unknown): LoaderName | undefined {
   const key = String(value ?? '')
@@ -101,7 +102,7 @@ function expandBound(value: string, pick: 'lo' | 'hi'): string {
  * A comma inside an interval is NEVER an alternative separator. Malformed ranges fail closed. */
 export function matchesVersionRange(range: string, version: string): boolean {
   const r = (range ?? '').trim();
-  if (!version || version === '未知') return false;
+  if (!version || version === t('modcompat.reason.unknown')) return false;
   if (!r || r === '*') return true;
   if (r.includes('||')) return r.split('||').some((part) => !!part.trim() && matchesVersionRange(part, version));
   if (r.includes(' && ')) return r.split(' && ').every((part) => !!part.trim() && matchesVersionRange(part, version));
@@ -204,17 +205,29 @@ export const instanceKey = (instance: Pick<InstalledVersion, 'id' | 'folder'>): 
 /** Explain the same semantic checks used for installation; never guess from labels. */
 export function modMismatchReasons(mod: ModInfo, instance: InstalledVersion): string[] {
   if (mod.error) return [mod.error];
-  if (instance.failed || instance.incomplete) return ['实例安装不完整或元数据无法读取'];
+  if (instance.failed || instance.incomplete) return [t('modcompat.reason.instance_incomplete')];
   const loader = normalizeLoader(instance.loader);
   const specs = (mod.variants?.length ? mod.variants : [mod]).filter((s) => loader && loader === normalizeLoader(s.loader));
-  if (!specs.length) return [`需要 ${mod.loader ?? '已声明的加载器'}，实例为 ${loader ?? '纯净版/未知'}`];
+  if (!specs.length)
+    return [
+      t('modcompat.reason.loader_missing', {
+        required: mod.loader ?? t('modcompat.reason.declared_loader'),
+        actual: loader ?? t('modcompat.reason.vanilla_unknown'),
+      }),
+    ];
   const reasons = specs.flatMap((s) => [
     ...(!matchesVersionRange(s.mcRange, instance.mcVersion)
-      ? [`Minecraft ${instance.mcVersion} 不满足 ${s.mcRange}（方括号含边界，圆括号不含边界）`]
+      ? [t('modcompat.reason.mc_range', { version: instance.mcVersion, range: s.mcRange })]
       : []),
     ...(s.loaderRange &&
     !matchesVersionRange(s.loaderRange, normalizeLoaderVersion(instance.loaderVersion ?? '', loader, instance.mcVersion))
-      ? [`${loader} ${instance.loaderVersion || '版本未知'} 不满足 ${s.loaderRange}`]
+      ? [
+          t('modcompat.reason.loader_range', {
+            loader: loader ?? '',
+            version: instance.loaderVersion || t('modcompat.reason.version_unknown'),
+            range: s.loaderRange,
+          }),
+        ]
       : []),
   ]);
   return [...new Set(reasons)];

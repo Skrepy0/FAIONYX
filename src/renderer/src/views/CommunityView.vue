@@ -18,6 +18,7 @@ import { favorites, favoriteBusy, loadFavorites, toggleProject } from '../modFav
 onMounted(() => void loadFavorites());
 import type { CommunityFile, CommunityKind, CommunityProjectReference, CommunityResult, CommunitySource, LoaderName } from '@shared/types';
 import type { InstalledVersion } from '@shared/types';
+import { t, locale } from '@renderer/i18n';
 
 // ---------------- 资源外链（源页面 + MC 百科介绍） ----------------
 /** CurseForge 的 URL 分类段（按当前搜索分类推断） */
@@ -38,7 +39,7 @@ function sourceUrl(r: CommunityProjectReference, kind: CommunityKind = query.kin
 function openMcmod(item: CommunityProjectReference) {
   const url = mcmodSearchUrl({ ...item, slug: item.slug ?? '' });
   if (url) openExternal(url);
-  else toast('该项目没有可用于检索的英文名称', 'error');
+  else toast(t('community.toast.no_english_name'), 'error');
 }
 
 function openExternal(url: string) {
@@ -64,13 +65,13 @@ function sectionKeyboard(event: KeyboardEvent) {
 // ---------------- 搜索条件 ----------------
 const PAGE_SIZE = 20;
 
-const kindTabs: Array<{ value: CommunityKind; label: string }> = [
-  { value: 'mod', label: 'Mod' },
-  { value: 'modpack', label: '整合包' },
-  { value: 'resourcepack', label: '资源包' },
-  { value: 'shader', label: '光影包' },
-  { value: 'datapack', label: '数据包' },
-];
+const kindTabs = computed<Array<{ value: CommunityKind; label: string }>>(() => [
+  { value: 'mod', label: t('community.kind.mod') },
+  { value: 'modpack', label: t('community.kind.modpack') },
+  { value: 'resourcepack', label: t('community.kind.resourcepack') },
+  { value: 'shader', label: t('community.kind.shader') },
+  { value: 'datapack', label: t('community.kind.datapack') },
+]);
 
 /** 类型筛选胶囊滑动指示块（与导航水滴/游戏 Tab 同款弹簧动效） */
 const kindCapsules = ref<HTMLElement | null>(null);
@@ -115,19 +116,19 @@ const kindBlobStyle = computed(() => ({
   opacity: kindBlob.on ? 1 : 0,
 }));
 
-const sourceOptions: Array<{ value: 'all' | CommunitySource; label: string }> = [
-  { value: 'all', label: '全部来源' },
+const sourceOptions = computed<Array<{ value: 'all' | CommunitySource; label: string }>>(() => [
+  { value: 'all', label: t('community.source.all') },
   { value: 'modrinth', label: 'Modrinth' },
   { value: 'curseforge', label: 'CurseForge' },
-];
+]);
 
-const loaderOptions: Array<{ value: '' | LoaderName; label: string }> = [
-  { value: '', label: '全部加载器' },
+const loaderOptions = computed<Array<{ value: '' | LoaderName; label: string }>>(() => [
+  { value: '', label: t('community.loader.all') },
   { value: 'forge', label: 'Forge' },
   { value: 'fabric', label: 'Fabric' },
   { value: 'quilt', label: 'Quilt' },
   { value: 'neoforge', label: 'NeoForge' },
-];
+]);
 
 /** 完整 MC 版本列表（与游戏下载页同一数据源：远程版本清单，正式版为主） */
 const manifestVersions = ref<string[]>([]);
@@ -157,7 +158,7 @@ const query = reactive({
   keyword: '',
   kind: 'mod' as CommunityKind,
   source: 'all' as 'all' | CommunitySource,
-  mcVersion: currentInstance.value?.mcVersion === '未知' ? '' : (currentInstance.value?.mcVersion ?? ''),
+  mcVersion: currentInstance.value?.mcVersion === t('community.unknown') ? '' : (currentInstance.value?.mcVersion ?? ''),
   loader: currentInstance.value?.loader ?? ('' as '' | LoaderName),
   sort: 'relevance' as 'relevance' | 'downloads' | 'newest',
 });
@@ -172,11 +173,11 @@ const supportsLoader = computed(() => usesCommunityLoader(query.kind));
 const usesPagination = computed(() => !supportsLoader.value);
 
 /** 排序选项 */
-const sortOptions = [
-  { value: 'relevance', label: '相关度' },
-  { value: 'downloads', label: '最多下载' },
-  { value: 'newest', label: '最新发布' },
-];
+const sortOptions = computed(() => [
+  { value: 'relevance', label: t('community.sort.relevance') },
+  { value: 'downloads', label: t('community.sort.downloads') },
+  { value: 'newest', label: t('community.sort.newest') },
+]);
 
 // ---------------- 搜索与列表 ----------------
 const results = ref<CommunityResult[]>(previousSession?.results ?? []);
@@ -261,7 +262,7 @@ async function doSearch(reset: boolean, page = currentPage.value) {
   } catch (e) {
     if (generation !== searchGeneration) return;
     loadError.value = errText(e);
-    if (!first) toast('加载失败：' + loadError.value, 'error');
+    if (!first) toast(t('community.error.load_failed', { e: loadError.value }), 'error');
   } finally {
     if (generation === searchGeneration) {
       loading.value = false;
@@ -313,7 +314,7 @@ onUnmounted(() => {
   if (topSearchTimer) clearTimeout(topSearchTimer);
 });
 function useCurrentInstance() {
-  query.mcVersion = currentInstance.value?.mcVersion === '未知' ? '' : (currentInstance.value?.mcVersion ?? '');
+  query.mcVersion = currentInstance.value?.mcVersion === t('community.unknown') ? '' : (currentInstance.value?.mcVersion ?? '');
   query.loader = currentInstance.value?.loader ?? '';
   versionInput.value = query.mcVersion;
   onFilterChange();
@@ -325,7 +326,7 @@ function useInstance(id: string) {
   const v = store.installed.find((x) => instanceKey(x) === id);
   if (!v) return;
   void selectInstance(v.id, v.folder);
-  query.mcVersion = v.mcVersion === '未知' ? '' : v.mcVersion;
+  query.mcVersion = v.mcVersion === t('community.unknown') ? '' : v.mcVersion;
   query.loader = v.loader ?? '';
   versionInput.value = query.mcVersion;
   onFilterChange();
@@ -357,7 +358,7 @@ onMounted(async () => {
     await nextTick();
     const content = document.querySelector<HTMLElement>('.content');
     if (content) content.scrollTop = previousSession.scrollTop;
-    if (previousSession.interrupted) loadError.value = '上次查询在离开页面时中断，已保留原结果；请重试。';
+    if (previousSession.interrupted) loadError.value = t('community.status.interrupted');
   }
 });
 
@@ -385,16 +386,23 @@ const onIconError = (r: CommunityResult) => {
   brokenIcons.value = new Set([...brokenIcons.value, itemKey(r)]);
 };
 
+/** 下载量格式化：zh-CN 用 亿/万，其余用 B/K */
 const fmtDownloads = (n: number): string => {
-  if (n >= 1e8) return (n / 1e8).toFixed(1) + ' 亿';
-  if (n >= 1e4) return (n / 1e4).toFixed(1) + ' 万';
+  if (locale.value === 'zh-CN') {
+    if (n >= 1e8) return (n / 1e8).toFixed(1) + t('community.downloads.billion');
+    if (n >= 1e4) return (n / 1e4).toFixed(1) + t('community.downloads.myriad');
+  } else {
+    if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  }
   return String(n);
 };
 
 const fmtDate = (iso: string): string => {
   if (!iso) return '—';
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString('zh-CN');
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString(locale.value === 'zh-CN' ? 'zh-CN' : 'en-US');
 };
 
 const fmtSize = (bytes: number): string => {
@@ -405,11 +413,11 @@ const fmtSize = (bytes: number): string => {
   return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
 };
 
-const releaseTagClass = (t: CommunityFile['releaseType']) => (t === 'beta' ? 'tag-cyan' : t === 'alpha' ? 'tag-danger' : 'tag-gold');
-const releaseText: Record<CommunityFile['releaseType'], string> = {
-  release: '正式版',
-  beta: 'Beta',
-  alpha: 'Alpha',
+const releaseTagClass = (rt: CommunityFile['releaseType']) => (rt === 'beta' ? 'tag-cyan' : rt === 'alpha' ? 'tag-danger' : 'tag-gold');
+const releaseText = (rt: CommunityFile['releaseType']): string => {
+  if (rt === 'beta') return 'Beta';
+  if (rt === 'alpha') return 'Alpha';
+  return t('community.release.release');
 };
 
 // ---------------- 下载模态框 ----------------
@@ -461,10 +469,10 @@ async function loadFiles() {
     modal.fileId = (files.find((f) => f.releaseType === 'release') ?? files[0])?.fileId ?? '';
     if (!files.length)
       modal.filesError = usesCommunityLoader(modal.kind)
-        ? '当前 Minecraft / Loader 条件下没有文件，可手动调整筛选。'
-        : '当前 Minecraft 版本下没有文件，可调整版本筛选。';
+        ? t('community.modal.no_file_with_loader')
+        : t('community.modal.no_file_no_loader');
   } catch (e) {
-    if (generation === fileGeneration) modal.filesError = '获取文件列表失败：' + errText(e);
+    if (generation === fileGeneration) modal.filesError = t('community.modal.files_error', { e: errText(e) });
   } finally {
     if (generation === fileGeneration) modal.loadingFiles = false;
   }
@@ -488,10 +496,10 @@ async function openDownload(item: CommunityProjectReference, kind: CommunityKind
     const scanned = await getModTargets();
     if (disposed || generation !== openGeneration || !modal.open) return;
     allTargets.value = scanned.versions;
-    if (scanned.errors.length) toast('部分目录扫描失败：' + scanned.errors.join('；'), 'error');
+    if (scanned.errors.length) toast(t('community.toast.scan_errors', { errors: scanned.errors.join('; ') }), 'error');
     await loadFiles();
   } catch (e) {
-    if (!disposed && generation === openGeneration) modal.filesError = '获取文件列表失败：' + errText(e);
+    if (!disposed && generation === openGeneration) modal.filesError = t('community.modal.files_error', { e: errText(e) });
   } finally {
     if (generation === openGeneration) modal.loadingFiles = false;
   }
@@ -518,12 +526,12 @@ async function confirmDownload() {
     });
     modal.open = false;
     if (modal.kind === 'modpack') {
-      toast(res || '已开始安装整合包', 'success');
+      toast(res || t('community.toast.modpack_started'), 'success');
     } else {
-      toast(`下载完成，已保存到：${res}`, 'success');
+      toast(t('community.toast.download_saved', { path: String(res) }), 'success');
     }
   } catch (e) {
-    toast('下载失败：' + errText(e), 'error');
+    toast(t('community.toast.download_failed', { e: errText(e) }), 'error');
   } finally {
     modal.downloading = false;
   }
@@ -538,11 +546,11 @@ function selectDownloadInstance() {
   <div data-ui="CommunityView:6e56fae5e7dd" class="page community-page" :data-design-page="query.kind">
     <!-- 标题 -->
     <div data-ui="CommunityView:9346ef73457d" class="page-head">
-      <h1 data-ui="CommunityView:5476a5545de6" class="page-title">社区资源</h1>
-      <p data-ui="CommunityView:8ea54e89551b" class="page-sub">搜索并下载 Modrinth / CurseForge 上的 Mod、整合包、资源包、光影与数据包</p>
+      <h1 data-ui="CommunityView:5476a5545de6" class="page-title">{{ t('community.title') }}</h1>
+      <p data-ui="CommunityView:8ea54e89551b" class="page-sub">{{ t('community.subtitle') }}</p>
     </div>
 
-    <div class="community-sections" role="tablist" aria-label="社区资源分区" @keydown="sectionKeyboard">
+    <div class="community-sections" role="tablist" :aria-label="t('community.section.aria')" @keydown="sectionKeyboard">
       <button
         class="community-section"
         role="tab"
@@ -552,7 +560,7 @@ function selectDownloadInstance() {
         :class="{ active: communityTab === 'browse' }"
         @click="communityTab = 'browse'"
       >
-        找资源</button
+        {{ t('community.section.browse') }}</button
       ><button
         class="community-section"
         role="tab"
@@ -562,18 +570,18 @@ function selectDownloadInstance() {
         :class="{ active: communityTab === 'favorites' }"
         @click="communityTab = 'favorites'"
       >
-        已收藏 MOD <span>{{ favorites.length }}</span>
+        {{ t('community.section.favorites') }} <span>{{ favorites.length }}</span>
       </button>
     </div>
 
     <div data-ui="CommunityView:f7acd66aeb10" class="filter-row instance-row">
-      <label data-ui="CommunityView:34312978e030" class="instance-label">选择版本</label>
+      <label data-ui="CommunityView:34312978e030" class="instance-label">{{ t('community.filter.select_version') }}</label>
       <SelectMenu
         v-if="store.installed.length"
         class="filter-select instance-filter"
-        aria-label="选择版本"
+        :aria-label="t('community.filter.select_version_aria')"
         :model-value="currentInstance ? instanceKey(currentInstance) : ''"
-        placeholder="选择实例…"
+        :placeholder="t('community.filter.placeholder')"
         :options="
           store.installed
             .filter((x) => !x.failed && !x.incomplete)
@@ -585,7 +593,9 @@ function selectDownloadInstance() {
         "
         @change="useInstance"
       />
-      <button data-ui="CommunityView:49df26abb0c5" class="btn btn-ghost btn-sm" @click="useCurrentInstance">使用当前实例</button>
+      <button data-ui="CommunityView:49df26abb0c5" class="btn btn-ghost btn-sm" @click="useCurrentInstance">
+        {{ t('community.filter.use_current') }}
+      </button>
     </div>
     <CommunityFavorites
       v-if="communityTab === 'favorites'"
@@ -605,17 +615,17 @@ function selectDownloadInstance() {
           <span data-ui="CommunityView:911176084f18" class="capsule-blob" :style="kindBlobStyle" aria-hidden="true"></span>
           <button
             data-ui="CommunityView:9275c1ee8bbc"
-            v-for="t in kindTabs"
-            :key="t.value"
+            v-for="tab in kindTabs"
+            :key="tab.value"
             class="capsule"
-            :data-kind="t.value"
-            :class="{ active: query.kind === t.value }"
+            :data-kind="tab.value"
+            :class="{ active: query.kind === tab.value }"
             @click="
-              query.kind = t.value;
+              query.kind = tab.value;
               onFilterChange();
             "
           >
-            {{ t.label }}
+            {{ tab.label }}
           </button>
         </div>
 
@@ -625,14 +635,14 @@ function selectDownloadInstance() {
               data-ui="CommunityView:bc0450fd9c8f"
               v-model="query.keyword"
               class="input"
-              :placeholder="query.kind === 'mod' ? '输入 MOD 名称或 MC百科中文名，回车搜索…' : '输入资源名称，回车搜索…'"
+              :placeholder="query.kind === 'mod' ? t('community.search.placeholder_mod') : t('community.search.placeholder_other')"
               @keyup.enter="onSearch"
             />
             <button
               data-ui="CommunityView:ce39174e4563"
               class="search-go"
               :disabled="loading"
-              :aria-label="loading ? '搜索中' : '搜索'"
+              :aria-label="loading ? t('community.search.searching') : t('community.search.search')"
               @click="onSearch"
             >
               <span v-if="loading" class="spin"></span>
@@ -653,12 +663,14 @@ function selectDownloadInstance() {
               </svg>
             </button>
           </div>
-          <button data-ui="CommunityView:15aecd36844d" class="btn btn-ghost btn-sm" :disabled="loading" @click="onReset">重置</button>
+          <button data-ui="CommunityView:15aecd36844d" class="btn btn-ghost btn-sm" :disabled="loading" @click="onReset">
+            {{ t('community.search.reset') }}
+          </button>
         </div>
 
         <div class="filter-row">
           <SelectMenu
-            aria-label="资源来源"
+            :aria-label="t('community.source.aria')"
             v-model="query.source"
             class="filter-select"
             :options="sourceOptions"
@@ -674,31 +686,45 @@ function selectDownloadInstance() {
             "
           />
           <SelectMenu
-            aria-label="加载器"
+            :aria-label="t('community.loader.aria')"
             v-if="supportsLoader"
             v-model="query.loader"
             class="filter-select"
             :options="loaderOptions"
             @change="onFilterChange"
           />
-          <SelectMenu aria-label="排序" v-model="query.sort" class="filter-select" :options="sortOptions" @change="onFilterChange" />
+          <SelectMenu
+            :aria-label="t('community.sort.aria')"
+            v-model="query.sort"
+            class="filter-select"
+            :options="sortOptions"
+            @change="onFilterChange"
+          />
         </div>
       </div>
 
       <!-- 结果列表 -->
       <div data-ui="CommunityView:5e55abba5e8a" ref="listCard" class="card list-card">
         <div data-ui="CommunityView:72423555b623" v-if="results.length && (loading || loadError)" class="status-strip" role="status">
-          {{ loading ? '正在更新条件，暂时显示上次结果…' : '更新失败，以下为上次结果：' + loadError
-          }}<button data-ui="CommunityView:4ab4e45e43a0" v-if="loadError" class="btn btn-ghost btn-sm" @click="doSearch(true)">重试</button>
+          {{ loading ? t('community.status.refreshing') : t('community.status.refresh_failed', { e: loadError })
+          }}<button data-ui="CommunityView:4ab4e45e43a0" v-if="loadError" class="btn btn-ghost btn-sm" @click="doSearch(true)">
+            {{ t('community.status.retry') }}
+          </button>
         </div>
         <p data-ui="CommunityView:fa2eef57b2fc" v-for="warning in searchWarnings" :key="warning" class="search-warning">{{ warning }}</p>
         <!-- 加载中 -->
-        <ContentSkeleton v-if="loading && !results.length" label="正在搜索社区资源…" :rows="6" retry @retry="doSearch(true)" />
+        <ContentSkeleton
+          v-if="loading && !results.length"
+          :label="t('community.skeleton.searching')"
+          :rows="6"
+          retry
+          @retry="doSearch(true)"
+        />
         <!-- 错误态 -->
         <div data-ui="CommunityView:680f71022a3b" v-else-if="loadError && !results.length" class="empty">
-          <span>搜索失败：{{ loadError }}</span>
+          <span>{{ t('community.error.search_failed', { e: loadError }) }}</span>
           <button data-ui="CommunityView:dadfdac6acc0" class="btn btn-ghost btn-sm" @click="usesPagination ? doSearch(false) : onSearch()">
-            重试
+            {{ t('community.status.retry') }}
           </button>
         </div>
         <!-- 空态 -->
@@ -718,7 +744,7 @@ function selectDownloadInstance() {
             <path d="M12 3a13.5 13.5 0 0 1 0 18" />
             <path d="M12 3a13.5 13.5 0 0 0 0 18" />
           </svg>
-          <span>{{ searched ? '没有找到匹配的资源，换个关键词或条件试试' : '输入关键词或选择条件开始搜索' }}</span>
+          <span>{{ searched ? t('community.empty.no_match') : t('community.empty.start') }}</span>
         </div>
         <!-- 列表 -->
         <template v-else>
@@ -741,23 +767,33 @@ function selectDownloadInstance() {
                 <div data-ui="CommunityView:d33af84ab969" class="result-head">
                   <strong class="result-title" tabindex="0" :title="r.title">{{ r.title }}</strong>
                   <span data-ui="CommunityView:6f93851d6071" class="tag" :class="r.source === 'modrinth' ? 'tag-success' : 'tag-cf'">
-                    来源：{{ r.source === 'modrinth' ? 'Modrinth' : 'CurseForge' }}
+                    {{
+                      t('community.result.source_label', {
+                        source: r.source === 'modrinth' ? t('community.result.source.modrinth') : t('community.result.source.curseforge'),
+                      })
+                    }}
                   </span>
                   <span data-ui="CommunityView:ad4b7d43f757" v-if="r.author" class="muted result-author">{{ r.author }}</span>
                 </div>
               </div>
-              <p data-ui="CommunityView:2c1a48d38ee1" class="result-desc" :title="r.description">{{ r.description || '暂无简介' }}</p>
+              <p data-ui="CommunityView:2c1a48d38ee1" class="result-desc" :title="r.description">
+                {{ r.description || t('community.result.no_desc') }}
+              </p>
               <div data-ui="CommunityView:b2d346eb1503" class="result-meta muted">
-                <span>下载量 {{ fmtDownloads(r.downloads) }}</span>
+                <span>{{ t('community.result.downloads', { value: fmtDownloads(r.downloads) }) }}</span>
                 <span data-ui="CommunityView:e69c45508563" class="meta-dot">·</span>
-                <span>更新于 {{ fmtDate(r.updatedAt) }}</span>
+                <span>{{ t('community.result.updated_at', { date: fmtDate(r.updatedAt) }) }}</span>
               </div>
               <div data-ui="CommunityView:9195d6b103b6" class="result-foot">
                 <div data-ui="CommunityView:22746f0aa9cd" class="result-links">
                   <button
                     data-ui="CommunityView:7c3533e67ba3"
                     class="icon-btn"
-                    :title="`打开 ${r.source === 'modrinth' ? 'Modrinth' : 'CurseForge'} 源页面（查看完整介绍）`"
+                    :title="
+                      t('community.result.view_source_title', {
+                        source: r.source === 'modrinth' ? t('community.result.source.modrinth') : t('community.result.source.curseforge'),
+                      })
+                    "
                     @click="openExternal(sourceUrl(r))"
                   >
                     <svg
@@ -775,7 +811,12 @@ function selectDownloadInstance() {
                       <path d="M10 14 21 3" />
                     </svg>
                   </button>
-                  <button data-ui="CommunityView:0c667bb024b0" class="icon-btn" title="在 MC 百科查看介绍与教程" @click="openMcmod(r)">
+                  <button
+                    data-ui="CommunityView:0c667bb024b0"
+                    class="icon-btn"
+                    :title="t('community.result.mcmod_title')"
+                    @click="openMcmod(r)"
+                  >
                     <svg
                       viewBox="0 0 24 24"
                       width="14"
@@ -793,9 +834,17 @@ function selectDownloadInstance() {
                     v-if="query.kind === 'mod'"
                     class="icon-btn result-favorite"
                     :class="{ active: favorites.some((f) => f.key === itemKey(r)) }"
-                    :aria-label="`${favorites.some((f) => f.key === itemKey(r)) ? '取消收藏' : '收藏'} ${r.title}`"
+                    :aria-label="
+                      favorites.some((f) => f.key === itemKey(r))
+                        ? t('community.result.favorite.aria_remove', { title: r.title })
+                        : t('community.result.favorite.aria_add', { title: r.title })
+                    "
                     :aria-pressed="favorites.some((f) => f.key === itemKey(r))"
-                    :title="favorites.some((f) => f.key === itemKey(r)) ? '取消收藏模组' : '收藏模组'"
+                    :title="
+                      favorites.some((f) => f.key === itemKey(r))
+                        ? t('community.result.favorite.title_remove')
+                        : t('community.result.favorite.title_add')
+                    "
                     :disabled="favoriteBusy.has(itemKey(r))"
                     @click.stop="toggleProject(r.source, r.projectId, r.title, r.iconUrl)"
                   >
@@ -827,7 +876,7 @@ function selectDownloadInstance() {
                     <path d="m7 10 5 5 5-5" />
                     <path d="M4 21h16" />
                   </svg>
-                  下载
+                  {{ t('community.result.download') }}
                 </button>
               </div>
             </div>
@@ -843,7 +892,7 @@ function selectDownloadInstance() {
           <div data-ui="CommunityView:c18472307641" v-if="!usesPagination && hasMore" class="more-row">
             <button data-ui="CommunityView:165371e35396" class="btn btn-ghost" :disabled="loadingMore" @click="onLoadMore">
               <span data-ui="CommunityView:6fa61ac3821a" v-if="loadingMore" class="spin"></span>
-              {{ loadingMore ? '加载中…' : '加载更多' }}
+              {{ loadingMore ? t('community.more.loading') : t('community.more.load') }}
             </button>
           </div>
         </template>
@@ -851,16 +900,22 @@ function selectDownloadInstance() {
           data-ui="CommunityView:d47a3ad6ba73"
           v-if="usesPagination && searched && totalPages > 1"
           class="pagination"
-          aria-label="资源分页"
+          :aria-label="t('community.pagination.aria')"
         >
-          <span class="muted">共 {{ totalResults }} 项 · 第 {{ currentPage }} / {{ totalPages }} 页</span>
+          <span class="muted">{{
+            t('community.pagination.summary', {
+              total: String(totalResults),
+              page: String(currentPage),
+              pages: String(totalPages),
+            })
+          }}</span>
           <button
             data-ui="CommunityView:391d4872befc"
             class="btn btn-ghost btn-sm"
             :disabled="loading || currentPage <= 1"
             @click="goToPage(currentPage - 1)"
           >
-            上一页
+            {{ t('community.pagination.prev') }}
           </button>
           <button
             data-ui="CommunityView:79ac33e57fdc"
@@ -880,7 +935,7 @@ function selectDownloadInstance() {
             :disabled="loading || currentPage >= totalPages"
             @click="goToPage(currentPage + 1)"
           >
-            下一页
+            {{ t('community.pagination.next') }}
           </button>
         </nav>
       </div>
@@ -894,7 +949,9 @@ function selectDownloadInstance() {
         @pointerdown.self="!modal.downloading && (modal.open = false)"
       >
         <div data-ui="CommunityView:6904c547ed30" class="modal download-modal">
-          <h3 data-ui="CommunityView:7b81ed690844" class="modal-title"><MarqueeText :text="'下载 ' + modal.item?.title" /></h3>
+          <h3 data-ui="CommunityView:7b81ed690844" class="modal-title">
+            <MarqueeText :text="t('community.modal.title_prefix', { title: modal.item?.title ?? '' })" />
+          </h3>
           <div data-ui="CommunityView:a84b1e456827" v-if="modal.item" class="modal-links">
             <button
               v-if="modal.kind === 'mod'"
@@ -903,39 +960,46 @@ function selectDownloadInstance() {
               :aria-pressed="favorites.some((f) => f.key === itemKey(modal.item!))"
               @click="toggleProject(modal.item.source, modal.item.projectId, modal.item.title, modal.item.iconUrl)"
             >
-              {{ favorites.some((f) => f.key === modal.item!.source + ':' + modal.item!.projectId) ? '★ 已收藏' : '☆ 收藏模组' }}
+              {{
+                favorites.some((f) => f.key === itemKey(modal.item!))
+                  ? t('community.modal.favorite.added')
+                  : t('community.modal.favorite.add')
+              }}
             </button>
             <button
               data-ui="CommunityView:6fabba70cd3a"
               class="btn btn-ghost btn-sm"
               @click="openExternal(sourceUrl(modal.item, modal.kind))"
             >
-              {{ modal.item.source === 'modrinth' ? 'Modrinth 源页面' : 'CurseForge 源页面' }}
+              {{ modal.item.source === 'modrinth' ? t('community.modal.source.modrinth') : t('community.modal.source.curseforge') }}
             </button>
-            <button data-ui="CommunityView:03eb0c52ad3e" class="btn btn-ghost btn-sm" @click="openMcmod(modal.item)">MC 百科介绍</button>
+            <button data-ui="CommunityView:03eb0c52ad3e" class="btn btn-ghost btn-sm" @click="openMcmod(modal.item)">
+              {{ t('community.modal.mcmod') }}
+            </button>
           </div>
           <div class="filter-row">
             <label data-ui="CommunityView:9b7baa1d1a72" class="modal-field"
-              >Minecraft 版本<input
+              >{{ t('community.modal.mc_version')
+              }}<input
                 data-ui="CommunityView:75b46121b566"
                 v-model="modal.mcVersion"
                 class="input"
                 list="mod-minecraft-versions"
-                placeholder="全部版本"
+                :placeholder="t('community.modal.all_versions')"
                 @change="loadFiles"
             /></label>
             <label data-ui="CommunityView:73416dae43e4" v-if="usesCommunityLoader(modal.kind)" class="modal-field"
-              >Loader<SelectMenu v-model="modal.loader" :options="loaderOptions" @change="loadFiles"
+              >{{ t('community.modal.loader') }}<SelectMenu v-model="modal.loader" :options="loaderOptions" @change="loadFiles"
             /></label>
             <datalist data-ui="CommunityView:3ea5bc9c8890" id="mod-minecraft-versions">
               <option v-for="v in manifestVersions" :key="v" :value="v" />
             </datalist>
           </div>
 
-          <p class="modal-label">选择文件版本</p>
+          <p class="modal-label">{{ t('community.modal.files_label') }}</p>
           <div data-ui="CommunityView:8f95d8f66a15" v-if="modal.loadingFiles" class="files-loading">
             <span data-ui="CommunityView:8941adbc1d4f" class="spin"></span>
-            <span class="muted">正在获取文件列表…</span>
+            <span class="muted">{{ t('community.modal.files_loading') }}</span>
           </div>
           <template v-else>
             <div data-ui="CommunityView:db1154820afe" v-if="modal.files.length" class="file-list">
@@ -950,13 +1014,14 @@ function selectDownloadInstance() {
                 <span data-ui="CommunityView:05bff2e14ac9" class="file-main">
                   <span data-ui="CommunityView:3906a840cd50" class="file-name" :title="f.fileName">{{ f.fileName }}</span>
                   <span data-ui="CommunityView:a7eecc7757d6" class="file-sub"
-                    >版本 {{ f.version }} · MC {{ f.gameVersions.join(' / ')
+                    >{{ t('community.modal.file_version', { version: f.version }) }} ·
+                    {{ t('community.modal.file_mc', { versions: f.gameVersions.join(' / ') })
                     }}<template v-if="usesCommunityLoader(modal.kind) && f.loaders.length"> · {{ f.loaders.join(' / ') }}</template></span
                   >
                 </span>
                 <span data-ui="CommunityView:9584cb689677" class="file-side">
                   <span data-ui="CommunityView:44e7a728a5f3" class="tag" :class="releaseTagClass(f.releaseType)">{{
-                    releaseText[f.releaseType]
+                    releaseText(f.releaseType)
                   }}</span>
                   <span data-ui="CommunityView:32e67d25368a" class="muted file-meta">{{ fmtDate(f.date) }} · {{ fmtSize(f.size) }}</span>
                 </span>
@@ -967,31 +1032,31 @@ function selectDownloadInstance() {
 
           <!-- 目标版本（整合包安装即新实例，无需选择） -->
           <template v-if="!isModpack">
-            <p class="modal-label">下载到版本</p>
+            <p class="modal-label">{{ t('community.modal.target_label') }}</p>
             <SelectMenu
               v-if="targetOptions.length"
               v-model="modal.versionId"
               :options="
                 targetOptions.map((v) => ({
                   value: instanceKey(v),
-                  label: v.id + ' · ' + v.mcVersion + ' / ' + (v.loader || '纯净版') + ' · ' + v.folder,
+                  label: v.id + ' · ' + v.mcVersion + ' / ' + (v.loader || 'Vanilla') + ' · ' + v.folder,
                 }))
               "
               @change="selectDownloadInstance"
             />
             <p data-ui="CommunityView:ab12acbb18fe" v-else class="files-error">
-              没有与所选文件兼容的已安装实例；可调整文件筛选，或在游戏版本页安装。
+              {{ t('community.modal.no_compatible') }}
             </p>
           </template>
-          <p data-ui="CommunityView:a8e08b82f315" v-else class="muted pack-tip">整合包将下载后自动创建独立实例并安装</p>
+          <p data-ui="CommunityView:a8e08b82f315" v-else class="muted pack-tip">{{ t('community.modal.pack_tip') }}</p>
 
           <div data-ui="CommunityView:2356b94bbc0d" class="modal-actions">
             <button data-ui="CommunityView:989d28842ec5" class="btn btn-ghost" :disabled="modal.downloading" @click="modal.open = false">
-              取消
+              {{ t('community.modal.cancel') }}
             </button>
             <button data-ui="CommunityView:cade5c4fc83a" class="btn btn-gold" :disabled="!canConfirm" @click="confirmDownload">
               <span data-ui="CommunityView:d3c64175bb8e" v-if="modal.downloading" class="spin"></span>
-              {{ modal.downloading ? '下载中…' : '确认下载' }}
+              {{ modal.downloading ? t('community.modal.downloading') : t('community.modal.confirm') }}
             </button>
           </div>
         </div>
@@ -1020,6 +1085,7 @@ function selectDownloadInstance() {
 </template>
 
 <style scoped>
+/* 样式未改动，沿用原文件 */
 .community-sections {
   display: flex;
   align-items: center;
@@ -1084,7 +1150,6 @@ function selectDownloadInstance() {
   margin: 0 auto;
 }
 
-/* ---------------- 搜索卡片 ---------------- */
 .search-card {
   display: flex;
   flex-direction: column;
@@ -1096,7 +1161,6 @@ function selectDownloadInstance() {
   align-items: center;
 }
 
-/* 输入框 + 内嵌搜索图标：整体是一个控件，视觉重量大幅下降 */
 .search-input {
   position: relative;
   display: flex;
@@ -1108,7 +1172,6 @@ function selectDownloadInstance() {
 .search-input .input {
   flex: 1;
   min-width: 0;
-  /* 给右侧图标留出位置，避免文字压到图标上 */
   padding-right: 40px;
 }
 
@@ -1159,7 +1222,6 @@ function selectDownloadInstance() {
   background: var(--card-2);
   width: fit-content;
 }
-/* Selection follows the active category with the shared deceleration curve. */
 .capsule-blob {
   position: absolute;
   border-radius: 999px;
@@ -1211,7 +1273,6 @@ function selectDownloadInstance() {
   min-width: 140px;
 }
 
-/* ---------------- 结果列表（卡片横向网格，窄窗口自动换行） ---------------- */
 .list-card {
   padding: 0;
   background: transparent;
@@ -1236,8 +1297,6 @@ function selectDownloadInstance() {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   gap: var(--space-3);
 }
-/* 结果列表在更新/失败时是 inert 的：给出明确的"正在刷新"视觉，
-   避免旧卡片看起来正常但点不动 */
 .result-list[inert] {
   opacity: 0.45;
   filter: saturate(0.55);
@@ -1246,11 +1305,9 @@ function selectDownloadInstance() {
   transition:
     opacity var(--motion-fast, 160ms) ease,
     filter var(--motion-fast, 160ms) ease;
-  /* 保留网格位置，不产生跳动 */
   pointer-events: none;
 }
 
-/* 卡片 hover 在 inert 期间不再抬边（避免和"刷新中"冲突） */
 .result-list[inert] .result-card:hover {
   border-color: var(--border);
   box-shadow: none;
@@ -1267,7 +1324,6 @@ function selectDownloadInstance() {
   transition:
     border-color var(--motion-fast) ease,
     box-shadow var(--motion-normal) ease;
-  /* A single fade keeps filtering and paging visually immediate. */
   animation: community-card-in var(--motion-enter) var(--ease-out) backwards;
 }
 @keyframes community-card-in {
@@ -1334,7 +1390,6 @@ function selectDownloadInstance() {
   font-weight: 650;
   font-size: var(--text-md);
 }
-/* CurseForge 橙（Modrinth 绿复用 tag-success） */
 .tag-cf {
   background: color-mix(in srgb, #f97316 12%, transparent);
   color: #f97316;
@@ -1351,7 +1406,6 @@ function selectDownloadInstance() {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  /* 固定两行高度，保证网格内卡片对齐不跳动 */
   min-height: calc(var(--text-xs) * 1.6 * 2);
 }
 .result-meta {
@@ -1402,7 +1456,6 @@ function selectDownloadInstance() {
   padding: var(--space-4) 0 var(--space-2);
 }
 
-/* ---------------- 下载模态框 ---------------- */
 .download-modal {
   width: min(740px, calc(100vw - 40px));
   max-height: 88vh;
@@ -1435,7 +1488,6 @@ function selectDownloadInstance() {
   gap: var(--space-3);
   padding: var(--space-4) 0;
 }
-/* 文件版本列表：卡片化行（主行文件名 + 副行版本兼容信息，右侧标签+日期体积），宽松呼吸 */
 .file-list {
   display: flex;
   flex-direction: column;
@@ -1443,7 +1495,6 @@ function selectDownloadInstance() {
   max-height: 280px;
   overflow-y: auto;
   padding: var(--space-1) var(--space-1) var(--space-1) 0;
-  /* 内嵌滚动区不再用外框包住（卡片自带边界） */
 }
 .file-row {
   display: flex;
@@ -1476,7 +1527,6 @@ function selectDownloadInstance() {
     inset 0 0 0 1px var(--accent),
     0 4px 14px var(--accent-soft);
 }
-/* 左：文件名（主）+ 版本兼容信息（副） */
 .file-main {
   flex: 1;
   min-width: 0;
@@ -1499,7 +1549,6 @@ function selectDownloadInstance() {
   font-size: var(--text-xs);
   color: var(--text-dim);
 }
-/* 右：发行标签 + 日期·体积 */
 .file-side {
   flex-shrink: 0;
   display: flex;
@@ -1673,7 +1722,6 @@ function selectDownloadInstance() {
   line-height: 1.5;
 }
 
-/* 更新中：左侧一条 2px 主题色进度脉冲 */
 .status-strip[role='status'] {
   border-left: 2px solid var(--accent);
   background: color-mix(in srgb, var(--accent) 6%, var(--card-2));

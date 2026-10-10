@@ -3,6 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import type { ModInfo } from '../../shared/types';
 import { logScope } from './launcherLog';
+import { translate as t } from '../../shared/i18n';
 
 type ScanResult = Array<ModInfo & { sha1: string; fingerprint?: number }>;
 interface SharedScan {
@@ -53,17 +54,17 @@ export function scanModDirectory(
         void worker.terminate().then(() => {
           if (error) reject(error);
           else {
-            logScope('resources').info(`解析 ${dir}：${result!.length} 个 JAR，${Date.now() - started} ms（后台线程）`);
+            logScope('resources').info(t('modscan.log.parsed', { dir, count: result!.length, ms: Date.now() - started }));
             resolve(result!);
           }
         }, reject);
       };
       const abort = () => finish(undefined, controller.signal.reason);
-      const timer = setTimeout(() => finish(undefined, new Error('扫描超时，请检查是否有损坏或过大的模组文件')), 120_000);
+      const timer = setTimeout(() => finish(undefined, new Error(t('modscan.error.timeout'))), 120_000);
       controller.signal.addEventListener('abort', abort, { once: true });
       worker.once('message', ({ result, error }) => finish(result, error ? new Error(error) : undefined));
       worker.once('error', (error) => finish(undefined, error));
-      worker.once('exit', () => finish(undefined, new Error('模组扫描线程已结束，请重试')));
+      worker.once('exit', () => finish(undefined, new Error(t('modscan.error.worker_exited'))));
     }).finally(() => {
       if (scans.get(key) === owned) scans.delete(key);
     });

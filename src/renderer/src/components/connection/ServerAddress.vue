@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@renderer/i18n';
 defineProps<{ address: string; revealed: boolean; copyable?: boolean }>();
 defineEmits<{ toggle: []; copy: [] }>();
 </script>
@@ -6,13 +7,13 @@ defineEmits<{ toggle: []; copy: [] }>();
 <template>
   <span class="server-address-line">
     <span v-if="revealed" class="server-address-value mono">{{ address }}</span>
-    <span v-else class="server-address-mask">地址已隐藏</span>
+    <span v-else class="server-address-mask">{{ t('server.address_hidden') }}</span>
     <button
       type="button"
       class="server-address-toggle"
-      :aria-label="revealed ? '隐藏服务器地址' : '显示服务器地址'"
+      :aria-label="revealed ? t('server.hide_address') : t('server.show_address')"
       :aria-pressed="revealed"
-      :title="revealed ? '隐藏服务器地址' : '显示服务器地址'"
+      :title="revealed ? t('server.hide_address') : t('server.show_address')"
       @click.stop="$emit('toggle')"
       @dblclick.stop
     >
@@ -21,17 +22,17 @@ defineEmits<{ toggle: []; copy: [] }>();
         <circle cx="12" cy="12" r="3" />
         <path v-if="!revealed" d="m3 3 18 18" />
       </svg>
-      <span>{{ revealed ? '隐藏' : '显示' }}</span>
+      <span>{{ revealed ? t('server.hide') : t('server.show') }}</span>
     </button>
     <button
       v-if="copyable && revealed"
       type="button"
       class="server-address-toggle"
-      aria-label="复制服务器地址"
-      title="复制服务器地址"
+      :aria-label="t('server.copy_address')"
+      :title="t('server.copy_address')"
       @click.stop="$emit('copy')"
     >
-      复制
+      {{ t('server.copy') }}
     </button>
   </span>
 </template>

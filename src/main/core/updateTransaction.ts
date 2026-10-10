@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
 import type { ReleaseInfo } from '../../shared/types';
+import { translate as t } from '../../shared/i18n';
 
 export interface UpdateTransaction {
   schema: 1;
@@ -59,12 +60,12 @@ export function readUpdateTransaction(file: string, target: string): UpdateTrans
   }
 }
 
-export async function validateUpdatePayload(t: UpdateTransaction): Promise<void> {
-  const stat = await fs.promises.lstat(t.file);
-  if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== t.size) throw new Error('更新包大小或文件类型已变化，请重新下载');
+export async function validateUpdatePayload(tx: UpdateTransaction): Promise<void> {
+  const stat = await fs.promises.lstat(tx.file);
+  if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== tx.size) throw new Error(t('updatetx.error.payload_changed'));
   const hash = createHash('sha256');
-  for await (const chunk of fs.createReadStream(t.file)) hash.update(chunk);
-  if (hash.digest('hex') !== t.sha256) throw new Error('更新包 SHA256 已变化，请重新下载');
+  for await (const chunk of fs.createReadStream(tx.file)) hash.update(chunk);
+  if (hash.digest('hex') !== tx.sha256) throw new Error(t('updatetx.error.hash_changed'));
 }
 
 export interface UpdaterScriptSpec {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
+import { t } from '@renderer/i18n';
 
 const props = withDefaults(
   defineProps<{
@@ -10,7 +11,7 @@ const props = withDefaults(
     slowAfterMs?: number;
   }>(),
   {
-    label: '正在加载…',
+    label: () => t('common.loading'),
     rows: 5,
     retry: false,
     slowAfterMs: 8000,
@@ -35,12 +36,12 @@ onUnmounted(() => {
 
 <template>
   <div class="content-skeleton">
-    <!-- 只让这一行承担 live region 语义，避免 aria-busy 与 status 打架 -->
+    <!-- Only this row carries live region semantics to avoid aria-busy vs status conflict -->
     <p class="skeleton-status" role="status" aria-live="polite">
       <span class="muted">{{ label }}</span>
       <template v-if="slow">
-        <span class="muted skeleton-slow">数据仍未返回，请检查网络或目录是否可用。</span>
-        <button v-if="retry" type="button" class="btn btn-ghost btn-sm" @click="$emit('retry')">重新读取</button>
+        <span class="muted skeleton-slow">{{ t('common.skeleton_loading') }}</span>
+        <button v-if="retry" type="button" class="btn btn-ghost btn-sm" @click="$emit('retry')">{{ t('common.reread') }}</button>
       </template>
     </p>
 

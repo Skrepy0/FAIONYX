@@ -10,6 +10,7 @@ import {
   type ImageDimensions,
   type ManagedImagePurpose,
 } from './imageAssetPolicy';
+import { translate as t } from '../../shared/i18n';
 
 const HEADER_LIMIT = 1024 * 1024;
 
@@ -44,7 +45,7 @@ async function loadNativeImage(): Promise<typeof import('electron').nativeImage>
   const electron = (await import('electron')) as unknown as typeof import('electron');
   const nativeImage = electron?.nativeImage;
   if (!nativeImage || typeof nativeImage.createFromBuffer !== 'function') {
-    throw new Error('图片编解码仅在 Electron 主进程中可用');
+    throw new Error(t('imageasset.error.codec_unavailable'));
   }
   return nativeImage;
 }
@@ -116,7 +117,7 @@ function readHeader(filePath: string, size: number): Buffer {
 export function inspectImageFile(sourcePath: string): InspectedImage {
   const source = fs.realpathSync(path.resolve(sourcePath));
   const stat = fs.statSync(source);
-  if (!stat.isFile()) throw new Error('所选路径不是图片文件');
+  if (!stat.isFile()) throw new Error(t('imageasset.error.not_image_file'));
   const dimensions = validateImageInput(source, stat.size, readImageDimensions(readHeader(source, stat.size)));
   return { path: source, bytes: stat.size, dimensions };
 }
@@ -140,40 +141,41 @@ export async function validateManagedImageSnapshot(
 ): Promise<EncodedManagedImage> {
   const data = Buffer.from(input);
   const format = sniffImageFormat(data);
-  if (!format) throw new Error('主题图片格式无效');
+  if (!format) throw new Error(t('imageasset.error.theme_format_invalid'));
   const extension: EncodedManagedImage['extension'] = format === 'jpeg' ? '.jpg' : format === 'png' ? '.png' : '.webp';
   const declared = validateImageInput('theme' + extension, data.length, readImageDimensions(data));
   const target = boundedImageSize(declared, purpose);
   if (target.width !== declared.width || target.height !== declared.height) {
-    throw new Error('主题图片超过该用途的尺寸上限，请先在原启动器中重新导入图片');
+    throw new Error(t('imageasset.error.theme_over_size_limit'));
   }
   if (format === 'webp') {
     // Electron's decoder does not support WebP; verify the complete bounded RIFF chunk container.
-    if (data.length < 20 || data.readUInt32LE(4) !== data.length - 8) throw new Error('主题 WebP 文件已损坏');
+    if (data.length < 20 || data.readUInt32LE(4) !== data.length - 8) throw new Error(t('imageasset.error.theme_webp_corrupt'));
     const chunks = (start: number, end: number, insideFrame = false): boolean => {
       let image = false;
       while (start < end) {
-        if (start + 8 > end) throw new Error('主题 WebP 数据块已损坏');
+        if (start + 8 > end) throw new Error(t('imageasset.error.theme_webp_chunk_corrupt'));
         const tag = data.toString('ascii', start, start + 4);
         const size = data.readUInt32LE(start + 4);
         const next = start + 8 + size + (size & 1);
-        if (next > end) throw new Error('主题 WebP 数据块已截断');
+        if (next > end) throw new Error(t('imageasset.error.theme_webp_chunk_truncated'));
         if (tag === 'VP8 ' || tag === 'VP8L') {
-          if (size < (tag === 'VP8L' ? 5 : 10)) throw new Error('主题 WebP 图像数据已损坏');
+          if (size < (tag === 'VP8L' ? 5 : 10)) throw new Error(t('imageasset.error.theme_webp_image_corrupt'));
           image = true;
         } else if (tag === 'ANMF') {
-          if (insideFrame || size < 16 || !chunks(start + 24, start + 8 + size, true)) throw new Error('主题 WebP 动画帧已损坏');
+          if (insideFrame || size < 16 || !chunks(start + 24, start + 8 + size, true))
+            throw new Error(t('imageasset.error.theme_webp_frame_corrupt'));
           image = true;
-        } else if (tag === 'VP8X' && size !== 10) throw new Error('主题 WebP 扩展头已损坏');
+        } else if (tag === 'VP8X' && size !== 10) throw new Error(t('imageasset.error.theme_webp_ext_header_corrupt'));
         start = next;
       }
       return image;
     };
-    if (!chunks(12, data.length)) throw new Error('主题 WebP 缺少图像数据');
+    if (!chunks(12, data.length)) throw new Error(t('imageasset.error.theme_webp_no_image'));
   } else {
     const decoded = await codec.decode(data);
     if (!decoded || decoded.width !== declared.width || decoded.height !== declared.height) {
-      throw new Error('主题图片解码失败，文件可能已损坏');
+      throw new Error(t('imageasset.error.theme_decode_failed'));
     }
   }
   return { data, extension, width: declared.width, height: declared.height };
@@ -190,27 +192,27 @@ export async function encodeManagedImageBuffer(
   const declared = validateImageInput(sourceName, data.length, readImageDimensions(header));
   const actualFormat = sniffImageFormat(header);
   if (!actualFormat || actualFormat !== expectedImageFormat(sourceName)) {
-    throw new Error('图片扩展名与实际格式不一致');
+    throw new Error(t('imageasset.error.extension_mismatch'));
   }
 
   if (actualFormat === 'webp') {
     const target = boundedImageSize(declared, purpose);
     if (target.width !== declared.width || target.height !== declared.height) {
-      throw new Error('WebP 图片超过该用途的尺寸上限且无法缩小，请改用 PNG 或 JPG 导入');
+      throw new Error(t('imageasset.error.webp_over_size_limit'));
     }
     return { data, extension: '.webp', width: declared.width, height: declared.height };
   }
 
   const decoded = await codec.decode(data);
-  if (!decoded) throw new Error('图片解码失败，文件可能已损坏');
+  if (!decoded) throw new Error(t('imageasset.error.decode_failed'));
   const target = boundedImageSize({ width: decoded.width, height: decoded.height }, purpose);
   const scaled = await decoded.resize(target.width, target.height);
 
   // 保留透明通道；其余图片转 JPEG 并移除 EXIF/XMP，兼顾隐私、磁盘与解码内存。
   const preserveAlpha = scaled.hasAlpha();
   const encoded = preserveAlpha ? await scaled.toPNG() : await scaled.toJPEG(88);
-  if (!encoded.length) throw new Error('图片缓存生成失败');
-  if (encoded.length > MAX_IMAGE_FILE_BYTES) throw new Error('优化后的图片仍超过 32MB');
+  if (!encoded.length) throw new Error(t('imageasset.error.cache_encode_failed'));
+  if (encoded.length > MAX_IMAGE_FILE_BYTES) throw new Error(t('imageasset.error.too_large_after_optimize'));
   return {
     data: encoded,
     extension: preserveAlpha ? '.png' : '.jpg',

@@ -6,6 +6,7 @@ import { Transform } from 'node:stream';
 import { waitIfTaskPaused } from './tasks';
 import yazl from 'yazl';
 import type { BackupManifest, BackupEntry } from '../../shared/instanceCenter';
+import { translate as t } from '../../shared/i18n';
 
 export type BackupProgress = (done: number, total: number, text: string) => void;
 export function safeRelative(value: string): string {
@@ -16,19 +17,19 @@ export function safeRelative(value: string): string {
     value.startsWith('/') ||
     value.split('/').some((p) => !p || p === '.' || p === '..' || /[:*?"<>|]/.test(p))
   )
-    throw new Error('无效的相对路径：' + value);
+    throw new Error(t('backupstore.error.invalid_relative_path', { value }));
   return value;
 }
 export async function safePath(root: string, rel: string, missing = false): Promise<string> {
   safeRelative(rel);
   const base = path.resolve(root);
   const rootStat = await fs.promises.lstat(base);
-  if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) throw new Error('目录不是普通目录');
+  if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) throw new Error(t('backupstore.error.root_not_directory'));
   let current = base;
   for (const part of rel.split('/')) {
     current = path.join(current, part);
     try {
-      if ((await fs.promises.lstat(current)).isSymbolicLink()) throw new Error('不跟随符号链接：' + rel);
+      if ((await fs.promises.lstat(current)).isSymbolicLink()) throw new Error(t('backupstore.error.symlink_not_followed', { rel }));
     } catch (e) {
       if (missing && (e as NodeJS.ErrnoException).code === 'ENOENT') continue;
       throw e;
@@ -69,14 +70,14 @@ export async function scanFiles(
     if (stat.isDirectory()) {
       for (const name of await fs.promises.readdir(file)) await visit(rel + '/' + name);
     } else if (stat.isFile()) result.push({ path: rel, size: stat.size, mtime: stat.mtimeMs });
-    else throw new Error('不支持的特殊文件：' + rel);
+    else throw new Error(t('backupstore.error.unsupported_special_file', { rel }));
   }
   for (const rel of roots) await visit(safeRelative(rel));
   return result.sort((a, b) => a.path.localeCompare(b.path));
 }
 export async function copyVerified(source: string, destination: string, signal?: AbortSignal): Promise<BackupEntry> {
   const before = await fs.promises.lstat(source);
-  if (!before.isFile() || before.isSymbolicLink()) throw new Error('源文件不是普通文件');
+  if (!before.isFile() || before.isSymbolicLink()) throw new Error(t('backupstore.error.source_not_file'));
   await fs.promises.mkdir(path.dirname(destination), { recursive: true });
   const gate = new Transform({
     transform(chunk, _encoding, callback) {
@@ -87,7 +88,7 @@ export async function copyVerified(source: string, destination: string, signal?:
   const sha256 = await hashFile(destination, signal);
   const after = await fs.promises.lstat(source);
   if (before.size !== after.size || before.mtimeMs !== after.mtimeMs || sha256 !== (await hashFile(source, signal)))
-    throw new Error('复制期间源文件发生变化：' + path.basename(source));
+    throw new Error(t('backupstore.error.source_changed_during_copy', { source: path.basename(source) }));
   return { path: '', size: after.size, sha256 };
 }
 export class BackupStore {
@@ -105,10 +106,11 @@ export class BackupStore {
     return result.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
   async read(id: string): Promise<BackupManifest> {
-    if (!/^[a-f0-9-]{36}$/.test(id)) throw new Error('无效的备份编号');
+    if (!/^[a-f0-9-]{36}$/.test(id)) throw new Error(t('backupstore.error.invalid_backup_id'));
     const file = await safePath(this.directory, id + '/manifest.json');
     const m = JSON.parse(await fs.promises.readFile(file, 'utf8')) as BackupManifest;
-    if (m.format !== 1 || m.id !== id || !Array.isArray(m.files) || !Array.isArray(m.roots)) throw new Error('不支持的备份格式');
+    if (m.format !== 1 || m.id !== id || !Array.isArray(m.files) || !Array.isArray(m.roots))
+      throw new Error(t('backupstore.error.unsupported_format'));
     m.roots.forEach(safeRelative);
     const names = new Set<string>();
     for (const f of m.files) {
@@ -121,7 +123,7 @@ export class BackupStore {
         f.size < 0 ||
         !m.roots.some((r) => f.path === r || f.path.startsWith(r + '/'))
       )
-        throw new Error('备份清单损坏');
+        throw new Error(t('backupstore.error.manifest_corrupt'));
       names.add(key);
     }
     return m;
@@ -146,16 +148,16 @@ export class BackupStore {
       const total = inputs.reduce((sum, f) => sum + f.size, 0);
       let done = 0;
       const space = await fs.promises.statfs(this.directory);
-      if (space.bavail * space.bsize < total + 1024 * 1024 * 16) throw new Error('备份位置磁盘空间不足');
+      if (space.bavail * space.bsize < total + 1024 * 1024 * 16) throw new Error(t('backupstore.error.disk_space'));
       for (const f of inputs) {
         signal?.throwIfAborted();
         const entry = await copyVerified(await safePath(source, f.path), path.join(stage, 'files', f.path), signal);
         files.push({ ...entry, path: f.path });
         done += entry.size;
-        progress?.(done, total, `备份文件 ${files.length}/${inputs.length}`);
+        progress?.(done, total, t('backupstore.label.backup_file', { done: files.length, total: inputs.length }));
       }
       if (JSON.stringify(inputs) !== JSON.stringify(await scanFiles(source, roots, signal)))
-        throw new Error('备份期间目录内容发生变化，请退出游戏后重试');
+        throw new Error(t('backupstore.error.content_changed_retry'));
       const manifest: BackupManifest = {
         format: 1,
         id,
@@ -184,7 +186,7 @@ export class BackupStore {
     for (const f of m.files) {
       const file = await safePath(this.directory, id + '/files/' + f.path);
       if ((await fs.promises.stat(file)).size !== f.size || (await hashFile(file, signal)) !== f.sha256)
-        throw new Error('备份文件校验失败：' + f.path);
+        throw new Error(t('backupstore.error.file_verify_failed', { path: f.path }));
     }
     return m;
   }
@@ -195,8 +197,8 @@ export class BackupStore {
     for (const f of m.files) {
       const output = await safePath(stage, f.path, true);
       const copy = await copyVerified(await safePath(this.directory, id + '/files/' + f.path), output, signal);
-      if (copy.sha256 !== f.sha256) throw new Error('恢复校验失败：' + f.path);
-      progress?.(++done, m.files.length, `恢复文件 ${done}/${m.files.length}`);
+      if (copy.sha256 !== f.sha256) throw new Error(t('backupstore.error.restore_verify_failed', { path: f.path }));
+      progress?.(++done, m.files.length, t('backupstore.label.restore_file', { done, total: m.files.length }));
     }
     return m;
   }
@@ -218,7 +220,7 @@ export async function exportTreeZip(root: string, destination: string, signal?: 
     await output;
     signal?.throwIfAborted();
     if (JSON.stringify(files) !== JSON.stringify(await scanFiles(root, await fs.promises.readdir(root), signal)))
-      throw new Error('导出期间存档发生变化，请退出游戏后重试');
+      throw new Error(t('backupstore.error.export_changed_retry'));
     // Exclusive publication: an existing export is never silently replaced.
     await fs.promises.copyFile(temporary, destination, fs.constants.COPYFILE_EXCL);
   } finally {

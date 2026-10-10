@@ -4,6 +4,7 @@ import { openInstanceCenter } from '../instanceCenter';
 import ContentSkeleton from '../components/ContentSkeleton.vue';
 import { catalogSession } from '../catalogCache';
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { t } from '@renderer/i18n';
 import {
   cleanupPartialInstall,
   errText,
@@ -38,7 +39,6 @@ import {
   selectInstance,
   applyLaunchState,
   displayVersionName,
-  displayVersionSub,
   fmtLastPlayed,
   isFavorite,
   progressMono,
@@ -116,7 +116,7 @@ async function onCategoryAction(action: VersionCategoryAction): Promise<boolean>
     if (action.type === 'remove' && installedCategory.value === action.id) installedCategory.value = VERSION_CATEGORY_UNCLASSIFIED;
     return true;
   } catch (error) {
-    categoryError.value = '保存分类失败：' + errText(error);
+    categoryError.value = t('games.toast.category_save_failed', { e: errText(error) });
     return false;
   } finally {
     categoryBusy.value = false;
@@ -159,8 +159,8 @@ watch(
 );
 const folderKey = (p: string) => p.replace(/\\/g, '/').replace(/\/$/, '').toLowerCase();
 const installedFolderOptions = computed(() => [
-  { value: '', label: '全部文件夹' },
-  { value: '@current', label: '当前文件夹' },
+  { value: '', label: t('games.folder.all') },
+  { value: '@current', label: t('games.folder.current') },
   ...(store.settings?.folders ?? []).map((f) => ({ value: f.path, label: `${f.name} · ${f.path}` })),
 ]);
 watch(installedFolderOptions, (options) => {
@@ -196,7 +196,6 @@ function updateTabBlob() {
   tabBlob.on = true;
 }
 watch(tab, () => nextTick(updateTabBlob));
-// 滑块宽度自适应：已安装数量变化（已安装（14）宽度变）与容器尺寸变化都重算
 watch(
   () => store.installed.length,
   () => nextTick(updateTabBlob)
@@ -204,7 +203,6 @@ watch(
 let tabBlobObserver: ResizeObserver | null = null;
 onMounted(() => {
   nextTick(updateTabBlob);
-  // 字体/布局就绪后校准一次（首帧 offsetWidth 可能未稳定）
   setTimeout(updateTabBlob, 200);
   tabBlobObserver = new ResizeObserver(() => updateTabBlob());
   if (gameTabs.value) tabBlobObserver.observe(gameTabs.value);
@@ -272,10 +270,8 @@ const folderRename = reactive({ open: false, name: '', busy: false, error: '' })
 const folderRemove = reactive({ open: false, busy: false });
 
 const currentFolder = computed(() => folders.value.find((folder) => folder.path === activeFolder.value));
-/** 失效文件夹死锁解除：检测到当前绑定文件夹不存在（被删除/重命名）时给「移除绑定/稍后处理」选择 */
 const folderMissingDismissed = ref(false);
 const folderMissing = computed(() => folderScan.value?.structure === 'missing' && !folderMissingDismissed.value);
-/** 移除失效绑定后刷新 */
 async function removeMissingFolder() {
   if (!activeFolder.value || folderRemove.busy) return;
   folderRemove.busy = true;
@@ -284,9 +280,9 @@ async function removeMissingFolder() {
     folderMissingDismissed.value = false;
     await loadFolderState();
     store.settings = await getSettings();
-    toast('已移除失效的文件夹绑定', 'success');
+    toast(t('games.toast.missing_removed'), 'success');
   } catch (error) {
-    toast(`移除失败：${errText(error)}`, 'error');
+    toast(t('games.toast.missing_remove_failed', { e: errText(error) }), 'error');
   } finally {
     folderRemove.busy = false;
   }
@@ -304,7 +300,7 @@ async function refreshFolderScan(syncList = true) {
     }
   } catch (error) {
     folderScan.value = null;
-    toast(`扫描游戏文件夹失败：${errText(error)}`, 'error');
+    toast(t('games.toast.scan_failed', { e: errText(error) }), 'error');
   } finally {
     folderBusy.value = false;
   }
@@ -317,7 +313,7 @@ async function loadFolderState() {
     activeFolder.value = state.active;
     await refreshFolderScan();
   } catch (error) {
-    toast(`读取游戏文件夹失败：${errText(error)}`, 'error');
+    toast(t('games.toast.folder_read_failed', { e: errText(error) }), 'error');
   }
 }
 
@@ -335,10 +331,10 @@ async function chooseFolderPath(selected: string) {
     store.resourceVersionId = '';
     await refreshInstalled();
     await refreshFolderScan(false);
-    toast(`默认下载位置已改为「${currentFolder.value?.name ?? '游戏文件夹'}」`, 'success');
+    toast(t('games.toast.folder_changed', { name: currentFolder.value?.name ?? t('games.folder.generic_name') }), 'success');
   } catch (error) {
     toast(
-      committed ? `下载位置已保存，但列表暂未刷新，请重试：${errText(error)}` : `切换失败：${errText(error)}`,
+      committed ? t('games.toast.folder_saved_stale', { e: errText(error) }) : t('games.toast.folder_switch_failed', { e: errText(error) }),
       committed ? 'info' : 'error'
     );
     if (!committed) await loadFolderState();
@@ -364,10 +360,10 @@ async function addGameFolder() {
     await refreshInstalled();
     await refreshFolderScan(false);
     const count = folderScan.value?.versions.length ?? 0;
-    toast(`默认下载位置已更改，识别到 ${count} 个版本；原位置的游戏已保留`, 'success');
+    toast(t('games.toast.folder_added', { count: String(count) }), 'success');
   } catch (error) {
     toast(
-      committed ? `下载位置已保存，但列表暂未刷新，请重试：${errText(error)}` : `添加失败：${errText(error)}`,
+      committed ? t('games.toast.folder_saved_stale', { e: errText(error) }) : t('games.toast.folder_add_failed', { e: errText(error) }),
       committed ? 'info' : 'error'
     );
   } finally {
@@ -385,9 +381,12 @@ async function markCurrentDefault() {
     const destination = folders.value.find((folder) => folder.isDefault)!.path;
     if (store.settings) store.settings = { ...store.settings, folders: folders.value, activeFolder: destination, gameDir: destination };
     store.settings = await getSettings();
-    toast('已设为默认游戏文件夹', 'success');
+    toast(t('games.toast.default_set'), 'success');
   } catch (error) {
-    toast(committed ? `下载位置已保存，请刷新页面读取：${errText(error)}` : `设置失败：${errText(error)}`, committed ? 'info' : 'error');
+    toast(
+      committed ? t('games.toast.default_saved', { e: errText(error) }) : t('games.toast.default_failed', { e: errText(error) }),
+      committed ? 'info' : 'error'
+    );
   } finally {
     folderBusy.value = false;
   }
@@ -408,7 +407,7 @@ async function confirmFolderRename() {
     folders.value = await renameFolder(activeFolder.value, folderRename.name);
     folderRename.open = false;
     store.settings = await getSettings();
-    toast('显示名称已更新', 'success');
+    toast(t('games.toast.folder_renamed'), 'success');
   } catch (error) {
     folderRename.error = errText(error);
   } finally {
@@ -424,9 +423,9 @@ async function confirmFolderRemove() {
     folderRemove.open = false;
     await loadFolderState();
     store.settings = await getSettings();
-    toast('已解除文件夹绑定；磁盘中的游戏、存档和 MOD 均未删除', 'success');
+    toast(t('games.toast.folder_unbound'), 'success');
   } catch (error) {
-    toast(`解除绑定失败：${errText(error)}`, 'error');
+    toast(t('games.toast.folder_unbind_failed', { e: errText(error) }), 'error');
   } finally {
     folderRemove.busy = false;
   }
@@ -437,7 +436,7 @@ async function revealCurrentFolder() {
   try {
     await openGameFolder(activeFolder.value);
   } catch (error) {
-    toast(`打开文件夹失败：${errText(error)}`, 'error');
+    toast(t('games.toast.open_folder_failed', { e: errText(error) }), 'error');
   }
 }
 
@@ -454,36 +453,34 @@ onMounted(() => {
 type TypeFilter = 'all' | 'release' | 'snapshot' | 'old';
 const typeFilter = ref<TypeFilter>('release');
 
-const typeFilters: Array<{ value: TypeFilter; label: string }> = [
-  { value: 'release', label: '正式版' },
-  { value: 'all', label: '全部' },
-  { value: 'snapshot', label: '快照' },
-  { value: 'old', label: '旧版' },
-];
+const typeFilters = computed<Array<{ value: TypeFilter; label: string }>>(() => [
+  { value: 'release', label: t('games.filter.release') },
+  { value: 'all', label: t('games.filter.all') },
+  { value: 'snapshot', label: t('games.filter.snapshot') },
+  { value: 'old', label: t('games.filter.old') },
+]);
 
-const typeText: Record<RemoteVersion['type'], string> = {
-  release: '正式版',
-  snapshot: '快照',
-  old_beta: 'Beta 旧版',
-  old_alpha: 'Alpha 旧版',
-};
+function typeText(kind: RemoteVersion['type']): string {
+  if (kind === 'release') return t('games.type.release');
+  if (kind === 'snapshot') return t('games.type.snapshot');
+  if (kind === 'old_beta') return t('games.type.old_beta');
+  return t('games.type.old_alpha');
+}
 
-/* release 金 / snapshot 青灰 / 旧版 dim */
-const typeTagClass = (t: RemoteVersion['type']) => (t === 'release' ? 'tag-gold' : t === 'snapshot' ? 'tag-cyan' : '');
+const typeTagClass = (kind: RemoteVersion['type']) => (kind === 'release' ? 'tag-gold' : kind === 'snapshot' ? 'tag-cyan' : '');
 
 const keyword = computed(() => store.searchKeyword.trim().toLowerCase());
 
-/** ETA 由主进程基于字节速度指数平滑；未知总量/暂停时不伪造。 */
 function progressEta(id: string) {
   const p = versionProgress(id);
   const eta = p?.etaSeconds;
   if (eta == null || !Number.isFinite(eta) || eta <= 3) return '';
-  if (eta >= 3600) return `本阶段约剩 ${Math.ceil(eta / 3600)}h`;
-  if (eta >= 60) return `本阶段约剩 ${Math.ceil(eta / 60)}min`;
-  return `本阶段约剩 ${Math.round(eta)}s`;
+  if (eta >= 3600) return t('games.eta.hours', { value: String(Math.ceil(eta / 3600)) });
+  if (eta >= 60) return t('games.eta.minutes', { value: String(Math.ceil(eta / 60)) });
+  return t('games.eta.seconds', { value: String(Math.round(eta)) });
 }
 function versionProgress(id: string) {
-  return store.installProgress[id] ?? { stage: 'version-json', progress: 0, text: '等待下载' };
+  return store.installProgress[id] ?? { stage: 'version-json', progress: 0, text: t('games.progress.waiting') };
 }
 
 const filtered = computed(() =>
@@ -501,13 +498,13 @@ const latestRelease = computed(() => manifest.value.find((v) => v.type === 'rele
 const isInstalled = (v: RemoteVersion) => store.installed.some((i) => i.mcVersion === v.id);
 
 // ---------------- 安装模态框 ----------------
-const loaderOptions: Array<{ value: '' | LoaderName; label: string }> = [
-  { value: '', label: '不安装' },
+const loaderOptions = computed<Array<{ value: '' | LoaderName; label: string }>>(() => [
+  { value: '', label: t('games.install.loader_none') },
   { value: 'forge', label: 'Forge' },
   { value: 'fabric', label: 'Fabric' },
   { value: 'quilt', label: 'Quilt' },
   { value: 'neoforge', label: 'NeoForge' },
-];
+]);
 
 const modal = reactive({
   open: false,
@@ -517,7 +514,6 @@ const modal = reactive({
   loaderVersion: '',
   loadingLoaders: false,
   loadLoadersError: '',
-  // Fabric API 联动
   apiOn: true,
   apiVersions: [] as FabricApiVersion[],
   apiVersion: '',
@@ -531,7 +527,6 @@ const modal = reactive({
   targetFolder: '',
 });
 
-/** 默认实例名（加载器类型+版本自动生成；纯净版固定为 MC 版本号） */
 const defaultInstanceName = computed(() => {
   const mc = modal.version?.id ?? '';
   if (!modal.loader) return mc;
@@ -541,18 +536,16 @@ const defaultInstanceName = computed(() => {
   return `${modal.loader}-loader-${modal.loaderVersion || '?'}-${mc}`;
 });
 
-/** 实例名冲突/非法校验（返回错误文案，合法为 ''；与主进程 validateInstanceName 同规则） */
 const instanceError = computed(() => {
   const n = (modal.instanceEdited ? modal.instanceName : defaultInstanceName.value).trim();
-  if (!n) return '实例名不能为空';
-  if (n.length > 64) return '实例名过长（最多 64 字符）';
-  if (/[\\/:*?"<>|]/.test(n)) return '实例名不能包含 \\ / : * ? " < > | 字符';
-  if (/^[.\s]|[.\s]$/.test(n)) return '实例名不能以空格或点开头/结尾';
-  if (allInstalled.value.some((v) => v.id === n && v.folder === modal.targetFolder)) return `实例「${n}」已存在，请改名后安装`;
+  if (!n) return t('games.instance_name.empty');
+  if (n.length > 64) return t('games.instance_name.too_long');
+  if (/[\\/:*?"<>|]/.test(n)) return t('games.instance_name.invalid_chars');
+  if (/^[.\s]|[.\s]$/.test(n)) return t('games.instance_name.whitespace');
+  if (allInstalled.value.some((v) => v.id === n && v.folder === modal.targetFolder)) return t('games.instance_name.exists', { name: n });
   return '';
 });
 
-/** 实际生效的实例名（纯净版默认 MC 版本号，加载器实例按规则生成，均可自定义） */
 const effectiveInstanceName = computed(() => (modal.instanceEdited ? modal.instanceName.trim() : defaultInstanceName.value));
 
 function openInstall(v: RemoteVersion) {
@@ -601,24 +594,23 @@ watch(
       if (stale) return;
       modal.loaderVersions = list;
       modal.loaderVersion = list[0] ?? '';
-      if (!list.length) modal.loadLoadersError = '该版本暂无可用的加载器版本';
+      if (!list.length) modal.loadLoadersError = t('games.install.loader_no_version');
     } catch (e) {
       if (stale) return;
-      modal.loadLoadersError = '获取加载器版本失败：' + errText(e);
+      modal.loadLoadersError = t('games.install.loader_failed', { e: errText(e) });
     } finally {
       if (!stale) modal.loadingLoaders = false;
     }
-    // 选择 Fabric 时联动拉取 Fabric API 版本列表
     if (loader === 'fabric' && !stale) {
       try {
         const list = await listFabricApi(mcVersion);
         if (stale) return;
         modal.apiVersions = list;
         modal.apiVersion = list[0]?.version ?? '';
-        if (!list.length) modal.apiError = '该版本暂无适配的 Fabric API';
+        if (!list.length) modal.apiError = t('games.install.fabric_api_no_version');
       } catch (e) {
         if (stale) return;
-        modal.apiError = '获取 Fabric API 列表失败：' + errText(e);
+        modal.apiError = t('games.install.fabric_api_failed', { e: errText(e) });
       } finally {
         if (!stale) modal.loadingApi = false;
       }
@@ -656,15 +648,13 @@ async function confirmInstall() {
         favoriteInstallIntent: modal.favoriteInstallIntent,
       };
   modal.open = false;
-  // 主进程后台异步下载，invoke 仅表示任务已受理；
-  // 完成/失败由 App.vue 订阅的 installDone 事件统一提示并刷新已安装列表
   store.installing.add(v.id);
-  toast(`开始下载版本 ${v.id}，请稍候…`, 'info');
+  toast(t('games.toast.download_started', { id: v.id }), 'info');
   try {
     await installVersion(v.id, opts, modal.targetFolder);
   } catch (e) {
     store.installing.delete(v.id);
-    toast('安装失败：' + errText(e), 'error');
+    toast(t('games.toast.install_failed', { e: errText(e) }), 'error');
   }
 }
 
@@ -683,45 +673,42 @@ async function onConfirmRemove() {
     await removeVersion(v.id, v.folder);
     await refreshInstalled();
     removeModal.open = false;
-    toast(`已删除 ${v.id}`, 'success');
+    toast(t('games.toast.removed', { id: v.id }), 'success');
   } catch (e) {
-    toast('删除失败：' + errText(e), 'error');
+    toast(t('games.toast.remove_failed', { e: errText(e) }), 'error');
   } finally {
     removeModal.busy = false;
   }
 }
 
-/** 清理安装失败的残留目录 */
 async function onCleanup(id: string, folder: string) {
   try {
     await cleanupPartialInstall(id, folder);
     await refreshInstalled();
-    toast('残留已清理', 'success');
+    toast(t('games.toast.cleanup_ok'), 'success');
   } catch (e) {
-    toast('清理失败：' + errText(e), 'error');
+    toast(t('games.toast.cleanup_failed', { e: errText(e) }), 'error');
   }
 }
 
-/** 打开该版本的版本文件夹（versions/<id>） */
 async function openVersionFolder(v: InstalledVersion) {
   try {
     await openDir('versions/' + v.id, v.folder);
   } catch (e) {
-    toast('打开文件夹失败：' + errText(e), 'error');
+    toast(t('games.toast.open_folder_failed', { e: errText(e) }), 'error');
   }
 }
 
-/** 版本列表条目的主操作：直接用该版本启动游戏（与首页最近游戏卡片行为一致） */
 async function launchVersion(v: InstalledVersion) {
   await selectInstance(v.id, v.folder);
   const folder = v.folder ?? store.settings?.activeFolder ?? store.settings?.gameDir;
   if (instanceLaunchBusy(store.launchStates, v.id, folder)) return;
-  applyLaunchState({ status: 'launching', text: '正在准备启动…', versionId: v.id, folder });
+  applyLaunchState({ status: 'launching', text: t('games.toast.launching'), versionId: v.id, folder });
   try {
     await launchGame(v.id, undefined, v.folder);
   } catch (e) {
     applyLaunchState({ status: 'error', text: errText(e), versionId: v.id, folder });
-    toast('启动失败：' + errText(e), 'error');
+    toast(t('games.toast.launch_failed', { e: errText(e) }), 'error');
   }
 }
 
@@ -758,7 +745,7 @@ const menuVersion = computed(() => allInstalled.value.find((v) => v.id === manag
 const loaderLabel = (v: InstalledVersion) =>
   v.loader
     ? `${({ fabric: 'Fabric', forge: 'Forge', neoforge: 'NeoForge', quilt: 'Quilt' } as Record<string, string>)[v.loader] || v.loader} ${v.loaderVersion || ''}`.trim()
-    : '原版';
+    : t('games.instance.meta.vanilla');
 let menuTrigger: HTMLElement | null = null;
 function closeManageMenu() {
   manageMenu.id = '';
@@ -778,34 +765,30 @@ function trapMenuFocus(event: KeyboardEvent) {
   }
 }
 
-/** 下载源切换（镜像 ⇄ 官方），持久化并刷新版本清单 */
 async function onToggleMirror() {
   const next = store.settings?.mirror === 'bmclapi' ? 'official' : 'bmclapi';
   try {
     await saveSettings({ mirror: next });
     store.settings = await getSettings();
-    toast(next === 'bmclapi' ? '已切换为 BMCLAPI 镜像源' : '已切换为官方源', 'success');
+    toast(next === 'bmclapi' ? t('games.toast.mirror_bmclapi') : t('games.toast.mirror_official'), 'success');
     void load(true);
   } catch (e) {
-    toast('切换下载源失败：' + errText(e), 'error');
+    toast(t('games.toast.mirror_failed', { e: errText(e) }), 'error');
   }
 }
 
-/** 重试安装失败的版本 */
 function onRetry(versionId: string, folder = activeFolder.value) {
   store.failedInstalls.delete(versionId);
   store.installing.add(versionId);
-  toast(`重新开始下载版本 ${versionId}…`, 'info');
+  toast(t('games.toast.retry_started', { id: versionId }), 'info');
   void installVersion(versionId, {}, folder).catch((e) => {
     store.installing.delete(versionId);
-    toast('安装失败：' + errText(e), 'error');
+    toast(t('games.toast.install_failed', { e: errText(e) }), 'error');
   });
 }
 
-/** 安装中的版本（进度条显示在已安装页顶部） */
 const installingVersions = computed(() => [...store.installing]);
 
-/** 文件夹显示名：优先用文件夹登记时的命名，未登记回退路径末级目录名 */
 const folderShortName = (p: string): string => {
   const norm = (v: string) => v.replace(/\\/g, '/').replace(/\/$/, '').toLowerCase();
   const hit = store.settings?.folders.find((f) => norm(f.path) === norm(p));
@@ -814,7 +797,6 @@ const folderShortName = (p: string): string => {
   return parts[parts.length - 1] || p;
 };
 
-/** 收藏置顶 + 组内最近游玩倒序 */
 const scopedInstalled = computed(() =>
   allInstalled.value
     .filter(
@@ -834,13 +816,19 @@ const sortedInstalled = computed(() =>
   )
 );
 const categoryFilters = computed(() => [
-  { id: VERSION_CATEGORY_ALL, name: '全部', count: scopedInstalled.value.length },
-  { id: VERSION_CATEGORY_FAVORITES, name: '收藏', count: scopedInstalled.value.filter((v) => isFavorite(v.id, v.folder)).length },
-  { id: VERSION_CATEGORY_UNCLASSIFIED, name: '未分类', count: scopedInstalled.value.filter((v) => !categoryOf(v)).length },
+  { id: VERSION_CATEGORY_ALL, name: t('games.category.all'), count: scopedInstalled.value.length },
+  {
+    id: VERSION_CATEGORY_FAVORITES,
+    name: t('games.category.favorites'),
+    count: scopedInstalled.value.filter((v) => isFavorite(v.id, v.folder)).length,
+  },
+  {
+    id: VERSION_CATEGORY_UNCLASSIFIED,
+    name: t('games.category.unclassified'),
+    count: scopedInstalled.value.filter((v) => !categoryOf(v)).length,
+  },
   ...categories.value.map((c) => ({ ...c, count: scopedInstalled.value.filter((v) => categoryOf(v) === c.id).length })),
 ]);
-/** 已收藏分组（不含残缺/失败版本） */
-const favoriteInstalled = computed(() => store.installed.filter((v) => isFavorite(v.id, v.folder) && !v.incomplete && !v.failed));
 
 function openManageMenu(e: MouseEvent, id: string, folder: string) {
   if (manageMenu.id === id && manageMenu.folder === folder) {
@@ -856,7 +844,6 @@ function openManageMenu(e: MouseEvent, id: string, folder: string) {
   void nextTick(() => document.querySelector<HTMLElement>('.instance-more-menu button')?.focus());
 }
 
-/** 跳转资源管理对应子页，并把上下文版本切到该版本 */
 async function goManage(view: 'mods' | 'packs' | 'shaders') {
   const { id, folder } = manageMenu;
   await selectInstance(id, folder);
@@ -919,7 +906,7 @@ async function openJavaModal() {
     const cur = allInstalled.value.find((v) => v.id === javaModal.id && v.folder === javaModal.folder);
     javaModal.value = cur?.javaPath ?? '';
   } catch (e) {
-    toast('读取 Java 列表失败：' + errText(e), 'error');
+    toast(t('games.toast.java_read_failed', { e: errText(e) }), 'error');
   } finally {
     javaModal.busy = false;
   }
@@ -930,9 +917,9 @@ async function onConfirmJava() {
     await setVersionJava(javaModal.id, javaModal.value, false, javaModal.folder);
     await refreshInstalled();
     javaModal.open = false;
-    toast(javaModal.value ? '已为该版本指定 Java' : '已恢复自动匹配 Java', 'success');
+    toast(javaModal.value ? t('games.toast.java_set') : t('games.toast.java_auto'), 'success');
   } catch (e) {
-    toast('设置失败：' + errText(e), 'error');
+    toast(t('games.toast.java_set_failed', { e: errText(e) }), 'error');
   }
 }
 
@@ -969,11 +956,11 @@ async function onConfirmResolution() {
     const width = Number(resolutionModal.width);
     const height = Number(resolutionModal.height);
     if (!Number.isInteger(width) || width < 854 || width > 7680) {
-      resolutionModal.error = '窗口宽度必须是 854–7680 之间的整数';
+      resolutionModal.error = t('games.toast.resolution_window_invalid');
       return;
     }
     if (!Number.isInteger(height) || height < 480 || height > 4320) {
-      resolutionModal.error = '窗口高度必须是 480–4320 之间的整数';
+      resolutionModal.error = t('games.toast.resolution_height_invalid');
       return;
     }
     override = {
@@ -988,7 +975,7 @@ async function onConfirmResolution() {
     await setVersionResolution(resolutionModal.id, override, resolutionModal.folder);
     await refreshInstalled();
     resolutionModal.open = false;
-    toast(override ? '已保存实例窗口设置' : '该实例已改为跟随全局窗口设置', 'success');
+    toast(override ? t('games.toast.resolution_saved') : t('games.toast.resolution_inherit'), 'success');
   } catch (error) {
     resolutionModal.error = errText(error);
   } finally {
@@ -1001,7 +988,6 @@ function openRename() {
   manageMenu.id = '';
 }
 
-/** 点击版本名直接进入改名 */
 function openRenameFor(id: string, folder = manageMenu.folder) {
   renameModal.folder = folder;
   renameModal.id = id;
@@ -1019,11 +1005,10 @@ async function onConfirmRename() {
   try {
     await renameVersion(oldId, newId, renameModal.folder);
     store.settings = await getSettings();
-    // 引用同步（渲染端）：最近游玩记录以版本 id 为键（收藏/服务器绑定由主进程同步）
     renameLastPlayed(oldId, newId);
     await refreshInstalled();
     renameModal.open = false;
-    toast('实例已重命名', 'success');
+    toast(t('games.toast.renamed'), 'success');
   } catch (e) {
     renameModal.error = errText(e);
   } finally {
@@ -1032,7 +1017,6 @@ async function onConfirmRename() {
 }
 
 async function onToggleIsolation(v: InstalledVersion, event: Event) {
-  // 原生 checkbox 会先自行翻转；状态只有在主进程事务成功后才允许改变。
   const input = event.currentTarget as HTMLInputElement;
   input.checked = !!v.isolated;
   if (isoBusy.value) return;
@@ -1051,9 +1035,9 @@ async function onToggleIsolation(v: InstalledVersion, event: Event) {
     }
     await setVersionIsolation(v.id, next, v.folder);
     await refreshInstalled();
-    toast(next ? `已为「${v.id}」开启版本隔离` : `已关闭「${v.id}」的版本隔离；独立目录中的原数据已保留`, 'success');
+    toast(next ? t('games.toast.isolation_on', { id: v.id }) : t('games.toast.isolation_off', { id: v.id }), 'success');
   } catch (e) {
-    toast('切换隔离失败：' + errText(e), 'error');
+    toast(t('games.toast.isolation_toggle_failed', { e: errText(e) }), 'error');
   } finally {
     if (!isolationModal.open) isoBusy.value = null;
   }
@@ -1068,7 +1052,7 @@ async function confirmIsolation() {
     await setVersionIsolation(target.id, true, target.folder);
     await refreshInstalled();
     isolationModal.open = false;
-    toast(`已为「${target.id}」开启版本隔离，共享数据已安全复制`, 'success');
+    toast(t('games.toast.isolation_confirmed', { id: target.id }), 'success');
   } catch (error) {
     isolationModal.error = errText(error);
   } finally {
@@ -1086,15 +1070,18 @@ async function confirmIsolation() {
   <div class="page" :data-design-page="tab">
     <!-- 标题 -->
     <div class="page-head">
-      <h1 class="page-title">游戏版本</h1>
-      <p class="page-sub">浏览、安装与管理 Minecraft 版本</p>
+      <h1 class="page-title">{{ t('games.title') }}</h1>
+      <p class="page-sub">{{ t('games.subtitle') }}</p>
     </div>
 
     <div class="game-tabs" ref="gameTabs">
       <span class="game-tabs-blob" :style="tabBlobStyle" aria-hidden="true"></span>
-      <button class="game-tab" data-tab="download" :class="{ active: tab === 'download' }" @click="tab = 'download'">版本下载</button>
+      <button class="game-tab" data-tab="download" :class="{ active: tab === 'download' }" @click="tab = 'download'">
+        {{ t('games.tab.download') }}
+      </button>
       <button class="game-tab" data-tab="installed" :class="{ active: tab === 'installed' }" @click="tab = 'installed'">
-        已安装<template v-if="allInstalled.length">（{{ allInstalled.length }}）</template>
+        <template v-if="allInstalled.length">{{ t('games.tab.installed_count', { count: String(allInstalled.length) }) }}</template>
+        <template v-else>{{ t('games.tab.installed') }}</template>
       </button>
     </div>
 
@@ -1102,11 +1089,16 @@ async function confirmIsolation() {
     <section class="card folder-manager" data-ui="games:folders" @contextmenu.prevent="showFolderContextMenu(activeFolder)">
       <div class="folder-manager-main">
         <div class="folder-select-wrap">
-          <span class="folder-caption">默认下载位置</span>
+          <span class="folder-caption">{{ t('games.folder.default_download') }}</span>
           <SelectMenu
             class="folder-select"
             :model-value="installFolder"
-            :options="folders.map((f) => ({ value: f.path, label: f.name + (f.isDefault ? '（默认）' : '') }))"
+            :options="
+              folders.map((f) => ({
+                value: f.path,
+                label: f.name + (f.isDefault ? t('games.folder.folder_default') : ''),
+              }))
+            "
             :disabled="folderBusy || !folders.length"
             @change="chooseFolderPath"
           />
@@ -1117,62 +1109,66 @@ async function confirmIsolation() {
           :aria-expanded="folderToolsOpen"
           @click="folderToolsOpen = !folderToolsOpen"
         >
-          管理文件夹 <span class="muted">{{ folders.length }}</span>
+          {{ t('games.folder.manage') }} <span class="muted">{{ folders.length }}</span>
         </button>
       </div>
       <div v-if="folderToolsOpen" class="folder-manager-actions" @keydown.esc="folderToolsOpen = false">
         <p class="muted folder-managed-path" :title="activeFolder">
-          正在管理：{{ currentFolder?.name || '游戏文件夹' }} · {{ activeFolder }}
+          {{ t('games.folder.managing', { name: currentFolder?.name || t('games.folder.generic_name'), path: activeFolder }) }}
         </p>
-        <button class="btn btn-ghost btn-sm" :disabled="folderBusy" @click="addGameFolder">+ 更改到其他下载位置</button>
+        <button class="btn btn-ghost btn-sm" :disabled="folderBusy" @click="addGameFolder">{{ t('games.folder.change') }}</button>
         <button class="btn btn-ghost btn-sm" :disabled="folderBusy" @click="refreshFolderScan()">
           <span v-if="folderBusy" class="spin"></span>
-          {{ folderBusy ? '扫描中' : '刷新' }}
+          {{ folderBusy ? t('games.folder.scanning') : t('games.folder.refresh') }}
         </button>
-        <button class="btn btn-ghost btn-sm" :disabled="!activeFolder" @click="revealCurrentFolder">打开</button>
-        <button class="btn btn-ghost btn-sm" :disabled="!currentFolder" @click="openFolderRename">重命名</button>
+        <button class="btn btn-ghost btn-sm" :disabled="!activeFolder" @click="revealCurrentFolder">{{ t('games.folder.open') }}</button>
+        <button class="btn btn-ghost btn-sm" :disabled="!currentFolder" @click="openFolderRename">
+          {{ t('games.folder.rename') }}
+        </button>
         <button
           v-if="currentFolder && !currentFolder.isDefault"
           class="btn btn-ghost btn-sm"
           :disabled="folderBusy"
           @click="markCurrentDefault"
         >
-          将当前管理文件夹设为默认下载位置
+          {{ t('games.folder.mark_default') }}
         </button>
         <button
           class="btn btn-danger btn-sm"
           :disabled="folderBusy || folders.length <= 1"
-          title="只解除 FAIONYX 登记，不删除磁盘文件"
+          :title="t('games.folder.unbind_title')"
           @click="folderRemove.open = true"
         >
-          解除绑定
+          {{ t('games.folder.unbind') }}
         </button>
       </div>
       <div v-if="folderMissing && currentFolder" class="folder-missing-card" role="alert">
         <div class="folder-missing-text">
-          <strong>检测不到该文件夹</strong>
-          <span class="muted">「{{ currentFolder.name }}」（{{ currentFolder.path }}）可能已被删除或重命名，暂时无法识别其中的版本。</span>
+          <strong>{{ t('games.folder.missing_title') }}</strong>
+          <span class="muted">{{ t('games.folder.missing_desc', { name: currentFolder.name, path: currentFolder.path }) }}</span>
         </div>
         <div class="folder-missing-actions">
-          <button class="btn btn-danger btn-sm" :disabled="folderRemove.busy" @click="removeMissingFolder">在启动器内移除该绑定</button>
-          <button class="btn btn-ghost btn-sm" @click="folderMissingDismissed = true">稍后处理</button>
+          <button class="btn btn-danger btn-sm" :disabled="folderRemove.busy" @click="removeMissingFolder">
+            {{ t('games.folder.remove_binding') }}
+          </button>
+          <button class="btn btn-ghost btn-sm" @click="folderMissingDismissed = true">{{ t('games.folder.later') }}</button>
         </div>
       </div>
       <p class="muted folder-location-hint">
-        新版本、整合包和共享资源使用默认下载位置；已有游戏保留原目录。<button
+        {{ t('games.folder.hint')
+        }}<button
           class="btn btn-ghost btn-sm"
           @click="
             store.settingsSection = 'installation';
             store.currentView = 'settings';
           "
         >
-          下载位置设置
+          {{ t('games.folder.download_settings') }}
         </button>
       </p>
       <p v-if="folderScan?.errors.length" class="folder-scan-error" role="status">{{ folderScan.errors[0] }}</p>
     </section>
 
-    <!-- 控制行：Tab + 搜索/筛选/刷新/下载源（同一行横向排布，窄窗口自动换行） -->
     <div v-if="tab === 'download'" class="game-controls">
       <div v-if="tab === 'download'" class="toolbar">
         <div class="tool-search">
@@ -1180,7 +1176,7 @@ async function confirmIsolation() {
             <circle cx="11" cy="11" r="7" />
             <path d="m21 21-4.3-4.3" />
           </svg>
-          <input v-model="store.searchKeyword" placeholder="搜索版本号…" />
+          <input v-model="store.searchKeyword" :placeholder="t('games.toolbar.search_placeholder')" />
         </div>
 
         <div class="filter-capsules">
@@ -1211,54 +1207,68 @@ async function confirmIsolation() {
             <path d="M21 12a9 9 0 1 1-2.64-6.36" />
             <path d="M21 3v6h-6" />
           </svg>
-          {{ loading ? '刷新中' : '刷新' }}
+          {{ loading ? t('games.toolbar.refreshing') : t('games.toolbar.refresh') }}
         </button>
 
         <button
           class="tag mirror-toggle"
           :class="store.settings?.mirror === 'bmclapi' ? 'tag-cyan' : ''"
           :title="
-            store.settings?.mirror === 'bmclapi' ? '当前：BMCLAPI 镜像源，点击切换为官方源' : '当前：官方源，点击切换为 BMCLAPI 镜像源'
+            store.settings?.mirror === 'bmclapi'
+              ? t('games.toolbar.mirror_switch_to_official')
+              : t('games.toolbar.mirror_switch_to_bmclapi')
           "
           @click="onToggleMirror"
         >
-          {{ store.settings?.mirror === 'bmclapi' ? 'BMCLAPI 镜像' : '官方源' }}
+          {{ store.settings?.mirror === 'bmclapi' ? t('games.toolbar.mirror_bmclapi') : t('games.toolbar.mirror_official') }}
         </button>
       </div>
     </div>
 
     <div v-if="tab === 'download'" class="catalog-status muted" role="status" data-ui="game.catalog-status">
-      <span v-if="staleCatalog || loadError">{{ loadError || '官方清单暂不可用，显示镜像或缓存；将自动重试' }}</span>
-      <span v-else>{{ loading ? '正在核对最新版本…' : '自动检查已开启' }}</span>
+      <span v-if="staleCatalog || loadError">{{ loadError || t('games.catalog.stale') }}</span>
+      <span v-else>{{ loading ? t('games.catalog.checking') : t('games.catalog.auto') }}</span>
       <span
-        >发布时间为本地时间<span v-if="checkedAt"> · 最近检查 {{ formatDate(new Date(checkedAt).toISOString()) }}</span></span
+        >{{ t('games.catalog.local_time')
+        }}<span v-if="checkedAt">{{ t('games.catalog.last_check', { time: formatDate(new Date(checkedAt).toISOString()) }) }}</span></span
       >
     </div>
     <div v-if="tab === 'download' && latestRelease && !keyword" class="card latest-release" data-ui="game.latest-release">
       <div>
-        <span class="tag tag-gold">最新正式版</span><strong>{{ latestRelease.id }}</strong>
-        <time :datetime="latestRelease.releaseTime">发布于 {{ formatDate(latestRelease.releaseTime) }}</time>
+        <span class="tag tag-gold">{{ t('games.latest.title') }}</span
+        ><strong>{{ latestRelease.id }}</strong>
+        <time :datetime="latestRelease.releaseTime">{{
+          t('games.latest.published', { date: formatDate(latestRelease.releaseTime) })
+        }}</time>
       </div>
       <button class="btn btn-gold" :disabled="store.installing.has(latestRelease.id)" @click="openInstall(latestRelease)">
-        {{ store.installing.has(latestRelease.id) ? '下载中' : isInstalled(latestRelease) ? '再次安装' : '安装' }}
+        {{
+          store.installing.has(latestRelease.id)
+            ? t('games.list.downloading')
+            : isInstalled(latestRelease)
+              ? t('games.list.reinstall')
+              : t('games.list.install')
+        }}
       </button>
     </div>
     <!-- 版本列表 -->
     <div v-if="tab === 'download'" class="card list-card">
-      <ContentSkeleton v-if="loading && !manifest.length" label="正在获取版本列表…" />
+      <ContentSkeleton v-if="loading && !manifest.length" :label="t('games.list.loading')" />
       <div v-else-if="loadError && !manifest.length" class="empty">
-        <span>加载失败：{{ loadError }}</span>
-        <button class="btn btn-ghost btn-sm" @click="load(true)">重试</button>
+        <span>{{ t('games.list.load_failed', { e: loadError }) }}</span>
+        <button class="btn btn-ghost btn-sm" @click="load(true)">{{ t('games.installed.retry') }}</button>
       </div>
       <div v-else-if="!filtered.length" class="empty">
-        <span>{{ keyword || typeFilter !== 'all' ? '没有匹配的版本' : '版本列表为空' }}</span>
+        <span>{{ keyword || typeFilter !== 'all' ? t('games.list.no_match') : t('games.list.empty') }}</span>
       </div>
       <div v-else class="version-list">
         <div v-for="v in filtered" :key="v.id" class="version-row">
           <div class="version-info">
             <span class="version-id">{{ v.id }}</span>
-            <span class="tag" :class="typeTagClass(v.type)">{{ typeText[v.type] }}</span>
-            <time class="muted version-date" :datetime="v.releaseTime" title="本地发布时间">{{ formatDate(v.releaseTime) }}</time>
+            <span class="tag" :class="typeTagClass(v.type)">{{ typeText(v.type) }}</span>
+            <time class="muted version-date" :datetime="v.releaseTime" :title="t('games.catalog.local_time')">{{
+              formatDate(v.releaseTime)
+            }}</time>
           </div>
           <div class="version-actions">
             <div v-if="store.installing.has(v.id) && versionProgress(v.id)" class="row-progress">
@@ -1272,9 +1282,15 @@ async function confirmIsolation() {
                 {{ versionProgress(v.id).source ? '· ' + versionProgress(v.id).source : '' }}
               </span>
             </div>
-            <span v-if="isInstalled(v)" class="tag tag-success">已安装</span>
+            <span v-if="isInstalled(v)" class="tag tag-success">{{ t('games.list.installed_tag') }}</span>
             <button class="btn btn-sm btn-ghost" :disabled="store.installing.has(v.id)" @click="openInstall(v)">
-              {{ store.installing.has(v.id) ? '下载中' : isInstalled(v) ? '再次安装' : '安装' }}
+              {{
+                store.installing.has(v.id)
+                  ? t('games.list.downloading')
+                  : isInstalled(v)
+                    ? t('games.list.reinstall')
+                    : t('games.list.install')
+              }}
             </button>
           </div>
         </div>
@@ -1282,12 +1298,11 @@ async function confirmIsolation() {
     </div>
     <!-- 已安装区 -->
     <div v-else class="card installed-card">
-      <!-- 安装中（进度显示） -->
       <div v-if="installingVersions.length" class="installing-block">
         <div v-for="id in installingVersions" :key="id" class="installed-row installing-row">
           <div class="inst-names">
             <span class="version-id">{{ id }}</span>
-            <span class="muted">正在下载安装…</span>
+            <span class="muted">{{ t('games.installed.installing') }}</span>
           </div>
           <div v-if="versionProgress(id)" class="row-progress">
             <div class="row-bar">
@@ -1301,7 +1316,6 @@ async function confirmIsolation() {
         </div>
       </div>
 
-      <!-- 安装失败（重试入口） -->
       <div
         v-for="id in [...store.failedInstalls].filter((x) => !installingVersions.includes(x))"
         :key="'fail-' + id"
@@ -1309,25 +1323,31 @@ async function confirmIsolation() {
       >
         <div class="inst-names">
           <span class="version-id">{{ id }}</span>
-          <span class="muted">上次安装失败</span>
+          <span class="muted">{{ t('games.installed.failed') }}</span>
         </div>
-        <button class="btn btn-ghost btn-sm installed-folder row-actions" @click="onRetry(id)">重试</button>
+        <button class="btn btn-ghost btn-sm installed-folder row-actions" @click="onRetry(id)">
+          {{ t('games.installed.retry') }}
+        </button>
       </div>
 
       <div class="installed-scope" data-ui="games:installed-scope">
-        <span class="muted">显示范围</span>
-        <SelectMenu v-model="installedFolder" :options="installedFolderOptions" aria-label="已安装实例显示范围" />
+        <span class="muted">{{ t('games.installed.scope') }}</span>
+        <SelectMenu v-model="installedFolder" :options="installedFolderOptions" :aria-label="t('games.installed.scope_aria')" />
         <label class="installed-search"
-          ><input v-model="installedSearch" class="input" aria-label="搜索已安装实例" placeholder="搜索实例名称、版本…"
+          ><input
+            v-model="installedSearch"
+            class="input"
+            :aria-label="t('games.installed.search_placeholder')"
+            :placeholder="t('games.installed.search_placeholder')"
         /></label>
-        <span class="muted scope-count">{{ sortedInstalled.length }} 个实例</span>
+        <span class="muted scope-count">{{ t('games.installed.count', { count: String(sortedInstalled.length) }) }}</span>
         <button class="btn btn-ghost btn-sm" :disabled="installedLoading" @click="refreshAllInstalled">
-          {{ installedLoading ? '刷新中…' : '刷新列表' }}
+          {{ installedLoading ? t('games.installed.refreshing') : t('games.installed.refresh') }}
         </button>
       </div>
       <p v-if="installedError" class="error" role="alert">{{ installedError }}</p>
       <div class="version-category-bar" data-ui="games:category-filters">
-        <div class="version-category-filters" role="group" aria-label="版本分类筛选">
+        <div class="version-category-filters" role="group" :aria-label="t('games.installed.category_aria')">
           <button
             v-for="category in categoryFilters"
             :key="category.id"
@@ -1349,34 +1369,32 @@ async function confirmIsolation() {
             categoryManagerOpen = true;
           "
         >
-          管理分类
+          {{ t('games.installed.manage_categories') }}
         </button>
       </div>
       <p v-if="categoryError && !categoryManagerOpen" class="error" role="alert">{{ categoryError }}</p>
       <div v-if="!sortedInstalled.length && !installingVersions.length" class="empty installed-empty">
         <span>{{
           installedLoading
-            ? '正在读取已安装实例…'
+            ? t('games.installed.empty_loading')
             : installedCategory === VERSION_CATEGORY_FAVORITES
-              ? '此范围还没有收藏版本，点击实例旁的星标即可收藏'
+              ? t('games.installed.empty_favorites')
               : installedCategory !== VERSION_CATEGORY_ALL
-                ? '此分类暂无匹配实例，可在实例的更多操作中设置分类'
+                ? t('games.installed.empty_category')
                 : installedSearch
-                  ? '没有匹配的实例，请调整搜索条件'
-                  : '当前范围没有已安装版本'
+                  ? t('games.installed.empty_search')
+                  : t('games.installed.empty')
         }}</span>
         <button
           v-if="installedCategory !== VERSION_CATEGORY_ALL"
           class="btn btn-ghost btn-sm"
           @click="installedCategory = VERSION_CATEGORY_ALL"
         >
-          查看全部版本
+          {{ t('games.installed.view_all') }}
         </button>
-        <button v-else class="btn btn-gold btn-sm" @click="tab = 'download'">去版本下载看看</button>
+        <button v-else class="btn btn-gold btn-sm" @click="tab = 'download'">{{ t('games.installed.go_download') }}</button>
       </div>
       <div v-else class="installed-list">
-        <!-- 同一实例仅渲染一次；sortWithFavorite 已负责收藏置顶。 -->
-
         <div
           v-for="v in sortedInstalled"
           :key="v.folder + '/' + v.id"
@@ -1386,8 +1404,12 @@ async function confirmIsolation() {
           <button
             class="fav-btn"
             :class="{ on: isFavorite(v.id, v.folder) }"
-            :title="isFavorite(v.id, v.folder) ? '取消收藏' : '收藏'"
-            :aria-label="(isFavorite(v.id, v.folder) ? '取消收藏 ' : '收藏 ') + displayVersionName(v)"
+            :title="isFavorite(v.id, v.folder) ? t('games.instance.favorite_remove') : t('games.instance.favorite_add')"
+            :aria-label="
+              isFavorite(v.id, v.folder)
+                ? t('games.instance.favorite_aria_remove', { name: displayVersionName(v) })
+                : t('games.instance.favorite_aria_add', { name: displayVersionName(v) })
+            "
             :aria-pressed="isFavorite(v.id, v.folder)"
             @click="toggleFavorite(v.id, v.folder)"
           >
@@ -1395,7 +1417,7 @@ async function confirmIsolation() {
               <path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01Z" />
             </svg>
           </button>
-          <button class="inst-icon" title="更换实例图标" @click="openIconPicker(v.id, v.folder)">
+          <button class="inst-icon" :title="t('games.instance.change_icon')" @click="openIconPicker(v.id, v.folder)">
             <img v-if="versionIconUrl(v)" :src="versionIconUrl(v)" alt="" />
             <svg
               v-else
@@ -1412,29 +1434,34 @@ async function confirmIsolation() {
             </svg>
           </button>
           <div class="inst-names">
-            <button class="version-id instance-name" :title="displayVersionName(v) + '（点击改名）'" @click="openRenameFor(v.id, v.folder)">
+            <button
+              class="version-id instance-name"
+              :title="t('games.instance.rename_title', { name: displayVersionName(v) })"
+              @click="openRenameFor(v.id, v.folder)"
+            >
               {{ displayVersionName(v) }}
             </button>
             <div class="instance-meta">
-              <span>{{ v.mcVersion || '版本未知' }}</span
+              <span>{{ v.mcVersion || t('games.instance.meta.mc_unknown') }}</span
               ><span>{{ loaderLabel(v) }}</span>
               <span class="instance-directory" :title="v.folder">{{ folderShortName(v.folder) }}</span>
               <span v-if="categoryLabel(v)" class="instance-category" :title="categoryLabel(v)">{{ categoryLabel(v) }}</span>
-              <span :title="v.gameDirectory || v.folder">{{ v.isolated ? '已隔离' : '共享目录' }}</span>
-              <span v-if="v.incomplete" class="error">下载未完成</span><span v-else-if="v.failed" class="error">安装失败</span>
-              <span v-else-if="v.modpackName" :title="v.modpackName">整合包</span>
+              <span :title="v.gameDirectory || v.folder">{{ v.isolated ? t('games.instance.isolated') : t('games.instance.shared') }}</span>
+              <span v-if="v.incomplete" class="error">{{ t('games.instance.incomplete') }}</span
+              ><span v-else-if="v.failed" class="error">{{ t('games.instance.failed') }}</span>
+              <span v-else-if="v.modpackName" :title="v.modpackName">{{ t('games.instance.modpack') }}</span>
             </div>
           </div>
           <div class="instance-commands">
             <div class="row-actions">
-              <button class="btn btn-ghost btn-sm" @click="openInstanceCenter(v)">管理</button>
+              <button class="btn btn-ghost btn-sm" @click="openInstanceCenter(v)">{{ t('games.instance.manage') }}</button>
               <button
                 v-if="v.incomplete"
                 class="btn btn-ghost btn-sm installed-launch"
                 :disabled="store.installing.has(v.id)"
                 @click="onRetry(v.id, v.folder)"
               >
-                继续下载
+                {{ t('games.instance.continue_download') }}
               </button>
               <button
                 v-else
@@ -1443,27 +1470,27 @@ async function confirmIsolation() {
                   v.failed ||
                   instanceLaunchBusy(store.launchStates, v.id, v.folder ?? store.settings?.activeFolder ?? store.settings?.gameDir)
                 "
-                :title="v.failed ? '安装失败，请从更多菜单清理残留后重新安装' : '启动 ' + displayVersionName(v)"
+                :title="v.failed ? t('games.instance.launch_disabled') : t('games.instance.launch_title', { name: displayVersionName(v) })"
                 @click="launchVersion(v)"
               >
-                {{ instanceLaunchBusy(store.launchStates, v.id, v.folder) ? '启动中…' : '▶ 启动' }}
+                {{ instanceLaunchBusy(store.launchStates, v.id, v.folder) ? t('games.instance.launching') : t('games.instance.launch') }}
               </button>
               <button
                 class="btn btn-ghost btn-sm instance-more"
-                :aria-label="displayVersionName(v) + '的更多操作'"
+                :aria-label="t('games.instance.more_aria', { name: displayVersionName(v) })"
                 :aria-expanded="manageMenu.id === v.id && manageMenu.folder === v.folder"
                 @click="openManageMenu($event, v.id, v.folder)"
               >
                 ⋯
               </button>
             </div>
-            <span class="muted played-text">最近游玩：{{ fmtLastPlayed(store.lastPlayed[v.id]) }}</span>
+            <span class="muted played-text">{{ t('games.instance.last_played', { time: fmtLastPlayed(store.lastPlayed[v.id]) }) }}</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 管理快捷菜单（模组/资源包/光影包） -->
+    <!-- 管理快捷菜单 -->
     <Teleport to="body">
       <div v-if="manageMenu.id" class="menu-overlay" @click="manageMenu.id = ''"></div>
       <div
@@ -1471,16 +1498,16 @@ async function confirmIsolation() {
         class="float-menu instance-more-menu"
         role="dialog"
         aria-modal="true"
-        aria-label="实例更多操作"
+        :aria-label="t('games.menu.aria')"
         @keydown.esc.stop="closeManageMenu"
         @keydown="trapMenuFocus"
         :style="{ top: manageMenu.top + 'px', left: manageMenu.left + 'px', maxHeight: `calc(100vh - ${manageMenu.top + 12}px)` }"
       >
         <div v-if="menuVersion" class="instance-technical" tabindex="0">
           <strong>{{ displayVersionName(menuVersion) }}</strong
-          ><span>实例 ID：{{ menuVersion.id }}</span
-          ><span>绑定目录：{{ menuVersion.folder }}</span
-          ><span>游戏目录：{{ menuVersion.gameDirectory || menuVersion.folder }}</span>
+          ><span>{{ t('games.menu.id', { id: menuVersion.id }) }}</span
+          ><span>{{ t('games.menu.bound_folder', { path: menuVersion.folder }) }}</span
+          ><span>{{ t('games.menu.game_folder', { path: menuVersion.gameDirectory || menuVersion.folder }) }}</span>
         </div>
         <button
           v-if="menuVersion"
@@ -1490,7 +1517,7 @@ async function confirmIsolation() {
             closeManageMenu();
           "
         >
-          打开实例文件夹
+          {{ t('games.menu.open_folder') }}
         </button>
         <button
           v-if="menuVersion"
@@ -1500,18 +1527,19 @@ async function confirmIsolation() {
             closeManageMenu();
           "
         >
-          实例设置与详情
+          {{ t('games.menu.settings') }}
         </button>
         <label v-if="menuVersion" class="instance-category-field"
-          >所属分类<select
+          >{{ t('games.menu.category_label')
+          }}<select
             class="select"
             data-ui="games:instance-category"
-            :aria-label="displayVersionName(menuVersion) + '的所属分类'"
+            :aria-label="t('games.menu.category_aria', { name: displayVersionName(menuVersion) })"
             :value="categoryOf(menuVersion)"
             :disabled="categoryBusy"
             @change="assignCategory(menuVersion, $event)"
           >
-            <option value="">未分类</option>
+            <option value="">{{ t('games.category.unclassified') }}</option>
             <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
           </select></label
         >
@@ -1522,7 +1550,7 @@ async function confirmIsolation() {
             :checked="!!menuVersion.isolated"
             :disabled="isoBusy === menuVersion.id"
             @change="onToggleIsolation(menuVersion, $event)"
-          />实例隔离</label
+          />{{ t('games.menu.isolation') }}</label
         >
         <button class="menu-item" @click="goManage('mods')">
           <svg
@@ -1539,7 +1567,7 @@ async function confirmIsolation() {
             <path d="m3 8 9 5 9-5" />
             <path d="M12 13v8" />
           </svg>
-          模组
+          {{ t('games.menu.mods') }}
         </button>
         <button class="menu-item" @click="goManage('packs')">
           <svg
@@ -1554,7 +1582,7 @@ async function confirmIsolation() {
           >
             <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
           </svg>
-          资源包
+          {{ t('games.menu.packs') }}
         </button>
         <button class="menu-item" @click="goManage('shaders')">
           <svg
@@ -1570,7 +1598,7 @@ async function confirmIsolation() {
             <circle cx="12" cy="12" r="4" />
             <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
           </svg>
-          光影包
+          {{ t('games.menu.shaders') }}
         </button>
         <button class="menu-item" @click="openRename">
           <svg
@@ -1586,7 +1614,7 @@ async function confirmIsolation() {
             <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
             <path d="m15 5 4 4" />
           </svg>
-          重命名
+          {{ t('games.menu.rename') }}
         </button>
         <button class="menu-item" @click="openIconPicker(manageMenu.id)">
           <svg
@@ -1603,7 +1631,7 @@ async function confirmIsolation() {
             <circle cx="9" cy="9" r="2" />
             <path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21" />
           </svg>
-          更换图标
+          {{ t('games.menu.change_icon') }}
         </button>
         <button class="menu-item" @click="openThumbnailPicker(manageMenu.id)">
           <svg
@@ -1620,7 +1648,7 @@ async function confirmIsolation() {
             <path d="m3 16 5-5 4 4 3-3 6 6" />
             <circle cx="16.5" cy="8.5" r="1.5" />
           </svg>
-          启动卡图片
+          {{ t('games.menu.thumbnail') }}
         </button>
         <button class="menu-item" @click="openJavaModal">
           <svg
@@ -1636,7 +1664,7 @@ async function confirmIsolation() {
             <path d="M18 8h1a3 3 0 0 1 0 6h-1M3 8h15v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
             <path d="M7 12h6M7 15h4" />
           </svg>
-          指定 Java
+          {{ t('games.menu.java') }}
         </button>
         <button class="menu-item" @click="openResolutionModal">
           <svg
@@ -1652,7 +1680,7 @@ async function confirmIsolation() {
             <rect x="3" y="4" width="18" height="14" rx="2" />
             <path d="M8 21h8M12 18v3" />
           </svg>
-          窗口设置
+          {{ t('games.menu.window') }}
         </button>
         <div class="menu-danger-zone" v-if="menuVersion">
           <button
@@ -1663,7 +1691,7 @@ async function confirmIsolation() {
               closeManageMenu();
             "
           >
-            清理安装残留
+            {{ t('games.menu.cleanup') }}
           </button>
           <button
             v-else
@@ -1674,7 +1702,7 @@ async function confirmIsolation() {
               closeManageMenu();
             "
           >
-            删除实例
+            {{ t('games.menu.delete') }}
           </button>
         </div>
       </div>
@@ -1690,21 +1718,21 @@ async function confirmIsolation() {
       @action="onCategoryAction"
     />
 
-    <!-- 实例窗口设置；未覆盖时始终跟随全局配置。 -->
+    <!-- 实例窗口设置 -->
     <Teleport to="body">
       <div v-if="resolutionModal.open" class="modal-mask" @pointerdown.self="resolutionModal.open = false">
         <div class="modal">
-          <h3 class="modal-title">窗口设置 · {{ resolutionModal.id }}</h3>
-          <p class="modal-label">实例设置优先于全局设置；选择“跟随全局”可删除覆盖。</p>
+          <h3 class="modal-title">{{ t('games.modal.resolution_title', { id: resolutionModal.id }) }}</h3>
+          <p class="modal-label">{{ t('games.modal.resolution_desc') }}</p>
           <select v-model="resolutionModal.mode" class="select">
-            <option value="inherit">跟随全局</option>
-            <option value="windowed">窗口化</option>
-            <option value="maximized">最大化</option>
-            <option value="fullscreen">全屏</option>
+            <option value="inherit">{{ t('games.modal.resolution_inherit') }}</option>
+            <option value="windowed">{{ t('games.modal.resolution_windowed') }}</option>
+            <option value="maximized">{{ t('games.modal.resolution_maximized') }}</option>
+            <option value="fullscreen">{{ t('games.modal.resolution_fullscreen') }}</option>
           </select>
           <div class="instance-resolution-size">
             <label>
-              <span class="muted">宽</span>
+              <span class="muted">{{ t('games.modal.resolution_width') }}</span>
               <input
                 v-model.number="resolutionModal.width"
                 class="input"
@@ -1716,7 +1744,7 @@ async function confirmIsolation() {
             </label>
             <span class="muted">×</span>
             <label>
-              <span class="muted">高</span>
+              <span class="muted">{{ t('games.modal.resolution_height') }}</span>
               <input
                 v-model.number="resolutionModal.height"
                 class="input"
@@ -1727,12 +1755,14 @@ async function confirmIsolation() {
               />
             </label>
           </div>
-          <p class="muted instance-resolution-tip">最大化会使用启动时所在显示器的可用工作区；全屏不会修改系统显示器分辨率。</p>
+          <p class="muted instance-resolution-tip">{{ t('games.modal.resolution_tip') }}</p>
           <p v-if="resolutionModal.error" class="loaders-error">{{ resolutionModal.error }}</p>
           <div class="modal-actions">
-            <button class="btn btn-ghost" :disabled="resolutionModal.busy" @click="resolutionModal.open = false">取消</button>
+            <button class="btn btn-ghost" :disabled="resolutionModal.busy" @click="resolutionModal.open = false">
+              {{ t('games.modal.cancel') }}
+            </button>
             <button class="btn btn-gold" :disabled="resolutionModal.busy" @click="onConfirmResolution">
-              {{ resolutionModal.busy ? '保存中…' : '保存' }}
+              {{ resolutionModal.busy ? t('games.modal.resolution_saving') : t('games.modal.resolution_save') }}
             </button>
           </div>
         </div>
@@ -1743,20 +1773,28 @@ async function confirmIsolation() {
     <Teleport to="body">
       <div v-if="javaModal.open" class="modal-mask" @pointerdown.self="javaModal.open = false">
         <div class="modal">
-          <h3 class="modal-title">指定 Java · {{ javaModal.id }}</h3>
-          <p class="modal-label">选择该版本使用的 Java（默认自动匹配）</p>
-          <div v-if="javaModal.busy" class="loaders-loading"><span class="spin"></span><span class="muted">读取 Java 列表…</span></div>
+          <h3 class="modal-title">{{ t('games.modal.java_title', { id: javaModal.id }) }}</h3>
+          <p class="modal-label">{{ t('games.modal.java_desc') }}</p>
+          <div v-if="javaModal.busy" class="loaders-loading">
+            <span class="spin"></span><span class="muted">{{ t('games.modal.java_loading') }}</span>
+          </div>
           <template v-else>
             <select v-model="javaModal.value" class="select">
-              <option value="">自动匹配（按版本需求选择，推荐）</option>
+              <option value="">{{ t('games.modal.java_auto') }}</option>
               <option v-for="j in javaModal.list" :key="j.path" :value="j.path">
-                Java {{ j.major }}（{{ j.source === 'manual' ? '手动' : '自动' }}）· {{ j.path }}
+                {{
+                  t('games.modal.java_entry', {
+                    major: String(j.major),
+                    source: j.source === 'manual' ? t('games.modal.java_source_manual') : t('games.modal.java_source_auto'),
+                    path: j.path,
+                  })
+                }}
               </option>
             </select>
           </template>
           <div class="modal-actions">
-            <button class="btn btn-ghost" @click="javaModal.open = false">取消</button>
-            <button class="btn btn-gold" @click="onConfirmJava">确定</button>
+            <button class="btn btn-ghost" @click="javaModal.open = false">{{ t('games.modal.cancel') }}</button>
+            <button class="btn btn-gold" @click="onConfirmJava">{{ t('games.modal.java_ok') }}</button>
           </div>
         </div>
       </div>
@@ -1766,14 +1804,14 @@ async function confirmIsolation() {
     <Teleport to="body">
       <div v-if="renameModal.open" class="modal-mask" @pointerdown.self="renameModal.open = false">
         <div class="modal">
-          <h3 class="modal-title">重命名实例</h3>
-          <p class="modal-label">新实例名（将作为文件夹名 versions/&lt;名&gt;/）</p>
+          <h3 class="modal-title">{{ t('games.modal.rename_title') }}</h3>
+          <p class="modal-label">{{ t('games.modal.rename_desc') }}</p>
           <input v-model="renameModal.name" class="input mono" spellcheck="false" @keyup.enter="onConfirmRename" />
           <p v-if="renameModal.error" class="loaders-error">{{ renameModal.error }}</p>
           <div class="modal-actions">
-            <button class="btn btn-ghost" @click="renameModal.open = false">取消</button>
+            <button class="btn btn-ghost" @click="renameModal.open = false">{{ t('games.modal.cancel') }}</button>
             <button class="btn btn-gold" :disabled="renameModal.busy" @click="onConfirmRename">
-              {{ renameModal.busy ? '重命名中…' : '确认重命名' }}
+              {{ renameModal.busy ? t('games.modal.rename_busy') : t('games.modal.rename_confirm') }}
             </button>
           </div>
         </div>
@@ -1802,14 +1840,14 @@ async function confirmIsolation() {
     <Teleport to="body">
       <div v-if="folderRename.open" class="modal-mask" @pointerdown.self="folderRename.open = false">
         <div class="modal">
-          <h3 class="modal-title">重命名游戏文件夹</h3>
-          <p class="modal-label">只修改 FAIONYX 中的显示名称，不会改动磁盘路径。</p>
+          <h3 class="modal-title">{{ t('games.modal.folder_rename_title') }}</h3>
+          <p class="modal-label">{{ t('games.modal.folder_rename_desc') }}</p>
           <input v-model="folderRename.name" class="input" maxlength="64" autofocus @keyup.enter="confirmFolderRename" />
           <p v-if="folderRename.error" class="loaders-error">{{ folderRename.error }}</p>
           <div class="modal-actions">
-            <button class="btn btn-ghost" @click="folderRename.open = false">取消</button>
+            <button class="btn btn-ghost" @click="folderRename.open = false">{{ t('games.modal.cancel') }}</button>
             <button class="btn btn-gold" :disabled="folderRename.busy" @click="confirmFolderRename">
-              {{ folderRename.busy ? '保存中…' : '保存名称' }}
+              {{ folderRename.busy ? t('games.modal.folder_rename_saving') : t('games.modal.folder_rename_save') }}
             </button>
           </div>
         </div>
@@ -1818,46 +1856,61 @@ async function confirmIsolation() {
 
     <ConfirmModal
       :open="folderRemove.open"
-      title="解除游戏文件夹绑定"
-      :message="`只会从 FAIONYX 移除「${currentFolder?.name ?? ''}」的登记。磁盘目录 ${activeFolder} 以及其中的游戏、存档、MOD 和配置都将完整保留。`"
+      :title="t('games.confirm.folder_unbind_title')"
+      :message="
+        t('games.confirm.folder_unbind_message', {
+          name: currentFolder?.name ?? '',
+          path: activeFolder,
+        })
+      "
       :busy="folderRemove.busy"
       @cancel="folderRemove.open = false"
       @confirm="confirmFolderRemove"
     />
 
-    <!-- 开启隔离前展示精确迁移范围；确认后才执行事务式复制。 -->
+    <!-- 开启隔离前展示精确迁移范围 -->
     <Teleport to="body">
       <div v-if="isolationModal.open && isolationModal.plan" class="modal-mask" @pointerdown.self="closeIsolationModal">
         <div class="modal isolation-modal">
-          <h3 class="modal-title">开启版本隔离 · {{ isolationModal.target?.id }}</h3>
-          <p class="modal-label isolation-intro">
-            以下共享数据将复制到版本独立目录。源文件会保留，目标中已存在的同名项不会被覆盖；失败时会回滚本次新增内容。
-          </p>
+          <h3 class="modal-title">{{ t('games.iso.title', { id: isolationModal.target?.id ?? '' }) }}</h3>
+          <p class="modal-label isolation-intro">{{ t('games.iso.intro') }}</p>
           <div class="isolation-paths">
-            <span>来源</span><code>{{ isolationModal.plan.source }}</code> <span>目标</span
+            <span>{{ t('games.iso.source') }}</span
+            ><code>{{ isolationModal.plan.source }}</code> <span>{{ t('games.iso.destination') }}</span
             ><code>{{ isolationModal.plan.destination }}</code>
           </div>
           <div class="isolation-summary">
-            {{ isolationModal.plan.items.length }} 项 · {{ isolationModal.plan.totalFiles }} 个文件 ·
-            {{ fmtBytes(isolationModal.plan.totalBytes) }}
+            {{
+              t('games.iso.summary', {
+                items: String(isolationModal.plan.items.length),
+                files: String(isolationModal.plan.totalFiles),
+                size: fmtBytes(isolationModal.plan.totalBytes),
+              })
+            }}
           </div>
           <div class="isolation-items">
             <div v-for="item in isolationModal.plan.items" :key="item.name" class="isolation-item">
               <div>
                 <strong>{{ item.name }}</strong>
-                <span class="muted"
-                  >{{ item.kind === 'directory' ? '文件夹' : '文件' }} · {{ item.files }} 个文件 · {{ fmtBytes(item.bytes) }}</span
-                >
+                <span class="muted">{{
+                  t('games.iso.item_detail', {
+                    kind: item.kind === 'directory' ? t('games.iso.item_folder') : t('games.iso.item_file'),
+                    files: String(item.files),
+                    size: fmtBytes(item.bytes),
+                  })
+                }}</span>
               </div>
-              <span v-if="isolationModal.plan.conflicts.includes(item.name)" class="tag tag-gold">目标已存在，跳过</span>
-              <span v-else class="tag">将复制</span>
+              <span v-if="isolationModal.plan.conflicts.includes(item.name)" class="tag tag-gold">{{ t('games.iso.conflict') }}</span>
+              <span v-else class="tag">{{ t('games.iso.will_copy') }}</span>
             </div>
           </div>
           <p v-if="isolationModal.error" class="loaders-error">{{ isolationModal.error }}</p>
           <div class="modal-actions">
-            <button class="btn btn-ghost" :disabled="isolationModal.busy" @click="closeIsolationModal">取消</button>
+            <button class="btn btn-ghost" :disabled="isolationModal.busy" @click="closeIsolationModal">
+              {{ t('games.modal.cancel') }}
+            </button>
             <button class="btn btn-gold" :disabled="isolationModal.busy" @click="confirmIsolation">
-              {{ isolationModal.busy ? '正在迁移…' : '确认并开启' }}
+              {{ isolationModal.busy ? t('games.iso.migrating') : t('games.iso.confirm') }}
             </button>
           </div>
         </div>
@@ -1867,8 +1920,8 @@ async function confirmIsolation() {
     <!-- 删除版本二次确认 -->
     <ConfirmModal
       :open="removeModal.open"
-      title="删除版本"
-      :message="`确定要删除版本「${removeModal.target?.id}」吗？该版本目录将移入系统回收站（共享的依赖库与资源会保留）。`"
+      :title="t('games.confirm.remove_title')"
+      :message="t('games.confirm.remove_message', { id: removeModal.target?.id ?? '' })"
       :busy="removeModal.busy"
       @cancel="removeModal.open = false"
       @confirm="onConfirmRemove"
@@ -1877,18 +1930,23 @@ async function confirmIsolation() {
     <!-- 安装模态框 -->
     <Teleport to="body">
       <div v-if="modal.open" class="modal-mask" @pointerdown.self="modal.open = false">
-        <div class="modal game-install-modal" role="dialog" aria-modal="true" :aria-label="`安装 ${modal.version?.id}`">
+        <div
+          class="modal game-install-modal"
+          role="dialog"
+          aria-modal="true"
+          :aria-label="t('games.install.aria', { id: modal.version?.id ?? '' })"
+        >
           <header class="install-header">
-            <h3 class="modal-title">安装 {{ modal.version?.id }}</h3>
-            <button class="icon-btn" aria-label="关闭安装窗口" data-modal-dismiss @click="modal.open = false">
+            <h3 class="modal-title">{{ t('games.install.title', { id: modal.version?.id ?? '' }) }}</h3>
+            <button class="icon-btn" :aria-label="t('games.install.close')" data-modal-dismiss @click="modal.open = false">
               <UiGlyph name="close" />
             </button>
           </header>
           <p class="install-location muted" data-ui="download-location:install-target">
-            本次安装到 <span class="mono">{{ modal.targetFolder }}</span>
+            <template v-if="modal.targetFolder">{{ t('games.install.target', { path: modal.targetFolder }) }}</template>
           </p>
           <div class="install-content">
-            <p class="modal-label">选择模组加载器</p>
+            <p class="modal-label">{{ t('games.install.loader_label') }}</p>
             <div class="loader-options">
               <button
                 v-for="opt in loaderOptions"
@@ -1903,10 +1961,10 @@ async function confirmIsolation() {
             </div>
 
             <template v-if="modal.loader">
-              <p class="modal-label">加载器版本</p>
+              <p class="modal-label">{{ t('games.install.loader_version_label') }}</p>
               <div v-if="modal.loadingLoaders" class="loaders-loading" data-ui="install:loader-loading">
                 <span class="spin"></span>
-                <span class="muted">正在获取 {{ modal.loader }} 版本列表…</span>
+                <span class="muted">{{ t('games.install.loader_loading', { loader: modal.loader }) }}</span>
               </div>
               <template v-else>
                 <select v-if="modal.loaderVersions.length" v-model="modal.loaderVersion" class="select" data-ui="install:loader-version">
@@ -1915,17 +1973,17 @@ async function confirmIsolation() {
                 <p v-if="modal.loadLoadersError" class="loaders-error" data-ui="install:loader-error">{{ modal.loadLoadersError }}</p>
               </template>
 
-              <!-- Fabric 联动：Fabric API 自动选择 -->
               <template v-if="modal.loader === 'fabric'">
                 <label class="check-option fapi-head"
                   ><input v-model="modal.apiOn" type="checkbox" data-ui="install:fabric-api" /><span
-                    ><strong>Fabric API</strong><small>同时安装，多数 Fabric 模组需要此项支持。</small></span
+                    ><strong>{{ t('games.install.fabric_api_title') }}</strong
+                    ><small>{{ t('games.install.fabric_api_desc') }}</small></span
                   ></label
                 >
                 <template v-if="modal.apiOn">
                   <div v-if="modal.loadingApi" class="loaders-loading">
                     <span class="spin"></span>
-                    <span class="muted">正在获取 Fabric API 版本…</span>
+                    <span class="muted">{{ t('games.install.fabric_api_loading') }}</span>
                   </div>
                   <template v-else>
                     <select v-if="modal.apiVersions.length" v-model="modal.apiVersion" class="select">
@@ -1934,9 +1992,11 @@ async function confirmIsolation() {
                       </option>
                     </select>
                     <p v-if="modal.apiError" class="loaders-error">{{ modal.apiError }}</p>
-                    <button v-if="modal.apiError" class="btn btn-ghost btn-sm" @click="apiRetry++">重试获取 Fabric API</button>
+                    <button v-if="modal.apiError" class="btn btn-ghost btn-sm" @click="apiRetry++">
+                      {{ t('games.install.fabric_api_retry') }}
+                    </button>
                     <p class="muted fapi-tip">
-                      {{ modal.apiError ? '请重试，或关闭“同时安装”后仅安装加载器' : '安装完成后将自动放入该实例使用的 mods 文件夹' }}
+                      {{ modal.apiError ? t('games.install.fabric_api_tip_error') : t('games.install.fabric_api_tip_ok') }}
                     </p>
                   </template>
                 </template>
@@ -1952,8 +2012,7 @@ async function confirmIsolation() {
               @ready="favoritesReady = $event"
             />
 
-            <!-- 实例名（所有实例均可自定义；纯净版默认 MC 版本号，加载器实例按规则生成） -->
-            <p class="modal-label">实例名</p>
+            <p class="modal-label">{{ t('games.install.instance_label') }}</p>
             <input
               v-model="modal.instanceName"
               class="input mono"
@@ -1962,11 +2021,15 @@ async function confirmIsolation() {
               @input="modal.instanceEdited = true"
             />
             <p v-if="instanceError" class="loaders-error">{{ instanceError }}</p>
-            <p v-else class="muted inst-hint">实例将安装为 versions/{{ effectiveInstanceName }}/，可自定义（同 MC 版本可共存多个实例）</p>
+            <p v-else class="muted inst-hint">
+              {{ t('games.install.instance_hint', { name: effectiveInstanceName }) }}
+            </p>
           </div>
           <footer class="modal-actions install-footer">
-            <button class="btn btn-ghost" @click="modal.open = false">取消</button>
-            <button class="btn btn-gold" :disabled="!canConfirm" @click="confirmInstall"><UiGlyph name="download" />确认安装</button>
+            <button class="btn btn-ghost" @click="modal.open = false">{{ t('games.modal.cancel') }}</button>
+            <button class="btn btn-gold" :disabled="!canConfirm" @click="confirmInstall">
+              <UiGlyph name="download" />{{ t('games.install.confirm') }}
+            </button>
           </footer>
         </div>
       </div>

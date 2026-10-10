@@ -1,6 +1,7 @@
 /**
  * 品牌与渠道常量（改这里，不要散落代码深处）。
  */
+import { translate as t } from './i18n';
 
 /** GitHub 仓库（自更新检查与 Release 下载来源） */
 export const GITHUB_REPO = 'Skrepy0/FAIONYX';
@@ -9,4 +10,4 @@ export const GITHUB_REPO = 'Skrepy0/FAIONYX';
 export const QQ_GROUP_NUMBER = '1049769942';
 
 /** 更新弹窗常驻提示（内测群备用下载渠道） */
-export const QQ_GROUP_HINT = '下载较慢？可以到 FAIONYX 内测群获取最新安装包，群内文件与 GitHub 版本一致';
+export const QQ_GROUP_HINT = t('branding.qq_group_hint');

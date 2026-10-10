@@ -6,6 +6,7 @@ import type { PunchProfile, SendParams } from './punchProfiles';
 import type { PunchParams } from './punchPolicy';
 import { RudpConn, type RudpTarget } from './rudp';
 import { STUN_SERVERS, stunQuery } from './stun';
+import { translate as t } from '../../../shared/i18n';
 export interface BackgroundDeps {
   valid: () => boolean;
   host: boolean;
@@ -37,7 +38,7 @@ export class TurnBackground {
   private controller = new AbortController();
   private standbyPending?: { socket: Socket; punch?: Puncher; timer?: NodeJS.Timeout };
   constructor(private deps: BackgroundDeps) {
-    this.monitor = setInterval(() => void this.run().catch(() => deps.log('本次后台直连探测未命中')), 30000);
+    this.monitor = setInterval(() => void this.run().catch(() => deps.log(t('voxlink.turnbg.probe_miss'))), 30000);
   }
   private active() {
     return !this.stopped && this.deps.valid() && this.deps.transport.isConnected();
@@ -74,7 +75,7 @@ export class TurnBackground {
       this.won = true;
       if (!this.deps.transport.addSecondaryPath(hit.socket, hit.target)) return;
       this.sockets.delete(hit.socket);
-      this.deps.log('后台直连已命中，正在观察 20 秒稳定性');
+      this.deps.log(t('voxlink.turnbg.direct_hit'));
       this.observe = setInterval(() => {
         if (!this.active()) {
           clearInterval(this.observe);
@@ -228,7 +229,7 @@ export class TurnBackground {
     this.standby = new RudpConn(hit.socket, hit.target);
     this.standby.start();
     void this.deps.signal('turn_stby', {}, 'host').catch(() => {});
-    this.deps.log('玩家中继热备已就绪');
+    this.deps.log(t('voxlink.turnbg.hot_standby_ready'));
   }
   takeStandby(): RudpConn | undefined {
     const standby = this.standby;

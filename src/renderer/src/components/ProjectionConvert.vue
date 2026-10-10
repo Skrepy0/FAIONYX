@@ -4,6 +4,7 @@ import type { ProjectionEntry, ProjectionFormat, ProjectionAnalysis, ProjectionC
 import SelectMenu from './SelectMenu.vue';
 import { errText } from '../api';
 import { toast } from '../store';
+import { t } from '@renderer/i18n';
 const props = defineProps<{ entry: ProjectionEntry }>(),
   emit = defineEmits<{ close: []; done: [] }>();
 const format = ref<ProjectionFormat>(props.entry.kind),
@@ -63,7 +64,7 @@ async function convert() {
     output.value = result.path;
     analysis.value = undefined;
     emit('done');
-    toast('投影副本已生成并重新读取验证', 'success');
+    toast(t('pc.converted_toast'), 'success');
   } catch (e) {
     error.value = errText(e);
   } finally {
@@ -85,64 +86,66 @@ onUnmounted(() => {
 <template>
   <Teleport to="body"
     ><div class="modal-mask" @keydown.esc="!busy && emit('close')">
-      <section class="modal conversion" role="dialog" aria-modal="true" aria-label="投影转换">
+      <section class="modal conversion" role="dialog" aria-modal="true" :aria-label="t('pc.title')">
         <header>
-          <h2>转换投影</h2>
-          <button class="btn btn-ghost" :disabled="busy" aria-label="关闭转换" @click="emit('close')">×</button>
+          <h2>{{ t('pc.title') }}</h2>
+          <button class="btn btn-ghost" :disabled="busy" :aria-label="t('pc.close')" @click="emit('close')">×</button>
         </header>
-        <p class="muted">{{ entry.name }} · 原文件保留，重名生成独立副本</p>
+        <p class="muted">{{ entry.name }} · {{ t('pc.keep_original') }}</p>
         <div class="targets">
           <label
-            >目标格式<SelectMenu
+            >{{ t('pc.target_format')
+            }}<SelectMenu
               v-model="format"
               :disabled="busy"
               :options="['litematic', 'schem', 'schematic', 'nbt'].map((v) => ({ value: v, label: '.' + v }))" /></label
           ><label
-            >目标游戏版本<SelectMenu
+            >{{ t('pc.target_version')
+            }}<SelectMenu
               v-model="version"
               :disabled="busy"
               :options="[
-                { value: '', label: '保留原游戏版本（仅格式转换）' },
-                ...versions.map((v) => ({ value: v.version, label: v.version + (v.supported ? '' : ' · 暂不支持') })),
+                { value: '', label: t('pc.keep_version') },
+                ...versions.map((v) => ({ value: v.version, label: v.version + (v.supported ? '' : ' · ' + t('pc.not_supported')) })),
               ]"
           /></label>
         </div>
-        <button class="btn btn-gold" :disabled="busy" @click="analyze">{{ busy ? '后台任务处理中…' : '分析差异' }}</button>
-        <p class="muted">进度和取消可在任务中心操作。</p>
+        <button class="btn btn-gold" :disabled="busy" @click="analyze">{{ busy ? t('pc.analyzing') : t('pc.analyze') }}</button>
+        <p class="muted">{{ t('pc.task_center_hint') }}</p>
         <p v-if="error" class="failed" role="alert">{{ error }}</p>
         <template v-if="analysis"
           ><p v-if="analysis.unsupported" class="failed" role="alert">{{ analysis.unsupported }}</p>
           <template v-else
-            ><p>共 {{ analysis.blocks }} 个方块 · {{ analysis.differences.length }} 项差异</p>
+            ><p>{{ t('pc.blocks_diffs', { blocks: analysis.blocks, diffs: analysis.differences.length }) }}</p>
             <div v-for="d in analysis.differences" :key="d.key" class="difference">
               <strong>{{ d.description }}</strong
-              ><span class="muted">数量 {{ d.count }}</span
+              ><span class="muted">{{ t('pc.count_label', { count: d.count }) }}</span
               ><label v-if="d.discardOnly"
                 ><input
                   type="checkbox"
                   :checked="choices[d.key] === 'discard'"
                   @change="choices[d.key] = ($event.target as HTMLInputElement).checked ? 'discard' : ''"
-                />确认舍弃此数据</label
+                />{{ t('pc.discard_confirm') }}</label
               ><template v-else
                 ><SelectMenu
                   :model-value="choices[d.key] === 'discard' ? 'discard' : choices[d.key] ? 'replace' : ''"
                   :options="[
-                    { value: '', label: '请选择处理方式' },
-                    { value: 'discard', label: '舍弃并替换为空气' },
-                    { value: 'replace', label: '手动指定替代方块状态' },
+                    { value: '', label: t('pc.choose_action') },
+                    { value: 'discard', label: t('pc.discard_air') },
+                    { value: 'replace', label: t('pc.manual_replace') },
                   ]"
                   @update:model-value="choices[d.key] = $event === 'replace' ? d.replacement || 'minecraft:air' : $event" /><input
                   v-if="choices[d.key] && choices[d.key] !== 'discard'"
                   v-model="choices[d.key]"
                   class="input"
-                  aria-label="替代方块状态"
-                  placeholder="minecraft:oak_log[axis=y]"
+                  :aria-label="t('pc.replace_state')"
+                  :placeholder="t('pc.replace_placeholder')"
               /></template>
             </div>
-            <button class="btn btn-gold" :disabled="!ready || busy" @click="convert">确认生成并验证新文件</button></template
+            <button class="btn btn-gold" :disabled="!ready || busy" @click="convert">{{ t('pc.confirm_generate') }}</button></template
           ></template
         >
-        <p v-if="output" role="status" class="output">已生成：{{ output }}<br />关闭后可选择新文件并分发到实例。</p>
+        <p v-if="output" role="status" class="output">{{ t('pc.output_label', { path: output }) }}<br />{{ t('pc.output_hint') }}</p>
       </section>
     </div></Teleport
   >

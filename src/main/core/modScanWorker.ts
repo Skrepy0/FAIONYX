@@ -6,6 +6,7 @@ import AdmZip from 'adm-zip';
 import { parseModArchive } from './modMetadata';
 import { curseFingerprint } from './modIconIdentity';
 import type { ModScanPurpose } from './modScan';
+import { translate as t } from '../../shared/i18n';
 
 // CPU-heavy ZIP parsing stays off Electron's main thread. Only regular files in this directory.
 async function scan() {
@@ -41,7 +42,7 @@ async function scan() {
         fingerprint: names ? curseFingerprint(data) : undefined,
       });
     } catch {
-      result.push({ fileName: entry.name, filePath: file, error: '文件损坏或不可读取' });
+      result.push({ fileName: entry.name, filePath: file, error: t('modscanworker.error.corrupt') });
     }
   }
   return result;

@@ -1,5 +1,6 @@
 import type { CommunitySource } from '../../shared/types';
 import { normalizeChineseModKeyword } from './community-zh';
+import { translate as t } from '../../shared/i18n';
 
 /** MC百科 exposes public HTML, not a documented JSON download API. We read only
  * result titles and the entry's explicit related-project links. No page code is
@@ -90,7 +91,7 @@ export function parseMcmodSearch(html: string, keyword: string): Candidate[] {
   const list = html.match(
     /<div\b[^>]*class=["'][^"']*\bsearch-result-list\b[^"']*["'][^>]*>([\s\S]*?)(?=<div\b[^>]*class=["'][^"']*search-result-pages|<footer\b|$)/i
   )?.[1];
-  if (list == null) throw new Error('MC百科搜索页面格式变化或访问受限');
+  if (list == null) throw new Error(t('mcmodsearch.error.page_format_changed'));
   const key = normalizeChineseModKeyword(keyword);
   const found: Candidate[] = [];
   for (const item of list.split(/<div\b[^>]*class=["']result-item["'][^>]*>/i).slice(1)) {
@@ -165,14 +166,14 @@ async function readHtmlWithSlot(url: string, fetcher: typeof fetch, signal: Abor
     redirect: 'error',
     headers: { 'User-Agent': 'FAIONYX (+https://github.com/Skrepy0/FAIONYX)', Accept: 'text/html' },
   });
-  if (!response.ok) throw new Error(`MC百科 HTTP ${response.status}`);
-  if (!(response.headers.get('content-type') ?? '').includes('text/html')) throw new Error('MC百科未返回可识别的搜索页面');
+  if (!response.ok) throw new Error(t('mcmodsearch.error.http', { status: response.status }));
+  if (!(response.headers.get('content-type') ?? '').includes('text/html')) throw new Error(t('mcmodsearch.error.not_html'));
   if (Number(response.headers.get('content-length')) > MAX_BYTES) {
     await response.body?.cancel();
-    throw new Error('MC百科页面超出读取限制');
+    throw new Error(t('mcmodsearch.error.too_large'));
   }
   const reader = response.body?.getReader();
-  if (!reader) throw new Error('MC百科返回了空页面');
+  if (!reader) throw new Error(t('mcmodsearch.error.empty_page'));
   const chunks: Uint8Array[] = [];
   let size = 0;
   try {
@@ -181,7 +182,7 @@ async function readHtmlWithSlot(url: string, fetcher: typeof fetch, signal: Abor
       const { done, value } = await reader.read();
       if (done) break;
       size += value.length;
-      if (size > MAX_BYTES) throw new Error('MC百科页面超出读取限制');
+      if (size > MAX_BYTES) throw new Error(t('mcmodsearch.error.too_large'));
       chunks.push(value);
     }
   } finally {
@@ -199,7 +200,7 @@ export async function lookupMcmod(keyword: string, fetcher: typeof fetch = deskt
     const stored = cache.get(key);
     if (stored && Date.now() - stored.at < 6 * 60 * 60_000) return structuredClone(stored.result);
     if (pending.has(key)) return structuredClone(await pending.get(key)!);
-    if (pending.size >= 16) return { entries: [], warnings: ['MC百科查询较多，已保留原中文关键词和内置别名；请稍后重试。'] };
+    if (pending.size >= 16) return { entries: [], warnings: [t('mcmodsearch.warn.too_many_queries')] };
   }
   const run = async (): Promise<McmodSearchResult> => {
     const signal = AbortSignal.timeout(10_000);
@@ -230,12 +231,12 @@ export async function lookupMcmod(keyword: string, fetcher: typeof fetch = deskt
             try {
               entries[index] = { ...candidate, projects: parseMcmodProjects(await readHtml(candidate.url, fetcher, signal)) };
             } catch {
-              warnings.push(`MC百科“${candidate.title}”的来源链接读取失败，未自动关联项目；可重试。`);
+              warnings.push(t('mcmodsearch.warn.link_read_failed', { title: candidate.title }));
             }
           }
         })
       );
-      if (limited) warnings.push('MC百科中文检索仅关联前两页中的最多 5 个条目；请使用完整中文名缩小范围。');
+      if (limited) warnings.push(t('mcmodsearch.warn.limited'));
       const result = { entries: entries.filter(Boolean), warnings };
       // Empty results and failed lookups are not negative-cache hits. They can
       // be retried immediately when the network or site recovers.
@@ -245,7 +246,7 @@ export async function lookupMcmod(keyword: string, fetcher: typeof fetch = deskt
       }
       return result;
     } catch {
-      return { entries: [], warnings: ['MC百科中文检索暂不可用，已保留原中文关键词和内置别名检索；可稍后重试。'] };
+      return { entries: [], warnings: [t('mcmodsearch.warn.unavailable')] };
     }
   };
   const promise = run();

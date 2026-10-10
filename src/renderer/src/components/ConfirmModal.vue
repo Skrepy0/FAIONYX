@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@renderer/i18n';
 /** 通用二次确认模态框（删除等危险操作） */
 defineProps<{
   open: boolean;
@@ -23,9 +24,9 @@ const emit = defineEmits<{
         <p class="confirm-text">{{ message }}</p>
         <p v-if="error" class="confirm-error" role="alert">{{ error }}</p>
         <div class="modal-actions">
-          <button class="btn btn-ghost" :disabled="busy" @click="emit('cancel')">取消</button>
+          <button class="btn btn-ghost" :disabled="busy" @click="emit('cancel')">{{ t('common.cancel') }}</button>
           <button class="btn btn-danger" :disabled="busy" @click="emit('confirm')">
-            {{ busy ? '处理中…' : (confirmText ?? '确认删除') }}
+            {{ busy ? t('common.processing') : (confirmText ?? t('common.confirm_delete')) }}
           </button>
         </div>
       </div>

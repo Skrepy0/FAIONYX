@@ -1,3 +1,5 @@
+import { translate as t } from './i18n';
+
 /** The operation must check signal before committing late side effects. */
 export async function withDeadline<T>(work: (signal: AbortSignal) => Promise<T>, ms: number, message: string): Promise<T> {
   const controller = new AbortController();
@@ -36,7 +38,7 @@ export class ProgressDeadline {
   private arm(): void {
     clearTimeout(this.timer);
     this.timer = setTimeout(() => {
-      this.controller.abort(new Error('启动准备超时，已取消'));
+      this.controller.abort(new Error(t('deadline.error.timeout')));
       this.onTimeout();
     }, this.ms);
   }

@@ -9,6 +9,7 @@ import { instanceDirectoryState } from './instances';
 import { readVersionJson } from './versions';
 import { parseModFile } from './modinfo';
 import { join } from 'node:path';
+import { translate as t } from '../../shared/i18n';
 
 /** 内置桥接 MOD jar（构建时复制进 out/main，打包时 asarUnpack） */
 function bundledBridgeJar(): string {
@@ -35,7 +36,7 @@ export function installBridge(versionId: string): { ok: boolean; already?: boole
   try {
     if (bridgeInstalled(versionId)) return { ok: true, already: true };
     const src = bundledBridgeJar();
-    if (!fs.existsSync(src)) return { ok: false, error: '内置桥接 MOD 文件缺失，请重新安装启动器' };
+    if (!fs.existsSync(src)) return { ok: false, error: t('modbridge.error.bridge_jar_missing') };
     const modsDir = path.join(gameDirOf(versionId), 'mods');
     fs.mkdirSync(modsDir, { recursive: true });
     fs.copyFileSync(src, path.join(modsDir, 'faionyx-bridge-1.0.1.jar'));
@@ -122,27 +123,27 @@ async function call(discovery: BridgeDiscovery, pathname: string, body?: unknown
 /** 连接状态：发现文件存在且 ping 通（游戏退出后端口关闭，ping 失败即断开） */
 export async function bridgeStatus(versionId: string): Promise<BridgeStatus> {
   const discovery = readDiscovery(versionId);
-  if (!discovery) return { connected: false, reason: '未发现桥接服务：请使用内置 FAIONYX Bridge 的实例启动游戏' };
+  if (!discovery) return { connected: false, reason: t('modbridge.error.not_discovered_use_bridge') };
   // 发现文件可能来自上次异常退出的残留：校验进程仍在运行
   try {
     process.kill(discovery.pid, 0);
   } catch {
-    return { connected: false, reason: '检测到上次的桥接记录，但游戏已退出' };
+    return { connected: false, reason: t('modbridge.error.stale_discovery') };
   }
   try {
     const pong = (await call(discovery, 'ping', undefined, 1500)) as { ok?: boolean };
     if (pong?.ok) return { connected: true, modVersion: discovery.modVersion, protocol: discovery.protocol };
-    return { connected: false, reason: '桥接服务响应异常' };
+    return { connected: false, reason: t('modbridge.error.bad_response') };
   } catch {
-    return { connected: false, reason: '桥接服务无响应（游戏可能正在加载或已退出）' };
+    return { connected: false, reason: t('modbridge.error.no_response') };
   }
 }
 
 export async function bridgeManifest(versionId: string): Promise<{ protocol: number; params: BridgeParam[] }> {
   const discovery = readDiscovery(versionId);
-  if (!discovery) throw new Error('未发现桥接服务');
+  if (!discovery) throw new Error(t('modbridge.error.not_discovered'));
   const manifest = (await call(discovery, 'manifest')) as { protocol?: number; params?: BridgeParam[] };
-  if (manifest?.protocol !== 1 || !Array.isArray(manifest.params)) throw new Error('桥接服务协议不兼容');
+  if (manifest?.protocol !== 1 || !Array.isArray(manifest.params)) throw new Error(t('modbridge.error.incompatible_protocol'));
   return { protocol: 1, params: manifest.params };
 }
 
@@ -153,7 +154,7 @@ export async function bridgeSet(
   value: unknown
 ): Promise<{ ok: boolean; value?: unknown; notice?: string; error?: string }> {
   const discovery = readDiscovery(versionId);
-  if (!discovery) return { ok: false, error: '未发现桥接服务：游戏未运行或未安装桥接 MOD' };
+  if (!discovery) return { ok: false, error: t('modbridge.error.not_discovered_game') };
   try {
     return (await call(discovery, 'set', { id: String(id ?? ''), value })) as {
       ok: boolean;
@@ -168,7 +169,7 @@ export async function bridgeSet(
 
 export async function bridgeReset(versionId: string, id?: string): Promise<{ ok: boolean; error?: string }> {
   const discovery = readDiscovery(versionId);
-  if (!discovery) return { ok: false, error: '未发现桥接服务' };
+  if (!discovery) return { ok: false, error: t('modbridge.error.not_discovered') };
   try {
     return (await call(discovery, 'reset', id ? { id: String(id) } : {})) as { ok: boolean; error?: string };
   } catch (error) {

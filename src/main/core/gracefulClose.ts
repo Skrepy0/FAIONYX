@@ -4,6 +4,7 @@ import type { ChildProcess } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { Readable } from 'node:stream';
 import { logScope } from './launcherLog';
+import { translate as t } from '../../shared/i18n';
 
 const closeLog = logScope('graceful-close');
 
@@ -28,16 +29,16 @@ export function requestGameWindowClose(child: GameProcessHandle): Promise<void> 
   if (!Number.isSafeInteger(pid) || !pid || child.exitCode !== null || child.signalCode !== null) return Promise.resolve();
   if (process.platform === 'darwin') return macGameWindow(child, 'close', 6000);
   if (process.platform === 'linux') return linuxGameWindow(child, 'close', 6000);
-  if (process.platform !== 'win32') return Promise.reject(new Error('请先在 Minecraft 内保存并退出，然后重试；当前平台不支持自动正常关窗'));
-  closeLog.info(`向游戏进程 pid=${pid} 发送正常关闭消息（WM_CLOSE）`);
+  if (process.platform !== 'win32') return Promise.reject(new Error(t('gracefulclose.error.unsupported_platform')));
+  closeLog.info(t('gracefulclose.log.wm_close_sent', { pid }));
   const script = `$ErrorActionPreference='Stop'; $gameProcess=[System.Diagnostics.Process]::GetProcessById(${pid}); if (-not $gameProcess.CloseMainWindow()) { throw 'Minecraft has no responsive main window; exit from inside the game.' }`;
   return new Promise((resolve, reject) => {
     execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { windowsHide: true, timeout: 6000 }, (error) => {
       if (error) {
-        closeLog.warn(`pid=${pid} 正常退出请求失败，请在游戏内保存退出`, error);
-        reject(new Error('无法发送正常退出请求，请在游戏内保存退出；不会自动强杀'));
+        closeLog.warn(t('gracefulclose.log.close_request_failed', { pid }), error);
+        reject(new Error(t('gracefulclose.error.close_request_failed')));
       } else {
-        closeLog.info(`pid=${pid} 已确认正常关闭请求送达`);
+        closeLog.info(t('gracefulclose.log.close_confirmed', { pid }));
         resolve();
       }
     });
@@ -51,7 +52,7 @@ export function focusGameWindow(child: GameProcessHandle, timeoutMs = 30000): Pr
   if (process.platform === 'darwin') return macGameWindow(child, 'focus', timeoutMs);
   if (process.platform === 'linux') return linuxGameWindow(child, 'focus', timeoutMs);
   if (process.platform !== 'win32') return Promise.resolve();
-  closeLog.debug(`拉起游戏窗口聚焦助手：pid=${pid}，超时 ${timeoutMs}ms`);
+  closeLog.debug(t('gracefulclose.log.focus_helper_started', { pid, timeout: timeoutMs }));
   const helper = join(__dirname, 'GameWindowFocus.exe').replace('app.asar', 'app.asar.unpacked');
   return new Promise((resolve, reject) => {
     const worker = execFile(
@@ -62,8 +63,8 @@ export function focusGameWindow(child: GameProcessHandle, timeoutMs = 30000): Pr
         child.off('exit', cancel);
         if (child.exitCode !== null || child.signalCode !== null) return resolve();
         if (error) {
-          closeLog.warn(`游戏窗口聚焦未完成：pid=${pid}`, error);
-          reject(new Error(stderr.trim() || '游戏窗口前台激活失败或超时'));
+          closeLog.warn(t('gracefulclose.log.focus_failed', { pid }), error);
+          reject(new Error(stderr.trim() || t('gracefulclose.error.focus_failed')));
         } else resolve();
       }
     );
@@ -84,7 +85,7 @@ function macGameWindow(child: GameProcessHandle, action: 'focus' | 'close', time
       (error, _stdout, stderr) => {
         child.off('exit', cancel);
         if (child.exitCode !== null || child.signalCode !== null) return resolve();
-        if (error) reject(new Error(stderr.trim() || '游戏窗口操作未完成，请在游戏内保存并退出'));
+        if (error) reject(new Error(stderr.trim() || t('gracefulclose.error.mac_window_failed')));
         else resolve();
       }
     );
@@ -103,7 +104,7 @@ function linuxGameWindow(child: GameProcessHandle, action: 'focus' | 'close', ti
       (error, _stdout, stderr) => {
         child.off('exit', cancel);
         if (child.exitCode !== null || child.signalCode !== null) return resolve();
-        if (error) reject(new Error(stderr.trim() || 'Linux 游戏窗口操作失败，请确认 X11/XWayland 可用；正常关窗不会强杀游戏'));
+        if (error) reject(new Error(stderr.trim() || t('gracefulclose.error.linux_window_failed')));
         else resolve();
       }
     );
@@ -362,7 +363,7 @@ function loadKernel32(): Promise<Kernel32Api | null> {
         },
       };
     } catch (error) {
-      closeLog.warn('koffi 加载失败，游戏进程回退 node spawn（退出启动器可能连带关闭游戏）', error);
+      closeLog.warn(t('gracefulclose.log.koffi_load_failed'), error);
       return null;
     }
   })());
@@ -487,7 +488,7 @@ export async function spawnGameProcess(
       api.close(outPipe?.write ?? 0);
       api.close(errPipe?.read ?? 0);
       api.close(errPipe?.write ?? 0);
-      throw new Error('进程启动失败：无法创建输出管道');
+      throw new Error(t('gracefulclose.error.create_pipe_failed'));
     }
     // 只有写端需要被子进程继承；读端显式清除继承位
     api.uninherit(outPipe.read);
@@ -499,14 +500,14 @@ export async function spawnGameProcess(
     if (!created) {
       api.close(outPipe.read);
       api.close(errPipe.read);
-      closeLog.error(`CreateProcessW 创建游戏进程失败：${javaPath}`);
-      throw new Error('进程启动失败：系统拒绝创建游戏进程（CreateProcessW）');
+      closeLog.error(t('gracefulclose.log.create_process_failed', { javaPath }));
+      throw new Error(t('gracefulclose.error.create_process_failed'));
     }
     const proc = new DetachedGameProcess(created.pid, created.hProcess, api, outPipe.read, errPipe.read);
     // 先恢复主线程再关线程句柄：CREATE_SUSPENDED 创建后必须 ResumeThread，游戏才会真正开跑
     api.resumeThread(created.hThread);
     api.close(created.hThread);
-    closeLog.info(`游戏进程已以脱离方式创建：pid=${created.pid}（与启动器生命周期解耦，关闭启动器不影响游戏）`);
+    closeLog.info(t('gracefulclose.log.process_created_detached', { pid: created.pid }));
     // 与 node 语义对齐：'spawn' 在调用方有机会注册监听后异步发出
     setImmediate(() => proc.emit('spawn'));
     return proc;
@@ -538,13 +539,13 @@ export async function spawnDetachedProcess(exePath: string, args: string[], opti
     const cmdline = [exePath, ...args].map(windowsQuote).join(' ');
     const created = api.createProcess(cmdline, 0, 0, options.cwd ?? '');
     if (!created) {
-      closeLog.error(`CreateProcessW 脱离式创建失败：${exePath}`);
+      closeLog.error(t('gracefulclose.log.detached_create_failed', { exePath }));
       return null;
     }
     api.resumeThread(created.hThread);
     api.close(created.hThread);
     api.close(created.hProcess);
-    closeLog.info(`脱离式进程已创建：pid=${created.pid} ${basename(exePath)}`);
+    closeLog.info(t('gracefulclose.log.detached_process_created', { pid: created.pid, name: basename(exePath) }));
     return created.pid;
   }
   const { spawn } = await import('node:child_process');

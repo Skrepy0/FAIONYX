@@ -2,7 +2,9 @@
  * 轻量全局状态（Vue reactive），跨视图共享。
  */
 import { computed, reactive, watch } from 'vue';
+import { settingsCatalog } from '../../shared/settingsCatalog';
 import { trackLaunchState } from '@shared/launchTracking';
+import { t as tr, locale } from '@renderer/i18n';
 import type { Account, InstalledVersion, LaunchState, ProgressEvent, Settings, YggdrasilProviderInput } from '@shared/types';
 import {
   errText,
@@ -79,7 +81,7 @@ export const store = reactive({
   selectedAccount: null as Account | null,
   installed: [] as InstalledVersion[],
   currentView: 'home' as ViewName,
-  settingsSection: '' as '' | 'java' | 'memory' | 'downloads',
+  settingsSection: '' as '' | SettingsItemId,
   /** 顶栏搜索关键字（游戏版本页版本列表联动过滤） */
   searchKeyword: '',
   /** 资源管理（模组/资源包/光影包）当前选中的版本 id；空 = 跟随第一个已装版本 */
@@ -125,6 +127,7 @@ export const store = reactive({
   /** 后台任务列表（版本安装/整合包导入/资源下载），驱动顶栏下载中心 */
   tasks: [] as TaskItem[],
   toasts: [] as ToastItem[],
+  locale: 'zh-CN',
 });
 
 const normalizeFolder = (value = '') => value.replaceAll('\\', '/').replace(/\/$/, '').toLowerCase();
@@ -162,10 +165,10 @@ watch(
   },
   { flush: 'sync' }
 );
+export type SettingsItemId = (typeof settingsCatalog)[number]['id'];
 
 export const applyLaunchState = (state: LaunchState) => trackLaunchState(store, state);
-
-export function openSettings(section: 'java' | 'memory' | 'downloads'): void {
+export function openSettings(section: SettingsItemId): void {
   store.settingsSection = section;
   store.currentView = 'settings';
 }
@@ -189,31 +192,32 @@ export interface TaskItem {
   finishedAt?: number;
 }
 
-/** 阶段名 → 中文阶段标签 */
-const STAGE_LABEL: Record<string, string> = {
-  parallel: '同步准备',
-  'version-json': '解析版本信息',
-  libraries: '下载依赖库',
-  client: '下载游戏本体',
-  assets: '下载资源文件',
-  loader: '安装加载器',
-  'loader-dependencies': '下载加载器依赖',
-  'loader-process': '生成加载器运行文件',
-  'fabric-api': '安装 Fabric API',
-  repair: '修复文件',
-  modpack: '安装整合包',
-  java: '准备 Java',
-  download: '下载文件',
-  'mod-prepare': '准备 MOD 与前置',
-  'mod-verify': '校验 MOD',
-  'mod-commit': '写入 MOD',
-  launch: '启动',
-  done: '完成',
-  error: '失败',
+/** 阶段名 → i18n 键 */
+const STAGE_LABEL_KEY: Record<string, string> = {
+  parallel: 'task.stage.parallel',
+  'version-json': 'task.stage.version_json',
+  libraries: 'task.stage.libraries',
+  client: 'task.stage.client',
+  assets: 'task.stage.assets',
+  loader: 'task.stage.loader',
+  'loader-dependencies': 'task.stage.loader_dependencies',
+  'loader-process': 'task.stage.loader_process',
+  'fabric-api': 'task.stage.fabric_api',
+  repair: 'task.stage.repair',
+  modpack: 'task.stage.modpack',
+  java: 'task.stage.java',
+  download: 'task.stage.download',
+  'mod-prepare': 'task.stage.mod_prepare',
+  'mod-verify': 'task.stage.mod_verify',
+  'mod-commit': 'task.stage.mod_commit',
+  launch: 'task.stage.launch',
+  done: 'task.stage.done',
+  error: 'task.stage.error',
 };
 
 export function stageLabel(stage: string): string {
-  return STAGE_LABEL[stage] ?? stage;
+  const key = STAGE_LABEL_KEY[stage];
+  return key ? tr(key) : stage;
 }
 
 /** 进度事件驱动任务 upsert（无 taskId 的全局进度不入任务列表） */
@@ -223,7 +227,7 @@ export function upsertTaskProgress(e: ProgressEvent) {
   if (!t) {
     t = {
       id: e.taskId,
-      title: e.taskTitle ?? '后台任务',
+      title: e.taskTitle ?? tr('task.background'),
       stage: e.stage,
       text: e.text,
       progress: e.progress,
@@ -358,7 +362,7 @@ export async function toggleFavorite(id: string, folder?: string) {
     store.settings = await saveSettings({ favoriteInstanceOverrides: next });
     // The star and ordering provide immediate local feedback.
   } catch (e) {
-    toast('收藏失败：' + errText(e), 'error');
+    toast(tr('task.favorite_failed', { error: errText(e) }), 'error');
   }
 }
 
@@ -533,8 +537,8 @@ export function resetProgressMono(taskId?: string) {
   if (Number.isNaN(d.getTime())) return '—';
   const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
   const days = Math.round((startOf(new Date()) - startOf(d)) / 86400000);
-  if (days <= 0) return '今天';
-  if (days === 1) return '昨天';
-  if (days < 30) return `${days}天前`;
-  return d.toLocaleDateString('zh-CN');
+  if (days <= 0) return tr('time.today');
+  if (days === 1) return tr('time.yesterday');
+  if (days < 30) return tr('time.days_ago', { days });
+  return d.toLocaleDateString(locale.value);
 }

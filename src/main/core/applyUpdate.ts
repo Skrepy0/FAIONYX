@@ -20,6 +20,7 @@ import { downloadAll } from './download';
 import { finishTask, registerTask } from './tasks';
 import { currentVersion, fetchSha256Sums, sha256File } from './selfUpdate';
 import { logScope } from './launcherLog';
+import { translate as t } from '../../shared/i18n';
 import { isolatedUpdateTest, trustedUpdateRelease, updateAssetName } from './updateTrust';
 import {
   macAppTarget,
@@ -136,8 +137,8 @@ export function getPendingUpdate(): PendingUpdate | null {
   if (process.platform === 'linux') return readLinuxUpdate();
   const exe = currentPortableExe();
   if (exe) {
-    const t = readUpdateTransaction(updateMarker(exe), exe);
-    if (t && fs.existsSync(t.file)) return t;
+    const txn = readUpdateTransaction(updateMarker(exe), exe);
+    if (txn && fs.existsSync(txn.file)) return txn;
   }
   try {
     const j = JSON.parse(fs.readFileSync(pendingFile(), 'utf8'));
@@ -172,8 +173,8 @@ async function writePendingUpdate(release: ReleaseInfo, file: string, sha256: st
   if (process.platform === 'linux') return stageLinuxUpdate(release, file, sha256, mode);
   const exe = currentPortableExe()!;
   const marker = updateMarker(exe);
-  if (fs.existsSync(marker) && !readUpdateTransaction(marker, exe)) throw new Error('此目录有其他启动器的更新记录，请使用独立目录');
-  const t: UpdateTransaction = {
+  if (fs.existsSync(marker) && !readUpdateTransaction(marker, exe)) throw new Error(t('applyupdate.error.other_launcher_record'));
+  const txn: UpdateTransaction = {
     schema: 1,
     id: randomUUID(),
     target: path.resolve(exe),
@@ -184,8 +185,8 @@ async function writePendingUpdate(release: ReleaseInfo, file: string, sha256: st
     release,
     mode,
   };
-  await validateUpdatePayload(t);
-  atomicUpdateJson(marker, t);
+  await validateUpdatePayload(txn);
+  atomicUpdateJson(marker, txn);
   fs.rmSync(pendingFile(), { force: true });
 }
 /** Suppress retrying a failed/unfinished transaction until the user explicitly downloads again. */
@@ -195,8 +196,8 @@ export function blockedUpdateVersion(): string | undefined {
   const exe = currentPortableExe();
   if (!exe) return;
   for (const suffix of ['.applying', '.applying.failed']) {
-    const t = readUpdateTransaction(updateMarker(exe) + suffix, exe);
-    if (t) return t.release.version;
+    const txn = readUpdateTransaction(updateMarker(exe) + suffix, exe);
+    if (txn) return txn.release.version;
   }
 }
 let verifiedStartupTransaction: UpdateTransaction | undefined;
@@ -242,10 +243,10 @@ export async function applyUpdateOnStartup(): Promise<boolean> {
       return false;
     }
   }
-  let t = readUpdateTransaction(marker, exe);
+  let txn = readUpdateTransaction(marker, exe);
   try {
     // Old pending files are upgraded only after obtaining and verifying the published checksum.
-    if (!t) {
+    if (!txn) {
       const legacy = getPendingUpdate();
       if (!legacy) return false;
       if (compareSemver(legacy.release.version, currentVersion()) <= 0) {
@@ -253,43 +254,43 @@ export async function applyUpdateOnStartup(): Promise<boolean> {
         return false;
       }
       const hash = (await fetchSha256Sums(legacy.release.assetUrl))?.get(legacy.release.assetName);
-      if (!hash) throw new Error('旧更新记录缺少可信校验值，请重新下载');
+      if (!hash) throw new Error(t('applyupdate.error.legacy_no_checksum'));
       const dest = path.join(updateDirOf(exe), randomUUID(), legacy.release.assetName);
       fs.mkdirSync(path.dirname(dest), { recursive: true });
       fs.copyFileSync(legacy.file, dest);
       await writePendingUpdate(legacy.release, dest, hash, 'upgrade');
-      t = readUpdateTransaction(marker, exe)!;
+      txn = readUpdateTransaction(marker, exe)!;
     }
-    if (t.mode === 'upgrade' && compareSemver(t.release.version, currentVersion()) <= 0) {
+    if (txn.mode === 'upgrade' && compareSemver(txn.release.version, currentVersion()) <= 0) {
       clearPendingUpdate();
       return false;
     }
-    await validateUpdatePayload(t);
+    await validateUpdatePayload(txn);
     const oldSha256 = await sha256File(exe);
     // Atomic claim means repeated launches cannot submit the same job twice.
     fs.renameSync(marker, claim);
     const helperPid = await spawnUpdater({
       oldExe: exe,
-      newExe: t.file,
+      newExe: txn.file,
       backupDir: backupDirOf(exe),
       mainPid: process.pid,
       wrapperPid: process.ppid,
       stateDir: userDataDir(),
-      transaction: t,
+      transaction: txn,
       oldSha256,
     });
     try {
-      atomicUpdateJson(claim, { ...t, helperPid });
+      atomicUpdateJson(claim, { ...txn, helperPid });
     } catch (error) {
-      updateLog.warn('更新助手已启动，无法补记进程编号', error);
+      updateLog.warn(t('applyupdate.log.helper_pid_record_failed'), error);
     }
     app.exit(0);
     return true;
   } catch (error) {
-    updateLog.error('启动时更新未完成；保留当前程序，不自动重启', error);
+    updateLog.error(t('applyupdate.log.startup_incomplete'), error);
     try {
-      if (t) {
-        atomicUpdateJson(claim + '.failed', t);
+      if (txn) {
+        atomicUpdateJson(claim + '.failed', txn);
         fs.rmSync(marker, { force: true });
         fs.rmSync(claim, { force: true });
       }
@@ -297,7 +298,7 @@ export async function applyUpdateOnStartup(): Promise<boolean> {
       fs.mkdirSync(userDataDir(), { recursive: true });
       fs.writeFileSync(failedFlagFile(), String(error));
     } catch (recordError) {
-      updateLog.warn('无法保存更新失败记录；继续打开启动器', recordError);
+      updateLog.warn(t('applyupdate.log.failed_record_save_failed'), recordError);
     }
     return false;
   }
@@ -309,11 +310,11 @@ export async function acknowledgeUpdateStartup(): Promise<void> {
   const exe = currentPortableExe();
   if (!exe) return;
   const claim = updateMarker(exe) + '.applying';
-  const t = verifiedStartupTransaction;
-  if (!t || currentVersion() !== t.release.version) return;
+  const txn = verifiedStartupTransaction;
+  if (!txn || currentVersion() !== txn.release.version) return;
   const state = getUpdateState();
-  if (state?.to === t.release.version) atomicUpdateJson(stateFile(), { ...state, result: 'ok' });
-  atomicUpdateJson(claim + '.receipt.json', { id: t.id, version: currentVersion() });
+  if (state?.to === txn.release.version) atomicUpdateJson(stateFile(), { ...state, result: 'ok' });
+  atomicUpdateJson(claim + '.receipt.json', { id: txn.id, version: currentVersion() });
 }
 
 /** 当前是否有更新包在下载中（防重复触发自动下载） */
@@ -334,7 +335,7 @@ export function startAutoUpdate(release: ReleaseInfo, settings: Pick<Settings, '
     const handle = startUpdateDownload(release, settings, 'upgrade');
     handle.done
       .then(() => {
-        updateLog.info(`更新 v${release.version} 已就绪（静默下载完成），将在下次启动时应用`);
+        updateLog.info(t('applyupdate.log.auto_ready', { version: release.version }));
         emit(IPC_EVENT.updateReady, { version: release.version });
       })
       .catch(() => {
@@ -386,21 +387,27 @@ export function startUpdateDownload(
   settings: Pick<Settings, 'updateSource' | 'updateMirrorUrl'>,
   mode: 'upgrade' | 'rollback'
 ): UpdateDownloadHandle {
-  if (process.platform === 'darwin' && !macUpdateSupported()) throw new Error('请将 FAIONYX.app 拖入可写的应用程序目录后再更新');
-  if (!trustedUpdateRelease(release)) throw new Error('更新来源无效，请重新检查官方版本');
+  if (process.platform === 'darwin' && !macUpdateSupported()) throw new Error(t('macupdate.error.app_dir_not_writable'));
+  if (!trustedUpdateRelease(release)) throw new Error(t('applyupdate.error.untrusted_source'));
   if (activeDownload) {
     if (activeDownload.version === release.version) return activeDownload.handle;
-    throw new Error('已有启动器更新正在下载，请完成或取消后再选择其他版本');
+    throw new Error(t('applyupdate.error.download_in_progress'));
   }
   const exe = currentPortableExe();
-  if (!exe) throw new Error('当前运行形态不支持自更新（仅便携版）');
-  if (!release.assetUrl) throw new Error('该版本没有可用的安装包资产');
+  if (!exe) throw new Error(t('applyupdate.error.portable_only'));
+  if (!release.assetUrl) throw new Error(t('applyupdate.error.no_asset'));
   // Keep the previous ready update until its replacement has been fully verified.
   const updateDir = path.join(updateDirOf(exe), release.version);
   fs.mkdirSync(updateDir, { recursive: true });
   const dest = path.join(updateDir, release.assetName || `FAIONYX-${release.version}.exe`);
 
-  const task = registerTask(`${mode === 'rollback' ? '回退' : '下载'}启动器 v${release.version}`, 'download');
+  const task = registerTask(
+    t('applyupdate.label.task_title', {
+      action: t(mode === 'rollback' ? 'applyupdate.label.rollback' : 'applyupdate.label.download'),
+      version: release.version,
+    }),
+    'download'
+  );
   const [url, ...alternates] = updateDownloadCandidates(release.assetUrl, settings);
   let slowSince: number | null = null;
   let slowHintSent = false;
@@ -410,7 +417,7 @@ export function startUpdateDownload(
       // 先取校验值（安全优先：取不到不开始下载）
       const sums = await fetchSha256Sums(release.assetUrl);
       const expected = sums?.get(release.assetName) ?? sums?.get(path.basename(dest)) ?? null;
-      if (!expected) throw new Error('无法获取更新包校验值（SHA256SUMS），已中止（安全考虑）');
+      if (!expected) throw new Error(t('applyupdate.error.no_checksum'));
       await downloadAll(
         [{ url, urls: alternates, dest, sha256: expected, size: release.assetSize || undefined }],
         (_done, _total, bps, detail) => {
@@ -421,7 +428,10 @@ export function startUpdateDownload(
           emit(IPC_EVENT.progress, {
             stage: 'launcher-update',
             progress: total > 0 ? received / total : 0,
-            text: `${mode === 'rollback' ? '回退' : '更新'}启动器 v${release.version}`,
+            text: t('applyupdate.label.progress_text', {
+              action: t(mode === 'rollback' ? 'applyupdate.label.rollback' : 'applyupdate.label.update'),
+              version: release.version,
+            }),
             speed: bps,
             etaSeconds: detail.etaSeconds ?? undefined,
             bytesDone: received,
@@ -447,9 +457,9 @@ export function startUpdateDownload(
       const actual = await sha256File(dest);
       if (actual !== expected) {
         fs.rmSync(dest, { force: true });
-        throw new Error(`更新包校验失败（SHA256 不一致），已删除文件。期望 ${expected.slice(0, 12)}… 实际 ${actual.slice(0, 12)}…`);
+        throw new Error(t('applyupdate.error.hash_mismatch', { expected: expected.slice(0, 12), actual: actual.slice(0, 12) }));
       }
-      updateLog.info(`更新包下载完成并校验通过：${dest}`);
+      updateLog.info(t('applyupdate.log.download_verified', { dest }));
       await writePendingUpdate(release, dest, expected, mode);
       emit(IPC_EVENT.taskDone, { taskId: task.id, ok: true });
     } catch (e) {
@@ -480,28 +490,28 @@ async function spawnUpdater(spec: UpdaterScriptSpec): Promise<number> {
     ['-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', scriptFile],
     { cwd: os.tmpdir() }
   );
-  if (!pid) throw new Error('无法启动更新助手，当前启动器已保留');
+  if (!pid) throw new Error(t('applyupdate.error.helper_spawn_failed'));
   return pid;
 }
 
 export async function applyDownloadedUpdate(release: ReleaseInfo): Promise<void> {
   const exe = currentPortableExe();
-  const t =
+  const txn =
     process.platform === 'darwin'
       ? readMacUpdate()
       : process.platform === 'linux'
         ? readLinuxUpdate()
         : exe && readUpdateTransaction(updateMarker(exe), exe);
-  if (!t || t.release.version !== release.version) throw new Error('更新尚未准备完成，请先下载');
-  if (process.platform === 'linux') await validateLinuxPendingUpdate(t);
-  else await validateUpdatePayload(t);
+  if (!txn || txn.release.version !== release.version) throw new Error(t('applyupdate.error.not_ready'));
+  if (process.platform === 'linux') await validateLinuxPendingUpdate(txn);
+  else await validateUpdatePayload(txn);
 }
 
 /** Manual rollback is staged for next startup too, and never consumes the only backup. */
 export async function restoreBackupAndRestart(): Promise<void> {
   const state = getUpdateState(),
     exe = currentPortableExe();
-  if (!state || !exe) throw new Error('没有可用的备份');
+  if (!state || !exe) throw new Error(t('applyupdate.error.no_backup'));
   if (process.platform === 'darwin') return stageMacBackup(state.backupPath, state.backupVersion);
   if (process.platform === 'linux') return stageLinuxBackup(state.backupPath, state.backupVersion);
   const dest = path.join(updateDirOf(exe), randomUUID(), `FAIONYX-${state.backupVersion}.exe`);
@@ -530,9 +540,9 @@ export async function checkLocalUpdateFile(filePath: string): Promise<LocalUpdat
   const m = EXE_VERSION_RE.exec(fileName);
   const version = m?.[1] ?? '';
   if (process.platform === 'darwin' && (!version || fileName !== updateAssetName(version)))
-    throw new Error('请选择当前 Mac 架构的 FAIONYX-版本-mac-' + process.arch + '.zip');
+    throw new Error(t('applyupdate.error.pick_mac_arch', { arch: process.arch }));
   if (process.platform === 'linux' && (!version || fileName !== updateAssetName(version)))
-    throw new Error('请选择当前 Linux 架构及安装方式的 FAIONYX 更新包');
+    throw new Error(t('applyupdate.error.pick_linux_package'));
   const current = currentVersion();
   const versionOk = !!version && compareSemver(version, current) >= 0;
   let sha: LocalUpdateCheck['sha256'] = 'unknown';
@@ -543,7 +553,8 @@ export async function checkLocalUpdateFile(filePath: string): Promise<LocalUpdat
     if (expected) {
       const actual = await sha256File(filePath);
       sha = actual === expected ? 'match' : 'mismatch';
-      if (sha === 'mismatch') detail = `期望 ${expected.slice(0, 12)}… 实际 ${actual.slice(0, 12)}…`;
+      if (sha === 'mismatch')
+        detail = t('applyupdate.detail.hash_mismatch', { expected: expected.slice(0, 12), actual: actual.slice(0, 12) });
     }
   } catch {
     /* 离线 → unknown */
@@ -554,9 +565,9 @@ export async function checkLocalUpdateFile(filePath: string): Promise<LocalUpdat
 /** Copy the explicitly chosen local package before staging; never move the user's file. */
 export async function applyLocalUpdateFile(check: LocalUpdateCheck): Promise<void> {
   const exe = currentPortableExe();
-  if (!exe) throw new Error('当前运行形态不支持自更新（仅便携版）');
+  if (!exe) throw new Error(t('applyupdate.error.portable_only'));
   const verified = await checkLocalUpdateFile(check.filePath);
-  if (!verified.version || verified.sha256 === 'mismatch') throw new Error('本地更新包校验未通过');
+  if (!verified.version || verified.sha256 === 'mismatch') throw new Error(t('applyupdate.error.local_verify_failed'));
   const dest = path.join(updateDirOf(exe), randomUUID(), verified.fileName);
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   fs.copyFileSync(verified.filePath, dest);

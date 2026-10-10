@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 import { errText, resetVersionThumbnail, setVersionThumbnailFit, uploadVersionThumbnail } from '../api';
 import { refreshInstalled, toast } from '../store';
 import { managedImageUrl } from '../managedAssets';
+import { t } from '@renderer/i18n';
 import type { ImageFit } from '@shared/types';
 
 const props = defineProps<{
@@ -19,9 +20,9 @@ const fit = ref<ImageFit>('crop');
 const busy = ref(false);
 const previewFailed = ref(false);
 const fitOptions: Array<{ value: ImageFit; label: string }> = [
-  { value: 'fill', label: '填充' },
-  { value: 'fit', label: '适应' },
-  { value: 'crop', label: '裁切' },
+  { value: 'fill', label: t('tp.fill') },
+  { value: 'fit', label: t('tp.fit') },
+  { value: 'crop', label: t('tp.crop') },
 ];
 
 watch(
@@ -48,9 +49,9 @@ async function importImage() {
     imagePath.value = imported;
     previewFailed.value = false;
     await refreshInstalled();
-    toast('实例启动卡缩略图已更新', 'success');
+    toast(t('tp.thumb_updated'), 'success');
   } catch (error) {
-    toast('导入缩略图失败：' + errText(error), 'error');
+    toast(t('tp.import_failed') + errText(error), 'error');
   } finally {
     busy.value = false;
   }
@@ -64,7 +65,7 @@ async function chooseFit(value: ImageFit) {
     fit.value = value;
     await refreshInstalled();
   } catch (error) {
-    toast('保存显示方式失败：' + errText(error), 'error');
+    toast(t('tp.save_fit_failed') + errText(error), 'error');
   } finally {
     busy.value = false;
   }
@@ -78,9 +79,9 @@ async function resetImage() {
     imagePath.value = '';
     previewFailed.value = false;
     await refreshInstalled();
-    toast('已恢复全局启动卡图片', 'success');
+    toast(t('tp.reset_done'), 'success');
   } catch (error) {
-    toast('恢复失败：' + errText(error), 'error');
+    toast(t('tp.reset_failed') + errText(error), 'error');
   } finally {
     busy.value = false;
   }
@@ -93,33 +94,33 @@ async function resetImage() {
       <div class="modal thumbnail-modal">
         <div class="thumbnail-head">
           <div>
-            <h3 class="modal-title">启动卡缩略图 · {{ versionId }}</h3>
-            <p class="modal-label">实例图片优先于个性化设置中的全局默认图片。</p>
+            <h3 class="modal-title">{{ t('tp.title') }} · {{ versionId }}</h3>
+            <p class="modal-label">{{ t('tp.instance_first') }}</p>
           </div>
-          <button class="icon-btn" title="关闭" @click="emit('close')">×</button>
+          <button class="icon-btn" :aria-label="t('common.close')" @click="emit('close')">×</button>
         </div>
 
         <div v-if="imagePath && !previewFailed" class="thumbnail-preview">
           <img
             :src="managedImageUrl(imagePath)"
             :style="{ objectFit: objectFit(fit) }"
-            alt="实例启动卡预览"
+            alt="{{ t('tp.preview_alt') }}"
             @error="previewFailed = true"
           />
         </div>
         <div v-else class="thumbnail-preview thumbnail-empty">
-          {{ previewFailed ? '图片不可用，首页将自动回退' : '当前跟随全局图片或内置轮播' }}
+          {{ previewFailed ? t('tp.image_unavailable') : t('tp.following_global') }}
         </div>
 
         <div class="thumbnail-actions">
           <button class="btn btn-gold" :disabled="busy" @click="importImage">
-            {{ busy ? '处理中…' : '导入图片…' }}
+            {{ busy ? t('tp.processing') : t('tp.import') }}
           </button>
-          <button class="btn btn-ghost" :disabled="busy || !imagePath" @click="resetImage">恢复全局默认</button>
+          <button class="btn btn-ghost" :disabled="busy || !imagePath" @click="resetImage">{{ t('tp.reset_default') }}</button>
         </div>
 
         <div class="thumbnail-fit">
-          <span class="muted">显示方式</span>
+          <span class="muted">{{ t('tp.fit_label') }}</span>
           <div class="thumbnail-fit-options">
             <button
               v-for="option in fitOptions"
@@ -133,7 +134,7 @@ async function resetImage() {
             </button>
           </div>
         </div>
-        <p class="thumbnail-note muted">PNG、JPG、JPEG、WebP 会经过尺寸与内容校验，并复制到 FAIONYX 管理目录；原文件移动后不受影响。</p>
+        <p class="thumbnail-note muted">{{ t('tp.thumb_note') }}</p>
       </div>
     </div>
   </Teleport>

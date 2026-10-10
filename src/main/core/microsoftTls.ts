@@ -4,6 +4,7 @@ import net from 'node:net';
 import tls from 'node:tls';
 import { checkServerIdentity } from 'node:tls';
 import { execFileSync } from 'node:child_process';
+import { translate as t } from '../../shared/i18n';
 
 const MICROSOFT_HOSTS = new Set([
   'login.microsoftonline.com',
@@ -22,14 +23,14 @@ export function microsoftEndpoint(input: string): URL {
     (url.port && url.port !== '443') ||
     !MICROSOFT_HOSTS.has(url.hostname)
   )
-    throw new Error('正版登录只允许连接受信任的 Microsoft / Xbox / Minecraft HTTPS 地址');
+    throw new Error(t('mstls.error.endpoint_not_allowed'));
   return url;
 }
 
 export function certificateError(error: NodeJS.ErrnoException): Error {
   if (/CERT|SELF_SIGNED|UNABLE_TO_VERIFY|TLS/i.test(error.code ?? ''))
-    return new Error(`SSL 证书验证失败（${error.code}）。请检查系统时间、代理或网络证书；登录已中止。`);
-  return new Error(`正版登录连接失败：${error.code ?? error.message}`);
+    return new Error(t('mstls.error.certificate_invalid', { code: error.code ?? '' }));
+  return new Error(t('mstls.error.connection_failed', { code: error.code ?? error.message }));
 }
 
 /** 读取 Windows 系统代理（HKCU Internet Settings）。未启用或非 Windows 返回 null。 */
@@ -78,11 +79,11 @@ async function proxiedTlsSocket(proxyAddress: string, target: URL, timeoutMs: nu
       if (res.statusCode === 200) resolve(socket);
       else {
         socket.destroy();
-        reject(new Error(`代理 CONNECT 失败：HTTP ${res.statusCode}`));
+        reject(new Error(t('mstls.error.proxy_connect_failed', { status: res.statusCode ?? 0 })));
       }
     });
     req.once('error', reject);
-    req.once('timeout', () => req.destroy(new Error('代理连接超时')));
+    req.once('timeout', () => req.destroy(new Error(t('mstls.error.proxy_timeout'))));
     req.end();
   });
   const tlsSocket = tls.connect({
@@ -128,14 +129,14 @@ export function microsoftFetch(
           const status = res.statusCode ?? 500;
           if (status >= 300 && status < 400) {
             res.destroy();
-            reject(new Error('正版认证端点返回了重定向，已阻止发送登录凭据'));
+            reject(new Error(t('mstls.error.redirect_blocked')));
             return;
           }
           const chunks: Buffer[] = [];
           let size = 0;
           res.on('data', (chunk: Buffer) => {
             size += chunk.length;
-            if (size > 2 * 1024 * 1024) res.destroy(new Error('正版认证响应超过大小限制'));
+            if (size > 2 * 1024 * 1024) res.destroy(new Error(t('mstls.error.response_too_large')));
             else chunks.push(chunk);
           });
           res.once('error', reject);
@@ -148,7 +149,7 @@ export function microsoftFetch(
           });
         }
       );
-      req.setTimeout(30000, () => req.destroy(new Error('正版认证连接超时')));
+      req.setTimeout(30000, () => req.destroy(new Error(t('mstls.error.connection_timeout'))));
       req.once('error', (error) => reject(certificateError(error)));
       req.end(init.body);
     };
@@ -157,7 +158,7 @@ export function microsoftFetch(
       return;
     }
     proxiedTlsSocket(proxy, url, 30000).then(start, (error) =>
-      reject(new Error(`系统代理连接失败：${error instanceof Error ? error.message : String(error)}`))
+      reject(new Error(t('mstls.error.system_proxy_failed', { error: error instanceof Error ? error.message : String(error) })))
     );
   });
 }

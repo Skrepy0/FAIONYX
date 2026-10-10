@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { translate as t } from '../../shared/i18n';
 
 export type ManagedImagePurpose = 'background' | 'launch-thumbnail' | 'instance-thumbnail';
 
@@ -91,15 +92,15 @@ export function readImageDimensions(buffer: Buffer): ImageDimensions | null {
 
 export function validateImageInput(filePath: string, bytes: number, dimensions: ImageDimensions | null): ImageDimensions {
   if (!ALLOWED_IMAGE_EXTENSIONS.has(path.extname(filePath).toLowerCase())) {
-    throw new Error('仅支持 PNG、JPG、JPEG 或 WebP 图片');
+    throw new Error(t('imageasset.error.unsupported_format'));
   }
-  if (!Number.isFinite(bytes) || bytes <= 0) throw new Error('图片文件为空');
-  if (bytes > MAX_IMAGE_FILE_BYTES) throw new Error('图片过大（最大 32MB）');
+  if (!Number.isFinite(bytes) || bytes <= 0) throw new Error(t('imageasset.error.empty_file'));
+  if (bytes > MAX_IMAGE_FILE_BYTES) throw new Error(t('imageasset.error.too_large'));
   if (!dimensions || dimensions.width < 1 || dimensions.height < 1) {
-    throw new Error('无法识别图片格式或尺寸');
+    throw new Error(t('imageasset.error.unrecognized'));
   }
   if (dimensions.width > 32_768 || dimensions.height > 32_768 || dimensions.width * dimensions.height > MAX_IMAGE_PIXELS) {
-    throw new Error('图片像素尺寸过大（最多 8000 万像素）');
+    throw new Error(t('imageasset.error.pixels_too_large'));
   }
   return dimensions;
 }

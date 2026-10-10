@@ -10,6 +10,7 @@ import { compareSemver } from '../../shared/semver';
 import { updateArtifactName, type InstallationKind } from '../../shared/platform';
 import { installationKind } from '../platform';
 import { assertLinuxElf, assertLinuxManifest, validateLinuxArchive } from './linuxUpdateIdentity';
+import { translate as t } from '../../shared/i18n';
 export { assertLinuxElf, validateLinuxArchive } from './linuxUpdateIdentity';
 const run = promisify(execFile);
 // Updater directories contain the physical ASAR archive. Electron's normal fs
@@ -48,7 +49,7 @@ export function linuxAppImageUpdateReason(): string | null {
     fs.accessSync('/dev/fuse', fs.constants.R_OK | fs.constants.W_OK);
     return null;
   } catch {
-    return '当前 AppImage 在解压模式运行或 FUSE 不可用，无法安全自动替换并重启。原程序和下载包会保留，请使用便携 tar.gz 或 DEB 安装包。';
+    return t('linuxupdate.error.appimage_unsafe_replace');
   }
 }
 const inside = (root: string, file: string) => {
@@ -57,21 +58,21 @@ const inside = (root: string, file: string) => {
 };
 export function readLinuxUpdate(file = marker()): (UpdateTransaction & { installedHash?: string; kind?: InstallationKind }) | null {
   try {
-    const t = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
     if (
-      t.schema !== 1 ||
-      !/^[a-f\d-]{36}$/i.test(t.id) ||
-      t.target !== linuxAppTarget() ||
-      !inside(linuxUpdateDir(), t.file) ||
-      !/^[a-f\d]{64}$/.test(t.sha256) ||
-      !Number.isSafeInteger(t.size) ||
-      t.size <= 0 ||
-      !/^\d+\.\d+\.\d+$/.test(t.release?.version) ||
-      path.basename(t.file) !== linuxUpdateAssetName(t.release.version) ||
-      !['upgrade', 'rollback', 'local'].includes(t.mode)
+      parsed.schema !== 1 ||
+      !/^[a-f\d-]{36}$/i.test(parsed.id) ||
+      parsed.target !== linuxAppTarget() ||
+      !inside(linuxUpdateDir(), parsed.file) ||
+      !/^[a-f\d]{64}$/.test(parsed.sha256) ||
+      !Number.isSafeInteger(parsed.size) ||
+      parsed.size <= 0 ||
+      !/^\d+\.\d+\.\d+$/.test(parsed.release?.version) ||
+      path.basename(parsed.file) !== linuxUpdateAssetName(parsed.release.version) ||
+      !['upgrade', 'rollback', 'local'].includes(parsed.mode)
     )
       return null;
-    return t;
+    return parsed;
   } catch {
     return null;
   }
@@ -89,7 +90,8 @@ async function verifyDirectory(dir: string, version: string): Promise<void> {
     await fd.close();
   }
   await fs.promises.access(path.join(dir, 'faionyx'), fs.constants.X_OK);
-  if (!(await physicalFs.promises.stat(path.join(dir, 'resources/app.asar'))).isFile()) throw Error('Linux 更新包缺少应用归档');
+  if (!(await physicalFs.promises.stat(path.join(dir, 'resources/app.asar'))).isFile())
+    throw new Error(t('linuxupdate.error.missing_app_archive'));
 }
 export async function verifyLinuxAppImage(file: string, version: string): Promise<void> {
   const fd = await fs.promises.open(file, 'r');
@@ -97,7 +99,7 @@ export async function verifyLinuxAppImage(file: string, version: string): Promis
     const bytes = Buffer.alloc(64);
     await fd.read(bytes, 0, 64, 0);
     assertLinuxElf(bytes);
-    if (bytes.toString('binary', 8, 11) !== 'AI\x02') throw Error('更新包不是 Type 2 AppImage');
+    if (bytes.toString('binary', 8, 11) !== 'AI\x02') throw new Error(t('linuxupdate.error.not_type2_appimage'));
     const block = Buffer.alloc(65536 + 3);
     let offset = 0,
       carry = 0,
@@ -107,7 +109,7 @@ export async function verifyLinuxAppImage(file: string, version: string): Promis
       if (!read.bytesRead) break;
       const length = carry + read.bytesRead;
       for (let i = block.indexOf('hsqs'); i >= 0 && i <= length - 4; i = block.indexOf('hsqs', i + 1)) {
-        if (++candidates > 64) throw Error('AppImage 文件系统候选数量异常');
+        if (++candidates > 64) throw new Error(t('linuxupdate.error.too_many_filesystems'));
         try {
           const raw = (
             await run('/usr/bin/unsquashfs', ['-o', String(offset - carry + i), '-cat', file, 'resources/faionyx-linux.json'], {
@@ -125,7 +127,7 @@ export async function verifyLinuxAppImage(file: string, version: string): Promis
       block.copy(block, 0, length - carry, length);
       offset += read.bytesRead;
     }
-    throw Error('无法验证 AppImage 内嵌版本；请安装 squashfs-tools 后重试');
+    throw new Error(t('linuxupdate.error.appimage_version_unverifiable'));
   } finally {
     await fd.close();
   }
@@ -139,21 +141,21 @@ export async function verifyLinuxDeb(file: string, version: string): Promise<voi
       .map((line) => line.split(/:\s*/, 2))
   );
   if (values.Package !== 'faionyx' || values.Version !== version || values.Architecture !== (process.arch === 'arm64' ? 'arm64' : 'amd64'))
-    throw Error('DEB 包名称、版本或架构不匹配');
+    throw new Error(t('linuxupdate.error.deb_mismatch'));
 }
-export async function validateLinuxPendingUpdate(t: UpdateTransaction): Promise<void> {
-  await validateUpdatePayload(t);
-  if (installationKind() === 'appimage') await verifyLinuxAppImage(t.file, t.release.version);
-  else if (installationKind() === 'deb') await verifyLinuxDeb(t.file, t.release.version);
-  else await validateLinuxArchive(t.file);
+export async function validateLinuxPendingUpdate(txn: UpdateTransaction): Promise<void> {
+  await validateUpdatePayload(txn);
+  if (installationKind() === 'appimage') await verifyLinuxAppImage(txn.file, txn.release.version);
+  else if (installationKind() === 'deb') await verifyLinuxDeb(txn.file, txn.release.version);
+  else await validateLinuxArchive(txn.file);
 }
 export async function stageLinuxUpdate(release: ReleaseInfo, file: string, sha256: string, mode: UpdateTransaction['mode']): Promise<void> {
   const appImageReason = linuxAppImageUpdateReason();
   if (appImageReason) throw Error(appImageReason);
-  if (!linuxUpdateSupported()) throw Error('Linux 应用目录不可写，请移至用户可写目录后更新');
+  if (!linuxUpdateSupported()) throw new Error(t('linuxupdate.error.app_dir_not_writable'));
   if (!inside(linuxUpdateDir(), file) || path.basename(file) !== linuxUpdateAssetName(release.version))
-    throw Error('请选择当前 Linux 架构及安装方式的官方更新包');
-  const t: UpdateTransaction = {
+    throw new Error(t('linuxupdate.error.pick_official_package'));
+  const txn: UpdateTransaction = {
     schema: 1,
     id: randomUUID(),
     target: linuxAppTarget()!,
@@ -164,18 +166,18 @@ export async function stageLinuxUpdate(release: ReleaseInfo, file: string, sha25
     release,
     mode,
   };
-  await validateLinuxPendingUpdate(t);
-  atomicUpdateJson(marker(), t);
+  await validateLinuxPendingUpdate(txn);
+  atomicUpdateJson(marker(), txn);
 }
 const q = (value: string) => "'" + value.replace(/'/g, "'\\''") + "'";
 const hashTarget = (target: string, kind: InstallationKind) => (kind === 'appimage' ? target : path.join(target, 'resources/app.asar'));
 async function hash(file: string): Promise<string> {
   const value = (await run('/usr/bin/sha256sum', ['--', file])).stdout.slice(0, 64);
-  if (!/^[a-f\d]{64}$/.test(value)) throw Error('Linux 应用哈希无法校验');
+  if (!/^[a-f\d]{64}$/.test(value)) throw new Error(t('linuxupdate.error.hash_unverifiable'));
   return value;
 }
 export function linuxUpdaterScript(
-  t: UpdateTransaction,
+  txn: UpdateTransaction,
   staged: string,
   oldHash: string,
   newHash: string,
@@ -183,22 +185,24 @@ export function linuxUpdaterScript(
   stateDir: string,
   kind: InstallationKind
 ): string {
-  const backup = path.join(path.dirname(t.target), '.FAIONYX-backup-' + t.id + (kind === 'appimage' ? '.AppImage' : ''));
+  const backup = path.join(path.dirname(txn.target), '.FAIONYX-backup-' + txn.id + (kind === 'appimage' ? '.AppImage' : ''));
   const applying = path.join(stateDir, 'linux-update.json.applying');
   const state = JSON.stringify({
-    from: t.from,
-    to: t.release.version,
+    from: txn.from,
+    to: txn.release.version,
     time: new Date().toISOString(),
     backupPath: backup,
-    backupVersion: t.from,
+    backupVersion: txn.from,
     result: 'applied',
   });
-  const executable = kind === 'appimage' ? t.target : path.join(t.target, 'faionyx');
+  const executable = kind === 'appimage' ? txn.target : path.join(txn.target, 'faionyx');
   return [
     '#!/bin/sh',
     'set -eu',
     'exec >>' + q(path.join(stateDir, 'linux-updater.log')) + ' 2>&1',
-    "fail() { printf '%s' 'Linux 更新未完成，原程序和备份已保留。' >" +
+    "fail() { printf '%s' '" +
+      t('linuxupdate.script.fail_keep') +
+      "' >" +
       q(path.join(stateDir, 'update-failed.flag')) +
       '; mv -f ' +
       q(applying) +
@@ -208,11 +212,11 @@ export function linuxUpdaterScript(
     'trap fail EXIT',
     'n=0',
     'while kill -0 ' + pid + ' 2>/dev/null; do n=$((n+1)); [ "$n" -lt 120 ] || exit 1; sleep 0.5; done',
-    '[ "$(sha256sum -- ' + q(hashTarget(t.target, kind)) + ' | cut -c1-64)" = ' + q(oldHash) + ' ]',
+    '[ "$(sha256sum -- ' + q(hashTarget(txn.target, kind)) + ' | cut -c1-64)" = ' + q(oldHash) + ' ]',
     '[ "$(sha256sum -- ' + q(hashTarget(staged, kind)) + ' | cut -c1-64)" = ' + q(newHash) + ' ]',
     '[ ! -e ' + q(backup) + ' ]',
-    'mv -- ' + q(t.target) + ' ' + q(backup),
-    'if ! mv -- ' + q(staged) + ' ' + q(t.target) + '; then mv -- ' + q(backup) + ' ' + q(t.target) + '; exit 1; fi',
+    'mv -- ' + q(txn.target) + ' ' + q(backup),
+    'if ! mv -- ' + q(staged) + ' ' + q(txn.target) + '; then mv -- ' + q(backup) + ' ' + q(txn.target) + '; exit 1; fi',
     "printf '%s' " + q(state) + ' >' + q(path.join(stateDir, 'update-state.json.tmp')),
     'mv -f -- ' + q(path.join(stateDir, 'update-state.json.tmp')) + ' ' + q(path.join(stateDir, 'update-state.json')),
     '# Normal FUSE mode execs AppRun in this PID. Extract-and-run forks a wrapper.',
@@ -227,7 +231,7 @@ export function linuxUpdaterScript(
     ' if [ "$(cat ' +
       q(applying + '.receipt') +
       ' 2>/dev/null || true)" = ' +
-      q(t.id) +
+      q(txn.id) +
       ' ]; then mv -f -- ' +
       q(applying) +
       ' ' +
@@ -242,11 +246,11 @@ export function linuxUpdaterScript(
     ' n=0; while kill -0 "$launched" 2>/dev/null; do n=$((n+1)); [ "$n" -lt 120 ] || exit 1; sleep 0.25; done',
     'fi',
     '# Restore only after the failed child exited. Never run old and new instances together.',
-    '[ "$(sha256sum -- ' + q(hashTarget(t.target, kind)) + ' | cut -c1-64)" = ' + q(newHash) + ' ]',
+    '[ "$(sha256sum -- ' + q(hashTarget(txn.target, kind)) + ' | cut -c1-64)" = ' + q(newHash) + ' ]',
     '[ "$(sha256sum -- ' + q(hashTarget(backup, kind)) + ' | cut -c1-64)" = ' + q(oldHash) + ' ]',
-    'mv -- ' + q(t.target) + ' ' + q(staged + '.failed'),
-    'mv -- ' + q(backup) + ' ' + q(t.target),
-    "printf '%s' 'Linux 新版本未完成启动，已恢复原应用；失败包已保留。' >" + q(path.join(stateDir, 'update-failed.flag')),
+    'mv -- ' + q(txn.target) + ' ' + q(staged + '.failed'),
+    'mv -- ' + q(backup) + ' ' + q(txn.target),
+    "printf '%s' '" + t('linuxupdate.script.restored') + "' >" + q(path.join(stateDir, 'update-failed.flag')),
     'mv -f -- ' + q(applying) + ' ' + q(applying + '.failed'),
     'trap - EXIT',
     q(executable) + ' >/dev/null 2>&1 &',
@@ -288,59 +292,59 @@ export async function applyLinuxUpdateOnStartup(): Promise<boolean> {
       }
       fs.renameSync(claim(), claim() + '.failed');
     }
-    const t = readLinuxUpdate();
-    if (!t) return false;
-    if (t.mode === 'upgrade' && compareSemver(t.release.version, app.getVersion()) <= 0) {
+    const txn = readLinuxUpdate();
+    if (!txn) return false;
+    if (txn.mode === 'upgrade' && compareSemver(txn.release.version, app.getVersion()) <= 0) {
       clearLinuxUpdate();
       return false;
     }
-    await validateLinuxPendingUpdate(t);
+    await validateLinuxPendingUpdate(txn);
     const kind = installationKind();
     if (kind === 'deb') {
-      const failure = await shell.openPath(t.file);
-      if (failure) throw Error('系统安装器无法打开 DEB：' + failure + '。已保留安装包，可在文件管理器中打开。');
+      const failure = await shell.openPath(txn.file);
+      if (failure) throw new Error(t('linuxupdate.error.open_deb_failed', { failure }));
       atomicUpdateJson(path.join(data(), 'linux-installer-handoff.json'), {
-        package: t.file,
-        version: t.release.version,
+        package: txn.file,
+        version: txn.release.version,
         time: new Date().toISOString(),
         status: 'awaiting-system-confirmation',
       });
       clearLinuxUpdate();
       return false;
     }
-    const stageRoot = fs.mkdtempSync(path.join(path.dirname(t.target), '.FAIONYX-update-'));
-    const staged = path.join(stageRoot, kind === 'appimage' ? path.basename(t.target) : 'FAIONYX');
+    const stageRoot = fs.mkdtempSync(path.join(path.dirname(txn.target), '.FAIONYX-update-'));
+    const staged = path.join(stageRoot, kind === 'appimage' ? path.basename(txn.target) : 'FAIONYX');
     if (kind === 'appimage') {
-      await fs.promises.copyFile(t.file, staged);
+      await fs.promises.copyFile(txn.file, staged);
       await fs.promises.chmod(staged, 0o755);
     } else {
       await run(
         '/usr/bin/tar',
-        ['--extract', '--gzip', '--file', t.file, '--directory', stageRoot, '--no-same-owner', '--no-same-permissions'],
+        ['--extract', '--gzip', '--file', txn.file, '--directory', stageRoot, '--no-same-owner', '--no-same-permissions'],
         { timeout: 120000 }
       );
-      await verifyDirectory(staged, t.release.version);
+      await verifyDirectory(staged, txn.release.version);
     }
-    const oldHash = await hash(hashTarget(t.target, kind)),
+    const oldHash = await hash(hashTarget(txn.target, kind)),
       installedHash = await hash(hashTarget(staged, kind));
-    const script = path.join(linuxUpdateDir(), 'apply-' + t.id + '.sh');
-    fs.writeFileSync(script, linuxUpdaterScript(t, staged, oldHash, installedHash, process.pid, data(), kind), { mode: 0o700 });
+    const script = path.join(linuxUpdateDir(), 'apply-' + txn.id + '.sh');
+    fs.writeFileSync(script, linuxUpdaterScript(txn, staged, oldHash, installedHash, process.pid, data(), kind), { mode: 0o700 });
     fs.renameSync(marker(), claim());
-    atomicUpdateJson(claim(), { ...t, kind, installedHash });
+    atomicUpdateJson(claim(), { ...txn, kind, installedHash });
     const helper = spawn('/bin/sh', [script], { detached: true, stdio: 'ignore' });
     await new Promise<void>((resolve, reject) => {
       helper.once('spawn', resolve);
       helper.once('error', reject);
     });
-    atomicUpdateJson(claim(), { ...t, kind, installedHash, helperPid: helper.pid });
+    atomicUpdateJson(claim(), { ...txn, kind, installedHash, helperPid: helper.pid });
     helper.unref();
     app.exit(0);
     return true;
   } catch (error) {
     try {
       fs.appendFileSync(path.join(data(), 'linux-updater.log'), new Date().toISOString() + ' ' + String(error) + '\n');
-      const t = readLinuxUpdate();
-      if (t) atomicUpdateJson(claim() + '.failed', t);
+      const txn = readLinuxUpdate();
+      if (txn) atomicUpdateJson(claim() + '.failed', txn);
       clearLinuxUpdate();
       fs.writeFileSync(path.join(data(), 'update-failed.flag'), String(error));
     } catch {
@@ -358,7 +362,7 @@ export async function acknowledgeLinuxUpdate(): Promise<void> {
 }
 export async function stageLinuxBackup(backup: string, version: string): Promise<void> {
   const kind = installationKind();
-  if (kind === 'deb') throw Error('系统安装版请通过 DEB 安装器选择需要恢复的版本');
+  if (kind === 'deb') throw new Error(t('linuxupdate.error.deb_restore_via_installer'));
   const dir = path.join(linuxUpdateDir(), randomUUID());
   fs.mkdirSync(dir, { recursive: true });
   const assetName = linuxUpdateAssetName(version),

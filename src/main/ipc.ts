@@ -9,7 +9,6 @@ import { registerVersionCategoriesIpc } from './core/versionCategories';
 import { normalizeVersionCategoryState, renameCategoryAssignment } from '../shared/versionCategories';
 import { registerMemoryOrganizerIpc } from './core/memoryOrganizer';
 import { registerProjectionsIpc } from './core/projectionsIpc';
-import { registerMascotsIpc } from './core/mascots';
 import { activeLaunchStates, rememberLaunchState } from './core/launchUiState';
 import { startNativeFileDrag } from './core/nativeFileDrag';
 import { dragResourceFilesSync } from './core/resourceDragPaths';
@@ -96,6 +95,7 @@ import type { DirectHostRequest } from '../shared/directConnect';
 import { registerVoxlinkIpc } from './core/voxlink';
 import { registerTerracottaIpc } from './core/terracotta';
 import { registerFrpIpc, installFrpEventBridge } from './core/frpIpc';
+import { translate as t } from '../shared/i18n';
 
 function errText(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
@@ -108,7 +108,6 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
   registerVersionCategoriesIpc();
   registerMemoryOrganizerIpc();
   registerProjectionsIpc(getWin);
-  registerMascotsIpc();
   registerInstanceCenterIpc(getWin);
   registerRecordingsIpc(getWin);
   ipcMain.handle('recordings:modVersions', (_e, kind, mc, loader) => recordingModVersions(kind, mc, loader));
@@ -127,8 +126,8 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
       try {
         return await listener(event, ...args);
       } catch (error) {
-        if (isCancelError(error)) launcherLogDebug('ipc', `通道 ${channel} 已取消：${errText(error)}`);
-        else launcherLogError('ipc', `IPC 通道 ${channel} 处理失败`, error);
+        if (isCancelError(error)) launcherLogDebug('ipc', t('ipc.log.cancel_channel', { channel, error: errText(error) }));
+        else launcherLogError('ipc', t('ipc.log.channel_failed', { channel }), error);
         throw error;
       }
     });
@@ -169,7 +168,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
     const opts = {
       properties: ['openFile' as const],
       title,
-      filters: [{ name: '图片', extensions: ['png', 'jpg', 'jpeg', 'webp'] }],
+      filters: [{ name: t('ipc.filter.images'), extensions: ['png', 'jpg', 'jpeg', 'webp'] }],
     };
     const result = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts);
     return result.canceled ? null : (result.filePaths[0] ?? null);
@@ -194,15 +193,16 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
   );
   ipcMain.handle(IPC.foldersContextMenu, (_e, folder: string, versionId?: string) => {
     const registered = settings.getSettings().folders.find((item) => pathIdentity(item.path) === pathIdentity(String(folder)));
-    if (!registered) throw new Error('文件夹未登记');
-    if (versionId && (!/^[^\\/]+$/.test(versionId) || versionId === '.' || versionId === '..')) throw new Error('无效版本 ID');
+    if (!registered) throw new Error(t('ipc.error.folder_unregistered'));
+    if (versionId && (!/^[^\\/]+$/.test(versionId) || versionId === '.' || versionId === '..'))
+      throw new Error(t('ipc.error.invalid_version_id'));
     const target = versionId ? path.join(registered.path, 'versions', versionId) : registered.path;
     Menu.buildFromTemplate([
       {
-        label: '打开对应文件夹',
+        label: t('ipc.menu.open_folder'),
         click: () => {
           void shell.openPath(target).then((error) => {
-            if (error) dialog.showErrorBox('无法打开文件夹', error);
+            if (error) dialog.showErrorBox(t('ipc.error.open_folder_failed'), error);
           });
         },
       },
@@ -215,10 +215,10 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
     return saved;
   });
   ipcMain.handle(IPC.appSelectImage, async () => {
-    return pickImage('选择图片');
+    return pickImage(t('ipc.dialog.select_image'));
   });
   ipcMain.handle(IPC.appearanceImportBackground, async () => {
-    const source = await pickImage('导入自定义背景');
+    const source = await pickImage(t('ipc.dialog.import_background'));
     if (!source) return null;
     const previous = settings.getSettings();
     const imported = await appearance.importGlobalImage(source, 'background');
@@ -238,9 +238,9 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
   ipcMain.handle(IPC.appearanceImportBackgroundMulti, async () => {
     const win = getWin();
     const options = {
-      title: '导入背景图片（可多选）',
+      title: t('ipc.dialog.import_background_multi'),
       properties: ['openFile' as const, 'multiSelections' as const],
-      filters: [{ name: '图片', extensions: ['png', 'jpg', 'jpeg', 'webp'] }],
+      filters: [{ name: t('ipc.filter.images'), extensions: ['png', 'jpg', 'jpeg', 'webp'] }],
     };
     const selection = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
     if (selection.canceled || !selection.filePaths.length) return null;
@@ -265,21 +265,21 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
   ipcMain.handle(IPC.appearanceImportLaunchThumbnail, async () => {
     const win = getWin();
     const options = {
-      title: '添加首页轮播图片（可多选）',
+      title: t('ipc.dialog.add_carousel_images'),
       properties: ['openFile' as const, 'multiSelections' as const],
-      filters: [{ name: '图片', extensions: ['png', 'jpg', 'jpeg', 'webp'] }],
+      filters: [{ name: t('ipc.filter.images'), extensions: ['png', 'jpg', 'jpeg', 'webp'] }],
     };
     const selection = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
     if (selection.canceled || !selection.filePaths.length) return null;
     if (carouselImages(settings.getSettings().launchThumbnail).length + selection.filePaths.length > MAX_CAROUSEL_IMAGES) {
-      throw new Error(`首页轮播最多 ${MAX_CAROUSEL_IMAGES} 张图片，请先移除部分图片`);
+      throw new Error(t('ipc.error.carousel_max_remove', { max: MAX_CAROUSEL_IMAGES }));
     }
     const imported: string[] = [];
     try {
       for (const source of selection.filePaths) imported.push((await appearance.importGlobalImage(source, 'launch-thumbnail')).path);
       const current = settings.getSettings().launchThumbnail;
       const images = [...carouselImages(current), ...imported];
-      if (images.length > MAX_CAROUSEL_IMAGES) throw new Error(`首页轮播最多 ${MAX_CAROUSEL_IMAGES} 张图片`);
+      if (images.length > MAX_CAROUSEL_IMAGES) throw new Error(t('ipc.error.carousel_max', { max: MAX_CAROUSEL_IMAGES }));
       return settings.saveSettings({ launchThumbnail: { ...current, images, image: images[0] ?? '' } });
     } catch (error) {
       for (const image of imported) appearance.removeGlobalImage(image, 'launch-thumbnail');
@@ -294,7 +294,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
   });
   ipcMain.handle(IPC.appSelectDir, async () => {
     const win = getWin();
-    const opts = { properties: ['openDirectory' as const], title: '选择游戏目录' };
+    const opts = { properties: ['openDirectory' as const], title: t('ipc.dialog.select_game_dir') };
     const r = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts);
     return r.canceled ? null : (r.filePaths[0] ?? null);
   });
@@ -302,8 +302,8 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
     const win = getWin();
     const opts = {
       properties: ['openFile' as const],
-      title: '选择整合包',
-      filters: [{ name: '整合包', extensions: ['mrpack', 'zip'] }],
+      title: t('ipc.dialog.select_modpack'),
+      filters: [{ name: t('ipc.filter.modpack'), extensions: ['mrpack', 'zip'] }],
     };
     const r = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts);
     return r.canceled ? null : (r.filePaths[0] ?? null);
@@ -351,14 +351,19 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
   function scopedVersion<T>(id: string, folder: string | undefined, action: () => T): T {
     const target = folder || folderOfVersion(id);
     const norm = (p: string) => (process.platform === 'win32' ? path.resolve(p).toLowerCase() : path.resolve(p));
-    if (!settings.getSettings().folders.some((f) => norm(f.path) === norm(target))) throw new Error('游戏文件夹未绑定或已解除绑定');
+    if (!settings.getSettings().folders.some((f) => norm(f.path) === norm(target))) throw new Error(t('ipc.error.folder_unbound'));
     return withGameFolder(target, action);
   }
   // 异步执行，不阻塞返回；进度经 event:progress（带 taskId）推送，结束经 event:installDone 推送
   ipcMain.handle(IPC.versionsInstall, (_e, versionId: string, opts?: InstallOptions, folder?: string) =>
     withDownloadFolder(folder, () => {
       const vid = String(versionId ?? '');
-      const task = registerTask(`安装版本 ${vid}${opts?.loader ? ` + ${opts.loader}` : ''}`, 'version');
+      const task = registerTask(
+        opts?.loader
+          ? t('ipc.task.install_version_loader', { version: vid, loader: opts.loader })
+          : t('ipc.task.install_version', { version: vid }),
+        'version'
+      );
       let favoriteModsResult: import('../shared/modFavorites').FavoriteInstallResult | undefined;
       const progressGuard = new ProgressEventGuard();
       let lastStage = '';
@@ -392,8 +397,8 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
         })
         .catch((err) => {
           const cancelled = isCancelError(err);
-          const text = cancelled ? '已取消' : errText(err);
-          if (!cancelled) taskEmit({ stage: 'error', progress: 0, text: `安装失败: ${text}` });
+          const text = cancelled ? t('ipc.text.cancelled') : errText(err);
+          if (!cancelled) taskEmit({ stage: 'error', progress: 0, text: t('ipc.task.install_failed', { error: text }) });
           // 保留本任务的 .installing 标记供续传/显式清理；绝不扫描删除其他并行任务的目录。
           taskDone(false, text, cancelled);
           send(IPC_EVENT.installDone, {
@@ -419,7 +424,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
       const name = String(newName ?? '').trim();
       // 前置校验：游戏运行中禁止改名（文件夹句柄被占用，且引用会错乱）
       if (launch.getRunningVersionIds().has(vid)) {
-        throw new Error('该版本正在运行中，请先退出游戏再改名');
+        throw new Error(t('ipc.error.version_running_rename'));
       }
       versions.renameVersion(vid, name);
       // 旧版 ID 收藏保留给其他目录同名实例，当前实例迁移到目录限定的键。
@@ -459,7 +464,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
   ipcMain.handle(IPC.foldersOpen, async (_e, p: string) => {
     const state = gameFolders.listGameFolders();
     const target = state.folders.find((folder) => folder.path === String(p ?? ''));
-    if (!target) throw new Error('文件夹未登记');
+    if (!target) throw new Error(t('ipc.error.folder_unregistered'));
     const error = await shell.openPath(target.path);
     if (error) throw new Error(error);
   });
@@ -480,15 +485,15 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
       const vid = String(id ?? '');
       const win = getWin();
       const opts = {
-        title: '选择实例图标',
-        filters: [{ name: '图片', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif'] }],
+        title: t('ipc.dialog.select_instance_icon'),
+        filters: [{ name: t('ipc.filter.images'), extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif'] }],
         properties: ['openFile' as const],
       };
       const r = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts);
       if (r.canceled || !r.filePaths[0]) return null;
       const src = r.filePaths[0];
       const st = fs.statSync(src);
-      if (st.size > 5 * 1024 * 1024) throw new Error('图片过大（最大 5MB）');
+      if (st.size > 5 * 1024 * 1024) throw new Error(t('ipc.error.image_too_large'));
       const ext = path.extname(src).toLowerCase() || '.png';
       const name = `${crypto.randomUUID()}${ext}`;
       fs.mkdirSync(instanceIconsDir(), { recursive: true });
@@ -502,7 +507,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
     scopedVersion(id, targetFolder, async () => {
       const versionId = String(id ?? '');
       const version = versions.readVersionJson(versionId);
-      const source = await pickImage('导入实例启动卡缩略图');
+      const source = await pickImage(t('ipc.dialog.import_instance_thumbnail'));
       if (!source) return null;
       const folder = folderOfVersion(versionId);
       const imported = await appearance.importInstanceThumbnail(source, folder);
@@ -534,10 +539,10 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
   ipcMain.handle(IPC.modpackSupplyFiles, async (_e, token: string) => {
     const files = pendingModpackFiles(String(token));
     const opts: Electron.OpenDialogOptions = {
-      title: `补充整合包文件（剩余 ${files.length} 个）`,
-      buttonLabel: '校验并补充',
+      title: t('ipc.dialog.supplement_modpack', { count: files.length }),
+      buttonLabel: t('ipc.dialog.supplement_confirm'),
       properties: ['openFile', 'multiSelections'],
-      filters: [{ name: '模组文件', extensions: ['jar', 'disabled'] }],
+      filters: [{ name: t('ipc.filter.mod_files'), extensions: ['jar', 'disabled'] }],
     };
     const win = getWin();
     const selection = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts);
@@ -546,7 +551,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
   });
   ipcMain.handle(IPC.modpackOpenFile, async (_e, token: string, fileID: number) => {
     const file = pendingModpackFiles(String(token)).find((f) => f.fileID === fileID);
-    if (!file) throw new Error('该文件已补充或任务已结束');
+    if (!file) throw new Error(t('ipc.error.file_supplied_or_done'));
     await shell.openExternal(await community.curseForgeFilePage(file.projectID, file.fileID));
   });
   // 只解析不安装：导入确认弹窗展示包信息用
@@ -563,7 +568,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
       existingId: typeof opts?.existingId === 'string' ? opts.existingId : undefined,
       confirmReplace: opts?.confirmReplace === true,
     };
-    const task = registerTask(`导入整合包 ${path.basename(fp)}`, 'modpack');
+    const task = registerTask(t('ipc.task.import_modpack', { name: path.basename(fp) }), 'modpack');
     clean.signal = task.controller.signal;
     const progressGuard = new ProgressEventGuard();
     let lastStage = '';
@@ -580,8 +585,8 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
       })
       .catch((err) => {
         const cancelled = isCancelError(err);
-        const text = cancelled ? '已取消' : errText(err);
-        if (!cancelled) taskEmit({ stage: 'error', progress: 0, text: `整合包安装失败: ${text}` });
+        const text = cancelled ? t('ipc.text.cancelled') : errText(err);
+        if (!cancelled) taskEmit({ stage: 'error', progress: 0, text: t('ipc.task.modpack_failed', { error: text }) });
         send(IPC_EVENT.taskDone, { taskId: task.id, ok: false, error: text, cancelled, stage: lastStage });
         send(IPC_EVENT.installDone, {
           versionId: '',
@@ -599,7 +604,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
   ipcMain.handle(IPC.worldProbe, (_e, inputPath: string) => worlds.probeWorld(String(inputPath ?? '')));
   ipcMain.handle(IPC.worldImport, async (_e, inputPath: string, options: WorldImportOptions) => {
     const source = String(inputPath ?? '');
-    const task = registerTask(`导入存档 ${path.basename(source)}`, 'world');
+    const task = registerTask(t('ipc.task.import_world', { name: path.basename(source) }), 'world');
     const progressGuard = new ProgressEventGuard();
     let lastStage = '';
     const taskEmit = (event: ProgressEvent): void => {
@@ -613,7 +618,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
       return result;
     } catch (error) {
       const cancelled = isCancelError(error);
-      const message = cancelled ? '已取消' : errText(error);
+      const message = cancelled ? t('ipc.text.cancelled') : errText(error);
       if (!cancelled) taskEmit({ stage: 'error', progress: 0, text: message });
       send(IPC_EVENT.taskDone, {
         taskId: task.id,
@@ -641,7 +646,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
   ipcMain.handle(
     IPC.communityDownload,
     async (_e, file: CommunityFile, target: { versionId: string; kind: CommunityKind; folder?: string }) => {
-      const task = registerTask(`下载 ${file.fileName ?? '资源'}`, 'download');
+      const task = registerTask(t('ipc.task.download', { name: file.fileName ?? t('ipc.text.resource') }), 'download');
       const progressGuard = new ProgressEventGuard();
       let lastStage = '';
       const taskEmit = (e: ProgressEvent): void => {
@@ -655,7 +660,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
           target,
           taskEmit,
           (done) => {
-            const cancelled = done.error === '已取消';
+            const cancelled = done.error === t('ipc.text.cancelled');
             send(IPC_EVENT.taskDone, {
               taskId: task.id,
               ok: done.ok,
@@ -683,7 +688,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
         send(IPC_EVENT.taskDone, {
           taskId: task.id,
           ok: false,
-          error: cancelled ? '已取消' : errText(err),
+          error: cancelled ? t('ipc.text.cancelled') : errText(err),
           cancelled,
           stage: lastStage,
         });
@@ -701,13 +706,13 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
     const win = getWin();
     const isWin = process.platform === 'win32';
     const opts = {
-      title: '选择 Java 可执行文件（java.exe / java）',
+      title: t('ipc.dialog.select_java'),
       filters: isWin
         ? [
-            { name: 'Java 可执行文件', extensions: ['exe'] },
-            { name: '所有文件', extensions: ['*'] },
+            { name: t('ipc.filter.java_exe'), extensions: ['exe'] },
+            { name: t('ipc.filter.all_files'), extensions: ['*'] },
           ]
-        : [{ name: '所有文件', extensions: ['*'] }],
+        : [{ name: t('ipc.filter.all_files'), extensions: ['*'] }],
       properties: ['openFile' as const],
     };
     const r = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts);
@@ -717,8 +722,8 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
   });
   ipcMain.handle(IPC.javaHide, (_e, p: string) => java.hideJava(String(p ?? '')));
   ipcMain.handle(IPC.javaRefresh, async (_event, refresh?: boolean) => {
-    if (activeJavaScanTaskId) throw new Error('Java 扫描已在进行中');
-    const task = registerTask('扫描本机 Java', 'java');
+    if (activeJavaScanTaskId) throw new Error(t('ipc.error.java_scan_running'));
+    const task = registerTask(t('ipc.task.scan_java'), 'java');
     activeJavaScanTaskId = task.id;
     const progressGuard = new ProgressEventGuard();
     const taskEmit = (event: ProgressEvent): void => {
@@ -739,7 +744,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
         taskId: task.id,
         ok: false,
         cancelled,
-        error: cancelled ? '已取消' : errText(error),
+        error: cancelled ? t('ipc.text.cancelled') : errText(error),
         stage: 'java-scan',
       });
       throw error;
@@ -770,15 +775,16 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
   // 异步执行；开始发 launching，退出/错误经 event:launchState 推送
   ipcMain.handle(IPC.gameLaunch, (_e, versionId: string, serverAddress?: string, requestedFolder?: string, createCommandWorld = false) => {
     // 多开支持：不再因已有游戏运行而拒绝新启动
-    if (typeof versionId !== 'string' || !versionId.trim()) throw new Error('请选择有效的游戏实例');
+    if (typeof versionId !== 'string' || !versionId.trim()) throw new Error(t('ipc.error.select_instance'));
     const config = settings.getSettings();
     const folder = requestedFolder || config.activeFolder || config.gameDir;
-    if (!config.folders.some((f) => pathIdentity(f.path) === pathIdentity(folder))) throw new Error('目标游戏文件夹未注册');
+    if (!config.folders.some((f) => pathIdentity(f.path) === pathIdentity(folder)))
+      throw new Error(t('ipc.error.target_folder_unregistered'));
     if (!versions.scanInstalledFolder(folder).versions.some((v) => v.id === versionId && !v.failed && !v.incomplete))
-      throw new Error('目标实例不存在或不完整，请刷新版本列表');
-    launcherLogInfo('game', `收到启动请求：version=${String(versionId ?? '')}`);
+      throw new Error(t('ipc.error.target_instance_missing'));
+    launcherLogInfo('game', t('ipc.log.launch_request', { version: String(versionId ?? '') }));
     const launchId = crypto.randomUUID();
-    sendState({ status: 'launching', text: '正在准备启动…', versionId, folder, launchId });
+    sendState({ status: 'launching', text: t('ipc.state.launching'), versionId, folder, launchId });
     void withGameFolder(folder, () =>
       launch
         .launch(
@@ -786,14 +792,14 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
           emit,
           (line) => send(IPC_EVENT.launchLog, line),
           (s) => {
-            if (s.status === 'error') launcherLogError('game', `启动状态异常：${s.text}`);
+            if (s.status === 'error') launcherLogError('game', t('ipc.log.state_error', { text: s.text }));
             else if (s.status === 'exited') {
               const code = s.code ?? 0;
-              if (s.exitKind === 'shutdown-timeout') launcherLogWarn('game', `游戏退出清理超时（code=${code}）：${s.text}`);
+              if (s.exitKind === 'shutdown-timeout') launcherLogWarn('game', t('ipc.log.exit_cleanup_timeout', { code, text: s.text }));
               else if (code === 0 || s.intentionalStop || s.intentionalRestart)
-                launcherLogInfo('game', `游戏已退出（code=${code}）：${s.text}`);
-              else launcherLogWarn('game', `游戏异常退出（code=${code}）：${s.text}`);
-            } else launcherLogInfo('game', `启动状态 ${s.status}：${s.text}`);
+                launcherLogInfo('game', t('ipc.log.game_exited', { code, text: s.text }));
+              else launcherLogWarn('game', t('ipc.log.game_crashed', { code, text: s.text }));
+            } else launcherLogInfo('game', t('ipc.log.state_generic', { status: s.status, text: s.text }));
             sendState({ ...s, versionId, folder, launchId });
             // 设置项生效：游戏成功进入运行状态后关闭启动器窗口
             if (s.status === 'running' && settings.getSettings().closeAfterLaunch) {
@@ -805,7 +811,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
         )
         .catch((err) => {
           launch.recordLaunchPreparationError(String(versionId ?? ''), errText(err));
-          launcherLogError('game', '启动准备失败', err);
+          launcherLogError('game', t('ipc.log.launch_prepare_failed'), err);
           sendState({ status: 'error', text: errText(err), versionId, folder, launchId });
         })
     );
@@ -862,7 +868,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
         loader: null,
         mcRange: '',
         dependencies: [],
-        error: '不支持的文件类型（仅支持 .jar 或包含 .jar 的文件夹）',
+        error: t('ipc.error.unsupported_file_type'),
       });
     }
     return list;
@@ -887,7 +893,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
     planModMigration(sourceId, folder, mc, loader)
   );
   ipcMain.handle(IPC.modsMigrationApply, (_e, planId: string, confirmed: boolean) => {
-    const task = registerTask('版本迁移', 'version');
+    const task = registerTask(t('ipc.task.version_migration'), 'version');
     void applyModMigration(planId, confirmed, (e) => emit({ ...e, taskId: task.id, taskTitle: task.title }), task.controller.signal)
       .then((r) => {
         send(IPC_EVENT.taskDone, { taskId: task.id, ok: true });
@@ -925,8 +931,8 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
     const win = getWin();
     const opts = {
       properties: ['openFile' as const],
-      title: '选择插件（.js 文件）',
-      filters: [{ name: 'FAIONYX 插件', extensions: ['js'] }],
+      title: t('ipc.dialog.select_plugin'),
+      filters: [{ name: t('ipc.filter.faionyx_plugin'), extensions: ['js', 'zip'] }],
     };
     const r = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts);
     if (r.canceled || !r.filePaths[0]) return plugins.listPlugins();
@@ -952,9 +958,9 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
   ipcMain.handle(IPC.defaultPacksImport, (_e, files: string[]) => defaultPacks.importDefaultResourcePacks(files));
   ipcMain.handle(IPC.defaultPacksPick, async () => {
     const picked = await dialog.showOpenDialog(getWin()!, {
-      title: '添加默认材质包',
+      title: t('ipc.dialog.add_default_packs'),
       properties: ['openFile', 'multiSelections'],
-      filters: [{ name: 'Minecraft 材质包', extensions: ['zip'] }],
+      filters: [{ name: t('ipc.filter.minecraft_packs'), extensions: ['zip'] }],
     });
     return picked.canceled ? defaultPacks.getDefaultResourcePacks() : defaultPacks.importDefaultResourcePacks(picked.filePaths);
   });
@@ -988,10 +994,10 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
     const win = getWin();
     const opts = {
       properties: ['openFile' as const],
-      title: '选择 FAIONYX 安装包',
+      title: t('ipc.dialog.select_installer'),
       filters: [
         {
-          name: 'FAIONYX 安装包',
+          name: t('ipc.filter.faionyx_installer'),
           extensions: process.platform === 'linux' ? ['AppImage', 'deb', 'gz'] : [process.platform === 'darwin' ? 'zip' : 'exe'],
         },
       ],
@@ -1039,7 +1045,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
     IPC.modsPrepare,
     async (_e, ref: { id: string; folder: string }, input: { paths?: string[]; file?: CommunityFile }, operationId?: string) => {
       const target = selectModTarget(modTargets().versions, ref.id, ref.folder);
-      const task = registerTask(`准备 MOD ${input.file?.fileName || '本地文件'}（尚未安装）`, 'download');
+      const task = registerTask(t('ipc.task.prepare_mod', { name: input.file?.fileName || t('ipc.text.local_file') }), 'download');
       const progressGuard = new ProgressEventGuard();
       let lastStage = 'mod-prepare';
       const taskEmit = (event: ProgressEvent) => {
@@ -1051,7 +1057,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
           ...(typeof operationId === 'string' && /^[a-zA-Z0-9:_-]{1,96}$/.test(operationId) ? { operationId } : {}),
         });
       };
-      taskEmit({ stage: 'mod-prepare', progress: 0, indeterminate: true, text: '读取 MOD 来源及兼容性，准备下载（尚未安装）…' });
+      taskEmit({ stage: 'mod-prepare', progress: 0, indeterminate: true, text: t('ipc.task.mod_prepare_stage') });
       try {
         const plan = await community.withCommunitySignal(task.controller.signal, () =>
           prepareModInstall(target, input, taskEmit, task.controller.signal)
@@ -1060,7 +1066,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
         return plan;
       } catch (error) {
         const cancelled = isCancelError(error);
-        if (!cancelled) taskEmit({ stage: 'error', progress: 0, text: `MOD 准备失败：${errText(error)}` });
+        if (!cancelled) taskEmit({ stage: 'error', progress: 0, text: t('ipc.task.mod_prepare_failed', { error: errText(error) }) });
         send(IPC_EVENT.taskDone, { taskId: task.id, ok: false, error: errText(error), cancelled, stage: lastStage });
         throw error;
       } finally {
@@ -1070,7 +1076,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
   );
   ipcMain.handle(IPC.modsDiscard, (_e, id: string) => discardModPlan(String(id)));
   ipcMain.handle(IPC.modsCommit, async (_e, id: string, includeDependencies: boolean, operationId?: string) => {
-    const task = registerTask('安装 MOD 与前置依赖', 'download');
+    const task = registerTask(t('ipc.task.install_mod'), 'download');
     const progressGuard = new ProgressEventGuard();
     let lastStage = 'mod-verify';
     const taskEmit = (event: ProgressEvent) => {
@@ -1082,14 +1088,14 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
         ...(typeof operationId === 'string' && /^[a-zA-Z0-9:_-]{1,96}$/.test(operationId) ? { operationId } : {}),
       });
     };
-    taskEmit({ stage: 'mod-verify', progress: 0, indeterminate: true, text: '准备下载前置及校验 MOD…' });
+    taskEmit({ stage: 'mod-verify', progress: 0, indeterminate: true, text: t('ipc.task.mod_verify_stage') });
     try {
       const result = await executeModPlan(
         id,
         includeDependencies === true,
         (ref) => {
           // 多开时代：仅禁止向正在运行的目标实例装 MOD
-          if (launch.getRunningVersionIds().has(ref.id)) throw new Error('目标实例正在运行，未安装任何 MOD；请退出该游戏后重试');
+          if (launch.getRunningVersionIds().has(ref.id)) throw new Error(t('ipc.error.mod_target_running'));
           return selectModTarget(modTargets().versions, ref.id, ref.folder!);
         },
         taskEmit,
@@ -1099,7 +1105,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
       return result;
     } catch (error) {
       const cancelled = isCancelError(error);
-      if (!cancelled) taskEmit({ stage: 'error', progress: 0, text: `MOD 安装失败：${errText(error)}` });
+      if (!cancelled) taskEmit({ stage: 'error', progress: 0, text: t('ipc.task.mod_install_failed', { error: errText(error) }) });
       send(IPC_EVENT.taskDone, { taskId: task.id, ok: false, error: errText(error), cancelled, stage: lastStage });
       throw error;
     } finally {
@@ -1121,12 +1127,12 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
     const parts = String(rel ?? '')
       .split(/[\\/]+/)
       .filter((s) => s && s !== '.');
-    if (parts.some((s) => s === '..')) throw new Error('非法目录');
+    if (parts.some((s) => s === '..')) throw new Error(t('ipc.error.illegal_path'));
     const isVersionPath = parts[0] === 'versions';
-    if (parts.length > (isVersionPath ? 3 : 2)) throw new Error('非法目录');
+    if (parts.length > (isVersionPath ? 3 : 2)) throw new Error(t('ipc.error.illegal_path'));
     // versions/<id> 前缀按版本所属文件夹寻址（多文件夹体系）；其余按当前活动文件夹
     if (folder && !settings.getSettings().folders.some((f) => pathIdentity(f.path) === pathIdentity(folder)))
-      throw new Error('游戏文件夹未登记');
+      throw new Error(t('ipc.error.folder_unregistered_plain'));
     const base =
       folder ||
       (isVersionPath && parts.length >= 2
@@ -1136,7 +1142,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
       return resolveResourceDirectory(base, parts[1], parts[2]);
     }
     const dir = parts.length ? path.join(base, ...parts) : base;
-    if (!path.resolve(dir).startsWith(path.resolve(base))) throw new Error('非法目录');
+    if (!path.resolve(dir).startsWith(path.resolve(base))) throw new Error(t('ipc.error.illegal_path'));
     return dir;
   };
   const listDir = async (rel: string, folder?: string): Promise<FsEntry[]> => listResourceEntries(await safeDir(rel, folder));
@@ -1144,8 +1150,8 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
     if (event.sender !== getWin()?.webContents) return;
     try {
       if (typeof rel !== 'string' || !/^versions\/[^/\\]+\/(mods|resourcepacks|shaderpacks)$/.test(rel))
-        throw new Error('不支持拖出该目录');
-      if (typeof folder !== 'string' || !folder) throw new Error('未指定游戏文件夹');
+        throw new Error(t('ipc.error.drag_out_unsupported'));
+      if (typeof folder !== 'string' || !folder) throw new Error(t('ipc.error.folder_not_specified'));
       const [, id, kind] = rel.split('/');
       startNativeFileDrag(event.sender, dragResourceFilesSync(path.join(centerTarget({ folder, id }).dir, kind), names));
     } catch (e) {
@@ -1168,7 +1174,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
       (parts.length === 1 || (parts.length === 3 && parts[0] === 'versions')) &&
       ['mods', 'resourcepacks', 'shaderpacks'].includes(parts[parts.length - 1])
     ))
-      throw new Error('不支持删除该目录中的文件');
+      throw new Error(t('ipc.error.delete_unsupported'));
     await withRecycleJob(dir, undefined, async () => {
       const { assertInstanceIdle } = await import('./core/instanceCenter');
       await assertInstanceIdle(path.dirname(dir));
@@ -1193,7 +1199,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
           .filter((v) => !v.isolated)
           .map((v) => v.id);
     if (affected.some((id) => running.has(id))) {
-      throw new Error('该实例正在运行中，请先退出游戏再禁用/启用模组');
+      throw new Error(t('ipc.error.instance_running_mod'));
     }
     const dir = await safeDir(relStr, folder);
     const base = path.basename(String(name ?? ''));
@@ -1202,9 +1208,9 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
     let to: string;
     if (lower.endsWith('.jar.disabled')) to = path.join(dir, base.slice(0, -'.disabled'.length));
     else if (lower.endsWith('.jar')) to = path.join(dir, `${base}.disabled`);
-    else throw new Error('仅支持禁用 .jar 模组文件');
-    if (!fs.existsSync(from)) throw new Error('文件不存在，请刷新后重试');
-    if (fs.existsSync(to)) throw new Error('目标文件名已存在，请手动处理后重试');
+    else throw new Error(t('ipc.error.only_jar_disable'));
+    if (!fs.existsSync(from)) throw new Error(t('ipc.error.file_missing'));
+    if (fs.existsSync(to)) throw new Error(t('ipc.error.target_exists'));
     fs.renameSync(from, to);
     return listDir(relStr, folder);
   });

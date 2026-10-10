@@ -28,6 +28,7 @@ import { safePath, type BackupProgress } from './backupStore';
 import { withFileJob } from './fileJobs';
 import { redactDiagnosticText } from './diagnostics';
 import { selectDiagnosticSession } from './diagnosticSession';
+import { translate as t } from '../../shared/i18n';
 const plans = new Map<string, { target: InstanceTarget; files: LaunchArtifact[]; metadata: string; time: number }>();
 async function tail(file: string) {
   const stat = await fs.promises.stat(file);
@@ -59,10 +60,10 @@ export async function diagnoseInstance(
       signal?.throwIfAborted();
       findings.push({
         rule: 'java-requirement',
-        title: '无法确认 Java 需求',
+        title: t('instdiag.rule.java_requirement_title'),
         confidence: 'unknown',
         evidence: redactDiagnosticText(String(error)),
-        advice: '补全官方游戏版本元数据，或检查模组声明的 Java 需求。',
+        advice: t('instdiag.rule.java_requirement_advice'),
         action: 'java',
       });
     }
@@ -84,17 +85,17 @@ export async function diagnoseInstance(
     if (configured && !fs.existsSync(configured))
       findings.push({
         rule: 'java-missing',
-        title: '指定的 Java 已不存在',
+        title: t('instdiag.rule.java_missing_title'),
         confidence: 'certain',
         evidence: redactDiagnosticText(configured),
-        advice: need ? `为本实例选择 Java ${need}。` : '重新选择有效的 Java 路径。',
+        advice: need ? t('instdiag.rule.java_missing_advice_version', { version: need }) : t('instdiag.rule.java_missing_advice_generic'),
         action: 'java',
       });
     else if (configured && requirement) {
       try {
         const exe = await resolveJavaExecutable(configured, signal),
           selected = await probeJavaAsync(exe, signal);
-        if (!selected) throw new Error('Java 无法正常运行');
+        if (!selected) throw new Error(t('launch.error.java_unusable'));
         const error = javaCompatibilityError(selected, requirement, arch);
         if (error) throw new Error(error);
         await validateCandidateJava(selected, signal);
@@ -102,20 +103,20 @@ export async function diagnoseInstance(
         signal?.throwIfAborted();
         findings.push({
           rule: 'java-selection',
-          title: '指定 Java 与实例需求不一致',
+          title: t('instdiag.rule.java_selection_title'),
           confidence: 'certain',
           evidence: redactDiagnosticText(String(error)),
-          advice: '选择满足游戏、加载器与模组要求的完整 Java，或开启自动管理。',
+          advice: t('instdiag.rule.java_selection_advice'),
           action: 'java',
         });
       }
     } else if (requirement && !java.length)
       findings.push({
         rule: 'java-unavailable',
-        title: '未发现已登记的兼容 Java',
+        title: t('instdiag.rule.java_unavailable_title'),
         confidence: 'possible',
-        evidence: `实例推荐：Java ${need}（64 位${arch ? '，' + arch : ''}）`,
-        advice: '在 Java 管理中扫描或安装适配运行时；自动管理将准备推荐版本。',
+        evidence: t('instdiag.rule.java_unavailable_evidence', { version: need ?? '', arch: arch ? '，' + arch : '' }),
+        advice: t('instdiag.rule.java_unavailable_advice'),
         action: 'java',
       });
     const files: LaunchArtifact[] = [client, ...launchLibraryFiles(merged)];
@@ -131,17 +132,17 @@ export async function diagnoseInstance(
         if (findings.filter((f) => f.rule === 'files').length < 10)
           findings.push({
             rule: 'files',
-            title: '运行文件缺失或损坏',
+            title: t('instdiag.rule.files_title'),
             confidence: 'certain',
             evidence: path.basename(file.dest) + '：' + reason,
-            advice: file.url ? '校验并修复运行文件。' : '元数据缺少下载地址，请重新安装对应加载器。',
+            advice: file.url ? t('instdiag.rule.files_advice_repair') : t('instdiag.rule.files_advice_no_url'),
             action: file.url ? 'files' : undefined,
           });
       }
     }
     for (let i = 0; i < files.length; i++) {
       await check(files[i]);
-      progress?.(i + 1, files.length, '检查运行文件');
+      progress?.(i + 1, files.length, t('instdiag.progress.check_files'));
     }
     if (asset && !bad.some((f) => f.dest.endsWith('/' + asset.id + '.json') || path.basename(f.dest) === asset.id + '.json')) {
       try {
@@ -156,7 +157,7 @@ export async function diagnoseInstance(
             size: o.size,
             url: 'https://resources.download.minecraft.net/' + o.hash.slice(0, 2) + '/' + o.hash,
           });
-          if (i % 64 === 0) progress?.(i, objects.length, '检查语言与声音资源');
+          if (i % 64 === 0) progress?.(i, objects.length, t('instdiag.progress.check_assets'));
         }
       } catch (e) {
         if (signal?.aborted) throw e;
@@ -187,10 +188,10 @@ export async function diagnoseInstance(
     } else
       findings.push({
         rule: 'no-session',
-        title: '暂无该实例的启动日志',
+        title: t('instdiag.rule.no_session_title'),
         confidence: 'unknown',
-        evidence: '只展示本次环境检查结果，未读取其他实例或旧目录的日志。',
-        advice: '下次通过 FAIONYX 启动失败后可查看对应会话原因。',
+        evidence: t('instdiag.rule.no_session_evidence'),
+        advice: t('instdiag.rule.no_session_advice'),
       });
     if (findings.some((f) => f.action === 'mods'))
       try {
@@ -213,11 +214,11 @@ export async function diagnoseInstance(
 }
 export async function repairInstanceFiles(planId: string, signal?: AbortSignal, progress?: BackupProgress) {
   const p = plans.get(planId);
-  if (!p || Date.now() - p.time > 30 * 60 * 1000) throw new Error('检查结果已过期，请重新检查');
+  if (!p || Date.now() - p.time > 30 * 60 * 1000) throw new Error(t('instdiag.error.plan_expired'));
   const c = centerTarget(p.target);
   await assertInstanceIdle(c.dir);
   return withGameFolder(c.folder, async () => {
-    if (JSON.stringify(resolveVersionChain(p.target.id).merged) !== p.metadata) throw new Error('实例版本配置已变化，请重新检查');
+    if (JSON.stringify(resolveVersionChain(p.target.id).merged) !== p.metadata) throw new Error(t('instdiag.error.version_changed'));
     let done = 0;
     for (const f of p.files) {
       signal?.throwIfAborted();
@@ -227,10 +228,10 @@ export async function repairInstanceFiles(planId: string, signal?: AbortSignal, 
         const rel = path.relative(r, f.dest);
         return rel && !rel.startsWith('..') && !path.isAbsolute(rel);
       });
-      if (!root) throw new Error('修复路径超出游戏目录');
+      if (!root) throw new Error(t('instdiag.error.repair_outside_gamedir'));
       await safePath(root, path.relative(root, f.dest).split(path.sep).join('/'), true);
       await withFileJob(f.dest, signal, () => ensureLaunchArtifact(f, getSettings().mirror, undefined, signal));
-      progress?.(++done, p.files.length, `修复文件 ${done}/${p.files.length}`);
+      progress?.(++done, p.files.length, t('instdiag.progress.repair_files', { done, total: p.files.length }));
     }
     plans.delete(planId);
     return done;

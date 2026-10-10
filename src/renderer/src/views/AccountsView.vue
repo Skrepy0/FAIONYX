@@ -21,14 +21,17 @@ import {
   selectAccount,
 } from '../api';
 import { refreshAccounts, store, toast } from '../store';
+import { t } from '@renderer/i18n';
 import Avatar from '../components/Avatar.vue';
+
 const credentialNotice = ref('');
 const credentialsPersistent = ref<boolean | null>(null);
 const securityNote = computed(() => {
-  const password = '密码只用于本次认证请求，不会保存。';
-  if (credentialsPersistent.value === true) return password + '登录令牌由当前系统的安全存储加密保存。';
-  return password + (credentialNotice.value || '正在检查当前系统的安全存储状态。');
+  const password = t('accounts.security.password_note');
+  if (credentialsPersistent.value === true) return password + t('accounts.security.token_persistent');
+  return password + (credentialNotice.value || t('accounts.security.storage_checking'));
 });
+
 import type {
   Account,
   MsDeviceCodeInfo,
@@ -47,14 +50,14 @@ const adding = ref(false);
 const NAME_RE = /^[A-Za-z0-9_]{3,16}$/;
 const nameError = computed(() => {
   if (!newName.value) return '';
-  if (!NAME_RE.test(newName.value)) return '用户名需为 3-16 位字母、数字或下划线';
+  if (!NAME_RE.test(newName.value)) return t('accounts.offline.name_invalid');
   return '';
 });
 
 async function onAddOffline() {
   const name = newName.value.trim();
   if (!NAME_RE.test(name)) {
-    toast('用户名需为 3-16 位字母、数字或下划线', 'error');
+    toast(t('accounts.offline.name_invalid'), 'error');
     return;
   }
   adding.value = true;
@@ -62,9 +65,9 @@ async function onAddOffline() {
     await addOfflineAccount(name);
     await refreshAccounts();
     newName.value = '';
-    toast(`已添加离线账号 ${name}`, 'success');
+    toast(t('accounts.toast.offline.added', { name }), 'success');
   } catch (e) {
-    toast('添加失败：' + errText(e), 'error');
+    toast(t('accounts.toast.offline.add_failed', { e: errText(e) }), 'error');
   } finally {
     adding.value = false;
   }
@@ -92,7 +95,7 @@ async function beginMsLogin() {
       ms.autoCopied = await copyText(ms.info.userCode);
     }
   } catch (e) {
-    toast('无法开始微软登录：' + errText(e), 'error');
+    toast(t('accounts.toast.ms.start_failed', { e: errText(e) }), 'error');
   } finally {
     ms.starting = false;
   }
@@ -111,7 +114,7 @@ async function cancelMsLogin() {
 async function copyCode() {
   if (!ms.info) return;
   const ok = await copyText(ms.info.userCode);
-  toast(ok ? '已复制验证码' : '复制失败，请手动复制', ok ? 'success' : 'error');
+  toast(ok ? t('accounts.toast.ms.code_copied') : t('accounts.toast.ms.code_copy_failed'), ok ? 'success' : 'error');
 }
 
 function openVerifyPage() {
@@ -158,7 +161,7 @@ async function loadProviders() {
       yggLogin.providerId = providers.value[0]?.id ?? '';
     }
   } catch (e) {
-    toast('读取外置登录提供商失败：' + errText(e), 'error');
+    toast(t('accounts.toast.provider.load_failed', { e: errText(e) }), 'error');
   }
 }
 
@@ -201,7 +204,7 @@ async function confirmProvider() {
   const candidate = providerModal.candidate;
   if (!candidate || providerModal.saving) return;
   if (candidate.insecure && !providerModal.allowInsecure) {
-    providerModal.error = '必须主动确认明文 HTTP 风险后才能保存';
+    providerModal.error = t('accounts.provider.modal.insecure_need_confirm');
     return;
   }
   providerModal.saving = true;
@@ -209,7 +212,7 @@ async function confirmProvider() {
     providers.value = await saveYggdrasilProvider(candidate, providerModal.allowInsecure);
     yggLogin.providerId = candidate.id;
     providerModal.open = false;
-    toast(`已保存外置登录提供商 ${candidate.name}`, 'success');
+    toast(t('accounts.toast.provider.saved', { name: candidate.name }), 'success');
   } catch (e) {
     providerModal.error = errText(e);
   } finally {
@@ -223,9 +226,9 @@ async function onRemoveProvider(provider: YggdrasilProvider) {
   try {
     providers.value = await removeYggdrasilProvider(provider.id);
     if (yggLogin.providerId === provider.id) yggLogin.providerId = providers.value[0]?.id ?? '';
-    toast(`已删除提供商 ${provider.name}`, 'success');
+    toast(t('accounts.toast.provider.removed', { name: provider.name }), 'success');
   } catch (e) {
-    toast('删除提供商失败：' + errText(e), 'error');
+    toast(t('accounts.toast.provider.remove_failed', { e: errText(e) }), 'error');
   } finally {
     removingProviderId.value = null;
   }
@@ -236,9 +239,16 @@ async function checkYggdrasilRuntime() {
   checkingRuntime.value = true;
   try {
     const runtime = await prepareYggdrasilRuntime();
-    toast(`authlib-injector ${runtime.version}（构建 ${runtime.buildNumber}）校验通过 · ${runtime.sha256.slice(0, 12)}…`, 'success');
+    toast(
+      t('accounts.toast.runtime.ok', {
+        version: runtime.version,
+        build: String(runtime.buildNumber),
+        hash: runtime.sha256.slice(0, 12),
+      }),
+      'success'
+    );
   } catch (e) {
-    toast('外置登录运行组件准备失败：' + errText(e), 'error');
+    toast(t('accounts.toast.runtime.failed', { e: errText(e) }), 'error');
   } finally {
     checkingRuntime.value = false;
   }
@@ -258,24 +268,24 @@ async function finishYggLogin(result: YggdrasilLoginResult) {
   }
   yggLogin.password = '';
   await refreshAccounts();
-  toast(`外置登录成功，欢迎 ${result.account.username}`, 'success');
+  toast(t('accounts.toast.ygg.success', { name: result.account.username }), 'success');
 }
 
 async function onYggLogin() {
   if (yggLogin.busy) return;
   if (!yggLogin.providerId) {
-    toast('请先添加并选择认证提供商', 'error');
+    toast(t('accounts.ygg.need_provider'), 'error');
     return;
   }
   if (!yggLogin.identifier.trim() || !yggLogin.password) {
-    toast('请输入账号和密码', 'error');
+    toast(t('accounts.ygg.need_credentials'), 'error');
     return;
   }
   yggLogin.busy = true;
   try {
     await finishYggLogin(await loginYggdrasil(yggLogin.providerId, yggLogin.identifier, yggLogin.password));
   } catch (e) {
-    toast('外置登录失败：' + errText(e), 'error');
+    toast(t('accounts.toast.ygg.failed', { e: errText(e) }), 'error');
   } finally {
     yggLogin.busy = false;
   }
@@ -289,9 +299,9 @@ async function confirmProfile() {
     profileModal.open = false;
     yggLogin.password = '';
     await refreshAccounts();
-    toast(`已选择角色 ${account.username}`, 'success');
+    toast(t('accounts.toast.profile.selected', { name: account.username }), 'success');
   } catch (e) {
-    toast('角色选择失败：' + errText(e), 'error');
+    toast(t('accounts.toast.profile.select_failed', { e: errText(e) }), 'error');
   } finally {
     profileModal.busy = false;
   }
@@ -303,28 +313,32 @@ async function onRefreshAccount(account: Account) {
   try {
     await refreshAccount(account.id);
     await refreshAccounts();
-    toast(`${account.username} 的会话有效`, 'success');
+    toast(t('accounts.toast.account.refreshed', { name: account.username }), 'success');
   } catch (e) {
-    toast('会话刷新失败：' + errText(e), 'error');
+    toast(t('accounts.toast.account.refresh_failed', { e: errText(e) }), 'error');
   } finally {
     refreshingId.value = null;
   }
 }
 
 function accountTypeLabel(account: Account): string {
-  if (account.type === 'microsoft') return '微软正版';
-  if (account.type === 'yggdrasil') return `外置 · ${account.providerName ?? '未知提供商'}`;
-  return '离线';
+  if (account.type === 'microsoft') return t('accounts.type.microsoft');
+  if (account.type === 'yggdrasil') {
+    return t('accounts.type.yggdrasil', {
+      provider: account.providerName ?? t('accounts.type.yggdrasil.unknown'),
+    });
+  }
+  return t('accounts.type.offline');
 }
 
 onMounted(() => {
   void getSystemInfo()
     .then((info) => {
       credentialsPersistent.value = info.credentialStorage?.persistent ?? null;
-      credentialNotice.value = info.credentialStorage?.message ?? '无法确认当前系统的安全存储状态。';
+      credentialNotice.value = info.credentialStorage?.message ?? t('accounts.security.storage_unknown');
     })
     .catch(() => {
-      credentialNotice.value = '无法获取当前系统的安全存储状态。';
+      credentialNotice.value = t('accounts.security.storage_fetch_failed');
     });
   void loadProviders();
   store.yggdrasilImportHandler = openProviderImport;
@@ -341,12 +355,12 @@ onMounted(() => {
     const account = result?.account ?? null;
     if (account) {
       await refreshAccounts();
-      toast(`登录成功，欢迎 ${account.username}`, 'success');
+      toast(t('accounts.toast.ms.success', { name: account.username }), 'success');
     } else if (result?.error) {
       // 具体失败步骤与原因（设备码/轮询/XBL/XSTS/MC 登录/拥有权/档案），可被查日志诊断
-      toast(`微软登录失败：${result.error}`, 'error');
+      toast(t('accounts.toast.ms.failed', { e: result.error }), 'error');
     } else {
-      toast('微软登录已取消', 'info');
+      toast(t('accounts.toast.ms.cancelled'), 'info');
     }
   });
 });
@@ -367,7 +381,7 @@ async function onSelect(acc: Account) {
   try {
     store.selectedAccount = await selectAccount(acc.id);
   } catch (e) {
-    toast('切换账号失败：' + errText(e), 'error');
+    toast(t('accounts.toast.account.select_failed', { e: errText(e) }), 'error');
   } finally {
     selectingId.value = null;
   }
@@ -380,9 +394,9 @@ async function onRemove(acc: Account) {
     if (store.selectedAccount?.id === acc.id) {
       store.selectedAccount = await getSelectedAccount();
     }
-    toast(`已删除账号 ${acc.username}`, 'success');
+    toast(t('accounts.toast.account.removed', { name: acc.username }), 'success');
   } catch (e) {
-    toast('删除失败：' + errText(e), 'error');
+    toast(t('accounts.toast.account.remove_failed', { e: errText(e) }), 'error');
   } finally {
     removingId.value = null;
   }
@@ -398,33 +412,39 @@ async function onRemove(acc: Account) {
           <path d="M19 12H5" />
           <path d="m12 19-7-7 7-7" />
         </svg>
-        返回首页
+        {{ t('accounts.back_home') }}
       </button>
       <div class="page-head">
-        <h1 class="page-title">账号</h1>
-        <p class="page-sub">管理微软正版、离线与外置 Yggdrasil 账号</p>
+        <h1 class="page-title">{{ t('accounts.title') }}</h1>
+        <p class="page-sub">{{ t('accounts.subtitle') }}</p>
       </div>
     </div>
 
     <p v-if="credentialNotice" class="muted" role="status">{{ credentialNotice }}</p>
     <!-- 添加账号 -->
     <div class="card">
-      <h3 class="section-title">添加账号</h3>
-      <div class="account-type-tabs" role="tablist" aria-label="账号类型">
-        <button :class="{ active: accountMode === 'microsoft' }" @click="accountMode = 'microsoft'">Microsoft 正版登录</button>
-        <button :class="{ active: accountMode === 'offline' }" @click="accountMode = 'offline'">离线登录</button>
-        <button :class="{ active: accountMode === 'yggdrasil' }" @click="accountMode = 'yggdrasil'">外置 Yggdrasil 登录</button>
+      <h3 class="section-title">{{ t('accounts.add.title') }}</h3>
+      <div class="account-type-tabs" role="tablist" :aria-label="t('accounts.tabs.aria')">
+        <button :class="{ active: accountMode === 'microsoft' }" @click="accountMode = 'microsoft'">
+          {{ t('accounts.tabs.microsoft') }}
+        </button>
+        <button :class="{ active: accountMode === 'offline' }" @click="accountMode = 'offline'">
+          {{ t('accounts.tabs.offline') }}
+        </button>
+        <button :class="{ active: accountMode === 'yggdrasil' }" @click="accountMode = 'yggdrasil'">
+          {{ t('accounts.tabs.yggdrasil') }}
+        </button>
       </div>
 
       <div v-if="accountMode === 'microsoft'" class="account-mode-panel">
-        <p class="muted mode-description">通过微软设备代码完成正版授权，FAIONYX 不会接触你的微软密码。</p>
-        <p class="muted">SSL 证书验证已启用：校验证书链、域名及有效期，证书异常时终止登录。</p>
+        <p class="muted mode-description">{{ t('accounts.ms.desc') }}</p>
+        <p class="muted">{{ t('accounts.ms.ssl_desc') }}</p>
         <button class="btn btn-gold ms-btn" :disabled="ms.starting" @click="beginMsLogin">
           <span v-if="ms.starting" class="spin"></span>
           <svg v-else viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
             <path d="M3 3h8.5v8.5H3zM12.5 3H21v8.5h-8.5zM3 12.5h8.5V21H3zM12.5 12.5H21V21h-8.5z" />
           </svg>
-          {{ ms.starting ? '正在获取登录码…' : '开始微软登录' }}
+          {{ ms.starting ? t('accounts.ms.starting') : t('accounts.ms.begin') }}
         </button>
       </div>
 
@@ -434,64 +454,67 @@ async function onRemove(acc: Account) {
             v-model="newName"
             class="input"
             :class="{ 'input-error': nameError }"
-            placeholder="离线账号用户名（3-16 位字母数字下划线）"
+            :placeholder="t('accounts.offline.placeholder')"
             maxlength="16"
             @keyup.enter="onAddOffline"
           />
           <p v-if="nameError" class="field-error">{{ nameError }}</p>
         </div>
         <button class="btn btn-gold add-btn" :disabled="adding || !newName || !!nameError" @click="onAddOffline">
-          {{ adding ? '添加中…' : '添加离线账号' }}
+          {{ adding ? t('accounts.offline.adding') : t('accounts.offline.add') }}
         </button>
       </div>
 
       <div v-else class="account-mode-panel ygg-panel">
         <div class="provider-head">
           <div>
-            <strong>认证提供商</strong>
-            <p class="muted mode-description">可输入 API Root，或把皮肤站卡片、URL、JSON/TXT 配置拖到窗口。</p>
+            <strong>{{ t('accounts.ygg.provider.title') }}</strong>
+            <p class="muted mode-description">{{ t('accounts.ygg.provider.desc') }}</p>
           </div>
           <div class="provider-head-actions">
             <button class="btn btn-ghost btn-sm" :disabled="checkingRuntime" @click="checkYggdrasilRuntime">
-              {{ checkingRuntime ? '校验中…' : '检查运行组件' }}
+              {{ checkingRuntime ? t('accounts.ygg.provider.checking') : t('accounts.ygg.provider.check_runtime') }}
             </button>
-            <button class="btn btn-ghost btn-sm" @click="openProviderImport()">添加提供商</button>
+            <button class="btn btn-ghost btn-sm" @click="openProviderImport()">{{ t('accounts.ygg.provider.add') }}</button>
           </div>
         </div>
         <div v-if="providers.length" class="provider-list">
           <div v-for="provider in providers" :key="provider.id" class="provider-item">
             <div>
               <strong>{{ provider.name }}</strong>
-              <span v-if="provider.insecure" class="tag tag-danger">HTTP 不安全</span>
+              <span v-if="provider.insecure" class="tag tag-danger">{{ t('accounts.ygg.provider.insecure_tag') }}</span>
               <p class="muted provider-url" :title="provider.apiRoot">{{ provider.apiRoot }}</p>
             </div>
             <button class="btn btn-danger btn-sm" :disabled="removingProviderId === provider.id" @click="onRemoveProvider(provider)">
-              删除
+              {{ t('accounts.ygg.provider.remove') }}
             </button>
           </div>
         </div>
-        <div v-else class="provider-empty">尚未添加提供商。可直接输入 <code>littleskin.cn</code> 后探测。</div>
+        <div v-else class="provider-empty">
+          {{ t('accounts.ygg.provider.empty_before') }}<code>{{ t('accounts.ygg.provider.empty_code') }}</code
+          >{{ t('accounts.ygg.provider.empty_after') }}
+        </div>
 
         <div class="ygg-login-grid">
           <label>
-            <span>提供商</span>
+            <span>{{ t('accounts.ygg.label.provider') }}</span>
             <select v-model="yggLogin.providerId" class="select">
-              <option value="" disabled>请选择提供商</option>
+              <option value="" disabled>{{ t('accounts.ygg.label.provider_placeholder') }}</option>
               <option v-for="provider in providers" :key="provider.id" :value="provider.id">
                 {{ provider.name }}
               </option>
             </select>
           </label>
           <label>
-            <span>账号或邮箱</span>
+            <span>{{ t('accounts.ygg.label.identifier') }}</span>
             <input v-model="yggLogin.identifier" class="input" autocomplete="username" />
           </label>
           <label>
-            <span>密码</span>
+            <span>{{ t('accounts.ygg.label.password') }}</span>
             <input v-model="yggLogin.password" class="input" type="password" autocomplete="current-password" @keyup.enter="onYggLogin" />
           </label>
           <button class="btn btn-gold ygg-login-btn" :disabled="yggLogin.busy || !providers.length" @click="onYggLogin">
-            {{ yggLogin.busy ? '正在认证…' : '登录' }}
+            {{ yggLogin.busy ? t('accounts.ygg.logging_in') : t('accounts.ygg.login') }}
           </button>
         </div>
         <p class="security-note">{{ securityNote }}</p>
@@ -500,9 +523,9 @@ async function onRemove(acc: Account) {
 
     <!-- 账号列表 -->
     <div class="card">
-      <h3 class="section-title">我的账号（{{ store.accounts.length }}）</h3>
+      <h3 class="section-title">{{ t('accounts.list.title', { count: String(store.accounts.length) }) }}</h3>
       <div v-if="!store.accounts.length" class="empty list-empty">
-        <span>还没有账号，先添加一个离线账号或登录微软账号吧</span>
+        <span>{{ t('accounts.list.empty') }}</span>
       </div>
       <div v-else class="account-list">
         <div
@@ -522,7 +545,7 @@ async function onRemove(acc: Account) {
             </div>
             <span class="muted uuid">{{ acc.uuid.slice(0, 8) }}</span>
           </div>
-          <span v-if="store.selectedAccount?.id === acc.id" class="selected-badge">使用中</span>
+          <span v-if="store.selectedAccount?.id === acc.id" class="selected-badge">{{ t('accounts.list.using') }}</span>
           <span v-else-if="selectingId === acc.id" class="spin"></span>
           <button
             v-if="acc.type === 'yggdrasil'"
@@ -530,10 +553,10 @@ async function onRemove(acc: Account) {
             :disabled="refreshingId === acc.id"
             @click.stop="onRefreshAccount(acc)"
           >
-            {{ refreshingId === acc.id ? '验证中…' : '验证会话' }}
+            {{ refreshingId === acc.id ? t('accounts.list.verifying') : t('accounts.list.verify_session') }}
           </button>
           <button class="btn btn-danger btn-sm remove-btn" :disabled="removingId === acc.id" @click.stop="onRemove(acc)">
-            {{ removingId === acc.id ? '删除中…' : '删除' }}
+            {{ removingId === acc.id ? t('accounts.list.removing') : t('accounts.list.remove') }}
           </button>
         </div>
       </div>
@@ -543,10 +566,10 @@ async function onRemove(acc: Account) {
     <Teleport to="body">
       <div v-if="ms.open" class="modal-mask">
         <div class="modal ms-modal">
-          <h3 class="modal-title">微软账号登录</h3>
-          <p class="muted ms-tip">请在浏览器中打开验证地址，输入下方代码完成授权。登录成功后本窗口会自动关闭。</p>
+          <h3 class="modal-title">{{ t('accounts.ms.modal.title') }}</h3>
+          <p class="muted ms-tip">{{ t('accounts.ms.modal.tip') }}</p>
 
-          <button class="user-code" title="点击复制" @click="copyCode">
+          <button class="user-code" :title="t('accounts.ms.modal.click_to_copy')" @click="copyCode">
             {{ ms.info?.userCode }}
           </button>
           <p v-if="ms.autoCopied" class="copy-hint copied">
@@ -562,22 +585,22 @@ async function onRemove(acc: Account) {
             >
               <path d="M20 6 9 17l-5-5" />
             </svg>
-            已自动复制到剪贴板，到验证页直接粘贴即可
+            {{ t('accounts.ms.modal.auto_copied') }}
           </p>
-          <p v-else class="muted copy-hint">点击代码即可复制</p>
+          <p v-else class="muted copy-hint">{{ t('accounts.ms.modal.click_to_copy') }}</p>
 
           <div class="ms-uri-row">
             <input class="input" :value="ms.info?.verificationUri" readonly />
-            <button class="btn btn-gold" @click="openVerifyPage">打开验证页面</button>
+            <button class="btn btn-gold" @click="openVerifyPage">{{ t('accounts.ms.modal.open_verify') }}</button>
           </div>
 
           <div v-if="ms.waiting" class="ms-waiting">
             <span class="spin"></span>
-            <span class="muted">正在等待授权完成…</span>
+            <span class="muted">{{ t('accounts.ms.modal.waiting') }}</span>
           </div>
 
           <div class="modal-actions">
-            <button class="btn btn-ghost" @click="cancelMsLogin">取消登录</button>
+            <button class="btn btn-ghost" @click="cancelMsLogin">{{ t('accounts.ms.modal.cancel') }}</button>
           </div>
         </div>
       </div>
@@ -585,51 +608,59 @@ async function onRemove(acc: Account) {
       <!-- 外置登录提供商探测与确认 -->
       <div v-if="providerModal.open" class="modal-mask" @pointerdown.self="providerModal.open = false">
         <div class="modal provider-modal">
-          <h3 class="modal-title">添加外置登录提供商</h3>
-          <p class="muted ms-tip">支持 API Root、authlib-injector 拖拽 URI，以及 FAIONYX 提供商 JSON/TXT 文件。</p>
+          <h3 class="modal-title">{{ t('accounts.provider.modal.title') }}</h3>
+          <p class="muted ms-tip">{{ t('accounts.provider.modal.tip') }}</p>
           <label class="provider-input-label">
-            <span>API Root 或配置内容</span>
+            <span>{{ t('accounts.provider.modal.source_label') }}</span>
             <textarea
               v-model="providerModal.source"
               class="input provider-source"
               :readonly="providerModal.input?.kind === 'file'"
-              placeholder="例如：https://littleskin.cn/api/yggdrasil"
+              :placeholder="t('accounts.provider.modal.source_placeholder')"
               spellcheck="false"
             ></textarea>
           </label>
           <label v-if="providerModal.requireInsecure" class="insecure-confirm">
             <input v-model="providerModal.allowInsecure" type="checkbox" />
-            <span>我了解 HTTP 会以明文传输账号与密码，仍要连接该服务</span>
+            <span>{{ t('accounts.provider.modal.insecure_confirm') }}</span>
           </label>
           <p v-if="providerModal.error" class="provider-error">{{ providerModal.error }}</p>
           <div v-if="providerModal.candidate" class="provider-preview">
             <div>
-              <span>名称</span><strong>{{ providerModal.candidate.name }}</strong>
+              <span>{{ t('accounts.provider.modal.field.name') }}</span
+              ><strong>{{ providerModal.candidate.name }}</strong>
             </div>
             <div>
-              <span>API Root</span><code>{{ providerModal.candidate.apiRoot }}</code>
+              <span>{{ t('accounts.provider.modal.field.api_root') }}</span
+              ><code>{{ providerModal.candidate.apiRoot }}</code>
             </div>
             <div>
-              <span>Auth Server</span><code>{{ providerModal.candidate.authServer }}</code>
+              <span>{{ t('accounts.provider.modal.field.auth_server') }}</span
+              ><code>{{ providerModal.candidate.authServer }}</code>
             </div>
             <div>
-              <span>Account Server</span><code>{{ providerModal.candidate.accountServer }}</code>
+              <span>{{ t('accounts.provider.modal.field.account_server') }}</span
+              ><code>{{ providerModal.candidate.accountServer }}</code>
             </div>
             <div>
-              <span>Session Server</span><code>{{ providerModal.candidate.sessionServer }}</code>
+              <span>{{ t('accounts.provider.modal.field.session_server') }}</span
+              ><code>{{ providerModal.candidate.sessionServer }}</code>
             </div>
             <div>
-              <span>Skin Domains</span><code>{{ providerModal.candidate.skinDomains.join(', ') || '未声明' }}</code>
+              <span>{{ t('accounts.provider.modal.field.skin_domains') }}</span
+              ><code>{{ providerModal.candidate.skinDomains.join(', ') || t('accounts.provider.modal.skin_domains_none') }}</code>
             </div>
-            <p v-if="providerModal.candidate.aliRedirected" class="ali-note">已按 ALI 标头解析到实际 API Root。</p>
+            <p v-if="providerModal.candidate.aliRedirected" class="ali-note">
+              {{ t('accounts.provider.modal.ali_note') }}
+            </p>
           </div>
           <div class="modal-actions provider-actions">
-            <button class="btn btn-ghost" @click="providerModal.open = false">取消</button>
+            <button class="btn btn-ghost" @click="providerModal.open = false">{{ t('accounts.provider.modal.cancel') }}</button>
             <button class="btn btn-ghost" :disabled="providerModal.probing" @click="probeProviderInput">
-              {{ providerModal.probing ? '正在获取元数据…' : '识别并校验' }}
+              {{ providerModal.probing ? t('accounts.provider.modal.probing') : t('accounts.provider.modal.probe') }}
             </button>
             <button class="btn btn-gold" :disabled="!providerModal.candidate || providerModal.saving" @click="confirmProvider">
-              {{ providerModal.saving ? '保存中…' : '确认保存' }}
+              {{ providerModal.saving ? t('accounts.provider.modal.saving') : t('accounts.provider.modal.save') }}
             </button>
           </div>
         </div>
@@ -638,8 +669,8 @@ async function onRemove(acc: Account) {
       <!-- 多角色选择 -->
       <div v-if="profileModal.open" class="modal-mask">
         <div class="modal profile-modal">
-          <h3 class="modal-title">选择 {{ profileModal.providerName }} 角色</h3>
-          <p class="muted ms-tip">此账号拥有多个角色，请选择本次要保存并启动的角色。</p>
+          <h3 class="modal-title">{{ t('accounts.profile.modal.title', { provider: profileModal.providerName }) }}</h3>
+          <p class="muted ms-tip">{{ t('accounts.profile.modal.tip') }}</p>
           <div class="profile-options">
             <label v-for="profile in profileModal.profiles" :key="profile.id" :class="{ selected: profileModal.selectedId === profile.id }">
               <input v-model="profileModal.selectedId" type="radio" :value="profile.id" />
@@ -648,9 +679,9 @@ async function onRemove(acc: Account) {
             </label>
           </div>
           <div class="modal-actions">
-            <button class="btn btn-ghost" @click="profileModal.open = false">取消</button>
+            <button class="btn btn-ghost" @click="profileModal.open = false">{{ t('accounts.profile.modal.cancel') }}</button>
             <button class="btn btn-gold" :disabled="profileModal.busy" @click="confirmProfile">
-              {{ profileModal.busy ? '正在选择…' : '使用此角色' }}
+              {{ profileModal.busy ? t('accounts.profile.modal.selecting') : t('accounts.profile.modal.use') }}
             </button>
           </div>
         </div>

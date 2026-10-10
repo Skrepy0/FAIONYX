@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { parse, compileScript, compileTemplate } from '@vue/compiler-sfc';
 import { mergeKeysIntoOptions } from '../src/main/core/keybindings';
-import { VANILLA_KEYBINDS, codeToMcKey, mcKeyLabel, mouseButtonToMcKey } from '../src/shared/keybindings';
+import { VANILLA_KEYBINDS, codeToMcKey, keybindLabelKey, mcKeyLabel, mouseButtonToMcKey } from '../src/shared/keybindings';
+import { setCurrentLocale } from '../src/shared/i18n';
 
 const read = (file: string) => fs.readFileSync(file, 'utf8');
 
@@ -26,6 +27,7 @@ test('options.txt merge covers existing key lines, appends missing ones, keeps a
 });
 
 test('keybind table covers vanilla options.txt keys; DOM code/mouse mapping works', () => {
+  setCurrentLocale('zh-CN');
   assert(VANILLA_KEYBINDS.length >= 30);
   const ids = new Set(VANILLA_KEYBINDS.map((d) => d.id));
   for (const required of ['key_key.forward', 'key_key.attack', 'key_key.inventory', 'key_key.chat', 'key_key.hotbar.9']) {
@@ -41,6 +43,9 @@ test('keybind table covers vanilla options.txt keys; DOM code/mouse mapping work
   assert.equal(mcKeyLabel('key.keyboard.left.shift'), '左Shift');
   assert.equal(mcKeyLabel('key.mouse.left'), '鼠标左键');
   assert.equal(mcKeyLabel('key.keyboard.unknown'), '未指定');
+  // 键位表存的是 i18n 键，显示名由调用方翻译
+  assert.equal(keybindLabelKey('key_key.forward'), 'keys.bindings.key_forward');
+  assert.equal(VANILLA_KEYBINDS.find((d) => d.id === 'key_key.forward')!.label, 'keys.bindings.key_forward');
 });
 
 test('bridge protocol: loopback only, token required for writes, server-scope params rejected locally', () => {

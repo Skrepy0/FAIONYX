@@ -1,6 +1,7 @@
 import type { VersionJson } from './versions';
 import { isMinecraftVersionId, resolveInstanceMetadata } from './instanceMetadata';
 import { compareVersions, matchesVersionRange } from '../../shared/modCompatibility';
+import { translate as t } from '../../shared/i18n';
 
 export interface JavaConstraint {
   source: string;
@@ -113,7 +114,7 @@ function loaderJavaConstraints(json: VersionJson, loader?: string): JavaConstrai
     ['9.0', 16],
   ];
   const support = bands.find(([minimum]) => compareVersions(version, minimum) >= 0)?.[1];
-  return support ? [{ source: `加载器 ASM ${version}`, range: `<${support + 1}` }] : [];
+  return support ? [{ source: t('javacompat.source.loader_asm', { version }), range: `<${support + 1}` }] : [];
 }
 
 export function buildJavaRequirement(
@@ -132,7 +133,7 @@ export function buildJavaRequirement(
   // A custom profile may declare a JVM requirement when its game identity is
   // unknown. Do not let an inherited/copied javaVersion override a known release.
   const major = canonical || release || officialLegacy || (!mcVersion ? declaredJavaMajor(json) : undefined);
-  if (!major) throw new Error(`无法确认 ${mcVersion ?? json.id} 的 Java 需求；请补全官方版本元数据或在实例元数据中声明 Java 版本。`);
+  if (!major) throw new Error(t('javacompat.error.unknown_requirement', { version: mcVersion ?? json.id }));
   const loader = resolveInstanceMetadata(json, () => undefined).loader;
   const allConstraints = [...loaderJavaConstraints(json, loader), ...constraints];
   // Standard legacy Forge/LaunchWrapper casts the system class loader to
@@ -157,7 +158,11 @@ export function buildJavaRequirement(
     const compatible = supported.find((n) => n >= major && javaMajorAllowed(n, requirement));
     if (!compatible)
       throw new Error(
-        `Java 需求冲突：游戏推荐 Java ${major}${oldForge ? '，旧版 Forge 需要 Java 8' : ''}；${allConstraints.map((c) => `${c.source}: ${c.range}`).join('；')}`
+        t('javacompat.error.conflict', {
+          major,
+          oldForge: oldForge ? t('javacompat.conflict.old_forge') : '',
+          constraints: allConstraints.map((c) => `${c.source}: ${c.range}`).join('；'),
+        })
       );
     requirement.recommendedMajor = compatible;
   }
@@ -186,15 +191,21 @@ export function javaCompatibilityError(
   automatic = false
 ): string | undefined {
   if (!info.is64Bit || (architecture && info.architecture !== architecture))
-    return `需要 64 位${architecture ? ' ' + architecture : ''} Java`;
-  if (info.major < requirement.minimumMajor) return `至少需要 Java ${requirement.minimumMajor}，当前为 Java ${info.major}`;
+    return t('javacompat.error.needs_64bit', { architecture: architecture ? ' ' + architecture : '' });
+  if (info.major < requirement.minimumMajor) return t('javacompat.error.minimum', { need: requirement.minimumMajor, current: info.major });
   if (requirement.maximumMajor !== undefined && info.major > requirement.maximumMajor)
-    return `旧版 Forge 需要 Java ${requirement.maximumMajor}，当前为 Java ${info.major}`;
+    return t('javacompat.error.old_forge_max', { max: requirement.maximumMajor, current: info.major });
   const version = info.version?.replace(/^1\.(?=8(?:\.|$))/, '').replace(/_/g, '.') ?? String(info.major);
   const bad = requirement.constraints.find((c) => (c.exclude ? javaRangeMatches(c.range, version) : !javaRangeMatches(c.range, version)));
-  if (bad) return `${bad.source} ${bad.exclude ? '不支持' : '要求'} Java ${bad.range}，当前为 Java ${info.major}`;
+  if (bad)
+    return t('javacompat.error.constraint', {
+      source: bad.source,
+      verb: bad.exclude ? t('javacompat.verb.excluded') : t('javacompat.verb.required'),
+      range: bad.range,
+      current: info.major,
+    });
   if (automatic && info.major !== requirement.recommendedMajor)
-    return `自动管理需要推荐的 Java ${requirement.recommendedMajor}，当前为 Java ${info.major}`;
+    return t('javacompat.error.recommended', { need: requirement.recommendedMajor, current: info.major });
   return undefined;
 }
 
@@ -231,6 +242,6 @@ export async function prepareCompatibleJava<T extends { major: number; is64Bit: 
   const installed = await install(requirement.recommendedMajor);
   signal?.throwIfAborted();
   const error = javaCompatibilityError(installed, requirement, architecture, true);
-  if (error) throw new Error('自动安装的 Java 校验失败：' + error);
+  if (error) throw new Error(t('javacompat.error.auto_install_invalid', { error }));
   return installed;
 }

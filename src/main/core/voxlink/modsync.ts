@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import { APP_VERSION } from './api';
 import type { ModSyncEntry, ModSyncManifest, ModSyncRow } from '../../../shared/voxlinkMods';
+import { translate as t } from '../../../shared/i18n';
 
 export interface LocalMod {
   fileName: string;
@@ -34,7 +35,7 @@ export async function scanModHashes(dir: string, signal: AbortSignal, includeDis
   let entries: fs.Dirent[];
   try {
     const stat = await fs.promises.lstat(dir);
-    if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error('模组目录不能是链接');
+    if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error(t('modsync.error.dir_link'));
     entries = await fs.promises.readdir(dir, { withFileTypes: true });
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
@@ -44,7 +45,7 @@ export async function scanModHashes(dir: string, signal: AbortSignal, includeDis
   for (const file of entries) {
     signal.throwIfAborted();
     if (!file.isFile() || !(/\.jar$/i.test(file.name) || (includeDisabled && /\.jar\.disabled$/i.test(file.name)))) continue;
-    if (result.length >= 1024) throw new Error('模组数量超过同步上限（1024），请先整理实例');
+    if (result.length >= 1024) throw new Error(t('modsync.error.too_many_mods'));
     const hash = createHash('sha1'),
       full = path.join(dir, file.name);
     const before = await fs.promises.stat(full, { bigint: true });
@@ -57,7 +58,7 @@ export async function scanModHashes(dir: string, signal: AbortSignal, includeDis
       before.mtimeNs !== after.mtimeNs ||
       before.ctimeNs !== after.ctimeNs
     )
-      throw new Error(`模组正在变化，请稍后重试：${file.name}`);
+      throw new Error(t('modsync.error.changing', { name: file.name }));
     result.push({ fileName: file.name, sha1: hash.digest('hex'), disabled: /\.disabled$/i.test(file.name) });
   }
   return result;
@@ -231,8 +232,8 @@ export function normalizeModName(name: string): string {
 export function diffMods(manifest: ModSyncManifest, local: LocalMod[], loader: string, mcVersion: string): ModSyncRow[] {
   return manifest.mods.map((entry) => {
     const matches = local.filter((f) => f.sha1.toLowerCase() === entry.sha1.toLowerCase());
-    if (matches.some((f) => !f.disabled)) return { entry, status: 'installed', reason: '已安装' };
-    if (matches.length) return { entry, status: 'disabled', reason: '已安装但被禁用，请手动启用' };
+    if (matches.some((f) => !f.disabled)) return { entry, status: 'installed', reason: t('modsync.reason.installed') };
+    if (matches.length) return { entry, status: 'disabled', reason: t('modsync.reason.disabled') };
     if (
       local.some(
         (f) =>
@@ -240,7 +241,7 @@ export function diffMods(manifest: ModSyncManifest, local: LocalMod[], loader: s
           normalizeModName(f.fileName) === normalizeModName(entry.fileName)
       )
     )
-      return { entry, status: 'conflict', reason: '已存在其他版本，请手动处理；不会覆盖或移动原文件' };
+      return { entry, status: 'conflict', reason: t('modsync.reason.conflict') };
     if (
       !safeModEntry(entry) ||
       !entry.loaders.includes(loader) ||
@@ -248,7 +249,7 @@ export function diffMods(manifest: ModSyncManifest, local: LocalMod[], loader: s
       manifest.loader !== loader ||
       manifest.mcVersion !== mcVersion
     )
-      return { entry, status: 'unresolved', reason: '与所选实例不兼容，或缺少可靠下载校验信息' };
-    return { entry, status: 'missing', reason: '可下载' };
+      return { entry, status: 'unresolved', reason: t('modsync.reason.unresolved') };
+    return { entry, status: 'missing', reason: t('modsync.reason.downloadable') };
   });
 }

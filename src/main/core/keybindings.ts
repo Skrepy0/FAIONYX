@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { app } from 'electron';
 import { VANILLA_KEYBINDS } from '../../shared/keybindings';
+import { translate as t } from '../../shared/i18n';
 
 const BIND_RE = /^key\.(keyboard|mouse)\.[a-z0-9.]+$/;
 
@@ -38,9 +39,9 @@ function persist(keys: Record<string, string>): void {
 /** 设置单个默认键位（id 必须是原版键位项，value 必须是合法 MC 绑定值） */
 export function setDefaultKey(id: string, bind: string): Record<string, string> {
   const key = String(id ?? '');
-  if (!VANILLA_KEYBINDS.some((d) => d.id === key)) throw new Error('未知的键位项');
+  if (!VANILLA_KEYBINDS.some((d) => d.id === key)) throw new Error(t('keybindings.error.unknown_item'));
   const value = String(bind ?? '');
-  if (!BIND_RE.test(value)) throw new Error('无效的按键值');
+  if (!BIND_RE.test(value)) throw new Error(t('keybindings.error.invalid_value'));
   const keys = getDefaultKeys();
   keys[key] = value;
   persist(keys);

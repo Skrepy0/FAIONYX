@@ -4,6 +4,7 @@ import { gzipSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
 import { ApiClient, APP_VERSION } from './api';
 import { redactDiagnosticText } from '../diagnostics';
+import { translate as t } from '../../../shared/i18n';
 export class ConnectionLog {
   private lines: string[] = [];
   private code = '';
@@ -33,7 +34,7 @@ export class ConnectionLog {
     this.started = Date.now();
     this.connected = 0;
     this.failed = this.uploaded = false;
-    this.record('info', '联机会话开始');
+    this.record('info', t('voxlink.connlog.session_start'));
     if (this.enabled()) void new ApiClient().post(this.base(), '/log/status', { code, role: this.role, enabled: true }).catch(() => {});
     if (!host) this.schedule(90000);
   }

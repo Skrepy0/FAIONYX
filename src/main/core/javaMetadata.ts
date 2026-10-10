@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import type { VersionJson } from './versions';
+import { translate as t } from '../../shared/i18n';
 
 const MANIFEST = 'https://piston-meta.mojang.com/mc/game/version_manifest_v2.json';
 type Read = (url: string, signal?: AbortSignal) => Promise<string>;
@@ -24,9 +25,10 @@ function validEntry(entry: Entry, id: string): boolean {
   }
 }
 function parseOfficial(entry: Entry, text: string): VersionJson {
-  if (crypto.createHash('sha1').update(text).digest('hex') !== entry.sha1.toLowerCase()) throw new Error('官方 Java 元数据 SHA1 校验失败');
+  if (crypto.createHash('sha1').update(text).digest('hex') !== entry.sha1.toLowerCase())
+    throw new Error(t('javametadata.error.sha1_mismatch'));
   const json = JSON.parse(text) as VersionJson;
-  if (json.id !== entry.id) throw new Error('官方 Java 元数据版本不一致');
+  if (json.id !== entry.id) throw new Error(t('javametadata.error.version_mismatch'));
   return json;
 }
 
@@ -47,11 +49,11 @@ export function createOfficialJavaReader(cacheRoot: () => string, read: Read) {
     }
     if (!manifest || !manifest.some((v) => v.id === id)) {
       const raw = JSON.parse(await read(MANIFEST, signal)) as { versions: Entry[] };
-      if (!Array.isArray(raw.versions)) throw new Error('官方版本清单无效');
+      if (!Array.isArray(raw.versions)) throw new Error(t('javametadata.error.manifest_invalid'));
       manifest = raw.versions;
     }
     const entry = manifest.find((v) => validEntry(v, id));
-    if (!entry) throw new Error(`官方版本清单找不到 ${id}，无法确认 Java 需求`);
+    if (!entry) throw new Error(t('javametadata.error.entry_missing', { id }));
     const text = await read(entry.url, signal),
       json = parseOfficial(entry, text);
     signal?.throwIfAborted();

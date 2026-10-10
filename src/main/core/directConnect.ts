@@ -12,6 +12,7 @@ import type {
   DirectOverview,
 } from '../../shared/directConnect';
 import { listAllInstalled } from './versions';
+import { translate as t } from '../../shared/i18n';
 import { getLastLaunch } from './launch';
 import { pathIdentity } from './folderPaths';
 import { setActiveGameFolder } from './gameFolders';
@@ -61,10 +62,9 @@ export async function inspectDirectNetwork(): Promise<DirectNetworkInfo> {
       }
     }
     gateways = await discoverGateways();
-    const messages = ['公网可达性需要好友从另一网络验证；本机检测无法确认运营商及防火墙是否放行。'];
-    if (!addresses.some((item) => item.kind === 'ipv6')) messages.push('未发现公网 IPv6 地址。');
-    if (!gateways.length)
-      messages.push('未发现可用 UPnP 网关：路由器可能未开启 UPnP，或当前网络不支持。可使用公网 IPv6 / 手动 IPv4 端口映射。');
+    const messages = [t('directconnect.diagnosis.public_reachability')];
+    if (!addresses.some((item) => item.kind === 'ipv6')) messages.push(t('directconnect.diagnosis.no_ipv6'));
+    if (!gateways.length) messages.push(t('directconnect.diagnosis.no_gateway'));
     network = {
       addresses,
       messages,
@@ -75,12 +75,12 @@ export async function inspectDirectNetwork(): Promise<DirectNetworkInfo> {
           externalAddress: gateway.externalAddress,
           diagnosis:
             scope === 'cgnat'
-              ? '网关 WAN 地址属于 CGNAT（100.64.0.0/10），UPnP 无法穿过运营商 NAT。'
+              ? t('directconnect.diagnosis.cgnat')
               : scope === 'private'
-                ? '网关 WAN 仍是私网地址，存在上级 NAT；仅映射本层路由器不能保证公网可达。'
+                ? t('directconnect.diagnosis.upstream_nat')
                 : scope === 'public'
-                  ? '发现公网 IPv4；开启房间时可尝试 UPnP 映射。'
-                  : '网关未提供可用的公网 IPv4。',
+                  ? t('directconnect.diagnosis.public_ipv4')
+                  : t('directconnect.diagnosis.no_public_ipv4'),
         };
       }),
     };
@@ -116,18 +116,17 @@ export async function directOverview(): Promise<DirectOverview> {
 }
 
 export function startDirectHost(request: DirectHostRequest): Promise<DirectHostState> {
-  if (session || operation) return Promise.reject(new Error('已有房间或正在创建房间，请先停止'));
+  if (session || operation) return Promise.reject(new Error(t('directconnect.error.room_busy')));
   controller = new AbortController();
   const signal = controller.signal;
   operation = (async () => {
     const version = listAllInstalled().find(
       (item) => item.id === request.versionId && pathIdentity(item.folder) === pathIdentity(request.folder)
     );
-    if (!version || version.incomplete) throw new Error('所选实例不存在或不完整');
+    if (!version || version.incomplete) throw new Error(t('directconnect.error.instance_missing'));
     const detected = await latestLanPort();
     const port = validatePort(request.port ?? detected ?? 0);
-    if (!(await probeTcp('127.0.0.1', port, signal)))
-      throw new Error('本机世界端口未开放。请在游戏内选择“对局域网开放”，然后刷新端口或手动输入。');
+    if (!(await probeTcp('127.0.0.1', port, signal))) throw new Error(t('directconnect.error.lan_port_closed'));
     signal.throwIfAborted();
     await inspectDirectNetwork();
     signal.throwIfAborted();
@@ -156,7 +155,7 @@ export function startDirectHost(request: DirectHostRequest): Promise<DirectHostS
         .map((item) => ({ host: item.address, port: forwarder.port, kind: item.kind }));
       const messages = [
         ...network.messages,
-        ...network.gateways.filter((item) => /CGNAT|上级 NAT/.test(item.diagnosis)).map((item) => item.diagnosis),
+        ...network.gateways.filter((item) => ['cgnat', 'private'].includes(ipv4Scope(item.externalAddress))).map((item) => item.diagnosis),
       ];
       const owner = `FAIONYX-${crypto.randomUUID().slice(0, 12)}`;
       if (request.useUpnp) {
@@ -166,7 +165,7 @@ export function startDirectHost(request: DirectHostRequest): Promise<DirectHostS
             const mapping = await createMapping(gateway, forwarder.port, owner, signal);
             mappings.push(mapping);
             endpoints.push({ host: gateway.externalAddress, port: forwarder.port, kind: 'ipv4' });
-            messages.push('UPnP 临时映射已建立（5 分钟租约，房间开启期间自动续租）。');
+            messages.push(t('directconnect.state.upnp_mapped'));
           } catch (error) {
             messages.push(String((error as Error).message));
           }
@@ -174,17 +173,16 @@ export function startDirectHost(request: DirectHostRequest): Promise<DirectHostS
       }
       if (request.publicAddress?.trim()) {
         const address = request.publicAddress.trim();
-        if (ipv4Scope(address) !== 'public') throw new Error('手动公网 IPv4 地址格式无效');
+        if (ipv4Scope(address) !== 'public') throw new Error(t('directconnect.error.manual_ipv4_invalid'));
         endpoints.push({ host: address, port: forwarder.port, kind: 'ipv4' });
-        messages.push(`手动 IPv4：请将路由器 TCP ${forwarder.port} 映射到本机同端口，未验证此规则是否存在。`);
+        messages.push(t('directconnect.state.manual_ipv4', { port: forwarder.port }));
       }
       signal.throwIfAborted();
       const unique = endpoints
         .filter((item, index) => endpoints.findIndex((other) => endpointAddress(other) === endpointAddress(item)) === index)
         .slice(0, 12);
-      if (!unique.some((item) => item.kind !== 'lan'))
-        messages.push('当前仅可供同一局域网加入，尚无公网房主路径。CGNAT、手机热点、校园网可能限制入站连接；你仍可以加入可达好友的世界。');
-      messages.push('开启房间后需保持 FAIONYX 和游戏运行；退出或关闭局域网世界会断开直连。');
+      if (!unique.some((item) => item.kind !== 'lan')) messages.push(t('directconnect.state.lan_only'));
+      messages.push(t('directconnect.state.keep_running'));
       const invitation: DirectInvitation = {
         format: 'FAIONYX-DIRECT',
         version: 1,
@@ -213,7 +211,7 @@ export function startDirectHost(request: DirectHostRequest): Promise<DirectHostS
         checking = true;
         try {
           if (!(await probeTcp('127.0.0.1', port))) {
-            lastMessages = ['本机世界已关闭，房间和端口映射已停止。'];
+            lastMessages = [t('directconnect.state.world_closed')];
             await stopDirectHost();
             return;
           }
@@ -224,7 +222,7 @@ export function startDirectHost(request: DirectHostRequest): Promise<DirectHostS
                 await mapping.renew();
               } catch (error) {
                 if (!state.messages.includes(String(error)))
-                  state.messages.push(`UPnP 续租失败：${String(error)}，IPv4 邀请可能不可达，请重新开启房间。`);
+                  state.messages.push(t('directconnect.state.upnp_renew_failed', { error: String(error) }));
               }
             }
           }
@@ -246,7 +244,7 @@ export function startDirectHost(request: DirectHostRequest): Promise<DirectHostS
 }
 
 export async function stopDirectHost(): Promise<DirectHostState> {
-  controller?.abort(new Error('房间创建已取消'));
+  controller?.abort(new Error(t('directconnect.error.room_create_cancelled')));
   await operation?.catch(() => undefined);
   const previous = session;
   session = null;
@@ -263,22 +261,24 @@ export async function resolveDirectInvitation(input: string): Promise<DirectJoin
   return {
     invitation,
     endpoint: replies.find((reply) => reply.online)?.endpoint,
-    failures: replies.filter((reply) => !reply.online).map((reply) => `${endpointAddress(reply.endpoint)}：连接超时或被拒绝`),
+    failures: replies
+      .filter((reply) => !reply.online)
+      .map((reply) => t('directconnect.error.endpoint_unreachable', { address: endpointAddress(reply.endpoint) })),
   };
 }
 
 export async function prepareDirectJoin(input: string, versionId: string, folder: string) {
   const result = await resolveDirectInvitation(input);
-  if (!result.endpoint) throw new Error('没有可达的好友地址。请检查房主是否在线、双方 IPv6、路由器映射及入站防火墙。');
+  if (!result.endpoint) throw new Error(t('directconnect.error.no_reachable_endpoint'));
   const version = listAllInstalled().find((item) => item.id === versionId && pathIdentity(item.folder) === pathIdentity(folder));
-  if (!version || version.incomplete) throw new Error('关联实例不存在或未完整安装，请先下载兼容版本');
+  if (!version || version.incomplete) throw new Error(t('directconnect.error.join_instance_missing'));
   const invite = result.invitation;
   if (
     version.mcVersion !== invite.minecraftVersion ||
     (version.loader ?? '') !== (invite.loader ?? '') ||
     (invite.loaderVersion && version.loaderVersion !== invite.loaderVersion)
   )
-    throw new Error('所选实例与房主的 Minecraft / Loader 版本不匹配，请选择兼容实例；MOD 列表还需双方自行确认一致。');
+    throw new Error(t('directconnect.error.version_mismatch'));
   setActiveGameFolder(folder);
   return { versionId, folder, address: endpointAddress(result.endpoint), directJoin: supportsQuickPlayMultiplayer(version.mcVersion) };
 }

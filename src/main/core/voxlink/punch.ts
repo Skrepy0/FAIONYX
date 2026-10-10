@@ -7,6 +7,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { signPunchFrame, verifyPunchFrame } from './punchAuth';
 import { DEFAULT, type PunchProfile } from './punchProfiles';
 import { fromProfile, type PunchParams, type PunchResult } from './punchPolicy';
+import { translate as t } from '../../../shared/i18n';
 export type Address = { address: string; port: number };
 export function punchBuildControl(type: number, nonce: number): Buffer {
   const b = Buffer.from([86, 76, type, 0, 0]); // UdpHolePuncher.java: MAGIC, CONTROL_PLAIN_LEN
@@ -111,7 +112,7 @@ export interface PuncherOptions {
 }
 export class PunchFailure extends Error {
   constructor(readonly result: PunchResult) {
-    super(result.firewallDetected ? '本轮未收到 UDP 回包' : '本轮打洞未命中');
+    super(result.firewallDetected ? t('voxlink.punch.no_udp_reply') : t('voxlink.punch.no_hit'));
     this.name = 'PunchFailure';
   }
 }

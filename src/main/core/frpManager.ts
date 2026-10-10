@@ -1,3 +1,4 @@
+import { translate as t } from '../../shared/i18n';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
@@ -54,7 +55,7 @@ export function readFrpRegistry(file: string, legacy?: FrpConfig | null): FrpReg
             {
               id: tunnelIdentity(legacy.accessKey, legacy.tunnelId),
               config: legacy,
-              name: `隧道 ${legacy.tunnelId}`,
+              name: t('frpmgr.tunnel_label', { id: legacy.tunnelId }),
               nodeName: '',
               localIp: '127.0.0.1',
               desired: false,
@@ -63,12 +64,13 @@ export function readFrpRegistry(file: string, legacy?: FrpConfig | null): FrpReg
         : [],
     };
   const raw = JSON.parse(fs.readFileSync(file, 'utf8')) as FrpRegistry;
-  if (raw.version !== 2 || !Array.isArray(raw.tunnels) || typeof raw.accessKey !== 'string') throw new Error('隧道配置损坏，已保留原文件');
+  if (raw.version !== 2 || !Array.isArray(raw.tunnels) || typeof raw.accessKey !== 'string')
+    throw new Error(t('frpmgr.error.config_corrupt'));
   if (
     raw.deletedIds !== undefined &&
     (!Array.isArray(raw.deletedIds) || raw.deletedIds.some((id) => typeof id !== 'string' || !/^[a-f0-9]{64}$/.test(id)))
   )
-    throw new Error('隧道删除记录损坏，已保留原文件');
+    throw new Error(t('frpmgr.error.deletion_log_corrupt'));
   for (const r of raw.tunnels) {
     if (
       !r.config?.accessKey ||
@@ -76,7 +78,7 @@ export function readFrpRegistry(file: string, legacy?: FrpConfig | null): FrpReg
       r.id !== tunnelIdentity(r.config.accessKey, r.config.tunnelId) ||
       typeof r.desired !== 'boolean'
     )
-      throw new Error('隧道配置无效，已保留原文件');
+      throw new Error(t('frpmgr.error.config_invalid'));
   }
   return raw;
 }
@@ -117,7 +119,7 @@ export class FrpManager {
   }
   private record(id: string) {
     const r = this.registry().tunnels.find((r) => r.id === id);
-    if (!r) throw new Error('未找到该隧道，请重新读取');
+    if (!r) throw new Error(t('frpmgr.error.tunnel_not_found'));
     return r;
   }
   private bump(id: string) {
@@ -138,7 +140,7 @@ export class FrpManager {
       remoteAddress: s?.remoteAddress || null,
       pid: s?.pid || null,
       startedAt: s?.startedAt || null,
-      message: error || s?.message || '尚未启动',
+      message: error || s?.message || t('frp.state.not_started'),
       logs: s?.logs || [],
       id: r.id,
       name: r.name,
@@ -158,16 +160,20 @@ export class FrpManager {
   register(key: string, tunnels: TunnelMetadata[]) {
     const next = structuredClone(this.registry());
     next.accessKey = key.trim();
-    for (const t of tunnels) {
-      const id = tunnelIdentity(key, String(t.id)),
+    for (const meta of tunnels) {
+      const id = tunnelIdentity(key, String(meta.id)),
         old = next.tunnels.find((r) => r.id === id);
       if (next.deletedIds?.includes(id) || this.deletions.has(id)) continue;
-      const metadata = { name: t.name || `隧道 ${t.id}`, nodeName: t.nodeName || '', localIp: t.localIp };
-      if (old) Object.assign(old, metadata, { config: { ...old.config, localPort: t.localPort } });
+      const metadata = {
+        name: meta.name || t('frpmgr.tunnel_label', { id: meta.id }),
+        nodeName: meta.nodeName || '',
+        localIp: meta.localIp,
+      };
+      if (old) Object.assign(old, metadata, { config: { ...old.config, localPort: meta.localPort } });
       else
         next.tunnels.push({
           id,
-          config: { accessKey: key.trim(), tunnelId: String(t.id), localPort: t.localPort },
+          config: { accessKey: key.trim(), tunnelId: String(meta.id), localPort: meta.localPort },
           ...metadata,
           desired: false,
         });
@@ -176,8 +182,8 @@ export class FrpManager {
     return this.list();
   }
   async start(id: string): Promise<void> {
-    if (this.deletions.has(id)) throw new Error('该隧道正在删除，请等待完成');
-    if (this.closing) throw new Error('启动器正在关闭，请稍后重试');
+    if (this.deletions.has(id)) throw new Error(t('frpmgr.error.deleting_wait'));
+    if (this.closing) throw new Error(t('frpmgr.error.closing_retry'));
     if (this.pending.has(id)) return void (await this.pending.get(id));
     const record = this.record(id),
       active = this.workers.get(id)?.status().status;
@@ -193,7 +199,7 @@ export class FrpManager {
       if (this.workers.get(id) !== worker) return;
       this.lastStates.set(id, worker.status());
       if (event.type === 'error' || (event.type === 'stopped' && event.status !== 'stopped'))
-        this.failures.set(id, event.message || '隧道异常退出');
+        this.failures.set(id, event.message || t('frpmgr.error.tunnel_crashed'));
       this.emit(id);
     });
     const task = Promise.resolve().then(async () => {
@@ -238,9 +244,9 @@ export class FrpManager {
   async remove(id: string): Promise<{ remoteDisconnectPending: boolean }> {
     const inFlight = this.deletions.get(id);
     if (inFlight) return inFlight;
-    if (this.closing) throw new Error('启动器正在关闭，请稍后重试');
+    if (this.closing) throw new Error(t('frpmgr.error.closing_retry'));
     const record = this.record(id);
-    if (!this.deps.deleteRemote) throw new Error('当前版本不支持远端删除');
+    if (!this.deps.deleteRemote) throw new Error(t('frpmgr.error.remote_delete_unsupported'));
     const task = Promise.resolve().then(async () => {
       let remoteDeleted = false;
       try {
@@ -248,11 +254,11 @@ export class FrpManager {
         await this.stop(id);
         await this.pending.get(id)?.catch(() => {});
         const worker = this.workers.get(id);
-        if (worker?.status().pid) throw new Error('本地隧道尚未停止，未执行远端删除，请稍后重试');
+        if (worker?.status().pid) throw new Error(t('frpmgr.error.local_not_stopped'));
         const result = await this.deps.deleteRemote!(record.config.accessKey, record.config.tunnelId);
         remoteDeleted = true;
         const next = structuredClone(this.registry());
-        next.tunnels = next.tunnels.filter((t) => t.id !== id);
+        next.tunnels = next.tunnels.filter((rec) => rec.id !== id);
         next.deletedIds = [...new Set([...(next.deletedIds || []), id])];
         this.commit(next);
         worker?.setSink(() => {});
@@ -263,13 +269,13 @@ export class FrpManager {
       } catch (error) {
         const detail = (error instanceof Error ? error.message : String(error)).split(record.config.accessKey).join('***');
         const message = remoteDeleted
-          ? `远端隧道已删除，但本地记录保存失败；请重试清理：${detail}`
-          : `未能完成删除；隧道卡片已保留：${detail}`;
+          ? t('frpmgr.error.remote_deleted_local_save_failed', { detail })
+          : t('frpmgr.error.delete_failed_card_kept', { detail });
         this.failures.set(id, message);
         throw new Error(message);
       } finally {
         this.deletions.delete(id);
-        if (this.registry().tunnels.some((t) => t.id === id)) this.emit(id);
+        if (this.registry().tunnels.some((rec) => rec.id === id)) this.emit(id);
       }
     });
     this.deletions.set(id, task);

@@ -2,16 +2,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { VersionJson } from './versions';
 import type { LoaderName } from '../../shared/types';
+import { translate as t } from '../../shared/i18n';
 
 /** Reuse runtime metadata, never copy or move another instance's mods/saves. */
 export function copyRuntimeProfile(root: string, sourceId: string, targetId: string): void {
   for (const id of [sourceId, targetId]) {
-    if (!id || id === '.' || id === '..' || /[\\/<>:"|?*]/.test(id)) throw new Error('无效的实例名称');
+    if (!id || id === '.' || id === '..' || /[\\/<>:"|?*]/.test(id)) throw new Error(t('packruntime.error.invalid_name'));
   }
   if (sourceId === targetId) return;
   const source = path.join(root, sourceId);
   const target = path.join(root, targetId);
-  if (fs.existsSync(target)) throw new Error('目标实例已存在');
+  if (fs.existsSync(target)) throw new Error(t('packruntime.error.target_exists'));
   const profile = JSON.parse(fs.readFileSync(path.join(source, `${sourceId}.json`), 'utf8'));
   fs.mkdirSync(target);
   const runtime = Object.fromEntries(Object.entries(profile).filter(([key]) => !key.startsWith('_')));
@@ -31,7 +32,7 @@ export function packRuntimeProfile(
     packVersion: string;
   }
 ): VersionJson {
-  if (runtime.inheritsFrom === id) throw new Error('整合包运行配置不能继承自身');
+  if (runtime.inheritsFrom === id) throw new Error(t('packruntime.error.inherit_self'));
   return {
     ...runtime,
     id,

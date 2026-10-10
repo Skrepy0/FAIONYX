@@ -29,6 +29,7 @@ import { exitHistory, rememberExit } from './core/exitHistory';
 import { configureRuntimeGraphics } from './runtimeGraphics';
 import { resynchronizeWindowsRestore } from './windowRestoreVisibility';
 import { adaptiveWindowOptions, attachUiWindowSizing } from './uiWindowSizing';
+import { setCurrentLocale, translate as t } from '../shared/i18n';
 
 configureRuntimeGraphics(app.commandLine, process.platform, dirname(process.execPath));
 
@@ -57,7 +58,7 @@ app.commandLine.appendSwitch('process-per-site');
 // 启动日志尽 earliest 初始化：闪退发生在 app.whenReady 之前时也有据可查
 try {
   initializeLauncherLog();
-  launcherLogInfo('main', '主进程模块加载完成，开始初始化');
+  launcherLogInfo('main', t('main.log.module_loaded'));
 } catch {
   /* 日志不可影响启动 */
 }
@@ -65,12 +66,12 @@ try {
 // 崩溃取证：minidump 落到 userData/Crashpad（不上传），配合 launcher-current.log 定位闪退
 try {
   crashReporter.start({ uploadToServer: false, compress: false });
-  launcherLogInfo('main', '崩溃报告器已启动（仅本地留存 minidump）');
+  launcherLogInfo('main', t('main.log.crash_reporter_started'));
 } catch (error) {
-  launcherLogWarn('main', 'crashReporter 初始化失败，不阻断启动', error);
+  launcherLogWarn('main', t('main.log.crash_reporter_failed'), error);
 }
 
-launcherLogInfo('main', '注册特权协议方案：faionyx-asset / faionyx-plugin');
+launcherLogInfo('main', t('main.log.privileged_schemes'));
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -98,7 +99,7 @@ let mascotPending = false;
 let memTrim: MemoryTrimController | null = null;
 
 function createWindow(startup?: Awaited<ReturnType<typeof createStartupSplash>>): void {
-  logScope('window').debug('开始创建主窗口');
+  logScope('window').debug(t('main.log.creating_window'));
   applyNativeAppearance(null, getSettings());
   const windowState = loadWindowState();
   const autoFit = getSettings().uiWindowAutoFit === true;
@@ -127,7 +128,7 @@ function createWindow(startup?: Awaited<ReturnType<typeof createStartupSplash>>)
     startup.attach(win);
   } else win.on('ready-to-show', () => win?.show());
   win.webContents.once('did-finish-load', () => {
-    void frpManager.restore().catch((error) => launcherLogWarn('frp', '恢复隧道失败', error));
+    void frpManager.restore().catch((error) => launcherLogWarn('frp', t('main.log.frp_restore_failed'), error));
   });
   applyNativeAppearance(win, getSettings());
   if (process.platform === 'win32' && windowState)
@@ -141,7 +142,7 @@ function createWindow(startup?: Awaited<ReturnType<typeof createStartupSplash>>)
   attachUiWindowSizing(win, autoFit);
   trackWindowState(win);
   win.once('show', () => {
-    void acknowledgeUpdateStartup().catch((error) => launcherLogWarn('update', '更新确认失败', error));
+    void acknowledgeUpdateStartup().catch((error) => launcherLogWarn('update', t('main.log.update_ack_failed'), error));
   });
   const mainWindow = win;
   skinEditorDirty = false;
@@ -194,7 +195,7 @@ function createWindow(startup?: Awaited<ReturnType<typeof createStartupSplash>>)
   mainWindow.on('show', () => reportVisibility(mainWindow.isVisible() && !mainWindow.isMinimized()));
   mainWindow.on('restore', () => reportVisibility(mainWindow.isVisible() && !mainWindow.isMinimized()));
   resynchronizeWindowsRestore(mainWindow, process.platform, (phase, error) => {
-    launcherLogWarn('window', `恢复窗口可见性同步失败：${phase}`, error);
+    launcherLogWarn('window', t('main.log.visibility_sync_failed', { phase }), error);
   });
   if (process.platform === 'win32') {
     // Native draggable regions do not dispatch DOM clicks. Observe, never consume.
@@ -210,11 +211,13 @@ function createWindow(startup?: Awaited<ReturnType<typeof createStartupSplash>>)
   // 渲染进程崩溃/无响应取证（25h2 GPU 崩溃常见前兆），现有 splash 处理只覆盖初始化期
   win.webContents.on('render-process-gone', (_event, details) => {
     if (!['clean-exit', 'killed'].includes(details.reason))
-      rememberExit(() => exitHistory().fault('launcher', `启动器界面异常退出：${details.reason}（代码 ${details.exitCode}）。`));
-    launcherLogWarn('window', `渲染进程退出：reason=${details.reason} exitCode=${details.exitCode}`);
+      rememberExit(() =>
+        exitHistory().fault('launcher', t('main.fault.renderer_crashed', { reason: details.reason, code: details.exitCode }))
+      );
+    launcherLogWarn('window', t('main.log.renderer_gone', { reason: details.reason, code: details.exitCode }));
   });
   win.webContents.on('unresponsive', () => {
-    launcherLogWarn('window', '渲染进程无响应');
+    launcherLogWarn('window', t('main.log.renderer_unresponsive'));
   });
   win.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
@@ -230,21 +233,25 @@ function createWindow(startup?: Awaited<ReturnType<typeof createStartupSplash>>)
 
 app.whenReady().then(async () => {
   initializeLauncherLog();
-  launcherLogInfo('main', `Electron 就绪（版本 ${app.getVersion()}）`);
+  launcherLogInfo('main', t('main.log.electron_ready', { version: app.getVersion() }));
+  // 主进程文案（对话框/错误提示）与渲染层共用同一份词条，语言取持久化设置。
+  try {
+    setCurrentLocale(getSettings().locale);
+  } catch {}
   if (await applyUpdateOnStartup()) return;
   const startup = await createStartupSplash();
-  launcherLogInfo('main', '启动闪屏已创建');
+  launcherLogInfo('main', t('main.log.splash_created'));
   // 内存压榨控制器：指标日志 + 静默期工作集整理（trim 进程清单来自 getAppMetrics，绝不触碰游戏进程）
   memTrim = await startMemoryTrim(
     () => win,
     (message) => launcherLogInfo('memory', message)
   );
-  launcherLogInfo('memory', '内存压榨控制器已启动（指标日志 5 分钟/条；静默 10 分钟后低频整理）');
+  launcherLogInfo('memory', t('main.log.memory_controller'));
   const { registerIpc } = await import('./ipc');
   try {
     await migrateLegacyAppearanceAssets();
   } catch (error) {
-    launcherLogWarn('appearance', '旧版外观资源迁移失败，不阻断启动', error);
+    launcherLogWarn('appearance', t('main.log.appearance_migrate_failed'), error);
   }
   protocol.handle('faionyx-asset', (request) => {
     if (request.method !== 'GET') return new Response('Method Not Allowed', { status: 405 });
@@ -263,13 +270,13 @@ app.whenReady().then(async () => {
   const { registerPluginProtocol } = await import('./core/plugins');
   registerPluginProtocol();
   registerIpc(() => (win && !win.isDestroyed() ? win : null));
-  launcherLogInfo('main', 'IPC 通道与插件协议注册完成');
+  launcherLogInfo('main', t('main.log.ipc_registered'));
 
   // 存量实例自包含迁移（老式 inheritsFrom 继承 → 合并进实例，幂等）：基础版本改名/删除不再波及已装实例
   void import('./core/versions').then(({ migrateFlattenedInstances }) =>
     migrateFlattenedInstances((m) => launcherLogInfo('migrate', m)).then((n) => {
-      if (n > 0) launcherLogInfo('migrate', `共 ${n} 个旧式继承实例已合并为自包含实例`);
-      launcherLogInfo('migrate', '存量实例迁移检查完成');
+      if (n > 0) launcherLogInfo('migrate', t('main.log.legacy_instances_merged', { count: n }));
+      launcherLogInfo('migrate', t('main.log.instance_migration_done'));
     })
   );
 
@@ -318,7 +325,7 @@ app.whenReady().then(async () => {
   });
 
   createWindow(startup);
-  launcherLogInfo('main', '主窗口创建完成');
+  launcherLogInfo('main', t('main.log.window_created'));
 
   // 自动更新计时器只注册一次；游戏状态由每个窗口的 renderer-ready 重放。
   win?.webContents.once('did-finish-load', () => {
@@ -347,13 +354,13 @@ app.whenReady().then(async () => {
           pendingVersion: pending?.release.version ?? blockedUpdateVersion(),
         });
         if (action === 'auto-download') {
-          launcherLogInfo('main', `自动安装模式：静默下载更新 v${result.release.version}`);
+          launcherLogInfo('main', t('main.log.auto_install_update', { version: result.release.version }));
           applyMod.startAutoUpdate(result.release, s);
         } else if (action === 'prompt') {
           win?.webContents.send('event:updatePrompt', result.release);
         }
       } catch (e) {
-        launcherLogInfo('main', `启动自动检查更新失败（静默降级）：${e instanceof Error ? e.message : String(e)}`);
+        launcherLogInfo('main', t('main.log.auto_update_check_failed', { error: e instanceof Error ? e.message : String(e) }));
       }
     };
     void runUpdateCheck();
@@ -363,7 +370,7 @@ app.whenReady().then(async () => {
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      launcherLogInfo('window', 'macOS 激活事件：重新创建主窗口');
+      launcherLogInfo('window', t('main.log.macos_activate'));
       createWindow();
     }
   });
@@ -389,40 +396,40 @@ app.on('before-quit', (event) => {
   void stopDirectHost();
   void stopVoxlinkOnQuit();
   void stopTerracottaOnQuit();
-  void frpManager.shutdown().catch((error) => launcherLogWarn('frp', '关闭隧道失败', error));
-  launcherLogInfo('main', '所有窗口已关闭，开始清理联机相关资源');
+  void frpManager.shutdown().catch((error) => launcherLogWarn('frp', t('main.log.frp_shutdown_failed'), error));
+  launcherLogInfo('main', t('main.log.all_windows_closed'));
 });
 
 // ---------------- 崩溃取证（win11 25h2 概率闪退排查） ----------------
 // 主进程未捕获异常：记录完整堆栈并保持进程存活（活着 > 闪退；日志可回溯）
 process.on('uncaughtException', (error) => {
-  rememberExit(() => exitHistory().fault('launcher', '启动器发生未捕获异常，详情已记录到启动器日志。'));
-  launcherLogError('crash', '主进程未捕获异常（进程保持存活）', error);
+  rememberExit(() => exitHistory().fault('launcher', t('main.fault.uncaught_exception')));
+  launcherLogError('crash', t('main.log.uncaught_exception'), error);
 });
 process.on('unhandledRejection', (reason) => {
-  rememberExit(() => exitHistory().fault('launcher', '启动器发生未处理的异步错误，详情已记录到启动器日志。'));
-  launcherLogError('crash', '未处理的 Promise 拒绝', reason);
+  rememberExit(() => exitHistory().fault('launcher', t('main.fault.unhandled_rejection')));
+  launcherLogError('crash', t('main.log.unhandled_rejection'), reason);
 });
 // 子进程（GPU/渲染/网络等）异常退出记录：25h2 上 GPU 进程崩溃是常见闪退前兆
 app.on('child-process-gone', (_event, details) => {
   if (!['clean-exit', 'killed'].includes(details.reason))
     rememberExit(() =>
-      exitHistory().fault('launcher', `启动器子进程异常退出：${details.type} / ${details.reason}（代码 ${details.exitCode}）。`)
+      exitHistory().fault('launcher', t('main.fault.child_crashed', { type: details.type, reason: details.reason, code: details.exitCode }))
     );
-  launcherLogWarn('crash', `子进程异常退出：type=${details.type} reason=${details.reason} exitCode=${details.exitCode}`);
+  launcherLogWarn('crash', t('main.log.child_crashed', { type: details.type, reason: details.reason, code: details.exitCode }));
 });
 app.on('before-quit', () => {
   // 任务B：任何正常退出路径都不终止游戏——游戏进程以脱离方式创建（gracefulClose.spawnGameProcess），
   // 这里只记录「游戏继续运行」，绝无 taskkill/树杀。
   const gamePids = getRunningGamePids();
-  if (gamePids.length) launcherLogInfo('exit', `启动器已退出，游戏(进程 PID ${gamePids.join('、')})继续运行`);
+  if (gamePids.length) launcherLogInfo('exit', t('main.log.exit_game_running', { pids: gamePids.join(t('common.list_separator')) }));
   // 尽早异步刷盘；quit 事件里还有同步兜底
   void flushLauncherLog();
 });
 app.on('quit', (_event, exitCode) => {
   if (launcherExitRecord) rememberExit(() => exitHistory().end(launcherExitRecord, exitCode ?? Number(process.exitCode ?? 0)));
   try {
-    launcherLogInfo('main', `应用退出，退出码 ${exitCode ?? process.exitCode ?? 0}`);
+    launcherLogInfo('main', t('main.log.app_exit', { code: exitCode ?? process.exitCode ?? 0 }));
   } catch {
     /* 忽略 */
   }

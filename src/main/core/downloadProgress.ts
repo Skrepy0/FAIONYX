@@ -1,3 +1,5 @@
+import { translate as t } from '../../shared/i18n';
+
 export interface DownloadProgressSnapshot {
   completedFiles: number;
   totalFiles: number;
@@ -32,7 +34,7 @@ export class DownloadProgressTracker {
   private hasDeterminateEpoch = false;
 
   add(expected?: number): number {
-    if (this.lastFraction >= 1) throw new Error('已完成的进度任务不能再添加文件');
+    if (this.lastFraction >= 1) throw new Error(t('downloadprogress.error.completed_add'));
     const wasDeterminate = this.isDeterminate();
     const doneBefore = this.sealed ? this.bytesDone() : 0;
     if (this.sealed && wasDeterminate) this.snapshot();
@@ -139,7 +141,7 @@ export class DownloadProgressTracker {
 
   private entry(index: number): ProgressEntry {
     const entry = this.entries[index];
-    if (!entry) throw new Error(`未知下载进度项: ${index}`);
+    if (!entry) throw new Error(t('downloadprogress.error.unknown_item', { index }));
     return entry;
   }
 

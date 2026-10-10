@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
 import type { RemoteVersion } from '@shared/types';
 import { filterVersions, versionCategories, versionCategory, type VersionCategory } from '@shared/versionPicker';
 import { getManifest } from '../api';
+import { t } from '@renderer/i18n';
 const props = defineProps<{ modelValue: string; disabled?: boolean }>(),
   emit = defineEmits<{ (e: 'update:modelValue', v: string): void }>();
 const open = ref(false),
@@ -41,7 +42,7 @@ async function load(refresh = false) {
   try {
     versions.value = await getManifest(refresh);
   } catch {
-    error.value = '版本列表加载失败，请重试或手动输入。';
+    error.value = t('mvp.load_failed');
   } finally {
     loading.value = false;
   }
@@ -127,10 +128,10 @@ onBeforeUnmount(close);
     :disabled="disabled"
     :aria-expanded="open"
     aria-haspopup="listbox"
-    aria-label="目标 Minecraft 版本"
+    :aria-label="t('mvp.aria_label')"
     @click="show"
   >
-    <span>{{ modelValue || '选择目标游戏版本' }}</span
+    <span>{{ modelValue || t('mvp.placeholder') }}</span
     ><span>⌄</span>
   </button>
   <Teleport to="body"
@@ -142,11 +143,11 @@ onBeforeUnmount(close);
             v-model="query"
             class="input"
             role="combobox"
-            aria-label="搜索游戏版本"
+            :aria-label="t('mvp.search_aria')"
             aria-controls="migration-version-list"
             :aria-expanded="open"
             :aria-activedescendant="'mc-option-' + active"
-            placeholder="搜索版本号，例如 1.21"
+            :placeholder="t('mvp.search_placeholder')"
             @input="reset"
           />
           <div class="version-categories">
@@ -159,25 +160,26 @@ onBeforeUnmount(close);
                 reset();
               "
             >
-              {{ c.label }}
+              {{ t(c.label) }}
             </button>
           </div>
         </div>
-        <div ref="list" id="migration-version-list" class="version-picker-list" role="listbox" aria-label="游戏版本">
-          <div v-if="loading" class="version-picker-message">正在获取版本列表…</div>
+        <div ref="list" id="migration-version-list" class="version-picker-list" role="listbox" :aria-label="t('mvp.list_aria')">
+          <div v-if="loading" class="version-picker-message">{{ t('mvp.loading') }}</div>
           <div v-else-if="error" class="version-picker-message">
-            {{ error }}<button class="btn btn-ghost" @click="load(true)">重试</button
-            ><button class="btn btn-ghost" @click="manual = true">手动输入</button>
+            {{ error }}<button class="btn btn-ghost" @click="load(true)">{{ t('mvp.retry') }}</button
+            ><button class="btn btn-ghost" @click="manual = true">{{ t('mvp.manual') }}</button>
           </div>
           <div v-else-if="!rows.length" class="version-picker-message">
-            当前分类没有匹配版本<button
+            {{ t('mvp.no_match')
+            }}<button
               class="btn btn-ghost"
               @click="
                 category = 'all';
                 reset();
               "
             >
-              搜索全部分类
+              {{ t('mvp.search_all') }}
             </button>
           </div>
           <button
@@ -194,20 +196,22 @@ onBeforeUnmount(close);
           >
             <span
               ><strong>{{ v.id }}</strong
-              ><small>{{ versionCategories.find((c) => c.value === versionCategory(v))?.label }}</small></span
+              ><small>{{ t(versionCategories.find((c) => c.value === versionCategory(v))?.label ?? '') }}</small></span
             ><time>{{ v.releaseTime.slice(0, 10) }}</time
             ><b>{{ v.id === modelValue ? '✓' : '' }}</b>
           </button>
         </div>
         <form v-if="manual" class="version-picker-manual" @submit.prevent="choose(manualValue.trim())">
-          <input v-model="manualValue" class="input" placeholder="完整版本号" aria-label="手动输入版本号" /><button
+          <input v-model="manualValue" class="input" :placeholder="t('mvp.full_version')" :aria-label="t('mvp.manual_aria')" /><button
             class="btn btn-gold"
             :disabled="!manualValue.trim()"
           >
-            选择
+            {{ t('mvp.select') }}
           </button>
         </form>
-        <footer>已选择：{{ modelValue || '尚未选择' }} · {{ rows.length }} 个结果</footer>
+        <footer>
+          {{ t('mvp.selected_prefix') }}{{ modelValue || t('mvp.none_selected') }} · {{ rows.length }} {{ t('mvp.results_count') }}
+        </footer>
       </section></Transition
     ></Teleport
   >

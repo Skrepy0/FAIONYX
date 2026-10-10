@@ -9,6 +9,7 @@
  * - 可观测：每 5 分钟汇总各进程 workingSetSize 写日志，trim 前后各记一条。
  */
 import type { BrowserWindow } from 'electron';
+import { translate as t } from '../../shared/i18n';
 
 // ---------------- 常量（可观测节奏与瘦身开关） ----------------
 /** 内存指标日志频率：5 分钟一次，低频不刷屏 */
@@ -53,7 +54,7 @@ export function sumWorkingSetByType(metrics: MemoryMetricsLike[]): { byType: Rec
 /** 指标日志行：`内存指标: browser=120MB, renderer=210MB (共 420MB)` */
 export function formatMemoryLine(byType: Record<string, number>, total: number): string {
   const parts = Object.entries(byType).map(([type, kb]) => `${type}=${mb(kb)}`);
-  return `内存指标: ${parts.join(', ') || '无进程'} (共 ${mb(total)})`;
+  return t('memtrim.metrics_line', { parts: parts.join(', ') || t('memtrim.no_process'), total: mb(total) });
 }
 
 function mb(kb: number): string {
@@ -112,7 +113,7 @@ function loadKernel32Trim(): Promise<Kernel32TrimApi | null> {
 
 /** PowerShell 兜底：单次 P/Invoke EmptyWorkingSet 整理自身（约几百 ms，只在 koffi 缺失时触发） */
 export function trimSelfPowerShellScript(selfPid: number): string {
-  if (!Number.isSafeInteger(selfPid) || selfPid <= 0) throw new Error('无效的启动器进程');
+  if (!Number.isSafeInteger(selfPid) || selfPid <= 0) throw new Error(t('memtrim.error.invalid_pid'));
   // GetCurrentProcess inside PowerShell targets PowerShell itself. Open only the
   // supplied launcher PID and always close the handle, even on native failure.
   return (
@@ -163,7 +164,7 @@ export async function startMemoryTrim(
 
   async function trimOnce(reason: string): Promise<void> {
     if (process.platform !== 'win32') {
-      log(`工作集整理(${reason})：此平台不适用；渲染层空闲回收单独记录，不计作真实内存优化收益`);
+      log(t('memtrim.log.platform_na', { reason }));
       return;
     }
     const metrics = app.getAppMetrics() as unknown as MemoryMetricsLike[];
@@ -187,8 +188,14 @@ export async function startMemoryTrim(
     const after = sumWorkingSetByType(app.getAppMetrics() as unknown as MemoryMetricsLike[]);
     const delta = before.total - after.total;
     log(
-      `工作集整理(${reason})：${mb(before.total)} → ${mb(after.total)}（驻留页减少约 ${mb(Math.max(0, delta))}，不代表私有提交内存释放，` +
-        `整理进程 ${handled} 个${kernel32 ? '' : '，PowerShell 兜底'}）`
+      t('memtrim.log.trim_summary', {
+        reason,
+        before: mb(before.total),
+        after: mb(after.total),
+        delta: mb(Math.max(0, delta)),
+        handled,
+        fallback: kernel32 ? '' : t('memtrim.log.trim_summary_fallback'),
+      })
     );
   }
 
@@ -205,10 +212,10 @@ export async function startMemoryTrim(
       if (hidden) return;
       hidden = true;
       broadcastToRenderer();
-      void trimOnce('窗口静默');
+      void trimOnce(t('memtrim.reason.window_idle'));
       idleTimer = setTimeout(() => {
-        void trimOnce('静默低频整理');
-        idleInterval = setInterval(() => void trimOnce('静默低频整理'), IDLE_TRIM_INTERVAL_MS);
+        void trimOnce(t('memtrim.reason.idle_periodic'));
+        idleInterval = setInterval(() => void trimOnce(t('memtrim.reason.idle_periodic')), IDLE_TRIM_INTERVAL_MS);
         idleInterval.unref?.();
       }, IDLE_TRIM_FIRST_MS);
       idleTimer.unref?.();

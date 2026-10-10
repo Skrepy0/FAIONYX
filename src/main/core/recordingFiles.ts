@@ -7,12 +7,13 @@ import yauzl from 'yauzl';
 import { hashFile, safePath } from './backupStore';
 import { waitIfTaskPaused } from './tasks';
 import type { RecordingKind } from '../../shared/recordings';
+import { translate as t } from '../../shared/i18n';
 
 /** Read ZIP directory and small metadata only; never unpack world data into memory. */
 export function validateRecording(file: string, kind: RecordingKind): Promise<void> {
   return new Promise((resolve, reject) => {
     yauzl.open(file, { lazyEntries: true }, (error, zip) => {
-      if (error || !zip) return reject(new Error('录像压缩包损坏或尚未保存完成'));
+      if (error || !zip) return reject(new Error(t('recordingfiles.error.corrupt_archive')));
       let settled = false,
         count = 0,
         metadata: Record<string, unknown> | undefined;
@@ -25,13 +26,13 @@ export function validateRecording(file: string, kind: RecordingKind): Promise<vo
       };
       zip.on('error', (e) => end(e));
       zip.on('entry', (entry) => {
-        if (++count > 100000) return end(new Error('录像条目过多'));
+        if (++count > 100000) return end(new Error(t('recordingfiles.error.too_many_entries')));
         names.add(entry.fileName);
         const metaName = kind === 'replaymod' ? 'metaData.json' : 'metadata.json';
         if (entry.fileName !== metaName) return zip.readEntry();
-        if (metadata || entry.uncompressedSize > 1024 * 1024) return end(new Error('录像元数据无效或过大'));
+        if (metadata || entry.uncompressedSize > 1024 * 1024) return end(new Error(t('recordingfiles.error.metadata_invalid')));
         zip.openReadStream(entry, (e, stream) => {
-          if (e || !stream) return end(e || new Error('无法读取录像元数据'));
+          if (e || !stream) return end(e || new Error(t('recordingfiles.error.metadata_unreadable')));
           const chunks: Buffer[] = [];
           let size = 0;
           stream.on('error', (e) => end(e));
@@ -39,7 +40,7 @@ export function validateRecording(file: string, kind: RecordingKind): Promise<vo
             size += b.length;
             if (size > 1024 * 1024) {
               stream.destroy();
-              end(new Error('录像元数据过大'));
+              end(new Error(t('recordingfiles.error.metadata_too_large')));
             } else chunks.push(b);
           });
           stream.on('end', () => {
@@ -48,7 +49,7 @@ export function validateRecording(file: string, kind: RecordingKind): Promise<vo
               if (!metadata || Array.isArray(metadata) || typeof metadata !== 'object') throw new Error();
               zip.readEntry();
             } catch {
-              end(new Error('录像元数据损坏'));
+              end(new Error(t('recordingfiles.error.metadata_corrupt')));
             }
           });
         });
@@ -65,7 +66,9 @@ export function validateRecording(file: string, kind: RecordingKind): Promise<vo
               !Array.isArray(chunks) &&
               Object.keys(chunks).length > 0 &&
               Object.keys(chunks).every((n) => names.has(n));
-        end(valid ? undefined : new Error('不是完整的 ' + (kind === 'replaymod' ? 'ReplayMod' : 'Flashback') + ' 录像'));
+        end(
+          valid ? undefined : new Error(t('recordingfiles.error.incomplete', { kind: kind === 'replaymod' ? 'ReplayMod' : 'Flashback' }))
+        );
       });
       zip.readEntry();
     });
@@ -80,9 +83,9 @@ export async function copyRecording(
   progress?: (bytes: number) => void
 ): Promise<string> {
   const before = await fs.promises.lstat(source);
-  if (!before.isFile() || before.isSymbolicLink()) throw new Error('录像不是普通文件');
+  if (!before.isFile() || before.isSymbolicLink()) throw new Error(t('recordingfiles.error.not_regular_file'));
   const root = await fs.promises.realpath(destination);
-  if ((await fs.promises.lstat(destination)).isSymbolicLink()) throw new Error('目标目录不能是链接');
+  if ((await fs.promises.lstat(destination)).isSymbolicLink()) throw new Error(t('recordingfiles.error.link_destination'));
   const stage = path.join(root, '.faionyx-recording-' + crypto.randomUUID() + '.part');
   const digest = crypto.createHash('sha256');
   let done = 0;
@@ -108,7 +111,7 @@ export async function copyRecording(
       sha !== (await hashFile(source, signal)) ||
       sha !== (await hashFile(stage, signal))
     )
-      throw new Error('录像在复制期间发生变化，请停止录制后重试');
+      throw new Error(t('recordingfiles.error.changed_during_copy'));
     signal?.throwIfAborted();
     const parsed = path.parse(source);
     for (let i = 0; i < 10000; i++) {
@@ -122,7 +125,7 @@ export async function copyRecording(
         if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
       }
     }
-    throw new Error('同名录像过多，请整理目标目录');
+    throw new Error(t('recordingfiles.error.too_many_same_name'));
   } finally {
     await fs.promises.unlink(stage).catch(() => {});
   }

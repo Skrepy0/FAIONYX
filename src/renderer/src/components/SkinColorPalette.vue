@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
 import { hsvToRgb, parseSkinChannels, parseSkinHex, rgbToHsv, rgbToSkinHex, SKIN_COLOR_PRESETS, type HsvColor } from '@shared/skinColors';
+import { t } from '@renderer/i18n';
 
 const props = defineProps<{ color: string; alpha: number; alphaEnabled: boolean; custom: string[]; recent: string[] }>();
 const emit = defineEmits<{ 'update:color': [string]; 'update:alpha': [number]; 'update:custom': [string[]] }>();
@@ -118,16 +119,18 @@ function addCustom() {
 </script>
 
 <template>
-  <section class="skin-color-palette" aria-label="自由调色板">
-    <div class="palette-title"><strong>颜色</strong></div>
+  <section class="skin-color-palette" :aria-label="t('sc.palette')">
+    <div class="palette-title">
+      <strong>{{ t('sc.current_color') }}</strong>
+    </div>
     <div class="palette-picker-plane">
       <div
         class="palette-sv"
         :style="{ backgroundColor: hueColor }"
         tabindex="0"
         role="group"
-        aria-label="饱和度与明度，方向键调整，Shift 加速"
-        :aria-description="`饱和度 ${Math.round(hsv.s)}%，明度 ${Math.round(hsv.v)}%`"
+        :aria-label="t('sc.saturation_value')"
+        :aria-description="t('sc.saturation', { s: Math.round(hsv.s).toString(), v: Math.round(hsv.v).toString() })"
         @pointerdown="svStart"
         @pointermove="svMove"
         @pointerup="svEnd"
@@ -137,23 +140,23 @@ function addCustom() {
         <span class="palette-sv-pointer" :style="{ left: `${hsv.s}%`, top: `${100 - hsv.v}%` }"></span>
       </div>
       <label class="palette-hue-label"
-        ><span class="sr-only">色相</span
-        ><input class="palette-hue" type="range" min="0" max="360" step="0.1" :value="hsv.h" aria-label="色相" @input="hue"
+        ><span class="sr-only">{{ t('sc.hue') }}</span
+        ><input class="palette-hue" type="range" min="0" max="360" step="0.1" :value="hsv.h" :aria-label="t('sc.hue')" @input="hue"
       /></label>
       <div class="palette-current">
-        <span>当前颜色</span
+        <span>{{ t('sc.current_color') }}</span
         ><span class="palette-preview checker"><span :style="{ backgroundColor: color, opacity: shownAlpha }"></span></span
         ><span class="palette-color-label">{{ color.toUpperCase() }}</span>
       </div>
     </div>
     <div class="palette-group palette-recent">
       <div class="palette-custom-title">
-        <span>最近使用</span
+        <span>{{ t('sc.recent_use') }}</span
         ><button
           type="button"
           class="palette-add"
           :disabled="selectedCustom || custom.length >= 256"
-          aria-label="加入当前颜色到自定义色板"
+          :aria-label="t('sc.add_to_custom')"
           @click="addCustom"
         >
           ＋
@@ -167,23 +170,24 @@ function addCustom() {
           class="palette-swatch"
           :class="{ selected: color === c }"
           :style="{ backgroundColor: c }"
-          :aria-label="`使用最近颜色 ${c}`"
+          :aria-label="t('sc.use_recent', { color: c })"
           :title="c.toUpperCase()"
           @click="choose(c)"
         ></button
-        ><span v-if="!recent.length" class="palette-help">绘制后记录最近使用的颜色。</span>
+        ><span v-if="!recent.length" class="palette-help">{{ t('sc.recent_empty') }}</span>
       </div>
     </div>
     <div class="palette-color-fields">
       <label class="palette-hex-field"
-        >HEX<input
+        >{{ t('sc.hex')
+        }}<input
           class="palette-hex"
           type="text"
           :value="drafts.hex"
           maxlength="7"
           spellcheck="false"
           :aria-invalid="!hexValid"
-          aria-label="HEX 颜色"
+          :aria-label="t('sc.hex')"
           @focus="focusedGroup = 'hex'"
           @input="editHex"
           @blur="finishEditing"
@@ -197,7 +201,7 @@ function addCustom() {
             type="text"
             inputmode="numeric"
             :value="drafts.rgb[index]"
-            :aria-label="`RGB ${name}`"
+            :aria-label="t('sc.rgb', { name })"
             :aria-invalid="!rgbValid"
             @focus="focusedGroup = 'rgb'"
             @input="editChannels('rgb', index, $event)"
@@ -213,7 +217,7 @@ function addCustom() {
             type="text"
             inputmode="decimal"
             :value="drafts.hsv[index]"
-            :aria-label="`HSV ${name}`"
+            :aria-label="t('sc.hsv', { name })"
             :aria-invalid="!hsvValid"
             @focus="focusedGroup = 'hsv'"
             @input="editChannels('hsv', index, $event)"
@@ -224,7 +228,7 @@ function addCustom() {
     </div>
     <div class="palette-alpha-row">
       <label
-        >透明度
+        >{{ t('sc.opacity') }}
         <input
           class="palette-alpha"
           type="range"
@@ -233,7 +237,7 @@ function addCustom() {
           step="1"
           :value="shownAlpha * 100"
           :disabled="!alphaEnabled"
-          aria-label="画笔透明度"
+          :aria-label="t('sc.brush_alpha')"
           @input="alphaSlider" /></label
       ><label class="palette-alpha-number"
         ><input
@@ -242,7 +246,7 @@ function addCustom() {
           :value="drafts.alpha"
           :disabled="!alphaEnabled"
           :aria-invalid="!alphaValid"
-          aria-label="画笔透明度百分比"
+          :aria-label="t('sc.brush_alpha_pct')"
           @focus="focusedGroup = 'alpha'"
           @input="alpha"
           @blur="finishEditing"
@@ -250,12 +254,12 @@ function addCustom() {
         />%</label
       >
     </div>
-    <p v-if="!alphaEnabled" class="palette-help">基础层保持 100% 不透明；切换外层可调整。</p>
+    <p v-if="!alphaEnabled" class="palette-help">{{ t('sc.alpha_disabled') }}</p>
     <p v-if="!hexValid || !rgbValid || !hsvValid || !alphaValid" class="palette-help palette-error" role="status">
-      请输入完整且有效的颜色；画笔仍使用上一个有效值。
+      {{ t('sc.invalid_color') }}
     </p>
     <div class="palette-group">
-      <span>常用颜色</span>
+      <span>{{ t('sc.common_colors') }}</span>
       <div class="palette-swatches">
         <button
           v-for="c in SKIN_COLOR_PRESETS"
@@ -264,7 +268,7 @@ function addCustom() {
           class="palette-swatch"
           :class="{ selected: color === c }"
           :style="{ backgroundColor: c }"
-          :aria-label="`选择颜色 ${c}`"
+          :aria-label="t('sc.choose_color', { color: c })"
           :title="c.toUpperCase()"
           :aria-pressed="color === c"
           @click="choose(c)"
@@ -273,9 +277,9 @@ function addCustom() {
     </div>
     <div class="palette-group">
       <div class="palette-custom-title">
-        <span>自定义色板</span
+        <span>{{ t('sc.custom_palette') }}</span
         ><button type="button" class="palette-add" :disabled="selectedCustom || custom.length >= 256" @click="addCustom">
-          {{ selectedCustom ? '已加入色板' : '+ 加入当前颜色' }}
+          {{ selectedCustom ? t('sc.already_added') : t('sc.add_color_current') }}
         </button>
       </div>
       <div class="palette-swatches palette-custom-swatches">
@@ -285,15 +289,15 @@ function addCustom() {
             class="palette-swatch"
             :class="{ selected: color === c }"
             :style="{ backgroundColor: c }"
-            :aria-label="`使用自定义颜色 ${c}`"
+            :aria-label="t('sc.use_custom', { color: c })"
             :title="c.toUpperCase()"
             @click="choose(c)"
           ></button
           ><button
             type="button"
             class="palette-remove"
-            :aria-label="`删除自定义颜色 ${c}`"
-            :title="`删除 ${c.toUpperCase()}`"
+            :aria-label="t('sc.delete_custom', { color: c })"
+            :title="t('sc.delete_custom_inline', { color: c.toUpperCase() })"
             @click="
               emit(
                 'update:custom',
@@ -303,7 +307,7 @@ function addCustom() {
           >
             ×
           </button></span
-        ><span v-if="!custom.length" class="palette-help">可保存你常用的颜色。</span>
+        ><span v-if="!custom.length" class="palette-help">{{ t('sc.custom_empty') }}</span>
       </div>
     </div>
   </section>

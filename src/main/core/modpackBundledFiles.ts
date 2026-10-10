@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import type { PackZip, PackEntry } from './streamPackZip';
+import { translate as t } from '../../shared/i18n';
 
 const normalize = (value: string): string => value.replace(/\\/g, '/').replace(/^\.\//, '');
 
@@ -46,12 +47,12 @@ export class BundledModpackFiles {
       if (entry.isDirectory || !name.startsWith(prefix)) continue;
       const rel = name.slice(prefix.length);
       if (!isPackResource(rel)) continue;
-      if (((entry.attr >>> 16) & 0o170000) === 0o120000) throw new Error(`整合包包含不允许的符号链接：${name}`);
+      if (((entry.attr >>> 16) & 0o170000) === 0o120000) throw new Error(t('packbundled.error.symlink', { name }));
       // Case collisions are unsafe on Windows even when the ZIP was created on another OS.
       const key = rel.toLowerCase();
-      if (paths.has(key)) throw new Error(`整合包包含重名覆盖文件：${rel}`);
+      if (paths.has(key)) throw new Error(t('packbundled.error.duplicate', { name: rel }));
       paths.add(key);
-      if (entry.header.size > 512 * 1024 * 1024) throw new Error(`overrides 单文件超过 512 MB：${rel}`);
+      if (entry.header.size > 512 * 1024 * 1024) throw new Error(t('packbundled.error.too_large', { name: rel }));
       const group = this.entries.get(entry.header.size) ?? [];
       group.push({ entry, rel });
       this.entries.set(entry.header.size, group);

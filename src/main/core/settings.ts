@@ -21,6 +21,7 @@ import {
 } from '../../shared/types';
 import { assertValidResolution, normalizeStoredResolution, resolutionValidationError } from './gameWindow';
 import { ensureGlobalImage, importGlobalImage, removeGlobalImage } from './appearanceAssets';
+import { setCurrentLocale, translate as t } from '../../shared/i18n';
 
 let cached: Settings | null = null;
 
@@ -32,7 +33,7 @@ function defaults(): Settings {
   const gameDir = defaultGameFolder(app.getPath('appData'));
   return {
     gameDir,
-    folders: [{ path: gameDir, name: '默认文件夹', isDefault: true }],
+    folders: [{ path: gameDir, name: t('gamefolders.label.default_folder'), isDefault: true }],
     activeFolder: gameDir,
     javaPath: '',
     javaAuto: true,
@@ -112,7 +113,7 @@ export function getSettings(): Settings {
         Array.isArray(raw.folders) && raw.folders.length
           ? raw.folders
           : raw.gameDir
-            ? [{ path: raw.gameDir, name: '默认文件夹', isDefault: true }]
+            ? [{ path: raw.gameDir, name: t('gamefolders.label.default_folder'), isDefault: true }]
             : def.folders,
       activeFolder: raw.activeFolder || raw.gameDir || def.activeFolder,
     };
@@ -145,13 +146,15 @@ export function getSettings(): Settings {
     }
     c.gameDir = c.activeFolder;
     cached = c;
+    // 主进程文案语言跟随持久化设置（首次读取配置时同步一次）。
+    setCurrentLocale(c.locale);
     // 将旧主题 key、旧外部背景路径和损坏资源回退一次性落盘，避免每次启动重复迁移。
     if (c.theme !== raw.theme || c.background.image !== storedBackground || c.launchThumbnail.image !== storedThumbnail) {
       try {
         fs.mkdirSync(path.dirname(settingsFile()), { recursive: true });
         fs.writeFileSync(settingsFile(), JSON.stringify(c, null, 2), 'utf-8');
       } catch (error) {
-        console.error('[FAIONYX] 旧外观设置迁移写入失败:', error);
+        console.error(`[FAIONYX] ${t('settings.log.legacy_appearance_write_failed')}`, error);
       }
     }
   } catch {
@@ -160,7 +163,7 @@ export function getSettings(): Settings {
   try {
     ensureDefaultGameFolder(app.getPath('appData'), cached.folders);
   } catch (error) {
-    console.error('[FAIONYX] 默认游戏目录创建失败:', error);
+    console.error(`[FAIONYX] ${t('settings.log.default_game_dir_failed')}`, error);
   }
   return cached;
 }
@@ -168,16 +171,16 @@ export function getSettings(): Settings {
 /** 合并 patch 并写盘，返回合并后的完整 Settings */
 export function saveSettings(patch: Partial<Settings>): Settings {
   if (Object.prototype.hasOwnProperty.call(patch, 'rememberGameWindowSize') && typeof patch.rememberGameWindowSize !== 'boolean')
-    throw new Error('保存游戏窗口大小必须为开启或关闭');
+    throw new Error(t('settings.error.remember_window_bool'));
   if (Object.prototype.hasOwnProperty.call(patch, 'uiWindowAutoFit') && typeof patch.uiWindowAutoFit !== 'boolean')
-    throw new Error('UI窗口自适应必须为开启或关闭');
+    throw new Error(t('settings.error.ui_autofit_bool'));
   const cur = getSettings();
   validateDownloadLimits({ ...cur, ...patch });
   if (patch.background?.fit !== undefined && !['fill', 'fit', 'crop'].includes(patch.background.fit)) {
-    throw new Error('非法的背景显示方式');
+    throw new Error(t('settings.error.invalid_background_fit'));
   }
   if (patch.launchThumbnail?.fit !== undefined && !['fill', 'fit', 'crop'].includes(patch.launchThumbnail.fit)) {
-    throw new Error('非法的启动卡显示方式');
+    throw new Error(t('settings.error.invalid_thumbnail_fit'));
   }
   let nextResolution = cur.resolution;
   if (patch.resolution) {
@@ -232,9 +235,11 @@ export function saveSettings(patch: Partial<Settings>): Settings {
     fs.writeFileSync(settingsFile() + '.tmp', JSON.stringify(merged, null, 2), 'utf-8');
     fs.renameSync(settingsFile() + '.tmp', settingsFile());
   } catch (error) {
-    throw new Error(`设置写入失败：${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(t('settings.error.write_failed', { error: error instanceof Error ? error.message : String(error) }));
   }
   cached = merged;
+  // 语言切换后主进程文案（对话框/错误提示）需立即跟随，而不是等下次启动。
+  if (patch.locale !== undefined) setCurrentLocale(merged.locale);
   if (patch.downloadThreads !== undefined || patch.downloadSpeedKBps !== undefined) downloadLimiter.configure(merged);
   if (patch.launchThumbnail) {
     const retained = new Set(carouselImages(merged.launchThumbnail));

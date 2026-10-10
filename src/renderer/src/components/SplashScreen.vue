@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
+import { t } from '@renderer/i18n';
 import splashFace from '../assets/splash-face.png';
 
 defineProps<{ leaving?: boolean }>();
@@ -111,15 +112,15 @@ onUnmounted(() => timers.forEach(clearTimeout));
 
 <template>
   <div class="splash" :class="{ leaving }">
-    <!-- 中央目标拼图区 -->
+    <!-- Central puzzle assembly area -->
     <div class="board" :class="phase">
       <div v-for="(t, i) in tiles" :key="i" class="tile" :style="tileStyle(t)"></div>
     </div>
 
-    <!-- Logo + 加载提示（定型期淡入） -->
+    <!-- Logo + loading hint (fade in during settle phase) -->
     <div class="brand" :class="{ show: phase === 'settle' }">
       <div class="brand-name">FAIONYX</div>
-      <div class="brand-hint">正在启动 FAIONYX…</div>
+      <div class="brand-hint">{{ t('sp.starting') }}</div>
     </div>
   </div>
 </template>
