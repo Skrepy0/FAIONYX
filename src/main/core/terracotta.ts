@@ -21,6 +21,7 @@ import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { app, BrowserWindow, type IpcMain } from 'electron';
+import { translate as t } from '../../shared/i18n';
 
 const TC_VERSION = '0.4.2';
 // 与 VoxLink MOD TerracottaBinary.java 一致的平台资产与 SHA-256
@@ -117,14 +118,14 @@ function assetKey(): string {
 
 function binaryPath(): string {
   const asset = ASSETS[assetKey()];
-  if (!asset) throw new Error(`陶瓦联机暂不支持此平台：${assetKey()}`);
+  if (!asset) throw new Error(t('terracotta.error.platform_unsupported', { platform: assetKey() }));
   return path.join(tcDir(), asset.exe);
 }
 
 /** 下载（带镜像回退与重试）→ SHA-256 校验 → 解 tar.gz 提取 exe。返回进度日志。 */
 async function ensureBinary(signal: AbortSignal): Promise<string> {
   const asset = ASSETS[assetKey()];
-  if (!asset) throw new Error(`陶瓦联机暂不支持此平台：${assetKey()}`);
+  if (!asset) throw new Error(t('terracotta.error.platform_unsupported', { platform: assetKey() }));
   const exe = binaryPath();
   fs.mkdirSync(tcDir(), { recursive: true });
   if (fs.existsSync(exe)) {
@@ -132,7 +133,7 @@ async function ensureBinary(signal: AbortSignal): Promise<string> {
       if (process.platform !== 'win32') await fs.promises.chmod(exe, 0o755);
       return exe;
     }
-    emit('log', { level: 'warn', msg: '本地陶瓦二进制校验失败，重新下载' });
+    emit('log', { level: 'warn', msg: t('terracotta.log.local_binary_verify_failed') });
     fs.rmSync(exe, { force: true });
   }
   const pkgPath = path.join(tcDir(), asset.pkg);
@@ -141,37 +142,40 @@ async function ensureBinary(signal: AbortSignal): Promise<string> {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         setState({ phase: 'downloading' });
-        emit('log', { level: 'info', msg: `下载陶瓦官方二进制：${new URL(base + '/' + asset.pkg).host}` });
+        emit('log', { level: 'info', msg: t('terracotta.log.download_binary', { host: new URL(base + '/' + asset.pkg).host }) });
         signal.throwIfAborted();
         await download(base + '/' + asset.pkg, pkgPath, signal);
-        if (!(await verifySha256(pkgPath, asset.packageSha256))) throw new Error('SHA-256 校验失败（包已损坏或被篡改）');
+        if (!(await verifySha256(pkgPath, asset.packageSha256))) throw new Error(t('terracotta.error.package_sha_failed'));
         signal.throwIfAborted();
         await extractTarGz(pkgPath, tcDir());
-        if (!fs.existsSync(exe)) throw new Error(`压缩包内未找到 ${asset.exe}`);
+        if (!fs.existsSync(exe)) throw new Error(t('terracotta.error.exe_missing_in_archive', { name: asset.exe }));
         if (!(await verifySha256(exe, asset.sha256))) {
           await fs.promises.rm(exe, { force: true });
-          throw new Error('陶瓦 EXE 校验失败');
+          throw new Error(t('terracotta.error.exe_verify_failed'));
         }
         fs.rmSync(pkgPath, { force: true });
         if (process.platform !== 'win32') await fs.promises.chmod(exe, 0o755);
-        emit('log', { level: 'info', msg: '陶瓦官方二进制就绪（已通过 SHA-256 校验）' });
+        emit('log', { level: 'info', msg: t('terracotta.log.binary_ready') });
         return exe;
       } catch (e) {
         lastErr = e;
         await fs.promises.rm(pkgPath, { force: true }).catch(() => {});
-        if (signal.aborted) throw new Error('下载已取消');
-        emit('log', { level: 'warn', msg: `下载源失败：${(e as Error).message}，尝试下一个` });
+        if (signal.aborted) throw new Error(t('terracotta.error.download_cancelled'));
+        emit('log', { level: 'warn', msg: t('terracotta.log.source_failed', { error: (e as Error).message }) });
       }
     }
   }
   throw new Error(
-    `陶瓦二进制下载失败：${(lastErr as Error)?.message ?? '全部镜像不可用'}。可到 https://github.com/burningtnt/Terracotta/releases 手动下载后放到 ${tcDir()}`
+    t('terracotta.error.download_failed', {
+      error: (lastErr as Error)?.message ?? t('terracotta.error.all_mirrors_unavailable'),
+      dir: tcDir(),
+    })
   );
 }
 
 async function download(url: string, file: string, signal: AbortSignal, redirects = 0): Promise<void> {
   signal.throwIfAborted();
-  if (redirects > 5) throw new Error('下载重定向过多');
+  if (redirects > 5) throw new Error(t('terracotta.error.redirect_too_many'));
   await new Promise<void>((resolve, reject) => {
     const req = (url.startsWith('https:') ? https : http).get(url, { signal, timeout: 20_000 }, (res) => {
       if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
@@ -181,7 +185,7 @@ async function download(url: string, file: string, signal: AbortSignal, redirect
       }
       if (res.statusCode !== 200) {
         res.resume();
-        reject(new Error('HTTP ' + res.statusCode));
+        reject(new Error(t('terracotta.error.http_status', { status: String(res.statusCode) })));
         return;
       }
       const total = Number(res.headers['content-length']) || 0;
@@ -199,7 +203,7 @@ async function download(url: string, file: string, signal: AbortSignal, redirect
         resolve();
       }, reject);
     });
-    req.on('timeout', () => req.destroy(new Error('下载连接超时，请重试')));
+    req.on('timeout', () => req.destroy(new Error(t('terracotta.error.download_timeout'))));
     req.on('error', reject);
   });
 }
@@ -214,7 +218,7 @@ async function extractTarGz(tarGz: string, destDir: string): Promise<void> {
     const size = parseInt(header.subarray(124, 136).toString('utf8').replace(/\0.*$/, '').trim() || '0', 8);
     const typeFlag = String.fromCharCode(header[156] ?? 48);
     off += 512;
-    if (!Number.isSafeInteger(size) || size < 0 || off + size > raw.length) throw new Error('陶瓦压缩包结构不完整');
+    if (!Number.isSafeInteger(size) || size < 0 || off + size > raw.length) throw new Error(t('terracotta.error.archive_incomplete'));
     if (!name) break;
     const data = raw.subarray(off, off + size);
     off += Math.ceil(size / 512) * 512;
@@ -238,7 +242,8 @@ async function startProcess(): Promise<number> {
   const mac = process.platform === 'darwin';
   if (linux || mac) {
     fs.mkdirSync(tcDir(), { recursive: true });
-    if (!fs.lstatSync(tcDir()).isDirectory() || fs.lstatSync(tcDir()).isSymbolicLink()) throw new Error('陶瓦工具目录不是独立目录');
+    if (!fs.lstatSync(tcDir()).isDirectory() || fs.lstatSync(tcDir()).isSymbolicLink())
+      throw new Error(t('terracotta.error.tool_dir_not_directory'));
   }
   // v0.4.2 uses temp_dir()/terracotta for its Unix lock, logs and service.
   // A unique TMPDIR prevents --hmcl from attaching to or replacing another
@@ -284,7 +289,7 @@ async function startProcess(): Promise<number> {
         /* private daemon group already empty */
       }
     }
-    emit('log', { level: 'info', msg: `陶瓦进程退出（${code ?? '信号'}）` });
+    emit('log', { level: 'info', msg: t('terracotta.log.process_exit', { code: code ?? t('terracotta.label.signal') }) });
     if (proc !== child) return;
     proc = null;
     if (!disposedByUser) {
@@ -295,7 +300,7 @@ async function startProcess(): Promise<number> {
   });
   const t0 = Date.now();
   while (Date.now() - t0 < START_TOTAL_TIMEOUT_MS) {
-    if (!proc || proc.exitCode !== null) throw new Error('陶瓦进程在启动期间退出，请查看日志');
+    if (!proc || proc.exitCode !== null) throw new Error(t('terracotta.error.process_exited_during_start'));
     if (mac) {
       // Official v0.4.2 publishes a two-byte big-endian port only after Rocket
       // binds. Never invoke --hmcl: it can win the startup lock and bootstrap
@@ -306,7 +311,7 @@ async function startProcess(): Promise<number> {
         try {
           const observed = JSON.parse(await tcGet('/state')) as TcStateJson;
           if (typeof observed.state === 'string' && proc === child && child.exitCode === null) {
-            emit('log', { level: 'info', msg: `陶瓦 HTTP 端口 ${httpPort}` });
+            emit('log', { level: 'info', msg: t('terracotta.log.http_port', { port: httpPort }) });
             return httpPort;
           }
         } catch {
@@ -321,7 +326,7 @@ async function startProcess(): Promise<number> {
       const m = /"port"\s*:\s*(\d+)/.exec(content);
       if (m) {
         httpPort = Number(m[1]);
-        emit('log', { level: 'info', msg: `陶瓦 HTTP 端口 ${httpPort}` });
+        emit('log', { level: 'info', msg: t('terracotta.log.http_port', { port: httpPort }) });
         return httpPort;
       }
     } catch {
@@ -329,13 +334,14 @@ async function startProcess(): Promise<number> {
     }
     await sleep(PORT_POLL_MS);
   }
-  throw new Error('陶瓦启动超时（120s）未写出端口文件');
+  throw new Error(t('terracotta.error.start_timeout'));
 }
 
 function prepareMacIdentity(directory: string): void {
   const persistent = path.join(tcDir(), 'terracotta');
   fs.mkdirSync(persistent, { recursive: true, mode: 0o700 });
-  if (!fs.lstatSync(persistent).isDirectory() || fs.lstatSync(persistent).isSymbolicLink()) throw new Error('陶瓦身份目录不是独立目录');
+  if (!fs.lstatSync(persistent).isDirectory() || fs.lstatSync(persistent).isSymbolicLink())
+    throw new Error(t('terracotta.error.identity_dir_not_directory'));
   const identity = path.join(persistent, 'machine-id');
   try {
     fs.writeFileSync(identity, crypto.randomBytes(16), { flag: 'wx', mode: 0o600 });
@@ -343,8 +349,7 @@ function prepareMacIdentity(directory: string): void {
     if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
   }
   const stat = fs.lstatSync(identity);
-  if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== 16)
-    throw new Error('陶瓦身份文件损坏，已保留原文件；请备份后修复 machine-id');
+  if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== 16) throw new Error(t('terracotta.error.identity_corrupt'));
   const service = path.join(directory, 'terracotta');
   fs.mkdirSync(service, { mode: 0o700 });
   fs.writeFileSync(path.join(service, 'machine-id'), fs.readFileSync(identity), { flag: 'wx', mode: 0o600 });
@@ -358,14 +363,14 @@ function readMacPort(lock: string): number | null {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
     throw error;
   }
-  if (!stat.isFile() || stat.isSymbolicLink()) throw new Error('陶瓦端口文件不是普通文件');
+  if (!stat.isFile() || stat.isSymbolicLink()) throw new Error(t('terracotta.error.port_file_not_file'));
   if (stat.size < 2) return null;
-  if (stat.size !== 2) throw new Error('陶瓦端口文件格式错误');
+  if (stat.size !== 2) throw new Error(t('terracotta.error.port_file_format'));
   const raw = fs.readFileSync(lock);
   if (raw.length < 2) return null;
-  if (raw.length !== 2) throw new Error('陶瓦端口文件格式错误');
+  if (raw.length !== 2) throw new Error(t('terracotta.error.port_file_format'));
   const port = raw.readUInt16BE(0);
-  if (!port) throw new Error('陶瓦端口无效');
+  if (!port) throw new Error(t('terracotta.error.port_invalid'));
   return port;
 }
 
@@ -384,7 +389,7 @@ function cleanUnixSession(session: UnixSession): Promise<void> {
         }
       }
       if (!alive) break;
-      if (Date.now() >= deadline) throw new Error('陶瓦独立会话尚未完全退出，已保留临时目录；不会删除运行中的服务文件');
+      if (Date.now() >= deadline) throw new Error(t('terracotta.error.session_not_exited'));
       await sleep(50);
     }
     if (session.mac) {
@@ -394,7 +399,7 @@ function cleanUnixSession(session: UnixSession): Promise<void> {
       const history = path.join(tcDir(), 'session-history');
       await fs.promises.mkdir(history, { recursive: true, mode: 0o700 });
       const stat = await fs.promises.lstat(history);
-      if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error('陶瓦历史目录不是独立目录，已保留会话文件');
+      if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error(t('terracotta.error.history_dir_not_directory'));
       await fs.promises.rename(session.directory, path.join(history, path.basename(session.directory)));
     } else await fs.promises.rm(session.directory, { recursive: true, force: true });
     if (unixSession === session) unixSession = null;
@@ -408,7 +413,7 @@ async function finishUnixSession(session: UnixSession): Promise<void> {
     await Promise.race([
       session.closed,
       new Promise<never>((_resolve, reject) => {
-        timer = setTimeout(() => reject(new Error('陶瓦独立进程退出超时，已保留会话文件')), 5000);
+        timer = setTimeout(() => reject(new Error(t('terracotta.error.session_exit_timeout'))), 5000);
       }),
     ]);
     await cleanUnixSession(session);
@@ -430,10 +435,10 @@ function tcGet(pathName: string): Promise<string> {
       });
       res.on('end', () => {
         if (res.statusCode === 200) resolve(body);
-        else reject(new Error(`HTTP ${res.statusCode}: ${body.slice(0, 200)}`));
+        else reject(new Error(t('terracotta.error.http_status_body', { status: String(res.statusCode), body: body.slice(0, 200) })));
       });
     });
-    req.on('timeout', () => req.destroy(new Error('请求超时')));
+    req.on('timeout', () => req.destroy(new Error(t('terracotta.error.request_timeout'))));
     req.on('error', reject);
   });
 }
@@ -448,27 +453,29 @@ interface TcStateJson {
 async function pollUntilReady(kind: 'host' | 'join', timeoutSec: number): Promise<TcStateJson> {
   const deadline = Date.now() + timeoutSec * 1000;
   while (Date.now() < deadline) {
-    if (!proc) throw new Error('陶瓦进程已退出');
+    if (!proc) throw new Error(t('terracotta.error.process_exited'));
     try {
       const json = JSON.parse(await tcGet('/state')) as TcStateJson;
       const st = json.state ?? 'unknown';
       if (st !== state.stateRaw) {
         setState({ stateRaw: st });
-        emit('log', { level: 'info', msg: `陶瓦状态：${st}` });
+        emit('log', { level: 'info', msg: t('terracotta.log.state', { state: st }) });
       }
       // 失败/异常态直接报错（与 MOD 的可恢复异常→重试一次对齐）
       if (st === 'exception' || st === 'fatal' || st === 'failed') {
         await tcGet('/state/ide').catch(() => {});
-        throw new Error(`陶瓦进入异常状态（${st}），已复位，可重试`);
+        const fatal = new Error(t('terracotta.error.state_exception', { state: st })) as Error & { tcFatalState?: true };
+        fatal.tcFatalState = true;
+        throw fatal;
       }
       if (kind === 'host' && st === 'host-ok' && json.room) return json;
       if (kind === 'join' && st === 'guest-ok' && json.url) return json;
     } catch (e) {
-      if ((e as Error).message.includes('异常状态')) throw e;
+      if ((e as { tcFatalState?: true }).tcFatalState) throw e;
     }
     await sleep(STATE_POLL_MS);
   }
-  throw new Error(kind === 'host' ? '等待房间号超时（30s）' : '等待连接就绪超时');
+  throw new Error(kind === 'host' ? t('terracotta.error.host_timeout') : t('terracotta.error.join_timeout'));
 }
 
 function stopPolling(): void {
@@ -516,16 +523,16 @@ function execFileAsync(cmd: string, args: string[]): Promise<{ stdout: string; s
 }
 
 async function tcStart(payload: { mode: 'host' | 'join'; code?: string; port?: number; playerName?: string }): Promise<TerracottaState> {
-  if (starting) throw new Error('陶瓦联机正在启动中，请稍候再试');
-  if (stopping) throw new Error('正在关闭陶瓦房间，请稍候');
-  if (installController) throw new Error('请等待陶瓦工具下载完成');
-  if (proc) throw new Error('陶瓦已运行，请先关闭当前房间');
+  if (starting) throw new Error(t('terracotta.error.already_starting'));
+  if (stopping) throw new Error(t('terracotta.error.stopping'));
+  if (installController) throw new Error(t('terracotta.error.install_in_progress'));
+  if (proc) throw new Error(t('terracotta.error.already_running'));
   const generation = ++operation;
   try {
     starting = true;
     const asset = ASSETS[assetKey()];
     if (!asset || !(await verifySha256(binaryPath(), asset.sha256).catch(() => false)))
-      throw new Error('请先点击「下载陶瓦工具」，下载并校验完成后再联机');
+      throw new Error(t('terracotta.error.tool_not_installed'));
     if (generation !== operation) return { ...state };
     setState({ phase: 'starting' });
     await startProcess();
@@ -534,7 +541,7 @@ async function tcStart(payload: { mode: 'host' | 'join'; code?: string; port?: n
     if (payload.mode === 'host') {
       setState({ phase: 'hosting', room: undefined, url: undefined, error: undefined });
       await tcGet(`/state/scanning?player=${encodeURIComponent(me)}`);
-      emit('log', { level: 'info', msg: '已请求创建陶瓦房间，等待房间号…' });
+      emit('log', { level: 'info', msg: t('terracotta.log.host_request') });
       const final = await pollUntilReady('host', 30);
       if (generation !== operation) return { ...state };
       setState({ phase: 'ready', room: final.room, url: undefined });
@@ -544,10 +551,10 @@ async function tcStart(payload: { mode: 'host' | 'join'; code?: string; port?: n
         .trim()
         .toUpperCase();
       // 陶瓦房间码：U/ 前缀 + 四段各 4 位（GitHub burningtnt/Terracotta 官方格式）
-      if (!/^U\/[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/.test(code)) throw new Error('陶瓦房间码格式应为 U/XXXX-XXXX-XXXX-XXXX（U/ 开头共四段）');
+      if (!/^U\/[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/.test(code)) throw new Error(t('terracotta.error.room_code_format'));
       setState({ phase: 'joining', room: code, url: undefined, error: undefined });
       await tcGet(`/state/guesting?room=${encodeURIComponent(code)}&player=${encodeURIComponent(me)}`);
-      emit('log', { level: 'info', msg: '已请求加入陶瓦房间，等待连接就绪…' });
+      emit('log', { level: 'info', msg: t('terracotta.log.join_request') });
       const final = await pollUntilReady('join', 60);
       if (generation !== operation) return { ...state };
       setState({ phase: 'ready', room: code, url: final.url });
@@ -588,7 +595,7 @@ async function tcStop(silent = false): Promise<TerracottaState> {
 }
 
 async function tcInstall(): Promise<void> {
-  if (installController || starting || stopping || proc) throw new Error('陶瓦正在运行或下载，请稍后重试');
+  if (installController || starting || stopping || proc) throw new Error(t('terracotta.error.busy'));
   const controller = new AbortController();
   installController = controller;
   setState({ phase: 'downloading', error: undefined, downloaded: 0, total: 0 });
@@ -598,7 +605,7 @@ async function tcInstall(): Promise<void> {
     setState({ phase: 'idle' });
     emit('ready', null);
   } catch (e) {
-    setState({ phase: 'idle', error: controller.signal.aborted ? '下载已取消' : (e as Error).message });
+    setState({ phase: 'idle', error: controller.signal.aborted ? t('terracotta.error.download_cancelled') : (e as Error).message });
     throw new Error(state.error);
   } finally {
     if (installController === controller) installController = null;

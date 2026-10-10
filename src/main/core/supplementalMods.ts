@@ -13,6 +13,7 @@ import { registerTask, finishTask } from './tasks';
 import { resolveInstanceMetadata } from './instanceMetadata';
 import { readVersionJson } from './versions';
 import { withGameFolder } from './paths';
+import { translate as t } from '../../shared/i18n';
 interface Stored extends SupplementalFailure {
   options: InstallOptions;
 }
@@ -35,7 +36,7 @@ function rows(): Stored[] {
     );
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === 'ENOENT') return [];
-    throw Error('附加模组重试记录无法读取，已保留原文件');
+    throw Error(t('supplemental.error.unreadable'));
   }
 }
 const visible = (list: Stored[]) => list.map(({ options, ...v }) => v);
@@ -63,22 +64,22 @@ export function registerSupplementalModsIpc(getWin: () => BrowserWindow | null) 
   publish = (list) => getWin()?.webContents.send('mods:supplementalPending', list);
   ipcMain.handle('mods:supplementalList', () => visible(rows()));
   ipcMain.handle('mods:supplementalKeep', (_e, id: string) => {
-    if (running.has(id)) throw Error('正在重试，请等待任务结束');
+    if (running.has(id)) throw Error(t('supplemental.error.retrying_wait'));
     return save(rows().filter((r) => r.id !== id));
   });
   ipcMain.handle('mods:supplementalRetry', async (_e, id: string, withResult?: boolean) => {
     const entry = rows().find((r) => r.id === id);
-    if (!entry) throw Error('重试记录已过期');
-    if (running.has(id)) throw Error('该模组任务正在重试');
+    if (!entry) throw Error(t('supplemental.error.expired'));
+    if (running.has(id)) throw Error(t('supplemental.error.already_retrying'));
     running.add(id);
-    const task = registerTask('重试附加模组 · ' + entry.target.id, 'download');
+    const task = registerTask(t('supplemental.task.retry', { id: entry.target.id }), 'download');
     let ok = false;
     try {
       const current = centerTarget(entry.target);
       await assertInstanceIdle(current.dir);
       const metadata = withGameFolder(current.folder, () => resolveInstanceMetadata(current.json, readVersionJson));
       if (metadata.broken || metadata.mcVersion !== entry.versionId || metadata.loader !== entry.options.loader)
-        throw Error('实例版本或加载器已变化，请重新选择兼容模组');
+        throw Error(t('supplemental.error.version_changed'));
       const files = await prepareInstallMods(entry.versionId, entry.options, task.controller.signal);
       await installRecordingMods(path.join(current.dir, 'mods'), files, task.controller.signal, (progress) =>
         getWin()?.webContents.send(IPC_EVENT.progress, {
@@ -86,7 +87,7 @@ export function registerSupplementalModsIpc(getWin: () => BrowserWindow | null) 
           taskTitle: task.title,
           stage: 'download',
           progress,
-          text: '下载并校验所选模组与必要前置',
+          text: t('supplemental.state.download_verify'),
         })
       );
       const result = await favoriteInstallResult(

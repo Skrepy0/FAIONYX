@@ -5,6 +5,7 @@ import { downloadAll, type AllProgressFn, type DownloadTask, type MirrorPref } f
 import { downloadLimiter } from './downloadLimits';
 import { defaultFolderPath } from './paths';
 import { throwIfCancelled, waitIfTaskPaused } from './tasks';
+import { translate as t } from '../../shared/i18n';
 
 /** Keep verified immutable downloads outside the instance transaction, so rollback/reimport can reuse them. */
 export async function prepareModpackFiles(
@@ -66,7 +67,7 @@ export function modpackCachedFile(
   cacheRoot = path.join(defaultFolderPath(), '.faionyx', 'modpack-cache')
 ): string {
   const hash = validHash({ sha1: file.sha1, url: '', dest: '' });
-  if (!hash) throw new Error('整合包文件 SHA1 无效');
+  if (!hash) throw new Error(t('modpackdownloads.error.invalid_sha1'));
   const ext = path.extname(file.fileName).toLowerCase();
   const suffix = ['.jar', '.zip', '.mrpack'].includes(ext) ? ext : '.bin';
   return path.join(cacheRoot, crypto.createHash('sha256').update(hash).digest('hex') + suffix);

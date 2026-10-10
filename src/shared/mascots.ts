@@ -1,11 +1,14 @@
+import { translate as t } from './i18n';
+
+/** name 为 i18n 键（mascots.name.*），由调用方通过 t() 取显示名 */
 export const MASCOTS = [
-  { id: 'q3', name: 'q3' },
-  { id: 'qiqi', name: 'qiqi' },
-  { id: 'biyuehu', name: '碧月狐' },
-  { id: 'hongshu', name: '红叔' },
-  { id: 'kamu', name: '卡慕' },
-  { id: 'milo', name: '米洛' },
-  { id: 'muchuanbei', name: '幕川北' },
+  { id: 'q3', name: 'mascots.name.q3' },
+  { id: 'qiqi', name: 'mascots.name.qiqi' },
+  { id: 'biyuehu', name: 'mascots.name.biyuehu' },
+  { id: 'hongshu', name: 'mascots.name.hongshu' },
+  { id: 'kamu', name: 'mascots.name.kamu' },
+  { id: 'milo', name: 'mascots.name.milo' },
+  { id: 'muchuanbei', name: 'mascots.name.muchuanbei' },
 ] as const;
 export interface MascotSound {
   muted: boolean;
@@ -106,7 +109,7 @@ export function normalizeMascotSound(value?: Partial<MascotSound>): MascotSound 
 export function addMascotHits(state: MascotState, hits: readonly string[]): MascotState {
   const next = { ...state, counts: { ...state.counts }, order: [...state.order] };
   for (const id of hits) {
-    if (!MASCOTS.some((m) => m.id === id)) throw new Error('人物标识无效');
+    if (!MASCOTS.some((m) => m.id === id)) throw new Error(t('mascots.error.invalid_id'));
     next.counts[id] = Math.min(Number.MAX_SAFE_INTEGER, (next.counts[id] || 0) + 1);
   }
   next.order = sortMascots(next);

@@ -723,7 +723,7 @@ async function onRemovePlugin(p: PluginInfo) {
           :aria-current="scope === item.id ? 'page' : undefined"
           @click="selectScope(item.id)"
         >
-          {{ item.label }}
+          {{ t(item.label) }}
         </button>
       </nav>
       <nav data-ui="SettingsView:59cf14ccb4be" class="settings-categories" :aria-label="t('settings.category_aria')">
@@ -735,7 +735,7 @@ async function onRemovePlugin(p: PluginInfo) {
           :aria-current="category === item.id ? 'page' : undefined"
           @click="selectCategory(item.id)"
         >
-          {{ item.label }}
+          {{ t(item.label) }}
         </button>
       </nav>
       <div
@@ -755,10 +755,10 @@ async function onRemovePlugin(p: PluginInfo) {
           class="btn btn-ghost"
           @click="jumpSetting(item.id)"
         >
-          <strong data-ui="SettingsView:32a83676fd73">{{ item.name }}</strong
+          <strong data-ui="SettingsView:32a83676fd73">{{ t(item.name) }}</strong
           ><span class="muted"
-            >{{ settingsScopes.find((s) => s.id === scopeOfCategory(item.category))?.label }} ·
-            {{ settingsCategories.find((c) => c.id === item.category)?.label }} →</span
+            >{{ t(settingsScopes.find((s) => s.id === scopeOfCategory(item.category))?.label ?? 'settings.scope.launcher') }} ·
+            {{ t(settingsCategories.find((c) => c.id === item.category)?.label ?? 'settings.scope.launcher') }} →</span
           >
         </button>
       </div>

@@ -4,6 +4,7 @@ import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { crc32, createInflateRaw } from 'node:zlib';
 import yauzl, { type Entry, type ZipFile } from 'yauzl';
+import { translate as t } from '../../shared/i18n';
 
 /** AdmZip fixtures and disk-backed production archives share metadata only. */
 export interface PackEntry {
@@ -66,9 +67,9 @@ export class StreamPackZip implements PackZip {
     // the same source, so a replaced pathname cannot supply different bytes.
     const archive = new StreamPackZip(zip, file, descriptor);
     try {
-      if (zip.entryCount > maximumEntries) throw new Error('整合包文件数量超过安全上限');
+      if (zip.entryCount > maximumEntries) throw new Error(t('streampack.error.too_many_entries'));
       await new Promise<void>((resolve, reject) => {
-        const abort = () => finish(signal!.reason ?? new Error('已取消'));
+        const abort = () => finish(signal!.reason ?? new Error(t('ipc.text.cancelled')));
         const finish = (error?: Error) => {
           zip.off('entry', entry);
           zip.off('end', end);
@@ -79,7 +80,7 @@ export class StreamPackZip implements PackZip {
         const fail = (error: Error) => finish(error);
         const end = () => finish();
         const entry = (raw: Entry) => {
-          if (archive.entries.length >= maximumEntries) return finish(new Error('整合包文件数量超过安全上限'));
+          if (archive.entries.length >= maximumEntries) return finish(new Error(t('streampack.error.too_many_entries')));
           const item: PackEntry = {
             entryName: raw.fileName,
             isDirectory: raw.fileName.endsWith('/'),
@@ -89,7 +90,7 @@ export class StreamPackZip implements PackZip {
               signal?.throwIfAborted();
               const chunks: Buffer[] = [];
               const stream = await archive.read(raw);
-              const abort = () => stream.destroy(signal!.reason ?? new Error('已取消'));
+              const abort = () => stream.destroy(signal!.reason ?? new Error(t('ipc.text.cancelled')));
               signal?.addEventListener('abort', abort, { once: true });
               if (signal?.aborted) abort();
               try {
@@ -114,7 +115,7 @@ export class StreamPackZip implements PackZip {
               signal?.throwIfAborted();
               const hash = crypto.createHash(algorithm),
                 stream = await archive.read(raw);
-              const abort = () => stream.destroy(signal!.reason ?? new Error('已取消'));
+              const abort = () => stream.destroy(signal!.reason ?? new Error(t('ipc.text.cancelled')));
               signal?.addEventListener('abort', abort, { once: true });
               if (signal?.aborted) abort();
               try {
@@ -148,17 +149,17 @@ export class StreamPackZip implements PackZip {
     }
   }
   private async read(entry: Entry): Promise<Transform> {
-    if (this.closed) throw new Error('整合包已关闭');
+    if (this.closed) throw new Error(t('streampack.error.closed'));
     if (this.failure) throw this.failure;
-    if (entry.isEncrypted()) throw new Error('整合包条目已加密，无法读取：' + entry.fileName);
-    if (![0, 8].includes(entry.compressionMethod)) throw new Error('整合包条目压缩格式不支持：' + entry.fileName);
+    if (entry.isEncrypted()) throw new Error(t('streampack.error.encrypted', { name: entry.fileName }));
+    if (![0, 8].includes(entry.compressionMethod)) throw new Error(t('streampack.error.unsupported_compression', { name: entry.fileName }));
     // Use the public header bounds validation, then bounded independent readers.
     // yauzl's shared default reader serializes 64 KiB IO across all entries;
     // 1 MiB streams retain a fixed budget and avoid thousands of tiny writes.
     this.opening++;
     try {
       const { fileDataStart } = await this.zip.readLocalFileHeaderPromise(entry, { minimal: true });
-      if (this.closed) throw new Error('整合包已关闭');
+      if (this.closed) throw new Error(t('streampack.error.closed'));
       const compressed = entry.compressedSize
         ? fs.createReadStream(this.file, {
             fd: this.descriptor,
@@ -180,13 +181,15 @@ export class StreamPackZip implements PackZip {
         highWaterMark: 1024 * 1024,
         transform(chunk: Buffer, _encoding, callback) {
           bytes += chunk.length;
-          if (bytes > entry.uncompressedSize) return callback(new Error('整合包条目大小超过声明值：' + entry.fileName));
+          if (bytes > entry.uncompressedSize) return callback(new Error(t('streampack.error.oversized_entry', { name: entry.fileName })));
           checksum = crc32(chunk, checksum);
           callback(null, chunk);
         },
         flush(callback) {
           callback(
-            bytes !== entry.uncompressedSize || checksum !== entry.crc32 ? new Error('整合包条目校验失败：' + entry.fileName) : undefined
+            bytes !== entry.uncompressedSize || checksum !== entry.crc32
+              ? new Error(t('streampack.error.entry_checksum', { name: entry.fileName }))
+              : undefined
           );
         },
       });

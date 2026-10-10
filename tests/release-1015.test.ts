@@ -184,7 +184,7 @@ test('auto update surfaces: settings toggle, pending state IPC, ready event', ()
   const settings = read('src/renderer/src/views/SettingsView.vue');
   assert.match(settings, /自动安装更新/);
   assert.match(settings, /\{\{\s*installAction\s*\}\}/);
-  assert.match(read('src/renderer/src/composables/usePlatformUpdate.ts'), /下次启动应用/);
+  assert.match(read('src/renderer/src/composables/usePlatformUpdate.ts'), /update\.action\.apply_next_launch/);
   assert.match(settings, /pendingUpdate/);
 });
 

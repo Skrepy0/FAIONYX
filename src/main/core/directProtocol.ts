@@ -1,5 +1,6 @@
 import net from 'node:net';
 import type { DirectEndpoint, DirectInvitation } from '../../shared/directConnect';
+import { translate as t } from '../../shared/i18n';
 
 export function ipv4Scope(ip: string): 'public' | 'private' | 'cgnat' | 'reserved' {
   if (net.isIP(ip) !== 4) return 'reserved';
@@ -33,7 +34,7 @@ export function endpointAddress(endpoint: DirectEndpoint): string {
   return `${net.isIP(endpoint.host) === 6 ? `[${endpoint.host}]` : endpoint.host}:${endpoint.port}`;
 }
 export function validatePort(port: number): number {
-  if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('端口必须是 1–65535 的整数');
+  if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error(t('directproto.error.port_invalid'));
   return port;
 }
 export function detectLanPort(log: string): number | undefined {
@@ -45,13 +46,13 @@ export function encodeInvitation(invitation: DirectInvitation): string {
   return 'FAIONYX-DIRECT-1:' + Buffer.from(JSON.stringify(invitation)).toString('base64url');
 }
 export function parseInvitation(input: string, now = Date.now()): DirectInvitation {
-  if (typeof input !== 'string' || input.length > 16384) throw new Error('邀请内容过大或格式无效');
+  if (typeof input !== 'string' || input.length > 16384) throw new Error(t('directproto.error.invite_too_large'));
   let value: DirectInvitation;
   try {
     const raw = input.trim();
     value = JSON.parse(raw.startsWith('FAIONYX-DIRECT-1:') ? Buffer.from(raw.slice(16), 'base64url').toString('utf8') : raw);
   } catch {
-    throw new Error('无法识别邀请，请粘贴完整的 FAIONYX-DIRECT-1 邀请信息');
+    throw new Error(t('directproto.error.invite_unrecognized'));
   }
   if (
     !value ||
@@ -66,21 +67,20 @@ export function parseInvitation(input: string, now = Date.now()): DirectInvitati
     !value.endpoints.length ||
     value.endpoints.length > 12
   )
-    throw new Error('邀请格式或版本无效');
+    throw new Error(t('directproto.error.invite_format_invalid'));
   const expires = Date.parse(value.expiresAt);
-  if (!Number.isFinite(expires) || expires < now || expires > now + 25 * 3600000)
-    throw new Error('邀请已过期或有效期无效，请让房主重新生成');
+  if (!Number.isFinite(expires) || expires < now || expires > now + 25 * 3600000) throw new Error(t('directproto.error.invite_expired'));
   if (
     (value.loader != null && !['forge', 'fabric', 'quilt', 'neoforge'].includes(value.loader)) ||
     (value.loaderVersion != null && (typeof value.loaderVersion !== 'string' || value.loaderVersion.length > 128))
   )
-    throw new Error('邀请的加载器信息无效');
+    throw new Error(t('directproto.error.invite_loader_invalid'));
   const endpoints: DirectEndpoint[] = [];
   for (const endpoint of value.endpoints) {
-    if (!endpoint || typeof endpoint.host !== 'string') throw new Error('邀请地址无效');
+    if (!endpoint || typeof endpoint.host !== 'string') throw new Error(t('directproto.error.invite_endpoint_invalid'));
     const scope = ipv4Scope(endpoint.host);
     const kind = isGlobalIPv6(endpoint.host) ? 'ipv6' : scope === 'public' ? 'ipv4' : scope === 'private' ? 'lan' : null;
-    if (!kind) throw new Error('邀请含有非公网或局域网单播 IP 地址');
+    if (!kind) throw new Error(t('directproto.error.invite_endpoint_scope'));
     const host = net.isIP(endpoint.host) === 6 ? new URL(`http://[${endpoint.host}]`).hostname.slice(1, -1) : endpoint.host;
     const clean = { host, port: validatePort(endpoint.port), kind } as DirectEndpoint;
     if (!endpoints.some((item) => endpointAddress(item) === endpointAddress(clean))) endpoints.push(clean);

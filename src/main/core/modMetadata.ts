@@ -2,6 +2,7 @@ import AdmZip from 'adm-zip';
 import { parse as parseToml } from '@iarna/toml';
 import { dependencyRange } from '../../shared/modCompatibility';
 import type { LoaderName, ModInfo, ModRequirement } from '../../shared/types';
+import { translate as t } from '../../shared/i18n';
 
 const builtins = new Set(['minecraft', 'forge', 'neoforge', 'fabricloader', 'quilt_loader', 'java']);
 type RecordValue = Record<string, any>;
@@ -13,7 +14,7 @@ export function parseModArchive(zip: AdmZip, filePath: string, fileName: string,
   const read = (name: string) => {
     const entry = zip.getEntry(name);
     if (!entry) return undefined;
-    if (entry.header.size > 2 * 1024 * 1024) throw new Error(`${name} 元数据过大`);
+    if (entry.header.size > 2 * 1024 * 1024) throw new Error(t('modmetadata.error.too_large', { name }));
     return zip.readAsText(entry).replace(/^\uFEFF/, '');
   };
   const records: Array<{
@@ -64,7 +65,7 @@ export function parseModArchive(zip: AdmZip, filePath: string, fileName: string,
       for (const raw of j.depends ?? []) {
         const d = typeof raw === 'string' ? { id: raw, versions: '*' } : raw;
         // Do not silently treat unsupported conditional dependencies as satisfied.
-        if (Array.isArray(d) || d?.unless) throw new Error('Quilt 条件前置需要手动检查；未自动安装');
+        if (Array.isArray(d) || d?.unless) throw new Error(t('modmetadata.error.quilt_conditional'));
         if (d && typeof d.id === 'string' && !d.optional && d.environment !== 'server') {
           const id = d.id.split(':').pop()!;
           deps[id] = deps[id] === undefined ? (d.versions ?? '*') : { all: [deps[id], d.versions ?? '*'] };
@@ -90,7 +91,7 @@ export function parseModArchive(zip: AdmZip, filePath: string, fileName: string,
       const text = read(file);
       if (!text) continue;
       const j = parseToml(text) as RecordValue;
-      if (!Array.isArray(j.mods) || !j.mods.length) throw new Error(`${file} 缺少 [[mods]]`);
+      if (!Array.isArray(j.mods) || !j.mods.length) throw new Error(t('modmetadata.error.missing_mods', { file }));
       const deps = Object.values(j.dependencies ?? {}).flat() as RecordValue[];
       const loader: LoaderName = file.includes('neoforge') || deps.some((d) => d.modId === 'neoforge') ? 'neoforge' : 'forge';
       const required = deps.filter(
@@ -151,7 +152,7 @@ export function parseModArchive(zip: AdmZip, filePath: string, fileName: string,
         }
       }
     }
-    if (!records.length || !records[0].id) throw new Error('未找到有效的 MOD 元数据 / mod id');
+    if (!records.length || !records[0].id) throw new Error(t('modmetadata.error.no_valid_metadata'));
     const first = records[0];
     Object.assign(info, first, { dependencies: first.requirements.map((d) => d.id) });
     info.variants = records.map((r) => ({

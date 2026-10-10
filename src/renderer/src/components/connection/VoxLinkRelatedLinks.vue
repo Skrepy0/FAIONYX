@@ -15,7 +15,7 @@ const open = ref(false);
       >
       <nav class="links-list" :aria-label="t('voxlink.related_links_list')">
         <a v-for="link in VOXLINK_LINKS" :key="link.label" :href="link.url" target="_blank" rel="noopener noreferrer"
-          ><strong>{{ link.label }} <span aria-hidden="true">↗</span></strong
+          ><strong>{{ t(link.label) }} <span aria-hidden="true">↗</span></strong
           ><small>{{ link.url }}</small></a
         >
       </nav>

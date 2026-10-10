@@ -2,6 +2,7 @@
 // Adapted from AUGUHDAR/VoxLink TurnTcpChannel.java, revision 721c7fae.
 import net from 'node:net';
 import dgram from 'node:dgram';
+import { translate as t } from '../../../shared/i18n';
 export async function openTurnTcp(host: string, port: number, signal: AbortSignal) {
   signal.throwIfAborted();
   const tcp = net.createConnection({ host, port }),
@@ -29,7 +30,7 @@ export async function openTurnTcp(host: string, port: number, signal: AbortSigna
   try {
     await new Promise<void>((resolve, reject) => {
       const timer = setTimeout(() => {
-        reject(new Error('TURN TCP 连接超时'));
+        reject(new Error(t('voxlink.turntcp.connect_timeout')));
         close();
       }, 3000);
       tcp.once('connect', () => {
@@ -38,13 +39,13 @@ export async function openTurnTcp(host: string, port: number, signal: AbortSigna
       });
       tcp.once('close', () => {
         clearTimeout(timer);
-        reject(new Error('TURN TCP 已关闭'));
+        reject(new Error(t('turnTcp.error.closed')));
       });
     });
     tcp.setNoDelay(true);
     const bind = (socket: dgram.Socket) =>
       new Promise<void>((resolve, reject) => {
-        const fail = () => reject(new Error('TURN TCP 已取消'));
+        const fail = () => reject(new Error(t('turnTcp.error.cancelled')));
         socket.once('close', fail);
         socket.bind(0, '127.0.0.1', () => {
           socket.off('close', fail);

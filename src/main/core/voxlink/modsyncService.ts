@@ -10,6 +10,7 @@ import type { InstanceTarget } from '../../../shared/instanceCenter';
 import type { ModSyncManifest, ModSyncPlan, ModSyncScope } from '../../../shared/voxlinkMods';
 import type { VoxlinkApp } from './engine';
 import { ApiClient, APIError, validateRoomCode } from './api';
+import { translate as t } from '../../../shared/i18n';
 import type { ModSyncGate, ModSyncGateResult } from '../../../shared/voxlinkMods';
 import { buildModManifests, diffMods, modrinthRequest, scanModHashes } from './modsync';
 import { samePath } from '../folderPaths';
@@ -30,7 +31,7 @@ async function targetContext(target: InstanceTarget) {
       }
     })
   );
-  if (meta.broken || meta.mcVersion === '未知') throw new Error('无法识别所选实例的游戏版本，请修复实例');
+  if (meta.broken || meta.mcVersion === '未知') throw new Error(t('voxlink.modsync.error.instance_version_unknown'));
   return { target: c.target, dir: path.join(c.dir, 'mods'), loader: meta.loader || 'vanilla', mcVersion: meta.mcVersion };
 }
 type Context = Awaited<ReturnType<typeof targetContext>>;
@@ -41,10 +42,10 @@ export class ModSyncService {
   private bypassed = new Set<string>();
   private skipped(code: string, gate: Exclude<ModSyncGate, 'MANIFEST'>): ModSyncGateResult {
     const message = {
-      UNSUPPORTED: '房主不支持模组清单，尚未检查一致性',
-      EMPTY: '房主清单为空',
-      NOT_READY: '房主清单未就绪或获取失败，尚未检查一致性',
-      BYPASSED: '你已跳过模组检查',
+      UNSUPPORTED: t('voxlink.modsync.error.gate_unsupported'),
+      EMPTY: t('voxlink.modsync.error.gate_empty'),
+      NOT_READY: t('voxlink.modsync.error.gate_not_ready'),
+      BYPASSED: t('voxlink.modsync.error.gate_bypassed'),
     }[gate];
     this.app().netLog('info', `ModSync gate skip: ${gate} · ${code}`);
     this.app().emit?.('mods:gate', { code, gate, message });
@@ -85,13 +86,16 @@ export class ModSyncService {
             );
           } catch (error) {
             signal.throwIfAborted();
-            this.app().netLog('warn', `${scope} 清单推送暂不可用，将按请求重试：${(error as Error).message}`);
+            this.app().netLog('warn', t('voxlink.modsync.log.manifest_push_unavailable', { scope, error: (error as Error).message }));
           }
         }
-        this.app().netLog('info', `模组清单已准备：必装 ${manifests.required.mods.length} / 全部 ${manifests.all.mods.length}`);
+        this.app().netLog(
+          'info',
+          t('voxlink.modsync.log.manifest_ready', { required: manifests.required.mods.length, all: manifests.all.mods.length })
+        );
       })
       .catch((error) => {
-        if (!signal.aborted) this.app().netLog('warn', `模组清单准备失败：${error.message}`);
+        if (!signal.aborted) this.app().netLog('warn', t('voxlink.modsync.log.manifest_prepare_failed', { error: error.message }));
       });
   }
   async answer(data: Record<string, unknown>) {
@@ -110,11 +114,12 @@ export class ModSyncService {
         host.controller.signal
       );
     } catch (error) {
-      if (!host.controller.signal.aborted) this.app().netLog('warn', `模组清单应答失败：${(error as Error).message}`);
+      if (!host.controller.signal.aborted)
+        this.app().netLog('warn', t('voxlink.modsync.log.manifest_answer_failed', { error: (error as Error).message }));
     }
   }
   private begin(operation: string) {
-    if (!/^[\w-]{1,100}$/.test(operation)) throw new Error('请求标识无效');
+    if (!/^[\w-]{1,100}$/.test(operation)) throw new Error(t('voxlink.modsync.error.invalid_operation'));
     this.operations.get(operation)?.abort();
     const controller = new AbortController();
     this.operations.set(operation, controller);
@@ -122,7 +127,7 @@ export class ModSyncService {
   }
   register(ipc: IpcMain) {
     ipc.handle('voxlink:mods:bypass', (_event, code: string) => {
-      if (!validateRoomCode(code)) throw Error('房间码无效');
+      if (!validateRoomCode(code)) throw Error(t('voxlink.modsync.error.invalid_room_code'));
       this.bypassed.add(code);
       return this.skipped(code, 'BYPASSED');
     });
@@ -134,7 +139,7 @@ export class ModSyncService {
       'voxlink:mods:check',
       async (_event, payload: { operation: string; code: string; scope: ModSyncScope; target: InstanceTarget }) => {
         const code = String(payload.code).trim().toUpperCase();
-        if (!validateRoomCode(code)) throw new Error('请输入有效的六位房间码');
+        if (!validateRoomCode(code)) throw new Error(t('voxlink.engine.error.invalid_room_code'));
         if (this.bypassed.has(code)) return this.skipped(code, 'BYPASSED');
         const controller = this.begin(payload.operation),
           signal = AbortSignal.any([controller.signal, AbortSignal.timeout(12000)]);
@@ -212,7 +217,7 @@ export class ModSyncService {
     );
     ipc.handle('voxlink:mods:download', async (event, payload: { operation: string; plan: string; selected: string[] }) => {
       const owned = this.plans.get(payload.plan);
-      if (!owned || owned.expires < Date.now()) throw new Error('模组清单已过期，请重新检查');
+      if (!owned || owned.expires < Date.now()) throw new Error(t('voxlink.modsync.error.plan_expired'));
       const controller = this.begin(payload.operation),
         signal = controller.signal;
       const staging = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'faionyx-voxlink-mods-'));
@@ -220,10 +225,10 @@ export class ModSyncService {
       try {
         const context = await targetContext(owned.plan.target);
         if (context.dir !== owned.context.dir || context.loader !== owned.context.loader || context.mcVersion !== owned.context.mcVersion)
-          throw new Error('实例配置已改变，请重新检查');
+          throw new Error(t('voxlink.modsync.error.instance_changed'));
         const selected = new Set(payload.selected);
         const rows = owned.plan.rows.filter((row) => row.status === 'missing' && selected.has(row.entry.sha1));
-        if (!rows.length) throw new Error('没有可下载的模组，请重新检查清单');
+        if (!rows.length) throw new Error(t('voxlink.modsync.error.no_downloadable_mods'));
         let progressAt = 0;
         const progress = (file: string, bytes: number, total: number) => {
           if (!event?.sender || event.sender.isDestroyed()) return;
@@ -248,7 +253,7 @@ export class ModSyncService {
           });
           signal.throwIfAborted();
           await fs.promises.mkdir(context.dir, { recursive: true });
-          if (!samePath(await fs.promises.realpath(context.dir), context.dir)) throw new Error('模组目录发生变化，已停止同步');
+          if (!samePath(await fs.promises.realpath(context.dir), context.dir)) throw new Error(t('voxlink.modsync.error.dir_changed'));
           const current = await scanModHashes(context.dir, signal, true);
           const check = diffMods(
             { protocolVersion: 'modSync.v1', loader: context.loader, mcVersion: context.mcVersion, mods: [entry], unknownMods: [] },
@@ -257,18 +262,19 @@ export class ModSyncService {
             context.mcVersion
           )[0];
           if (check.status === 'installed') continue;
-          if (check.status !== 'missing') throw new Error(`${entry.title}：${check.reason}`);
+          if (check.status !== 'missing')
+            throw new Error(t('voxlink.modsync.error.row_conflict', { title: entry.title, reason: check.reason }));
           // COPYFILE_EXCL is deliberate: even a concurrent manual install is never overwritten.
           await fs.promises.copyFile(temp, path.join(context.dir, entry.fileName), fs.constants.COPYFILE_EXCL);
           installed++;
           progress(entry.title, entry.size, entry.size);
         }
-        return { installed, message: '同步完成。请关闭当前游戏，再启动所选实例使模组生效。' };
+        return { installed, message: t('voxlink.modsync.state.sync_done') };
       } finally {
         if (installed)
           this.app().emit?.('mods:download-result', {
             installed,
-            message: `已下载 ${installed} 个模组，请关闭当前游戏并重新启动所选实例，使模组生效。`,
+            message: t('voxlink.modsync.state.download_result', { installed }),
           });
         if (this.operations.get(payload.operation) === controller) this.operations.delete(payload.operation);
         await fs.promises.rm(staging, { recursive: true, force: true });

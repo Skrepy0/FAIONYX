@@ -1,6 +1,7 @@
 import { httpFetch } from './httpClient';
 import { CF_BUILTIN_KEY } from './curseforgeKey';
 import { usesSystemProxy } from './systemDownload';
+import { translate as t } from '../../shared/i18n';
 
 export function needsCurseForgeKey(url: string): boolean {
   const u = new URL(url);
@@ -34,11 +35,11 @@ export async function downloadFetch(
     if (![301, 302, 303, 307, 308].includes(response.status)) return response;
     const location = response.headers.get('location');
     await response.body?.cancel();
-    if (!location) throw new Error('下载跳转缺少地址');
+    if (!location) throw new Error(t('downloadfetch.error.redirect_missing_location'));
     const next = new URL(location, url);
     if (!['https:', 'http:'].includes(next.protocol) || (new URL(url).protocol === 'https:' && next.protocol !== 'https:'))
-      throw new Error('下载跳转地址不安全');
+      throw new Error(t('downloadfetch.error.redirect_insecure'));
     url = next.href;
   }
-  throw new Error('下载跳转次数过多');
+  throw new Error(t('downloadfetch.error.too_many_redirects'));
 }

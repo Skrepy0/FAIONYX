@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { withFileJob } from './fileJobs';
+import { translate as t } from '../../shared/i18n';
 
 /** Use the native recycle operation instead of deleting children before discovering a locked parent. */
 export async function recycleVersion(
@@ -12,11 +13,11 @@ export async function recycleVersion(
   }
 ): Promise<void> {
   if (typeof id !== 'string' || !id || id === '.' || id === '..' || /[\\/:*?"<>|\x00-\x1f]/.test(id) || /[. ]$/.test(id)) {
-    throw new Error('版本名称无效，未删除任何文件');
+    throw new Error(t('versionremoval.error.invalid_name'));
   }
   const parent = path.resolve(folder, 'versions'),
     target = path.resolve(parent, id);
-  if (path.dirname(target) !== parent) throw new Error('版本路径超出游戏目录');
+  if (path.dirname(target) !== parent) throw new Error(t('versionremoval.error.path_outside'));
   return withFileJob(target, undefined, async () => {
     let stat;
     try {
@@ -25,12 +26,13 @@ export async function recycleVersion(
       if ((e as NodeJS.ErrnoException).code === 'ENOENT') return;
       throw e;
     }
-    if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error('版本目录是链接或不是文件夹，请在文件管理器中确认其实际位置');
-    if ((await fs.lstat(parent)).isSymbolicLink()) throw new Error('versions 目录是链接，请先确认实际游戏目录');
+    if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error(t('versionremoval.error.dir_link'));
+    if ((await fs.lstat(parent)).isSymbolicLink()) throw new Error(t('versionremoval.error.versions_link'));
     await deps.assertIdle(target);
     // Recheck after asynchronous process inspection; no traversal into child links.
     const current = await fs.lstat(target);
-    if (current.isSymbolicLink() || current.ino !== stat.ino || current.dev !== stat.dev) throw new Error('版本目录已变化，请刷新后重试');
+    if (current.isSymbolicLink() || current.ino !== stat.ino || current.dev !== stat.dev)
+      throw new Error(t('versionremoval.error.changed'));
     try {
       await deps.trash(target);
       try {
@@ -39,10 +41,13 @@ export async function recycleVersion(
         if ((e as NodeJS.ErrnoException).code === 'ENOENT') return;
         throw e;
       }
-      throw new Error('系统未移除该目录');
+      throw new Error(t('versionremoval.error.not_removed'));
     } catch (error) {
       throw new Error(
-        `无法将版本移入回收站：请关闭使用该目录的游戏或文件窗口，并检查目录权限及磁盘的回收站支持。目录：${target}；${error instanceof Error ? error.message : String(error)}`
+        t('versionremoval.error.trash_failed', {
+          target,
+          error: error instanceof Error ? error.message : String(error),
+        })
       );
     }
   });

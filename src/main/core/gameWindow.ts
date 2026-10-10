@@ -1,4 +1,5 @@
 import type { GameResolution, GameWindowMode } from '../../shared/types';
+import { translate as t } from '../../shared/i18n';
 
 export const GAME_WIDTH_MIN = 854;
 export const GAME_WIDTH_MAX = 7680;
@@ -41,12 +42,12 @@ export function normalizeStoredResolution(
 }
 
 export function resolutionValidationError(value: GameResolution): string | null {
-  if (!isMode(value.mode)) return '请选择有效的窗口模式';
+  if (!isMode(value.mode)) return t('gamewindow.error.mode_invalid');
   if (!Number.isInteger(value.width) || value.width < GAME_WIDTH_MIN || value.width > GAME_WIDTH_MAX) {
-    return `窗口宽度必须是 ${GAME_WIDTH_MIN}–${GAME_WIDTH_MAX} 之间的整数`;
+    return t('gamewindow.error.width_range', { min: GAME_WIDTH_MIN, max: GAME_WIDTH_MAX });
   }
   if (!Number.isInteger(value.height) || value.height < GAME_HEIGHT_MIN || value.height > GAME_HEIGHT_MAX) {
-    return `窗口高度必须是 ${GAME_HEIGHT_MIN}–${GAME_HEIGHT_MAX} 之间的整数`;
+    return t('gamewindow.error.height_range', { min: GAME_HEIGHT_MIN, max: GAME_HEIGHT_MAX });
   }
   return null;
 }

@@ -8,6 +8,7 @@ import crypto from 'node:crypto';
 import type { InstalledVersion, ServerEntry, ServerLaunchPreparation, ServerPingResult, ServerSyncResult } from '../../shared/types';
 import { parseNbt, buildServersDat } from './nbt';
 import { logScope } from './launcherLog';
+import { translate as t } from '../../shared/i18n';
 
 const serverLog = logScope('servers');
 import { listAllInstalled, scanInstalledFolder } from './versions';
@@ -74,7 +75,7 @@ function persist(list: ServerEntry[]): void {
 
 export function addServer(name: string, address: string): ServerEntry[] {
   const n = name.trim();
-  if (!n) throw new Error('服务器名称不能为空');
+  if (!n) throw new Error(t('servers.error.name_required'));
   const parsed = parseServerAddress(address);
   const list = listServers();
   if (
@@ -83,7 +84,7 @@ export function addServer(name: string, address: string): ServerEntry[] {
         !server.versionId && (server.normalizedAddress ?? parseServerAddress(server.address).normalizedAddress) === parsed.normalizedAddress
     )
   ) {
-    throw new Error('该服务器已在未绑定列表中');
+    throw new Error(t('servers.error.already_unbound'));
   }
   list.push({
     id: crypto.randomUUID(),
@@ -101,7 +102,7 @@ export function addServer(name: string, address: string): ServerEntry[] {
 export function favoriteServer(id: string, favorite: boolean): ServerEntry[] {
   const list = listServers();
   const entry = list.find((s) => s.id === id);
-  if (!entry) throw new Error('服务器不存在');
+  if (!entry) throw new Error(t('servers.error.not_found'));
   entry.favorite = favorite;
   persist(list);
   return list;
@@ -124,15 +125,15 @@ export function editServer(id: string, name: string, address: string): ServerEnt
 
 function findInstalledTarget(versionId: string, folder?: string, targets?: InstalledVersion[]): InstalledVersion {
   if (folder && !getSettings().folders.some((f) => pathIdentity(f.path) === pathIdentity(folder)))
-    throw new Error('关联的游戏文件夹已解除绑定，请重新选择实例');
+    throw new Error(t('servers.error.folder_unbound'));
   const available = targets ?? (folder ? scanInstalledFolder(folder, versionId).versions : listAllInstalled());
   let matches = available.filter((target) => target.id === versionId);
   if (folder) {
     const identity = pathIdentity(folder);
     matches = matches.filter((target) => pathIdentity(target.folder) === identity);
   }
-  if (!matches.length) throw new Error(`关联实例「${versionId}」已被删除或所在磁盘不可用`);
-  if (matches.length > 1) throw new Error(`多个游戏文件夹中都存在「${versionId}」，请重新选择具体实例`);
+  if (!matches.length) throw new Error(t('servers.error.instance_missing', { id: versionId }));
+  if (matches.length > 1) throw new Error(t('servers.error.instance_ambiguous', { id: versionId }));
   return matches[0];
 }
 
@@ -151,7 +152,7 @@ function applyTarget(entry: ServerEntry, target: InstalledVersion): void {
 export function bindServer(id: string, versionId: string, folder?: string): ServerEntry[] {
   const list = listServers();
   const s = list.find((x) => x.id === id);
-  if (!s) throw new Error('服务器不存在');
+  if (!s) throw new Error(t('servers.error.not_found'));
   if (versionId) {
     const target = findInstalledTarget(versionId, folder);
     const endpoint = s.normalizedAddress ?? parseServerAddress(s.address).normalizedAddress;
@@ -163,7 +164,7 @@ export function bindServer(id: string, versionId: string, folder?: string): Serv
         !!entry.folder &&
         pathIdentity(entry.folder) === pathIdentity(target.folder)
     );
-    if (duplicate) throw new Error('该服务器已关联到所选实例');
+    if (duplicate) throw new Error(t('servers.error.already_bound'));
     applyTarget(s, target);
   } else {
     delete s.versionId;
@@ -203,22 +204,22 @@ export function writeServerToGameDat(id: string): void {
     const next = [...read.list, { name: entry.name, ip: endpoint }];
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, 'servers.dat'), buildServersDat(next));
-    serverLog.info(`服务器「${entry.name}」已写入实例 ${target.id} 的 servers.dat（共 ${next.length} 条）`);
+    serverLog.info(t('servers.log.written_dat', { name: entry.name, id: target.id, count: next.length }));
   } catch (e) {
     // 写入失败不影响绑定流程（下次启动同步仍可识别）
-    serverLog.warn('写入 servers.dat 失败', e);
+    serverLog.warn(t('servers.log.write_dat_failed'), e);
   }
 }
 
 export function prepareServerLaunch(id: string, versionId?: string, folder?: string): ServerLaunchPreparation {
   const list = listServers();
   const entry = list.find((server) => server.id === id);
-  if (!entry) throw new Error('服务器记录不存在');
+  if (!entry) throw new Error(t('servers.error.record_not_found'));
   const requestedVersion = versionId || entry.versionId;
-  if (!requestedVersion) throw new Error('请先选择要启动的游戏实例');
+  if (!requestedVersion) throw new Error(t('servers.error.select_instance'));
   const target = findInstalledTarget(requestedVersion, folder || entry.folder);
-  if (target.failed) throw new Error(`实例「${target.id}」安装事务未完成，请先清理或重新安装`);
-  if (target.incomplete) throw new Error(`实例「${target.id}」缺少关键文件，请先修复或重新下载`);
+  if (target.failed) throw new Error(t('servers.error.instance_tx_incomplete', { id: target.id }));
+  if (target.incomplete) throw new Error(t('servers.error.instance_files_missing', { id: target.id }));
 
   // 切换活动目录后，versions 的寻址表会在前端刷新时按该目录重建。
   setActiveGameFolder(target.folder);
@@ -263,7 +264,7 @@ function readServersDat(dir: string): { list: DatServer[]; error?: string } {
   try {
     const root = parseNbt(fs.readFileSync(file));
     const list = root.servers;
-    if (!Array.isArray(list)) return { list: [], error: 'servers.dat 缺少 servers 列表' };
+    if (!Array.isArray(list)) return { list: [], error: t('servers.error.dat_missing_list') };
     return {
       list: list
         .map((e) => {
@@ -460,7 +461,7 @@ export function pingServer(address: string): Promise<ServerPingResult> {
     const offline: ServerPingResult = {
       online: false,
       players: '-',
-      motd: '无法连接（服务器离线或地址错误）',
+      motd: t('servers.ping.unreachable'),
       version: '-',
       latencyMs: 0,
     };
@@ -552,8 +553,8 @@ export function pingServer(address: string): Promise<ServerPingResult> {
           finish({
             online: true,
             players: `${s.players?.online ?? 0}/${s.players?.max ?? 0}`,
-            motd: motdText(s.description) || '这个服务器没有介绍',
-            version: s.version?.name ?? '未知',
+            motd: motdText(s.description) || t('servers.ping.no_motd'),
+            version: s.version?.name ?? t('versions.label.unknown'),
             latencyMs: rttMs,
           });
         } catch {

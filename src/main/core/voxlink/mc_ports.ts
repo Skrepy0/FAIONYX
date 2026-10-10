@@ -2,6 +2,7 @@
 // FAIONYX process/port discovery. Process arguments are inspected locally and never logged.
 import { execFile } from 'node:child_process';
 import net from 'node:net';
+import { translate as t } from '../../../shared/i18n';
 export interface McPortEntry {
   port: number;
   pid: number;
@@ -49,17 +50,17 @@ export async function detectMcPorts(): Promise<McPortEntry[]> {
   ].sort((a, b) => a.port - b.port);
 }
 export async function probeHostPort(port: number, timeoutMs = 1500): Promise<void> {
-  if (!port) throw new Error('请先启动游戏并对局域网开放世界');
-  if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('请填写游戏中显示的有效端口（1–65535）');
+  if (!port) throw new Error(t('voxlink.mcports.error.start_game'));
+  if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error(t('voxlink.mcports.error.invalid_port'));
   await new Promise<void>((resolve, reject) => {
     const socket = net.createConnection({ host: '127.0.0.1', port });
-    const timer = setTimeout(() => finish(new Error('请先启动游戏并对局域网开放世界')), timeoutMs);
+    const timer = setTimeout(() => finish(new Error(t('voxlink.mcports.error.start_game'))), timeoutMs);
     const finish = (error?: Error) => {
       clearTimeout(timer);
       socket.destroy();
       error ? reject(error) : resolve();
     };
     socket.once('connect', () => finish());
-    socket.once('error', () => finish(new Error('请先启动游戏并对局域网开放世界')));
+    socket.once('error', () => finish(new Error(t('voxlink.mcports.error.start_game'))));
   });
 }

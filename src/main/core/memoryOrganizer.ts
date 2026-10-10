@@ -4,6 +4,7 @@ import os from 'node:os';
 import { ipcMain } from 'electron';
 import { shouldSkipMemoryProcess, type MemoryOrganizeResult } from '../../shared/memoryOrganizer';
 import { getRunningGamePids } from './launch';
+import { translate as t } from '../../shared/i18n';
 let active: Promise<MemoryOrganizeResult> | undefined;
 const freeMB = () => Math.floor(os.freemem() / 1048576);
 export function organizeMemory(): Promise<MemoryOrganizeResult> {
@@ -42,9 +43,9 @@ async function run(): Promise<MemoryOrganizeResult> {
     let pids = Buffer.alloc(4096),
       length = Buffer.alloc(4);
     for (;;) {
-      if (!enumerate(pids, pids.length, length)) throw new Error('无法枚举进程（Windows ' + error() + '）');
+      if (!enumerate(pids, pids.length, length)) throw new Error(t('memoryorganizer.error.enumerate_failed', { code: error() }));
       if (length.readUInt32LE(0) < pids.length) break;
-      if (pids.length >= 1048576) throw new Error('进程清单超过上限');
+      if (pids.length >= 1048576) throw new Error(t('memoryorganizer.error.list_too_large'));
       pids = Buffer.alloc(pids.length * 2);
     }
     const count = length.readUInt32LE(0) / 4,
@@ -60,7 +61,7 @@ async function run(): Promise<MemoryOrganizeResult> {
       const handle = open(0x1100, false, pid);
       if (!handle) {
         result.skipped++;
-        failure('打开进程失败（Windows ' + error() + '）');
+        failure(t('memoryorganizer.error.open_failed', { code: error() }));
         continue;
       }
       try {
@@ -69,7 +70,7 @@ async function run(): Promise<MemoryOrganizeResult> {
         size.writeUInt32LE(32768);
         if (!image(handle, 0, chars, size)) {
           result.skipped++;
-          failure('无法识别进程（Windows ' + error() + '）');
+          failure(t('memoryorganizer.error.identify_failed', { code: error() }));
           continue;
         }
         const name = chars.subarray(0, size.readUInt32LE(0) * 2).toString('utf16le');
@@ -80,7 +81,7 @@ async function run(): Promise<MemoryOrganizeResult> {
         if (trim(handle)) result.processed++;
         else {
           result.skipped++;
-          failure('整理失败（Windows ' + error() + '）');
+          failure(t('memoryorganizer.error.trim_failed', { code: error() }));
         }
       } finally {
         close(handle);

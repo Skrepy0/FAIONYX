@@ -7,6 +7,7 @@
 import dgram from 'node:dgram';
 import { EventEmitter } from 'node:events';
 import { signPunchFrame, verifyPunchFrame } from './punchAuth';
+import { translate as t } from '../../../shared/i18n';
 export const RUDP_TYPE_PUNCH = 1,
   RUDP_TYPE_PUNCH_ACK = 2,
   RUDP_TYPE_DATA = 3,
@@ -170,7 +171,7 @@ export class RudpConn extends EventEmitter {
     } as RudpPath;
     path.receive = (b, from) => this.receive(b, from, path);
     path.closed = () => {
-      if (this.primary === path) this.closeWith('传输连接已关闭');
+      if (this.primary === path) this.closeWith(t('voxlink.rudp.reason.transport_closed'));
       else if (this.secondary === path) this.dropSecondaryPath();
     };
     path.error = (e) => {
@@ -237,7 +238,7 @@ export class RudpConn extends EventEmitter {
         if (error && this.primary === path) this.closeWith(error.message);
       });
     } catch {
-      if (this.primary === path) this.closeWith('传输连接已关闭');
+      if (this.primary === path) this.closeWith(t('voxlink.rudp.reason.transport_closed'));
     }
   }
   setOnClosed(fn: (reason: string) => void): void {
@@ -405,7 +406,7 @@ export class RudpConn extends EventEmitter {
     // Reject ACKs beyond the sequence actually transmitted.
     if (f.type === RUDP_TYPE_DATA || f.type === RUDP_TYPE_ACK || f.type === RUDP_TYPE_KEEPALIVE) this.processAck(f.ack, f.type, now);
     if (f.type === RUDP_TYPE_DISCONNECT) {
-      this.closeWith('对端断开');
+      this.closeWith(t('voxlink.rudp.reason.peer_disconnected'));
       return;
     }
     if (f.type === RUDP_TYPE_RESTART) {
@@ -453,12 +454,12 @@ export class RudpConn extends EventEmitter {
     this.timer = setInterval(() => {
       const now = Date.now();
       if (now - this.lastRx > 60000) {
-        this.closeWith('对端连接超时');
+        this.closeWith(t('voxlink.rudp.reason.peer_timeout'));
         return;
       }
       for (const [seq, entry] of this.pending) {
         if (now - entry.created > 24000) {
-          this.closeWith('可靠传输重试超时');
+          this.closeWith(t('voxlink.rudp.reason.retry_timeout'));
           return;
         }
         if (now - entry.sent >= this.rto + Math.min(entry.retries, 3) * 250) {
@@ -482,7 +483,7 @@ export class RudpConn extends EventEmitter {
     const job = this.writers.then(async () => {
       for (let offset = 0; offset < copy.length;) {
         while (this.pending.size >= 64 && !this.ended) await this.wait();
-        if (this.ended) throw new Error('连接已关闭');
+        if (this.ended) throw new Error(t('voxlink.rudp.error.connection_closed'));
         const seq = this.nextSend;
         this.nextSend = (seq + 1) >>> 0;
         const size = this.primary?.codec ? 1374 : 1400,
@@ -543,6 +544,6 @@ export class RudpConn extends EventEmitter {
     this.onClosed?.(reason);
   }
   close(): void {
-    this.closeWith('连接已关闭');
+    this.closeWith(t('voxlink.rudp.reason.connection_closed'));
   }
 }

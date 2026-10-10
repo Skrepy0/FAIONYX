@@ -16,6 +16,7 @@ import { exportModState, importModState } from './modState';
 import { parseNbt } from './nbt';
 import { withFileJob } from './fileJobs';
 import { externalGameUsesDirectory } from './gameDirectoryUse';
+import { translate as t } from '../../shared/i18n';
 
 const OMIT = new Set([
   'versions',
@@ -48,27 +49,27 @@ export function validateInstanceName(name: string) {
     name === '.' ||
     name === '..'
   )
-    throw new Error('实例名称无效，请使用不含路径符号的名称');
+    throw new Error(t('instc.error.invalid_name'));
   return name;
 }
 export function centerTarget(target: InstanceTarget) {
   validateInstanceName(target.id);
-  if (!getSettings().folders.some((f) => samePath(f.path, target.folder))) throw new Error('游戏文件夹尚未登记');
+  if (!getSettings().folders.some((f) => samePath(f.path, target.folder))) throw new Error(t('instc.error.folder_unregistered'));
   const folder = fs.realpathSync(target.folder);
   const json = withGameFolder(folder, () => readVersionJson(target.id));
   const state = instanceDirectoryState(target.id, json, folder);
-  if (!fs.existsSync(state.path)) throw new Error('实例目录不存在');
+  if (!fs.existsSync(state.path)) throw new Error(t('instc.error.dir_missing'));
   const dir = fs.realpathSync(state.path);
-  if (!samePath(state.path, dir)) throw new Error('实例目录不能是符号链接');
+  if (!samePath(state.path, dir)) throw new Error(t('instc.error.dir_symlink'));
   return { folder, dir, json, state, target: { folder, id: target.id } };
 }
 export async function assertInstanceIdle(dir: string) {
   const running = getRunningVersionIds();
   for (const v of listAllInstalled().filter((v) => running.has(v.id))) {
     const j = withGameFolder(v.folder, () => readVersionJson(v.id));
-    if (samePath(instanceDirectoryState(v.id, j, v.folder).path, dir)) throw new Error('使用该目录的游戏正在运行，请退出游戏后重试');
+    if (samePath(instanceDirectoryState(v.id, j, v.folder).path, dir)) throw new Error(t('instc.error.game_running'));
   }
-  if (await externalGameUsesDirectory(dir)) throw new Error('另一个启动器的游戏正在使用此目录，请退出游戏后重试');
+  if (await externalGameUsesDirectory(dir)) throw new Error(t('instc.error.external_game_running'));
 }
 export async function playerRoots(dir: string, id: string, saves = true, screenshots = false) {
   const names = await fs.promises.readdir(dir);
@@ -144,21 +145,23 @@ async function stageInstance(
   const roots = await playerRoots(c.dir, c.target.id, saves, screenshots),
     inputs = await scanFiles(c.dir, roots, signal);
   const space = await fs.promises.statfs(stage);
-  if (space.bavail * space.bsize < inputs.reduce((n, f) => n + f.size, 0) + 16 * 1024 * 1024) throw new Error('目标目录磁盘空间不足');
+  if (space.bavail * space.bsize < inputs.reduce((n, f) => n + f.size, 0) + 16 * 1024 * 1024)
+    throw new Error(t('instc.error.insufficient_space'));
   let done = 0;
   for (const f of inputs) {
     await copyVerified(await safePath(c.dir, f.path), path.join(stage, f.path), signal);
-    progress?.(++done, inputs.length, `复制文件 ${done}/${inputs.length}`);
+    progress?.(++done, inputs.length, t('instc.progress.copying', { done, total: inputs.length }));
   }
-  if (JSON.stringify(inputs) !== JSON.stringify(await scanFiles(c.dir, roots, signal))) throw new Error('复制期间实例文件发生变化，请重试');
+  if (JSON.stringify(inputs) !== JSON.stringify(await scanFiles(c.dir, roots, signal)))
+    throw new Error(t('instc.error.changed_during_copy'));
   const { json, jar } = selfContained(c, id);
   await fs.promises.writeFile(path.join(stage, id + '.json'), JSON.stringify(json, null, 2));
   if (fs.existsSync(jar)) await copyVerified(jar, path.join(stage, id + '.jar'), signal);
-  else if (!json.downloads?.client?.url) throw new Error('缺少游戏本体及下载元数据，无法创建独立副本');
+  else if (!json.downloads?.client?.url) throw new Error(t('instc.error.no_client_download'));
 }
 export async function backupInstance(
   target: InstanceTarget,
-  title = '实例手动备份',
+  title = t('instc.label.manual_backup'),
   automatic = false,
   world?: string,
   signal?: AbortSignal,
@@ -171,7 +174,7 @@ export async function backupInstance(
       const store = instanceBackups(c.dir);
       if (world) {
         safeRelative(world);
-        if (world.includes('/')) throw new Error('无效存档');
+        if (world.includes('/')) throw new Error(t('instc.error.invalid_world'));
         return store.create(c.dir, ['saves/' + world], title, automatic, { type: 'world', target: c.target, world }, signal, progress);
       }
       const stage = await fs.promises.mkdtemp(path.join(app.getPath('temp'), 'faionyx-backup-'));
@@ -204,7 +207,7 @@ export async function cloneInstance(
 ) {
   validateInstanceName(name);
   const c = centerTarget(target);
-  if (!getSettings().folders.some((f) => samePath(f.path, destinationFolder))) throw new Error('请选择已登记的目标游戏文件夹');
+  if (!getSettings().folders.some((f) => samePath(f.path, destinationFolder))) throw new Error(t('instc.error.dest_folder_unregistered'));
   const parent = path.join(fs.realpathSync(destinationFolder), 'versions');
   await fs.promises.mkdir(parent, { recursive: true });
   const dest = await safePath(parent, name, true);
@@ -212,7 +215,7 @@ export async function cloneInstance(
     withFileJob(path.join(c.dir, 'mods'), signal, () =>
       withFileJob(dest, signal, async () => {
         await assertInstanceIdle(c.dir);
-        if (fs.existsSync(dest)) throw new Error('目标实例已存在，请更换名称');
+        if (fs.existsSync(dest)) throw new Error(t('instc.error.dest_exists'));
         const stage = await fs.promises.mkdtemp(path.join(parent, '.faionyx-instance-'));
         let published = false;
         try {
@@ -220,7 +223,7 @@ export async function cloneInstance(
           if (restoreId) {
             const backups = instanceBackups(c.dir),
               m = await backups.verify(restoreId, signal);
-            if (m.metadata?.type === 'world') throw new Error('请在存档页面恢复此备份');
+            if (m.metadata?.type === 'world') throw new Error(t('instc.error.restore_world_from_world_page'));
             if (m.metadata?.type === 'instance') {
               await backups.materialize(restoreId, stage, signal, progress);
               const old = (m.metadata.target as InstanceTarget).id;
@@ -280,12 +283,12 @@ export async function centerWorlds(target: InstanceTarget): Promise<InstanceWorl
     try {
       const file = await safePath(c.dir, 'saves/' + id + '/level.dat');
       const stat = await fs.promises.stat(file);
-      if (stat.size > 32 * 1024 * 1024) throw new Error('level.dat 超过读取限制');
+      if (stat.size > 32 * 1024 * 1024) throw new Error(t('instc.error.level_dat_too_large'));
       const n = parseNbt(await fs.promises.readFile(file)) as any,
         d = n.Data || n;
       row.name = String(d.LevelName || id);
       row.version = d.Version?.Name;
-      row.mode = ['生存', '创造', '冒险', '旁观'][d.GameType];
+      row.mode = [t('instc.mode.survival'), t('instc.mode.creative'), t('instc.mode.adventure'), t('instc.mode.spectator')][d.GameType];
       row.lastPlayed = Number(d.LastPlayed) || stat.mtimeMs;
       row.icon = await smallImage(c.dir, 'saves/' + id + '/icon.png');
     } catch (e) {
@@ -322,7 +325,7 @@ export async function restoreWorld(
   const c = centerTarget(target),
     backups = instanceBackups(c.dir),
     m = await backups.verify(backupId, signal);
-  if (m.metadata?.type !== 'world') throw new Error('请选择存档备份');
+  if (m.metadata?.type !== 'world') throw new Error(t('instc.error.choose_world_backup'));
   const original = String(m.metadata.world);
   validateInstanceName(original);
   return withFileJob(c.dir, signal, async () => {
@@ -330,13 +333,13 @@ export async function restoreWorld(
     await fs.promises.mkdir(path.join(c.dir, 'saves'), { recursive: true });
     const dest = await safePath(c.dir, 'saves/' + name, true),
       exists = fs.existsSync(dest);
-    if (exists && !overwrite) throw new Error('同名存档已存在，请换一个名称或明确选择覆盖');
+    if (exists && !overwrite) throw new Error(t('instc.error.world_exists'));
     const before = JSON.stringify(await scanFiles(c.dir, ['saves/' + name], signal));
     if (exists)
       await backups.create(
         c.dir,
         ['saves/' + name],
-        '存档覆盖恢复前',
+        t('instc.label.world_overwrite_backup'),
         false,
         { type: 'world', world: name, target: c.target },
         signal,
@@ -350,7 +353,7 @@ export async function restoreWorld(
       await assertInstanceIdle(c.dir);
       signal?.throwIfAborted();
       if (exists !== fs.existsSync(dest) || before !== JSON.stringify(await scanFiles(c.dir, ['saves/' + name], signal)))
-        throw new Error('准备恢复期间存档发生变化，请重试');
+        throw new Error(t('instc.error.world_changed_before_restore'));
       if (exists) await fs.promises.rename(dest, old);
       try {
         await fs.promises.rename(path.join(stage, 'saves', original), dest);
@@ -360,7 +363,7 @@ export async function restoreWorld(
             await fs.promises.rename(old, dest);
           } catch {
             preserve = true;
-            throw new Error('恢复提交失败，原存档保留于 ' + old);
+            throw new Error(t('instc.error.world_restore_commit_failed', { path: old }));
           }
         throw e;
       }
@@ -375,13 +378,13 @@ export async function restoreInstanceInPlace(target: InstanceTarget, backupId: s
     backups = instanceBackups(c.dir),
     m = await backups.verify(backupId, signal);
   if (!c.state.isolated || !samePath(c.dir, path.join(c.folder, 'versions', target.id)))
-    throw new Error('共享或自定义目录请恢复为新的隔离实例');
-  if (m.metadata?.type === 'world') throw new Error('请使用存档恢复');
+    throw new Error(t('instc.error.shared_dir_needs_isolated'));
+  if (m.metadata?.type === 'world') throw new Error(t('instc.error.use_world_restore'));
   const roots = [...(await playerRoots(c.dir, target.id, true, true)), target.id + '.json', target.id + '.jar'];
   const beforeFiles = JSON.stringify(await scanFiles(c.dir, roots, signal)),
     beforeLocks = JSON.stringify(exportModState(path.join(c.dir, 'mods')));
   // Create a complete recoverable manual record before touching the destination.
-  await backupInstance(target, '实例覆盖恢复前', false, undefined, signal, progress);
+  await backupInstance(target, t('instc.label.instance_overwrite_backup'), false, undefined, signal, progress);
   const name = 'restore-' + crypto.randomUUID();
   const result = await cloneInstance(target, name, c.folder, true, true, signal, progress, backupId);
   const staging = path.join(c.folder, 'versions', result.id),
@@ -396,7 +399,7 @@ export async function restoreInstanceInPlace(target: InstanceTarget, backupId: s
           beforeFiles !== JSON.stringify(await scanFiles(c.dir, roots, signal)) ||
           beforeLocks !== JSON.stringify(exportModState(path.join(c.dir, 'mods')))
         )
-          throw new Error('准备恢复期间实例发生变化，已保留现有实例，请重新执行');
+          throw new Error(t('instc.error.instance_changed_before_restore'));
         const json = JSON.parse(await fs.promises.readFile(path.join(staging, name + '.json'), 'utf8'));
         json.id = target.id;
         await fs.promises.unlink(path.join(staging, name + '.json'));
@@ -416,7 +419,7 @@ export async function restoreInstanceInPlace(target: InstanceTarget, backupId: s
             importModState(path.join(c.dir, 'mods'), beforeState);
           } catch {
             keepOld = true;
-            throw new Error('恢复提交失败；原实例保留于 ' + old);
+            throw new Error(t('instc.error.instance_restore_commit_failed', { path: old }));
           }
           throw e;
         }

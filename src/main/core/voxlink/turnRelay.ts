@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 // ConnectionManager.java TURN host/guest lifecycle, VoxLink c475faa98cca16d4a2eeef4422c862c36091e1fc.
 import { ApiClient } from './api';
+import { translate as t } from '../../../shared/i18n';
 import { TurnSession, probeTurnNodes, validTurnEndpoint, type TurnAllocation, type TurnNode } from './turn';
 import { derivePunchKey } from './punchAuth';
 import { RudpConn } from './rudp';
@@ -71,7 +72,7 @@ export class TurnRelay {
     return !link.controller.signal.aborted && !!room && room.code === link.room.code && room.token === link.room.token;
   }
   private valid(link: RelayLink) {
-    if (!this.current(link)) throw new Error('房间已退出');
+    if (!this.current(link)) throw new Error(t('voxlink.engine.error.room_left'));
   }
   private release(link: RelayLink) {
     if (!link.allocation) return;
@@ -126,7 +127,7 @@ export class TurnRelay {
   }
   async startGuest(): Promise<void> {
     const room = this.deps.room();
-    if (!room || room.isHost) throw new Error('请先加入房间后使用 TURN 中继');
+    if (!room || room.isHost) throw new Error(t('voxlink.turnrelay.error.join_room_first'));
     if (this.guest || this.deps.directConnected()) return;
     const link: RelayLink = { controller: new AbortController(), room };
     this.guest = link;
@@ -135,18 +136,18 @@ export class TurnRelay {
       link.controller.abort();
     }, 35000);
     const signal = link.controller.signal;
-    this.deps.stage('active', 'TURN：正在获取节点并测试延迟…');
-    this.deps.state('trying', '', '正在建立 TURN 中继');
+    this.deps.stage('active', t('voxlink.turnrelay.state.stage_probing'));
+    this.deps.state('trying', '', t('voxlink.turnrelay.state.establishing'));
     try {
       const status = (await this.deps.api.get(this.deps.baseURL(), '/relay/status', {}, {}, signal)) as { enabled?: boolean };
       this.valid(link);
-      if (status.enabled === false) throw new Error('服务器暂未启用 TURN 中继');
+      if (status.enabled === false) throw new Error(t('voxlink.turnrelay.error.relay_disabled'));
       const raw = (await this.deps.api.get(this.deps.baseURL(), '/relay/list', {}, {}, signal)) as { nodes?: TurnNode[] };
       this.valid(link);
       const nodes = (raw.nodes || [])
         .filter((n) => n.id != null && validTurnEndpoint(n.host, n.port))
         .map((n) => ({ ...n, id: String(n.id) }));
-      if (!nodes.length) throw new Error('当前没有可用的 TURN 节点');
+      if (!nodes.length) throw new Error(t('voxlink.turnrelay.error.no_nodes'));
       const sorted = await probeTurnNodes(nodes, signal);
       this.valid(link);
       if (this.deps.directConnected()) {
@@ -189,7 +190,7 @@ export class TurnRelay {
           this.close(link);
           return;
         }
-        this.deps.stage('active', 'TURN：节点已分配，正在绑定中继通路…');
+        this.deps.stage('active', t('voxlink.turnrelay.state.stage_binding'));
         link.session = await TurnSession.bind({ ...allocation, ticket: allocation.guestTicket }, 2, signal);
         this.valid(link);
         allocationData = {
@@ -205,11 +206,11 @@ export class TurnRelay {
       const ready = new Promise<Record<string, unknown>>((resolve, reject) => {
         const timer = setTimeout(() => {
           cleanup();
-          reject(new Error('房主 20 秒内未确认 TURN，请确认对方使用支持中继的版本'));
+          reject(new Error(t('voxlink.turnrelay.error.host_timeout')));
         }, 20_000);
         const abort = () => {
           cleanup();
-          reject(new Error('房间已退出'));
+          reject(new Error(t('voxlink.engine.error.room_left')));
         };
         const cleanup = () => {
           clearTimeout(timer);
@@ -223,7 +224,7 @@ export class TurnRelay {
         };
         link.nack = (reason) => {
           cleanup();
-          reject(new Error('房主拒绝 TURN：' + reason));
+          reject(new Error(t('voxlink.turnrelay.error.host_rejected', { reason })));
         };
         signal.addEventListener('abort', abort, { once: true });
         if (signal.aborted) abort();
@@ -239,7 +240,7 @@ export class TurnRelay {
         return;
       }
       if (link.std) {
-        if (readyData.stdTurn !== true) throw Error('房主返回了不匹配的 TURN 协议');
+        if (readyData.stdTurn !== true) throw Error(t('voxlink.turnrelay.error.protocol_mismatch'));
         await link.std.bind({ address: String(readyData.relayHost ?? ''), port: Number(readyData.relayPort) }, signal);
         this.valid(link);
       }
@@ -264,8 +265,8 @@ export class TurnRelay {
       rc.once('closed', () => this.lost(link));
       this.deps.connected('host', addr);
       this.background(link, 'host');
-      this.deps.stage('ok', 'TURN 中继已建立');
-      this.deps.state('success', addr, '通过 TURN 中继连接，本地地址 ' + addr);
+      this.deps.stage('ok', t('voxlink.turnrelay.state.stage_ready'));
+      this.deps.state('success', addr, t('voxlink.turnrelay.state.connected_local', { address: addr }));
     } catch (e) {
       const roomNow = this.deps.room(),
         active =
@@ -273,7 +274,7 @@ export class TurnRelay {
           (link.timedOut && this.guest === link && roomNow?.code === link.room.code && roomNow?.token === link.room.token);
       this.close(link);
       if (active) {
-        const message = link.timedOut ? 'TURN 分配超过 35 秒，请重试' : (e as Error).message;
+        const message = link.timedOut ? t('voxlink.turnrelay.error.alloc_timeout') : (e as Error).message;
         this.deps.stage('fail', message);
         this.deps.state('failed', '', message);
         throw new Error(message);
@@ -284,8 +285,8 @@ export class TurnRelay {
     if (!this.current(link)) return;
     const standby = link.background?.takeStandby();
     this.close(link);
-    this.deps.stage('fail', 'TURN 中继已断开，可重新连接');
-    this.deps.state('failed', '', 'TURN 中继已断开');
+    this.deps.stage('fail', t('voxlink.turnrelay.state.lost_reconnect'));
+    this.deps.state('failed', '', t('voxlink.turnrelay.state.lost'));
     if (standby && !link.room.isHost) {
       void (async () => {
         try {
@@ -428,7 +429,7 @@ export class TurnRelay {
       link.resend = setTimeout(() => {
         if (this.current(link) && this.hosts.get(from) === link) void this.deps.signal('turn_ready', link.readyData!, from).catch(() => {});
       }, 4000);
-      this.deps.stage('ok', '房客 TURN 通路已建立，等待游戏连接');
+      this.deps.stage('ok', t('voxlink.turnrelay.state.guest_path_ready'));
     } catch (e) {
       const active = this.current(link);
       this.close(link);
@@ -441,7 +442,7 @@ export class TurnRelay {
             from
           )
           .catch(() => {});
-        this.deps.log('warn', '房客 TURN 建立失败：' + reason);
+        this.deps.log('warn', t('voxlink.turnrelay.log.guest_failed', { reason }));
       }
     }
   }

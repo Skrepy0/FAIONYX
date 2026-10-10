@@ -6,6 +6,7 @@ import {
   VIDEO_OPTION_ORDER,
   uniqueGameOptions,
   supportedGameOption,
+  gameOptionChoiceKey,
   type DefaultGameOptions,
   type GameOptionDef,
   type GameOptionValue,
@@ -28,7 +29,7 @@ const title = computed(() =>
     ? t('gameoptions.root_title')
     : page.value === 'mouse'
       ? t('gameoptions.mouse_title')
-      : GAME_OPTION_PAGES.find((p) => p[0] === page.value)?.[1]
+      : t(GAME_OPTION_PAGES.find((p) => p[0] === page.value)?.[1] ?? 'gameoptions.root_title')
 );
 const rows = computed(() => {
   const list = GAME_OPTIONS.filter((d) => d.page === page.value || (page.value === 'controls' && d.id === 'mouseSensitivity')).map((d) =>
@@ -38,9 +39,13 @@ const rows = computed(() => {
 });
 const unavailable = computed(() => uniqueGameOptions.filter((d) => d.id in state.value.values && !supportedGameOption(d, version.value)));
 const value = (d: GameOptionDef) => draft.value[d.id] ?? state.value.values[d.id] ?? d.initial;
+/** 选项取值显示名：i18n 键走翻译，内联文本（如语言名）原样返回。 */
+const choiceLabel = (label: string) => (label.startsWith('gameoptions.') ? t(label) : label);
+/** 单位显示名：i18n 键走翻译，°/%/px 这类符号原样返回。 */
+const unitLabel = (unit?: string) => (unit && unit.startsWith('gameoptions.') ? t(unit) : (unit ?? ''));
 const label = (d: GameOptionDef) =>
-  d.choices?.find((c) => c[0] === value(d))?.[1] ??
-  (typeof value(d) === 'boolean' ? (value(d) ? t('gameoptions.on') : t('gameoptions.off')) : String(value(d)) + (d.unit ?? ''));
+  choiceLabel(d.choices?.find((c) => c[0] === value(d))?.[1] ?? '') ||
+  (typeof value(d) === 'boolean' ? (value(d) ? t('gameoptions.on') : t('gameoptions.off')) : String(value(d)) + unitLabel(d.unit));
 async function save(change: Parameters<typeof setDefaultGameOptions>[0]) {
   if (busy.value) return;
   busy.value = true;
@@ -115,7 +120,7 @@ onMounted(async () => {
     </div>
     <p class="options-note muted">{{ t('gameoptions.note') }}</p>
     <p data-ui="DefaultGameOptions:10d78a0fdb4e" v-if="unavailable.length" class="options-warning">
-      {{ t('gameoptions.unsupported_warning', { version, items: unavailable.map((d) => d.label).join('、') }) }}
+      {{ t('gameoptions.unsupported_warning', { version, items: unavailable.map((d) => t(d.label)).join(t('common.list_separator')) }) }}
     </p>
     <div data-ui="DefaultGameOptions:0d8159fbfd41" class="options-path">
       <button
@@ -149,26 +154,26 @@ onMounted(async () => {
             :class="{ 'option-custom': d.id in state.values, 'option-unsupported': !supportedGameOption(d, version) }"
           >
             <div class="option-caption">
-              <span>{{ d.label }}</span
+              <span>{{ t(d.label) }}</span
               ><label data-ui="DefaultGameOptions:b2052d5c2d85" v-if="typeof d.initial === 'number' && !d.choices" class="option-number"
                 ><input
                   data-ui="DefaultGameOptions:77a5c1dbe109"
                   type="number"
-                  :aria-label="t('gameoptions.option_value_label', { label: d.label })"
+                  :aria-label="t('gameoptions.option_value_label', { label: t(d.label) })"
                   :min="d.min"
                   :max="d.max"
                   :step="d.step"
                   :value="value(d)"
                   :disabled="busy || !supportedGameOption(d, version)"
                   @change="numericChange(d, $event)"
-                /><span>{{ d.unit }}</span></label
+                /><span>{{ unitLabel(d.unit) }}</span></label
               ><strong data-ui="DefaultGameOptions:c39dcd5dabdd" v-else>{{ label(d) }}</strong>
             </div>
             <input
               data-ui="DefaultGameOptions:0d2326a37a73"
               v-if="typeof d.initial === 'number' && !d.choices"
               type="range"
-              :aria-label="d.label"
+              :aria-label="t(d.label)"
               :min="d.min"
               :max="d.max"
               :step="d.step"
@@ -181,18 +186,18 @@ onMounted(async () => {
               data-ui="DefaultGameOptions:573cbf8cab33"
               v-else-if="d.choices && d.choices.length > 3"
               class="input option-select"
-              :aria-label="d.label"
+              :aria-label="t(d.label)"
               :value="value(d)"
               :disabled="busy || !supportedGameOption(d, version)"
               @change="save({ id: d.id, value: d.choices.find((c) => String(c[0]) === ($event.target as HTMLSelectElement).value)![0] })"
             >
-              <option v-for="[v, name] in d.choices" :key="String(v)" :value="String(v)">{{ name }}</option>
+              <option v-for="[v, name] in d.choices" :key="String(v)" :value="String(v)">{{ choiceLabel(name) }}</option>
             </select>
             <button
               data-ui="DefaultGameOptions:085c7f6ac800"
               v-else
               class="option-toggle"
-              :aria-label="d.label"
+              :aria-label="t(d.label)"
               :disabled="busy || !supportedGameOption(d, version)"
               @click="cycle(d)"
             >
@@ -253,7 +258,7 @@ onMounted(async () => {
             class="option-entry"
             @click="open(id)"
           >
-            {{ name }}<span>›</span>
+            {{ t(name) }}<span>›</span>
           </button>
         </div>
         <p data-ui="DefaultGameOptions:49d93417eccf" v-if="page === 'credits'" class="empty">

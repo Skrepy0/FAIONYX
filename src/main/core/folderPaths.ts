@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { translate as t } from '../../shared/i18n';
 
 /** 存在时解析 junction/符号链接；路径不存在时仍返回绝对规范形式。 */
 export function canonicalPath(input: string): string {
@@ -31,12 +32,12 @@ export function resolveMinecraftRoot(input: string): {
   path: string;
   structure: 'minecraft' | 'faionyx' | 'empty';
 } {
-  if (!input.trim()) throw new Error('文件夹路径不能为空');
+  if (!input.trim()) throw new Error(t('folderpaths.error.empty'));
   let selected = canonicalPath(input);
   // 先检查存在性再给友好错误；否则 statSync 会把 ENOENT 系统报错直接抛给用户
-  if (!fs.existsSync(selected)) throw new Error('文件夹不存在，请检查路径是否正确');
+  if (!fs.existsSync(selected)) throw new Error(t('folderpaths.error.not_exists'));
   const stat = fs.statSync(selected);
-  if (!stat.isDirectory()) throw new Error('选择的路径不是文件夹');
+  if (!stat.isDirectory()) throw new Error(t('folderpaths.error.not_dir'));
 
   if (path.basename(selected).toLowerCase() === 'versions') {
     selected = canonicalPath(path.dirname(selected));

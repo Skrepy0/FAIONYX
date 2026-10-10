@@ -1,4 +1,5 @@
 import { httpFetch } from './httpClient';
+import { translate as t } from '../../shared/i18n';
 
 export interface CfMetadataSource {
   base: string;
@@ -17,8 +18,9 @@ export interface ResolvedCfFile extends Omit<ResolvedCfDownload, 'url'> {
 
 /** Public CDN layout uses the numeric file ID, with no padding on its remainder. */
 export function constructCurseForgeCdnUrl(fileID: number, fileName: string): string {
-  if (!Number.isSafeInteger(fileID) || fileID <= 0) throw new Error('CurseForge 文件标识无效');
-  if (!fileName || /[/\\\x00-\x1f]/.test(fileName) || fileName === '.' || fileName === '..') throw new Error('文件名无效');
+  if (!Number.isSafeInteger(fileID) || fileID <= 0) throw new Error(t('community.error.invalid_cf_file'));
+  if (!fileName || /[/\\\x00-\x1f]/.test(fileName) || fileName === '.' || fileName === '..')
+    throw new Error(t('cfdownload.error.invalid_name'));
   return `https://edge.forgecdn.net/files/${Math.floor(fileID / 1000)}/${fileID % 1000}/${encodeURIComponent(fileName)}`;
 }
 
@@ -64,7 +66,7 @@ export async function resolveCurseForgeFileUrl(
   sources: CfMetadataSource[],
   signal?: AbortSignal
 ): Promise<string | null> {
-  if (![projectID, fileID].every((n) => Number.isSafeInteger(n) && n > 0)) throw new Error('CurseForge 文件标识无效');
+  if (![projectID, fileID].every((n) => Number.isSafeInteger(n) && n > 0)) throw new Error(t('community.error.invalid_cf_file'));
   for (const source of sources) {
     signal?.throwIfAborted();
     try {
@@ -115,7 +117,7 @@ export async function curseForgeInstallDir(
       signal?.throwIfAborted();
     }
   }
-  throw new Error(`无法确定 ${fileName} 的资源类型，请稍后重试获取 CurseForge 项目信息`);
+  throw new Error(t('cfdownload.error.unknown_class', { fileName }));
 }
 
 /** File identity remains useful when a pack bundles a file without an automatic download URL. */
@@ -125,7 +127,7 @@ export async function resolveCurseForgeMetadata(
   sources: CfMetadataSource[],
   signal?: AbortSignal
 ): Promise<ResolvedCfFile> {
-  if (![projectID, fileID].every((n) => Number.isSafeInteger(n) && n > 0)) throw new Error('CurseForge 文件标识无效');
+  if (![projectID, fileID].every((n) => Number.isSafeInteger(n) && n > 0)) throw new Error(t('community.error.invalid_cf_file'));
   let last: unknown;
   let localOnly: ResolvedCfFile | undefined;
   for (const source of sources) {
@@ -136,7 +138,7 @@ export async function resolveCurseForgeMetadata(
       const res = await httpFetch(`${source.base}/mods/${projectID}/files/${fileID}`, { signal: requestSignal, headers: source.headers });
       if (!res.ok) {
         await res.body?.cancel();
-        throw new Error(`文件信息 HTTP ${res.status}`);
+        throw new Error(t('cfdownload.error.file_info_http', { status: res.status }));
       }
       const { data } = (await res.json()) as {
         data?: {
@@ -149,13 +151,13 @@ export async function resolveCurseForgeMetadata(
           hashes?: { algo: number; value: string }[];
         };
       };
-      if (data?.id !== fileID || data.modId !== projectID) throw new Error('文件信息与整合包清单不匹配');
+      if (data?.id !== fileID || data.modId !== projectID) throw new Error(t('cfdownload.error.file_info_mismatch'));
       const name = data.fileName ?? '',
         sha1 = data.hashes?.find((h) => h.algo === 1)?.value ?? '';
-      if (!name || /[/\\\x00-\x1f]/.test(name) || name === '.' || name === '..') throw new Error('文件名无效');
+      if (!name || /[/\\\x00-\x1f]/.test(name) || name === '.' || name === '..') throw new Error(t('cfdownload.error.invalid_name'));
       if (!Number.isSafeInteger(data.fileLength) || data.fileLength! <= 0 || !/^[a-f\d]{40}$/i.test(sha1))
-        throw new Error('文件缺少有效大小或 SHA1，无法安全下载');
-      if (data.downloadUrl && new URL(data.downloadUrl).protocol !== 'https:') throw new Error('文件下载地址无效');
+        throw new Error(t('cfdownload.error.missing_size_sha1'));
+      if (data.downloadUrl && new URL(data.downloadUrl).protocol !== 'https:') throw new Error(t('cfdownload.error.invalid_download_url'));
       const file = {
         fileName: name,
         url: data.downloadUrl || null,
@@ -172,14 +174,14 @@ export async function resolveCurseForgeMetadata(
     }
   }
   if (localOnly) return localOnly;
-  throw new Error(`CurseForge ${projectID}/${fileID}：${last instanceof Error ? last.message : String(last)}`);
+  throw new Error(
+    t('cfdownload.error.metadata_failed', { project: projectID, file: fileID, error: last instanceof Error ? last.message : String(last) })
+  );
 }
 
 export function requireCurseForgeDownload(file: ResolvedCfFile, projectID: number, fileID: number): ResolvedCfDownload {
   if (!file.isAvailable || !file.url) {
-    throw new Error(
-      `CurseForge ${projectID}/${fileID}（${file.fileName}）：未提供可自动下载的文件，且整合包内没有大小和 SHA1 均匹配的副本。请从 CurseForge 文件页面取得该版本并补入整合包的 overrides/mods 后重试，或联系整合包作者补全文件。`
-    );
+    throw new Error(t('cfdownload.error.no_auto_download', { project: projectID, file: fileID, name: file.fileName }));
   }
   return { fileName: file.fileName, url: file.url, sha1: file.sha1, size: file.size };
 }

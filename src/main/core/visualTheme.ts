@@ -8,6 +8,7 @@ import { cleanDesign } from '../../shared/visualDesign';
 import { carouselImages, carouselSelection, carouselTiming, MAX_CAROUSEL_IMAGES } from '../../shared/appearancePolicy';
 import { BUILTIN_LAUNCH_IMAGES, isBuiltinLaunchImage } from '../../shared/launchImages';
 import { DEFAULT_CUSTOM_THEME, DEFAULT_BACKGROUND, DEFAULT_LAUNCH_THUMBNAIL, DEFAULT_HOME_LAYOUT, type Settings } from '../../shared/types';
+import { translate as t } from '../../shared/i18n';
 const MAX = 64 * 1024 * 1024;
 export function exportVisualTheme(preview?: Partial<Settings>): string {
   const s = { ...getSettings(), ...preview },
@@ -42,20 +43,20 @@ export function exportVisualTheme(preview?: Partial<Settings>): string {
     visualDesign: cleanDesign(s.visualDesign),
     assets,
   });
-  if (Buffer.byteLength(payload) > MAX) throw new Error('主题图片过大，请减少图片后导出（上限64MiB）');
+  if (Buffer.byteLength(payload) > MAX) throw new Error(t('visualtheme.error.too_large'));
   return 'FAIONYX2.' + gzipSync(payload).toString('base64');
 }
 export async function importVisualTheme(code: string, preview = false): Promise<Settings> {
-  if (typeof code !== 'string' || code.length > MAX * 2) throw new Error('主题码无效或过大');
+  if (typeof code !== 'string' || code.length > MAX * 2) throw new Error(t('visualtheme.error.invalid_code'));
   const value = code.trim();
   let p: any;
   if (value.startsWith('FAIONYX2.'))
     p = JSON.parse(gunzipSync(Buffer.from(value.slice(8), 'base64'), { maxOutputLength: MAX }).toString('utf8'));
   else if (value.startsWith('FAIONYX.'))
     p = { format: 2, theme: 'custom', custom: { colors: JSON.parse(Buffer.from(value.slice(7), 'base64').toString('utf8')).colors } };
-  else throw new Error('请粘贴完整的 FAIONYX 主题码');
+  else throw new Error(t('visualtheme.error.paste_full_code'));
   if (p.format !== 2 || !['custom', 'blue-white', 'black-orange', 'white-pink', 'black-pink', 'transparent'].includes(p.theme))
-    throw new Error('不支持的主题格式');
+    throw new Error(t('visualtheme.error.unsupported_format'));
   const colors = { ...DEFAULT_CUSTOM_THEME.colors };
   for (const key of Object.keys(colors) as (keyof typeof colors)[])
     if (/^#[a-f0-9]{6}$/i.test(p.custom?.colors?.[key])) colors[key] = p.custom.colors[key];
@@ -66,14 +67,14 @@ export async function importVisualTheme(code: string, preview = false): Promise<
     async function image(id: unknown, purpose: 'background' | 'launch-thumbnail') {
       if (!id) return '';
       if (typeof id !== 'string' || !/^image-[a-f0-9]{64}$/.test(id) || typeof p.assets?.[id] !== 'string')
-        throw new Error('主题图片资源缺失');
+        throw new Error(t('visualtheme.error.asset_missing'));
       const key = purpose + id;
       if (importJobs.has(key)) return importJobs.get(key)!;
       const bytes = Buffer.from(p.assets[id], 'base64');
       if (bytes.length > 16 * 1024 * 1024 || 'image-' + crypto.createHash('sha256').update(bytes).digest('hex') !== id)
-        throw new Error('主题图片校验失败');
+        throw new Error(t('visualtheme.error.image_verify_failed'));
       const format = sniffImageFormat(bytes);
-      if (!format) throw new Error('主题图片格式无效');
+      if (!format) throw new Error(t('visualtheme.error.image_format_invalid'));
       const job = importGlobalImageSnapshot(bytes, purpose).then((result) => {
         imported.set(key, { path: result.path, purpose });
         return result.path;

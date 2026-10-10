@@ -1,5 +1,6 @@
 import net from 'node:net';
 import { domainToASCII } from 'node:url';
+import { translate as t } from '../../shared/i18n';
 
 export interface ParsedServerAddress {
   host: string;
@@ -13,20 +14,20 @@ export interface ParsedServerAddress {
 
 function normalizedHost(value: string): string {
   const raw = value.trim().replace(/\.$/, '');
-  if (!raw || /[\s/?#@]/.test(raw)) throw new Error('服务器地址格式无效');
+  if (!raw || /[\s/?#@]/.test(raw)) throw new Error(t('serverutils.error.address_format'));
   if (net.isIP(raw)) return raw.toLowerCase();
   const ascii = domainToASCII(raw).toLowerCase();
   if (!ascii || ascii.length > 253 || ascii.split('.').some((part) => !part || part.length > 63)) {
-    throw new Error('服务器域名格式无效');
+    throw new Error(t('serverutils.error.domain_format'));
   }
   return ascii;
 }
 
 function normalizedPort(value: string | undefined): { port: number; explicit: boolean } {
   if (value == null || value === '') return { port: 25565, explicit: false };
-  if (!/^\d{1,5}$/.test(value)) throw new Error('服务器端口必须是 1 到 65535 的整数');
+  if (!/^\d{1,5}$/.test(value)) throw new Error(t('serverutils.error.port_range'));
   const port = Number(value);
-  if (port < 1 || port > 65535) throw new Error('服务器端口必须是 1 到 65535 的整数');
+  if (port < 1 || port > 65535) throw new Error(t('serverutils.error.port_range'));
   return { port, explicit: true };
 }
 
@@ -37,17 +38,17 @@ function normalizedPort(value: string | undefined): { port: number; explicit: bo
 export function parseServerAddress(input: string): ParsedServerAddress {
   let raw = input.trim();
   if (/^minecraft:\/\//i.test(raw)) raw = raw.slice('minecraft://'.length);
-  if (!raw) throw new Error('服务器地址不能为空');
+  if (!raw) throw new Error(t('serverutils.error.empty'));
 
   let hostRaw = raw;
   let portRaw: string | undefined;
   if (raw.startsWith('[')) {
     const closing = raw.indexOf(']');
-    if (closing < 0) throw new Error('IPv6 地址缺少右方括号');
+    if (closing < 0) throw new Error(t('serverutils.error.ipv6_bracket_missing'));
     hostRaw = raw.slice(1, closing);
     const rest = raw.slice(closing + 1);
     if (rest) {
-      if (!rest.startsWith(':')) throw new Error('服务器地址格式无效');
+      if (!rest.startsWith(':')) throw new Error(t('serverutils.error.address_format'));
       portRaw = rest.slice(1);
     }
   } else {
@@ -57,7 +58,7 @@ export function parseServerAddress(input: string): ParsedServerAddress {
       hostRaw = raw.slice(0, at);
       portRaw = raw.slice(at + 1);
     } else if (colonCount > 1 && net.isIP(raw) !== 6) {
-      throw new Error('IPv6 地址指定端口时请使用 [地址]:端口');
+      throw new Error(t('serverutils.error.ipv6_port_hint'));
     }
   }
 

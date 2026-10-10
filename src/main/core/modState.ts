@@ -2,6 +2,7 @@ import { app } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { translate as t } from '../../shared/i18n';
 interface DirectoryState {
   aliases: Record<string, string>;
   locks: Record<string, boolean>;
@@ -11,7 +12,7 @@ export function exportModState(dir: string) {
 }
 export function importModState(dir: string, value: unknown) {
   const s = value as DirectoryState;
-  if (!s || typeof s !== 'object' || !s.aliases || !s.locks) throw new Error('模组状态记录无效');
+  if (!s || typeof s !== 'object' || !s.aliases || !s.locks) throw new Error(t('modstate.error.invalid'));
   write(dir, { aliases: { ...s.aliases }, locks: { ...s.locks } });
 }
 function stateFile(dir: string) {
@@ -30,7 +31,7 @@ function read(dir: string): DirectoryState {
     const v = JSON.parse(fs.readFileSync(stateFile(dir), 'utf8'));
     return { aliases: v.aliases || {}, locks: v.locks || {} };
   } catch (e) {
-    if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw new Error('模组锁定记录无法读取，请先恢复记录后重试');
+    if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw new Error(t('modstate.error.unreadable'));
     return { aliases: {}, locks: {} };
   }
 }

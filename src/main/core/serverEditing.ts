@@ -1,12 +1,13 @@
 import type { ServerEntry } from '../../shared/types';
 import { parseServerAddress } from './serverUtils';
+import { translate as t } from '../../shared/i18n';
 
 /** Edit launcher metadata in place; preserve identity, instance bindings and history. */
 export function editedServers(list: ServerEntry[], id: string, name: string, address: string): ServerEntry[] {
   const current = list.find((s) => s.id === id);
-  if (!current) throw new Error('服务器不存在，请刷新列表');
+  if (!current) throw new Error(t('serverediting.error.not_found'));
   const trimmed = name.trim();
-  if (!trimmed) throw new Error('服务器名称不能为空');
+  if (!trimmed) throw new Error(t('serverediting.error.name_required'));
   const parsed = parseServerAddress(address);
   const folderKey = (folder?: string) => (folder ?? '').replace(/\\/g, '/').replace(/\/$/, '').toLowerCase();
   const duplicate = list.some(
@@ -16,7 +17,7 @@ export function editedServers(list: ServerEntry[], id: string, name: string, add
       (s.versionId ?? '') === (current.versionId ?? '') &&
       (!current.versionId || folderKey(s.folder) === folderKey(current.folder))
   );
-  if (duplicate) throw new Error('同一实例下已存在该服务器地址');
+  if (duplicate) throw new Error(t('serverediting.error.duplicate'));
   return list.map((s) =>
     s.id === id
       ? {

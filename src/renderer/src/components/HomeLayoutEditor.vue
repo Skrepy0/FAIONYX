@@ -52,7 +52,7 @@ const slides = computed(() =>
     return {
       key,
       src: bundled?.src ?? managedImageUrl(key),
-      title: bundled?.title ?? `${t('hle.custom_image')} ${images.value.indexOf(key) + 1}`,
+      title: bundled ? t(bundled.title) : `${t('hle.custom_image')} ${images.value.indexOf(key) + 1}`,
       builtin: !!bundled,
     };
   })

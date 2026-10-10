@@ -11,6 +11,7 @@ import {
   type PunchResult,
   type FailureReason,
 } from './punchPolicy';
+import { translate as t } from '../../../shared/i18n';
 export const ZERO_RECV_FINAL_ROUND_LIMIT = 20; // ConnectionManager.java: ZERO_RECV_FINAL_ROUND_LIMIT
 export const PREDICTION_OFF_CAP = 50; // ConnectionManager.java: PREDICTION_OFF_CAP (not a total round limit)
 export const BACKOFF_DELAYS_MS = [1000, 2000, 4000] as const; // ConnectionManager.java: BACKOFF_DELAYS_MS
@@ -50,14 +51,18 @@ export class PunchRounds {
     if (next === this.profile) return;
     if (this.switchedAt && Date.now() - this.switchedAt < PROFILE_SWITCH_COOLDOWN_MS) {
       this.log(
-        `模板切换被 20 秒节流：目标 ${next.name}，保留 ${this.profile.name}，剩余 ${PROFILE_SWITCH_COOLDOWN_MS - (Date.now() - this.switchedAt)} ms`
+        t('voxlink.punchrounds.switch_throttled', {
+          next: next.name,
+          current: this.profile.name,
+          remaining: PROFILE_SWITCH_COOLDOWN_MS - (Date.now() - this.switchedAt),
+        })
       );
       return;
     }
     const differences = Object.fromEntries(
       Object.entries(next).filter(([key, value]) => JSON.stringify(value) !== JSON.stringify(PROFILES.DEFAULT[key as keyof PunchProfile]))
     );
-    this.log(`模板切换：${this.profile.name} → ${next.name}；相对 DEFAULT 的全部差异：${JSON.stringify(differences)}`);
+    this.log(t('voxlink.punchrounds.switch', { from: this.profile.name, to: next.name, differences: JSON.stringify(differences) }));
     this.profile = next;
     this.switchedAt = Date.now();
   }

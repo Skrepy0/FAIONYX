@@ -3,6 +3,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { StartupGate, BOOT_STAGES, canAssembleBoot, type BootStage } from '../shared/startup';
 import { launcherLog } from './core/launcherLog';
+import { translate as t } from '../shared/i18n';
 
 const FADE_DURATION_MS = 260;
 const FADE_TICK_MS = 16;
@@ -13,7 +14,13 @@ const VISIBLE_POLL_MS = 15;
 /** Hard ceiling for the whole splash lifecycle. Anything beyond this is a stuck boot. */
 const WATCHDOG_TIMEOUT_MS = 45_000;
 
-const BOOT_LABELS = ['读取配置…', '加载账户…', '扫描游戏实例…', '准备主界面…', '准备首帧…'] as const;
+const BOOT_LABEL_KEYS = [
+  'nativestartup.boot.read_config',
+  'nativestartup.boot.load_accounts',
+  'nativestartup.boot.scan_instances',
+  'nativestartup.boot.prepare_main',
+  'nativestartup.boot.prepare_first_frame',
+] as const;
 
 export interface NativeStartup {
   attach(window: BrowserWindow): void;
@@ -38,9 +45,9 @@ function fadeIn(window: BrowserWindow) {
       clearInterval(timer);
       return;
     }
-    const t = Math.min(1, (Date.now() - started) / FADE_DURATION_MS);
-    window.setOpacity(t * t * (3 - 2 * t));
-    if (t === 1) {
+    const progress = Math.min(1, (Date.now() - started) / FADE_DURATION_MS);
+    window.setOpacity(progress * progress * (3 - 2 * progress));
+    if (progress === 1) {
       clearInterval(timer);
       window.emit('faionyx:startup-opacity-complete');
     }
@@ -119,7 +126,7 @@ export function createNativeStartup(signal: string, pid: number): NativeStartup 
     if (readySent) return;
 
     const prefix = canAssembleBoot(gate.state) ? 'assembling\n' : 'loading\n';
-    send(prefix + BOOT_LABELS[Math.min(BOOT_LABELS.length - 1, gate.completed.size)]);
+    send(prefix + t(BOOT_LABEL_KEYS[Math.min(BOOT_LABEL_KEYS.length - 1, gate.completed.size)]));
   };
 
   const doReveal = (animated: boolean) => {
@@ -146,7 +153,7 @@ export function createNativeStartup(signal: string, pid: number): NativeStartup 
   const fail = (window: BrowserWindow, message: string) => {
     if (disposed || revealed) return;
     cleanup();
-    void dialog.showMessageBox({ type: 'error', title: 'FAIONYX 初始化失败', message }).finally(() => {
+    void dialog.showMessageBox({ type: 'error', title: t('nativestartup.dialog.init_failed_title'), message }).finally(() => {
       if (!window.isDestroyed()) window.close();
     });
   };
@@ -162,7 +169,7 @@ export function createNativeStartup(signal: string, pid: number): NativeStartup 
     if (window.isDestroyed()) return;
 
     cleanup(); // 幂等
-    void dialog.showMessageBox({ type: 'error', title: 'FAIONYX 运行异常', message }).finally(() => {
+    void dialog.showMessageBox({ type: 'error', title: t('nativestartup.dialog.run_error_title'), message }).finally(() => {
       if (!window.isDestroyed()) window.close();
     });
   };
@@ -219,7 +226,7 @@ export function createNativeStartup(signal: string, pid: number): NativeStartup 
       if (gate.state.ready) {
         doReveal(false);
       } else {
-        fail(main, '主界面初始化超时，请检查后端进程是否正常运行。');
+        fail(main, t('nativestartup.error.init_timeout'));
       }
     }, WATCHDOG_TIMEOUT_MS);
     watchdogTimer.unref();
@@ -255,13 +262,13 @@ export function createNativeStartup(signal: string, pid: number): NativeStartup 
       // 单一持久处理器，按 revealed 分支；两个事件都靠 crashReported / disposed 去重。
       window.webContents.on('render-process-gone', (_e, details) => {
         if (window.isDestroyed()) return;
-        if (revealed) crashAfterReveal(window, `主界面进程退出：${details.reason}`);
-        else fail(window, `主界面进程退出：${details.reason}`);
+        if (revealed) crashAfterReveal(window, t('nativestartup.error.renderer_exited', { reason: details.reason }));
+        else fail(window, t('nativestartup.error.renderer_exited', { reason: details.reason }));
       });
       window.webContents.on('did-fail-load', (_e, code, description, _url, isMainFrame) => {
         if (!isMainFrame || code === -3 || window.isDestroyed()) return;
-        if (revealed) crashAfterReveal(window, `无法加载主界面：${description}`);
-        else fail(window, `无法加载主界面：${description}`);
+        if (revealed) crashAfterReveal(window, t('nativestartup.error.load_failed', { description }));
+        else fail(window, t('nativestartup.error.load_failed', { description }));
       });
 
       startTimers();

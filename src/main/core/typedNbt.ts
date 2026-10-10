@@ -1,5 +1,6 @@
 /** Lossless Java NBT codec: tag widths, signed longs and homogeneous list types are retained. */
 import zlib from 'node:zlib';
+import { translate as t } from '../../shared/i18n';
 export type NbtType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export interface NbtTag {
   type: NbtType;
@@ -24,18 +25,18 @@ export function decodeNbtString(bytes: Buffer): string {
     }
     if ((a & 0xe0) === 0xc0) {
       const b = bytes[p++];
-      if (b === undefined || (b & 0xc0) !== 0x80) throw Error('NBT UTF 字符串损坏');
+      if (b === undefined || (b & 0xc0) !== 0x80) throw Error(t('typednbt.error.utf_corrupt'));
       const n = ((a & 31) << 6) | (b & 63);
-      if (n !== 0 && n < 128) throw Error('NBT UTF 字符串损坏');
+      if (n !== 0 && n < 128) throw Error(t('typednbt.error.utf_corrupt'));
       chars.push(n);
     } else if ((a & 0xf0) === 0xe0) {
       const b = bytes[p++],
         c = bytes[p++];
-      if (b === undefined || c === undefined || (b & 0xc0) !== 0x80 || (c & 0xc0) !== 0x80) throw Error('NBT UTF 字符串损坏');
+      if (b === undefined || c === undefined || (b & 0xc0) !== 0x80 || (c & 0xc0) !== 0x80) throw Error(t('typednbt.error.utf_corrupt'));
       const n = ((a & 15) << 12) | ((b & 63) << 6) | (c & 63);
-      if (n < 2048) throw Error('NBT UTF 字符串损坏');
+      if (n < 2048) throw Error(t('typednbt.error.utf_corrupt'));
       chars.push(n);
-    } else throw Error('NBT Modified UTF-8 编码无效');
+    } else throw Error(t('typednbt.error.utf_invalid'));
   }
   let result = '';
   for (let i = 0; i < chars.length; i += 4096) result += String.fromCharCode(...chars.slice(i, i + 4096));
@@ -58,11 +59,11 @@ export function readTypedNbt(input: Buffer): { name: string; root: NbtTag } {
       : input[0] === 0x78
         ? zlib.inflateSync(input, { maxOutputLength: LIMIT })
         : input;
-  if (b.length > LIMIT) throw new Error('NBT 解压后超过 128 MB');
+  if (b.length > LIMIT) throw new Error(t('typednbt.error.decompressed_too_large'));
   let p = 0,
     nodes = 0;
   function take(n: number) {
-    if (!Number.isSafeInteger(n) || n < 0 || p + n > b.length) throw new Error('NBT 数据截断');
+    if (!Number.isSafeInteger(n) || n < 0 || p + n > b.length) throw new Error(t('typednbt.error.truncated'));
     const start = p;
     p += n;
     return start;
@@ -73,11 +74,11 @@ export function readTypedNbt(input: Buffer): { name: string; root: NbtTag } {
   };
   const count = () => {
     const n = b.readInt32BE(take(4));
-    if (n < 0 || n > 16777216) throw new Error('NBT 集合长度超限');
+    if (n < 0 || n > 16777216) throw new Error(t('typednbt.error.collection_too_large'));
     return n;
   };
   function read(type: NbtType, depth: number): NbtTag {
-    if (depth > 64 || ++nodes > 2000000) throw new Error('NBT 结构过深或标签过多');
+    if (depth > 64 || ++nodes > 2000000) throw new Error(t('typednbt.error.too_deep'));
     switch (type) {
       case 1:
         return tag(type, b.readInt8(take(1)));
@@ -100,7 +101,7 @@ export function readTypedNbt(input: Buffer): { name: string; root: NbtTag } {
       case 9: {
         const element = b.readUInt8(take(1)) as NbtType,
           n = count();
-        if (element > 12 || (element === 0 && n)) throw new Error('NBT 列表类型无效');
+        if (element > 12 || (element === 0 && n)) throw new Error(t('typednbt.error.list_type_invalid'));
         return tag(
           type,
           Array.from({ length: n }, () => read(element, depth + 1)),
@@ -113,7 +114,7 @@ export function readTypedNbt(input: Buffer): { name: string; root: NbtTag } {
           const child = b.readUInt8(take(1)) as NbtType;
           if (child === 0) break;
           const name = string();
-          if (Object.hasOwn(value, name)) throw new Error('NBT 标签重复');
+          if (Object.hasOwn(value, name)) throw new Error(t('typednbt.error.duplicate_tag'));
           value[name] = read(child, depth + 1);
         }
         return tag(type, value);
@@ -133,14 +134,14 @@ export function readTypedNbt(input: Buffer): { name: string; root: NbtTag } {
         );
       }
       default:
-        throw new Error('NBT 标签类型无效：' + type);
+        throw new Error(t('typednbt.error.tag_type_invalid', { type }));
     }
   }
   const type = b.readUInt8(take(1)) as NbtType;
-  if (type !== 10) throw new Error('投影 NBT 根必须是 Compound');
+  if (type !== 10) throw new Error(t('typednbt.error.projection_root'));
   const name = string(),
     root = read(type, 0);
-  if (p !== b.length) throw new Error('NBT 存在额外尾数据');
+  if (p !== b.length) throw new Error(t('typednbt.error.trailing_data'));
   return { name, root };
 }
 export function writeTypedNbt(root: NbtTag, name = '', compressed = true): Buffer {
@@ -149,7 +150,7 @@ export function writeTypedNbt(root: NbtTag, name = '', compressed = true): Buffe
     nodes = 0;
   const push = (b: Buffer) => {
     bytes += b.length;
-    if (bytes > LIMIT) throw new Error('NBT 写入超过 128 MB');
+    if (bytes > LIMIT) throw new Error(t('typednbt.error.write_too_large'));
     chunks.push(b);
   };
   function number(value: number | bigint, size: number, method: string) {
@@ -159,50 +160,50 @@ export function writeTypedNbt(root: NbtTag, name = '', compressed = true): Buffe
   }
   function string(s: string) {
     const b = encodeNbtString(s);
-    if (b.length > 65535) throw new Error('NBT 字符串过长');
+    if (b.length > 65535) throw new Error(t('typednbt.error.string_too_long'));
     number(b.length, 2, 'writeUInt16BE');
     push(b);
   }
-  function write(t: NbtTag, depth: number) {
-    if (depth > 64 || ++nodes > 2000000) throw new Error('NBT 结构过深或标签过多');
-    switch (t.type) {
+  function write(node: NbtTag, depth: number) {
+    if (depth > 64 || ++nodes > 2000000) throw new Error(t('typednbt.error.too_deep'));
+    switch (node.type) {
       case 1:
-        number(t.value, 1, 'writeInt8');
+        number(node.value, 1, 'writeInt8');
         break;
       case 2:
-        number(t.value, 2, 'writeInt16BE');
+        number(node.value, 2, 'writeInt16BE');
         break;
       case 3:
-        number(t.value, 4, 'writeInt32BE');
+        number(node.value, 4, 'writeInt32BE');
         break;
       case 4:
-        number(BigInt(t.value), 8, 'writeBigInt64BE');
+        number(BigInt(node.value), 8, 'writeBigInt64BE');
         break;
       case 5:
-        number(t.value, 4, 'writeFloatBE');
+        number(node.value, 4, 'writeFloatBE');
         break;
       case 6:
-        number(t.value, 8, 'writeDoubleBE');
+        number(node.value, 8, 'writeDoubleBE');
         break;
       case 7:
-        number(t.value.length, 4, 'writeInt32BE');
-        push(Buffer.from(t.value));
+        number(node.value.length, 4, 'writeInt32BE');
+        push(Buffer.from(node.value));
         break;
       case 8:
-        string(t.value);
+        string(node.value);
         break;
       case 9: {
-        const element = t.elementType ?? t.value[0]?.type ?? 0;
+        const element = node.elementType ?? node.value[0]?.type ?? 0;
         number(element, 1, 'writeUInt8');
-        number(t.value.length, 4, 'writeInt32BE');
-        for (const v of t.value) {
-          if (v.type !== element) throw new Error('NBT 列表不是同类型');
+        number(node.value.length, 4, 'writeInt32BE');
+        for (const v of node.value) {
+          if (v.type !== element) throw new Error(t('typednbt.error.list_not_homogeneous'));
           write(v, depth + 1);
         }
         break;
       }
       case 10:
-        for (const [key, value] of Object.entries(t.value) as [string, NbtTag][]) {
+        for (const [key, value] of Object.entries(node.value) as [string, NbtTag][]) {
           number(value.type, 1, 'writeUInt8');
           string(key);
           write(value, depth + 1);
@@ -210,18 +211,18 @@ export function writeTypedNbt(root: NbtTag, name = '', compressed = true): Buffe
         number(0, 1, 'writeUInt8');
         break;
       case 11:
-        number(t.value.length, 4, 'writeInt32BE');
-        for (const v of t.value) number(v, 4, 'writeInt32BE');
+        number(node.value.length, 4, 'writeInt32BE');
+        for (const v of node.value) number(v, 4, 'writeInt32BE');
         break;
       case 12:
-        number(t.value.length, 4, 'writeInt32BE');
-        for (const v of t.value) number(BigInt.asIntN(64, BigInt(v)), 8, 'writeBigInt64BE');
+        number(node.value.length, 4, 'writeInt32BE');
+        for (const v of node.value) number(BigInt.asIntN(64, BigInt(v)), 8, 'writeBigInt64BE');
         break;
       default:
-        throw new Error('NBT 标签类型无效');
+        throw new Error(t('typednbt.error.tag_type_invalid_short'));
     }
   }
-  if (root.type !== 10) throw new Error('NBT 根必须是 Compound');
+  if (root.type !== 10) throw new Error(t('typednbt.error.root_compound'));
   number(10, 1, 'writeUInt8');
   string(name);
   write(root, 0);

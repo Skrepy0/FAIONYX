@@ -21,6 +21,7 @@ import { dependencyGraph, dependencyRepository } from './modInstallPlan';
 import { compatibleRecordingMod, RECORDING_PROJECTS } from '../../shared/recordingMods';
 import { FavoriteVersionQueue } from './favoriteVersionQueue';
 import { fileHash } from './fileHash';
+import { translate as t } from '../../shared/i18n';
 const file = () => path.join(app.getPath('userData'), 'mod-favorites.json');
 export function modFavorites(): ModFavorite[] {
   try {
@@ -29,7 +30,7 @@ export function modFavorites(): ModFavorite[] {
     return value.map((v) => ({ ...v, key: favoriteKey(v) }));
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === 'ENOENT') return [];
-    throw new Error('收藏记录读取失败，未覆盖原记录');
+    throw new Error(t('modfavorites.error.read_failed'));
   }
 }
 function write(list: ModFavorite[]) {
@@ -45,7 +46,7 @@ export function setFavorite(value: ModFavorite, on: boolean) {
   if (on)
     list.push({
       key,
-      name: String(value.name || value.projectId || '本地模组').slice(0, 200),
+      name: String(value.name || value.projectId || t('modfavorites.label.local_mod')).slice(0, 200),
       source: value.source,
       projectId: value.projectId,
       sha1: hash,
@@ -64,7 +65,7 @@ export async function favoriteVersionResult(
 ): Promise<FavoriteVersionResult> {
   favoriteKey({ source, projectId: project });
   if (!['fabric', 'quilt', 'forge', 'neoforge'].includes(loader) || typeof mc !== 'string' || !mc.trim() || mc.length > 100)
-    throw new Error('请选择游戏与加载器');
+    throw new Error(t('modfavorites.error.select_game_loader'));
   mc = mc.trim();
   return versionQueries.request(
     JSON.stringify([source, project, mc, loader]),
@@ -93,30 +94,31 @@ export async function prepareInstallMods(mc: string, opts: InstallOptions, signa
     signal?.throwIfAborted();
     validateFavoriteInstallIntent(opts.favoriteMods ?? [], opts.favoriteInstallIntent);
     const selections = [...(opts.favoriteMods || [])];
-    if (selections.length > 100) throw new Error('收藏模组过多');
+    if (selections.length > 100) throw new Error(t('modfavorites.error.too_many_selected'));
     if (opts.recordingMod)
       selections.push({ source: 'modrinth', projectId: RECORDING_PROJECTS[opts.recordingMod.kind], fileId: opts.recordingMod.fileId });
     if (!selections.length) return [];
-    if (!opts.loader) throw new Error('收藏模组需要模组加载器');
+    if (!opts.loader) throw new Error(t('modfavorites.error.loader_required'));
     const roots: CommunityFile[] = [];
     for (const selected of selections) {
       const files = await favoriteVersions(selected.source, selected.projectId, mc, opts.loader, signal);
       const exact = files.find((f) => f.fileId === selected.fileId);
-      if (!exact) throw new Error('所选模组版本已不可用或不兼容：' + selected.projectId);
+      if (!exact) throw new Error(t('modfavorites.error.version_unavailable', { project: selected.projectId }));
       roots.push(exact);
     }
     if (opts.loader === 'fabric' && opts.fabricApi) {
       const api = (await favoriteVersions('modrinth', 'P7dR8mSH', mc, opts.loader, signal)).find((f) => f.version === opts.fabricApi);
-      if (!api) throw new Error('Fabric API 已不可用');
+      if (!api) throw new Error(t('modfavorites.error.fabric_api_unavailable'));
       roots.push(api);
     }
     const target = { mcVersion: mc, loader: opts.loader } as Parameters<typeof dependencyGraph>[1];
     const graph = await dependencyGraph(roots, target, dependencyRepository);
-    for (const f of graph) if (!compatibleRecordingMod(f, mc, opts.loader)) throw new Error('模组缺少可校验下载文件：' + f.fileName);
+    for (const f of graph)
+      if (!compatibleRecordingMod(f, mc, opts.loader)) throw new Error(t('modfavorites.error.missing_download', { fileName: f.fileName }));
     const names = new Map<string, string>();
     for (const f of graph) {
       const old = names.get(f.fileName);
-      if (old && old !== f.sha1) throw new Error('模组文件名冲突：' + f.fileName);
+      if (old && old !== f.sha1) throw new Error(t('modfavorites.error.name_conflict', { fileName: f.fileName }));
       names.set(f.fileName, f.sha1!);
     }
     signal?.throwIfAborted();
@@ -139,14 +141,14 @@ export async function favoriteInstallResult(
     signal?.throwIfAborted();
     const target = path.join(modsDirectory, file.fileName),
       info = await fs.promises.lstat(target);
-    if (!info.isFile() || info.isSymbolicLink()) throw new Error('收藏模组落盘校验失败：' + file.fileName);
+    if (!info.isFile() || info.isSymbolicLink()) throw new Error(t('modfavorites.error.verify_failed', { fileName: file.fileName }));
     const sha1 = await fileHash(target, 'sha1', signal);
-    if (sha1 !== file.sha1?.toLowerCase()) throw new Error('收藏模组落盘哈希不符：' + file.fileName);
+    if (sha1 !== file.sha1?.toLowerCase()) throw new Error(t('modfavorites.error.hash_mismatch', { fileName: file.fileName }));
     verifiedFiles.push({ fileName: file.fileName, sha1, source: file.source, projectId: file.projectId });
   }
   for (const selected of opts.favoriteMods ?? [])
     if (!files.some((file) => file.source === selected.source && file.projectId === selected.projectId && file.fileId === selected.fileId))
-      throw new Error('收藏模组未出现在实际安装结果中：' + selected.projectId);
+      throw new Error(t('modfavorites.error.not_installed', { project: selected.projectId }));
   const selectedKeys = new Set((opts.favoriteMods ?? []).map((f) => f.source + ':' + f.fileId)),
     favoriteGraph = new Set<string>();
   const visit = (file: CommunityFile) => {
@@ -182,20 +184,21 @@ export function registerModFavoritesIpc() {
   ipcMain.handle('mods:favorite', (_e, value, on) => setFavorite(value, on === true));
   ipcMain.handle('mods:favoriteRemove', (_e, keys) => write(removeFavoriteRecords(modFavorites(), keys)));
   ipcMain.handle('mods:favoriteLink', async (_e, key, source, projectId) => {
-    if (typeof key !== 'string' || !modFavorites().some((f) => f.key === key)) throw new Error('该收藏已被取消，请刷新列表');
+    if (typeof key !== 'string' || !modFavorites().some((f) => f.key === key)) throw new Error(t('modfavorites.error.cancelled'));
     const project = await communityModProject(source, projectId);
     return write(linkFavoriteRecords(modFavorites(), key, project));
   });
   ipcMain.handle('mods:favoriteVersions', async (e, s, p, mc, l, ticket?: string) => {
     if (ticket === undefined) return favoriteVersions(s, p, mc, l);
-    if (typeof ticket !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(ticket)) throw new Error('收藏查询订阅无效');
+    if (typeof ticket !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(ticket)) throw new Error(t('modfavorites.error.subscription_invalid'));
     const owner = e.sender,
       key = owner.id + ':' + ticket;
-    if (subscriptions.has(key)) throw new Error('收藏查询订阅重复');
+    if (subscriptions.has(key)) throw new Error(t('modfavorites.error.subscription_duplicate'));
     if (!observed.has(owner)) {
       observed.add(owner);
       owner.once('destroyed', () => {
-        for (const [id, controller] of subscriptions) if (id.startsWith(owner.id + ':')) controller.abort(new Error('收藏查询窗口已关闭'));
+        for (const [id, controller] of subscriptions)
+          if (id.startsWith(owner.id + ':')) controller.abort(new Error(t('modfavorites.error.window_closed')));
       });
     }
     const controller = new AbortController();
@@ -207,17 +210,18 @@ export function registerModFavoritesIpc() {
     }
   });
   ipcMain.handle('mods:favoriteVersionsCancel', (e, ticket: string) => {
-    if (typeof ticket === 'string') subscriptions.get(e.sender.id + ':' + ticket)?.abort(new Error('收藏查询已取消'));
+    if (typeof ticket === 'string')
+      subscriptions.get(e.sender.id + ':' + ticket)?.abort(new Error(t('modfavorites.error.query_cancelled')));
   });
   ipcMain.handle('mods:favoriteLocal', async (_e, version, folder, name, on, link) => {
     const dir = await resolveResourceDirectory(folder, version, 'mods'),
       mods = await modCatalog(version, folder),
       mod = mods.find((m) => m.fileName === name);
-    if (!mod?.sha1) throw new Error('无法校验该模组');
+    if (!mod?.sha1) throw new Error(t('modfavorites.error.unverifiable'));
     await validateModFile(dir, name, mod.sha1);
     if (link) {
       const key = favoriteKey(link);
-      if (key.startsWith('sha1:')) throw new Error('请选择来源平台和项目');
+      if (key.startsWith('sha1:')) throw new Error(t('modfavorites.error.select_source_project'));
       await communityFiles(link.source, link.projectId, { kind: 'mod' });
       rememberModIdentity(dir, mod.sha1, key);
     } else

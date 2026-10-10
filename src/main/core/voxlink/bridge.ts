@@ -2,6 +2,7 @@
 // FAIONYX stream adapter: backpressure and lifecycle are owned by Node sockets.
 import net from 'node:net';
 import { RudpConn } from './rudp';
+import { translate as t } from '../../../shared/i18n';
 export const BRIDGE_BUF_SIZE = 32768,
   BRIDGE_IDLE_TIMEOUT_MS = 30000,
   BRIDGE_DIAL_WINDOW_MS = 10000,
@@ -107,7 +108,7 @@ export async function startHostLazyBridge(rc: RudpConn, port: number, log: LogFn
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
           socket.destroy();
-          reject(new Error('本地游戏连接超时'));
+          reject(new Error(t('voxlink.bridge.connect_timeout')));
         }, BRIDGE_DIAL_TIMEOUT_MS);
         socket.once('error', (error) => {
           clearTimeout(timeout);

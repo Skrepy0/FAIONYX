@@ -17,13 +17,14 @@ import { SkinProfileCache } from './skinProfileCache';
 import { downloadTexture } from './skinTexture';
 import type { Account } from '../../shared/types';
 import { OfflineSkinStore, type OfflineSkinSnapshot } from './offlineSkinStore';
+import { translate as t } from '../../shared/i18n';
 const profileCache = new SkinProfileCache(() => path.join(app.getPath('userData'), 'skin-cache'));
 const offlineSkins = new OfflineSkinStore(
   () => path.join(app.getPath('userData'), 'offline-skins'),
   (bytes) => {
     const image = nativeImage.createFromBuffer(bytes),
       size = image.getSize();
-    if (image.isEmpty() || size.width !== 64 || size.height !== 64) throw new Error('皮肤 PNG 无法解码，请选择有效的 64×64 图片');
+    if (image.isEmpty() || size.width !== 64 || size.height !== 64) throw new Error(t('skins.error.png_undecodable'));
   }
 );
 
@@ -31,14 +32,14 @@ const offlineSkins = new OfflineSkinStore(
 function appearanceAccount(accountId?: string): Account {
   const selected = selectedAccount(),
     account = accountId ? accountById(accountId) : selected;
-  if (!account) throw new Error('请先选择账号');
-  if (accountId && selected?.id !== accountId) throw new Error('账号已变更，请重新确认应用账号');
+  if (!account) throw new Error(t('skins.error.select_account'));
+  if (accountId && selected?.id !== accountId) throw new Error(t('se.account_changed'));
   return { ...account };
 }
 function offlineAccount(accountId: string): Account {
-  if (!accountId) throw new Error('请重新选择离线账号并确认应用');
+  if (!accountId) throw new Error(t('skins.error.reselect_offline'));
   const account = appearanceAccount(accountId);
-  if (account.type !== 'offline') throw new Error('请先选择离线账号');
+  if (account.type !== 'offline') throw new Error(t('skins.error.select_offline'));
   return account;
 }
 /** Launch consumes a checked immutable PNG; account name/UUID and credentials are unchanged. */
@@ -76,10 +77,10 @@ function historyFile(): string {
 
 /** 取当前账号可用的 MC token：无账号 / 非微软账号直接抛中文错误 */
 async function requireMcToken(acc = selectedAccount()): Promise<string> {
-  if (!acc) throw new Error('请先选择账号');
-  if (acc.type !== 'microsoft') throw new Error('皮肤功能需要微软正版账号');
+  if (!acc) throw new Error(t('skins.error.select_account'));
+  if (acc.type !== 'microsoft') throw new Error(t('skins.error.microsoft_required'));
   const valid = await getValidAccount(acc);
-  if (!valid.accessToken) throw new Error('登录状态已失效，请重新登录微软账号');
+  if (!valid.accessToken) throw new Error(t('skins.error.login_expired_ms'));
   return valid.accessToken;
 }
 
@@ -92,45 +93,45 @@ async function apiError(res: Response, fallback: string): Promise<Error> {
   };
   const raw = String(data.errorMessage ?? data.message ?? data.error ?? '');
   if (res.status === 401 || res.status === 403) {
-    return new Error('登录状态已失效或无权限，请重新登录微软账号');
+    return new Error(t('skins.error.unauthorized_ms'));
   }
   if (res.status === 404 || /not_found|not found/i.test(raw)) {
-    return new Error('该账号未拥有 Minecraft 或尚未创建游戏档案');
+    return new Error(t('skins.error.no_minecraft_profile'));
   }
-  if (res.status === 429) return new Error('操作过于频繁，请稍后再试');
-  return new Error(raw || `${fallback}（HTTP ${res.status}）`);
+  if (res.status === 429) return new Error(t('skins.error.rate_limited'));
+  return new Error(raw || t('skins.error.http_fallback', { fallback, status: res.status }));
 }
 
 /** 校验皮肤文件：存在、PNG 魔数（89 50 4E 47）、IHDR 尺寸必须 64×64，返回文件内容 */
 function validateSkinPng(filePath: string): Buffer {
-  if (!filePath) throw new Error('请选择皮肤文件');
+  if (!filePath) throw new Error(t('skins.error.select_skin_file'));
   let stat: fs.Stats;
   try {
     stat = fs.statSync(filePath);
   } catch {
-    throw new Error('皮肤文件不存在');
+    throw new Error(t('skins.error.skin_file_missing'));
   }
-  if (!stat.isFile()) throw new Error('皮肤文件不存在');
+  if (!stat.isFile()) throw new Error(t('skins.error.skin_file_missing'));
   const buf = fs.readFileSync(filePath);
   // PNG 魔数 + IHDR 头长度校验
   if (buf.length < 24 || buf[0] !== 0x89 || buf[1] !== 0x50 || buf[2] !== 0x4e || buf[3] !== 0x47) {
-    throw new Error('皮肤必须是 64×64 的 PNG 图片');
+    throw new Error(t('skins.error.skin_must_be_png64'));
   }
   // IHDR：宽 = 偏移 16 大端 UInt32，高 = 偏移 20
   const width = buf.readUInt32BE(16);
   const height = buf.readUInt32BE(20);
-  if (width !== 64 || height !== 64) throw new Error('皮肤必须是 64×64 的 PNG 图片');
+  if (width !== 64 || height !== 64) throw new Error(t('skins.error.skin_must_be_png64'));
   return buf;
 }
 
 /** Main-process PNG decoding keeps corrupt responses out of the appearance cache. */
 async function fetchTexture(url: string): Promise<{ dataUrl?: string; textureError?: string }> {
   const result = await downloadTexture(url, fetch, (bytes) => {
-    if (nativeImage.createFromBuffer(bytes).isEmpty()) throw new Error('材质 PNG 无法解码');
+    if (nativeImage.createFromBuffer(bytes).isEmpty()) throw new Error(t('skins.error.texture_undecodable'));
   });
   if (result.textureError) {
-    console.error('[FAIONYX] 皮肤纹理下载失败:', result.textureError);
-    appendLauncherLog(`皮肤纹理下载失败: ${result.textureError}`);
+    console.error('[FAIONYX] ' + t('skins.log.texture_download_failed') + ':', result.textureError);
+    appendLauncherLog(`${t('skins.log.texture_download_failed')}: ${result.textureError}`);
   }
   return result;
 }
@@ -149,7 +150,7 @@ function appendLauncherLog(line: string): void {
 /** 拉取当前账号皮肤/披风档案 */
 export async function getProfile(refresh = false, accountId?: string): Promise<ProfileSkins> {
   const account = accountId ? accountById(accountId) : selectedAccount();
-  if (!account) throw new Error('请先选择账号');
+  if (!account) throw new Error(t('skins.error.select_account'));
   // Never reuse the old minotar disk cache for an offline account: local manifests are authoritative.
   if (account.type === 'offline') return fetchProfile({ ...account });
   const key = JSON.stringify([account.type, account.id, account.uuid, account.providerId, account.apiRoot]);
@@ -179,12 +180,12 @@ async function fetchProfile(account: Account): Promise<ProfileSkins> {
     return profile;
   }
   const token = (await getValidAccount(account)).accessToken;
-  if (!token) throw new Error('登录状态已失效，请重新登录');
+  if (!token) throw new Error(t('skins.error.login_expired'));
   const res = await fetch(`${API}/minecraft/profile`, {
     headers: { Authorization: `Bearer ${token}` },
     signal: AbortSignal.timeout(30000),
   });
-  if (!res.ok) throw await apiError(res, '获取皮肤档案失败');
+  if (!res.ok) throw await apiError(res, t('skins.error.fetch_profile_failed'));
   const data = (await res.json()) as {
     name?: string;
     skins?: { id: string; state?: string; url?: string; variant?: string }[];
@@ -201,7 +202,7 @@ async function fetchProfile(account: Account): Promise<ProfileSkins> {
   skins.sort((a, b) => Number(b.state === 'ACTIVE') - Number(a.state === 'ACTIVE'));
   const capes: CapeInfo[] = (data.capes ?? []).map((c) => ({
     id: c.id,
-    alias: c.alias || '披风',
+    alias: c.alias || t('skins.label.cape'),
     active: c.state === 'ACTIVE',
     url: c.url,
   }));
@@ -231,7 +232,7 @@ export async function getAvatar(accountId?: string): Promise<string | null> {
 /** 上传皮肤（multipart/form-data），成功后写入本地历史并返回最新档案 */
 export async function uploadSkin(filePath: string, variant: SkinVariant, accountId?: string): Promise<ProfileSkins> {
   const account = appearanceAccount(accountId);
-  if (variant !== 'classic' && variant !== 'slim') throw new Error('无效的皮肤模型');
+  if (variant !== 'classic' && variant !== 'slim') throw new Error(t('skins.error.invalid_variant'));
   const buf = validateSkinPng(String(filePath ?? ''));
   const token = await requireMcToken(account);
   const form = new FormData();
@@ -248,7 +249,7 @@ export async function uploadSkin(filePath: string, variant: SkinVariant, account
     body: form,
     signal: AbortSignal.timeout(60000),
   });
-  if (!res.ok) throw await apiError(res, '皮肤上传失败');
+  if (!res.ok) throw await apiError(res, t('skins.error.upload_failed'));
   saveHistory(buf, variant, path.basename(String(filePath ?? '')) || undefined);
   return await getProfile(true, account.id);
 }
@@ -273,7 +274,7 @@ export async function changeCape(capeId: string | null): Promise<ProfileSkins> {
           body: JSON.stringify({ capeId: String(capeId) }),
           signal: AbortSignal.timeout(30000),
         });
-  if (!res.ok) throw await apiError(res, '披风更换失败');
+  if (!res.ok) throw await apiError(res, t('skins.error.cape_change_failed'));
   return await getProfile(true);
 }
 
@@ -299,7 +300,7 @@ function persistHistory(): void {
     fs.mkdirSync(skinsDir(), { recursive: true });
     fs.writeFileSync(historyFile(), JSON.stringify(loadHistory(), null, 2), 'utf-8');
   } catch (e) {
-    console.error('[FAIONYX] 皮肤历史写入失败:', e);
+    console.error('[FAIONYX] ' + t('skins.log.history_write_failed') + ':', e);
   }
 }
 
@@ -336,7 +337,7 @@ function saveHistory(buf: Buffer, variant: SkinVariant, sourceName?: string): vo
     fs.mkdirSync(skinsDir(), { recursive: true });
     fs.writeFileSync(path.join(skinsDir(), `${id}.png`), buf);
   } catch (e) {
-    console.error('[FAIONYX] 皮肤历史保存失败:', e);
+    console.error('[FAIONYX] ' + t('skins.log.history_save_failed') + ':', e);
     return;
   }
   list.unshift({ id, variant, time: Date.now(), name: sourceName || undefined, hash });
@@ -356,7 +357,7 @@ function saveHistory(buf: Buffer, variant: SkinVariant, sourceName?: string): vo
 /** 历史列表（新→旧），每条附带 data:image/png;base64 缩略图 */
 export async function history(accountId?: string): Promise<SkinHistoryEntry[]> {
   const account = accountId ? accountById(accountId) : selectedAccount();
-  if (accountId && !account) throw new Error('账号不存在，请重新选择账号');
+  if (accountId && !account) throw new Error(t('skins.error.account_not_found'));
   if (account?.type === 'offline') return offlineSkins.history(account.id);
   const out: SkinHistoryEntry[] = [];
   for (const item of loadHistory()) {
@@ -380,7 +381,7 @@ export async function historyDelete(id: string, accountId?: string): Promise<Ski
   return withFileJob(skinsDir(), undefined, async () => {
     const list = loadHistory();
     const idx = list.findIndex((item) => item.id === id);
-    if (idx < 0) throw new Error('历史皮肤不存在，请刷新后重试');
+    if (idx < 0) throw new Error(t('skins.error.history_missing'));
     await recycleFile(skinsDir(), id + '.png');
     const currentIndex = list.findIndex((item) => item.id === id);
     if (currentIndex >= 0) list.splice(currentIndex, 1);
@@ -419,8 +420,8 @@ export async function uploadHistory(id: string, accountId?: string): Promise<Pro
   }
   const safe = path.basename(String(id ?? ''));
   const item = loadHistory().find((i) => i.id === safe);
-  if (!item) throw new Error('历史记录不存在');
+  if (!item) throw new Error(t('skins.error.history_entry_missing'));
   const file = path.join(skinsDir(), `${safe}.png`);
-  if (!fs.existsSync(file)) throw new Error('历史皮肤文件已丢失');
+  if (!fs.existsSync(file)) throw new Error(t('skins.error.history_file_lost'));
   return await uploadSkin(file, item.variant, account.id);
 }

@@ -1,4 +1,5 @@
 import type { ParallelStage, ProgressEvent } from '../../shared/types';
+import { translate as t } from '../../shared/i18n';
 
 interface Lane {
   id: string;
@@ -69,7 +70,9 @@ export class ParallelProgress {
           id: lane.id,
           stage: event?.stage,
           label: lane.label,
-          text: done ? (event?.text ?? '已就绪') : (this.waitingText.get(lane.id) ?? event?.text ?? '等待准备'),
+          text: done
+            ? (event?.text ?? t('parallelprogress.state.ready'))
+            : (this.waitingText.get(lane.id) ?? event?.text ?? t('parallelprogress.state.waiting')),
           progress,
           state: done ? 'done' : event ? 'running' : 'waiting',
           speed: done ? undefined : event?.speed,

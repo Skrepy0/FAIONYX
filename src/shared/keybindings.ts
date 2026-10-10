@@ -2,66 +2,96 @@
  * MC 原版键位表（options.txt 的 key_* 项）与默认值。
  * 用于启动器的「默认按键」功能：启动时把默认键位同步进实例 options.txt。
  */
+import { translate as t } from './i18n';
 
 export interface KeybindDef {
   /** options.txt 键位项 id，如 key_key.forward */
   id: string;
-  /** 分类（UI 分组展示） */
-  category: '移动' | '游戏' | '物品栏' | '视角' | '界面' | '多人游戏' | '杂项';
-  /** 中文显示名 */
+  /** 分类的 i18n 键（UI 分组展示） */
+  category: string;
+  /** 显示名的 i18n 键 */
   label: string;
   /** MC 默认绑定（key.keyboard.* / key.mouse.* / key.keyboard.unknown） */
   defaultBind: string;
 }
 
+/** 键位显示名 i18n 键：key_key.forward → keys.bindings.key_forward */
+export const keybindLabelKey = (id: string): string => 'keys.bindings.' + id.replace(/^key_key\./, 'key_');
+
+const KEYBIND_CATEGORY_KEYS = {
+  movement: 'keys.bindings.category_movement',
+  gameplay: 'keys.bindings.category_gameplay',
+  inventory: 'keys.bindings.category_inventory',
+  camera: 'keys.bindings.category_camera',
+  interface: 'keys.bindings.category_interface',
+  multiplayer: 'keys.bindings.category_multiplayer',
+  misc: 'keys.bindings.category_misc',
+} as const;
+
+const bind = (id: string, category: string, defaultBind: string): KeybindDef => ({
+  id,
+  category,
+  label: keybindLabelKey(id),
+  defaultBind,
+});
+
 /** MC Java 版 options.txt 中的全部原版键位 */
 export const VANILLA_KEYBINDS: KeybindDef[] = [
   // 移动
-  { id: 'key_key.forward', category: '移动', label: '前进', defaultBind: 'key.keyboard.w' },
-  { id: 'key_key.back', category: '移动', label: '后退', defaultBind: 'key.keyboard.s' },
-  { id: 'key_key.left', category: '移动', label: '向左移动', defaultBind: 'key.keyboard.a' },
-  { id: 'key_key.right', category: '移动', label: '向右移动', defaultBind: 'key.keyboard.d' },
-  { id: 'key_key.jump', category: '移动', label: '跳跃', defaultBind: 'key.keyboard.space' },
-  { id: 'key_key.sneak', category: '移动', label: '潜行', defaultBind: 'key.keyboard.left.shift' },
-  { id: 'key_key.sprint', category: '移动', label: '疾跑', defaultBind: 'key.keyboard.left.control' },
+  bind('key_key.forward', KEYBIND_CATEGORY_KEYS.movement, 'key.keyboard.w'),
+  bind('key_key.back', KEYBIND_CATEGORY_KEYS.movement, 'key.keyboard.s'),
+  bind('key_key.left', KEYBIND_CATEGORY_KEYS.movement, 'key.keyboard.a'),
+  bind('key_key.right', KEYBIND_CATEGORY_KEYS.movement, 'key.keyboard.d'),
+  bind('key_key.jump', KEYBIND_CATEGORY_KEYS.movement, 'key.keyboard.space'),
+  bind('key_key.sneak', KEYBIND_CATEGORY_KEYS.movement, 'key.keyboard.left.shift'),
+  bind('key_key.sprint', KEYBIND_CATEGORY_KEYS.movement, 'key.keyboard.left.control'),
   // 游戏
-  { id: 'key_key.attack', category: '游戏', label: '攻击 / 破坏', defaultBind: 'key.mouse.left' },
-  { id: 'key_key.use', category: '游戏', label: '使用物品 / 放置方块', defaultBind: 'key.mouse.right' },
-  { id: 'key_key.pickItem', category: '游戏', label: '选取方块', defaultBind: 'key.mouse.middle' },
+  bind('key_key.attack', KEYBIND_CATEGORY_KEYS.gameplay, 'key.mouse.left'),
+  bind('key_key.use', KEYBIND_CATEGORY_KEYS.gameplay, 'key.mouse.right'),
+  bind('key_key.pickItem', KEYBIND_CATEGORY_KEYS.gameplay, 'key.mouse.middle'),
   // 物品栏
-  { id: 'key_key.inventory', category: '物品栏', label: '打开 / 关闭物品栏', defaultBind: 'key.keyboard.e' },
-  { id: 'key_key.drop', category: '物品栏', label: '丢弃所选物品', defaultBind: 'key.keyboard.q' },
-  { id: 'key_key.swapOffhand', category: '物品栏', label: '与副手交换物品', defaultBind: 'key.keyboard.f' },
-  { id: 'key_key.hotbar.1', category: '物品栏', label: '快捷栏 1', defaultBind: 'key.keyboard.1' },
-  { id: 'key_key.hotbar.2', category: '物品栏', label: '快捷栏 2', defaultBind: 'key.keyboard.2' },
-  { id: 'key_key.hotbar.3', category: '物品栏', label: '快捷栏 3', defaultBind: 'key.keyboard.3' },
-  { id: 'key_key.hotbar.4', category: '物品栏', label: '快捷栏 4', defaultBind: 'key.keyboard.4' },
-  { id: 'key_key.hotbar.5', category: '物品栏', label: '快捷栏 5', defaultBind: 'key.keyboard.5' },
-  { id: 'key_key.hotbar.6', category: '物品栏', label: '快捷栏 6', defaultBind: 'key.keyboard.6' },
-  { id: 'key_key.hotbar.7', category: '物品栏', label: '快捷栏 7', defaultBind: 'key.keyboard.7' },
-  { id: 'key_key.hotbar.8', category: '物品栏', label: '快捷栏 8', defaultBind: 'key.keyboard.8' },
-  { id: 'key_key.hotbar.9', category: '物品栏', label: '快捷栏 9', defaultBind: 'key.keyboard.9' },
+  bind('key_key.inventory', KEYBIND_CATEGORY_KEYS.inventory, 'key.keyboard.e'),
+  bind('key_key.drop', KEYBIND_CATEGORY_KEYS.inventory, 'key.keyboard.q'),
+  bind('key_key.swapOffhand', KEYBIND_CATEGORY_KEYS.inventory, 'key.keyboard.f'),
+  bind('key_key.hotbar.1', KEYBIND_CATEGORY_KEYS.inventory, 'key.keyboard.1'),
+  bind('key_key.hotbar.2', KEYBIND_CATEGORY_KEYS.inventory, 'key.keyboard.2'),
+  bind('key_key.hotbar.3', KEYBIND_CATEGORY_KEYS.inventory, 'key.keyboard.3'),
+  bind('key_key.hotbar.4', KEYBIND_CATEGORY_KEYS.inventory, 'key.keyboard.4'),
+  bind('key_key.hotbar.5', KEYBIND_CATEGORY_KEYS.inventory, 'key.keyboard.5'),
+  bind('key_key.hotbar.6', KEYBIND_CATEGORY_KEYS.inventory, 'key.keyboard.6'),
+  bind('key_key.hotbar.7', KEYBIND_CATEGORY_KEYS.inventory, 'key.keyboard.7'),
+  bind('key_key.hotbar.8', KEYBIND_CATEGORY_KEYS.inventory, 'key.keyboard.8'),
+  bind('key_key.hotbar.9', KEYBIND_CATEGORY_KEYS.inventory, 'key.keyboard.9'),
   // 视角
-  { id: 'key_key.togglePerspective', category: '视角', label: '切换视角', defaultBind: 'key.keyboard.f5' },
-  { id: 'key_key.smoothCamera', category: '视角', label: '电影视角（平滑运镜）', defaultBind: 'key.keyboard.unknown' },
-  { id: 'key_key.zoom', category: '视角', label: '放大（望远镜）', defaultBind: 'key.keyboard.c' },
+  bind('key_key.togglePerspective', KEYBIND_CATEGORY_KEYS.camera, 'key.keyboard.f5'),
+  bind('key_key.smoothCamera', KEYBIND_CATEGORY_KEYS.camera, 'key.keyboard.unknown'),
+  bind('key_key.zoom', KEYBIND_CATEGORY_KEYS.camera, 'key.keyboard.c'),
   // 界面
-  { id: 'key_key.chat', category: '界面', label: '打开聊天栏', defaultBind: 'key.keyboard.t' },
-  { id: 'key_key.command', category: '界面', label: '输入命令', defaultBind: 'key.keyboard.slash' },
-  { id: 'key_key.socialInteractions', category: '界面', label: '社交屏幕', defaultBind: 'key.keyboard.p' },
-  { id: 'key_key.advancements', category: '界面', label: '进度', defaultBind: 'key.keyboard.l' },
-  { id: 'key_key.screenshot', category: '界面', label: '截图', defaultBind: 'key.keyboard.f2' },
-  { id: 'key_key.fullscreen', category: '界面', label: '全屏切换', defaultBind: 'key.keyboard.f11' },
-  { id: 'key_key.narrator', category: '界面', label: '旁白切换', defaultBind: 'key.keyboard.b' },
+  bind('key_key.chat', KEYBIND_CATEGORY_KEYS.interface, 'key.keyboard.t'),
+  bind('key_key.command', KEYBIND_CATEGORY_KEYS.interface, 'key.keyboard.slash'),
+  bind('key_key.socialInteractions', KEYBIND_CATEGORY_KEYS.interface, 'key.keyboard.p'),
+  bind('key_key.advancements', KEYBIND_CATEGORY_KEYS.interface, 'key.keyboard.l'),
+  bind('key_key.screenshot', KEYBIND_CATEGORY_KEYS.interface, 'key.keyboard.f2'),
+  bind('key_key.fullscreen', KEYBIND_CATEGORY_KEYS.interface, 'key.keyboard.f11'),
+  bind('key_key.narrator', KEYBIND_CATEGORY_KEYS.interface, 'key.keyboard.b'),
   // 多人游戏
-  { id: 'key_key.playerlist', category: '多人游戏', label: '玩家列表', defaultBind: 'key.keyboard.tab' },
+  bind('key_key.playerlist', KEYBIND_CATEGORY_KEYS.multiplayer, 'key.keyboard.tab'),
   // 杂项
-  { id: 'key_key.saveToolbarActivator', category: '杂项', label: '保存快捷栏（创造模式工具）', defaultBind: 'key.keyboard.unknown' },
-  { id: 'key_key.loadToolbarActivator', category: '杂项', label: '加载快捷栏（创造模式工具）', defaultBind: 'key.keyboard.unknown' },
-  { id: 'key_key.spectatorOutlines', category: '杂项', label: '旁观者模式玩家轮廓', defaultBind: 'key.keyboard.unknown' },
+  bind('key_key.saveToolbarActivator', KEYBIND_CATEGORY_KEYS.misc, 'key.keyboard.unknown'),
+  bind('key_key.loadToolbarActivator', KEYBIND_CATEGORY_KEYS.misc, 'key.keyboard.unknown'),
+  bind('key_key.spectatorOutlines', KEYBIND_CATEGORY_KEYS.misc, 'key.keyboard.unknown'),
 ];
 
-export const KEYBIND_CATEGORIES = ['移动', '游戏', '物品栏', '视角', '界面', '多人游戏', '杂项'] as const;
+/** 分类 i18n 键，按 UI 展示顺序 */
+export const KEYBIND_CATEGORIES = [
+  KEYBIND_CATEGORY_KEYS.movement,
+  KEYBIND_CATEGORY_KEYS.gameplay,
+  KEYBIND_CATEGORY_KEYS.inventory,
+  KEYBIND_CATEGORY_KEYS.camera,
+  KEYBIND_CATEGORY_KEYS.interface,
+  KEYBIND_CATEGORY_KEYS.multiplayer,
+  KEYBIND_CATEGORY_KEYS.misc,
+] as const;
 
 /** DOM KeyboardEvent.code → MC 绑定值。无法识别的返回 null。 */
 const CODE_TO_MC: Record<string, string> = (() => {
@@ -138,59 +168,61 @@ export function mouseButtonToMcKey(button: number): string | null {
 }
 
 /** MC 绑定值 → 简短显示（key.keyboard.left.shift → LShift，key.mouse.left → 鼠标左键） */
+const MC_KEY_KEYS: Record<string, string> = {
+  space: 'keys.bindings.key_space',
+  tab: 'keys.bindings.key_tab',
+  enter: 'keys.bindings.key_enter',
+  escape: 'keys.bindings.key_escape',
+  backspace: 'keys.bindings.key_backspace',
+  delete: 'keys.bindings.key_delete',
+  'left.shift': 'keys.bindings.key_left.shift',
+  'right.shift': 'keys.bindings.key_right.shift',
+  'left.control': 'keys.bindings.key_left.control',
+  'right.control': 'keys.bindings.key_right.control',
+  'left.alt': 'keys.bindings.key_left.alt',
+  'right.alt': 'keys.bindings.key_right.alt',
+  'left.win': 'keys.bindings.key_left.win',
+  'right.win': 'keys.bindings.key_right.win',
+  up: 'keys.bindings.key_up',
+  down: 'keys.bindings.key_down',
+  left: 'keys.bindings.key_arrow_left',
+  right: 'keys.bindings.key_arrow_right',
+  'page.up': 'keys.bindings.key_page.up',
+  'page.down': 'keys.bindings.key_page.down',
+  'caps.lock': 'keys.bindings.key_caps.lock',
+  'num.lock': 'keys.bindings.key_num.lock',
+  'grave.accent': 'keys.bindings.key_grave.accent',
+  apostrophe: 'keys.bindings.key_apostrophe',
+  slash: 'keys.bindings.key_slash',
+  backslash: 'keys.bindings.key_backslash',
+  minus: 'keys.bindings.key_minus',
+  equal: 'keys.bindings.key_equal',
+  comma: 'keys.bindings.key_comma',
+  period: 'keys.bindings.key_period',
+  'left.bracket': 'keys.bindings.key_left.bracket',
+  'right.bracket': 'keys.bindings.key_right.bracket',
+  semicolon: 'keys.bindings.key_semicolon',
+  home: 'keys.bindings.key_home',
+  end: 'keys.bindings.key_end',
+  insert: 'keys.bindings.key_insert',
+};
+const MOUSE_KEY_KEYS: Record<string, string> = {
+  left: 'keys.bindings.mouse_left',
+  middle: 'keys.bindings.mouse_middle',
+  right: 'keys.bindings.mouse_right',
+  4: 'keys.bindings.mouse_4',
+  5: 'keys.bindings.mouse_5',
+};
+
 export function mcKeyLabel(bind: string): string {
-  if (!bind || bind === 'key.keyboard.unknown') return '未指定';
+  if (!bind || bind === 'key.keyboard.unknown') return t('keys.bindings.key_unbound');
   if (bind.startsWith('key.mouse.')) {
-    const names: Record<string, string> = {
-      left: '鼠标左键',
-      middle: '鼠标中键',
-      right: '鼠标右键',
-      4: '鼠标侧键4',
-      5: '鼠标侧键5',
-    };
-    return names[bind.slice('key.mouse.'.length)] ?? bind;
+    const key = MOUSE_KEY_KEYS[bind.slice('key.mouse.'.length)];
+    return key ? t(key) : bind;
   }
   const key = bind.replace(/^key\.keyboard\./, '');
-  const pretty: Record<string, string> = {
-    space: '空格',
-    tab: 'Tab',
-    enter: '回车',
-    escape: 'Esc',
-    backspace: '退格',
-    delete: 'Del',
-    'left.shift': '左Shift',
-    'right.shift': '右Shift',
-    'left.control': '左Ctrl',
-    'right.control': '右Ctrl',
-    'left.alt': '左Alt',
-    'right.alt': '右Alt',
-    'left.win': '左Win',
-    'right.win': '右Win',
-    up: '↑',
-    down: '↓',
-    left: '←',
-    right: '→',
-    'page.up': 'PageUp',
-    'page.down': 'PageDown',
-    'caps.lock': 'CapsLock',
-    'num.lock': 'NumLock',
-    'grave.accent': '`',
-    apostrophe: "'",
-    slash: '/',
-    backslash: '\\',
-    minus: '-',
-    equal: '=',
-    comma: ',',
-    period: '.',
-    'left.bracket': '[',
-    'right.bracket': ']',
-    semicolon: ';',
-    home: 'Home',
-    end: 'End',
-    insert: 'Ins',
-  };
-  if (pretty[key]) return pretty[key];
-  if (key.startsWith('keypad.')) return '小键盘 ' + key.slice(7);
+  if (MC_KEY_KEYS[key]) return t(MC_KEY_KEYS[key]);
+  if (key.startsWith('keypad.')) return t('keys.bindings.key_prefix_keypad') + key.slice(7);
   return key.length === 1 ? key.toUpperCase() : key;
 }
 

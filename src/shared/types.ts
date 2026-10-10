@@ -1126,7 +1126,8 @@ export interface WorldCandidateInfo {
   dataVersion?: number;
   minecraftVersion?: string;
   versionConfidence: WorldVersionConfidence;
-  gameMode?: '生存' | '创造' | '冒险' | '旁观';
+  /** 已按当前语言本地化的游戏模式文案（主进程翻译后经 IPC 传回）。 */
+  gameMode?: string;
   hardcore: boolean;
   datapackCount: number;
   resourcePacks: WorldResourcePackInfo[];

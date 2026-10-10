@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import yazl from 'yazl';
 import { redactDiagnosticPath, redactDiagnosticText } from './diagnostics';
+import { translate as t } from '../../shared/i18n';
 
 const MAX_LOG_BYTES = 16 * 1024 * 1024;
 
@@ -36,7 +37,7 @@ async function readTextTail(file: string): Promise<{
     if (includedBytes > 0) await handle.read(buffer, 0, includedBytes, stat.size - includedBytes);
     const truncated = stat.size > includedBytes;
     return {
-      text: `${truncated ? `[FAIONYX] 日志过大，仅包含末尾 ${includedBytes} 字节。\n` : ''}${buffer.toString('utf-8')}`,
+      text: `${truncated ? t('diagarchive.log_truncated', { bytes: includedBytes }) : ''}${buffer.toString('utf-8')}`,
       originalBytes: stat.size,
       includedBytes,
       modifiedAt: stat.mtime.toISOString(),
@@ -78,7 +79,7 @@ async function addSanitizedLog(
     }
     if (spec.missingPlaceholder) {
       zip.addBuffer(
-        Buffer.from(`[FAIONYX] 此项${entry.status === 'missing' ? '不存在' : '无法读取'}；请查看 manifest.json。\n`),
+        Buffer.from(entry.status === 'missing' ? t('diagarchive.entry_missing') : t('diagarchive.entry_unreadable')),
         spec.archivePath
       );
     }

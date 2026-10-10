@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { translate as t } from '../../shared/i18n';
 
 interface AssetObject {
   hash: string;
@@ -67,7 +68,8 @@ export async function prepareLaunchAssets(
   transfer: (tasks: AssetTransfer[]) => Promise<void>
 ): Promise<{ root: string; indexId: string; gameAssets: string }> {
   const indexId = version.assetIndex?.id ?? version.assets ?? 'legacy';
-  if (!/^[a-zA-Z0-9_.-]+$/.test(indexId) || indexId === '.' || indexId === '..') throw new Error('游戏资源索引名称无效');
+  if (!/^[a-zA-Z0-9_.-]+$/.test(indexId) || indexId === '.' || indexId === '..')
+    throw new Error(t('launchassets.error.invalid_index_name'));
   const candidates = [...new Set([...roots, fallbackRoot].map((p) => path.resolve(p)))];
   let root = path.resolve(fallbackRoot);
   let index: AssetIndex | null = null;
@@ -81,11 +83,11 @@ export async function prepareLaunchAssets(
   }
   if (!index) {
     const ref = version.assetIndex;
-    if (!ref?.url) throw new Error(`缺少游戏资源索引 ${indexId}，无法加载语言与声音；请修复该游戏版本的资源文件`);
+    if (!ref?.url) throw new Error(t('launchassets.error.index_missing', { indexId }));
     const dest = path.join(root, 'indexes', `${indexId}.json`);
     await transfer([{ url: ref.url, dest, sha1: ref.sha1, size: ref.size }]);
     index = readIndex(dest, ref.sha1);
-    if (!index) throw new Error(`游戏资源索引 ${indexId} 损坏，无法继续启动`);
+    if (!index) throw new Error(t('launchassets.error.index_corrupt', { indexId }));
   }
 
   const tasks = new Map<string, AssetTransfer>();
@@ -116,7 +118,7 @@ export async function prepareLaunchAssets(
   if (tasks.size) {
     await transfer([...tasks.values()]);
     for (const task of tasks.values()) {
-      if (!validFile(task.dest, { hash: task.sha1!, size: task.size }, true)) throw new Error('游戏资源补全失败，请检查网络后重试');
+      if (!validFile(task.dest, { hash: task.sha1!, size: task.size }, true)) throw new Error(t('launchassets.error.completion_failed'));
     }
   }
 

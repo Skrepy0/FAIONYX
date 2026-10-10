@@ -160,7 +160,7 @@ onBeforeUnmount(close);
                 reset();
               "
             >
-              {{ c.label }}
+              {{ t(c.label) }}
             </button>
           </div>
         </div>
@@ -196,7 +196,7 @@ onBeforeUnmount(close);
           >
             <span
               ><strong>{{ v.id }}</strong
-              ><small>{{ versionCategories.find((c) => c.value === versionCategory(v))?.label }}</small></span
+              ><small>{{ t(versionCategories.find((c) => c.value === versionCategory(v))?.label ?? '') }}</small></span
             ><time>{{ v.releaseTime.slice(0, 10) }}</time
             ><b>{{ v.id === modelValue ? '✓' : '' }}</b>
           </button>

@@ -6,6 +6,7 @@ import net from 'node:net';
 import { createHash, createHmac, randomBytes } from 'node:crypto';
 import type { ApiClient } from './api';
 import { validTurnEndpoint } from './turn';
+import { translate as t } from '../../../shared/i18n';
 import type { RudpCodec, RudpTarget } from './rudp';
 
 export const TURN_COOKIE = 0x2112a442,
@@ -132,7 +133,7 @@ export function parseTurnMessage(b: Buffer): ParsedTurnMessage | null {
 }
 function ipBytes(address: string): Buffer {
   if (net.isIPv4(address)) return Buffer.from(address.split('.').map(Number));
-  if (!net.isIPv6(address)) throw Error('无效的 TURN 地址');
+  if (!net.isIPv6(address)) throw Error(t('voxlink.stdturn.error.invalid_address'));
   let value = address.split('%')[0];
   if (value.includes('.')) {
     const last = value.slice(value.lastIndexOf(':') + 1),
@@ -208,7 +209,7 @@ export async function fetchTurnCredential(
     typeof data.password !== 'string' ||
     !data.password
   )
-    throw Error('标准 TURN 凭证不完整');
+    throw Error(t('voxlink.stdturn.error.credential_incomplete'));
   return data;
 }
 /** The transaction listener is detached before handing the socket to RUDP. */
@@ -247,8 +248,8 @@ export class StdTurnSession {
         signal.removeEventListener('abort', abort);
         error ? reject(error) : resolve(result!);
       };
-      const abort = () => done(Error('标准 TURN 操作已取消')),
-        closed = () => done(Error('标准 TURN 连接已关闭'));
+      const abort = () => done(Error(t('voxlink.stdturn.error.operation_cancelled'))),
+        closed = () => done(Error(t('voxlink.stdturn.error.connection_closed')));
       const receive = (b: Buffer, from: dgram.RemoteInfo) => {
         if (from.address !== this.target.address || from.port !== this.target.port) return;
         const m = parseTurnMessage(b);
@@ -260,12 +261,12 @@ export class StdTurnSession {
           return;
         }
         if (round++ >= TURN_TX_ROUNDS || Date.now() >= deadline) {
-          done(Error('标准 TURN 节点响应超时'));
+          done(Error(t('voxlink.stdturn.error.response_timeout')));
           return;
         }
         try {
           this.socket.send(packet, this.target.port, this.target.address, (error) => {
-            if (error) done(Error('标准 TURN 发送失败'));
+            if (error) done(Error(t('voxlink.stdturn.error.send_failed')));
           });
         } catch {
           closed();
@@ -292,7 +293,7 @@ export class StdTurnSession {
     socket.once('close', () => signal.removeEventListener('abort', abort));
     try {
       await new Promise<void>((resolve, reject) => {
-        socket.once('close', () => reject(Error('标准 TURN 已取消')));
+        socket.once('close', () => reject(Error(t('voxlink.stdturn.error.allocate_cancelled'))));
         socket.bind(0, resolve);
       });
       signal.throwIfAborted();
@@ -308,7 +309,7 @@ export class StdTurnSession {
           signal.throwIfAborted();
         }
       if (!challenge || challenge.type !== 0x113 || challenge.errorCode !== 401 || !challenge.attrs.has(20) || !challenge.attrs.has(21))
-        throw Error('标准 TURN 未返回有效鉴权挑战');
+        throw Error(t('voxlink.stdturn.error.no_challenge'));
       session.realm = challenge.attrs.get(20)!.toString();
       session.nonce = challenge.attrs.get(21)!.toString();
       session.key = turnLongTermKey(cred.username, session.realm, cred.password);
@@ -324,7 +325,7 @@ export class StdTurnSession {
       );
       const relay = decodeXorAddress(reply.attrs.get(22), reply.id);
       if (reply.type !== 0x103 || !relay || !relay.port)
-        throw Error('标准 TURN 分配失败' + (reply.errorCode ? ` (${reply.errorCode})` : ''));
+        throw Error(t('voxlink.stdturn.error.allocate_failed') + (reply.errorCode ? ` (${reply.errorCode})` : ''));
       session.relay = relay;
       const life = reply.attrs.get(13);
       if (life?.length === 4) session.lifetime = life.readUInt32BE(0);
@@ -336,9 +337,10 @@ export class StdTurnSession {
     }
   }
   async bind(peer: RudpTarget, signal: AbortSignal, timeout = 8000): Promise<void> {
-    if (!net.isIP(peer.address) || !validTurnEndpoint(peer.address, peer.port)) throw Error('对端 TURN 地址无效');
+    if (!net.isIP(peer.address) || !validTurnEndpoint(peer.address, peer.port))
+      throw Error(t('voxlink.stdturn.error.peer_address_invalid'));
     const permission = await this.transact(this.auth(8).address(18, { ...peer, port: 0 }), timeout, signal);
-    if (permission.type !== 0x108) throw Error('标准 TURN 权限建立失败');
+    if (permission.type !== 0x108) throw Error(t('voxlink.stdturn.error.permission_failed'));
     const reply = await this.transact(
       this.auth(9)
         .put(12, Buffer.from([0x40, 0, 0, 0]))
@@ -346,7 +348,7 @@ export class StdTurnSession {
       timeout,
       signal
     );
-    if (reply.type !== 0x109) throw Error('标准 TURN ChannelBind 失败');
+    if (reply.type !== 0x109) throw Error(t('voxlink.stdturn.error.channel_bind_failed'));
     signal.throwIfAborted();
     this.peer = peer;
   }

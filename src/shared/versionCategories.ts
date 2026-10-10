@@ -1,4 +1,5 @@
 import type { VersionCategory } from './types';
+import { translate as t } from './i18n';
 
 export const VERSION_CATEGORY_ALL = '@all';
 export const VERSION_CATEGORY_FAVORITES = '@favorites';
@@ -17,10 +18,10 @@ export function versionCategoryKey(folder: string, id: string, platform: string)
   return JSON.stringify([root, id]);
 }
 export function categoryName(value: unknown): string {
-  if (typeof value !== 'string') throw new Error('请输入分类名称');
+  if (typeof value !== 'string') throw new Error(t('versioncategories.error.name_required'));
   const name = value.trim();
-  if (!name || [...name].length > 40 || /[\u0000-\u001f\u007f]/.test(name)) throw new Error('分类名称须为 1–40 个字符，且不能包含控制字符');
-  if (reservedNames.has(nameIdentity(name))) throw new Error('此名称用于内置分类，请换一个名称');
+  if (!name || [...name].length > 40 || /[\u0000-\u001f\u007f]/.test(name)) throw new Error(t('versioncategories.error.name_invalid'));
+  if (reservedNames.has(nameIdentity(name))) throw new Error(t('versioncategories.error.name_reserved'));
   return name;
 }
 /** Old settings have no labels. Damaged labels never change instances/favorites. */
@@ -66,7 +67,8 @@ export function normalizeVersionCategoryState(value: {
 }
 export function assertAvailableCategoryName(categories: VersionCategory[], name: unknown, exceptId?: string): string {
   const valid = categoryName(name);
-  if (categories.some((row) => row.id !== exceptId && nameIdentity(row.name) === nameIdentity(valid))) throw new Error('已存在同名分类');
+  if (categories.some((row) => row.id !== exceptId && nameIdentity(row.name) === nameIdentity(valid)))
+    throw new Error(t('versioncategories.error.name_exists'));
   return valid;
 }
 export function versionCategoryOf(

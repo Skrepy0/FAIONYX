@@ -12,6 +12,7 @@ import * as yggdrasil from './yggdrasil';
 import { microsoftFetch } from './microsoftTls';
 import { logScope } from './launcherLog';
 import { protectedCredentialStorage, credentialStorageStatus } from './credentialProtection';
+import { translate as t } from '../../shared/i18n';
 
 const authLog = logScope('ms-auth');
 
@@ -21,8 +22,8 @@ async function step<T>(name: string, fn: () => Promise<T>): Promise<T> {
     return await fn();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    authLog.error(`微软登录步骤失败：${name}`, error);
-    throw new Error(`${name}：${message}`);
+    authLog.error(t('accounts.log.ms_step_failed', { name }), error);
+    throw new Error(t('accounts.error.step_labeled', { name, message }));
   }
 }
 
@@ -72,7 +73,7 @@ function storeFile(): string {
 
 function encryptSecret(value: unknown): string {
   if (!protectedCredentialStorage(safeStorage)) {
-    throw new Error('系统安全存储当前不可用，无法安全保存登录令牌');
+    throw new Error(t('accounts.error.secure_storage_unavailable'));
   }
   const plain = typeof value === 'string' ? value : JSON.stringify(value);
   return safeStorage.encryptString(plain).toString('base64');
@@ -151,7 +152,7 @@ function load(): AccountsFile {
     try {
       persist();
     } catch (error) {
-      console.error('[FAIONYX] 账号凭据安全迁移失败，原文件保持不变:', error);
+      console.error('[FAIONYX] ' + t('accounts.log.credential_migration_failed') + ':', error);
     }
   }
   return cached;
@@ -265,7 +266,7 @@ export function hasProviderAccounts(providerId: string): boolean {
 }
 
 export function saveYggdrasilAccount(account: Account): Account {
-  if (account.type !== 'yggdrasil') throw new Error('无效的外置登录账号');
+  if (account.type !== 'yggdrasil') throw new Error(t('accounts.error.invalid_yggdrasil'));
   return publicAccount(upsert(account));
 }
 
@@ -280,7 +281,7 @@ function offlineUuid(username: string): string {
 
 export function addOffline(username: string): Account {
   const name = username.trim();
-  if (!name) throw new Error('用户名不能为空');
+  if (!name) throw new Error(t('accounts.error.username_required'));
   const uuid = offlineUuid(name);
   const account: Account = {
     id: uuid,
@@ -305,11 +306,11 @@ function sleep(ms: number, signal?: AbortSignal): Promise<void> {
     }, ms);
     const onAbort = (): void => {
       clearTimeout(timer);
-      reject(new Error('已取消'));
+      reject(new Error(t('ipc.text.cancelled')));
     };
     if (signal?.aborted) {
       clearTimeout(timer);
-      reject(new Error('已取消'));
+      reject(new Error(t('ipc.text.cancelled')));
     }
     signal?.addEventListener('abort', onAbort, { once: true });
   });
@@ -346,7 +347,7 @@ async function postJson(url: string, body: unknown): Promise<Record<string, unkn
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok) {
     const xerr = data.XErr ? ` (XErr ${String(data.XErr)})` : '';
-    throw new Error(`请求失败 HTTP ${res.status}${xerr}: ${url}`);
+    throw new Error(t('accounts.error.request_failed_http_xerr', { status: res.status, xerr, url }));
   }
   return data;
 }
@@ -358,7 +359,7 @@ async function getJson(url: string, bearer: string): Promise<Record<string, unkn
     useProxy: useProxy(),
   });
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-  if (!res.ok) throw new Error(`请求失败 HTTP ${res.status}: ${url}`);
+  if (!res.ok) throw new Error(t('accounts.error.request_failed_http', { status: res.status, url }));
   return data;
 }
 
@@ -373,7 +374,7 @@ function uuidWithHyphens(id: string): string {
  */
 async function completeMsLogin(msAccessToken: string, refreshToken: string, expiresIn: number, select = true): Promise<Account> {
   // 1. XBL 认证
-  const xbl = await step('Xbox Live 认证', () =>
+  const xbl = await step(t('accounts.step.xbl_auth'), () =>
     postJson('https://user.auth.xboxlive.com/user/authenticate', {
       Properties: {
         AuthMethod: 'RPS',
@@ -385,10 +386,10 @@ async function completeMsLogin(msAccessToken: string, refreshToken: string, expi
     })
   );
   const xblToken = xbl.Token as string;
-  if (!xblToken) throw new Error('Xbox Live 认证失败：响应缺少 Token');
+  if (!xblToken) throw new Error(t('accounts.error.xbl_missing_token'));
 
   // 2. XSTS 授权
-  const xsts = await step('XSTS 授权', () =>
+  const xsts = await step(t('accounts.step.xsts_auth'), () =>
     postJson('https://xsts.auth.xboxlive.com/xsts/authorize', {
       Properties: { SandboxId: 'RETAIL', UserTokens: [xblToken] },
       RelyingParty: 'rp://api.minecraftservices.com/',
@@ -399,31 +400,35 @@ async function completeMsLogin(msAccessToken: string, refreshToken: string, expi
   const xui = (xsts.DisplayClaims as { xui?: { uhs?: string }[] } | undefined)?.xui;
   const uhs = xui?.[0]?.uhs;
   if (!xstsToken || !uhs) {
-    throw new Error('XSTS 授权失败（该账号可能尚未创建 Xbox 档案，请先在 xbox.com 登录一次）');
+    throw new Error(t('accounts.error.xsts_failed_no_profile'));
   }
 
   // 3. MC 登录
-  const mc = await step('Minecraft 登录', () =>
+  const mc = await step(t('accounts.step.minecraft_login'), () =>
     postJson('https://api.minecraftservices.com/authentication/login_with_xbox', {
       identityToken: `XBL3.0 x=${uhs};${xstsToken}`,
     })
   );
   const mcToken = mc.access_token as string;
   const mcExpires = (mc.expires_in as number | undefined) ?? expiresIn;
-  if (!mcToken) throw new Error('Minecraft 登录失败：响应缺少 access_token');
+  if (!mcToken) throw new Error(t('accounts.error.mc_missing_access_token'));
 
   // 4. 拥有权检查
-  const entitlements = await step('Minecraft 拥有权检查', () => getJson('https://api.minecraftservices.com/entitlements/mcstore', mcToken));
+  const entitlements = await step(t('accounts.step.entitlements_check'), () =>
+    getJson('https://api.minecraftservices.com/entitlements/mcstore', mcToken)
+  );
   const items = (entitlements.items as { name?: string }[] | undefined) ?? [];
   if (!items.some((i) => i.name === 'product_minecraft')) {
-    throw new Error('Minecraft 拥有权检查：该账号未拥有 Minecraft');
+    throw new Error(t('accounts.error.no_minecraft_entitlement'));
   }
 
   // 5. 档案
-  const profile = await step('获取 Minecraft 档案', () => getJson('https://api.minecraftservices.com/minecraft/profile', mcToken));
+  const profile = await step(t('accounts.step.fetch_profile'), () =>
+    getJson('https://api.minecraftservices.com/minecraft/profile', mcToken)
+  );
   const pid = profile.id as string;
   const pname = profile.name as string;
-  if (!pid || !pname) throw new Error('获取 Minecraft 档案失败');
+  if (!pid || !pname) throw new Error(t('accounts.error.profile_failed'));
 
   const uuid = uuidWithHyphens(pid);
   const account: Account = {
@@ -445,27 +450,27 @@ async function pollDeviceCode(deviceCode: string, intervalSec: number, expiresIn
   const deadline = Date.now() + expiresInSec * 1000;
   while (Date.now() < deadline) {
     await sleep(interval, signal);
-    const t = await postForm(`${msAuthBase(clientId)}/token`, {
+    const token = await postForm(`${msAuthBase(clientId)}/token`, {
       client_id: clientId,
       grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
       device_code: deviceCode,
     });
-    if (typeof t.access_token === 'string') {
+    if (typeof token.access_token === 'string') {
       return await completeMsLogin(
-        t.access_token,
-        (t.refresh_token as string | undefined) ?? '',
-        (t.expires_in as number | undefined) ?? 86400
+        token.access_token,
+        (token.refresh_token as string | undefined) ?? '',
+        (token.expires_in as number | undefined) ?? 86400
       );
     }
-    const err = t.error as string | undefined;
+    const err = token.error as string | undefined;
     if (err === 'authorization_pending') continue;
     if (err === 'slow_down') {
       interval += 5000;
       continue;
     }
-    throw new Error((t.error_description as string | undefined) ?? err ?? '登录失败');
+    throw new Error((token.error_description as string | undefined) ?? err ?? t('accounts.error.login_failed'));
   }
-  throw new Error('登录超时，设备码已过期');
+  throw new Error(t('accounts.error.login_timeout'));
 }
 
 /**
@@ -481,9 +486,9 @@ export async function beginMsDeviceCode(onDone: (account: Account | null, error?
   });
   const deviceCode = dc.device_code as string | undefined;
   if (!deviceCode) {
-    const message = (dc.error_description as string | undefined) ?? '获取设备码失败';
-    authLog.error(`微软登录步骤失败：获取设备码（${message}）`);
-    throw new Error(`获取设备码：${message}`);
+    const message = (dc.error_description as string | undefined) ?? t('accounts.error.device_code_failed');
+    authLog.error(t('accounts.log.ms_step_failed', { name: t('accounts.step.device_code', { message }) }));
+    throw new Error(t('accounts.error.step_labeled', { name: t('accounts.step.device_code_label'), message }));
   }
 
   pollAbort = new AbortController();
@@ -493,7 +498,7 @@ export async function beginMsDeviceCode(onDone: (account: Account | null, error?
     .catch((e) => {
       const message = e instanceof Error ? e.message : String(e);
       // 用户主动取消不写错误日志；真实失败写日志供诊断
-      if (!signal.aborted) authLog.error('微软登录失败', e);
+      if (!signal.aborted) authLog.error(t('accounts.log.ms_login_failed'), e);
       onDone(null, signal.aborted ? undefined : message);
     });
 
@@ -512,20 +517,20 @@ export function cancelMsLogin(): void {
 
 /** 用 refresh_token 重走整个 XBL→XSTS→MC 链，更新存储 */
 export async function refreshMicrosoft(account: Account): Promise<Account> {
-  if (!account.refreshToken) throw new Error('缺少 refresh_token，请重新登录');
-  const t = await postForm(`${msAuthBase(getSettings().msClientId)}/token`, {
+  if (!account.refreshToken) throw new Error(t('accounts.error.missing_refresh_token'));
+  const token = await postForm(`${msAuthBase(getSettings().msClientId)}/token`, {
     client_id: getSettings().msClientId,
     grant_type: 'refresh_token',
     refresh_token: account.refreshToken,
     scope: MS_SCOPE,
   });
-  if (typeof t.access_token !== 'string') {
-    throw new Error((t.error_description as string | undefined) ?? '微软令牌刷新失败，请重新登录');
+  if (typeof token.access_token !== 'string') {
+    throw new Error((token.error_description as string | undefined) ?? t('accounts.error.token_refresh_failed'));
   }
   const refreshed = await completeMsLogin(
-    t.access_token,
-    (t.refresh_token as string | undefined) ?? account.refreshToken,
-    (t.expires_in as number | undefined) ?? 86400,
+    token.access_token,
+    (token.refresh_token as string | undefined) ?? account.refreshToken,
+    (token.expires_in as number | undefined) ?? 86400,
     false
   );
   // 后台头像刷新不得改变用户当前选中的账号。
@@ -550,7 +555,7 @@ export async function getValidAccount(account: Account): Promise<Account> {
 /** 账号页手动验证/刷新；只向前端返回展示字段。 */
 export async function refreshAccountById(id: string): Promise<Account> {
   const account = load().accounts.find((item) => item.id === id);
-  if (!account) throw new Error('账号不存在');
+  if (!account) throw new Error(t('accounts.error.account_not_found'));
   const refreshed = await getValidAccount(account);
   if (refreshed !== account) upsert(refreshed, false);
   return publicAccount(refreshed);

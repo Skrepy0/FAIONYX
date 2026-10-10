@@ -13,6 +13,8 @@ export interface JavaTarget {
 }
 type ReadJson = (url: string) => Promise<any>;
 
+import { translate as t } from '../../shared/i18n';
+
 function verifiedPackage(provider: string, url: unknown, hash: unknown, size: unknown, hosts: string[]): JavaPackage {
   const parsed = new URL(String(url));
   if (
@@ -25,7 +27,7 @@ function verifiedPackage(provider: string, url: unknown, hash: unknown, size: un
     !Number.isSafeInteger(size) ||
     Number(size) <= 0
   ) {
-    throw new Error(`${provider} 返回的 Java 下载元数据不完整或无效`);
+    throw new Error(t('javasources.error.metadata_invalid', { provider }));
   }
   return { provider, url: parsed.href, sha256: hash, size: Number(size) };
 }
@@ -41,7 +43,7 @@ export async function temurinPackage(target: JavaTarget, read: ReadJson): Promis
       (a) => a.version?.major === major && a.binary?.os === os && a.binary?.architecture === arch && a.binary?.image_type === 'jre'
     );
   const pkg = asset?.binary?.package;
-  if (!pkg) throw new Error(`Adoptium 没有匹配 Java ${major} ${os}/${arch} 的 JRE`);
+  if (!pkg) throw new Error(t('javasources.error.adoptium_no_match', { major, os, arch }));
   return verifiedPackage('Eclipse Temurin', pkg.link, pkg.checksum, pkg.size, ['github.com']);
 }
 
@@ -66,7 +68,7 @@ export async function zuluPackage(target: JavaTarget, read: ReadJson): Promise<J
   const item =
     Array.isArray(list) &&
     list.find((a) => a.java_version?.[0] === major && a.availability_type === 'CA' && /^[\da-f-]{36}$/i.test(a.package_uuid));
-  if (!item) throw new Error(`Azul 没有匹配 Java ${major} ${system}/${cpu} 的 JRE`);
+  if (!item) throw new Error(t('javasources.error.azul_no_match', { major, system, cpu }));
   const detail = await read(`https://api.azul.com/metadata/v1/zulu/packages/${item.package_uuid}`);
   if (
     detail.java_version?.[0] !== major ||
@@ -77,7 +79,7 @@ export async function zuluPackage(target: JavaTarget, read: ReadJson): Promise<J
     detail.archive_type !== archive ||
     detail.availability_type !== 'CA'
   )
-    throw new Error('Azul 返回的 Java 版本或平台不匹配');
+    throw new Error(t('javasources.error.azul_version_mismatch'));
   const pkg = verifiedPackage('Azul Zulu', detail.download_url, detail.sha256_hash, detail.size, ['cdn.azul.com']);
   // Azul's API size can be rounded (25/mac-arm64 reports 56,496,600 for a
   // 56,496,636-byte archive with the correct SHA256). Get exact size from the
@@ -126,7 +128,10 @@ export async function provisionJava<T>(
     ['Azul', zuluPackage],
   ] as const) {
     signal?.throwIfAborted();
-    report(`${errors.length ? '切换备用源：' : ''}正在准备 Java ${target.major}（${label} · ${target.arch}）`);
+    report(
+      (errors.length ? t('javasources.report.switching_source') : '') +
+        t('javasources.report.preparing', { major: target.major, label, arch: target.arch })
+    );
     try {
       const pkg = await provider(target, read);
       signal?.throwIfAborted();
@@ -137,6 +142,11 @@ export async function provisionJava<T>(
     }
   }
   throw new Error(
-    `Java ${target.major}（${target.os}/${target.arch}）自动准备失败，游戏尚未启动。请检查网络或系统代理后重试，也可在设置中选择已安装的对应 Java。\n${errors.join('\n')}`
+    t('javasources.error.provision_failed', {
+      major: target.major,
+      os: target.os,
+      arch: target.arch,
+      errors: errors.join('\n'),
+    })
   );
 }

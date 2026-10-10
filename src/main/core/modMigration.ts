@@ -14,6 +14,7 @@ import { communityFiles, communityExactFile, cfChannel } from './community';
 import { httpFetch } from './httpClient';
 import { downloadFile } from './download';
 import { fileHash } from './fileHash';
+import { translate as t } from '../../shared/i18n';
 const plans = new Map<string, ModMigrationPlan>(),
   running = new Set<string>();
 const MR = 'https://api.modrinth.com/v2';
@@ -24,7 +25,7 @@ async function post(url: string, body: unknown, headers: Record<string, string> 
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(20000),
   });
-  if (!r.ok) throw new Error('社区查询失败 HTTP ' + r.status);
+  if (!r.ok) throw new Error(t('modmigration.error.community_query', { status: r.status }));
   return r.json() as Promise<any>;
 }
 export function compatibleFile(file: CommunityFile, mc: string, loader: string) {
@@ -42,7 +43,7 @@ export function compatibleFile(file: CommunityFile, mc: string, loader: string) 
 export async function planModMigration(sourceId: string, folder: string, mcVersion: string, loader: LoaderName): Promise<ModMigrationPlan> {
   requireResourceVersion(sourceId);
   if (!/^[a-zA-Z0-9._-]{1,40}$/.test(mcVersion) || !['fabric', 'forge', 'neoforge', 'quilt'].includes(loader))
-    throw new Error('请选择有效的游戏版本与加载器');
+    throw new Error(t('modmigration.error.invalid_target'));
   const dir = await resolveResourceDirectory(folder, sourceId, 'mods');
   const names = (
     await fs.promises.readdir(dir, { withFileTypes: true }).catch((e) => {
@@ -52,10 +53,10 @@ export async function planModMigration(sourceId: string, folder: string, mcVersi
   )
     .filter((e) => e.isFile() && /\.jar(?:\.disabled)?$/i.test(e.name))
     .map((e) => e.name);
-  if (names.length > 500) throw new Error('单次最多迁移500个模组，请先整理模组列表');
-  if (!names.length) throw new Error('当前版本没有可迁移的模组');
+  if (names.length > 500) throw new Error(t('modmigration.error.too_many_mods'));
+  if (!names.length) throw new Error(t('modmigration.error.no_mods'));
   const [scanned, loaders] = await Promise.all([scanModDirectory(dir, true, names), listLoaderVersions(loader, mcVersion)]);
-  if (!loaders[0]) throw new Error(`${loader} 没有适配 ${mcVersion} 的加载器`);
+  if (!loaders[0]) throw new Error(t('modmigration.error.no_loader', { loader, mcVersion }));
   const entries: MigrationEntry[] = [];
   for (const i of scanned)
     entries.push({
@@ -65,7 +66,7 @@ export async function planModMigration(sourceId: string, folder: string, mcVersi
       sha1: i.sha1 || (await fileHash(path.join(dir, i.fileName))),
       disabled: /\.disabled$/i.test(i.fileName),
       status: 'unavailable',
-      reason: i.error ? '文件无法解析，保留为禁用文件' : '未匹配社区来源',
+      reason: i.error ? t('modmigration.reason.unparsable') : t('modmigration.reason.unmatched'),
     });
   let originals: any = {},
     updates: any = {},
@@ -103,10 +104,10 @@ export async function planModMigration(sourceId: string, folder: string, mcVersi
         if (match) cfIds.set(e.sha1, String(match.file.modId || match.id));
       }
     } catch (e) {
-      throw new Error('无法完成社区来源识别，请检查网络后重试。' + (mrError || String(e)));
+      throw new Error(t('modmigration.error.origin_lookup_failed', { error: mrError || String(e) }));
     }
   }
-  if (mrError) throw new Error('Modrinth 查询失败，请重试：' + mrError);
+  if (mrError) throw new Error(t('modmigration.error.modrinth_failed', { error: mrError }));
   const versions = new Map<string, CommunityFile>();
   let index = 0;
   await Promise.all(
@@ -116,7 +117,7 @@ export async function planModMigration(sourceId: string, folder: string, mcVersi
           v = updates[e.sha1],
           project = originals[e.sha1]?.project_id;
         if (project) {
-          e.reason = '该项目没有适配目标版本与加载器的文件';
+          e.reason = t('modmigration.reason.project_no_file');
           if (v) {
             const f = v.files?.find((x: any) => x.primary) || v.files?.[0];
             if (f) {
@@ -147,7 +148,7 @@ export async function planModMigration(sourceId: string, folder: string, mcVersi
             }
           }
         } else if (cfIds.has(e.sha1)) {
-          e.reason = '该项目没有适配目标版本与加载器的可下载文件';
+          e.reason = t('modmigration.reason.project_no_download');
           const list = await communityFiles('curseforge', cfIds.get(e.sha1)!, { mcVersion, loader, kind: 'mod' });
           const file = list.find((f) => compatibleFile(f, mcVersion, loader));
           if (file) {
@@ -161,10 +162,10 @@ export async function planModMigration(sourceId: string, folder: string, mcVersi
   );
   const warnings: string[] = entries
       .filter((e) => isModLocked(dir, e.sha1))
-      .map((e) => `锁定模组 ${e.fileName} 将按目标游戏重新匹配；确认后目标文件仍锁定`),
+      .map((e) => t('modmigration.warn.locked_rematch', { name: e.fileName })),
     visited = new Set<string>();
   for (let n = 0; n < entries.length; n++) {
-    if (entries.length > 500) throw new Error('前置依赖超过500项，请检查模组依赖关系');
+    if (entries.length > 500) throw new Error(t('modmigration.error.too_many_deps'));
     const e = entries[n];
     if (!e.target || e.disabled) continue;
     for (const dep of e.target.dependencies || []) {
@@ -186,7 +187,7 @@ export async function planModMigration(sourceId: string, folder: string, mcVersi
             target: existing,
           });
         if (dep.fileId && existing.fileId !== dep.fileId)
-          warnings.push(`${e.fileName} 需要特定前置版本 ${dep.fileId}，当前目标版本为 ${existing.fileName}，请确认兼容性`);
+          warnings.push(t('modmigration.warn.dep_version_mismatch', { name: e.fileName, dep: dep.fileId, current: existing.fileName }));
         continue;
       }
       try {
@@ -195,7 +196,7 @@ export async function planModMigration(sourceId: string, folder: string, mcVersi
           : (await communityFiles(source, dep.projectId || '', { mcVersion, loader, kind: 'mod' })).find((f) =>
               compatibleFile(f, mcVersion, loader)
             );
-        if (!file || !compatibleFile(file, mcVersion, loader)) throw new Error('无兼容可下载版本');
+        if (!file || !compatibleFile(file, mcVersion, loader)) throw new Error(t('modmigration.error.no_compatible_file'));
         versions.set(source + ':' + file.projectId, file);
         entries.push({
           fileName: '',
@@ -207,7 +208,13 @@ export async function planModMigration(sourceId: string, folder: string, mcVersi
           target: file,
         });
       } catch (err) {
-        warnings.push(`${e.fileName || e.name} 的必要前置 ${dep.projectId || dep.fileId || '未知'} 未能匹配：${String(err)}`);
+        warnings.push(
+          t('modmigration.warn.dep_unmatched', {
+            name: e.fileName || e.name,
+            dep: dep.projectId || dep.fileId || t('modmigration.error.unknown'),
+            error: String(err),
+          })
+        );
       }
     }
   }
@@ -235,11 +242,11 @@ export async function validateMigrationSource(plan: ModMigrationPlan, dir: strin
     .filter((e) => e.fileName)
     .map((e) => e.fileName)
     .sort();
-  if (JSON.stringify(names) !== JSON.stringify(expected)) throw new Error('检查后模组列表发生变化，请重新检查');
+  if (JSON.stringify(names) !== JSON.stringify(expected)) throw new Error(t('modmigration.error.list_changed'));
   for (const e of plan.entries.filter((e) => e.fileName)) {
     const stat = await fs.promises.lstat(path.join(dir, e.fileName));
     if (!stat.isFile() || stat.isSymbolicLink() || (await fileHash(path.join(dir, e.fileName))) !== e.sha1)
-      throw new Error('检查后模组文件已变化，请重新检查：' + e.fileName);
+      throw new Error(t('modmigration.error.file_changed', { name: e.fileName }));
   }
 }
 export function migrationInstanceId(source: string, mc: string, id: string) {
@@ -247,18 +254,18 @@ export function migrationInstanceId(source: string, mc: string, id: string) {
 }
 export async function applyModMigration(id: string, confirmMissing: boolean, emit: ProgressEmit, signal?: AbortSignal) {
   const plan = plans.get(id);
-  if (!plan || Date.now() - plan.createdAt > 1800000) throw new Error('迁移预览已过期，请重新检查');
+  if (!plan || Date.now() - plan.createdAt > 1800000) throw new Error(t('modmigration.error.plan_expired'));
   if ((plan.entries.some((e) => e.status === 'unavailable') || plan.warnings.length) && confirmMissing !== true)
-    throw new Error('请先确认未匹配模组与依赖提醒');
-  if (running.has(id)) throw new Error('该迁移正在进行');
+    throw new Error(t('modmigration.error.confirm_missing_required'));
+  if (running.has(id)) throw new Error(t('modmigration.error.already_running'));
   running.add(id);
   let stage = '';
   try {
     const dir = await resolveResourceDirectory(plan.folder, plan.sourceId, 'mods');
-    emit({ stage: 'download', progress: 0, overall: 0, text: '正在校验迁移源文件' });
+    emit({ stage: 'download', progress: 0, overall: 0, text: t('modmigration.state.validating_source') });
     await validateMigrationSource(plan, dir);
     if (!confirmMissing && plan.entries.some((e) => e.fileName && isModLocked(dir, e.sha1)))
-      throw new Error('模组已锁定，请重新检查并确认迁移');
+      throw new Error(t('modmigration.error.mod_locked'));
     signal?.throwIfAborted();
     stage = await fs.promises.mkdtemp(path.join(plan.folder, '.faionyx-migration-'));
     let i = 0;
@@ -270,7 +277,7 @@ export async function applyModMigration(id: string, confirmMissing: boolean, emi
       const digest = e.target?.sha1 || e.sha1;
       const previous = used.get(name.toLowerCase());
       if (previous) {
-        if (previous !== digest) throw new Error('迁移文件名冲突：' + name);
+        if (previous !== digest) throw new Error(t('modmigration.error.name_conflict', { name }));
         continue;
       }
       used.set(name.toLowerCase(), digest);
@@ -279,12 +286,12 @@ export async function applyModMigration(id: string, confirmMissing: boolean, emi
         await downloadFile(
           e.target.url,
           dest,
-          (d, t) =>
+          (d, total) =>
             emit({
               stage: 'download',
-              progress: t ? d / t : 0,
-              overall: (0.65 * (i + (t ? d / t : 0))) / plan.entries.length,
-              text: '迁移模组 ' + (e.fileName || e.name),
+              progress: total ? d / total : 0,
+              overall: (0.65 * (i + (total ? d / total : 0))) / plan.entries.length,
+              text: t('modmigration.state.migrating_mod', { name: e.fileName || e.name }),
             }),
           e.target.sha1,
           undefined,
@@ -299,23 +306,24 @@ export async function applyModMigration(id: string, confirmMissing: boolean, emi
     signal?.throwIfAborted();
     const targetId = migrationInstanceId(plan.sourceId, plan.mcVersion, plan.id);
     requireResourceVersion(targetId);
-    if (fs.existsSync(path.join(plan.folder, 'versions', targetId))) throw new Error('目标迁移实例已存在，请重新检查生成新实例');
+    if (fs.existsSync(path.join(plan.folder, 'versions', targetId))) throw new Error(t('modmigration.error.target_instance_exists'));
     await withGameFolder(plan.folder, async () => {
       await installVersion(
         plan.mcVersion,
         { loader: plan.loader, loaderVersion: plan.loaderVersion, instanceName: targetId },
-        (e) => emit({ ...e, overall: 0.65 + 0.3 * (e.overall ?? e.progress), text: '准备目标游戏：' + e.text }),
+        (e) =>
+          emit({ ...e, overall: 0.65 + 0.3 * (e.overall ?? e.progress), text: t('modmigration.state.preparing_target', { text: e.text }) }),
         signal
       );
       setNewInstanceIsolation(targetId, true);
       const marker = path.join(plan.folder, 'versions', targetId, '.installing');
-      await fs.promises.writeFile(marker, '版本迁移尚未完成');
+      await fs.promises.writeFile(marker, t('modmigration.marker.installing'));
       signal?.throwIfAborted();
       const mods = await resolveResourceDirectory(plan.folder, targetId, 'mods');
-      if (fs.existsSync(mods)) throw new Error('目标模组目录已存在，未覆盖，请重新迁移');
+      if (fs.existsSync(mods)) throw new Error(t('modmigration.error.mods_dir_exists'));
       for (const e of plan.entries)
         if (e.fileName && isModLocked(dir, e.sha1)) {
-          if (!confirmMissing) throw new Error('模组已锁定，请重新确认后迁移');
+          if (!confirmMissing) throw new Error(t('modmigration.error.mod_locked_confirm'));
           setModLocked(mods, e.target?.sha1 || e.sha1, true);
         }
       await fs.promises.rename(stage, mods);
@@ -324,14 +332,15 @@ export async function applyModMigration(id: string, confirmMissing: boolean, emi
       await fs.promises.rm(marker, { force: true });
     });
     plans.delete(id);
-    emit({ stage: 'done', progress: 1, overall: 1, text: '版本迁移完成：' + targetId });
+    emit({ stage: 'done', progress: 1, overall: 1, text: t('modmigration.state.done', { id: targetId }) });
     return { versionId: targetId, folder: plan.folder };
   } finally {
     running.delete(id);
     if (stage) {
       const resolved = path.resolve(stage),
         root = path.resolve(plan.folder) + path.sep;
-      if (!resolved.startsWith(root) || !path.basename(resolved).startsWith('.faionyx-migration-')) throw new Error('迁移临时目录校验失败');
+      if (!resolved.startsWith(root) || !path.basename(resolved).startsWith('.faionyx-migration-'))
+        throw new Error(t('modmigration.error.temp_dir_invalid'));
       await fs.promises.rm(resolved, { recursive: true, force: true });
     }
   }

@@ -3,6 +3,7 @@
  * 每个任务持有一个 AbortController，取消信号贯穿 downloadAll/downloadFile
  */
 import { logScope } from './launcherLog';
+import { translate as t } from '../../shared/i18n';
 
 const taskLog = logScope('tasks');
 
@@ -52,18 +53,18 @@ export function registerTask(title: string, kind: TaskRecord['kind']): TaskRecor
   };
   tasks.set(id, rec);
   taskBySignal.set(rec.controller.signal, rec);
-  taskLog.debug(`任务注册：${title}（${id}）`);
+  taskLog.debug(t('tasks.log.registered', { title, id }));
   return rec;
 }
 
 export function cancelTask(id: string): boolean {
   const rec = tasks.get(id) as InternalTaskRecord | undefined;
   if (!rec) {
-    taskLog.debug(`取消失败：任务不存在（${id}）`);
+    taskLog.debug(t('tasks.log.cancel_missing', { id }));
     return false;
   }
   if (rec.status !== 'cancelling') {
-    taskLog.info(`任务取消：${rec.title}（${id}）`);
+    taskLog.info(t('tasks.log.cancel', { title: rec.title, id }));
     rec.status = 'cancelling';
     rec.controller.abort(new DOMException('已取消', 'AbortError'));
     for (const resume of rec.resumeWaiters) resume();
@@ -74,7 +75,7 @@ export function cancelTask(id: string): boolean {
 
 export function finishTask(id: string): void {
   const rec = tasks.get(id) as InternalTaskRecord | undefined;
-  if (rec) taskLog.debug(`任务结束：${rec.title}（${id}）`);
+  if (rec) taskLog.debug(t('tasks.log.finished', { title: rec.title, id }));
   rec?.settle();
   if (rec) {
     for (const resume of rec.resumeWaiters) resume();
@@ -87,10 +88,10 @@ export function finishTask(id: string): void {
 export function pauseTask(id: string): boolean {
   const rec = tasks.get(id);
   if (!rec || rec.status !== 'running') {
-    taskLog.warn(`任务暂停失败：任务不存在或不在运行中（${id}）`);
+    taskLog.warn(t('tasks.log.pause_missing', { id }));
     return false;
   }
-  taskLog.info(`任务暂停：${rec.title}（${id}）`);
+  taskLog.info(t('tasks.log.paused', { title: rec.title, id }));
   rec.status = 'paused';
   return true;
 }
@@ -98,10 +99,10 @@ export function pauseTask(id: string): boolean {
 export function resumeTask(id: string): boolean {
   const rec = tasks.get(id) as InternalTaskRecord | undefined;
   if (!rec || rec.status !== 'paused') {
-    taskLog.warn(`任务恢复失败：任务不存在或未处于暂停（${id}）`);
+    taskLog.warn(t('tasks.log.resume_missing', { id }));
     return false;
   }
-  taskLog.info(`任务恢复：${rec.title}（${id}）`);
+  taskLog.info(t('tasks.log.resumed', { title: rec.title, id }));
   rec.status = 'running';
   for (const resume of rec.resumeWaiters) resume();
   rec.resumeWaiters.clear();
@@ -125,7 +126,7 @@ export async function waitIfTaskPaused(signal?: AbortSignal): Promise<void> {
     };
     const onAbort = (): void => {
       rec.resumeWaiters.delete(resume);
-      reject(new Error('已取消'));
+      reject(new Error(t('ipc.text.cancelled')));
     };
     rec.resumeWaiters.add(resume);
     signal.addEventListener('abort', onAbort, { once: true });
@@ -146,11 +147,11 @@ export async function cancelTaskAndWait(id: string, timeoutMs = 30_000): Promise
     await Promise.race([
       rec.settled,
       new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error('取消超时：后台任务尚未停止，请稍后重试')), timeoutMs);
+        timer = setTimeout(() => reject(new Error(t('tasks.error.cancel_timeout'))), timeoutMs);
       }),
     ]);
   } catch (error) {
-    taskLog.warn(`任务取消超时（${timeoutMs}ms）：${rec.title}（${id}）`, error);
+    taskLog.warn(t('tasks.log.cancel_timeout', { timeout: timeoutMs, title: rec.title, id }), error);
     throw error;
   } finally {
     if (timer) clearTimeout(timer);
@@ -165,7 +166,7 @@ export function isCancelError(e: unknown): boolean {
 
 /** 阶段边界手动检查（下载循环之外的长流程节点调用） */
 export function throwIfCancelled(signal?: AbortSignal): void {
-  if (signal?.aborted) throw new Error('已取消');
+  if (signal?.aborted) throw new Error(t('ipc.text.cancelled'));
 }
 
 /** 可取消的退避等待；取消时不必等定时器自然结束。 */
@@ -179,7 +180,7 @@ export function abortableDelay(ms: number, signal?: AbortSignal): Promise<void> 
     }, ms);
     const onAbort = (): void => {
       clearTimeout(timer);
-      reject(new Error('已取消'));
+      reject(new Error(t('ipc.text.cancelled')));
     };
     signal.addEventListener('abort', onAbort, { once: true });
   });

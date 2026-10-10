@@ -296,7 +296,7 @@ function sanitizeLog(text: string): string {
     .replace(/(\d{1,3}\.){3}\d{1,3}/g, (m) => (m === '127.0.0.1' ? m : '***'));
 }
 
-function pushLog(text: string, level = 'info', stage = conn.value?.phase || '准备'): void {
+function pushLog(text: string, level = 'info', stage = conn.value?.phase || t('voxlink.panel.stage_prepare')): void {
   const d = new Date();
   const ts = [d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, '0')).join(':');
   logs.value.push({ ts, text: sanitizeLog(text), level, stage });
@@ -633,7 +633,7 @@ onUnmounted(() => {
           <span data-ui="VoxLinkPanel:e622b7bd540c" class="stage-dot">{{ step.state === 'done' ? '✓' : i + 1 }}</span
           ><span data-ui="VoxLinkPanel:1fd8eb27a14d" class="stage-copy"
             ><strong>{{ step.label }}</strong
-            ><small>{{ step.detail || '{{ t('voxlink.panel.waiting_previous') }}' }}</small></span
+            ><small>{{ step.detail || t('voxlink.panel.waiting_previous') }}</small></span
           >
         </li>
       </ol>
@@ -799,26 +799,30 @@ onUnmounted(() => {
               :placeholder="t('voxlink.panel.search_room_name')"
               @keydown.enter="loadLobby" /></label
           ><button data-ui="VoxLinkPanel:016a2518dbf1" class="btn btn-ghost" :disabled="loadingLobby" @click="loadLobby">
-            {{ loadingLobby ? '{{ t('voxlink.panel.refreshing') }}' : '{{ t('voxlink.panel.refresh_lobby') }}' }}
+            {{ loadingLobby ? t('voxlink.panel.refreshing') : t('voxlink.panel.refresh_lobby') }}
           </button>
         </div>
         <p data-ui="VoxLinkPanel:e312b633a89b" v-if="!rooms.length" class="connection-muted">
-          {{ loadingLobby ? '{{ t('voxlink.panel.searching_public') }}' : '{{ t('voxlink.panel.no_public_rooms') }}' }}
+          {{ loadingLobby ? t('voxlink.panel.searching_public') : t('voxlink.panel.no_public_rooms') }}
         </p>
         <ul data-ui="VoxLinkPanel:23ebb3082754" v-else class="lobby-list">
           <li data-ui="VoxLinkPanel:84d06265d7c7" v-for="room in rooms" :key="room.code" class="lobby-item">
             <div data-ui="VoxLinkPanel:69f9a9318d00" class="lobby-main">
-              <span class="connection-eyebrow">{{ room.category || '一起游玩' }}</span
+              <span class="connection-eyebrow">{{ room.category || t('voxlink.panel.play_together') }}</span
               ><strong>{{ room.name }}</strong
               ><small
-                >{{ [room.gameVersion, room.loader].filter(Boolean).join(' · ') || '版本未标注' }} ·
+                >{{ [room.gameVersion, room.loader].filter(Boolean).join(' · ') || t('voxlink.panel.version_untagged') }} ·
                 {{ natLabel('UNKNOWN', room.natType) }}</small
-              ><span data-ui="VoxLinkPanel:f8116c66cc88" v-if="room.clientTag === 'faionyx'" class="faionyx-badge">FAIONYX 房间</span>
+              ><span data-ui="VoxLinkPanel:f8116c66cc88" v-if="room.clientTag === 'faionyx'" class="faionyx-badge">{{
+                t('voxlink.panel.faionyx_room')
+              }}</span>
             </div>
             <div data-ui="VoxLinkPanel:1040c97a6114" class="lobby-side">
               <span data-ui="VoxLinkPanel:9d3841267bb7" class="connection-muted"
-                >{{ room.currentPlayers ?? '?' }}/{{ room.maxPlayers ?? '?' }} 人</span
-              ><button data-ui="VoxLinkPanel:446640f4241c" class="btn btn-gold" @click="startJoin(room.code)">加入 →</button>
+                >{{ room.currentPlayers ?? '?' }}/{{ room.maxPlayers ?? '?' }} {{ t('voxlink.panel.players_unit') }}</span
+              ><button data-ui="VoxLinkPanel:446640f4241c" class="btn btn-gold" @click="startJoin(room.code)">
+                {{ t('voxlink.panel.join') }} →
+              </button>
             </div>
           </li>
         </ul>
@@ -827,10 +831,11 @@ onUnmounted(() => {
     <VoxLinkModSync v-if="pendingJoin" :code="pendingJoin" :target="selectedTarget" @join="joinAfterMods" @dismiss="pendingJoin = ''" />
     <VoxLinkTickets v-if="ticketsOpen" @close="ticketsOpen = false" />
     <details data-ui="VoxLinkPanel:6110025709f6" class="connection-details reference-details">
-      <summary>联机设置</summary>
+      <summary>{{ t('voxlink.panel.connection_settings') }}</summary>
       <div data-ui="VoxLinkPanel:00597c7aef0f" class="connection-detail-content">
         <label class="connection-toggle"
-          ><span>协助其他玩家中继<small>允许使用玩家中继。TURN 始终由你主动点击，不会自动启用。</small></span
+          ><span
+            >{{ t('voxlink.panel.help_relay') }}<small>{{ t('voxlink.panel.help_relay_hint') }}</small></span
           ><input
             data-ui="VoxLinkPanel:87677ed49b2c"
             type="checkbox"
@@ -838,7 +843,8 @@ onUnmounted(() => {
             :disabled="joined"
             @change="toggleRelay" /><span class="connection-toggle-track" aria-hidden="true"></span></label
         ><label class="connection-toggle"
-          ><span>发送联机故障诊断<small>向 VoxLink 上传脱敏的联机日志，帮助排查连接问题。</small></span
+          ><span
+            >{{ t('voxlink.panel.send_diagnostics') }}<small>{{ t('voxlink.panel.send_diagnostics_hint') }}</small></span
           ><input
             data-ui="VoxLinkPanel:1db3b2b22cc9"
             type="checkbox"
@@ -848,12 +854,18 @@ onUnmounted(() => {
       </div>
     </details>
     <details data-ui="VoxLinkPanel:4df65d02a080" v-for="group in logGroups" :key="group.label" class="log-group">
-      <summary>{{ logGroupLabel(group.label) }} · {{ group.rows.length }} 条</summary>
+      <summary>{{ logGroupLabel(group.label) }} · {{ t('voxlink.panel.log_count', { count: group.rows.length }) }}</summary>
       <div data-ui="VoxLinkPanel:1325cce1cc38" class="connection-log-viewport">
         <p data-ui="VoxLinkPanel:ec5b6c9228e1" v-for="(log, i) in group.rows" :key="i" class="connection-log-line" :class="log.level">
           <span data-ui="VoxLinkPanel:a0bb180b19af" class="log-ts">{{ log.ts }}</span>
           <span data-ui="VoxLinkPanel:688da0e690b8" class="log-level">{{
-            log.level === 'error' ? '错误' : log.level === 'warn' ? '提醒' : log.level === 'stage' ? '阶段' : '详细'
+            log.level === 'error'
+              ? t('voxlink.panel.log_level_error')
+              : log.level === 'warn'
+                ? t('voxlink.panel.log_level_warn')
+                : log.level === 'stage'
+                  ? t('voxlink.panel.log_level_stage')
+                  : t('voxlink.panel.log_level_detail')
           }}</span>
           {{ log.text }}
         </p>

@@ -3,7 +3,18 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { BOOT_STAGES, StartupGate, type BootStage } from '../shared/startup';
 import { launcherLog } from './core/launcherLog';
+import { getSettings } from './core/settings';
 import { awaitNativeStartup, createNativeStartup, showStartupWindow } from './nativeStartup';
+import { translate as t } from '../shared/i18n';
+
+/** 闪屏语言取自持久化设置；读取失败时回退 zh-CN（闪屏先于渲染层启动，不能用 i18n 模块）。 */
+function splashLocale(): string {
+  try {
+    return getSettings().locale === 'en-US' ? 'en-US' : 'zh-CN';
+  } catch {
+    return 'zh-CN';
+  }
+}
 
 /** Startup-only window coordination. This does not own or terminate Minecraft processes. */
 export async function createStartupSplash() {
@@ -35,7 +46,7 @@ function createElectronStartupSplash() {
     focusable: false,
     skipTaskbar: true,
     alwaysOnTop: true,
-    title: 'FAIONYX · 正在启动',
+    title: t('startupsplash.window.title'),
     webPreferences: {
       preload: join(__dirname, '../preload/splash.js'),
       sandbox: true,
@@ -127,8 +138,8 @@ function createElectronStartupSplash() {
   });
   splash.webContents.on('render-process-gone', () => animationFailure('renderer process exited'));
   const load = process.env.ELECTRON_RENDERER_URL
-    ? splash.loadURL(new URL('splash.html', process.env.ELECTRON_RENDERER_URL).toString())
-    : splash.loadFile(join(__dirname, '../renderer/splash.html'));
+    ? splash.loadURL(new URL(`splash.html?locale=${encodeURIComponent(splashLocale())}`, process.env.ELECTRON_RENDERER_URL).toString())
+    : splash.loadFile(join(__dirname, '../renderer/splash.html'), { query: { locale: splashLocale() } });
   void load.catch((error) => animationFailure(String(error)));
   return {
     attach(window: BrowserWindow) {
@@ -144,15 +155,19 @@ function createElectronStartupSplash() {
         dispose();
         void dialog.showMessageBox({
           type: 'error',
-          title: 'FAIONYX 初始化失败',
-          message: `主界面进程退出：${details.reason}。请重新启动并查看启动器日志。`,
+          title: t('startupsplash.dialog.init_failed_title'),
+          message: t('startupsplash.dialog.renderer_exited', { reason: details.reason }),
         });
         window.close();
       });
       window.webContents.once('did-fail-load', (_event, code, description, _url, isMainFrame) => {
         if (!isMainFrame || code === -3 || revealed) return;
         dispose();
-        void dialog.showMessageBox({ type: 'error', title: 'FAIONYX 初始化失败', message: `无法加载主界面（${code}）：${description}` });
+        void dialog.showMessageBox({
+          type: 'error',
+          title: t('startupsplash.dialog.init_failed_title'),
+          message: t('startupsplash.dialog.load_failed', { code, description }),
+        });
         window.close();
       });
     },

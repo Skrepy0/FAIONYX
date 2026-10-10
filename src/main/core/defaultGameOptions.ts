@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { app } from 'electron';
 import { mcVersionFamily } from '../../shared/keybindings';
+import { translate as t } from '../../shared/i18n';
 import {
   encodeGameOption,
   supportedGameOption,
@@ -30,7 +31,7 @@ export function getDefaultGameOptions(): DefaultGameOptions {
 export function setDefaultGameOptions(change: { enabled?: boolean; id?: string; value?: GameOptionValue | null }): DefaultGameOptions {
   const state = getDefaultGameOptions();
   if (change.enabled !== undefined) {
-    if (typeof change.enabled !== 'boolean') throw new Error('同步开关无效');
+    if (typeof change.enabled !== 'boolean') throw new Error(t('gameoptions.error.sync_invalid'));
     state.enabled = change.enabled;
   }
   if (change.id) {
@@ -52,7 +53,7 @@ export function mergeGameOptions(
   version: string
 ): { text: string; applied: string[]; unsupported: string[] } {
   if (Object.keys(values).length && (!version || mcVersionFamily(version)[0] === 999))
-    throw new Error('无法确认 Minecraft 实际版本，未写入默认游戏选项');
+    throw new Error(t('gameoptions.error.version_unknown'));
   const writes = new Map<string, string>(),
     unsupported: string[] = [];
   for (const [id, value] of Object.entries(values)) {
@@ -74,7 +75,7 @@ export function mergeGameOptions(
     let packs: string[] = [];
     if (source) {
       const parsed = JSON.parse(source);
-      if (!Array.isArray(parsed) || parsed.some((p) => typeof p !== 'string')) throw new Error('现有资源包配置无效，未覆盖 options.txt');
+      if (!Array.isArray(parsed) || parsed.some((p) => typeof p !== 'string')) throw new Error(t('gameoptions.error.packs_invalid'));
       packs = parsed;
     }
     packs = packs.filter((p) => p !== 'high_contrast');
@@ -104,7 +105,7 @@ export function syncDefaultGameOptions(gameDir: string, version: string, state =
     const tmp = target + `.faionyx-${process.pid}.tmp`;
     fs.writeFileSync(tmp, result.text, 'utf8');
     fs.renameSync(tmp, target);
-    if (fs.readFileSync(target, 'utf8') !== result.text) throw new Error('默认游戏选项写入校验失败');
+    if (fs.readFileSync(target, 'utf8') !== result.text) throw new Error(t('gameoptions.error.write_verify'));
   }
   return result;
 }

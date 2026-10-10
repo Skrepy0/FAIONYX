@@ -1,4 +1,5 @@
 import { loadCapeToCanvas, loadSkinToCanvas } from 'skinview-utils';
+import { t } from '@renderer/i18n';
 /**
  * 皮肤渲染工具：用 canvas 把 64×64 皮肤 PNG 渲染为 2D 人偶正面图。
  * 含外层 hat/装甲层叠加，最近邻缩放保持像素风；失败返回空字符串由 UI 兜底。
@@ -11,7 +12,7 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
     // textures.minecraft.net 带 CORS *，dataUrl 本地加载，均可安全绘制
     img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('图片加载失败'));
+    img.onerror = () => reject(new Error(t('skin.image_load_failed')));
     img.src = src;
   });
 }

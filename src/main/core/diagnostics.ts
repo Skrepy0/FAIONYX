@@ -1,5 +1,6 @@
 import os from 'node:os';
 import path from 'node:path';
+import { translate as t } from '../../shared/i18n';
 
 const TOKEN_KEYS = '(?:access[_-]?token|refresh[_-]?token|client[_-]?token|session[_-]?(?:id|key)|password|authorization)';
 
@@ -42,6 +43,6 @@ export function safeDiagnosticFilePart(value: string): string {
 }
 
 export function redactDiagnosticPath(value: string): string {
-  if (!value) return '（未知）';
+  if (!value) return t('diagnostics.unknown');
   return redactDiagnosticText(path.normalize(value));
 }

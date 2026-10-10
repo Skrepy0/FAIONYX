@@ -69,11 +69,11 @@ async function onUpload() {
             :key="m.id"
             class="mob-cell"
             :class="{ active: currentIcon === 'mob:' + m.id }"
-            :title="m.name"
+            :title="t(m.name)"
             :disabled="busy"
             @click="pick('mob:' + m.id)"
           >
-            <img :src="`mobs/${m.id}.png`" :alt="m.name" loading="lazy" />
+            <img :src="`mobs/${m.id}.png`" :alt="t(m.name)" loading="lazy" />
           </button>
         </div>
       </div>

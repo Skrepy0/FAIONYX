@@ -1,11 +1,13 @@
 /** 房间标题与客户端来源标识分开；两端共用默认名称及输入约束。 */
-export const DEFAULT_VOXLINK_ROOM_NAME = '我的世界联机';
+import { translate as t } from './i18n';
+
+export const DEFAULT_VOXLINK_ROOM_NAME = t('voxlinkroom.default_room_name');
 export const VOXLINK_ROOM_NAME_MAX = 32;
 
 export function normalizeVoxlinkRoomName(value: string): string {
   const name = value.trim();
-  if (!name) throw new Error('请输入房间名');
-  if (name.length > VOXLINK_ROOM_NAME_MAX) throw new Error('房间名不能超过 32 个字符');
+  if (!name) throw new Error(t('voxlinkroom.error.name_required'));
+  if (name.length > VOXLINK_ROOM_NAME_MAX) throw new Error(t('voxlinkroom.error.name_too_long'));
   return name;
 }
 
@@ -16,5 +18,4 @@ export function isVoxlinkContentBlocked(error: unknown): boolean {
   );
 }
 
-export const VOXLINK_ROOM_BLOCKED_MESSAGE =
-  '房间信息未通过 VoxLink 服务端审核，请修改房间名后重试。若普通名称仍被拒绝，请联系 VoxLink 服务方核查。';
+export const VOXLINK_ROOM_BLOCKED_MESSAGE = t('voxlinkroom.blocked_message');

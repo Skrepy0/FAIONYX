@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import AdmZip from 'adm-zip';
 import { verifyFile, downloadFile, type MirrorPref } from './download';
+import { translate as t } from '../../shared/i18n';
 
 export interface LaunchArtifact {
   dest: string;
@@ -31,9 +32,9 @@ export async function invalidLaunchArtifact(file: LaunchArtifact): Promise<strin
   if (reason) return reason;
   if (!file.sha1 && /\.jar$/i.test(file.dest)) {
     try {
-      if (!new AdmZip(file.dest).test()) return 'JAR 内容校验失败';
+      if (!new AdmZip(file.dest).test()) return t('launchintegrity.reason.jar_invalid');
     } catch {
-      return 'JAR 格式损坏';
+      return t('launchintegrity.reason.jar_corrupt');
     }
   }
   if (before && before === (await artifactSignature(file))) {
@@ -41,7 +42,7 @@ export async function invalidLaunchArtifact(file: LaunchArtifact): Promise<strin
     verifiedArtifacts.set(key, { signature: before, expires: Date.now() + 5 * 60_000 });
     return null;
   }
-  return '文件在完整性校验期间发生变化，请重试';
+  return t('launchintegrity.reason.changed_during_check');
 }
 
 /** Validate first; a readable path is not evidence of a complete download. */
@@ -53,7 +54,7 @@ export async function ensureLaunchArtifact(
 ): Promise<boolean> {
   const reason = await invalidLaunchArtifact(file);
   if (!reason) return false;
-  if (!file.url) throw new Error(`${file.dest}：${reason}，缺少下载地址，请修复或重新安装加载器`);
+  if (!file.url) throw new Error(t('launchintegrity.error.missing_url', { dest: file.dest, reason }));
   await fs.promises.mkdir(path.dirname(file.dest), { recursive: true });
   const stat = () =>
     fs.promises.lstat(file.dest).catch((e) => {
@@ -61,7 +62,7 @@ export async function ensureLaunchArtifact(
       throw e;
     });
   const before = await stat();
-  if (before && (!before.isFile() || before.isSymbolicLink())) throw new Error('修复目标不是普通文件');
+  if (before && (!before.isFile() || before.isSymbolicLink())) throw new Error(t('launchintegrity.error.target_not_file'));
   const stage = await fs.promises.mkdtemp(path.join(path.dirname(file.dest), '.faionyx-repair-'));
   const temporary = path.join(stage, path.basename(file.dest)),
     old = path.join(stage, 'original');
@@ -69,11 +70,11 @@ export async function ensureLaunchArtifact(
   try {
     await downloadFile(file.url, temporary, progress, file.sha1, mirror, signal, [], { size: file.size });
     const after = await invalidLaunchArtifact({ ...file, dest: temporary });
-    if (after) throw new Error(`${file.dest}：修复后仍未通过完整性校验（${after}）`);
+    if (after) throw new Error(t('launchintegrity.error.still_invalid', { dest: file.dest, reason: after }));
     signal?.throwIfAborted();
     const current = await stat();
-    if (current && (!current.isFile() || current.isSymbolicLink())) throw new Error('修复目标类型已变化');
-    if (before?.size !== current?.size || before?.mtimeMs !== current?.mtimeMs) throw new Error('修复期间目标文件已变化，请重新检查');
+    if (current && (!current.isFile() || current.isSymbolicLink())) throw new Error(t('launchintegrity.error.target_type_changed'));
+    if (before?.size !== current?.size || before?.mtimeMs !== current?.mtimeMs) throw new Error(t('launchintegrity.error.target_changed'));
     if (before) await fs.promises.rename(file.dest, old);
     try {
       await fs.promises.copyFile(temporary, file.dest, fs.constants.COPYFILE_EXCL);
@@ -83,7 +84,7 @@ export async function ensureLaunchArtifact(
           await fs.promises.rename(old, file.dest);
         } catch {
           preserve = true;
-          throw new Error('修复未完成，原文件保留于 ' + old);
+          throw new Error(t('launchintegrity.error.original_kept', { path: old }));
         }
       }
       throw e;

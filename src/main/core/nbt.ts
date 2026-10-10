@@ -5,6 +5,7 @@
  */
 
 import zlib from 'node:zlib';
+import { translate as t } from '../../shared/i18n';
 
 export interface NbtCompound {
   [key: string]: unknown;
@@ -17,7 +18,7 @@ class Reader {
 
   private ensure(bytes: number): void {
     if (!Number.isInteger(bytes) || bytes < 0 || this.off + bytes > this.buf.length) {
-      throw new Error('NBT 数据被截断或长度无效');
+      throw new Error(t('nbt.error.truncated'));
     }
   }
 
@@ -76,12 +77,12 @@ class Reader {
 
   private collectionLength(): number {
     const length = this.int();
-    if (length < 0 || length > 1_000_000) throw new Error(`NBT 集合长度异常: ${length}`);
+    if (length < 0 || length > 1_000_000) throw new Error(t('nbt.error.collection_length', { length }));
     return length;
   }
 
   payload(type: number, depth = 0): unknown {
-    if (depth > 64) throw new Error('NBT 嵌套层级过深');
+    if (depth > 64) throw new Error(t('nbt.error.too_deep'));
     switch (type) {
       case 1:
         return this.byte();
@@ -114,10 +115,10 @@ class Reader {
       case 10: {
         const obj: NbtCompound = {};
         for (;;) {
-          const t = this.type();
-          if (t === 0) break;
+          const tagId = this.type();
+          if (tagId === 0) break;
           const name = this.string();
-          obj[name] = this.payload(t, depth + 1);
+          obj[name] = this.payload(tagId, depth + 1);
         }
         return obj;
       }
@@ -130,7 +131,7 @@ class Reader {
         return Array.from({ length }, () => this.long());
       }
       default:
-        throw new Error(`不支持的 NBT 类型: ${type}`);
+        throw new Error(t('nbt.error.unsupported_type', { type }));
     }
   }
 }
@@ -148,7 +149,7 @@ function decompressNbt(buf: Buffer): Buffer {
       // 0x78 也可能恰好是未压缩数据的一部分，按原数据继续解析。
     }
   }
-  if (buf.length > MAX_DECOMPRESSED_NBT) throw new Error('NBT 文件过大');
+  if (buf.length > MAX_DECOMPRESSED_NBT) throw new Error(t('nbt.error.too_large'));
   return buf;
 }
 
@@ -156,7 +157,7 @@ function decompressNbt(buf: Buffer): Buffer {
 export function parseNbt(buf: Buffer): NbtCompound {
   const r = new Reader(decompressNbt(buf));
   const rootType = r.type();
-  if (rootType !== 10) throw new Error('NBT 根节点不是 Compound');
+  if (rootType !== 10) throw new Error(t('nbt.error.root_not_compound'));
   r.string(); // root name（通常为空）
   return r.payload(10) as NbtCompound;
 }
@@ -217,16 +218,16 @@ function writePayload(w: Writer, type: number, value: unknown): void {
       break;
     case 10: {
       for (const [k, v] of Object.entries(value as NbtCompound)) {
-        const t = tagTypeOf(v);
-        w.byte(t);
+        const tagId = tagTypeOf(v);
+        w.byte(tagId);
         w.string(k);
-        writePayload(w, t, v);
+        writePayload(w, tagId, v);
       }
       w.byte(0);
       break;
     }
     default:
-      throw new Error(`不支持的写入类型: ${type}`);
+      throw new Error(t('nbt.error.unsupported_write_type', { type }));
   }
 }
 
@@ -236,7 +237,7 @@ function tagTypeOf(v: unknown): number {
   if (typeof v === 'string') return 8;
   if (typeof v === 'number') return Number.isInteger(v) && Math.abs(v) < 128 ? 1 : 3;
   if (typeof v === 'object' && v !== null) return 10;
-  throw new Error('无法推断 NBT 类型');
+  throw new Error(t('nbt.error.unknown_type'));
 }
 
 export class NbtList {

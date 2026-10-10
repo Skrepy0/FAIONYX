@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import type { RemoteVersion } from '../../shared/types';
+import { translate as t } from '../../shared/i18n';
 
 export interface VersionCatalog {
   versions: RemoteVersion[];
@@ -24,7 +25,7 @@ const systemFetch: typeof fetch = async (input, init) => {
 
 export function parseVersionCatalog(data: unknown): RemoteVersion[] {
   const entries = (data as { versions?: unknown[] })?.versions;
-  if (!Array.isArray(entries)) throw new Error('版本清单格式无效');
+  if (!Array.isArray(entries)) throw new Error(t('versioncatalog.error.invalid_manifest'));
   const versions = entries.flatMap((value) => {
     const v = value as RemoteVersion;
     if (
@@ -42,7 +43,7 @@ export function parseVersionCatalog(data: unknown): RemoteVersion[] {
     }
     return [{ id: v.id, type: v.type, url: v.url, releaseTime: v.releaseTime }];
   });
-  if (!versions.length) throw new Error('版本清单为空或损坏');
+  if (!versions.length) throw new Error(t('versioncatalog.error.empty_manifest'));
   return versions;
 }
 
@@ -83,7 +84,7 @@ export async function fetchVersionCatalog(
       const response = await fetcher(url, { signal: requestSignal, headers: { 'Cache-Control': 'no-cache' } });
       if (!response.ok) {
         await response.body?.cancel();
-        throw new Error(`清单 HTTP ${response.status}`);
+        throw new Error(t('versioncatalog.error.http', { status: response.status }));
       }
       return parseVersionCatalog(await response.json());
     })
@@ -92,7 +93,7 @@ export async function fetchVersionCatalog(
   const valid = results.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []));
   if (!valid.length) {
     if (cached) return { ...cached, stale: true };
-    throw new Error('无法获取版本清单，请检查网络后重试');
+    throw new Error(t('versioncatalog.error.fetch_failed'));
   }
   // Keep known versions during mirror outages, but newer live official data wins duplicates.
   const versions = mergeVersionCatalogs([...valid, ...(cached ? [cached.versions] : [])]);

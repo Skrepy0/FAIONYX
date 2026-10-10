@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { MASCOTS, addMascotHits, normalizeMascotSound, sortMascots, type MascotBatch, type MascotState } from '../../shared/mascots';
+import { translate as t } from '../../shared/i18n';
 
 const ids = MASCOTS.map((m) => m.id) as string[];
 const file = () => path.join(app.getPath('userData'), 'mascot-counts.json');
@@ -16,7 +17,7 @@ function serialize<T>(work: () => Promise<T>): Promise<T> {
   return result;
 }
 function owner(event: IpcMainInvokeEvent) {
-  if (!BrowserWindow.fromWebContents(event.sender) || event.sender.isDestroyed()) throw new Error('彩蛋窗口已关闭');
+  if (!BrowserWindow.fromWebContents(event.sender) || event.sender.isDestroyed()) throw new Error(t('mascots.error.window_closed'));
 }
 const publicState = (state: SavedState): MascotState => ({
   counts: state.counts,
@@ -26,7 +27,7 @@ const publicState = (state: SavedState): MascotState => ({
 async function read(): Promise<SavedState> {
   try {
     const raw = JSON.parse(await fs.readFile(file(), 'utf8'));
-    if (!raw || !raw.counts || !Array.isArray(raw.order)) throw new Error('计数格式无效');
+    if (!raw || !raw.counts || !Array.isArray(raw.order)) throw new Error(t('mascots.error.invalid_format'));
     return {
       counts: Object.fromEntries(ids.map((id) => [id, Number.isSafeInteger(raw.counts[id]) && raw.counts[id] >= 0 ? raw.counts[id] : 0])),
       order: [...new Set([...raw.order.filter((id: string) => ids.includes(id)), ...ids])] as string[],
@@ -37,7 +38,7 @@ async function read(): Promise<SavedState> {
     };
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === 'ENOENT') return { counts: {}, order: [...ids], sound: normalizeMascotSound(), receipts: [] };
-    throw new Error('互动计数记录无法读取，未覆盖原记录');
+    throw new Error(t('mascots.error.record_unreadable'));
   }
 }
 async function write(state: SavedState) {
@@ -58,7 +59,7 @@ export function validateMascotBatch(value: unknown): MascotBatch {
     batch.hits.length > 512 ||
     batch.hits.some((id) => !ids.includes(id))
   )
-    throw new Error('互动批次无效');
+    throw new Error(t('mascots.error.invalid_batch'));
   if (
     batch.tieOrder !== undefined &&
     (!Array.isArray(batch.tieOrder) ||
@@ -66,7 +67,7 @@ export function validateMascotBatch(value: unknown): MascotBatch {
       new Set(batch.tieOrder).size !== ids.length ||
       batch.tieOrder.some((id) => !ids.includes(id)))
   )
-    throw new Error('互动队序无效');
+    throw new Error(t('mascots.error.invalid_tie_order'));
   return batch;
 }
 export function registerMascotsIpc() {
@@ -84,7 +85,7 @@ export function registerMascotsIpc() {
       const state = await read(),
         receipt = state.receipts.find((r) => r.batchId === batch.batchId);
       if (receipt) {
-        if (receipt.hash !== hash) throw new Error('互动批次标识已被使用');
+        if (receipt.hash !== hash) throw new Error(t('mascots.error.batch_id_used'));
         return publicState(state);
       }
       const next = addMascotHits({ ...state, order: batch.tieOrder || state.order }, batch.hits) as SavedState;
@@ -95,13 +96,13 @@ export function registerMascotsIpc() {
   // Preserve the 1.1.6 IPC for older in-process callers.
   ipcMain.handle('mascots:slap', (event, id) => {
     owner(event);
-    if (!ids.includes(id)) throw new Error('人物标识无效');
+    if (!ids.includes(id)) throw new Error(t('mascots.error.invalid_id'));
     return serialize(async () => write(addMascotHits(await read(), [id]) as SavedState));
   });
   ipcMain.handle('mascots:sound', (event, value) => {
     owner(event);
     if (typeof value?.muted !== 'boolean' || typeof value?.volume !== 'number' || !Number.isFinite(value.volume))
-      throw new Error('音效设置无效');
+      throw new Error(t('mascots.error.invalid_sound'));
     return serialize(async () => {
       const state = await read();
       state.sound = normalizeMascotSound(value);
@@ -110,8 +111,8 @@ export function registerMascotsIpc() {
   });
   ipcMain.handle('mascots:reset', (event, confirmed, scope) => {
     owner(event);
-    if (confirmed !== true) throw new Error('请确认重置计数');
-    if (scope !== undefined && scope !== 'kamu') throw new Error('重置范围无效');
+    if (confirmed !== true) throw new Error(t('mascots.error.confirm_reset'));
+    if (scope !== undefined && scope !== 'kamu') throw new Error(t('mascots.error.invalid_scope'));
     return serialize(async () => {
       const state = await read();
       if (scope === 'kamu') state.counts.kamu = 0;

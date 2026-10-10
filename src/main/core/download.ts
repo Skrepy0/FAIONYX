@@ -13,6 +13,7 @@ import { abortableDelay, inheritTaskControl, isTaskPaused, waitIfTaskPaused } fr
 import { DownloadProgressTracker, SmoothedSpeedEstimator, type DownloadProgressSnapshot } from './downloadProgress';
 import { DownloadSourcePool } from './downloadSources';
 import { resolveNativeIntegrity } from './platformNatives';
+import { translate as t } from '../../shared/i18n';
 
 export type MirrorPref = 'official' | 'bmclapi';
 export type ProgressFn = (done: number, total: number, networkBytes?: number) => void;
@@ -168,12 +169,12 @@ export async function verifyFile(file: string, expected: Integrity, signal?: Abo
   try {
     stat = await fs.promises.stat(file);
   } catch (e) {
-    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return '文件缺失';
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return t('download.reason.missing');
     throw e;
   }
-  if (!stat.isFile()) return '路径不是文件';
-  if (expected.size !== undefined && stat.size !== expected.size) return '文件大小不符';
-  if (!stat.size && expected.size !== 0) return '空文件';
+  if (!stat.isFile()) return t('download.reason.not_file');
+  if (expected.size !== undefined && stat.size !== expected.size) return t('download.reason.size_mismatch');
+  if (!stat.size && expected.size !== 0) return t('download.reason.empty');
   const checks = (['sha1', 'sha512', 'sha256'] as const)
     .filter((key) => !!expected[key])
     .map((key) => ({ key, hash: crypto.createHash(key) }));
@@ -184,7 +185,8 @@ export async function verifyFile(file: string, expected: Integrity, signal?: Abo
       for (const check of checks) check.hash.update(bytes);
     }
     for (const check of checks)
-      if (check.hash.digest('hex').toLowerCase() !== expected[check.key]!.toLowerCase()) return `${check.key} 校验失败`;
+      if (check.hash.digest('hex').toLowerCase() !== expected[check.key]!.toLowerCase())
+        return t('download.reason.hash_failed', { key: check.key });
   }
   signal?.throwIfAborted();
   return null;
@@ -308,12 +310,12 @@ async function receive(
         sinceData += dt;
         elapsed += dt;
         windowTime += dt;
-        if (sinceData >= transferTimeouts.inactivityMs) controller.abort(new NetworkIdle('下载网络停滞'));
+        if (sinceData >= transferTimeouts.inactivityMs) controller.abort(new NetworkIdle(t('download.error.network_idle')));
         // A queue/paused task consumes no timeout. Only abandon an unresponsive
         // first source early when an exact fallback exists; the last source keeps
         // the full idle allowance, so slower but usable connections can finish.
         if (!response && hasAlternative && elapsed >= transferTimeouts.alternativeHeadersMs)
-          controller.abort(new NetworkIdle('下载源响应缓慢，切换备用来源'));
+          controller.abort(new NetworkIdle(t('download.error.source_slow_switch')));
         const smallAlternative = hasAlternative && !!response && (expected.size ?? 0) < slow.largeFileBytes;
         const duration =
           hasAlternative && (expected.size ?? 0) >= slow.largeFileBytes
@@ -333,7 +335,7 @@ async function receive(
             remainingBytes > 0 &&
             remainingBytes / Math.max(1, rate) > slow.smallWindowMs / 1000;
           if ((aggressive && rate < slow.largeMinBps) || smallStalled || (ready && windowBytes < slow.minWindowBytes))
-            controller.abort(new NetworkIdle('下载速度过慢'));
+            controller.abort(new NetworkIdle(t('download.error.too_slow')));
           windowTime = 0;
           windowBytes = 0;
         }
@@ -362,7 +364,7 @@ async function receive(
       }
       throw new DownloadHttpError(response.status, url);
     }
-    if (!response.body) throw new InvalidContent('下载响应没有内容');
+    if (!response.body) throw new InvalidContent(t('download.error.no_body'));
     connected?.(response.url || url);
     let total = range ? range.end - range.start + 1 : (expected.size ?? 0);
     if (response.status === 206) {
@@ -374,11 +376,12 @@ async function receive(
         Number(parsed[2]) >= Number(parsed[3]) ||
         (range && Number(parsed[2]) !== range.end)
       )
-        throw new InvalidContent('Content-Range 不正确');
-      if (expected.size !== undefined && Number(parsed[3]) !== expected.size) throw new InvalidContent('响应总大小不符');
+        throw new InvalidContent(t('download.error.bad_content_range'));
+      if (expected.size !== undefined && Number(parsed[3]) !== expected.size)
+        throw new InvalidContent(t('download.error.total_size_mismatch'));
       if (!range) total = Number(parsed[3]);
     } else {
-      if (range) throw new InvalidContent('服务器不支持范围请求');
+      if (range) throw new InvalidContent(t('download.error.range_unsupported'));
       offset = 0;
       const length = Number(response.headers.get('content-length'));
       if (!total && length > 0) total = length;
@@ -405,20 +408,20 @@ async function receive(
       let written = 0;
       while (written < chunk.value.length) {
         const result = await file.write(chunk.value, written, chunk.value.length - written);
-        if (!result.bytesWritten) throw new Error('写入文件失败');
+        if (!result.bytesWritten) throw new Error(t('download.error.write_failed'));
         written += result.bytesWritten;
       }
       done += written;
       transferred += written;
       windowBytes += written;
       remainingBytes = total ? Math.max(0, total - done) : Infinity;
-      if (total && done > total) throw new InvalidContent('响应数据超出声明大小');
+      if (total && done > total) throw new InvalidContent(t('download.error.exceeds_declared'));
       progress?.(done, total, written);
       // HTTP length/Content-Range plus the final hash define completion, not a
       // delayed transport EOF. Release this slot immediately once bytes arrive.
       if (total && done === total) break;
     }
-    if (total && done !== total) throw new InvalidContent('下载大小不符');
+    if (total && done !== total) throw new InvalidContent(t('download.error.size_mismatch'));
     await file.sync();
     if (!downloadLimiter.isThrottling && !isTaskPaused(signal)) sources?.observe(observationUrl, headersMs, bodyMs, transferred);
     return done;
@@ -456,12 +459,12 @@ async function segmented(
   const cache = path.resolve(dest + '.segments-cache'),
     size = expected.size!;
   const clear = async () => {
-    if (path.dirname(cache) !== path.dirname(path.resolve(dest))) throw new Error('缓存路径越界');
+    if (path.dirname(cache) !== path.dirname(path.resolve(dest))) throw new Error(t('download.error.cache_path_escape'));
     await fs.promises.rm(cache, { recursive: true, force: true });
   };
   try {
     const stat = await fs.promises.lstat(cache);
-    if (stat.isSymbolicLink() || !stat.isDirectory()) throw new Error('下载缓存不是普通目录');
+    if (stat.isSymbolicLink() || !stat.isDirectory()) throw new Error(t('download.error.cache_not_dir'));
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
   }
@@ -527,7 +530,7 @@ async function segmented(
       file = path.join(cache, index + '.part');
     if (received[index] === end - start + 1) return;
     const tried = new Map<(typeof sources)[number], number>();
-    let lastError: unknown = new Error('没有可用的分片下载地址');
+    let lastError: unknown = new Error(t('download.error.no_chunk_source'));
     for (let attempt = 0; attempt < sources.length * 2 + 1; attempt++) {
       controller.signal.throwIfAborted();
       const available = sources.filter((source) => !source.disabled && (tried.get(source) ?? 0) < 2);
@@ -603,7 +606,7 @@ async function segmented(
         length = Math.min(step, size - index * step);
       try {
         const st = await fs.promises.lstat(file);
-        if (!st.isFile() || st.isSymbolicLink()) throw new Error('下载分片不是普通文件');
+        if (!st.isFile() || st.isSymbolicLink()) throw new Error(t('download.error.chunk_not_file'));
         if (st.size <= length) received[index] = st.size;
         else await fs.promises.rm(file);
       } catch (error) {
@@ -652,7 +655,7 @@ async function segmented(
           let offset = 0;
           while (offset < data.length) {
             const result = await output.write(data, offset, data.length - offset);
-            if (!result.bytesWritten) throw new Error('分片合并写入失败');
+            if (!result.bytesWritten) throw new Error(t('download.error.chunk_merge_failed'));
             offset += result.bytesWritten;
           }
         }
@@ -731,7 +734,7 @@ export async function downloadFile(
       }
       if ((expected.size ?? 0) >= 50 * 1024 * 1024) {
         const space = diskProbe ? diskProbe(path.dirname(dest)) : await fs.promises.statfs(path.dirname(dest));
-        if (Number(space.bavail) * Number(space.bsize) < expected.size!) throw new Error('磁盘空间不足');
+        if (Number(space.bavail) * Number(space.bsize) < expected.size!) throw new Error(t('download.error.disk_space'));
       }
       const supplied = downloadCandidates([url, ...alternatives], mirror);
       const candidates = (integrity.sourcePool?.order(supplied, expected.size) ?? supplied).sort(
@@ -739,7 +742,7 @@ export async function downloadFile(
           Number(Math.max(failures.get(origin(a))?.until ?? 0, serverCooldowns.get(origin(a)) ?? 0) > Date.now()) -
           Number(Math.max(failures.get(origin(b))?.until ?? 0, serverCooldowns.get(origin(b)) ?? 0) > Date.now())
       );
-      let lastError: unknown = new Error('没有下载地址');
+      let lastError: unknown = new Error(t('download.error.no_source'));
       for (let index = 0; index < candidates.length; index++) {
         const source = candidates[index],
           fallback = index + 1 < candidates.length;
@@ -793,7 +796,12 @@ export async function downloadFile(
         /* retain invalid input */
       }
       throw new Error(
-        `下载失败：${failure.message || String(lastError)}${failure.cause?.code ? ` (${failure.cause.code})` : ''}\n文件：${path.basename(dest)}\n地址：${address}`,
+        t('download.error.failed_detail', {
+          message: failure.message || String(lastError),
+          code: failure.cause?.code ? t('download.error.failed_code_suffix', { code: failure.cause.code }) : '',
+          file: path.basename(dest),
+          address,
+        }),
         { cause: lastError }
       );
     } finally {

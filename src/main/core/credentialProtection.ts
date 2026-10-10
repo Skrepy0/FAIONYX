@@ -1,4 +1,5 @@
 /** A working cipher with a public fallback password is not protected storage. */
+import { translate as t } from '../../shared/i18n';
 export interface CredentialStorage {
   isEncryptionAvailable(): boolean;
   getSelectedStorageBackend?(): string;
@@ -17,10 +18,6 @@ export function credentialStorageStatus(storage: CredentialStorage, platform: st
   return {
     persistent,
     sessionOnly: platform === 'linux' && !persistent,
-    message: persistent
-      ? ''
-      : platform === 'linux'
-        ? '系统密钥服务不可用，登录仅在本次运行中有效；请启用 GNOME Keyring 或 KWallet 后重新登录。'
-        : '系统安全存储当前不可用，无法安全保存登录令牌',
+    message: persistent ? '' : platform === 'linux' ? t('credprotect.linux_unavailable') : t('credprotect.unavailable'),
   };
 }

@@ -11,6 +11,7 @@ import { frpManager } from './frpService';
 import { tunnelIdentity } from './frpManager';
 import { loadFrpConfig, type FrpEvent, type FrpConfig, type FrpState } from './frp';
 import { fetchFrpNodes, createFrpTunnel, getRunnableFrpTunnel, type FrpCreateTunnel } from './frpNodes';
+import { translate as t } from '../../shared/i18n';
 
 export interface FrpStartPayload {
   id?: string;
@@ -30,24 +31,24 @@ export const FRP_IPC = {
 
 export function registerFrpIpc(ipcMain: IpcMain): void {
   ipcMain.handle('frp:delete-tunnel', async (_event, payload: { id?: string; confirmed?: boolean }) => {
-    if (!payload?.id || payload.confirmed !== true) throw new Error('请先确认删除该隧道');
+    if (!payload?.id || payload.confirmed !== true) throw new Error(t('frp.ipc.error.confirm_delete'));
     return frpManager.remove(String(payload.id));
   });
   ipcMain.handle('frp:create-tunnel', (_e, payload: { accessKey: string; tunnel: FrpCreateTunnel }) =>
     createFrpTunnel(String(payload?.accessKey ?? ''), payload?.tunnel)
   );
   ipcMain.handle(FRP_IPC.start, async (_event, payload: FrpStartPayload) => {
-    if (!payload || typeof payload !== 'object') throw new Error('参数无效');
+    if (!payload || typeof payload !== 'object') throw new Error(t('frp.ipc.error.invalid_params'));
     if (payload.id) return frpManager.start(String(payload.id));
     const accessKey = String(payload.accessKey ?? '').trim();
     const tunnelId = String(payload.tunnelId ?? '').trim();
-    if (!accessKey) throw new Error('请填写访问密钥');
+    if (!accessKey) throw new Error(t('frp.ipc.error.access_key_required'));
     const tunnel = await getRunnableFrpTunnel(accessKey, tunnelId);
     frpManager.register(accessKey, [tunnel]);
     return frpManager.start(tunnelIdentity(accessKey, tunnelId));
   });
   ipcMain.handle(FRP_IPC.stop, async (_event, payload: { id?: string }) => {
-    if (!payload?.id) throw new Error('请选择要停止的隧道');
+    if (!payload?.id) throw new Error(t('frp.ipc.error.select_tunnel_to_stop'));
     await frpManager.stop(String(payload.id));
     return frpManager.list();
   });

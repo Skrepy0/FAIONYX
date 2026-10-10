@@ -6,6 +6,7 @@ import { withFileJob } from './fileJobs';
 import { protectModChange } from './changeProtection';
 import { isModLocked } from './modState';
 import { externalGameUsesDirectory } from './gameDirectoryUse';
+import { translate as t } from '../../shared/i18n';
 
 const sha = (bytes: Buffer, algorithm = 'sha256') => crypto.createHash(algorithm).update(bytes).digest('hex');
 // Exact payload of our released 1.0.0, independent of ZIP timestamps/JAR manifest
@@ -30,7 +31,7 @@ export async function upgradeInstalledBridge(gameDirectory: string, bundled: str
   const dir = path.join(gameDirectory, 'mods'),
     messages: string[] = [];
   if (!fs.existsSync(dir)) return messages;
-  if (fs.lstatSync(dir).isSymbolicLink()) return ['桥接修复未执行：mods 是链接目录，请手动更新桥接 MOD'];
+  if (fs.lstatSync(dir).isSymbolicLink()) return [t('bridgeupgrade.msg.mods_symlink')];
   return withFileJob(dir, undefined, async () => {
     for (const name of await fs.promises.readdir(dir)) {
       if (!/\.jar$/i.test(name)) continue; // Preserve explicitly disabled files.
@@ -45,30 +46,31 @@ export async function upgradeInstalledBridge(gameDirectory: string, bundled: str
       }
       const oldSha1 = sha(old, 'sha1');
       if (isModLocked(dir, oldSha1)) {
-        messages.push('旧桥接 MOD 已锁定，请解锁后重新启动以修复退出占用');
+        messages.push(t('bridgeupgrade.msg.old_locked'));
         continue;
       }
       if (await externalGameUsesDirectory(gameDirectory)) {
-        messages.push('同目录游戏仍在运行，桥接退出修复将在全部退出后的下次启动应用');
+        messages.push(t('bridgeupgrade.msg.same_dir_running'));
         continue;
       }
       const next = await fs.promises.readFile(bundled);
       const metadata = JSON.parse(new AdmZip(next).readAsText('fabric.mod.json'));
-      if (metadata.id !== 'faionyx-bridge' || metadata.version !== '1.0.1') throw new Error('内置桥接修复文件版本不匹配');
-      await protectModChange(dir, [name], '桥接退出占用修复前');
+      if (metadata.id !== 'faionyx-bridge' || metadata.version !== '1.0.1')
+        throw new Error(t('bridgeupgrade.error.bundled_version_mismatch'));
+      await protectModChange(dir, [name], t('bridgeupgrade.label.protect_title'));
       if ((await externalGameUsesDirectory(gameDirectory)) || isModLocked(dir, oldSha1))
-        throw new Error('桥接修复前目录占用或锁定状态发生变化');
+        throw new Error(t('bridgeupgrade.error.dir_state_changed'));
       const temp = path.join(dir, '.faionyx-bridge-' + crypto.randomUUID() + '.tmp');
       try {
         await fs.promises.writeFile(temp, next, { flag: 'wx' });
         await fs.promises.chmod(temp, stat.mode);
-        if (sha(await fs.promises.readFile(temp)) !== sha(next)) throw new Error('桥接修复文件校验失败');
+        if (sha(await fs.promises.readFile(temp)) !== sha(next)) throw new Error(t('bridgeupgrade.error.verify_failed'));
         const current = await fs.promises.lstat(file);
         if (!current.isFile() || current.isSymbolicLink() || sha(await fs.promises.readFile(file)) !== sha(old))
-          throw new Error('桥接文件已变化，保留当前文件');
+          throw new Error(t('bridgeupgrade.error.file_changed'));
         // Atomic replacement; an occupied file leaves the original in place.
         await fs.promises.rename(temp, file);
-        messages.push('已保护并更新内置桥接 MOD 至 1.0.1，修复退出后的后台线程占用');
+        messages.push(t('bridgeupgrade.msg.updated'));
       } finally {
         await fs.promises.rm(temp, { force: true });
       }

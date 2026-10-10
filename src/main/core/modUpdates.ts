@@ -16,6 +16,7 @@ import { logScope } from './launcherLog';
 import { withFileJob } from './fileJobs';
 import { modHash, replaceModFiles, validateModFile } from './modTransaction';
 import { isModLocked, rememberModIdentity, transferModLock } from './modState';
+import { translate as t } from '../../shared/i18n';
 
 const MR_BASES = ['https://api.modrinth.com/v2', 'https://mod.mcimirror.top/modrinth/v2'];
 const UA = { 'User-Agent': 'FAIONYX-Launcher (github.com/Skrepy0/FAIONYX)' };
@@ -149,7 +150,7 @@ export async function checkModUpdates(versionId: string): Promise<ModUpdateRepor
   const loader = meta.loader;
   const report: ModUpdateReport = { mcVersion: meta.mcVersion || '', loader: loader ?? '', entries: [] };
   if (!scanned.length) return report;
-  if (!meta.mcVersion || !loader) throw new Error('实例缺少加载器或 Minecraft 版本元数据，无法检测更新');
+  if (!meta.mcVersion || !loader) throw new Error(t('modupdates.error.missing_metadata'));
 
   const entries: ModUpdateEntry[] = scanned
     .filter((info) => !info.error && info.sha1)
@@ -188,29 +189,29 @@ export async function applyModUpdates(
   return withFileJob(dir, undefined, async () => {
     const results: Array<{ fileName: string; ok: boolean; error?: string }> = [];
     for (const item of items) {
-      updateLog.info(`开始更新 ${item.fileName} → ${item.targetName}（实例 ${versionId}，目录 ${dir}）`);
+      updateLog.info(t('modupdates.log.update_start', { fileName: item.fileName, targetName: item.targetName, versionId, dir }));
       onItem?.(item.fileName, 'start');
       try {
         await assertModsIdle(dir);
         await validateModFile(dir, item.fileName, item.oldSha1);
         const oldHash = await modHash(path.join(dir, item.fileName));
-        if (isModLocked(dir, oldHash)) throw new Error('此模组已锁定，请解除锁定后更新');
+        if (isModLocked(dir, oldHash)) throw new Error(t('modupdates.error.locked_unlock_first'));
         const name = item.targetName.replace(/\.disabled$/i, '') + (/\.disabled$/i.test(item.fileName) ? '.disabled' : '');
         await replaceModFiles(
           dir,
           [{ oldName: item.fileName, oldSha1: oldHash, name, sha1: item.sha1 || '', url: item.url, size: item.size }],
           async () => {
             await assertModsIdle(dir);
-            if (isModLocked(dir, oldHash)) throw new Error('此模组已锁定');
+            if (isModLocked(dir, oldHash)) throw new Error(t('modupdates.error.locked'));
           }
         );
         transferModLock(dir, oldHash, item.sha1!);
-        updateLog.info(`模组更新完成：${item.fileName} → ${name}`);
+        updateLog.info(t('modupdates.log.update_done', { fileName: item.fileName, name }));
         onItem?.(item.fileName, 'ok');
         results.push({ fileName: item.fileName, ok: true });
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        updateLog.error(`模组更新失败：${item.fileName}（实例 ${versionId}）`, error);
+        updateLog.error(t('modupdates.log.update_failed', { fileName: item.fileName, versionId }), error);
         onItem?.(item.fileName, 'error', message);
         results.push({ fileName: item.fileName, ok: false, error: message });
       }

@@ -8,6 +8,7 @@ import type { ProgressEvent } from '../../shared/types';
 import { getSettings } from './settings';
 import { setDownloadGameFolder } from './gameFolders';
 import { gameDir as currentGameDir } from './paths';
+import { translate as t } from '../../shared/i18n';
 
 export type ProgressEmit = (e: ProgressEvent) => void;
 
@@ -68,15 +69,15 @@ export function checkTarget(newDir: string, needBytes: number): DirCheckResult {
   try {
     resolved = path.resolve(newDir);
   } catch {
-    return { ok: false, error: '路径无效' };
+    return { ok: false, error: t('gamedir.error.invalid_path') };
   }
   const cur = path.resolve(currentGameDir());
-  if (resolved === cur) return { ok: false, error: '新目录与当前游戏目录相同，无需更改' };
+  if (resolved === cur) return { ok: false, error: t('gamedir.error.same_dir') };
   if (resolved.startsWith(cur + path.sep)) {
-    return { ok: false, error: '新目录不能位于当前游戏目录内部（会导致无限递归复制）' };
+    return { ok: false, error: t('gamedir.error.nested_inside') };
   }
   if (cur.startsWith(resolved + path.sep)) {
-    return { ok: false, error: '新目录不能是当前游戏目录的父目录（迁移会破坏自身数据）' };
+    return { ok: false, error: t('gamedir.error.parent_of_current') };
   }
   try {
     fs.mkdirSync(resolved, { recursive: true });
@@ -85,7 +86,7 @@ export function checkTarget(newDir: string, needBytes: number): DirCheckResult {
     fs.writeFileSync(probe, 'ok');
     fs.rmSync(probe, { force: true });
   } catch (e) {
-    return { ok: false, error: `目标目录不可写（权限问题）：${errText(e)}` };
+    return { ok: false, error: t('gamedir.error.not_writable', { error: errText(e) }) };
   }
   if (needBytes > 0) {
     try {
@@ -95,7 +96,7 @@ export function checkTarget(newDir: string, needBytes: number): DirCheckResult {
       if (free < need) {
         return {
           ok: false,
-          error: `目标磁盘剩余空间不足：需要约 ${(need / GB).toFixed(1)} GB，可用 ${(free / GB).toFixed(1)} GB`,
+          error: t('gamedir.error.insufficient_space', { need: (need / GB).toFixed(1), free: (free / GB).toFixed(1) }),
           freeGB: free / GB,
           needGB: need / GB,
         };
@@ -120,7 +121,7 @@ export async function migrateGameDir(newDir: string, migrate: boolean, emit: Pro
   const resolved = path.resolve(newDir);
   const stats = migrate ? dirStats(src) : { files: 0, bytes: 0 };
 
-  emit({ stage: 'migrate', progress: 0, text: '校验目标目录…' });
+  emit({ stage: 'migrate', progress: 0, text: t('gamedir.progress.check_target') });
   const check = checkTarget(resolved, stats.bytes);
   if (!check.ok) throw new Error(check.error);
 
@@ -144,7 +145,7 @@ export async function migrateGameDir(newDir: string, migrate: boolean, emit: Pro
               await new Promise((r) => setTimeout(r, 300));
               fs.copyFileSync(s, d);
             } catch {
-              throw new Error(`复制失败：${e.name}（${errText(err)}）`);
+              throw new Error(t('gamedir.error.copy_failed', { name: e.name, error: errText(err) }));
             }
           }
           done++;
@@ -152,7 +153,7 @@ export async function migrateGameDir(newDir: string, migrate: boolean, emit: Pro
             emit({
               stage: 'migrate',
               progress: (done / stats.files) * 0.98,
-              text: `迁移游戏文件 ${done}/${stats.files}`,
+              text: t('gamedir.progress.migrating', { done, total: stats.files }),
             });
           }
         }
@@ -163,7 +164,7 @@ export async function migrateGameDir(newDir: string, migrate: boolean, emit: Pro
 
   // 全部完成才切换配置（之前的任何失败都不会破坏现状）
   setDownloadGameFolder(resolved);
-  emit({ stage: 'migrate', progress: 1, text: '游戏目录已切换' });
+  emit({ stage: 'migrate', progress: 1, text: t('gamedir.progress.switched') });
   return resolved;
 }
 

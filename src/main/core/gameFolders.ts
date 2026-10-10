@@ -7,13 +7,14 @@ import { canonicalPath, pathIdentity, resolveMinecraftRoot } from './folderPaths
 import { scanInstalledFolder } from './versions';
 import { logScope } from './launcherLog';
 import { defaultGameFolder } from './defaultGameFolder';
+import { translate as t } from '../../shared/i18n';
 
 const folderLog = logScope('folders');
 
 const cleanName = (value: string): string => {
   const name = value.trim();
-  if (!name) throw new Error('显示名称不能为空');
-  if (name.length > 64) throw new Error('显示名称最多 64 个字符');
+  if (!name) throw new Error(t('gamefolders.error.name_empty'));
+  if (name.length > 64) throw new Error(t('gamefolders.error.name_too_long'));
   return name;
 };
 
@@ -75,7 +76,7 @@ export function addGameFolder(input: string): { folders: GameFolder[]; folder: G
   const current = listGameFolders();
   const duplicate = current.folders.find((folder) => pathIdentity(folder.path) === pathIdentity(resolved.path));
   if (duplicate) {
-    folderLog.info(`游戏文件夹已登记，直接复用：${duplicate.path}（结构 ${resolved.structure}）`);
+    folderLog.info(t('gamefolders.log.reuse', { path: duplicate.path, structure: String(resolved.structure) }));
     return { folders: current.folders, folder: duplicate, structure: resolved.structure };
   }
   const folder: GameFolder = {
@@ -83,7 +84,7 @@ export function addGameFolder(input: string): { folders: GameFolder[]; folder: G
     name: path.basename(resolved.path) || resolved.path,
     isDefault: false,
   };
-  folderLog.info(`登记新游戏文件夹：${folder.path}（结构 ${resolved.structure}）`);
+  folderLog.info(t('gamefolders.log.register', { path: folder.path, structure: String(resolved.structure) }));
   return {
     folders: persistFolders([...current.folders, folder]),
     folder,
@@ -96,7 +97,7 @@ export function renameGameFolder(input: string, displayName: string): GameFolder
   const name = cleanName(displayName);
   const current = listGameFolders();
   if (!current.folders.some((folder) => pathIdentity(folder.path) === identity)) {
-    throw new Error('文件夹未登记');
+    throw new Error(t('ipc.error.folder_unregistered'));
   }
   return persistFolders(
     current.folders.map((folder) => (pathIdentity(folder.path) === identity ? { ...folder, name } : folder)),
@@ -109,16 +110,16 @@ export function removeGameFolder(input: string): GameFolder[] {
   const identity = pathIdentity(input);
   const current = listGameFolders();
   const target = current.folders.find((folder) => pathIdentity(folder.path) === identity);
-  if (!target) throw new Error('文件夹未登记');
-  folderLog.info(`解除登记游戏文件夹：${target.path}（磁盘文件保留）`);
+  if (!target) throw new Error(t('ipc.error.folder_unregistered'));
+  folderLog.info(t('gamefolders.log.unregister', { path: target.path }));
   let folders = current.folders.filter((folder) => pathIdentity(folder.path) !== identity);
   // 失效/最后一个文件夹也允许解除绑定：移除后自动补回内置默认文件夹，不留死锁
   if (!folders.length) {
     const { app } = require('electron');
     const fallback = defaultGameFolder(app.getPath('appData'));
     fs.mkdirSync(fallback, { recursive: true });
-    folders = [{ path: fallback, name: '默认文件夹', isDefault: true }];
-    folderLog.info(`已移除最后一个文件夹，自动重建内置默认文件夹：${fallback}`);
+    folders = [{ path: fallback, name: t('gamefolders.label.default_folder'), isDefault: true }];
+    folderLog.info(t('gamefolders.log.rebuilt_default', { path: fallback }));
   }
   if (target.isDefault) folders[0] = { ...folders[0], isDefault: true };
   const nextActive =
@@ -131,7 +132,7 @@ export function setDefaultGameFolder(input: string): GameFolder[] {
   const current = listGameFolders();
   const selected = current.folders.find((folder) => pathIdentity(folder.path) === identity);
   if (!selected) {
-    throw new Error('文件夹未登记');
+    throw new Error(t('ipc.error.folder_unregistered'));
   }
   assertWritableDownloadFolder(selected.path);
   return persistFolders(
@@ -144,7 +145,7 @@ export function setDefaultGameFolder(input: string): GameFolder[] {
 }
 
 function assertWritableDownloadFolder(folder: string): void {
-  if (!fs.existsSync(folder) || !fs.statSync(folder).isDirectory()) throw new Error('下载文件夹已不存在，请重新选择');
+  if (!fs.existsSync(folder) || !fs.statSync(folder).isDirectory()) throw new Error(t('gamefolders.error.folder_missing'));
   const probe = path.join(folder, `.faionyx-write-test-${crypto.randomUUID()}`);
   try {
     fs.writeFileSync(probe, '', { flag: 'wx' });
@@ -157,7 +158,7 @@ function assertWritableDownloadFolder(folder: string): void {
         /* Preserve the write error. */
       }
     }
-    throw new Error(`下载文件夹不可写：${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(t('gamefolders.error.folder_not_writable', { error: error instanceof Error ? error.message : String(error) }));
   }
 }
 
@@ -188,8 +189,8 @@ export function setActiveGameFolder(input: string): string {
   const identity = pathIdentity(input);
   const current = listGameFolders();
   const folder = current.folders.find((value) => pathIdentity(value.path) === identity);
-  if (!folder) throw new Error('文件夹未登记');
-  if (!fs.existsSync(folder.path)) throw new Error('文件夹已不存在，请重新连接或解除绑定');
+  if (!folder) throw new Error(t('ipc.error.folder_unregistered'));
+  if (!fs.existsSync(folder.path)) throw new Error(t('gamefolders.error.folder_gone'));
   persistFolders(current.folders, folder.path);
   return folder.path;
 }
@@ -199,15 +200,15 @@ export function scanGameFolder(input: string): FolderScanResult {
   const current = listGameFolders();
   const identity = pathIdentity(input);
   const folder = current.folders.find((value) => pathIdentity(value.path) === identity);
-  if (!folder) throw new Error('文件夹未登记');
+  if (!folder) throw new Error(t('ipc.error.folder_unregistered'));
   if (!fs.existsSync(folder.path)) {
-    folderLog.warn(`扫描游戏文件夹失败：${folder.path} 不存在或磁盘不可用`);
+    folderLog.warn(t('gamefolders.log.scan_missing', { path: folder.path }));
     return {
       folder,
       structure: 'missing',
       status: 'error',
       versions: [],
-      errors: ['文件夹不存在或磁盘当前不可用'],
+      errors: [t('gamefolders.error.folder_unavailable')],
       scannedAt: new Date().toISOString(),
       durationMs: Date.now() - started,
     };
@@ -220,11 +221,24 @@ export function scanGameFolder(input: string): FolderScanResult {
   const scanned = scanInstalledFolder(folder.path);
   if (scanned.errors.length) {
     folderLog.warn(
-      `扫描 ${folder.path} 完成（结构 ${structure}，${scanned.versions.length} 个版本，${scanned.errors.length} 条警告，耗时 ${Date.now() - started}ms）`,
+      t('gamefolders.log.scan_warnings', {
+        path: folder.path,
+        structure: String(structure),
+        versions: scanned.versions.length,
+        warnings: scanned.errors.length,
+        ms: Date.now() - started,
+      }),
       new Error(scanned.errors.join('；'))
     );
   } else {
-    folderLog.info(`扫描 ${folder.path} 完成：结构 ${structure}，${scanned.versions.length} 个版本（耗时 ${Date.now() - started}ms）`);
+    folderLog.info(
+      t('gamefolders.log.scan_done', {
+        path: folder.path,
+        structure: String(structure),
+        versions: scanned.versions.length,
+        ms: Date.now() - started,
+      })
+    );
   }
   return {
     folder,

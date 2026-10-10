@@ -3,6 +3,7 @@
 import { EventEmitter } from 'node:events';
 import WebSocket from 'ws';
 import { ApiClient, APIError } from './api';
+import { translate as t } from '../../../shared/i18n';
 export interface SessionOptions {
   code: string;
   token: string;
@@ -82,7 +83,7 @@ export class VoxlinkSession extends EventEmitter {
     this.socket?.terminate();
     for (const p of this.pending.values()) {
       clearTimeout(p.timer);
-      p.reject(new Error('会话已取消'));
+      p.reject(new Error(t('voxlink.session.error.cancelled')));
     }
     this.pending.clear();
     this.finish();
@@ -135,7 +136,7 @@ export class VoxlinkSession extends EventEmitter {
         clearInterval(this.watchdog);
         for (const p of this.pending.values()) {
           clearTimeout(p.timer);
-          p.reject(new Error('信令连接已断开'));
+          p.reject(new Error(t('voxlink.session.error.disconnected')));
         }
         this.pending.clear();
         if (this.finished) return;
@@ -214,7 +215,7 @@ export class VoxlinkSession extends EventEmitter {
           this.pending.delete(frame.id);
           clearTimeout(item.timer);
           if (frame.success) item.resolve(frame.data);
-          else item.reject(new APIError(frame.error ?? 'SIGNAL', frame.message ?? '请求失败'));
+          else item.reject(new APIError(frame.error ?? 'SIGNAL', frame.message ?? t('voxlink.session.error.request_failed')));
         } catch {}
       });
     }).finally(() => {
@@ -223,10 +224,10 @@ export class VoxlinkSession extends EventEmitter {
     return this.connecting;
   }
   async request(route: string, extra: Record<string, unknown>): Promise<unknown> {
-    if (this.finished) throw new Error('会话已取消');
+    if (this.finished) throw new Error(t('voxlink.session.error.cancelled'));
     if (this.socket?.readyState === WebSocket.OPEN && Date.now() - this.lastFrame > 35000) this.socket.terminate();
     await this.connect();
-    if (this.finished) throw new Error('会话已取消');
+    if (this.finished) throw new Error(t('voxlink.session.error.cancelled'));
     const body = this.payload(extra);
     if (this.socket?.readyState === WebSocket.OPEN) {
       try {
@@ -234,7 +235,7 @@ export class VoxlinkSession extends EventEmitter {
           const id = this.nextId++;
           const timer = setTimeout(() => {
             this.pending.delete(id);
-            reject(new Error('信令响应超时'));
+            reject(new Error(t('voxlink.session.error.response_timeout')));
           }, 6000);
           this.pending.set(id, { resolve, reject, timer });
           this.socket!.send(JSON.stringify({ id, route, method: 'POST', body }));
@@ -297,7 +298,7 @@ export class VoxlinkSession extends EventEmitter {
           delay = 30000;
           if (!this.degraded) {
             this.degraded = true;
-            this.app.emit('signaling:degraded', { message: '信令暂时不可用，已降低心跳频率；游戏通路保持运行' });
+            this.app.emit('signaling:degraded', { message: t('voxlink.session.state.degraded') });
           }
         }
       }

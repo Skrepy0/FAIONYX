@@ -7,6 +7,7 @@ import { recycleFile } from './recycleFile';
 import fs from 'node:fs';
 import path from 'node:path';
 import { app, protocol } from 'electron';
+import { translate as t } from '../../shared/i18n';
 
 export interface PluginMeta {
   id: string;
@@ -100,7 +101,7 @@ export function installPlugin(sourcePath: string): string {
   if (st.isDirectory()) {
     const manifest = path.join(src, 'plugin.json');
     const main = path.join(src, 'main.js');
-    if (!fs.existsSync(main)) throw new Error('插件文件夹缺少 main.js');
+    if (!fs.existsSync(main)) throw new Error(t('plugins.error.missing_main'));
     let name = path.basename(src);
     if (fs.existsSync(manifest)) {
       try {
@@ -111,13 +112,13 @@ export function installPlugin(sourcePath: string): string {
       }
     }
     id = sanitizePluginId(name);
-    if (!ID_RE.test(id)) throw new Error('插件 id 无效（仅限字母数字、-、_）');
+    if (!ID_RE.test(id)) throw new Error(t('plugins.error.invalid_id_charset'));
     files = [{ from: main, to: 'main.js' }];
     if (fs.existsSync(manifest)) files.push({ from: manifest, to: 'plugin.json' });
   } else {
-    if (!/\.js$/i.test(src)) throw new Error('请选择 .js 插件文件或插件文件夹');
+    if (!/\.js$/i.test(src)) throw new Error(t('plugins.error.select_js'));
     id = sanitizePluginId(path.basename(src, path.extname(src)));
-    if (!ID_RE.test(id)) throw new Error('插件 id 无效（仅限字母数字、-、_）');
+    if (!ID_RE.test(id)) throw new Error(t('plugins.error.invalid_id_charset'));
     files = [{ from: src, to: 'main.js' }];
   }
   const dest = path.join(pluginsRoot(), id);
@@ -128,7 +129,7 @@ export function installPlugin(sourcePath: string): string {
 }
 
 export function setPluginEnabled(id: string, enabled: boolean): PluginInfo[] {
-  if (!ID_RE.test(id)) throw new Error('插件 id 无效');
+  if (!ID_RE.test(id)) throw new Error(t('plugins.error.invalid_id'));
   const current = new Set(readEnabled());
   if (enabled) current.add(id);
   else current.delete(id);
@@ -137,10 +138,10 @@ export function setPluginEnabled(id: string, enabled: boolean): PluginInfo[] {
 }
 
 export async function removePlugin(id: string): Promise<PluginInfo[]> {
-  if (!ID_RE.test(id)) throw new Error('插件 id 无效');
+  if (!ID_RE.test(id)) throw new Error(t('plugins.error.invalid_id'));
   const dir = path.join(pluginsRoot(), id);
   // 边界：只能删除插件根目录内的对应 id 目录
-  if (path.dirname(path.resolve(dir)) !== path.resolve(pluginsRoot())) throw new Error('非法插件路径');
+  if (path.dirname(path.resolve(dir)) !== path.resolve(pluginsRoot())) throw new Error(t('plugins.error.illegal_path'));
   await recycleFile(pluginsRoot(), id);
   writeEnabled(readEnabled().filter((x) => x !== id));
   return listPlugins();
@@ -148,11 +149,11 @@ export async function removePlugin(id: string): Promise<PluginInfo[]> {
 
 /** 读取插件代码（渲染进程加载用）；仅在插件存在且启用时返回。 */
 export function readPluginCode(id: string): string {
-  if (!ID_RE.test(id)) throw new Error('插件 id 无效');
-  if (!readEnabled().includes(id)) throw new Error('插件未启用');
+  if (!ID_RE.test(id)) throw new Error(t('plugins.error.invalid_id'));
+  if (!readEnabled().includes(id)) throw new Error(t('plugins.error.not_enabled'));
   const file = path.join(pluginsRoot(), id, 'main.js');
   const stat = fs.statSync(file);
-  if (stat.size > 1024 * 1024) throw new Error('插件文件过大（上限 1 MB）');
+  if (stat.size > 1024 * 1024) throw new Error(t('plugins.error.too_large'));
   return fs.readFileSync(file, 'utf-8');
 }
 

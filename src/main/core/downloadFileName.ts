@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import path from 'node:path';
+import { translate as t } from '../../shared/i18n';
 
 const RESERVED_DEVICE = /^(?:con|prn|aux|nul|clock\$|conin\$|conout\$|com[1-9¹²³]|lpt[1-9¹²³])(?:\.|$)/i;
 const MAX_NAME_BYTES = 200; // Leave room for .part and .segments-cache on every target filesystem.
@@ -24,7 +25,7 @@ function trimToBytes(value: string, budget: number): string {
 export function downloadFileName(input: string): string {
   const original = String(input ?? '');
   if (/[\\/]/.test(original) || /^\.{1,2}$/.test(original.trim())) {
-    throw new Error('下载文件名不能包含目录或路径跳转');
+    throw new Error(t('downloadfilename.error.path_separator'));
   }
   if (!original) return 'download.bin';
   let safe = original.replace(/[<>:"|?*\u0000-\u001f\u007f]/g, '_').replace(/[. ]+$/, '');

@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { YggdrasilProvider, YggdrasilProviderInput } from '../../shared/types';
+import { translate as t } from '../../shared/i18n';
 
 export interface ParsedProviderDescriptor {
   sourceLabel: string;
@@ -52,19 +53,19 @@ function findStrings(record: Record<string, unknown>, aliases: string[]): string
 
 export function normalizeYggdrasilUrl(input: string): string {
   let value = input.trim();
-  if (!value) throw new Error('API Root 不能为空');
+  if (!value) throw new Error(t('yggdrasilprov.error.api_root_empty'));
   if (!/^[a-z][a-z\d+.-]*:\/\//i.test(value)) value = `https://${value}`;
   let url: URL;
   try {
     url = new URL(value);
   } catch {
-    throw new Error('API Root 不是有效 URL');
+    throw new Error(t('yggdrasilprov.error.api_root_invalid'));
   }
   if (url.protocol !== 'https:' && url.protocol !== 'http:') {
-    throw new Error('认证服务仅支持 HTTPS 或 HTTP URL');
+    throw new Error(t('yggdrasilprov.error.scheme_unsupported'));
   }
-  if (url.username || url.password) throw new Error('认证服务 URL 不得包含用户名或密码');
-  if (url.search || url.hash) throw new Error('认证服务 URL 不得包含查询参数或片段');
+  if (url.username || url.password) throw new Error(t('yggdrasilprov.error.url_has_credentials'));
+  if (url.search || url.hash) throw new Error(t('yggdrasilprov.error.url_has_query_or_fragment'));
   url.pathname = `${url.pathname.replace(/\/+$/, '')}/`;
   return url.toString();
 }
@@ -90,8 +91,8 @@ export function normalizeSkinDomains(values: string[]): string[] {
 
 function descriptorFromText(text: string, sourceLabel: string): ParsedProviderDescriptor {
   const trimmed = text.trim().replace(/^\uFEFF/, '');
-  if (!trimmed) throw new Error('拖入内容为空');
-  if (trimmed.length > MAX_PROVIDER_FILE) throw new Error('提供商配置超过 1 MB 限制');
+  if (!trimmed) throw new Error(t('yggdrasilprov.error.empty_content'));
+  if (trimmed.length > MAX_PROVIDER_FILE) throw new Error(t('yggdrasilprov.error.config_too_large'));
 
   const dndPrefix = 'authlib-injector:yggdrasil-server:';
   if (trimmed.toLowerCase().startsWith(dndPrefix)) {
@@ -100,7 +101,7 @@ function descriptorFromText(text: string, sourceLabel: string): ParsedProviderDe
     try {
       decoded = decodeURIComponent(encoded);
     } catch {
-      throw new Error('authlib-injector 拖拽 URI 编码无效');
+      throw new Error(t('yggdrasilprov.error.drag_uri_invalid_encoding'));
     }
     return { sourceLabel, apiRoot: normalizeYggdrasilUrl(decoded), skinDomains: [] };
   }
@@ -110,15 +111,15 @@ function descriptorFromText(text: string, sourceLabel: string): ParsedProviderDe
     try {
       data = JSON.parse(trimmed) as Record<string, unknown>;
     } catch {
-      throw new Error('提供商 JSON 格式无效');
+      throw new Error(t('yggdrasilprov.error.json_invalid'));
     }
     if (!data || typeof data !== 'object' || Array.isArray(data)) {
-      throw new Error('提供商 JSON 顶层必须是对象');
+      throw new Error(t('yggdrasilprov.error.json_not_object'));
     }
     const apiRoot =
       findString(data, ['apiRoot', 'yggdrasilApiRoot', 'yggdrasilServer', 'apiUrl', 'serverUrl']) ??
       (typeof data.url === 'string' ? data.url : undefined);
-    if (!apiRoot) throw new Error('提供商 JSON 中缺少 API Root');
+    if (!apiRoot) throw new Error(t('yggdrasilprov.error.json_missing_api_root'));
     return {
       sourceLabel,
       name: findString(data, ['providerName', 'serverName', 'name']),
@@ -139,19 +140,19 @@ function descriptorFromText(text: string, sourceLabel: string): ParsedProviderDe
 }
 
 export function parseProviderInput(input: YggdrasilProviderInput): ParsedProviderDescriptor {
-  if (input.kind === 'text') return descriptorFromText(String(input.value ?? ''), '拖入或粘贴的文本');
+  if (input.kind === 'text') return descriptorFromText(String(input.value ?? ''), t('yggdrasilprov.label.pasted_text'));
   const filePath = path.resolve(String(input.value ?? ''));
   let stat: fs.Stats;
   try {
     stat = fs.statSync(filePath);
   } catch {
-    throw new Error('提供商配置文件不存在');
+    throw new Error(t('yggdrasilprov.error.config_file_missing'));
   }
-  if (!stat.isFile()) throw new Error('提供商配置必须是文件');
-  if (stat.size > MAX_PROVIDER_FILE) throw new Error('提供商配置超过 1 MB 限制');
+  if (!stat.isFile()) throw new Error(t('yggdrasilprov.error.config_must_be_file'));
+  if (stat.size > MAX_PROVIDER_FILE) throw new Error(t('yggdrasilprov.error.config_too_large'));
   const ext = path.extname(filePath).toLowerCase();
   if (!['.json', '.txt', '.url', '.yggdrasil'].includes(ext)) {
-    throw new Error('仅支持 JSON、TXT、URL 或 .yggdrasil 提供商配置');
+    throw new Error(t('yggdrasilprov.error.config_extension_unsupported'));
   }
   return descriptorFromText(fs.readFileSync(filePath, 'utf-8'), path.basename(filePath));
 }
@@ -207,7 +208,7 @@ export function serializeYggdrasilUserProperties(properties: Array<{ name: strin
 }
 
 export function buildAuthlibInjectorArguments(jarPath: string, apiRoot: string, metadata: string): string[] {
-  if (!jarPath.trim()) throw new Error('authlib-injector 路径为空');
+  if (!jarPath.trim()) throw new Error(t('yggdrasilprov.error.injector_path_empty'));
   const root = normalizeYggdrasilUrl(apiRoot);
   parseMetadataShape(metadata);
   return [`-javaagent:${jarPath}=${root}`, `-Dauthlibinjector.yggdrasil.prefetched=${Buffer.from(metadata, 'utf-8').toString('base64')}`];
@@ -218,6 +219,6 @@ function parseMetadataShape(metadata: string): void {
     const value = JSON.parse(metadata) as unknown;
     if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error();
   } catch {
-    throw new Error('authlib-injector 预取元数据无效');
+    throw new Error(t('yggdrasilprov.error.metadata_invalid'));
   }
 }

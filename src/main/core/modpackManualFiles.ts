@@ -5,6 +5,7 @@ import { pipeline } from 'node:stream/promises';
 import type { ManualModpackFile, ManualModpackRequest } from '../../shared/types';
 import { modpackCachedFile } from './modpackDownloads';
 import { waitIfTaskPaused } from './tasks';
+import { translate as t } from '../../shared/i18n';
 
 interface Session {
   files: ManualModpackFile[];
@@ -62,7 +63,7 @@ export async function waitForModpackFiles(files: ManualModpackFile[], notify: Se
 
 export function pendingModpackFiles(token: string): ManualModpackFile[] {
   const session = sessions.get(token);
-  if (!session) throw new Error('该补充文件任务已结束，请查看下载中心');
+  if (!session) throw new Error(t('modpackmanual.error.task_ended_center'));
   return session.files.slice();
 }
 
@@ -72,8 +73,8 @@ export async function supplyModpackFiles(
   selected: string[]
 ): Promise<{ accepted: number; remaining: number; rejected: string[] }> {
   const session = sessions.get(token);
-  if (!session) throw new Error('该补充文件任务已结束');
-  if (session.busy) throw new Error('正在校验上一批文件');
+  if (!session) throw new Error(t('modpackmanual.error.task_ended'));
+  if (session.busy) throw new Error(t('modpackmanual.error.validating_previous'));
   session.busy = true;
   const rejected: string[] = [];
   let accepted = 0;

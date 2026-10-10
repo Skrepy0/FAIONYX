@@ -7,6 +7,7 @@
 import { watch } from 'vue';
 import { listPlugins } from './api';
 import { store, toast } from './store';
+import { t } from '@renderer/i18n';
 
 export interface FaionyxPluginApi {
   /** 全局 toast 通知 */
@@ -85,11 +86,11 @@ export async function loadEnabledPlugins(): Promise<void> {
       el.src = `faionyx-plugin://${encodeURIComponent(plugin.id)}/main.js`;
       el.dataset.faionyxPlugin = plugin.id;
       el.onload = () => {
-        console.info(`[FAIONYX] 插件已加载：${plugin.id}`);
+        console.info(`[FAIONYX] ${t('plugins.log.loaded', { id: plugin.id })}`);
         resolve();
       };
       el.onerror = () => {
-        console.warn(`[FAIONYX] 插件加载失败：${plugin.id}`);
+        console.warn(`[FAIONYX] ${t('plugins.log.load_failed', { id: plugin.id })}`);
         resolve();
       };
       document.head.appendChild(el);

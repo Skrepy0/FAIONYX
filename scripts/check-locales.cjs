@@ -12,7 +12,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const LOCALES_DIR = path.join(ROOT, 'src/renderer/src/i18n/locales');
+const LOCALES_DIR = path.join(ROOT, 'src/shared/i18n/locales');
 
 const args = process.argv.slice(2);
 const strict = args.includes('--strict');

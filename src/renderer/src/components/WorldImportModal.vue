@@ -246,7 +246,7 @@ async function submit() {
 
           <div v-if="candidate.modEvidence.length" class="world-warning">
             <strong>{{ t('wi.mod_evidence') }}</strong>
-            <span>{{ candidate.modEvidence.join('；') }}。{{ t('wi.mod_evidence_hint') }}</span>
+            <span>{{ candidate.modEvidence.join(t('common.list_separator')) }}。{{ t('wi.mod_evidence_hint') }}</span>
           </div>
 
           <label class="field">

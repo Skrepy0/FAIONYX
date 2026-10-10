@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // FAIONYX HTTP adapter. Endpoint/envelope contract: VoxLink SignalingClient.java 6b11d93.
 import { version } from '../../../../package.json';
+import { translate as t } from '../../../shared/i18n';
 export const APP_VERSION = version;
 export const DEFAULT_SERVER_URL = 'https://p2p.wuhui.icu';
 export const HTTP_TIMEOUT_MS = 10_000;
@@ -52,9 +53,9 @@ export class ApiClient {
     body: unknown,
     signal?: AbortSignal
   ): Promise<unknown> {
-    if (!validateServerURL(base)) throw new APIError('NETWORK', '服务器地址无效');
+    if (!validateServerURL(base)) throw new APIError('NETWORK', t('voxlink.api.error.invalid_server'));
     const key = route === '/room/update' ? `${base}|${String((body as { code?: string })?.code ?? '')}` : '';
-    if (key && (this.deadlines.get(key) ?? 0) > Date.now()) throw new APIError('RATE_LIMITED', '请稍后再修改房间', 429);
+    if (key && (this.deadlines.get(key) ?? 0) > Date.now()) throw new APIError('RATE_LIMITED', t('voxlink.api.error.rate_limited'), 429);
     const url = new URL(base);
     url.searchParams.set('route', route);
     for (const [name, values] of Object.entries(query))
@@ -75,7 +76,7 @@ export class ApiClient {
             const part = await reader.read();
             if (part.done) break;
             size += part.value.byteLength;
-            if (size > MAX_RESPONSE_LEN) throw new APIError('RESPONSE_LIMIT', '服务器响应过大', response.status);
+            if (size > MAX_RESPONSE_LEN) throw new APIError('RESPONSE_LIMIT', t('voxlink.api.error.response_too_large'), response.status);
             chunks.push(part.value);
           }
       } finally {
@@ -85,7 +86,7 @@ export class ApiClient {
       try {
         envelope = JSON.parse(Buffer.concat(chunks).toString('utf8'));
       } catch {
-        throw new APIError(`HTTP_${response.status}`, '服务器未返回有效 JSON', response.status);
+        throw new APIError(`HTTP_${response.status}`, t('voxlink.api.error.invalid_json'), response.status);
       }
       if (response.status === 429 && key) {
         const retry = response.headers.get('retry-after');
@@ -96,7 +97,7 @@ export class ApiClient {
       if (!response.ok || envelope.success !== true)
         throw new APIError(
           envelope.error ?? (response.status === 429 ? 'RATE_LIMITED' : `HTTP_${response.status}`),
-          envelope.message ?? '请求失败',
+          envelope.message ?? t('voxlink.session.error.request_failed'),
           response.status
         );
       return envelope.data ?? null;

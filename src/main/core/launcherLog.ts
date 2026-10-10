@@ -10,6 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { app } from 'electron';
 import { redactDiagnosticText } from './diagnostics';
+import { translate as t } from '../../shared/i18n';
 
 export type LauncherLogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -129,7 +130,7 @@ export function initializeLauncherLog(): string {
       [
         divider,
         `[${now.toISOString()}] FAIONYX ${app.getVersion()} session started (${process.platform} ${process.arch})`,
-        `Electron ${process.versions.electron ?? '?'} / Node ${process.versions.node ?? '?'} / 日志级别下限 ${minimumLevel}`,
+        `Electron ${process.versions.electron ?? '?'} / Node ${process.versions.node ?? '?'} / ${t('launcherlog.session.min_level', { level: minimumLevel })}`,
         divider,
       ].join('\n') + '\n',
       'utf-8'

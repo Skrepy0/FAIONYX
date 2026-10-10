@@ -21,6 +21,7 @@ import { copyRecording, validateRecording } from './recordingFiles';
 import { recycleFile } from './recycleFile';
 import { withFileJob } from './fileJobs';
 import { registerTask, finishTask, waitIfTaskPaused } from './tasks';
+import { translate as t } from '../../shared/i18n';
 
 type Source = { folder?: string; root: string; label: string; library: boolean };
 type Stored = { entry: RecordingEntry; source: Source; rel: string };
@@ -30,7 +31,7 @@ let scanGeneration = 0;
 function activeRoot() {
   const settings = getSettings(),
     root = settings.activeFolder || settings.gameDir;
-  if (!root || !settings.folders.some((f) => key(f.path) === key(root))) throw new Error('请先选择已登记的游戏文件夹');
+  if (!root || !settings.folders.some((f) => key(f.path) === key(root))) throw new Error(t('recordingipc.error.no_active_folder'));
   return path.resolve(root);
 }
 async function library(root: string) {
@@ -40,10 +41,10 @@ async function library(root: string) {
 }
 function selectedItems(ids: unknown): Stored[] {
   const bound = new Set(getSettings().folders.map((f) => key(f.path)));
-  if (!Array.isArray(ids) || !ids.length || ids.length > 10000) throw new Error('请选择录像文件');
+  if (!Array.isArray(ids) || !ids.length || ids.length > 10000) throw new Error(t('recordingipc.error.select_files'));
   return [...new Set(ids)].map((id) => {
     const s = catalog.get(id);
-    if (!s || !s.source.folder || !bound.has(key(s.source.folder))) throw new Error('录像所属文件夹已解除绑定，请刷新列表');
+    if (!s || !s.source.folder || !bound.has(key(s.source.folder))) throw new Error(t('recordingipc.error.folder_unbound'));
     return s;
   });
 }
@@ -63,23 +64,23 @@ async function scan(): Promise<RecordingCatalog> {
     const root = path.resolve(registered.path),
       label = registered.name || root;
     sources.push(
-      { folder: root, root: path.join(root, 'recordings'), label: label + ' · 集中收藏', library: true },
-      { folder: root, root, label: label + ' · 共享目录', library: false }
+      { folder: root, root: path.join(root, 'recordings'), label: label + ' · ' + t('recordings.filter.source_library'), library: true },
+      { folder: root, root, label: label + ' · ' + t('games.instance.shared'), library: false }
     );
     try {
       const result = scanInstalledFolder(root);
-      warnings.push(...result.errors.map((error) => root + '：' + error));
+      warnings.push(...result.errors.map((error) => t('recordingipc.warn.prefixed', { prefix: root, message: error })));
       for (const v of result.versions) {
         try {
           const c = centerTarget({ folder: root, id: v.id });
           sources.push({ folder: root, root: c.dir, label: v.id, library: false });
           instances.push({ folder: root, id: v.id, name: v.id + ' · ' + root });
         } catch {
-          warnings.push('无法读取实例：' + root + ' / ' + v.id);
+          warnings.push(t('recordingipc.warn.instance_unreadable', { root, id: v.id }));
         }
       }
     } catch (e) {
-      warnings.push(root + '：' + String(e));
+      warnings.push(t('recordingipc.warn.prefixed', { prefix: root, message: String(e) }));
     }
   }
   const found = new Map<string, Stored>(),
@@ -90,7 +91,7 @@ async function scan(): Promise<RecordingCatalog> {
     seen.add(key(source.root));
     for (const kind of ['replaymod', 'flashback'] as const) {
       async function visit(rel: string, depth: number): Promise<void> {
-        if (++visited > 20000) throw new Error('扫描已达到 20000 个目录/文件上限，请分目录整理');
+        if (++visited > 20000) throw new Error(t('recordingipc.error.scan_limit'));
         const dir = await safePath(source.root, rel, true);
         let entries: fs.Dirent[];
         try {
@@ -107,7 +108,7 @@ async function scan(): Promise<RecordingCatalog> {
             continue;
           }
           if (!file.isFile() || !(kind === 'replaymod' ? /\.mcpr$/i : /\.zip$/i).test(file.name)) continue;
-          if (found.size >= 10000) throw new Error('仅显示前 10000 个录像文件');
+          if (found.size >= 10000) throw new Error(t('recordingipc.error.display_limit'));
           const full = await safePath(source.root, next),
             stat = await fs.promises.lstat(full);
           const id = crypto.createHash('sha256').update(key(full)).digest('hex');
@@ -131,7 +132,8 @@ async function scan(): Promise<RecordingCatalog> {
       try {
         await visit(RECORDING_DIRS[kind], 0);
       } catch (e) {
-        if ((e as NodeJS.ErrnoException).code !== 'ENOENT') warnings.push(source.label + '：' + String(e));
+        if ((e as NodeJS.ErrnoException).code !== 'ENOENT')
+          warnings.push(t('recordingipc.warn.prefixed', { prefix: source.label, message: String(e) }));
       }
     }
   }
@@ -150,7 +152,7 @@ async function current(s: Stored): Promise<string> {
   const file = await safePath(s.source.root, s.rel),
     stat = await fs.promises.lstat(file);
   if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== s.entry.size || stat.mtimeMs !== s.entry.modified)
-    throw new Error('录像已变化，请刷新列表后重试');
+    throw new Error(t('recordingipc.error.changed_refresh'));
   return file;
 }
 export function registerRecordingsIpc(getWin: () => BrowserWindow | null) {
@@ -159,11 +161,12 @@ export function registerRecordingsIpc(getWin: () => BrowserWindow | null) {
     if (event.sender !== getWin()?.webContents) return;
     try {
       const items = selectedItems(ids);
-      if (items.length > 1000) throw new Error('每次最多拖出 1000 个录像，请分批选择');
+      if (items.length > 1000) throw new Error(t('recordingipc.error.drag_limit'));
       const files = items.map((s) => {
         const file = dragPath(s.source.root, s.rel),
           stat = fs.lstatSync(file);
-        if (!stat.isFile() || stat.size !== s.entry.size || stat.mtimeMs !== s.entry.modified) throw new Error('录像已变化，请刷新后重试');
+        if (!stat.isFile() || stat.size !== s.entry.size || stat.mtimeMs !== s.entry.modified)
+          throw new Error(t('recordingipc.error.changed_retry'));
         return file;
       });
       startNativeFileDrag(event.sender, files);
@@ -181,7 +184,9 @@ export function registerRecordingsIpc(getWin: () => BrowserWindow | null) {
   });
   async function run(items: Stored[], action: RecordingRequest['action'], destination?: string) {
     const task = registerTask(
-      '录像文件 · ' + { collect: '收集', export: '提取', dispatch: '复制到实例', trash: '移入回收站' }[action],
+      t('recordingipc.label.task_title', {
+        action: t(`recordingipc.label.action.${action}`),
+      }),
       'world'
     );
     const signal = task.controller.signal,
@@ -212,7 +217,7 @@ export function registerRecordingsIpc(getWin: () => BrowserWindow | null) {
             });
           } else {
             await validateRecording(file, item.entry.kind);
-            if (!destination) throw new Error('未指定录像目标目录');
+            if (!destination) throw new Error(t('recordingipc.error.no_destination'));
             const root = destination;
             await withFileJob(root, signal, async () => {
               if (action === 'dispatch') await assertInstanceIdle(root);
@@ -226,7 +231,7 @@ export function registerRecordingsIpc(getWin: () => BrowserWindow | null) {
             id: item.entry.id,
             name: item.entry.name,
             ok: false,
-            error: signal.aborted ? '任务已取消，原录像保留' : String(e),
+            error: signal.aborted ? t('recordingipc.state.cancelled_kept') : String(e),
           });
         }
         done += item.entry.size;
@@ -236,7 +241,7 @@ export function registerRecordingsIpc(getWin: () => BrowserWindow | null) {
         taskId: task.id,
         ok: !failed,
         cancelled: signal.aborted,
-        error: failed ? `${failed} 个录像处理失败，请查看录像页结果` : undefined,
+        error: failed ? t('recordingipc.state.failed_count', { count: failed }) : undefined,
       });
       return results;
     } finally {
@@ -251,16 +256,19 @@ export function registerRecordingsIpc(getWin: () => BrowserWindow | null) {
       request.ids.length < 1 ||
       request.ids.length > 10000
     )
-      throw new Error('录像操作参数无效');
+      throw new Error(t('recordingipc.error.invalid_request'));
     const root = activeRoot(),
       items = selectedItems(request.ids);
     let dest: string | undefined = request.action === 'collect' ? await library(root) : undefined;
     if (request.action === 'dispatch') {
-      if (!request.target) throw new Error('请选择目标实例');
+      if (!request.target) throw new Error(t('recordingipc.error.select_target'));
       dest = centerTarget(request.target).dir;
     }
     if (request.action === 'export') {
-      const picked = await dialog.showOpenDialog({ title: '选择录像提取文件夹', properties: ['openDirectory', 'createDirectory'] });
+      const picked = await dialog.showOpenDialog({
+        title: t('recordingipc.dialog.export_folder'),
+        properties: ['openDirectory', 'createDirectory'],
+      });
       if (picked.canceled) return null;
       dest = picked.filePaths[0];
     }
@@ -269,7 +277,7 @@ export function registerRecordingsIpc(getWin: () => BrowserWindow | null) {
   ipcMain.handle('recordings:import', async () => {
     const root = activeRoot();
     const picked = await dialog.showOpenDialog({
-      title: '导入录像到集中收藏',
+      title: t('recordingipc.dialog.import_title'),
       properties: ['openFile', 'multiSelections'],
       filters: [{ name: 'ReplayMod / Flashback', extensions: ['mcpr', 'zip'] }],
     });
@@ -279,7 +287,7 @@ export function registerRecordingsIpc(getWin: () => BrowserWindow | null) {
     for (const file of picked.filePaths) {
       const stat = await fs.promises.lstat(file);
       items.push({
-        source: { root: path.dirname(file), label: '导入', library: false },
+        source: { root: path.dirname(file), label: t('root.topbar.import'), library: false },
         rel: path.basename(file),
         entry: {
           id: file,
@@ -287,7 +295,7 @@ export function registerRecordingsIpc(getWin: () => BrowserWindow | null) {
           kind: /\.mcpr$/i.test(file) ? 'replaymod' : 'flashback',
           size: stat.size,
           modified: stat.mtimeMs,
-          source: '导入',
+          source: t('root.topbar.import'),
           directory: path.dirname(file),
           library: false,
         },

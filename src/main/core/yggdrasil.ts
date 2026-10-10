@@ -12,6 +12,7 @@ import type {
   YggdrasilProviderInput,
   YggdrasilRuntimeInfo,
 } from '../../shared/types';
+import { translate as t } from '../../shared/i18n';
 import { getSettings } from './settings';
 import {
   endpointUrl,
@@ -94,7 +95,7 @@ function cleanProvider(value: unknown): YggdrasilProvider | null {
   try {
     const apiRoot = normalizeYggdrasilUrl(String(item.apiRoot ?? ''));
     const descriptor = {
-      sourceLabel: '已保存配置',
+      sourceLabel: t('yggdrasil.label.saved_config'),
       apiRoot,
       authServer: item.authServer,
       accountServer: item.accountServer,
@@ -135,14 +136,14 @@ function persistProviders(providers: YggdrasilProvider[]): void {
 
 export function findProvider(id: string): YggdrasilProvider {
   const provider = listProviders().find((item) => item.id === id);
-  if (!provider) throw new Error('外置登录提供商已被删除，请重新添加');
+  if (!provider) throw new Error(t('yggdrasil.error.provider_deleted'));
   return provider;
 }
 
 function assertSecure(urls: string[], allowInsecure: boolean): void {
   const insecure = urls.some((value) => normalizeYggdrasilUrl(value).startsWith('http:'));
   if (insecure && !allowInsecure) {
-    throw new Error('INSECURE_YGGDRASIL:该认证服务使用明文 HTTP，账号和密码可能被窃听。勾选风险确认后才能继续。');
+    throw new Error(`INSECURE_YGGDRASIL:${t('yggdrasil.error.insecure_http')}`);
   }
 }
 
@@ -152,7 +153,7 @@ async function responseTextLimited(response: Response, maxBytes: number): Promis
 
 async function responseBufferLimited(response: Response, maxBytes: number): Promise<Buffer> {
   const declared = Number(response.headers.get('content-length') ?? 0);
-  if (declared > maxBytes) throw new Error(`认证服务响应超过 ${Math.round(maxBytes / 1024)} KB 限制`);
+  if (declared > maxBytes) throw new Error(t('yggdrasil.error.response_too_large', { kb: Math.round(maxBytes / 1024) }));
   if (!response.body) return Buffer.alloc(0);
   const reader = response.body.getReader();
   const chunks: Buffer[] = [];
@@ -164,7 +165,7 @@ async function responseBufferLimited(response: Response, maxBytes: number): Prom
       total += value.byteLength;
       if (total > maxBytes) {
         await reader.cancel();
-        throw new Error(`认证服务响应超过 ${Math.round(maxBytes / 1024)} KB 限制`);
+        throw new Error(t('yggdrasil.error.response_too_large', { kb: Math.round(maxBytes / 1024) }));
       }
       chunks.push(Buffer.from(value));
     }
@@ -179,10 +180,10 @@ function parseMetadata(raw: string): Record<string, unknown> {
   try {
     data = JSON.parse(raw);
   } catch {
-    throw new Error('认证服务返回的元数据不是有效 JSON');
+    throw new Error(t('yggdrasil.error.metadata_invalid_json'));
   }
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
-    throw new Error('认证服务元数据顶层必须是对象');
+    throw new Error(t('yggdrasil.error.metadata_not_object'));
   }
   return data as Record<string, unknown>;
 }
@@ -195,7 +196,7 @@ async function fetchMetadataAt(inputUrl: string, allowInsecure: boolean): Promis
     redirect: 'follow',
     signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
   });
-  if (!first.ok) throw new Error(`认证服务元数据请求失败（HTTP ${first.status}）`);
+  if (!first.ok) throw new Error(t('yggdrasil.error.metadata_http', { status: first.status }));
   const firstUrl = normalizeYggdrasilUrl(first.url || initial);
   assertSecure([firstUrl], allowInsecure);
   const ali = first.headers.get('x-authlib-injector-api-location');
@@ -210,7 +211,7 @@ async function fetchMetadataAt(inputUrl: string, allowInsecure: boolean): Promis
         signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
       })
     : first;
-  if (!response.ok) throw new Error(`认证服务 API Root 请求失败（HTTP ${response.status}）`);
+  if (!response.ok) throw new Error(t('yggdrasil.error.api_root_http', { status: response.status }));
   const finalRoot = normalizeYggdrasilUrl(response.url || resolved);
   assertSecure([finalRoot], allowInsecure);
   const raw = await responseTextLimited(response, MAX_METADATA_BYTES);
@@ -262,8 +263,8 @@ export async function probeProvider(input: YggdrasilProviderInput, allowInsecure
 
 export function saveProvider(candidate: YggdrasilProviderCandidate, allowInsecure = false): YggdrasilProvider[] {
   const cleaned = cleanProvider(candidate);
-  if (!cleaned) throw new Error('提供商配置无效，请重新探测');
-  if (cleaned.id !== candidate.id) throw new Error('提供商 API Root 与探测结果不一致');
+  if (!cleaned) throw new Error(t('yggdrasil.error.provider_config_invalid'));
+  if (cleaned.id !== candidate.id) throw new Error(t('yggdrasil.error.provider_api_root_mismatch'));
   assertSecure([cleaned.apiRoot, cleaned.authServer, cleaned.accountServer, cleaned.sessionServer], allowInsecure);
   const list = listProviders();
   const index = list.findIndex((provider) => provider.id === cleaned.id);
@@ -276,9 +277,9 @@ export function saveProvider(candidate: YggdrasilProviderCandidate, allowInsecur
 }
 
 export function removeProvider(id: string, hasAccounts: boolean): YggdrasilProvider[] {
-  if (hasAccounts) throw new Error('该提供商仍有关联账号，请先退出并删除这些账号');
+  if (hasAccounts) throw new Error(t('yggdrasil.error.provider_has_accounts'));
   const list = listProviders();
-  if (!list.some((provider) => provider.id === id)) throw new Error('提供商不存在');
+  if (!list.some((provider) => provider.id === id)) throw new Error(t('yggdrasil.error.provider_not_found'));
   persistProviders(list.filter((provider) => provider.id !== id));
   try {
     fs.rmSync(path.join(metadataDirectory(), `${id}.json`), { force: true });
@@ -300,9 +301,9 @@ async function readYggError(response: Response, fallback: string): Promise<Error
       .replace(/\s+/g, ' ')
       .trim();
   }
-  if (response.status === 403) return new Error(detail || '账号或密码错误，或账号尚未激活');
-  if (response.status === 429) return new Error('认证请求过于频繁，请稍后再试');
-  return new Error(detail || `${fallback}（HTTP ${response.status}）`);
+  if (response.status === 403) return new Error(detail || t('yggdrasil.error.credentials_invalid'));
+  if (response.status === 429) return new Error(t('yggdrasil.error.rate_limited'));
+  return new Error(detail || t('yggdrasil.error.http_fallback', { fallback, status: response.status }));
 }
 
 async function postYgg(url: string, body: unknown): Promise<YggResponse> {
@@ -313,13 +314,13 @@ async function postYgg(url: string, body: unknown): Promise<YggResponse> {
     redirect: 'error',
     signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
   });
-  if (!response.ok) throw await readYggError(response, '认证服务请求失败');
+  if (!response.ok) throw await readYggError(response, t('yggdrasil.error.auth_request_failed'));
   if (response.status === 204) return {};
   const raw = await responseTextLimited(response, MAX_METADATA_BYTES);
   try {
     return JSON.parse(raw) as YggResponse;
   } catch {
-    throw new Error('认证服务返回了无效 JSON');
+    throw new Error(t('yggdrasil.error.invalid_json'));
   }
 }
 
@@ -334,7 +335,7 @@ function cleanProfile(value: YggProfile): YggdrasilProfileChoice | null {
 
 function uuidWithHyphens(value: string): string {
   const id = value.replace(/-/g, '').toLowerCase();
-  if (!/^[0-9a-f]{32}$/.test(id)) throw new Error('认证服务返回了无效角色 UUID');
+  if (!/^[0-9a-f]{32}$/.test(id)) throw new Error(t('yggdrasil.error.invalid_profile_uuid'));
   return `${id.slice(0, 8)}-${id.slice(8, 12)}-${id.slice(12, 16)}-${id.slice(16, 20)}-${id.slice(20)}`;
 }
 
@@ -358,10 +359,10 @@ function accountFromResponse(
   fallbackClientToken?: string
 ): Account {
   const profile = response.selectedProfile ? cleanProfile(response.selectedProfile) : null;
-  if (!profile) throw new Error('认证服务未返回已选择的角色');
+  if (!profile) throw new Error(t('yggdrasil.error.no_selected_profile'));
   const accessToken = String(response.accessToken ?? '');
   const clientToken = String(response.clientToken ?? fallbackClientToken ?? '');
-  if (!accessToken || !clientToken) throw new Error('认证服务未返回完整令牌');
+  if (!accessToken || !clientToken) throw new Error(t('yggdrasil.error.incomplete_token'));
   const uuid = uuidWithHyphens(profile.id);
   const id = `ygg-${crypto.createHash('sha256').update(`${provider.id}\u0000${identifier}\u0000${profile.id}`).digest('hex').slice(0, 32)}`;
   return {
@@ -402,8 +403,8 @@ export async function authenticate(providerIdValue: string, identifierValue: str
   const provider = findProvider(providerIdValue);
   const identifier = identifierValue.trim();
   const password = passwordValue;
-  if (!identifier) throw new Error('账号或邮箱不能为空');
-  if (!password) throw new Error('密码不能为空');
+  if (!identifier) throw new Error(t('yggdrasil.error.identifier_empty'));
+  if (!password) throw new Error(t('yggdrasil.error.password_empty'));
   const clientToken = crypto.randomUUID().replace(/-/g, '');
   const response = await postYgg(endpointUrl(provider.authServer, 'authenticate'), {
     agent: { name: 'Minecraft', version: 1 },
@@ -414,7 +415,7 @@ export async function authenticate(providerIdValue: string, identifierValue: str
   });
   const accessToken = String(response.accessToken ?? '');
   const returnedClientToken = String(response.clientToken ?? clientToken);
-  if (!accessToken) throw new Error('认证服务未返回 accessToken');
+  if (!accessToken) throw new Error(t('yggdrasil.error.no_access_token'));
   if (response.selectedProfile) {
     return {
       status: 'complete',
@@ -422,7 +423,7 @@ export async function authenticate(providerIdValue: string, identifierValue: str
     };
   }
   const profiles = (response.availableProfiles ?? []).map(cleanProfile).filter((profile): profile is YggdrasilProfileChoice => !!profile);
-  if (!profiles.length) throw new Error('此账号没有可用角色，请先在皮肤站创建角色');
+  if (!profiles.length) throw new Error(t('yggdrasil.error.no_profiles'));
   if (profiles.length === 1) {
     return {
       status: 'complete',
@@ -446,10 +447,10 @@ export async function authenticate(providerIdValue: string, identifierValue: str
 export async function completeProfileSelection(challengeId: string, profileIdValue: string): Promise<Account> {
   const pending = pendingProfiles.get(challengeId);
   pendingProfiles.delete(challengeId);
-  if (!pending || pending.expiresAt < Date.now()) throw new Error('角色选择已过期，请重新登录');
+  if (!pending || pending.expiresAt < Date.now()) throw new Error(t('yggdrasil.error.selection_expired'));
   const profileId = profileIdValue.replace(/-/g, '').toLowerCase();
   const profile = pending.profiles.find((item) => item.id === profileId);
-  if (!profile) throw new Error('所选角色不在本次登录响应中');
+  if (!profile) throw new Error(t('yggdrasil.error.profile_not_in_response'));
   return await selectSingleProfile(pending.provider, pending.identifier, pending.accessToken, pending.clientToken, profile, pending.user);
 }
 
@@ -466,10 +467,10 @@ async function validateCredentials(account: Account, provider: YggdrasilProvider
 }
 
 export async function refreshAccount(account: Account): Promise<Account> {
-  if (account.type !== 'yggdrasil' || !account.providerId) throw new Error('不是外置登录账号');
+  if (account.type !== 'yggdrasil' || !account.providerId) throw new Error(t('yggdrasil.error.not_external_account'));
   const provider = findProvider(account.providerId);
   if (await validateCredentials(account, provider)) return account;
-  if (!account.accessToken || !account.clientToken) throw new Error('外置登录凭据缺失，请重新登录');
+  if (!account.accessToken || !account.clientToken) throw new Error(t('yggdrasil.error.missing_credentials'));
   let response: YggResponse;
   try {
     response = await postYgg(endpointUrl(provider.authServer, 'refresh'), {
@@ -478,10 +479,10 @@ export async function refreshAccount(account: Account): Promise<Account> {
       requestUser: true,
     });
   } catch (error) {
-    throw new Error(`外置登录已失效，请重新输入密码：${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(t('yggdrasil.error.refresh_failed', { error: error instanceof Error ? error.message : String(error) }));
   }
   const refreshed = accountFromResponse(provider, account.loginIdentifier ?? account.username, response, account.clientToken);
-  if (refreshed.uuid !== account.uuid) throw new Error('刷新响应的角色与原账号不一致，请重新登录');
+  if (refreshed.uuid !== account.uuid) throw new Error(t('yggdrasil.error.refresh_profile_mismatch'));
   return { ...account, ...refreshed, id: account.id };
 }
 
@@ -515,7 +516,12 @@ export async function providerMetadata(provider: YggdrasilProvider): Promise<str
       parseMetadata(cached);
       return cached;
     } catch {
-      throw new Error(`无法获取 ${provider.name} 元数据，且没有可用缓存：${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        t('yggdrasil.error.metadata_unavailable', {
+          provider: provider.name,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      );
     }
   }
 }
@@ -586,13 +592,13 @@ async function fetchInjectorArtifact(): Promise<InjectorArtifact> {
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const artifact = cleanArtifact(JSON.parse(await responseTextLimited(response, 128 * 1024)));
-      if (!artifact) throw new Error('构件元数据缺少可信下载地址或 SHA-256');
+      if (!artifact) throw new Error(t('yggdrasil.error.artifact_untrusted'));
       return artifact;
     } catch (error) {
       errors.push(`${new URL(source).hostname}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
-  throw new Error(`无法获取 authlib-injector：${errors.join('；')}`);
+  throw new Error(t('yggdrasil.error.injector_fetch_failed', { errors: errors.join(t('common.list_separator')) }));
 }
 
 async function downloadInjector(): Promise<string> {
@@ -609,20 +615,20 @@ async function downloadInjector(): Promise<string> {
     redirect: 'follow',
     signal: AbortSignal.timeout(60_000),
   });
-  if (!response.ok) throw new Error(`authlib-injector 下载失败（HTTP ${response.status}）`);
+  if (!response.ok) throw new Error(t('yggdrasil.error.injector_download_http', { status: response.status }));
   const finalDownloadUrl = new URL(response.url || artifact.download_url);
   if (
     finalDownloadUrl.protocol !== 'https:' ||
     !['authlib-injector.yushi.moe', 'bmclapi2.bangbang93.com'].includes(finalDownloadUrl.hostname)
   ) {
-    throw new Error('authlib-injector 下载发生了不可信重定向');
+    throw new Error(t('yggdrasil.error.injector_redirect'));
   }
   const declared = Number(response.headers.get('content-length') ?? 0);
-  if (declared > MAX_AGENT_BYTES) throw new Error('authlib-injector 文件大小异常');
+  if (declared > MAX_AGENT_BYTES) throw new Error(t('yggdrasil.error.injector_size'));
   const bytes = await responseBufferLimited(response, MAX_AGENT_BYTES);
-  if (!bytes.length || bytes.length > MAX_AGENT_BYTES) throw new Error('authlib-injector 文件大小异常');
+  if (!bytes.length || bytes.length > MAX_AGENT_BYTES) throw new Error(t('yggdrasil.error.injector_size'));
   const actual = crypto.createHash('sha256').update(bytes).digest('hex');
-  if (actual !== artifact.checksums.sha256) throw new Error('authlib-injector SHA-256 校验失败');
+  if (actual !== artifact.checksums.sha256) throw new Error(t('yggdrasil.error.injector_checksum'));
   const temp = `${jar}.${process.pid}.part`;
   try {
     fs.writeFileSync(temp, bytes);
@@ -642,9 +648,9 @@ export async function ensureAuthlibInjector(): Promise<string> {
 export async function runtimeInfo(): Promise<YggdrasilRuntimeInfo> {
   const jar = await ensureAuthlibInjector();
   const artifact = cleanArtifact(JSON.parse(fs.readFileSync(artifactManifestFile(), 'utf-8')));
-  if (!artifact) throw new Error('authlib-injector 本地构件清单损坏');
+  if (!artifact) throw new Error(t('yggdrasil.error.injector_manifest_corrupt'));
   const actual = sha256File(jar);
-  if (actual !== artifact.checksums.sha256) throw new Error('authlib-injector 本地 SHA-256 校验失败');
+  if (actual !== artifact.checksums.sha256) throw new Error(t('yggdrasil.error.injector_local_checksum'));
   return {
     path: jar,
     version: artifact.version,
@@ -661,14 +667,14 @@ export async function launchArguments(account: Account): Promise<string[]> {
 }
 
 export async function externalProfile(account: Account): Promise<ProfileSkins> {
-  if (account.type !== 'yggdrasil' || !account.providerId) throw new Error('不是外置登录账号');
+  if (account.type !== 'yggdrasil' || !account.providerId) throw new Error(t('yggdrasil.error.not_external_account'));
   const provider = findProvider(account.providerId);
   const profileId = account.uuid.replace(/-/g, '');
   const response = await fetch(`${endpointUrl(provider.sessionServer, `session/minecraft/profile/${profileId}`)}?unsigned=false`, {
     headers: { Accept: 'application/json' },
     signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
   });
-  if (!response.ok) throw await readYggError(response, '获取外置角色材质失败');
+  if (!response.ok) throw await readYggError(response, t('yggdrasil.error.profile_texture_failed'));
   const data = (await response.json()) as {
     name?: unknown;
     properties?: Array<{ name?: unknown; value?: unknown }>;
@@ -684,7 +690,7 @@ export async function externalProfile(account: Account): Promise<ProfileSkins> {
     try {
       payload = JSON.parse(Buffer.from(textureProperty.value, 'base64').toString('utf-8')) as typeof payload;
     } catch {
-      throw new Error('外置角色的 textures 属性无效');
+      throw new Error(t('yggdrasil.error.texture_invalid'));
     }
   }
   const skinUrl = typeof payload.textures?.SKIN?.url === 'string' ? payload.textures.SKIN.url : undefined;

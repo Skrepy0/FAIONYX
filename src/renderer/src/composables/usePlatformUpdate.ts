@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue';
 import { getSystemInfo } from '../api';
+import { t } from '@renderer/i18n';
 const systemInstaller = ref(false);
 let requested = false;
 /** Keep native installer handoff distinct from a completed portable replacement. */
@@ -13,13 +14,11 @@ export function usePlatformUpdate() {
         })
         .catch(() => {});
   }
-  const installAction = computed(() => (systemInstaller.value ? '下次启动打开安装器' : '下次启动应用'));
+  const installAction = computed(() => t(systemInstaller.value ? 'update.action.open_installer' : 'update.action.apply_next_launch'));
   const installExplanation = computed(() =>
-    systemInstaller.value
-      ? '安装包已下载并通过 SHA256 完整性校验。下次启动将打开系统安装器，确认并完成系统安装后才会更新。'
-      : '安装包已下载并通过 SHA256 完整性校验。下次手动启动时完成安装，替换前会自动备份当前版本。'
+    t(systemInstaller.value ? 'update.explain.system_installer' : 'update.explain.portable_replace')
   );
-  const updateReadyMessage = (prefix = '更新已就绪') =>
-    prefix + (systemInstaller.value ? '，下次启动将打开系统安装器，确认后完成安装' : '，下次手动启动时应用');
+  const updateReadyMessage = (prefix = t('update.ready_prefix')) =>
+    prefix + t(systemInstaller.value ? 'update.ready_suffix.system_installer' : 'update.ready_suffix.portable');
   return { systemInstaller, installAction, installExplanation, updateReadyMessage };
 }

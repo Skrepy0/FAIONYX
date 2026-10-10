@@ -1,4 +1,5 @@
 import type { CommunitySource } from './types';
+import { translate as t } from './i18n';
 export interface ModFavorite {
   key: string;
   name: string;
@@ -56,13 +57,13 @@ export interface FavoriteInstallResult {
 
 /** A checked feature must not silently become an empty request after a failed query. Legacy selections remain supported. */
 export function validateFavoriteInstallIntent(selections: readonly FavoriteSelection[], intent?: FavoriteInstallIntent) {
-  if (!Array.isArray(selections) || selections.length > 100) throw new Error('收藏模组过多（每次最多 100 项）');
+  if (!Array.isArray(selections) || selections.length > 100) throw new Error(t('modfavorites.error.too_many'));
   const selected = new Set<string>();
   for (const selection of selections) {
-    if (!selection || typeof selection !== 'object') throw new Error('收藏模组选择已失效，请重新检查');
+    if (!selection || typeof selection !== 'object') throw new Error(t('modfavorites.error.selection_stale'));
     const key = favoriteKey(selection);
     if (typeof selection.fileId !== 'string' || !selection.fileId || selection.fileId.length > 300 || selected.has(key))
-      throw new Error('收藏模组选择重复或已失效，请重新检查');
+      throw new Error(t('modfavorites.error.selection_duplicate'));
     selected.add(key);
   }
   if (intent === undefined)
@@ -76,7 +77,7 @@ export function validateFavoriteInstallIntent(selections: readonly FavoriteSelec
     intent.approvedSkips.length > 1000 ||
     (intent.baseOnly !== undefined && typeof intent.baseOnly !== 'boolean')
   )
-    throw new Error('收藏安装意图无效，请重新选择');
+    throw new Error(t('modfavorites.error.intent_invalid'));
   const expected = new Map<string, string>();
   for (const item of intent.expected) {
     if (
@@ -87,10 +88,10 @@ export function validateFavoriteInstallIntent(selections: readonly FavoriteSelec
       item.name.length > 200 ||
       expected.has(item.key)
     )
-      throw new Error('收藏项目快照无效，请重新检查');
+      throw new Error(t('modfavorites.error.snapshot_invalid'));
     expected.set(item.key, item.name);
   }
-  for (const key of selected) if (!expected.has(key)) throw new Error('所选模组不在本次收藏快照中');
+  for (const key of selected) if (!expected.has(key)) throw new Error(t('modfavorites.error.not_in_snapshot'));
   const skipped = new Map<string, FavoriteInstallSkip>();
   for (const item of intent.approvedSkips) {
     if (
@@ -101,8 +102,8 @@ export function validateFavoriteInstallIntent(selections: readonly FavoriteSelec
       !['incompatible', 'unlinked', 'unreliable', 'query-error', 'deselected', 'base-only'].includes(item.reason) ||
       (item.message !== undefined && (typeof item.message !== 'string' || item.message.length > 1000))
     )
-      throw new Error('收藏跳过决定无效，请重新检查');
-    if (item.reason === 'base-only' && intent.baseOnly !== true) throw new Error('尚未确认不安装收藏模组');
+      throw new Error(t('modfavorites.error.skip_invalid'));
+    if (item.reason === 'base-only' && intent.baseOnly !== true) throw new Error(t('modfavorites.error.base_only_unconfirmed'));
     skipped.set(item.key, {
       key: item.key,
       name: expected.get(item.key)!,
@@ -110,18 +111,17 @@ export function validateFavoriteInstallIntent(selections: readonly FavoriteSelec
       ...(item.message ? { message: item.message } : {}),
     });
   }
-  if (intent.baseOnly === true && selected.size) throw new Error('仅安装基础实例与收藏模组选择冲突');
-  if (!selected.size && intent.baseOnly !== true)
-    throw new Error('没有已确认的收藏模组；请重试、逐项跳过并选择不安装收藏模组，或关闭此选项');
+  if (intent.baseOnly === true && selected.size) throw new Error(t('modfavorites.error.base_only_conflict'));
+  if (!selected.size && intent.baseOnly !== true) throw new Error(t('modfavorites.error.no_confirmed'));
   if ([...expected.keys()].some((key) => !selected.has(key) && !skipped.has(key)))
-    throw new Error('部分收藏模组尚未确认，请重试或明确跳过每一项');
+    throw new Error(t('modfavorites.error.partial_unconfirmed'));
   return { requested: expected.size, selected: selected.size, skipped: [...skipped.values()], baseOnly: intent.baseOnly === true };
 }
 export function favoriteKey(value: { source?: string; projectId?: string; sha1?: string }): string {
   if ((value.source === 'modrinth' || value.source === 'curseforge') && /^[a-zA-Z0-9_-]{1,100}$/.test(value.projectId || ''))
     return `${value.source}:${value.projectId}`;
   if (/^[a-f0-9]{40}$/i.test(value.sha1 || '')) return `sha1:${value.sha1!.toLowerCase()}`;
-  throw new Error('收藏缺少可信项目或文件标识');
+  throw new Error(t('modfavorites.error.missing_identity'));
 }
 
 export interface FavoriteFilter {
@@ -152,7 +152,7 @@ export function linkFavoriteRecords(
   project: { source: CommunitySource; projectId: string; name: string; iconUrl?: string }
 ): ModFavorite[] {
   const original = list.find((f) => f.key === oldKey);
-  if (!original) throw new Error('该收藏已被取消，请刷新列表');
+  if (!original) throw new Error(t('modfavorites.error.cancelled'));
   const key = favoriteKey(project),
     existing = list.find((f) => f.key === key);
   const hashes = [
@@ -181,7 +181,7 @@ export function removeFavoriteRecords(list: readonly ModFavorite[], keys: readon
     keys.length > 1000 ||
     keys.some((key) => typeof key !== 'string' || !list.some((f) => f.key === key))
   ) {
-    throw new Error('收藏选择已失效，请刷新后重试');
+    throw new Error(t('modfavorites.error.selection_expired'));
   }
   const removed = new Set(keys);
   return list.filter((f) => !removed.has(f.key));

@@ -3,6 +3,7 @@ import path from 'node:path';
 import { app } from 'electron';
 import { httpFetch } from './httpClient';
 import type { Library, LibraryArtifact } from './versions';
+import { translate as t } from '../../shared/i18n';
 
 const CENTRAL = 'https://repo.maven.apache.org/maven2/';
 const digests = new Map<string, string>();
@@ -49,7 +50,7 @@ export function nativeLibraryForHost(
     !/^3\.\d+\.\d+$/.test(parts[2] ?? '') ||
     Number(parts[2].split('.')[1]) < 3
   ) {
-    throw new Error(`此游戏运行库未提供已验证的 Linux ARM64 文件：${library.name ?? legacyKey}。请使用兼容版本；不能加载 x64 原生库。`);
+    throw new Error(t('platformnatives.error.no_arm64_file', { library: library.name ?? legacyKey ?? '' }));
   }
   const [, module, version] = parts;
   const relative = `org/lwjgl/${module}/${version}/${module}-${version}-${classifier}.jar`;
@@ -78,7 +79,7 @@ export async function resolveNativeIntegrity<T extends { url?: string; sha1?: st
 ): Promise<T> {
   const url = task.nativeChecksumUrl;
   if (!url) return task;
-  if (!trustedChecksumUrl(url) || task.url !== url.slice(0, -5)) throw new Error('原生库校验来源无效');
+  if (!trustedChecksumUrl(url) || task.url !== url.slice(0, -5)) throw new Error(t('platformnatives.error.untrusted_checksum'));
   const cached = nativeChecksum(url);
   if (cached) {
     task.sha1 = cached;
@@ -88,10 +89,10 @@ export async function resolveNativeIntegrity<T extends { url?: string; sha1?: st
   const response = await httpFetch(url, { signal: combined, systemProxy: true });
   if (!response.ok) {
     await response.body?.cancel();
-    throw new Error(`无法取得 ${path.basename(task.url)} 的官方 ARM64 校验值（HTTP ${response.status}），未使用 x64 替代`);
+    throw new Error(t('platformnatives.error.checksum_fetch_failed', { file: path.basename(task.url), status: String(response.status) }));
   }
   const reader = response.body?.getReader();
-  if (!reader) throw new Error('原生库校验响应为空');
+  if (!reader) throw new Error(t('platformnatives.error.empty_checksum'));
   let text = '',
     bytes = 0;
   try {
@@ -99,14 +100,14 @@ export async function resolveNativeIntegrity<T extends { url?: string; sha1?: st
       const chunk = await reader.read();
       if (chunk.done) break;
       bytes += chunk.value.byteLength;
-      if (bytes > 256) throw new Error('原生库校验响应过大');
+      if (bytes > 256) throw new Error(t('platformnatives.error.checksum_too_large'));
       text += Buffer.from(chunk.value).toString('ascii');
     }
   } finally {
     await reader.cancel().catch(() => {});
   }
   const hash = text.trim().toLowerCase();
-  if (!/^[a-f0-9]{40}$/.test(hash)) throw new Error('原生库官方 SHA1 无效');
+  if (!/^[a-f0-9]{40}$/.test(hash)) throw new Error(t('platformnatives.error.invalid_sha1'));
   task.sha1 = hash;
   digests.set(url, hash);
   try {
@@ -120,8 +121,9 @@ export async function resolveNativeIntegrity<T extends { url?: string; sha1?: st
 
 /** Check the actual ELF machine, not its file name, before Java may load it. */
 export function assertNativeElf(data: Buffer, arch: string, label: string): void {
-  if (data.length < 20 || data[0] !== 0x7f || data.toString('ascii', 1, 4) !== 'ELF') throw new Error(`原生库不是有效 ELF：${label}`);
-  if (data[4] !== 2 || data[5] !== 1) throw new Error(`原生库不是支持的 64 位小端 ELF：${label}`);
+  if (data.length < 20 || data[0] !== 0x7f || data.toString('ascii', 1, 4) !== 'ELF')
+    throw new Error(t('platformnatives.error.not_elf', { label }));
+  if (data[4] !== 2 || data[5] !== 1) throw new Error(t('platformnatives.error.not_elf64_le', { label }));
   const expected = arch === 'arm64' ? 183 : arch === 'x64' ? 62 : 0;
-  if (!expected || data.readUInt16LE(18) !== expected) throw new Error(`原生库架构不匹配（需要 ${arch}）：${label}`);
+  if (!expected || data.readUInt16LE(18) !== expected) throw new Error(t('platformnatives.error.arch_mismatch', { arch, label }));
 }

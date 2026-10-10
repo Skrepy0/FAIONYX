@@ -1,22 +1,22 @@
-import { ref } from 'vue';
-import zhCN from './locales/zh-CN.json';
-import enUS from './locales/en-US.json';
+import { ref, watch } from 'vue';
+import { translate, setCurrentLocale, normalizeLocale, type LocaleId } from '@shared/i18n';
 import { store } from '@renderer/store';
 import { saveSettings } from '@renderer/api';
 
-const messages: Record<string, Record<string, string>> = {
-  'zh-CN': zhCN as unknown as Record<string, string>,
-  'en-US': enUS as unknown as Record<string, string>,
-};
-export const locale = ref('zh-CN');
+export { LOCALE_IDS, FALLBACK_LOCALE, normalizeLocale, hasKey } from '@shared/i18n';
+export type { LocaleId } from '@shared/i18n';
+
+export const locale = ref<LocaleId>('zh-CN');
+// 渲染层 ref 是唯一真源，同步给共享层，主进程文案（toast/dialog）随之切换。
+watch(locale, (v) => setCurrentLocale(v), { immediate: true });
 export function t(key: string, params?: Record<string, string | number>) {
-  const dict = messages[locale.value] ?? messages['zh-CN'];
-  let s = (dict[key] ?? messages['zh-CN'][key] ?? key) as string;
-  for (const [k, v] of Object.entries(params ?? {})) s = s.replace(`{${k}}`, String(v));
-  return s;
+  // 读取 locale 让模板 / computed 建立响应式依赖：语言切换后文案立即重算。
+  void locale.value;
+  return translate(key, params);
 }
 export function setLocale(lang: string) {
-  locale.value = lang;
+  locale.value = normalizeLocale(lang);
+  setCurrentLocale(locale.value);
   void saveSettings({ locale: lang })
     .then((s) => {
       store.settings = s;

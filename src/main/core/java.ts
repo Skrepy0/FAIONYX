@@ -34,6 +34,7 @@ export { selectJavaByMajor, javaCompatibilityError } from './javaCompatibility';
 export type { JavaRequirement } from './javaCompatibility';
 import { gameJavaArchitecture } from './javaArchitecture';
 import { requireDesktopGamePlatform } from '../../shared/platform';
+import { translate as t } from '../../shared/i18n';
 import { provisionJava, javaPackageSize } from './javaSources';
 import { httpFetch } from './httpClient';
 import { validateJavaRuntime } from './javaRuntimeHealth';
@@ -78,7 +79,7 @@ export interface JavaScanOptions {
 
 function throwIfScanCancelled(signal?: AbortSignal): void {
   if (signal?.aborted) {
-    const error = new Error('已取消');
+    const error = new Error(t('ipc.text.cancelled'));
     error.name = 'AbortError';
     throw error;
   }
@@ -151,7 +152,7 @@ function runTextProcess(command: string, args: string[], signal?: AbortSignal, t
         settled = true;
         signal?.removeEventListener('abort', onAbort);
         if (signal?.aborted) {
-          const aborted = new Error('已取消');
+          const aborted = new Error(t('ipc.text.cancelled'));
           aborted.name = 'AbortError';
           reject(aborted);
           return;
@@ -198,7 +199,7 @@ export async function resolveJavaExecutable(exe: string, signal?: AbortSignal): 
     const resolved = runtime && realExecutable(runtime);
     if (resolved) return resolved;
   }
-  throw new Error('无法解析真实 Java 运行时，请选择 JDK/JRE 的 bin/java 可执行文件');
+  throw new Error(t('java.error.resolve_runtime'));
 }
 
 /** execFile 以 Buffer 收输出（编码由调用方按 JVM 平台编码判定）。 */
@@ -227,8 +228,8 @@ function quickCandidates(runWhere = true): JavaCandidate[] {
   const settings = getSettings();
 
   // 1. 用户指定
-  addCandidate(candidates, settings.javaPath, '当前配置');
-  for (const exe of settings.javaCustom ?? []) addCandidate(candidates, exe, '手动添加');
+  addCandidate(candidates, settings.javaPath, t('java.label.source_current'));
+  for (const exe of settings.javaCustom ?? []) addCandidate(candidates, exe, t('java.label.source_manual'));
 
   // 2. JAVA_HOME
   addCandidate(candidates, process.env.JAVA_HOME, 'JAVA_HOME');
@@ -254,7 +255,7 @@ function quickCandidates(runWhere = true): JavaCandidate[] {
       const base = path.join(`${systemDrive}\\`, 'Program Files', dn);
       try {
         for (const sub of fs.readdirSync(base)) {
-          addCandidate(candidates, path.join(base, sub), '常见安装目录');
+          addCandidate(candidates, path.join(base, sub), t('java.label.source_common_dir'));
         }
       } catch {
         /* 目录不存在 */
@@ -267,7 +268,7 @@ function quickCandidates(runWhere = true): JavaCandidate[] {
         const l1p = path.join(rtBase, l1);
         try {
           for (const l2 of fs.readdirSync(l1p)) {
-            addCandidate(candidates, path.join(l1p, l2, l1), 'Minecraft 官方 Runtime');
+            addCandidate(candidates, path.join(l1p, l2, l1), t('java.label.source_minecraft_runtime'));
           }
         } catch {
           /* 非目录 */
@@ -296,13 +297,13 @@ function quickCandidates(runWhere = true): JavaCandidate[] {
         /* 目录不存在 */
       }
     }
-    addCandidate(candidates, '/usr/bin/java', '系统路径');
+    addCandidate(candidates, '/usr/bin/java', t('java.label.source_system_path'));
   } else {
     // Linux
-    addCandidate(candidates, '/usr/bin/java', '系统路径');
+    addCandidate(candidates, '/usr/bin/java', t('java.label.source_system_path'));
     try {
       for (const sub of fs.readdirSync('/usr/lib/jvm')) {
-        addCandidate(candidates, path.join('/usr/lib/jvm', sub), '系统 JVM 目录');
+        addCandidate(candidates, path.join('/usr/lib/jvm', sub), t('java.label.source_system_jvm'));
       }
     } catch {
       /* 目录不存在 */
@@ -314,7 +315,7 @@ function quickCandidates(runWhere = true): JavaCandidate[] {
     for (const sub of fs.readdirSync(runtimesDir())) {
       const home = path.join(runtimesDir(), sub);
       // Windows 结构 bin/java.exe；macOS 结构 Contents/Home/bin/java
-      addCandidate(candidates, home, 'FAIONYX Runtime');
+      addCandidate(candidates, home, t('java.label.source_faionyx_runtime'));
     }
   } catch {
     /* 目录不存在 */
@@ -357,7 +358,7 @@ function writePersistentCache(list: JavaInfo[]): void {
     const payload: JavaScanCacheFile = { version: 1, scannedAt: Date.now(), list };
     fs.writeFileSync(file, JSON.stringify(payload, null, 2), 'utf-8');
   } catch (error) {
-    console.warn('[FAIONYX] Java 扫描缓存写入失败:', error);
+    console.warn('[FAIONYX] ' + t('java.log.cache_write_failed') + ':', error);
   }
 }
 
@@ -409,12 +410,12 @@ export function scanJava(refresh = false): JavaInfo[] {
  * the renderer or the other launch preparation branches. */
 export async function scanJavaForLaunch(emit?: ProgressEmit, signal?: AbortSignal): Promise<JavaInfo[]> {
   signal?.throwIfAborted();
-  emit?.({ stage: 'java-scan', progress: 0, indeterminate: true, text: '正在检查本机 Java 与运行环境缓存…' });
+  emit?.({ stage: 'java-scan', progress: 0, indeterminate: true, text: t('java.state.scan_local') });
   if (scanCache && Date.now() - scanCache.time < SCAN_TTL) return mergeCustom(scanCache.list);
   const persisted = cachedCompleteList(PERSISTENT_SCAN_TTL);
   if (persisted) return mergeCustom(persisted);
   const candidates = quickCandidates(false);
-  emit?.({ stage: 'java-scan', progress: 0, indeterminate: true, text: '正在检查 PATH 中的 Java…' });
+  emit?.({ stage: 'java-scan', progress: 0, indeterminate: true, text: t('java.state.scan_path') });
   try {
     const output = await runTextProcess(IS_WIN ? 'where.exe' : 'which', ['java'], signal, 10000);
     for (const executable of output.split(/\r?\n/).filter(Boolean))
@@ -430,7 +431,12 @@ export async function scanJavaForLaunch(emit?: ProgressEmit, signal?: AbortSigna
     return true;
   });
   const found = await mapLaunchFiles(unique, async (candidate) => {
-    emit?.({ stage: 'java-scan', progress: 0, indeterminate: true, text: `正在验证 Java：${candidate.executable}` });
+    emit?.({
+      stage: 'java-scan',
+      progress: 0,
+      indeterminate: true,
+      text: t('java.state.verify_candidate', { path: candidate.executable }),
+    });
     signal?.throwIfAborted();
     const info = await probeJavaAsync(realExecutable(candidate.executable) ?? candidate.executable, signal);
     return info
@@ -452,7 +458,7 @@ export function listJavaSummary(): Promise<JavaInfo[]> {
       settings = getSettings();
     const candidates = quickCandidates(false);
     for (const info of readPersistentCache()?.list ?? [])
-      candidates.push({ executable: info.path, sourceDetail: info.sourceDetail ?? '已缓存' });
+      candidates.push({ executable: info.path, sourceDetail: info.sourceDetail ?? t('java.label.source_cached') });
     const unique = new Map<string, JavaCandidate>();
     for (const c of candidates) {
       const real = realExecutable(c.executable);
@@ -465,14 +471,19 @@ export function listJavaSummary(): Promise<JavaInfo[]> {
       while (cursor < pending.length) {
         const c = pending[cursor++],
           info = await probeJavaAsync(c.executable);
-        if (info) found.push({ ...info, source: c.sourceDetail === '手动添加' ? 'manual' : 'auto', sourceDetail: c.sourceDetail });
+        if (info)
+          found.push({
+            ...info,
+            source: c.sourceDetail === t('java.label.source_manual') ? 'manual' : 'auto',
+            sourceDetail: c.sourceDetail,
+          });
       }
     };
     await Promise.all(Array.from({ length: Math.min(4, pending.length) }, worker));
     const hidden = new Set((settings.javaHidden ?? []).map(pathKey));
     const list = sortJava(found.filter((j) => !hidden.has(pathKey(j.path))));
     console.info(`[FAIONYX] Java summary: ${list.length} runtimes, ${Date.now() - started} ms (persistent probe cache enabled)`);
-    javaLog.info(`Java 概览扫描完成：${list.length} 个运行时（耗时 ${Date.now() - started}ms）`);
+    javaLog.info(t('java.log.summary_done', { count: list.length, ms: Date.now() - started }));
     return list;
   })().finally(() => {
     summaryPending = undefined;
@@ -579,7 +590,7 @@ async function windowsScanRoots(drives: string[], signal?: AbortSignal): Promise
     // 这样能覆盖 D:\自定义目录\runtime，同时不会递归遍历整块游戏盘。
     addScanRoot(roots, {
       directory: `${drive}\\`,
-      label: `${drive} 固定磁盘浅层扫描`,
+      label: t('java.label.scan_drive_shallow', { drive }),
       shallowDepth: 2,
       maxDepth: 10,
       maxDirectories: 8000,
@@ -588,7 +599,7 @@ async function windowsScanRoots(drives: string[], signal?: AbortSignal): Promise
       for (const vendor of vendorDirs) {
         addScanRoot(roots, {
           directory: path.join(`${drive}\\`, programDir, vendor),
-          label: `${drive} 常见安装目录`,
+          label: t('java.label.scan_common_dir', { drive }),
           maxDepth: 7,
           maxDirectories: 12000,
         });
@@ -611,7 +622,7 @@ async function windowsScanRoots(drives: string[], signal?: AbortSignal): Promise
     ]) {
       addScanRoot(roots, {
         directory: path.join(`${drive}\\`, name),
-        label: `${drive} 本地磁盘`,
+        label: t('java.label.scan_local_disk', { drive }),
         maxDepth: 6,
         maxDirectories: 12000,
       });
@@ -622,7 +633,7 @@ async function windowsScanRoots(drives: string[], signal?: AbortSignal): Promise
         if (!item.isDirectory() || item.isSymbolicLink() || !rootHints.test(item.name)) continue;
         addScanRoot(roots, {
           directory: path.join(`${drive}\\`, item.name),
-          label: `${drive} 本地磁盘`,
+          label: t('java.label.scan_local_disk', { drive }),
           maxDepth: 6,
           maxDirectories: 12000,
         });
@@ -638,16 +649,16 @@ async function windowsScanRoots(drives: string[], signal?: AbortSignal): Promise
   // 缺失时从 Roaming 的同级 Local 目录推导。
   const localAppData = process.env.LOCALAPPDATA || path.join(path.dirname(appData), 'Local');
   const userRoots: Array<[string, string, number]> = [
-    [path.join(appData, '.minecraft', 'runtime'), 'Minecraft 官方 Runtime', 8],
+    [path.join(appData, '.minecraft', 'runtime'), t('java.label.source_minecraft_runtime'), 8],
     [path.join(appData, 'PrismLauncher'), 'Prism Launcher Runtime', 7],
     [path.join(appData, 'ModrinthApp'), 'Modrinth Runtime', 7],
     [path.join(appData, 'com.modrinth.theseus'), 'Modrinth Runtime', 8],
-    [path.join(localAppData, 'Programs'), '用户程序目录', 6],
+    [path.join(localAppData, 'Programs'), t('java.label.source_user_programs'), 6],
     [path.join(userHome, '.jdks'), 'IDE JDK', 5],
     [path.join(userHome, '.gradle', 'jdks'), 'Gradle JDK', 5],
     [path.join(userHome, '.lunarclient'), 'Lunar Client Runtime', 7],
     [path.join(userHome, '.badlion'), 'Badlion Runtime', 7],
-    [runtimesDir(), 'FAIONYX Runtime', 7],
+    [runtimesDir(), t('java.label.source_faionyx_runtime'), 7],
   ];
   for (const [directory, label, maxDepth] of userRoots) {
     addScanRoot(roots, { directory, label, maxDepth, maxDirectories: 16000 });
@@ -684,7 +695,7 @@ async function platformScanRoots(drives: string[], signal?: AbortSignal): Promis
   for (const directory of candidates) {
     addScanRoot(roots, {
       directory,
-      label: '本地 Runtime 目录',
+      label: t('java.label.source_runtime_dir'),
       maxDepth: 7,
       maxDirectories: 16000,
     });
@@ -745,30 +756,34 @@ function scanProgress(emit: ProgressEmit | undefined, progress: number, text: st
 export async function scanJavaInstallations(options: JavaScanOptions = {}): Promise<JavaInfo[]> {
   const { refresh = false, signal, emit } = options;
   const started = Date.now();
-  javaLog.info(`开始完整扫描本机 Java（refresh=${refresh}）`);
+  javaLog.info(t('java.log.scan_start', { refresh: String(refresh) }));
   if (!refresh) {
     const cached = cachedCompleteList(PERSISTENT_SCAN_TTL);
     if (cached) {
-      javaLog.info(`命中持久缓存，直接载入 ${cached.length} 个 Java（耗时 ${Date.now() - started}ms）`);
-      scanProgress(emit, 1, `已从缓存载入 ${cached.length} 个 Java`);
+      javaLog.info(t('java.log.cache_hit', { count: cached.length, ms: Date.now() - started }));
+      scanProgress(emit, 1, t('java.state.cache_loaded', { count: cached.length }));
       return mergeCustom(cached);
     }
   }
 
   throwIfScanCancelled(signal);
-  scanProgress(emit, 0.02, '正在读取 Java 配置、PATH 与注册表…');
+  scanProgress(emit, 0.02, t('java.state.read_config'));
   const candidates = new Map<string, JavaCandidate>();
   for (const candidate of quickCandidates()) {
     addCandidate(candidates, candidate.executable, candidate.sourceDetail);
   }
   const [registeredHomes, drives] = await Promise.all([registryJavaHomes(signal), fixedWindowsDrives(signal)]);
-  for (const home of registeredHomes) addCandidate(candidates, home, 'Windows 注册表');
+  for (const home of registeredHomes) addCandidate(candidates, home, t('java.label.source_registry'));
 
   throwIfScanCancelled(signal);
   const roots = await platformScanRoots(drives, signal);
   for (let i = 0; i < roots.length; i++) {
     const root = roots[i];
-    scanProgress(emit, 0.08 + (i / Math.max(roots.length, 1)) * 0.52, `正在扫描 ${root.label}：${root.directory}`);
+    scanProgress(
+      emit,
+      0.08 + (i / Math.max(roots.length, 1)) * 0.52,
+      t('java.state.scan_root', { label: root.label, directory: root.directory })
+    );
     await discoverInRoot(root, candidates, signal);
   }
 
@@ -811,7 +826,11 @@ export async function scanJavaInstallations(options: JavaScanOptions = {}): Prom
       scanProgress(
         emit,
         0.62 + (completed / Math.max(pending.length, 1)) * 0.37,
-        `正在验证 Java ${completed}/${pending.length}${info ? `：Java ${info.major} ${info.architecture ?? ''}` : ''}`
+        t('java.state.verify_progress', {
+          done: completed,
+          total: pending.length,
+          detail: info ? t('java.state.verify_detail', { major: info.major, architecture: info.architecture ?? '' }) : '',
+        })
       );
     }
   };
@@ -829,15 +848,19 @@ export async function scanJavaInstallations(options: JavaScanOptions = {}): Prom
       const foundKeys = new Set(found.map((j) => pathKey(j.path)));
       const restore = hidden.filter((p) => foundKeys.has(pathKey(p)));
       if (restore.length) {
-        javaLog.info(`重扫恢复 ${restore.length} 个曾被隐藏的 Java：${restore.join('、')}`);
+        javaLog.info(t('java.log.hidden_restored', { count: restore.length, list: restore.join(t('common.list_separator')) }));
         saveSettings({ javaHidden: hidden.filter((p) => !foundKeys.has(pathKey(p))) });
       }
     }
   }
   javaLog.info(
-    `本机 Java 扫描完成：共 ${list.length} 个可用（验证 ${pending.length} 个候选，耗时 ${((Date.now() - started) / 1000).toFixed(1)}s）`
+    t('java.log.scan_done', {
+      count: list.length,
+      pending: pending.length,
+      seconds: ((Date.now() - started) / 1000).toFixed(1),
+    })
   );
-  scanProgress(emit, 1, `扫描完成，共找到 ${list.length} 个可用 Java`);
+  scanProgress(emit, 1, t('java.state.scan_done', { count: list.length }));
   return mergeCustom(list);
 }
 
@@ -853,7 +876,7 @@ function mergeCustom(list: JavaInfo[]): JavaInfo[] {
     if (auto.some((j) => pathKey(j.path) === pathKey(real))) continue;
     if (manual.some((j) => pathKey(j.path) === pathKey(real))) continue;
     const info = probeJava(real);
-    if (info) manual.push({ ...info, source: 'manual', sourceDetail: '手动添加' });
+    if (info) manual.push({ ...info, source: 'manual', sourceDetail: t('java.label.source_manual') });
   }
   return sortJava([...manual, ...auto]);
 }
@@ -862,7 +885,7 @@ function mergeCustom(list: JavaInfo[]): JavaInfo[] {
 export function addCustomJava(javaPath: string): void {
   const real = realExecutable(javaPath);
   const info = real ? probeJava(real) : null;
-  if (!info) throw new Error('这不是有效的 Java（java -version 校验失败）');
+  if (!info) throw new Error(t('java.error.invalid_java'));
   const s = getSettings();
   const list = [...(s.javaCustom ?? [])];
   if (!list.some((p) => pathKey(p) === pathKey(real!))) {
@@ -895,7 +918,7 @@ const officialJava = createOfficialJavaReader(
     });
     if (!response.ok) {
       await response.body?.cancel();
-      throw new Error(`官方 Java 元数据 HTTP ${response.status}`);
+      throw new Error(t('java.error.metadata_http', { status: response.status }));
     }
     return response.text();
   }
@@ -990,7 +1013,7 @@ export async function selectHealthyJava(
       return checked;
     } catch (error) {
       signal?.throwIfAborted();
-      javaLog.warn('跳过不完整的 Java：' + candidate.path + '；' + String(error));
+      javaLog.warn(t('java.log.skip_incomplete', { path: candidate.path, error: String(error) }));
     }
   }
   return null;
@@ -1000,7 +1023,7 @@ export async function validateCandidateJava(candidate: JavaInfo, signal?: AbortS
   const exe = await resolveJavaExecutable(candidate.path, signal);
   const actual = await probeJavaAsync(exe, signal);
   if (!actual || actual.major !== candidate.major || !actual.is64Bit || actual.architecture !== candidate.architecture)
-    throw new Error('Java 缓存与当前实际运行时不一致');
+    throw new Error(t('java.error.cache_mismatch'));
   await validateJavaRuntime(exe, actual.major);
   signal?.throwIfAborted();
   return { ...actual, path: exe };
@@ -1023,26 +1046,32 @@ async function ensureJavaInternal(
         try {
           return await validateCandidateJava(candidate, signal);
         } catch (error) {
-          javaLog.warn('跳过不完整的 Java：' + candidate.path + '；' + String(error));
+          javaLog.warn(t('java.log.skip_incomplete', { path: candidate.path, error: String(error) }));
           throw error;
         }
       },
       async (major) => {
-        javaLog.info(`本机没有适配的 Java ${major}（64位），开始自动下载推荐运行时`);
+        javaLog.info(t('java.log.no_compatible', { major }));
         const exe = await downloadAndExtractJava(major, emit, architecture, signal);
         const info = await probeJavaAsync(exe, signal);
-        if (!info) throw new Error('自动安装的 Java 无法运行');
+        if (!info) throw new Error(t('java.error.auto_java_unrunnable'));
         return info;
       },
       architecture,
       signal
     );
     javaLog.info(
-      `选用 Java ${selected.major}（${selected.version}，${selected.architecture}）：${selected.path}（耗时 ${((Date.now() - started) / 1000).toFixed(1)}s）`
+      t('java.log.selected', {
+        major: selected.major,
+        version: selected.version,
+        architecture: selected.architecture ?? '',
+        path: selected.path,
+        seconds: ((Date.now() - started) / 1000).toFixed(1),
+      })
     );
     return selected.path;
   } catch (error) {
-    if (!isCancelError(error)) javaLog.error(`自动准备 Java ${need} 失败`, error);
+    if (!isCancelError(error)) javaLog.error(t('java.log.prepare_failed', { need }), error);
     throw error;
   }
 }
@@ -1095,7 +1124,12 @@ async function downloadAndExtractJava(
               stage: 'java',
               progress: total ? (done / total) * 0.85 : 0,
               bytesDone: done,
-              text: `下载 Java ${need} · ${pkg.provider} ${(done / 1048576).toFixed(1)}${total ? '/' + (total / 1048576).toFixed(1) : ''} MB`,
+              text: t('java.state.download', {
+                need,
+                provider: pkg.provider,
+                done: (done / 1048576).toFixed(1),
+                total: total ? '/' + (total / 1048576).toFixed(1) : '',
+              }),
             }),
           undefined,
           'official',
@@ -1103,7 +1137,7 @@ async function downloadAndExtractJava(
           [],
           { sha256: pkg.sha256, size, systemProxy: true, maxAttempts: 2 }
         );
-        emit({ stage: 'java', progress: 0.9, text: `校验通过，正在解压 Java ${need} · ${pkg.provider}` });
+        emit({ stage: 'java', progress: 0.9, text: t('java.state.verify_extract', { need, provider: pkg.provider }) });
         fs.mkdirSync(extracted);
         if (IS_WIN) new AdmZip(archive).extractAllTo(extracted, true);
         else
@@ -1122,13 +1156,16 @@ async function downloadAndExtractJava(
           : [path.join(source, 'bin', JAVA_EXE)];
         const exe = candidates.find((file) => fs.existsSync(file));
         if (!exe || !fs.realpathSync(exe).startsWith(fs.realpathSync(extracted) + path.sep))
-          throw new Error('Java 解压失败：未找到有效的 bin/java');
+          throw new Error(t('java.error.extract_no_binary'));
         if (!IS_WIN) fs.chmodSync(exe, 0o755);
-        emit({ stage: 'java', progress: 0.95, text: `正在验证 Java ${need} · ${pkg.provider}（${arch}）` });
+        emit({ stage: 'java', progress: 0.95, text: t('java.state.verify_download', { need, provider: pkg.provider, arch }) });
         const verified = await probeJavaAsync(exe, signal);
         if (!verified || verified.major !== need || verified.architecture !== (arch === 'aarch64' ? 'arm64' : 'x64'))
           throw new Error(
-            `Java ${need} 无法运行或架构不匹配${IS_MAC && process.arch === 'arm64' && arch === 'x64' ? '；旧版游戏需要 Intel Java，请确认系统已安装 Rosetta' : ''}`
+            t('java.error.verify_failed', {
+              need,
+              rosetta: IS_MAC && process.arch === 'arm64' && arch === 'x64' ? t('java.error.rosetta_hint') : '',
+            })
           );
         await validateJavaRuntime(exe, verified.major);
         signal?.throwIfAborted();
@@ -1142,7 +1179,7 @@ async function downloadAndExtractJava(
           ...verified,
           path: installedPath,
           source: 'auto',
-          sourceDetail: `FAIONYX Runtime · ${pkg.provider}`,
+          sourceDetail: `${t('java.label.source_faionyx_runtime')} · ${pkg.provider}`,
         });
         const persisted = readPersistentCache();
         scanCache = {
@@ -1151,7 +1188,7 @@ async function downloadAndExtractJava(
           complete: scanCache?.complete ?? !!persisted,
         };
         if (persisted) writePersistentCache(sortJava([...persisted.list, info]));
-        emit({ stage: 'java', progress: 1, text: `Java ${need} 就绪 · ${pkg.provider}（${arch}）` });
+        emit({ stage: 'java', progress: 1, text: t('java.state.ready', { need, provider: pkg.provider, arch }) });
         return installedPath;
       } finally {
         // staging is a unique mkdtemp child of the managed runtime root.

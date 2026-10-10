@@ -1,6 +1,8 @@
 export type FeedbackImagePhase = 'loading' | 'loaded' | 'decoding' | 'decoded' | 'cancelled' | 'failed';
 export type FeedbackImageEvent = { name: 'palm' | 'print'; phase: FeedbackImagePhase; at: number; reason?: string };
 
+import { t } from '@renderer/i18n';
+
 // decode() is a real readiness boundary. The deadline only rejects failure; it
 // never makes an image ready. A late decode continuation cannot revive a closed
 // or hidden initialization. Native decoding itself has no browser cancel API.
@@ -31,14 +33,14 @@ export function prepareFeedbackImages(
     }
     rejectAll(error);
   };
-  const timer = setTimeout(() => fail(new Error(`反馈像素图片解码超时 (${deadlineMs}ms)`)), deadlineMs);
+  const timer = setTimeout(() => fail(new Error(t('mascot.feedback.decode_timeout', { ms: deadlineMs }))), deadlineMs);
   cleanup.push(() => clearTimeout(timer));
   const decoded = entries.map(
     ({ name, image, url }) =>
       new Promise<void>((resolve, reject) => {
         let started = false;
         const onError = () => {
-          const error = new Error('反馈像素图片加载失败：' + name);
+          const error = new Error(t('mascot.feedback.load_failed', { name }));
           reject(error);
           fail(error);
         };
@@ -69,7 +71,7 @@ export function prepareFeedbackImages(
             },
             (error) => {
               if (!finished) {
-                const failure = new Error('反馈像素图片解码失败：' + String(error));
+                const failure = new Error(t('mascot.feedback.decode_failed', { error: String(error) }));
                 reject(failure);
                 fail(failure);
               }
@@ -96,7 +98,7 @@ export function prepareFeedbackImages(
     cancel: () => {
       if (finished) return;
       cancelled = true;
-      fail(new Error('反馈像素图片准备已取消'));
+      fail(new Error(t('mascot.feedback.cancelled')));
     },
   };
 }
