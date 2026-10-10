@@ -8,6 +8,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { app, protocol } from 'electron';
 import { translate as t } from '../../shared/i18n';
+import os from 'os';
+import AdmZip from 'adm-zip';
 
 export interface PluginMeta {
   id: string;
@@ -92,40 +94,95 @@ export function listPlugins(): PluginInfo[] {
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
-/** 安装插件：支持单个 .js 文件或含 plugin.json + main.js 的文件夹。返回插件 id。 */
+/** 从插件目录读取 id 与待拷贝文件（必须含 main.js，可选 plugin.json） */
+function collectPluginFiles(dir: string, fallbackName: string): { id: string; files: Array<{ from: string; to: string }> } {
+  const manifest = path.join(dir, 'plugin.json');
+  const main = path.join(dir, 'main.js');
+  if (!fs.existsSync(main)) throw new Error(t('plugins.error.missing_main'));
+
+  let name = fallbackName;
+  if (fs.existsSync(manifest)) {
+    try {
+      const j = JSON.parse(fs.readFileSync(manifest, 'utf-8'));
+      name = String(j.id || j.name || name);
+    } catch {
+      /* 保持 fallback 名 */
+    }
+  }
+  const id = sanitizePluginId(name);
+  if (!ID_RE.test(id)) throw new Error(t('plugins.error.invalid_id_charset'));
+
+  const files: Array<{ from: string; to: string }> = [{ from: main, to: 'main.js' }];
+  if (fs.existsSync(manifest)) files.push({ from: manifest, to: 'plugin.json' });
+  return { id, files };
+}
+
+/** 安全解压 zip 到指定目录（拒绝 ../ 路径穿越） */
+function extractZip(zipPath: string, destDir: string): void {
+  const zip = new AdmZip(zipPath);
+  const destRoot = path.resolve(destDir);
+  const prefix = destRoot + path.sep;
+  for (const entry of zip.getEntries()) {
+    const target = path.resolve(destRoot, entry.entryName);
+    if (target !== destRoot && !target.startsWith(prefix)) {
+      throw new Error(t('plugins.error.invalid_archive'));
+    }
+    if (entry.isDirectory) {
+      fs.mkdirSync(target, { recursive: true });
+    } else {
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, entry.getData());
+    }
+  }
+}
+
+/** 压缩包常见「外面多套一层同名文件夹」，自动下钻到真正的插件根目录 */
+function resolvePluginRoot(dir: string): string {
+  if (fs.existsSync(path.join(dir, 'main.js')) || fs.existsSync(path.join(dir, 'plugin.json'))) {
+    return dir;
+  }
+  const subdirs = fs.readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory());
+  if (subdirs.length === 1) return resolvePluginRoot(path.join(dir, subdirs[0].name));
+  return dir;
+}
+
+/**
+ * 安装插件：支持单个 .js 文件、含 plugin.json + main.js 的文件夹，
+ * 或包含同样结构的 .zip 压缩包。返回插件 id。
+ */
 export function installPlugin(sourcePath: string): string {
   const src = path.resolve(String(sourcePath ?? ''));
   const st = fs.statSync(src);
-  let id: string;
-  let files: Array<{ from: string; to: string }>;
-  if (st.isDirectory()) {
-    const manifest = path.join(src, 'plugin.json');
-    const main = path.join(src, 'main.js');
-    if (!fs.existsSync(main)) throw new Error(t('plugins.error.missing_main'));
-    let name = path.basename(src);
-    if (fs.existsSync(manifest)) {
-      try {
-        const j = JSON.parse(fs.readFileSync(manifest, 'utf-8'));
-        name = String(j.id || j.name || name);
-      } catch {
-        /* 保持目录名 */
-      }
+  let tmpDir: string | null = null;
+
+  try {
+    let id: string;
+    let files: Array<{ from: string; to: string }>;
+
+    if (st.isDirectory()) {
+      ({ id, files } = collectPluginFiles(src, path.basename(src)));
+    } else if (/\.zip$/i.test(src)) {
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'plugin-install-'));
+      extractZip(src, tmpDir);
+      const root = resolvePluginRoot(tmpDir);
+      // 找不到 plugin.json 时用「压缩包名」而不是临时目录名做 id
+      const fallback = root === tmpDir ? path.basename(src, path.extname(src)) : path.basename(root);
+      ({ id, files } = collectPluginFiles(root, fallback));
+    } else {
+      if (!/\.js$/i.test(src)) throw new Error(t('plugins.error.select_js'));
+      id = sanitizePluginId(path.basename(src, path.extname(src)));
+      if (!ID_RE.test(id)) throw new Error(t('plugins.error.invalid_id_charset'));
+      files = [{ from: src, to: 'main.js' }];
     }
-    id = sanitizePluginId(name);
-    if (!ID_RE.test(id)) throw new Error(t('plugins.error.invalid_id_charset'));
-    files = [{ from: main, to: 'main.js' }];
-    if (fs.existsSync(manifest)) files.push({ from: manifest, to: 'plugin.json' });
-  } else {
-    if (!/\.js$/i.test(src)) throw new Error(t('plugins.error.select_js'));
-    id = sanitizePluginId(path.basename(src, path.extname(src)));
-    if (!ID_RE.test(id)) throw new Error(t('plugins.error.invalid_id_charset'));
-    files = [{ from: src, to: 'main.js' }];
+
+    const dest = path.join(pluginsRoot(), id);
+    if (fs.existsSync(dest)) fs.rmSync(dest, { recursive: true, force: true });
+    fs.mkdirSync(dest, { recursive: true });
+    for (const f of files) fs.copyFileSync(f.from, path.join(dest, f.to));
+    return id;
+  } finally {
+    if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
   }
-  const dest = path.join(pluginsRoot(), id);
-  if (fs.existsSync(dest)) fs.rmSync(dest, { recursive: true, force: true });
-  fs.mkdirSync(dest, { recursive: true });
-  for (const f of files) fs.copyFileSync(f.from, path.join(dest, f.to));
-  return id;
 }
 
 export function setPluginEnabled(id: string, enabled: boolean): PluginInfo[] {

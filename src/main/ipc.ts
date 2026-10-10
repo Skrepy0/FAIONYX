@@ -932,7 +932,7 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
     const opts = {
       properties: ['openFile' as const],
       title: t('ipc.dialog.select_plugin'),
-      filters: [{ name: t('ipc.filter.faionyx_plugin'), extensions: ['js'] }],
+      filters: [{ name: t('ipc.filter.faionyx_plugin'), extensions: ['js', 'zip'] }],
     };
     const r = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts);
     if (r.canceled || !r.filePaths[0]) return plugins.listPlugins();

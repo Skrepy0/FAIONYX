@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import { locale, setLocale, t } from '@renderer/i18n';
-const langOptions = [
-  { value: 'zh-CN', label: t('settings.lang.zh') },
-  { value: 'en-US', label: t('settings.lang.en') },
-];
+import { langOptions, locale, setLocale, t } from '@renderer/i18n';
 import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import UpdateDialogShell from '../components/UpdateDialogShell.vue';
 const ThirdPartyNotices = defineAsyncComponent(() => import('../components/ThirdPartyNotices.vue'));
@@ -39,7 +35,6 @@ import { DEFAULT_CUSTOM_THEME, THEME_PRESETS } from '@shared/types';
 import { autoMemoryMB } from '@shared/memory';
 import MemoryOrganizer from '../components/MemoryOrganizer.vue';
 import type { LocalUpdateCheck, PluginInfo, ReleaseInfo, Settings, ThemeName, UpdateStateInfo } from '@shared/types';
-import { QQ_GROUP_NUMBER } from '@shared/branding';
 import { useMotion } from '../motion';
 const { systemReduced } = useMotion();
 import { usePlatformUpdate } from '../composables/usePlatformUpdate';
@@ -2351,10 +2346,17 @@ async function onRemovePlugin(p: PluginInfo) {
   transform: scale(0.98);
 }
 .theme-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
   font-size: var(--text-sm);
   color: var(--text-dim);
   transition: color 0.16s ease;
+  white-space: nowrap;
 }
+
 .theme-option.active .theme-label {
   color: var(--accent);
   font-weight: 600;

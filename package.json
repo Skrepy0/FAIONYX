@@ -21,7 +21,9 @@
     "verify:harmonyos": "node scripts/verify-harmonyos.cjs",
     "dist:all": "node scripts/dist-platform.cjs",
     "license:check": "node scripts/check-licenses.cjs",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "lang:update": "node scripts/gen-locales.cjs",
+    "lang:check": "node scripts/check-locales.cjs"
   },
   "build": {
     "electronDist": "D:\\Front-projects\\FAIONYX\\node_modules\\electron\\electron-v44.3.0-win32-x64",

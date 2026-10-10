@@ -3,6 +3,8 @@
  * 主进程 (src/main) 与渲染进程 (src/renderer) 都必须遵守本文件定义。
  */
 
+import { LocaleId } from './i18n';
+
 // ---------------- 账号 ----------------
 export type AccountType = 'offline' | 'microsoft' | 'yggdrasil';
 
@@ -443,7 +445,7 @@ export interface Settings {
   /** 自动安装更新（默认开启）：发现新版本静默下载，启动器关闭时自动安装；关闭则弹窗询问 */
   autoUpdate?: boolean;
   /** 界面语言 **/
-  locale?: string;
+  locale?: LocaleId;
 }
 
 // ---------------- 启动器自更新 ----------------

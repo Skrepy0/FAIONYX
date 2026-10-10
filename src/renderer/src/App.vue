@@ -43,7 +43,7 @@ import {
   startUpdateDownload,
 } from './api';
 import type { ReleaseInfo } from '@shared/types';
-import { locale, t, $t } from '@renderer/i18n';
+import { locale, t, $t, setLocale } from '@renderer/i18n';
 import UpdateModal from './components/UpdateModal.vue';
 import {
   applyLaunchState,
@@ -1119,7 +1119,7 @@ onMounted(async () => {
   void pollTickets();
   offs.push(installVisualDesign());
   void loadExitNotices();
-  if (store.settings?.locale) locale.value = store.settings.locale;
+  if (store.settings && store.settings.locale) locale.value = store.settings.locale;
   applyTheme(store.settings?.theme, store.settings?.custom);
   document.addEventListener('pointerdown', closeOtherFileMores, true);
   motionQuery.addEventListener('change', onMotionChange);
@@ -1321,6 +1321,13 @@ onMounted(async () => {
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
     window.faionyx.send('boot:stage', 'paint');
     window.faionyx.send('boot:renderer-ready');
+  }
+  // 手动刷新语言，确保插件的语言能正常加载
+  if (store.settings && store.settings.locale) {
+    setLocale(store.settings.locale);
+    const temp = store.settings.locale;
+    locale.value = 'en-US';
+    locale.value = temp;
   }
 });
 

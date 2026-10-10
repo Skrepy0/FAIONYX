@@ -7,7 +7,8 @@
 import { watch } from 'vue';
 import { listPlugins } from './api';
 import { store, toast } from './store';
-import { t } from '@renderer/i18n';
+import { bumpLocaleRevision, setLocale, t } from '@renderer/i18n';
+import { flattenDeep, mergeLocaleMessages } from '@shared/i18n';
 
 export interface FaionyxPluginApi {
   /** 全局 toast 通知 */
@@ -22,6 +23,8 @@ export interface FaionyxPluginApi {
   store: typeof store;
   /** 启动器版本号 */
   version: string;
+  /** 运行时注入/覆盖一种语言的词条（JSON 字符串） */
+  loadLocale: (id: string, json: string, displayName?: string) => boolean;
 }
 
 declare global {
@@ -53,7 +56,24 @@ function installGlobalApi(): void {
     getView: () => store.currentView,
     store,
     version: __APP_VERSION__,
+    loadLocale(id, json, displayName) {
+      if (typeof id !== 'string' || !id) return false;
+      let raw: unknown;
+      try {
+        raw = JSON.parse(json);
+      } catch (e) {
+        console.error(`[Plugin] language parse error: ${e}`);
+        return false;
+      }
+      const flat = flattenDeep(raw);
+      if (!flat) return false;
+      const ok = mergeLocaleMessages(id, flat, displayName);
+      if (ok) bumpLocaleRevision();
+      if (store.locale === id) setLocale(id);
+      return ok;
+    },
   };
+
   watch(
     () => store.currentView,
     (view) => {
