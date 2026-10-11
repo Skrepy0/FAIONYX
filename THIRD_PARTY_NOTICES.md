@@ -1,5 +1,15 @@
 # Third-party notices / 第三方声明
 
+> **Fork notice**
+>
+> This repository is a fork of KAMUCL.
+> Original project: https://github.com/kamubaba-i/KAMUCL
+> Original KAMUCL code Copyright (c) 2026 kamubaba-i.
+> Fork modifications Copyright (c) 2026 Skrepy0.
+>
+> All original third-party notices below are retained unchanged.
+> Fork-specific changes, if any, are marked with "Fork modification:".
+
 The root MIT license covers original KAMUCL contributions only. Third-party
 copyright, license and trademark rights remain with their respective holders.
 
