@@ -36,6 +36,7 @@ export interface DownloadTask {
   reuseDirs?: string[];
   reuseFiles?: string[];
   nativeChecksumUrl?: string;
+  proxyUrl?: string;
 }
 interface Integrity {
   sha1?: string;
@@ -43,6 +44,7 @@ interface Integrity {
   sha256?: string;
   size?: number;
   systemProxy?: boolean;
+  proxyUrl?: string;
 }
 export const BMCL_MAVEN_ROOT = 'https://bmclapi2.bangbang93.com/maven/';
 export function mirrorUrl(input: string, mirror: MirrorPref): string {
@@ -350,6 +352,7 @@ async function receive(
       bodyTimeoutMs: 120_000,
       separateConnection: !!range,
       systemProxy: expected.systemProxy,
+      proxyUrl: expected.proxyUrl,
     });
     headersMs = performance.now() - headerStart;
     waiting = false;
@@ -706,13 +709,21 @@ export async function downloadFile(
     reuseDirs?: string[];
     reuseFiles?: string[];
     systemProxy?: boolean;
+    proxyUrl?: string;
     maxAttempts?: number;
     maxSegments?: number | (() => number);
     sourcePool?: DownloadSourcePool;
   } = {}
 ): Promise<void> {
   return withFileJob(dest, signal, async () => {
-    const expected = { sha1, sha512: integrity.sha512, sha256: integrity.sha256, size: integrity.size, systemProxy: integrity.systemProxy },
+    const expected = {
+        sha1,
+        sha512: integrity.sha512,
+        sha256: integrity.sha256,
+        size: integrity.size,
+        systemProxy: integrity.systemProxy,
+        proxyUrl: integrity.proxyUrl,
+      },
       temporary = dest + '.part';
     const attempts = Math.max(1, Math.min(4, integrity.maxAttempts ?? 4));
     await fs.promises.mkdir(path.dirname(dest), { recursive: true });
@@ -904,6 +915,7 @@ export async function downloadAll(
                 size: task.size,
                 reuseDirs: task.reuseDirs,
                 reuseFiles: task.reuseFiles,
+                proxyUrl: task.proxyUrl,
                 sourcePool,
                 maxSegments: () => Math.max(1, Math.floor(downloadLimiter.maxConcurrent / Math.max(1, active.size))),
               }

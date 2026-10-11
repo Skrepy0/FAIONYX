@@ -17,6 +17,7 @@ import { httpFetch } from './httpClient';
 import { logScope } from './launcherLog';
 import { isolatedUpdateTest, trustedUpdateRelease, updateAssetName } from './updateTrust';
 import { translate as t } from '../../shared/i18n';
+import { fetchSignal } from './download';
 
 const updateLog = logScope('self-update');
 
@@ -109,31 +110,15 @@ function toReleaseInfo(j: GhRelease): ReleaseInfo | null {
   return trustedUpdateRelease(release) ? release : null;
 }
 
-async function ghFetch(url: string, etag?: string): Promise<Response> {
-  // 国内网络对 GitHub TLS 偶发重置：失败后 1.5s 重试一次（幂等 GET 安全）
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), API_TIMEOUT_MS);
-    try {
-      return await httpFetch(url, {
-        signal: ctrl.signal,
-        headers: {
-          Accept: 'application/vnd.github+json',
-          'User-Agent': 'FAIONYX-Launcher',
-          ...(etag ? { 'If-None-Match': etag } : {}),
-        },
-      });
-    } catch (e) {
-      if (attempt === 1) throw e;
-      updateLog.debug(t('selfupdate.log.gh_retry'), e);
-      await new Promise((r) => setTimeout(r, 1500));
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-  throw new Error('unreachable');
+export async function ghFetch(url: string, proxyUrl?: string): Promise<Response> {
+  return httpFetch(url, {
+    signal: fetchSignal(),
+    // proxyUrl 存在时 httpFetch 会优先走 ProxyAgent；否则回退 systemProxy/直连。
+    systemProxy: true,
+    proxyUrl,
+    headers: { accept: 'application/octet-stream, text/plain, */*' },
+  }) as unknown as Promise<Response>;
 }
-
 /**
  * 检查最新 Release。force=false 时 6h 缓存有效直接返回缓存；
  * 网络失败/限流静默降级（有缓存回退缓存）。
@@ -240,17 +225,19 @@ export function parseSha256Sums(text: string): Map<string, string> {
   }
   return map;
 }
+type SumsFetcher = (url: string, proxyUrl?: string) => Promise<Response>;
 
 /** Resolve the requested release's checksums, never a different latest version's manifest. */
 export async function fetchSha256Sums(
   releaseAssetUrlHint?: string,
-  fetcher: typeof ghFetch = ghFetch
+  fetcher: SumsFetcher = ghFetch,
+  proxyUrl?: string
 ): Promise<Map<string, string> | null> {
   const urls: string[] = [];
   const expectedName = releaseAssetUrlHint?.split('/').at(-1);
   const read = async (url: string): Promise<Map<string, string> | null> => {
     try {
-      const res = await fetcher(url);
+      const res = await fetcher(url, proxyUrl);
       if (!res.ok) return null;
       const sums = parseSha256Sums(await res.text());
       return sums.size && (!expectedName || sums.has(expectedName)) ? sums : null;
@@ -266,7 +253,7 @@ export async function fetchSha256Sums(
   const dlBase = downloadBaseOverride();
   if (dlBase) urls.push(`${dlBase}/SHA256SUMS.txt`);
   try {
-    const res = await fetcher(`${apiBase()}/repos/${GITHUB_REPO}/releases/latest`);
+    const res = await fetcher(`${apiBase()}/repos/${GITHUB_REPO}/releases/latest`, proxyUrl);
     if (res.ok) {
       const json = (await res.json()) as GhRelease;
       const sums = (json.assets ?? []).find((a) => a.name === 'SHA256SUMS.txt');
@@ -293,4 +280,27 @@ export async function sha256File(file: string): Promise<string> {
     stream.on('error', reject);
   });
   return hash.digest('hex');
+}
+/**
+ * 仅接受 http/https scheme 的代理地址；非法或空时返回不带代理的 fetcher，
+ * 行为与原来的 ghFetch 完全一致（由 httpFetch 走 systemProxy/直连）。
+ */
+export function makeGhFetch(proxyUrl?: string): SumsFetcher {
+  const normalized = normalizeProxyUrl(proxyUrl);
+  if (!normalized) return (url: string) => ghFetch(url);
+  return (url: string) => ghFetch(url, normalized);
+}
+
+/** 仅接受 http/https scheme；非法或空串返回 undefined。 */
+function normalizeProxyUrl(proxyUrl?: string): string | undefined {
+  if (!proxyUrl) return undefined;
+  const raw = proxyUrl.trim();
+  if (!raw) return undefined;
+  try {
+    const u = new URL(raw);
+    if (u.protocol === 'http:' || u.protocol === 'https:') return raw;
+  } catch {
+    /* 非法 URL */
+  }
+  return undefined;
 }

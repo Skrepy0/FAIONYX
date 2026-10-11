@@ -29,6 +29,7 @@ import {
   selectDir,
   setDownloadFolder,
   setPluginEnabled,
+  testUpdateProxy,
 } from '../api';
 import { enterEditMode, store, toast } from '../store';
 import { DEFAULT_CUSTOM_THEME, THEME_PRESETS } from '@shared/types';
@@ -228,7 +229,38 @@ async function onCheckUpdate() {
     toast(t('settings.toast.update_check_failed'), 'error');
   }
 }
+// ---------------- 更新代理测试 ----------------
+const proxyTestUrl = ref('https://github.com/');
+const proxyTestState = ref<'idle' | 'testing' | 'ok' | 'failed'>('idle');
+const proxyTestMessage = ref('');
 
+async function onTestUpdateProxy() {
+  if (proxyTestState.value === 'testing') return;
+  const target = proxyTestUrl.value.trim();
+  if (!target) {
+    proxyTestState.value = 'failed';
+    proxyTestMessage.value = t('settings.about.update_proxy_test_empty');
+    return;
+  }
+  proxyTestState.value = 'testing';
+  proxyTestMessage.value = '';
+  try {
+    const result = await testUpdateProxy(target, store.settings?.updateProxyUrl ?? '');
+    if (result.ok) {
+      proxyTestState.value = 'ok';
+      proxyTestMessage.value = t('settings.about.update_proxy_test_ok', {
+        status: String(result.status ?? 0),
+        ms: String(result.latencyMs ?? 0),
+      });
+    } else {
+      proxyTestState.value = 'failed';
+      proxyTestMessage.value = result.error || t('settings.about.update_proxy_test_failed', { status: String(result.status ?? 0) });
+    }
+  } catch (e) {
+    proxyTestState.value = 'failed';
+    proxyTestMessage.value = errText(e);
+  }
+}
 const updateSource = computed(() => store.settings?.updateSource ?? 'auto');
 function onUpdateSourceChange(e: Event) {
   void save({ updateSource: (e.target as HTMLSelectElement).value as Settings['updateSource'] });
@@ -1571,6 +1603,100 @@ async function onRemovePlugin(p: PluginInfo) {
                 @change="onUpdateMirrorChange"
               />
             </div>
+
+            <!-- 更新代理：与 updateSource / updateMirrorUrl 同一区域，紧跟其后 -->
+            <div
+              data-ui="SettingsView:update-proxy-toggle"
+              class="card group group-inline setting-target"
+              data-section="update-proxy"
+              tabindex="-1"
+            >
+              <div>
+                <h3 class="group-title">{{ t('settings.about.update_proxy_title') }}</h3>
+                <p class="muted">{{ t('settings.about.update_proxy_desc') }}</p>
+              </div>
+              <label class="switch">
+                <input
+                  data-ui="SettingsView:update-proxy-toggle-input"
+                  type="checkbox"
+                  :aria-label="t('settings.about.update_proxy_title')"
+                  :checked="store.settings.updateUseProxy === true"
+                  @change="save({ updateUseProxy: ($event.target as HTMLInputElement).checked })"
+                />
+                <span class="switch-ui"></span>
+              </label>
+            </div>
+
+            <!-- 启用代理后展示配置区域 -->
+            <div
+              v-if="store.settings.updateUseProxy === true"
+              data-ui="SettingsView:update-proxy-config"
+              class="card group setting-target"
+              data-section="update-proxy-config"
+              tabindex="-1"
+            >
+              <div class="upd-row">
+                <span class="upd-label">{{ t('settings.about.update_proxy_url') }}</span>
+                <input
+                  data-ui="SettingsView:update-proxy-url-input"
+                  class="input mono upd-mirror"
+                  type="text"
+                  inputmode="url"
+                  spellcheck="false"
+                  autocomplete="off"
+                  :value="store.settings.updateProxyUrl ?? ''"
+                  :placeholder="t('settings.about.update_proxy_url_placeholder')"
+                  @change="save({ updateProxyUrl: ($event.target as HTMLInputElement).value.trim() })"
+                />
+              </div>
+              <p class="muted group-hint">{{ t('settings.about.update_proxy_hint') }}</p>
+
+              <!-- 代理连通性测试 -->
+              <div class="upd-row proxy-test-row">
+                <span class="upd-label">{{ t('settings.about.update_proxy_test_target') }}</span>
+                <input
+                  data-ui="SettingsView:update-proxy-test-url"
+                  class="input mono upd-mirror proxy-test-input"
+                  type="text"
+                  inputmode="url"
+                  spellcheck="false"
+                  autocomplete="off"
+                  v-model="proxyTestUrl"
+                  :placeholder="t('settings.about.update_proxy_test_placeholder')"
+                  :disabled="proxyTestState === 'testing'"
+                  @keydown.enter="onTestUpdateProxy"
+                />
+                <button
+                  data-ui="SettingsView:update-proxy-test-button"
+                  class="btn btn-ghost btn-sm proxy-test-btn"
+                  type="button"
+                  :disabled="proxyTestState === 'testing'"
+                  @click="onTestUpdateProxy"
+                >
+                  <span v-if="proxyTestState === 'testing'" class="spin"></span>
+                  {{
+                    proxyTestState === 'testing' ? t('settings.about.update_proxy_testing') : t('settings.about.update_proxy_test_button')
+                  }}
+                </button>
+              </div>
+              <p
+                v-if="proxyTestState === 'ok'"
+                class="group-hint proxy-test-result proxy-test-ok"
+                role="status"
+                data-ui="SettingsView:update-proxy-test-result"
+              >
+                {{ proxyTestMessage }}
+              </p>
+              <p
+                v-else-if="proxyTestState === 'failed'"
+                class="group-hint proxy-test-result proxy-test-failed"
+                role="alert"
+                data-ui="SettingsView:update-proxy-test-result"
+              >
+                {{ proxyTestMessage }}
+              </p>
+            </div>
+
             <details class="update-maintenance">
               <summary>{{ t('settings.about.maintenance') }}</summary>
               <div data-ui="SettingsView:bb7974b118ee" class="upd-row upd-actions-row">
@@ -3026,6 +3152,31 @@ async function onRemovePlugin(p: PluginInfo) {
 .setting-control {
   width: 180px;
   flex-shrink: 0;
+}
+.proxy-test-row {
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: nowrap;
+}
+.proxy-test-input {
+  flex: 1;
+  min-width: 0;
+}
+.proxy-test-btn {
+  flex: none;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.proxy-test-result {
+  margin-top: 4px;
+}
+.proxy-test-ok {
+  color: var(--accent-2);
+}
+.proxy-test-failed {
+  color: var(--danger);
 }
 @media (max-width: 1100px) {
   .runtime-grid {

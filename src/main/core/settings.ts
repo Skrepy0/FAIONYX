@@ -62,6 +62,8 @@ function defaults(): Settings {
     skinEditorPalette: normalizeSkinPalettePreferences(undefined),
     closeAfterLaunch: false,
     configVersion: 1,
+    updateUseProxy: false,
+    updateProxyUrl: '',
   };
 }
 

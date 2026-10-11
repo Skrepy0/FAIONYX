@@ -55,6 +55,7 @@ import type {
   YggdrasilProviderCandidate,
   YggdrasilProviderInput,
   YggdrasilRuntimeInfo,
+  ProxyTestResult,
 } from '@shared/types';
 
 function invoke<T>(channel: string, ...args: unknown[]): Promise<T> {
@@ -442,3 +443,7 @@ export function formatSpeed(bytes?: number): string {
 
 export const importResources = (files: string[], id: string, folder: string, kind: string) =>
   invoke<number>(IPC.fsImportResources, files, id, folder, kind);
+
+export function testUpdateProxy(targetUrl: string, proxyUrl?: string): Promise<ProxyTestResult> {
+  return window.faionyx.invoke(IPC.testUpdateProxy, targetUrl, proxyUrl) as Promise<ProxyTestResult>;
+}

@@ -16,10 +16,18 @@ export async function downloadFetch(
     process.versions.electron ? (await import('./community')).cfChannel().key : process.env.FAIONYX_CF_API_KEY || CF_BUILTIN_KEY,
   fetcher = httpFetch
 ): Promise<Response> {
+  // proxyUrl 存在时优先使用自定义代理：跳过系统代理探测与兜底。
+  const customProxyUrl = init?.proxyUrl || undefined;
+
   for (let hop = 0; hop < 10; hop++) {
     // Use the player's configured proxy/PAC immediately; keep direct transfer
     // when this URL resolves to DIRECT. Re-evaluate after every redirect.
-    const requestInit = { ...init, systemProxy: init?.systemProxy || (fetcher === httpFetch && (await usesSystemProxy(url))) };
+    // When an explicit proxyUrl is given, it takes precedence and system proxy is skipped.
+    const requestInit = {
+      ...init,
+      proxyUrl: customProxyUrl,
+      systemProxy: init?.systemProxy || (!customProxyUrl && fetcher === httpFetch && (await usesSystemProxy(url))),
+    };
     const headers = { ...init?.headers };
     if (needsCurseForgeKey(url)) headers['x-api-key'] = await getKey();
     let response: Response;
@@ -29,7 +37,16 @@ export async function downloadFetch(
       init?.signal?.throwIfAborted();
       // Node does not use the desktop's PAC/proxy/certificate store. Retry a failed
       // connection through Electron's system transport, retaining Range + validation.
-      if (fetcher !== httpFetch || !process.versions.electron || requestInit.systemProxy || !(error instanceof TypeError)) throw error;
+      // Skip this fallback when an explicit proxyUrl is configured.
+      if (
+        customProxyUrl ||
+        fetcher !== httpFetch ||
+        !process.versions.electron ||
+        requestInit.systemProxy ||
+        !(error instanceof TypeError)
+      ) {
+        throw error;
+      }
       response = await httpFetch(url, { ...init, headers, redirect: 'manual', systemProxy: true });
     }
     if (![301, 302, 303, 307, 308].includes(response.status)) return response;

@@ -128,6 +128,8 @@ export const store = reactive({
   tasks: [] as TaskItem[],
   toasts: [] as ToastItem[],
   locale: 'zh-CN',
+  updateUseProxy: false,
+  updateProxyUrl: '',
 });
 
 const normalizeFolder = (value = '') => value.replaceAll('\\', '/').replace(/\/$/, '').toLowerCase();

@@ -5069,5 +5069,17 @@
   "home.module.sysInfo": "系统信息",
   "home.module.quickActions": "快速操作",
   "home.module.authorCard": "作者卡片",
-  "version.unknown": "未知"
+  "version.unknown": "未知",
+  "settings.about.update_proxy_title": "启用代理",
+  "settings.about.update_proxy_desc": "下载更新与校验和时通过该代理访问",
+  "settings.about.update_proxy_url": "代理地址",
+  "settings.about.update_proxy_url_placeholder": "http://127.0.0.1:7890",
+  "settings.about.update_proxy_hint": "仅支持 HTTP/HTTPS 代理地址，格式如 http://host:port 或 https://host:port。留空表示不使用代理。",
+  "settings.about.update_proxy_test_target": "测试网址",
+  "settings.about.update_proxy_test_placeholder": "https://api.github.com/",
+  "settings.about.update_proxy_test_button": "测试连接",
+  "settings.about.update_proxy_testing": "测试中…",
+  "settings.about.update_proxy_test_empty": "请先填写测试网址",
+  "settings.about.update_proxy_test_ok": "连接成功（HTTP {status}，{ms} ms）",
+  "settings.about.update_proxy_test_failed": "连接失败（HTTP {status}）"
 }

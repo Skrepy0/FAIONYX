@@ -446,6 +446,9 @@ export interface Settings {
   autoUpdate?: boolean;
   /** 界面语言 **/
   locale?: LocaleId;
+  /** 下载更新时使用代理 **/
+  updateUseProxy: boolean;
+  updateProxyUrl: string;
 }
 
 // ---------------- 启动器自更新 ----------------
@@ -719,7 +722,12 @@ export interface LaunchState {
   intentionalStop?: boolean;
   exitKind?: import('./gameExit').GameExitKind;
 }
-
+export interface ProxyTestResult {
+  ok: boolean;
+  status?: number;
+  latencyMs?: number;
+  error?: string;
+}
 // ---------------- IPC 通道（invoke: 前端 await 调用） ----------------
 export const IPC = {
   centerOverview: 'center:overview',
@@ -955,6 +963,8 @@ export const IPC = {
   updateResetSettings: 'update:resetSettings', // () => void  配置不兼容时重置设置（先备份原文件）
   updateGetPending: 'update:getPending', // () => { release: ReleaseInfo; file: string } | null  已就绪待安装
   updateApplyPending: 'update:applyPending', // () => void  立即安装已就绪的更新并重启
+
+  testUpdateProxy: 'test:update-proxy',
 } as const;
 
 export interface FsEntry {

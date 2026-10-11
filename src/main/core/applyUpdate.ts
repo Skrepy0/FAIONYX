@@ -13,12 +13,12 @@ import {
 } from './updateTransaction';
 export { buildUpdaterScript } from './updateTransaction';
 import { app } from 'electron';
-import type { LocalUpdateCheck, ProgressEvent, ReleaseInfo, Settings, UpdateStateInfo } from '../../shared/types';
+import type { LocalUpdateCheck, ProgressEvent, ProxyTestResult, ReleaseInfo, Settings, UpdateStateInfo } from '../../shared/types';
 import { IPC_EVENT } from '../../shared/types';
 import { compareSemver } from '../../shared/semver';
 import { downloadAll } from './download';
 import { finishTask, registerTask } from './tasks';
-import { currentVersion, fetchSha256Sums, sha256File } from './selfUpdate';
+import { currentVersion, fetchSha256Sums, makeGhFetch, sha256File } from './selfUpdate';
 import { logScope } from './launcherLog';
 import { translate as t } from '../../shared/i18n';
 import { isolatedUpdateTest, trustedUpdateRelease, updateAssetName } from './updateTrust';
@@ -47,6 +47,7 @@ import {
   stageLinuxBackup,
   validateLinuxPendingUpdate,
 } from './linuxUpdate';
+import { httpFetch } from './httpClient';
 
 const updateLog = logScope('self-update');
 
@@ -81,7 +82,25 @@ export function updateSupported(): boolean {
   if (process.platform === 'linux') return linuxUpdateSupported();
   return !!currentPortableExe();
 }
+type UpdateSettings = Pick<Settings, 'updateSource' | 'updateMirrorUrl' | 'updateUseProxy' | 'updateProxyUrl'>;
 
+/**
+ * 解析更新下载用的显式代理地址。
+ * 仅在 updateUseProxy 为 true 且 updateProxyUrl 是合法的 http/https URL 时返回非空字符串；
+ * 其余情况返回 undefined，让下载/校验回退到原有直连或系统代理逻辑。
+ */
+function resolveUpdateProxyUrl(settings: UpdateSettings): string | undefined {
+  if (!settings.updateUseProxy) return undefined;
+  const raw = settings.updateProxyUrl?.trim();
+  if (!raw) return undefined;
+  try {
+    const u = new URL(raw);
+    if (u.protocol === 'http:' || u.protocol === 'https:') return raw;
+  } catch {
+    /* 非法 URL 视为未配置 */
+  }
+  return undefined;
+}
 function updateDirOf(exe: string): string {
   if (process.platform === 'darwin') return macUpdateDir();
   if (process.platform === 'linux') return linuxUpdateDir();
@@ -327,7 +346,7 @@ export function isUpdateDownloading(): boolean {
  * 自动安装模式入口：静默后台下载；完成后写待安装状态并发 updateReady，
  * 下次用户启动时应用，本次退出不执行替换或重启。
  */
-export function startAutoUpdate(release: ReleaseInfo, settings: Pick<Settings, 'updateSource' | 'updateMirrorUrl'>): void {
+export function startAutoUpdate(release: ReleaseInfo, settings: UpdateSettings): void {
   if (!updateSupported()) return;
   if (autoDownloadingVersion) return;
   autoDownloadingVersion = release.version;
@@ -360,7 +379,7 @@ export async function applyPendingIfAny(): Promise<boolean> {
 // ---------------- 下载源 ----------------
 
 /** 按设置构造下载候选 URL 列表（auto=直连优先镜像兜底；direct=仅直连；mirror=仅镜像） */
-export function updateDownloadCandidates(assetUrl: string, settings: Pick<Settings, 'updateSource' | 'updateMirrorUrl'>): string[] {
+export function updateDownloadCandidates(assetUrl: string, settings: UpdateSettings): string[] {
   const mirrorPrefix = (settings.updateMirrorUrl || 'https://ghproxy.net/').trim();
   const mirrored = mirrorPrefix ? mirrorPrefix + assetUrl : '';
   const source = settings.updateSource ?? 'auto';
@@ -382,11 +401,7 @@ let activeDownload: { version: string; handle: UpdateDownloadHandle } | null = n
  * 后台下载更新包：注册下载中心任务（分阶段进度/可取消/断点续传/多源换源），
  * 完成后强制 SHA256 校验。低速 30s 通过 emit 发一次内测群提示。
  */
-export function startUpdateDownload(
-  release: ReleaseInfo,
-  settings: Pick<Settings, 'updateSource' | 'updateMirrorUrl'>,
-  mode: 'upgrade' | 'rollback'
-): UpdateDownloadHandle {
+export function startUpdateDownload(release: ReleaseInfo, settings: UpdateSettings, mode: 'upgrade' | 'rollback'): UpdateDownloadHandle {
   if (process.platform === 'darwin' && !macUpdateSupported()) throw new Error(t('macupdate.error.app_dir_not_writable'));
   if (!trustedUpdateRelease(release)) throw new Error(t('applyupdate.error.untrusted_source'));
   if (activeDownload) {
@@ -396,6 +411,11 @@ export function startUpdateDownload(
   const exe = currentPortableExe();
   if (!exe) throw new Error(t('applyupdate.error.portable_only'));
   if (!release.assetUrl) throw new Error(t('applyupdate.error.no_asset'));
+
+  // 解析显式代理：仅在启用且 URL 合法时生效。
+  const proxyUrl = resolveUpdateProxyUrl(settings);
+  // 构造带代理的 fetcher；未启用代理时用 fetchSha256Sums 的默认 ghFetch。
+  const proxiedFetcher = proxyUrl ? makeGhFetch(proxyUrl) : undefined;
   // Keep the previous ready update until its replacement has been fully verified.
   const updateDir = path.join(updateDirOf(exe), release.version);
   fs.mkdirSync(updateDir, { recursive: true });
@@ -414,17 +434,26 @@ export function startUpdateDownload(
 
   const done = (async () => {
     try {
-      // 先取校验值（安全优先：取不到不开始下载）
-      const sums = await fetchSha256Sums(release.assetUrl);
+      // 先取校验值（安全优先：取不到不开始下载）。
+      // 校验和请求同样走用户配置的显式代理，避免开启代理后卡在校验和获取。
+      const sums = await fetchSha256Sums(release.assetUrl, proxiedFetcher);
       const expected = sums?.get(release.assetName) ?? sums?.get(path.basename(dest)) ?? null;
       if (!expected) throw new Error(t('applyupdate.error.no_checksum'));
       await downloadAll(
-        [{ url, urls: alternates, dest, sha256: expected, size: release.assetSize || undefined }],
+        [
+          {
+            url,
+            urls: alternates,
+            dest,
+            sha256: expected,
+            size: release.assetSize || undefined,
+            proxyUrl,
+          },
+        ],
         (_done, _total, bps, detail) => {
           const received = detail.bytesDone,
             total = detail.bytesTotal ?? 0;
           const now = Date.now();
-          // Network-only, per-task rate from the common transfer service.
           emit(IPC_EVENT.progress, {
             stage: 'launcher-update',
             progress: total > 0 ? received / total : 0,
@@ -453,7 +482,6 @@ export function startUpdateDownload(
         'official',
         task.controller.signal
       );
-      // 完整性校验：SHA256 不一致即失败（删除文件防误用）
       const actual = await sha256File(dest);
       if (actual !== expected) {
         fs.rmSync(dest, { force: true });
@@ -534,7 +562,7 @@ export async function restoreBackupAndRestart(): Promise<void> {
 
 /** 校验本地安装包：版本号（文件名解析）与 SHA256（联网比对 Release，离线则 unknown 由用户自担确认） */
 const EXE_VERSION_RE = /^FAIONYX-(\d+\.\d+\.\d+(?:\.\d+)?)/i;
-export async function checkLocalUpdateFile(filePath: string): Promise<LocalUpdateCheck> {
+export async function checkLocalUpdateFile(filePath: string, proxyUrl?: string): Promise<LocalUpdateCheck> {
   const fileName = path.basename(filePath);
   const st = fs.statSync(filePath);
   const m = EXE_VERSION_RE.exec(fileName);
@@ -548,7 +576,8 @@ export async function checkLocalUpdateFile(filePath: string): Promise<LocalUpdat
   let sha: LocalUpdateCheck['sha256'] = 'unknown';
   let detail = '';
   try {
-    const sums = await fetchSha256Sums();
+    const fetcher = proxyUrl ? makeGhFetch(proxyUrl) : undefined;
+    const sums = await fetchSha256Sums(undefined, fetcher);
     const expected = sums?.get(fileName) ?? null;
     if (expected) {
       const actual = await sha256File(filePath);
@@ -577,4 +606,49 @@ export async function applyLocalUpdateFile(check: LocalUpdateCheck): Promise<voi
     await sha256File(dest),
     'local'
   );
+}
+
+/**
+ * 用给定代理访问 targetUrl，仅做一次 GET，读少量 body 后立即取消。
+ * proxyUrl 为空/非法时按直连测试，方便用户对比。
+ */
+export async function testProxyConnection(targetUrl: string, proxyUrl?: string): Promise<ProxyTestResult> {
+  let url: URL;
+  try {
+    url = new URL(targetUrl);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return { ok: false, error: `Unsupported protocol: ${url.protocol}` };
+    }
+  } catch {
+    return { ok: false, error: 'Invalid URL' };
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  const started = Date.now();
+  try {
+    const res = await httpFetch(url.href, {
+      method: 'GET',
+      signal: controller.signal,
+      // 代理地址由 httpFetch 内部校验：非法/空串自动回退直连
+      proxyUrl: proxyUrl?.trim() || undefined,
+      headers: { accept: 'text/plain, */*' },
+    });
+    const latencyMs = Date.now() - started;
+    // 读一点就取消，避免拖大响应
+    try {
+      await res.body?.cancel();
+    } catch {
+      /* ignore */
+    }
+    return { ok: res.ok, status: res.status, latencyMs };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : String(e),
+      latencyMs: Date.now() - started,
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
 }

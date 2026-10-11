@@ -114,6 +114,9 @@ export function registerIpc(getWin: () => BrowserWindow | null): void {
   ipcMain.handle(IPC.exitHistoryList, () => exitHistory().list());
   ipcMain.handle(IPC.exitHistoryAck, () => exitHistory().acknowledge());
   ipcMain.handle(IPC.exitHistoryClear, () => exitHistory().clearHistory());
+  ipcMain.handle(IPC.testUpdateProxy, async (_e, targetUrl: string, proxyUrl?: string) => {
+    return applyUpdate.testProxyConnection(targetUrl, proxyUrl);
+  });
   // IPC 失败兜底：注册期统一包装 ipcMain.handle，handler 抛错时记录通道名与脱敏错误，
   // 再原样抛回渲染端（渲染端收到的错误与原行为一致）；取消类错误属常规路径只记 debug。
   type IpcInvokeListener = (event: unknown, ...args: unknown[]) => unknown;
